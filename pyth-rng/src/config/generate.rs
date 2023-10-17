@@ -1,8 +1,5 @@
 use {
-    crate::config::{
-        EthereumOptions,
-        RandomnessOptions,
-    },
+    crate::config::EthereumOptions,
     clap::Args,
     ethers::types::Address,
     reqwest::Url,

@@ -4,8 +4,6 @@ use {
         config::GenerateOptions,
         ethereum::PythContract,
     },
-    ethers::core::types::Address,
-    sha3::Digest,
     std::{
         error::Error,
         sync::Arc,

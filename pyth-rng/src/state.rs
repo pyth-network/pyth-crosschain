@@ -23,7 +23,7 @@ impl PebbleHashChain {
     pub fn new(secret: [u8; 32], length: usize) -> Self {
         let mut hash = Vec::<[u8; 32]>::with_capacity(length);
         hash.push(Keccak256::digest(secret).into());
-        for i in 1..length {
+        for _ in 1..length {
             hash.push(Keccak256::digest(&hash[hash.len() - 1]).into());
         }
 

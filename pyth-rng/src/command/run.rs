@@ -16,8 +16,6 @@ use {
         routing::get,
         Router,
     },
-    clap::Parser,
-    ethers::core::types::Address,
     std::{
         error::Error,
         sync::Arc,
@@ -52,7 +50,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
     // are for the most recent chain).
     let random: [u8; 32] = provider_info.commitment_metadata;
-    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+    let chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let chain_state = HashChainState {
         offsets:     vec![provider_info
             .original_commitment_sequence_number
@@ -68,7 +66,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         println!("Root of chain matches commitment");
     }
 
-    let mut state = api::ApiState {
+    let state = api::ApiState {
         state: Arc::new(chain_state),
         contract,
         provider_address: opts.provider,

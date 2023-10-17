@@ -4,7 +4,6 @@ use {
         ethereum::PythContract,
         state::PebbleHashChain,
     },
-    ethers::core::types::U256,
     std::{
         error::Error,
         sync::Arc,

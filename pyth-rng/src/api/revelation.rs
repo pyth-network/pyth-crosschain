@@ -43,7 +43,7 @@ pub async fn revelation(
         .get_request(state.provider_address, sequence)
         .call()
         .await
-        .map_err(|e| RestError::TemporarilyUnavailable)?;
+        .map_err(|_| RestError::TemporarilyUnavailable)?;
 
     // sequence_number == 0 means the request does not exist.
     if r.sequence_number != 0 {

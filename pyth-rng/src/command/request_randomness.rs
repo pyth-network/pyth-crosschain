@@ -3,8 +3,6 @@ use {
         config::RequestRandomnessOptions,
         ethereum::PythContract,
     },
-    ethers::core::types::Address,
-    sha3::Digest,
     std::{
         error::Error,
         sync::Arc,
