@@ -64,11 +64,13 @@ impl PythContract {
         user_randomness: &[u8; 32],
         use_blockhash: bool,
     ) -> Result<u64, Box<dyn Error>> {
+        let fee = self.get_fee(*provider).call().await?;
+
         let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
 
         if let Some(r) = self
             .request(*provider, hashed_randomness, use_blockhash)
-            .value(200)
+            .value(fee)
             .send()
             .await?
             .await?
