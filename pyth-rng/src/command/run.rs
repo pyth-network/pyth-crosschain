@@ -17,6 +17,7 @@ use {
         Router,
     },
     std::{
+        collections::HashMap,
         error::Error,
         sync::Arc,
     },
@@ -66,11 +67,14 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         println!("Root of chain matches commitment");
     }
 
-    let state = api::ApiState {
+    let state = api::BlockchainState {
         state: Arc::new(chain_state),
         contract,
         provider_address: opts.provider,
     };
+    let mut chains = HashMap::new();
+    chains.insert(0, state);
+    let api_state = api::ApiState { chains };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -78,7 +82,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(api::index))
-        .route("/v1/revelation", get(api::revelation))
+        .route("/v1/revelation/:chain_id/:sequence", get(api::revelation))
         .with_state(state.clone())
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());

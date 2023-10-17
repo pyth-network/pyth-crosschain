@@ -1,8 +1,14 @@
 use {
-    crate::api::RestError,
+    crate::api::{
+        ChainId,
+        RestError,
+    },
     anyhow::Result,
     axum::{
-        extract::State,
+        extract::{
+            Path,
+            State,
+        },
         Json,
     },
     pythnet_sdk::wire::array,
@@ -20,7 +26,7 @@ use {
 /// This endpoint will not return the random value unless someone has requested the sequence number on-chain.
 #[utoipa::path(
 get,
-path = "/v1/revelation",
+path = "/v1/revelation/:chain_id/:sequence",
 responses(
 (status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
 (status = 403, description = "Random value cannot currently be retrieved", body = String)
@@ -31,12 +37,17 @@ GetRandomValueQueryParams
 )]
 pub async fn revelation(
     State(state): State<crate::api::ApiState>,
-    QsQuery(params): QsQuery<GetRandomValueQueryParams>,
+    Path(params): Path<GetRandomValueQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     let sequence: u64 = params
         .sequence
         .try_into()
         .map_err(|_| RestError::InvalidSequenceNumber)?;
+
+    let state = state
+        .chains
+        .get(&params.chain_id)
+        .ok_or_else(|| RestError::InvalidChainId)?;
 
     let r = state
         .contract
@@ -60,8 +71,9 @@ pub async fn revelation(
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
-#[into_params(parameter_in=Query)]
+#[into_params(parameter_in=Path)]
 pub struct GetRandomValueQueryParams {
+    pub chain_id: ChainId,
     pub sequence: u64,
 }
 
