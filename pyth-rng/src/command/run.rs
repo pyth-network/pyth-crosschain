@@ -45,8 +45,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     struct ApiDoc;
 
     let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
-    let provider_addr = opts.provider.parse::<Address>()?;
-    let provider_info = contract.get_provider_info(provider_addr).call().await?;
+    let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
     // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
     // TODO: we should instantiate the state here with multiple hash chains.
@@ -72,7 +71,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let mut state = api::ApiState {
         state: Arc::new(chain_state),
         contract,
-        provider_address: provider_addr,
+        provider_address: opts.provider,
     };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the

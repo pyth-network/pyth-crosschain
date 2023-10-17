@@ -4,6 +4,7 @@ use {
         RandomnessOptions,
     },
     clap::Args,
+    ethers::types::Address,
     std::net::SocketAddr,
 };
 
@@ -26,5 +27,5 @@ pub struct RunOptions {
     #[arg(long = "provider")]
     #[arg(env = "PYTH_PROVIDER")]
     #[arg(default_value = "0x368397bDc956b4F23847bE244f350Bde4615F25E")]
-    pub provider: String,
+    pub provider: Address,
 }

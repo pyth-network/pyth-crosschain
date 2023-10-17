@@ -1,10 +1,13 @@
-use clap::{
-    crate_authors,
-    crate_description,
-    crate_name,
-    crate_version,
-    Args,
-    Parser,
+use {
+    clap::{
+        crate_authors,
+        crate_description,
+        crate_name,
+        crate_version,
+        Args,
+        Parser,
+    },
+    ethers::types::Address,
 };
 
 
@@ -68,7 +71,7 @@ pub struct EthereumOptions {
     #[arg(long = "pyth-contract-addr")]
     #[arg(env = "PYTH_CONTRACT_ADDR")]
     #[arg(default_value = "0x28F16Af4D87523910b843a801454AEde5F9B0459")]
-    pub contract_addr: String,
+    pub contract_addr: Address,
 }
 
 #[derive(Args, Clone, Debug)]

@@ -4,6 +4,7 @@ use {
         RandomnessOptions,
     },
     clap::Args,
+    ethers::types::Address,
 };
 
 #[derive(Args, Clone, Debug)]
@@ -20,5 +21,5 @@ pub struct RequestRandomnessOptions {
     #[arg(long = "provider")]
     #[arg(env = "PYTH_PROVIDER")]
     #[arg(default_value = "0x368397bDc956b4F23847bE244f350Bde4615F25E")]
-    pub provider: String,
+    pub provider: Address,
 }

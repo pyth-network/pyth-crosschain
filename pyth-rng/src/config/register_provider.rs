@@ -4,6 +4,7 @@ use {
         RandomnessOptions,
     },
     clap::Args,
+    ethers::types::U256,
 };
 
 #[derive(Args, Clone, Debug)]
@@ -19,5 +20,5 @@ pub struct RegisterProviderOptions {
     /// The fee to charge (in wei) for each requested random number
     #[arg(long = "pyth-contract-fee")]
     #[arg(default_value = "100")]
-    pub fee: u64,
+    pub fee: U256,
 }

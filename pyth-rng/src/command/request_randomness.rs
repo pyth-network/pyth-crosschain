@@ -15,10 +15,8 @@ pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), B
     let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
 
     let user_randomness = rand::random::<[u8; 32]>();
-    let provider = opts.provider.parse::<Address>()?;
-
     let sequence_number = contract
-        .request_wrapper(&provider, &user_randomness, false)
+        .request_wrapper(&opts.provider, &user_randomness, false)
         .await?;
 
     println!("sequence number: {:#?}", sequence_number);

@@ -49,7 +49,7 @@ impl PythContract {
             .with_chain_id(chain_id.as_u64());
 
         Ok(PythRandom::new(
-            opts.contract_addr.parse::<Address>()?,
+            opts.contract_addr,
             Arc::new(SignerMiddleware::new(provider, wallet__)),
         ))
     }

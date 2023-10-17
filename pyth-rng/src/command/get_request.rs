@@ -17,7 +17,7 @@ pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>>
     let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
 
     if let r = contract
-        .get_request(opts.provider.parse::<Address>()?, opts.sequence)
+        .get_request(opts.provider, opts.sequence)
         .call()
         .await?
     {

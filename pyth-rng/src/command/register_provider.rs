@@ -22,7 +22,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
 
     // Arguments to the contract to register our new provider.
-    let fee_in_wei = U256::from(opts.fee);
+    let fee_in_wei = opts.fee;
     let commitment = chain.reveal()?;
     // Store the random seed in the metadata field so that we can regenerate the hash chain
     // at-will. (This is secure because you can't generate the chain unless you also have the secret)

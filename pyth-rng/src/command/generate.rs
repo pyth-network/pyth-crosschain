@@ -17,7 +17,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
 
     let user_randomness = rand::random::<[u8; 32]>();
-    let provider = opts.provider.parse::<Address>()?;
+    let provider = opts.provider;
 
     // Request a random number on the contract
     let sequence_number = contract
@@ -31,7 +31,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     // Get the committed value from the provider
     let client = reqwest::Client::new();
     let request_url = client
-        .get(format!("{}/v1/revelation", &opts.url))
+        .get(opts.url.join("/v1/revelation")?)
         .query(&[("sequence", sequence_number)])
         .build()?;
     let resp = client
