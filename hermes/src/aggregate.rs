@@ -36,6 +36,7 @@ use {
     },
     borsh::BorshDeserialize,
     byteorder::BigEndian,
+    prometheus_client::registry::Registry,
     pyth_sdk::{
         Price,
         PriceFeed,
@@ -61,6 +62,7 @@ use {
     wormhole_sdk::Vaa,
 };
 
+pub mod metrics;
 pub mod wormhole_merkle;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -100,7 +102,7 @@ impl AggregationEvent {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub struct AggregateState {
     /// The latest completed slot. This is used to check whether a completed state is new or out of
     /// order.
@@ -112,14 +114,18 @@ pub struct AggregateState {
     /// The latest observed slot among different Aggregate updates. This is used for the health
     /// probes.
     pub latest_observed_slot: Option<Slot>,
+
+    /// Metrics
+    pub metrics: metrics::Metrics,
 }
 
 impl AggregateState {
-    pub fn new() -> Self {
+    pub fn new(metrics_registry: &mut Registry) -> Self {
         Self {
             latest_completed_slot:      None,
             latest_completed_update_at: None,
             latest_observed_slot:       None,
+            metrics:                    metrics::Metrics::new(metrics_registry),
         }
     }
 }
@@ -192,6 +198,13 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
                     )
                     .await?;
 
+                    state
+                        .aggregate_state
+                        .write()
+                        .await
+                        .metrics
+                        .observe(proof.slot, metrics::Event::Vaa);
+
                     proof.slot
                 }
             }
@@ -203,6 +216,13 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
             state
                 .store_accumulator_messages(accumulator_messages)
                 .await?;
+
+            state
+                .aggregate_state
+                .write()
+                .await
+                .metrics
+                .observe(slot, metrics::Event::AccumulatorMessages);
             slot
         }
     };
@@ -268,6 +288,10 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     aggregate_state
         .latest_completed_update_at
         .replace(Instant::now());
+
+    aggregate_state
+        .metrics
+        .observe(slot, metrics::Event::CompletedUpdate);
 
     Ok(())
 }

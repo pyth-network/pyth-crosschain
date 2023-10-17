@@ -4,7 +4,7 @@ use {
     std::net::SocketAddr,
 };
 
-const DEFAULT_RPC_ADDR: &str = "127.0.0.1:33999";
+const DEFAULT_RPC_LISTEN_ADDR: &str = "127.0.0.1:33999";
 const DEFAULT_RPC_REQUESTER_IP_HEADER_NAME: &str = "X-Forwarded-For";
 
 #[derive(Args, Clone, Debug)]
@@ -13,9 +13,9 @@ const DEFAULT_RPC_REQUESTER_IP_HEADER_NAME: &str = "X-Forwarded-For";
 pub struct Options {
     /// Address and port the RPC server will bind to.
     #[arg(long = "rpc-listen-addr")]
-    #[arg(default_value = DEFAULT_RPC_ADDR)]
-    #[arg(env = "RPC_ADDR")]
-    pub addr: SocketAddr,
+    #[arg(default_value = DEFAULT_RPC_LISTEN_ADDR)]
+    #[arg(env = "RPC_LISTEN_ADDR")]
+    pub listen_addr: SocketAddr,
 
     /// Whitelisted websocket ip network addresses (separated by comma).
     #[arg(long = "rpc-ws-whitelist")]

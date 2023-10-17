@@ -8,6 +8,7 @@ use {
     anyhow::Result,
     axum::{
         extract::Extension,
+        middleware::from_fn_with_state,
         routing::get,
         Router,
     },
@@ -26,14 +27,16 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
+mod metrics_middleware;
 mod rest;
 mod types;
 mod ws;
 
 #[derive(Clone)]
 pub struct ApiState {
-    pub state: Arc<State>,
-    pub ws:    Arc<ws::WsState>,
+    pub state:   Arc<State>,
+    pub ws:      Arc<ws::WsState>,
+    pub metrics: Arc<metrics_middleware::Metrics>,
 }
 
 impl ApiState {
@@ -43,8 +46,13 @@ impl ApiState {
         requester_ip_header_name: String,
     ) -> Self {
         Self {
+            metrics: Arc::new(metrics_middleware::Metrics::new(state.clone())),
+            ws: Arc::new(ws::WsState::new(
+                ws_whitelist,
+                requester_ip_header_name,
+                state.clone(),
+            )),
             state,
-            ws: Arc::new(ws::WsState::new(ws_whitelist, requester_ip_header_name)),
         }
     }
 }
@@ -59,7 +67,7 @@ pub async fn run(
     state: Arc<State>,
     mut update_rx: Receiver<AggregationEvent>,
 ) -> Result<()> {
-    tracing::info!(endpoint = %opts.rpc.addr, "Starting RPC Server.");
+    tracing::info!(endpoint = %opts.rpc.listen_addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]
     #[openapi(
@@ -101,15 +109,20 @@ pub async fn run(
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(rest::index))
-        .route("/live", get(rest::live))
-        .route("/ready", get(rest::ready))
-        .route("/ws", get(ws::ws_route_handler))
-        .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
-        .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/get_price_feed", get(rest::get_price_feed))
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
+        .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
+        .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
+        .route("/live", get(rest::live))
+        .route("/metrics", get(rest::metrics))
+        .route("/ready", get(rest::ready))
+        .route("/ws", get(ws::ws_route_handler))
+        .route_layer(from_fn_with_state(
+            state.clone(),
+            metrics_middleware::track_metrics,
+        ))
         .with_state(state.clone())
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive())
@@ -139,7 +152,7 @@ pub async fn run(
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
-    axum::Server::try_bind(&opts.rpc.addr)?
+    axum::Server::try_bind(&opts.rpc.listen_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             // Ignore Ctrl+C errors, either way we need to shut down. The main Ctrl+C handler

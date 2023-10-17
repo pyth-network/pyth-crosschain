@@ -1,0 +1,6 @@
+export PYTHNET_HTTP_ADDR=http://pythnet-http-rpc/
+export PYTHNET_WS_ADDR=ws://pythnet-ws-rpc/
+export RPC_LISTEN_ADDR=0.0.0.0:7575
+export BENCHMARKS_ENDPOINT=https://benchmarks.pyth.network
+export WORMHOLE_SPY_RPC_ADDR=http://spy-or-beacon-rpc
+export RUST_LOG=info
