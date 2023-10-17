@@ -400,3 +400,9 @@
   rpcUrl: https://rpc.ankr.com/chiliz
   networkId: 88888
   type: EvmChain
+- id: zetachain_testnet
+  wormholeChainName: zetachain
+  mainnet: false
+  rpcUrl: https://rpc.ankr.com/zetachain_evm_athens_testnet
+  networkId: 7001
+  type: EvmChain
