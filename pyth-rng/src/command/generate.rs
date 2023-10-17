@@ -29,8 +29,10 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     // Get the committed value from the provider
     let client = reqwest::Client::new();
     let request_url = client
-        .get(opts.url.join("/v1/revelation")?)
-        .query(&[("sequence", sequence_number)])
+        .get(opts.url.join(&format!(
+            "/v1/revelation/{}/{}",
+            opts.chain_id, sequence_number
+        ))?)
         .build()?;
     let resp = client
         .execute(request_url)

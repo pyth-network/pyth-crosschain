@@ -24,15 +24,15 @@ pub use {
 mod index;
 mod revelation;
 
-// TODO
+// TODO: maybe this should be a string?
 pub type ChainId = u64;
 
+#[derive(Clone)]
 pub struct ApiState {
-    pub chains: HashMap<ChainId, BlockchainState>,
+    pub chains: Arc<HashMap<ChainId, BlockchainState>>,
 }
 
 /// The state of the randomness service for a single blockchain.
-#[derive(Clone)]
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,

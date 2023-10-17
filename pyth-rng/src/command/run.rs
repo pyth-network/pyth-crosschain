@@ -74,7 +74,9 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     };
     let mut chains = HashMap::new();
     chains.insert(0, state);
-    let api_state = api::ApiState { chains };
+    let api_state = api::ApiState {
+        chains: Arc::new(chains),
+    };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -83,7 +85,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(api::index))
         .route("/v1/revelation/:chain_id/:sequence", get(api::revelation))
-        .with_state(state.clone())
+        .with_state(api_state)
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
 

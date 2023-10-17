@@ -1,5 +1,8 @@
 use {
-    crate::config::EthereumOptions,
+    crate::{
+        api::ChainId,
+        config::EthereumOptions,
+    },
     clap::Args,
     ethers::types::Address,
     reqwest::Url,
@@ -11,6 +14,10 @@ use {
 pub struct GenerateOptions {
     #[command(flatten)]
     pub ethereum: EthereumOptions,
+
+    #[arg(long = "chain-id")]
+    #[arg(default_value = "0")]
+    pub chain_id: ChainId,
 
     /// Submit a randomness request to this provider
     #[arg(long = "provider")]

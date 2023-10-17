@@ -36,7 +36,7 @@ const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
 #[allow(clippy::large_enum_variant)]
 pub enum Options {
     /// Run the Randomness Service.
-    Run(run::RunOptions),
+    Run(RunOptions),
 
     /// Register a new provider with the Pyth Random oracle.
     RegisterProvider(RegisterProviderOptions),
