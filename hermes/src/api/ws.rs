@@ -43,6 +43,16 @@ use {
     },
     ipnet::IpNet,
     nonzero_ext::nonzero,
+    prometheus_client::{
+        encoding::{
+            EncodeLabelSet,
+            EncodeLabelValue,
+        },
+        metrics::{
+            counter::Counter,
+            family::Family,
+        },
+    },
     pyth_sdk::PriceIdentifier,
     serde::{
         Deserialize,
@@ -79,16 +89,65 @@ pub struct PriceFeedClientConfig {
     allow_out_of_order: bool,
 }
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelValue)]
+pub enum Interaction {
+    NewConnection,
+    CloseConnection,
+    ClientHeartbeat,
+    PriceUpdate,
+    ClientMessage,
+    RateLimit,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelValue)]
+pub enum Status {
+    Success,
+    Error,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
+pub struct Labels {
+    pub interaction: Interaction,
+    pub status:      Status,
+}
+
+pub struct Metrics {
+    pub interactions: Family<Labels, Counter>,
+}
+
+impl Metrics {
+    pub fn new(state: Arc<State>) -> Self {
+        let new = Self {
+            interactions: Family::default(),
+        };
+
+        {
+            let interactions = new.interactions.clone();
+
+            tokio::spawn(async move {
+                state.metrics_registry.write().await.register(
+                    "ws_interactions",
+                    "Total number of websocket interactions",
+                    interactions,
+                );
+            });
+        }
+
+        new
+    }
+}
+
 pub struct WsState {
     pub subscriber_counter:       AtomicUsize,
     pub subscribers:              DashMap<SubscriberId, mpsc::Sender<AggregationEvent>>,
     pub bytes_limit_whitelist:    Vec<IpNet>,
     pub rate_limiter:             DefaultKeyedRateLimiter<IpAddr>,
     pub requester_ip_header_name: String,
+    pub metrics:                  Metrics,
 }
 
 impl WsState {
-    pub fn new(whitelist: Vec<IpNet>, requester_ip_header_name: String) -> Self {
+    pub fn new(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<State>) -> Self {
         Self {
             subscriber_counter: AtomicUsize::new(0),
             subscribers: DashMap::new(),
@@ -97,6 +156,7 @@ impl WsState {
             ))),
             bytes_limit_whitelist: whitelist,
             requester_ip_header_name,
+            metrics: Metrics::new(state.clone()),
         }
     }
 }
@@ -161,7 +221,16 @@ async fn websocket_handler(
 ) {
     let ws_state = state.ws.clone();
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
+
     tracing::debug!(id, ?subscriber_ip, "New Websocket Connection");
+    ws_state
+        .metrics
+        .interactions
+        .get_or_create(&Labels {
+            interaction: Interaction::NewConnection,
+            status:      Status::Success,
+        })
+        .inc();
 
     let (notify_sender, notify_receiver) = mpsc::channel(NOTIFICATIONS_CHAN_LEN);
     let (sender, receiver) = stream.split();
@@ -247,6 +316,15 @@ impl Subscriber {
             },
             _  = self.ping_interval.tick() => {
                 if !self.responded_to_ping {
+                    self.ws_state
+                        .metrics
+                        .interactions
+                        .get_or_create(&Labels {
+                            interaction: Interaction::ClientHeartbeat,
+                            status: Status::Error,
+                        })
+                        .inc();
+
                     return Err(anyhow!("Subscriber did not respond to ping. Closing connection."));
                 }
                 self.responded_to_ping = false;
@@ -318,6 +396,16 @@ impl Subscriber {
                         ip = %ip_addr,
                         "Rate limit exceeded. Closing connection.",
                     );
+                    self.ws_state
+                        .metrics
+                        .interactions
+                        .get_or_create(&Labels {
+                            interaction: Interaction::RateLimit,
+                            status:      Status::Error,
+                        })
+                        .inc();
+
+
                     self.sender
                         .send(
                             serde_json::to_string(&ServerResponseMessage::Err {
@@ -335,6 +423,15 @@ impl Subscriber {
             // `sender.feed` buffers a message to the client but does not flush it, so we can send
             // multiple messages and flush them all at once.
             self.sender.feed(message.into()).await?;
+
+            self.ws_state
+                .metrics
+                .interactions
+                .get_or_create(&Labels {
+                    interaction: Interaction::PriceUpdate,
+                    status:      Status::Success,
+                })
+                .inc();
         }
 
         self.sender.flush().await?;
@@ -350,6 +447,14 @@ impl Subscriber {
                 // to subscribers list will be closed and it will eventually get
                 // removed.
                 tracing::trace!(id = self.id, "Subscriber Closed Connection.");
+                self.ws_state
+                    .metrics
+                    .interactions
+                    .get_or_create(&Labels {
+                        interaction: Interaction::CloseConnection,
+                        status:      Status::Success,
+                    })
+                    .inc();
 
                 // Send the close message to gracefully shut down the connection
                 // Otherwise the client might get an abnormal Websocket closure
@@ -365,6 +470,16 @@ impl Subscriber {
                 return Ok(());
             }
             Message::Pong(_) => {
+                // This metric can be used to monitor the number of active connections
+                self.ws_state
+                    .metrics
+                    .interactions
+                    .get_or_create(&Labels {
+                        interaction: Interaction::ClientHeartbeat,
+                        status:      Status::Success,
+                    })
+                    .inc();
+
                 self.responded_to_ping = true;
                 return Ok(());
             }
@@ -372,6 +487,14 @@ impl Subscriber {
 
         match maybe_client_message {
             Err(e) => {
+                self.ws_state
+                    .metrics
+                    .interactions
+                    .get_or_create(&Labels {
+                        interaction: Interaction::ClientMessage,
+                        status:      Status::Error,
+                    })
+                    .inc();
                 self.sender
                     .send(
                         serde_json::to_string(&ServerMessage::Response(
@@ -436,6 +559,15 @@ impl Subscriber {
                 }
             }
         }
+
+        self.ws_state
+            .metrics
+            .interactions
+            .get_or_create(&Labels {
+                interaction: Interaction::ClientMessage,
+                status:      Status::Success,
+            })
+            .inc();
 
         self.sender
             .send(

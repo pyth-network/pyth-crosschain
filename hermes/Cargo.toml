@@ -1,6 +1,6 @@
 [package]
 name        = "hermes"
-version     = "0.3.3"
+version     = "0.4.0"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
@@ -27,7 +27,7 @@ libc               = { version = "0.2.140" }
 log                = { version = "0.4.17" }
 mock_instant       = { version = "0.3.1", features = ["sync"] }
 nonzero_ext        = { version = "0.3.0" }
-prometheus-client  = { version = "0.21.1" }
+prometheus-client  = { version = "0.21.2" }
 prost              = { version = "0.12.1" }
 pyth-sdk           = { version = "0.8.0" }
 pythnet-sdk        = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
@@ -48,21 +48,6 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 utoipa             = { version = "3.4.0", features = ["axum_extras"] }
 utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }
 wormhole-sdk       = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-
-# Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
-# with the dependencies required by many Solana components. This means that we
-# would have to use the same version of libp2p as solana. Luckily we don't need
-# to worry about this until we want to hoist the libp2p portion of Hermes into
-# Rust land.
-libp2p = { version = "0.42.2", features = [
-    "gossipsub",
-    "identify",
-    "mplex",
-    "noise",
-    "secp256k1",
-    "websocket",
-    "yamux",
-]}
 
 # We are bound to this Solana version in order to match pyth-oracle.
 solana-client          = { version = "=1.13.3" }

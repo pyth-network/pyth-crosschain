@@ -9,6 +9,7 @@ use {
         },
         network::wormhole::GuardianSet,
     },
+    prometheus_client::registry::Registry,
     reqwest::Url,
     std::{
         collections::{
@@ -46,6 +47,9 @@ pub struct State {
 
     /// Benchmarks endpoint
     pub benchmarks_endpoint: Option<Url>,
+
+    /// Metrics registry
+    pub metrics_registry: RwLock<Registry>,
 }
 
 impl State {
@@ -54,13 +58,15 @@ impl State {
         cache_size: u64,
         benchmarks_endpoint: Option<Url>,
     ) -> Arc<Self> {
+        let mut metrics_registry = Registry::default();
         Arc::new(Self {
             cache: Cache::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             api_update_tx: update_tx,
-            aggregate_state: RwLock::new(AggregateState::new()),
+            aggregate_state: RwLock::new(AggregateState::new(&mut metrics_registry)),
             benchmarks_endpoint,
+            metrics_registry: RwLock::new(metrics_registry),
         })
     }
 }
