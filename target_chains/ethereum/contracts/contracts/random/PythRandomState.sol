@@ -26,7 +26,6 @@ contract PythRandomStructs {
         // The contract maintains the invariant that sequenceNumber <= endSequenceNumber.
         // If sequenceNumber == endSequenceNumber, the provider must rotate their commitment to add additional random values.
         uint64 endSequenceNumber;
-
         // The sequence number that will be assigned to the next inbound user request.
         uint64 sequenceNumber;
         // The current commitment represents an index/value in the provider's hash chain.
@@ -37,10 +36,8 @@ contract PythRandomStructs {
         // are revealed on-chain.
         bytes32 currentCommitment;
         uint64 currentCommitmentSequenceNumber;
-
     }
 
-    // TODO: add block number?
     struct Request {
         address provider;
         uint64 sequenceNumber;

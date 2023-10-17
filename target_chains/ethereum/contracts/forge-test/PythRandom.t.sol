@@ -14,7 +14,8 @@ import "./utils/RandTestUtils.t.sol";
 import "../contracts/random/PythRandom.sol";
 
 // TODO
-// - what's the impact of # of in-flight requests on gas usage?
+// - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
+//   verify the provider's value.
 // - fuzz test?
 contract PythRandomTest is Test, RandTestUtils {
     PythRandom public random;
@@ -184,13 +185,19 @@ contract PythRandomTest is Test, RandTestUtils {
         PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
-        assert(info1.originalCommitmentSequenceNumber <= info1.currentCommitmentSequenceNumber);
+        assert(
+            info1.originalCommitmentSequenceNumber <=
+                info1.currentCommitmentSequenceNumber
+        );
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
         PythRandomStructs.ProviderInfo memory info2 = random.getProviderInfo(
             provider2
         );
-        assert(info2.originalCommitmentSequenceNumber <= info2.currentCommitmentSequenceNumber);
+        assert(
+            info2.originalCommitmentSequenceNumber <=
+                info2.currentCommitmentSequenceNumber
+        );
         assert(info2.sequenceNumber > info2.currentCommitmentSequenceNumber);
         assert(info2.sequenceNumber <= info2.endSequenceNumber);
     }
@@ -327,9 +334,13 @@ contract PythRandomTest is Test, RandTestUtils {
             provider1FeeInWei,
             newHashChain[0],
             bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
-            newHashChainOffset + 10
+            10
         );
         assertInvariants();
+        PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.endSequenceNumber, newHashChainOffset + 10);
 
         uint64 sequenceNumber3 = request(user2, provider1, 42, false);
         // Rotating the provider key uses a sequence number
