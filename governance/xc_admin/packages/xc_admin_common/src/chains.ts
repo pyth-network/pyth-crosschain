@@ -46,6 +46,7 @@ export const RECEIVER_CHAINS = {
   boba: 60031,
   manta: 60032,
   chiliz: 60033,
+  zetachain: 60034,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
