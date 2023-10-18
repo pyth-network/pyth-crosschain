@@ -406,3 +406,9 @@
   rpcUrl: https://rpc.ankr.com/zetachain_evm_athens_testnet
   networkId: 7001
   type: EvmChain
+- id: astar_testnet
+  wormholeChainName: astar
+  mainnet: false
+  rpcUrl: https://rpc.zkatana.gelato.digital
+  networkId: 1261120
+  type: EvmChain
