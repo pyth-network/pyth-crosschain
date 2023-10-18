@@ -24,7 +24,7 @@ jobs:
         id: ecr_login
       - name: Build docker image
         run: |
-          DOCKER_BUILDKIT=1 docker build -t lerna -f tilt_devnet/docker_images/Dockerfile.lerna .
+          DOCKER_BUILDKIT=1 docker build -t lerna -f Dockerfile.lerna .
           DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}

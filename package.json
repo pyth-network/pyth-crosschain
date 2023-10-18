@@ -9,7 +9,6 @@
     "price_service/client/js",
     "pythnet/message_buffer",
     "target_chains/aptos/sdk/js",
-    "target_chains/cosmwasm/sdk/js",
     "target_chains/cosmwasm/tools",
     "target_chains/cosmwasm/deploy-scripts",
     "target_chains/ethereum/contracts",
@@ -18,7 +17,6 @@
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
     "target_chains/sui/cli",
-    "third_party/pyth/p2w-relay",
     "wormhole_attester/sdk/js",
     "contract_manager"
   ],

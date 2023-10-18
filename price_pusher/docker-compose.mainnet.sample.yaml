@@ -53,7 +53,7 @@ services:
     # Use this to build the price pusher from source. A dependency of the pusher docker
     # image is the pyth-crosschain monorepo lerna docker image. Build lerna image
     # using the following command from the repo root:
-    # `docker buildx build -f tilt_devnet/docker_images/Dockerfile.lerna -t lerna .`
+    # `docker buildx build -f Dockerfile.lerna -t lerna .`
     #
     # Please note that the docker build from source only works in x86_64 platforms
     # and doesn't work on arm platforms (like Apple M1/M2).
