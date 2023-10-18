@@ -47,37 +47,43 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-    let contract = Arc::new(PythContract::from_opts(&opts.config, &opts.chain_id).await?);
-    let provider_info = contract.get_provider_info(opts.provider).call().await?;
+    let config = opts.config.load()?;
 
-    // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
-    // TODO: we should instantiate the state here with multiple hash chains.
-    // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
-    // are for the most recent chain).
-    let random: [u8; 32] = provider_info.commitment_metadata;
-    let chain = PebbleHashChain::from_config(&opts.randomness, random)?;
-    let chain_state = HashChainState {
-        offsets:     vec![provider_info
-            .original_commitment_sequence_number
-            .try_into()?],
-        hash_chains: vec![chain],
-    };
+    let mut chains = HashMap::new();
+    for chain_config in &config.chains {
+        let contract = Arc::new(PythContract::from_config(&chain_config).await?);
+        let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
-    if chain_state.reveal(provider_info.original_commitment_sequence_number)?
-        != provider_info.original_commitment
-    {
-        return Err(anyhow!("The root of the generated hash chain does not match the commitment. Is the secret configured correctly?").into());
-    } else {
-        println!("Root of chain matches commitment");
+        // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
+        // TODO: we should instantiate the state here with multiple hash chains.
+        // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
+        // are for the most recent chain).
+        let random: [u8; 32] = provider_info.commitment_metadata;
+        let hash_chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+        let chain_state = HashChainState {
+            offsets:     vec![provider_info
+                .original_commitment_sequence_number
+                .try_into()?],
+            hash_chains: vec![hash_chain],
+        };
+
+        if chain_state.reveal(provider_info.original_commitment_sequence_number)?
+            != provider_info.original_commitment
+        {
+            return Err(anyhow!("The root of the generated hash chain does not match the commitment. Is the secret configured correctly?").into());
+        } else {
+            println!("Root of chain matches commitment");
+        }
+
+        let state = api::BlockchainState {
+            state: Arc::new(chain_state),
+            contract,
+            provider_address: opts.provider,
+        };
+
+        chains.insert(chain_config.chain_id, state);
     }
 
-    let state = api::BlockchainState {
-        state: Arc::new(chain_state),
-        contract,
-        provider_address: opts.provider,
-    };
-    let mut chains = HashMap::new();
-    chains.insert(0, state);
     let api_state = api::ApiState {
         chains: Arc::new(chains),
     };
