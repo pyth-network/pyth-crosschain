@@ -1,5 +1,8 @@
 use {
-    crate::config::RandomnessOptions,
+    crate::{
+        api::ChainId,
+        config::RandomnessOptions,
+    },
     anyhow::{
         ensure,
         Result,
@@ -32,12 +35,17 @@ impl PebbleHashChain {
         Self { hash, next: 0 }
     }
 
-    // TODO: possibly take the chain id here to ensure different hash chains on every blockchain
-    pub fn from_config(opts: &RandomnessOptions, random: [u8; 32]) -> Result<Self, Box<dyn Error>> {
-        let mut secret: [u8; 32] = [0u8; 32];
-        secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
-        let secret: [u8; 32] = Keccak256::digest([random, secret].flatten()).into();
+    pub fn from_config(
+        opts: &RandomnessOptions,
+        chain_id: &ChainId,
+        random: [u8; 32],
+    ) -> Result<Self, Box<dyn Error>> {
+        let mut input: Vec<u8> = vec![];
+        input.extend_from_slice(&hex::decode(opts.secret.clone())?);
+        input.extend_from_slice(&chain_id.as_bytes());
+        input.extend_from_slice(&random);
 
+        let secret: [u8; 32] = Keccak256::digest(input).into();
         Ok(Self::new(secret, opts.chain_length.try_into()?))
     }
 

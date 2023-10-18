@@ -24,7 +24,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
 
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
-    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+    let mut chain = PebbleHashChain::from_config(&opts.randomness, &opts.chain_id, random)?;
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = opts.fee;

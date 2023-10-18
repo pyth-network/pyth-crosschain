@@ -60,7 +60,8 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
         // are for the most recent chain).
         let random: [u8; 32] = provider_info.commitment_metadata;
-        let hash_chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+        let hash_chain =
+            PebbleHashChain::from_config(&opts.randomness, &chain_config.chain_id, random)?;
         let chain_state = HashChainState {
             offsets:     vec![provider_info
                 .original_commitment_sequence_number
