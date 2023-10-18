@@ -1,10 +1,7 @@
 use {
     crate::{
         api,
-        config::{
-            Config,
-            RunOptions,
-        },
+        config::RunOptions,
         ethereum::PythContract,
         state::{
             HashChainState,
@@ -22,7 +19,6 @@ use {
     std::{
         collections::HashMap,
         error::Error,
-        fs,
         sync::Arc,
     },
     tower_http::cors::CorsLayer,
@@ -52,7 +48,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
 
     let mut chains = HashMap::new();
     for chain_config in &config.chains {
-        let contract = Arc::new(PythContract::from_config(&chain_config).await?);
+        let contract = Arc::new(PythContract::from_config(&chain_config)?);
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
         // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.

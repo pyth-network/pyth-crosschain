@@ -1,10 +1,7 @@
 use {
-    crate::{
-        api::ChainId,
-        config::{
-            ConfigOptions,
-            RandomnessOptions,
-        },
+    crate::config::{
+        ConfigOptions,
+        RandomnessOptions,
     },
     clap::Args,
     ethers::types::Address,

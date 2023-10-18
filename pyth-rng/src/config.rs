@@ -1,4 +1,5 @@
 use {
+    crate::api::ChainId,
     anyhow::anyhow,
     clap::{
         crate_authors,
@@ -10,23 +11,11 @@ use {
     },
     ethers::types::Address,
     std::{
-        collections::{
-            HashMap,
-            HashSet,
-        },
+        collections::HashMap,
         error::Error,
         fs,
     },
 };
-
-
-mod generate;
-mod get_request;
-mod register_provider;
-mod request_randomness;
-mod run;
-
-use crate::api::ChainId;
 pub use {
     generate::GenerateOptions,
     get_request::GetRequestOptions,
@@ -34,6 +23,12 @@ pub use {
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
 };
+
+mod generate;
+mod get_request;
+mod register_provider;
+mod request_randomness;
+mod run;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";

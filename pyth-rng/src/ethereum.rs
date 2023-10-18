@@ -1,11 +1,5 @@
 use {
-    crate::{
-        api::ChainId,
-        config::{
-            ConfigOptions,
-            EthereumConfig,
-        },
-    },
+    crate::config::EthereumConfig,
     anyhow::anyhow,
     ethers::{
         abi::RawLog,
@@ -130,11 +124,8 @@ impl SignablePythContract {
 }
 
 impl PythContract {
-    pub async fn from_config(
-        chain_config: &EthereumConfig,
-    ) -> Result<PythContract, Box<dyn Error>> {
+    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract, Box<dyn Error>> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-        let chain_id = provider.get_chainid().await?;
 
         Ok(PythRandom::new(
             chain_config.contract_addr,

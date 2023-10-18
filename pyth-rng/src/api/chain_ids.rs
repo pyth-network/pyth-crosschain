@@ -8,7 +8,6 @@ use {
         extract::State,
         Json,
     },
-    utoipa::ToSchema,
 };
 
 /// Get the list of supported chain ids
