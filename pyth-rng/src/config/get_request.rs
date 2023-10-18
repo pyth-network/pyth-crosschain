@@ -1,5 +1,8 @@
 use {
-    crate::config::EthereumOptions,
+    crate::{
+        api::ChainId,
+        config::ConfigOptions,
+    },
     clap::Args,
     ethers::types::Address,
 };
@@ -9,7 +12,12 @@ use {
 #[group(id = "GetRequest")]
 pub struct GetRequestOptions {
     #[command(flatten)]
-    pub ethereum: EthereumOptions,
+    pub config: ConfigOptions,
+
+    /// Retrieve a randomness request to this provider
+    #[arg(long = "chain-id")]
+    #[arg(env = "PYTH_CHAIN_ID")]
+    pub chain_id: ChainId,
 
     /// Retrieve a randomness request to this provider
     #[arg(long = "provider")]

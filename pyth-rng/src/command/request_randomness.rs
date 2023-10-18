@@ -1,7 +1,7 @@
 use {
     crate::{
         config::RequestRandomnessOptions,
-        ethereum::PythContract,
+        ethereum::SignablePythContract,
     },
     std::{
         error::Error,
@@ -10,7 +10,13 @@ use {
 };
 
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), Box<dyn Error>> {
-    let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
+    let contract = Arc::new(
+        SignablePythContract::from_config(
+            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &opts.private_key,
+        )
+        .await?,
+    );
 
     let user_randomness = rand::random::<[u8; 32]>();
     let sequence_number = contract

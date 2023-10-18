@@ -11,19 +11,30 @@ use {
         },
     },
     ethers::core::types::Address,
-    std::sync::Arc,
+    std::{
+        collections::HashMap,
+        sync::Arc,
+    },
 };
 pub use {
+    chain_ids::*,
     index::*,
     revelation::*,
 };
 
+mod chain_ids;
 mod index;
 mod revelation;
 
-/// The state of the randomness service for a single blockchain.
+pub type ChainId = String;
+
 #[derive(Clone)]
 pub struct ApiState {
+    pub chains: Arc<HashMap<ChainId, BlockchainState>>,
+}
+
+/// The state of the randomness service for a single blockchain.
+pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,
     /// The EVM contract where the protocol is running.
@@ -32,10 +43,11 @@ pub struct ApiState {
     pub provider_address: Address,
 }
 
-
 pub enum RestError {
     /// The caller passed a sequence number that isn't within the supported range
     InvalidSequenceNumber,
+    /// The caller passed an unsupported chain id
+    InvalidChainId,
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
@@ -54,6 +66,9 @@ impl IntoResponse for RestError {
                 "The sequence number is out of the permitted range",
             )
                 .into_response(),
+            RestError::InvalidChainId => {
+                (StatusCode::BAD_REQUEST, "The chain id is not supported").into_response()
+            }
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The random value cannot currently be retrieved",
