@@ -21,14 +21,14 @@ $ yarn add @pythnetwork/pyth-aptos-js
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
 See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
 To use Pyth prices on chain,
-they must be fetched from an off-chain price service. The `AptosPriceServiceConnection` class can be used to interact with these services,
+they must be fetched from a Hermes instance. The `AptosPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
 Pyth prices and submit them to the network:
 
 ```typescript
 const connection = new AptosPriceServiceConnection(
-  "https://xc-testnet.pyth.network"
-); // See Price Service endpoints section below for other endpoints
+  "https://hermes-beta.pyth.network"
+); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
   // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#aptos-testnet
@@ -120,21 +120,20 @@ setTimeout(() => {
 
 [This example](./src/examples/AptosRelay.ts) shows how to update prices on an Aptos network. It does the following:
 
-1. Fetches update data from the Price Service for the given price feeds.
+1. Fetches update data from Hermes for the given price feeds.
 2. Calls the Pyth Aptos contract with the update data.
 
 You can run this example with `npm run example-relay`. A full command that updates BTC and ETH prices on the BNB Chain testnet network looks like this:
 
 ```bash
 export APTOS_KEY = "0x...";
-npm run example-relay -- --endpoint https://xc-testnet.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6 --full-node https://fullnode.testnet.aptoslabs.com/v1 --pyth-contract 0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541
+npm run example-relay -- \
+  --endpoint https://hermes-beta.pyth.network \
+  --full-node https://fullnode.testnet.aptoslabs.com/v1 \
+  --pyth-contract 0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541 \
+  --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
 ```
 
-## Price Service endpoints
+## Hermes endpoints
 
-We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
-
-| Aptos Network | Price Service URL               |
-| ------------- | ------------------------------- |
-| Testnet       | https://xc-testnet.pyth.network |
-| Mainnet       | https://xc-mainnet.pyth.network |
+Please find the list of public Hermes endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).

@@ -21,14 +21,14 @@ $ yarn add @pythnetwork/pyth-sui-js
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
 See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
 Typically, to use Pyth prices on chain,
-they must be fetched from an off-chain price service. The `SuiPriceServiceConnection` class can be used to interact with these services,
+they must be fetched from an off-chain Hermes instance. The `SuiPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
 Pyth prices and submit them to the network:
 
 ```typescript
 const connection = new SuiPriceServiceConnection(
   "https://hermes-beta.pyth.network"
-); // See Price Service endpoints section below for other endpoints
+); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
   // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#sui-testnet
@@ -99,7 +99,7 @@ Now in your contract you can consume the price by calling `pyth::get_price` or o
 
 [This example](./src/examples/SuiRelay.ts) shows how to update prices on an Sui network. It does the following:
 
-1. Fetches update data from the Price Service for the given price feeds.
+1. Fetches update data from Hermes for the given price feeds.
 2. Calls the Pyth Sui contract with the update data.
 
 You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
@@ -148,4 +148,6 @@ setTimeout(() => {
 }, 60000);
 ```
 
-## [Price Service endpoints](https://docs.pyth.network/documentation/pythnet-price-feeds/price-service#public-endpoints)
+## Hermes endpoints
+
+You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).

@@ -85,7 +85,7 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
 
 # For Aptos
 npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
-    --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 --price-service-endpoint "https://xc-testnet.pyth.network" \
+    --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 --price-service-endpoint "https://hermes-beta.pyth.network" \
     --price-config-file "./price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
@@ -99,7 +99,7 @@ npm run start -- sui \
   --wormhole-package-id 0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e \
   --wormhole-state-id 0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02 \
   --price-feed-to-price-info-object-table-id 0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5 \
-  --price-service-endpoint https://xc-testnet.pyth.network \
+  --price-service-endpoint https://hermes-beta.pyth.network \
   --mnemonic-file ./mnemonic \
   --price-config-file ./price-config.testnet.sample.yaml \
   [--pushing-frequency 10] \
@@ -128,7 +128,7 @@ For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the f
 
 ```sh
 npm run dev -- evm --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
-    --pyth-contract-address 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C --price-service-endpoint https://xc-testnet.pyth.network \
+    --pyth-contract-address 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C --price-service-endpoint https://hermes-beta.pyth.network \
     --mnemonic-file "./mnemonic" --price-config-file "./price-config.testnet.sample.yaml"
 ```
 

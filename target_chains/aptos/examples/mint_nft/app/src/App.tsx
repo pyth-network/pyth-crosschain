@@ -7,11 +7,11 @@ import logo from "./logo.svg";
 // Please read https://docs.pyth.network/documentation/pythnet-price-feeds before building on Pyth
 
 // Rpc endpoint
-const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
+const TESTNET_HERMES_ENDPOINT = "https://hermes-beta.pyth.network";
 
 // Connection
 const testnetConnection = new AptosPriceServiceConnection(
-  TESTNET_PRICE_SERVICE
+  TESTNET_HERMES_ENDPOINT
 ); // Price service client used to retrieve the offchain VAAs to update the onchain price
 
 // Price id : this is not an aptos account but instead an opaque identifier for each price https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet

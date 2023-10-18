@@ -5,39 +5,25 @@ Pyth Crosschain.
 
 Within this monorepo you will find the following subprojects:
 
-## Wormhole Attester
-
-> wormhole_attester
-
-The main Pyth implementation currently exists as an [on-chain contract][] on
-Pythnet, a separate instance of the Solana blockchain. In order to expose
-these prices cross-chain, the Wormhole Attester contract acts as a sender for Pyth prices. At regular intervals the Pyth
-contract will observe the current Pyth price for selected products, and produce
-an attestation which is then relayed over Wormhole to be consumed by the
-various receiver contracts.
-
-[on-chain contract]: https://github.com/pyth-network/pyth-client
-
 ## Target Chains
 
-> target_chains
+> [target_chains](./target_chains/)
 
 This directory contains on-chain contracts and SDKs for all of the various
 blockchain runtimes that Pyth supports. Each subdirectory corresponds to a
 blockchain runtime. Inside each subdirectory, there are subfolders for
 contracts, SDKs, and examples.
 
-## Price Service
+## Hermes
 
-> price_service
+> [hermes](./hermes/)
 
-The Price Service is an off-chain service which constantly observes the
-Wormhole network watching for price attestations emitted from the Pyth
-contract. It exposes all observed attestations via a public API over HTTPS/WSS
-which can be consumed by client-side applications that wish to use Pyth pricing
-data.
+Hermes is an off-chain service which constantly observes Pythnet and the
+Wormhole network watching for price updates emitted from the Pyth contract. It
+exposes all observed attestations via a public API over HTTPS/WSS which can be
+consumed by client-side applications that wish to use Pyth pricing data.
 
-The `client` subdirectory provides an SDK for interacting with the price service.
+The [`price_service/client`](./price_service/client/) directory provides an SDK for interacting with Hermes.
 However, most users will interact with the price service via a chain-specific SDK
 
 For a guide on utilising this service in your project, see the chain-specific SDK

@@ -19,7 +19,7 @@ export function OrderEntry(props: {
   approxPrice: number | undefined;
   baseToken: TokenConfig;
   quoteToken: TokenConfig;
-  priceServiceUrl: string;
+  hermesUrl: string;
   pythContractAddress: string;
   swapContractAddress: string;
 }) {
@@ -156,7 +156,7 @@ export function OrderEntry(props: {
               onClick={async () => {
                 await sendSwapTx(
                   props.web3!,
-                  props.priceServiceUrl,
+                  props.hermesUrl,
                   props.baseToken.pythPriceFeedId,
                   props.quoteToken.pythPriceFeedId,
                   props.pythContractAddress,
@@ -180,7 +180,7 @@ export function OrderEntry(props: {
 
 async function sendSwapTx(
   web3: Web3,
-  priceServiceUrl: string,
+  hermesUrl: string,
   baseTokenPriceFeedId: string,
   quoteTokenPriceFeedId: string,
   pythContractAddress: string,
@@ -189,7 +189,7 @@ async function sendSwapTx(
   qtyWei: BigNumber,
   isBuy: boolean
 ) {
-  const pythPriceService = new EvmPriceServiceConnection(priceServiceUrl);
+  const pythPriceService = new EvmPriceServiceConnection(hermesUrl);
   const priceFeedUpdateData = await pythPriceService.getPriceFeedsUpdateData([
     baseTokenPriceFeedId,
     quoteTokenPriceFeedId,
