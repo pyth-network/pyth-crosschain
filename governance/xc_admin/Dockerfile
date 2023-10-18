@@ -1,4 +1,4 @@
-# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+# Defined in Dockerfile.lerna
 FROM lerna
 
 USER root

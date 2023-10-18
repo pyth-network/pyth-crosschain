@@ -37,7 +37,7 @@ jobs:
         env:
           AWS_REGION: us-east-1
       - run: |
-          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f third_party/pyth/Dockerfile.p2w-attest .
+          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f wormhole-attester/client/Dockerfile.p2w-attest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: public.ecr.aws
