@@ -1,6 +1,6 @@
 use {
     crate::{
-        ethereum::PythContract,
+        ethereum::SignablePythContract,
         state::HashChainState,
     },
     axum::{
@@ -37,7 +37,7 @@ pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,
     /// The EVM contract where the protocol is running.
-    pub contract:         Arc<PythContract>,
+    pub contract:         Arc<SignablePythContract>,
     /// The EVM address of the provider that this server is operating for.
     pub provider_address: Address,
 }

@@ -1,5 +1,8 @@
 use {
-    crate::config::EthereumOptions,
+    crate::{
+        api::ChainId,
+        config::ConfigOptions,
+    },
     anyhow::anyhow,
     ethers::{
         abi::RawLog,
@@ -33,23 +36,27 @@ use {
 // contract in the same repo.
 abigen!(PythRandom, "src/abi.json");
 
-pub type PythContract = PythRandom<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type SignablePythContract = PythRandom<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type PythContract = PythRandom<Provider<Http>>;
 
-impl PythContract {
-    // TODO: this method requires a private key to instantiate the contract. This key
-    // shouldn't be required for read-only uses (e.g., when the server is running).
-    pub async fn from_opts(opts: &EthereumOptions) -> Result<PythContract, Box<dyn Error>> {
-        let provider = Provider::<Http>::try_from(&opts.geth_rpc_addr)?;
+impl SignablePythContract {
+    pub async fn from_opts(
+        opts: &ConfigOptions,
+        chain_id: &ChainId,
+        private_key: &str,
+    ) -> Result<SignablePythContract, Box<dyn Error>> {
+        let chain_config = opts.load()?.get_chain_config(chain_id)?;
+        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-        let wallet__ = opts
-            .private_key
+
+        let wallet__ = private_key
             .clone()
             .ok_or(anyhow!("No private key specified"))?
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
 
         Ok(PythRandom::new(
-            opts.contract_addr,
+            chain_config.contract_addr,
             Arc::new(SignerMiddleware::new(provider, wallet__)),
         ))
     }
@@ -119,5 +126,21 @@ impl PythContract {
         } else {
             Err(anyhow!("Request failed").into())
         }
+    }
+}
+
+impl PythContract {
+    pub async fn from_opts(
+        opts: &ConfigOptions,
+        chain_id: &ChainId,
+    ) -> Result<PythContract, Box<dyn Error>> {
+        let chain_config = opts.load()?.get_chain_config(chain_id)?;
+        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        let chain_id = provider.get_chainid().await?;
+
+        Ok(PythRandom::new(
+            chain_config.contract_addr,
+            Arc::new(provider),
+        ))
     }
 }

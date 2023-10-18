@@ -1,7 +1,10 @@
 use {
-    crate::config::{
-        EthereumOptions,
-        RandomnessOptions,
+    crate::{
+        api::ChainId,
+        config::{
+            ConfigOptions,
+            RandomnessOptions,
+        },
     },
     clap::Args,
     ethers::types::Address,
@@ -12,10 +15,18 @@ use {
 #[group(id = "RequestRandomness")]
 pub struct RequestRandomnessOptions {
     #[command(flatten)]
-    pub ethereum: EthereumOptions,
+    pub config: ConfigOptions,
 
-    #[command(flatten)]
-    pub randomness: RandomnessOptions,
+    /// Request randomness on this blockchain.
+    #[arg(long = "chain-id")]
+    #[arg(env = "PYTH_CHAIN_ID")]
+    pub chain_id: ChainId,
+
+    /// A 20-byte (40 char) hex encoded Ethereum private key.
+    /// This key is required to submit transactions (such as registering with the contract).
+    #[arg(long = "private-key")]
+    #[arg(env = "PRIVATE_KEY")]
+    pub private_key: String,
 
     /// Submit a randomness request to this provider
     #[arg(long = "provider")]

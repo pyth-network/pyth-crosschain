@@ -1,4 +1,5 @@
 use {
+    anyhow::anyhow,
     clap::{
         crate_authors,
         crate_description,
@@ -8,6 +9,10 @@ use {
         Parser,
     },
     ethers::types::Address,
+    std::{
+        error::Error,
+        fs,
+    },
 };
 
 
@@ -17,6 +22,7 @@ mod register_provider;
 mod request_randomness;
 mod run;
 
+use crate::api::ChainId;
 pub use {
     generate::GenerateOptions,
     get_request::GetRequestOptions,
@@ -51,27 +57,26 @@ pub enum Options {
 }
 
 #[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Ethereum Options")]
-#[group(id = "Ethereum")]
-pub struct EthereumOptions {
-    /// A 20-byte (40 char) hex encoded Ethereum private key.
-    /// This key is required to submit transactions (such as registering with the contract).
-    #[arg(long = "private-key")]
-    #[arg(env = "PRIVATE_KEY")]
-    #[arg(default_value = None)]
-    pub private_key: Option<String>,
+#[command(next_help_heading = "Config Options")]
+#[group(id = "Config")]
+pub struct ConfigOptions {
+    /// A secret used for generating new hash chains. A 64-char hex string.
+    #[arg(long = "config")]
+    #[arg(env = "PYTH_CONFIG")]
+    #[arg(default_value = "config.yaml")]
+    pub config: String,
+}
 
-    /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
-    #[arg(long = "geth-rpc-addr")]
-    #[arg(env = "GETH_RPC_ADDR")]
-    #[arg(default_value = "https://goerli.optimism.io")]
-    pub geth_rpc_addr: String,
+impl ConfigOptions {
+    pub fn load(&self) -> Result<Config, Box<dyn Error>> {
+        // Open and read the YAML file
+        let yaml_content = fs::read_to_string(&self.config)?;
+        let config: Config = serde_yaml::from_str(&yaml_content)?;
 
-    /// Address of a Pyth Randomness contract to interact with.
-    #[arg(long = "pyth-contract-addr")]
-    #[arg(env = "PYTH_CONTRACT_ADDR")]
-    #[arg(default_value = "0x28F16Af4D87523910b843a801454AEde5F9B0459")]
-    pub contract_addr: Address,
+        config.check_is_valid()?;
+
+        Ok(config)
+    }
 }
 
 #[derive(Args, Clone, Debug)]
@@ -89,4 +94,39 @@ pub struct RandomnessOptions {
     #[arg(env = "PYTH_CHAIN_LENGTH")]
     #[arg(default_value = "32")]
     pub chain_length: u64,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Config {
+    pub chains: Vec<EthereumConfig>,
+}
+
+impl Config {
+    pub fn check_is_valid(&self) -> Result<(), Box<dyn Error>> {
+        // TODO: check that chain ids are unique
+        Ok(())
+    }
+
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<&EthereumConfig, Box<dyn Error>> {
+        self.chains.iter().find(|x| x.chain_id == chain_id).ok_or(
+            anyhow!(format!(
+                "Could not find chain_id {} in the configuration file",
+                &chain_id
+            ))
+            .into(),
+        )
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct EthereumConfig {
+    /// A unique identifier for the chain. Endpoints of this server require users to pass
+    /// this value to identify which blockchain they are operating on.
+    pub chain_id: ChainId,
+
+    /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
+    pub geth_rpc_addr: String,
+
+    /// Address of a Pyth Randomness contract to interact with.
+    pub contract_addr: Address,
 }
