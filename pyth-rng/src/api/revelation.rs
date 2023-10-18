@@ -25,10 +25,10 @@ use {
 /// This endpoint will not return the random value unless someone has requested the sequence number on-chain.
 ///
 /// Every blockchain supported by this service has a distinct sequence of random numbers and chain_id.
-/// Callers should pass the
+/// Callers must pass the appropriate chain_id to ensure they fetch the correct random number.
 #[utoipa::path(
 get,
-path = "/v1/revelation/{chain_id}/{sequence}",
+path = "/v1/chains/{chain_id}/revelations/{sequence}",
 responses(
 (status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
 (status = 403, description = "Random value cannot currently be retrieved", body = String)
@@ -72,6 +72,7 @@ pub async fn revelation(
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Path)]
 pub struct GetRandomValueQueryParams {
+    #[param(value_type = String)]
     pub chain_id: ChainId,
     pub sequence: u64,
 }

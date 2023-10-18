@@ -35,10 +35,11 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     #[openapi(
     paths(
     crate::api::revelation,
+    crate::api::chain_ids,
     ),
     components(
     schemas(
-    crate::api::GetRandomValueResponse
+    crate::api::GetRandomValueResponse,
     )
     ),
     tags(
@@ -97,7 +98,11 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(api::index))
-        .route("/v1/revelation/:chain_id/:sequence", get(api::revelation))
+        .route("/v1/chains", get(api::chain_ids))
+        .route(
+            "/v1/chains/:chain_id/revelations/:sequence",
+            get(api::revelation),
+        )
         .with_state(api_state)
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());

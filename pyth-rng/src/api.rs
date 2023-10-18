@@ -15,12 +15,15 @@ use {
         collections::HashMap,
         sync::Arc,
     },
+    utoipa::ToSchema,
 };
 pub use {
+    chain_ids::*,
     index::*,
     revelation::*,
 };
 
+mod chain_ids;
 mod index;
 mod revelation;
 
