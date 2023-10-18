@@ -5,7 +5,7 @@ use {
             Config,
             RunOptions,
         },
-        ethereum::SignablePythContract,
+        ethereum::PythContract,
         state::{
             HashChainState,
             PebbleHashChain,
@@ -47,8 +47,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-
-    let contract = Arc::new(SignablePythContract::from_opts(&opts.config, &opts.chain_id).await?);
+    let contract = Arc::new(PythContract::from_opts(&opts.config, &opts.chain_id).await?);
     let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
     // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.

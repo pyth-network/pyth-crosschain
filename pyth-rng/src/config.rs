@@ -107,14 +107,18 @@ impl Config {
         Ok(())
     }
 
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<&EthereumConfig, Box<dyn Error>> {
-        self.chains.iter().find(|x| x.chain_id == chain_id).ok_or(
-            anyhow!(format!(
-                "Could not find chain_id {} in the configuration file",
-                &chain_id
-            ))
-            .into(),
-        )
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig, Box<dyn Error>> {
+        self.chains
+            .iter()
+            .find(|x| x.chain_id == *chain_id)
+            .map(|c| c.clone())
+            .ok_or(
+                anyhow!(format!(
+                    "Could not find chain_id {} in the configuration file",
+                    &chain_id
+                ))
+                .into(),
+            )
     }
 }
 

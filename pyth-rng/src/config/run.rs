@@ -1,7 +1,10 @@
 use {
-    crate::config::{
-        ConfigOptions,
-        RandomnessOptions,
+    crate::{
+        api::ChainId,
+        config::{
+            ConfigOptions,
+            RandomnessOptions,
+        },
     },
     clap::Args,
     ethers::types::Address,
@@ -16,6 +19,12 @@ pub struct RunOptions {
 
     #[command(flatten)]
     pub randomness: RandomnessOptions,
+
+    // FIXME: delete this
+    /// Retrieve a randomness request to this provider
+    #[arg(long = "chain-id")]
+    #[arg(env = "PYTH_CHAIN_ID")]
+    pub chain_id: ChainId,
 
     /// Address and port the HTTP server will bind to.
     #[arg(long = "rpc-listen-addr")]

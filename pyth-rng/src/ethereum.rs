@@ -51,7 +51,6 @@ impl SignablePythContract {
 
         let wallet__ = private_key
             .clone()
-            .ok_or(anyhow!("No private key specified"))?
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
 
