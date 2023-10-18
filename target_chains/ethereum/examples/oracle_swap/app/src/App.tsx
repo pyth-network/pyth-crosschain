@@ -34,7 +34,7 @@ const CONFIG = {
   },
   swapContractAddress: "0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02",
   pythContractAddress: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-  priceServiceUrl: "https://xc-testnet.pyth.network",
+  hermesUrl: "https://hermes-beta.pyth.network",
   mintQty: 100,
 };
 
@@ -98,18 +98,15 @@ function App() {
   useEffect(() => {
     // The Pyth price service client is used to retrieve the current Pyth prices and the price update data that
     // needs to be posted on-chain with each transaction.
-    const pythPriceService = new EvmPriceServiceConnection(
-      CONFIG.priceServiceUrl,
-      {
-        logger: {
-          error: console.error,
-          warn: console.warn,
-          info: () => undefined,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
-      }
-    );
+    const pythPriceService = new EvmPriceServiceConnection(CONFIG.hermesUrl, {
+      logger: {
+        error: console.error,
+        warn: console.warn,
+        info: () => undefined,
+        debug: () => undefined,
+        trace: () => undefined,
+      },
+    });
 
     pythPriceService.subscribePriceFeedUpdates(
       [CONFIG.baseToken.pythPriceFeedId, CONFIG.quoteToken.pythPriceFeedId],
@@ -289,7 +286,7 @@ function App() {
             approxPrice={exchangeRateMeta?.rate}
             baseToken={CONFIG.baseToken}
             quoteToken={CONFIG.quoteToken}
-            priceServiceUrl={CONFIG.priceServiceUrl}
+            hermesUrl={CONFIG.hermesUrl}
             pythContractAddress={CONFIG.pythContractAddress}
             swapContractAddress={CONFIG.swapContractAddress}
           />

@@ -25,7 +25,7 @@ const parser = yargs(hideBin(process.argv))
     },
     endpoint: {
       type: "string",
-      desc: "Price service endpoint to use, defaults to https://xc-mainnet.pyth.network for mainnet and https://xc-testnet.pyth.network for testnet",
+      desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
     },
   });
 
@@ -40,8 +40,8 @@ async function main() {
     );
   }
   const defaultEndpoint = contract.getChain().isMainnet()
-    ? "https://xc-mainnet.pyth.network"
-    : "https://xc-testnet.pyth.network";
+    ? "https://hermes.pyth.network"
+    : "https://hermes-beta.pyth.network";
   const priceService = new PriceServiceConnection(
     argv.endpoint || defaultEndpoint
   );

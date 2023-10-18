@@ -1,8 +1,8 @@
 # Price Service Client
 
 [Pyth Network](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities.
-These prices are available either via HTTP or WebSocket from Pyth's [price service](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/server).
-This library is a client for interacting with the price service, allowing your application to consume Pyth real-time prices in on- and off-chain Javascript/Typescript applications.
+These prices are available either via HTTP or WebSocket from [Hermes](https://github.com/pyth-network/pyth-crosschain/tree/main/hermes).
+This library is a client for interacting with Hermes, allowing your application to consume Pyth real-time prices in on- and off-chain Javascript/Typescript applications.
 
 ## Installation
 
@@ -24,7 +24,7 @@ Typical usage of the connection is along the following lines:
 
 ```typescript
 const connection = new PriceServiceConnection(
-  "https://xc-testnet.pyth.network",
+  "https://hermes-beta.pyth.network",
   {
     priceFeedRequestConfig: {
       // Provide this option to retrieve signed price updates for on-chain contracts.
@@ -32,7 +32,7 @@ const connection = new PriceServiceConnection(
       binary: true,
     },
   }
-); // See Price Service endpoints section below for other endpoints
+); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
   // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
@@ -67,7 +67,7 @@ setTimeout(() => {
 
 ### On-chain Applications
 
-On-chain applications will need to submit the price updates returned by the price service to the Pyth contract on their blockchain.
+On-chain applications will need to submit the price updates returned by Hermes to the Pyth contract on their blockchain.
 These applications should pass the `binary: true` option to the constructor as shown above, to ensure that all methods on `PriceServiceConnection` return the required information.
 This option will add a `vaa` field to `PriceFeed` that represents a signed price update.
 The `vaa` is a binary blob serialized as a base64 string.
@@ -80,14 +80,9 @@ You can run it with `npm run example`.
 A full command that prints BTC and ETH price feeds, in the testnet network, looks like so:
 
 ```bash
-npm run example -- --endpoint https://xc-testnet.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
+npm run example -- --endpoint https://hermes-beta.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
 ```
 
-## Price Service endpoints
+## Hermes endpoints
 
-Public endpoints for the Price Service are provided for both mainnet and testnet. These can be used regardless of which network you deploy your own contracts to as long as it is a Pyth supported network. For example, you can use the testnet Price Service whether you are deploying your contract to the BNB or Polygon testnet.
-
-| network | url                             |
-| ------- | ------------------------------- |
-| mainnet | https://xc-mainnet.pyth.network |
-| testnet | https://xc-testnet.pyth.network |
+You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).

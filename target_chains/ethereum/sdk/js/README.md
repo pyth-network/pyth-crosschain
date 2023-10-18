@@ -20,14 +20,14 @@ $ yarn add @pythnetwork/pyth-evm-js
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
 See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach. In order to use Pyth prices on chain,
-they must be fetched from an off-chain price service. The `EvmPriceServiceConnection` class can be used to interact with these services,
+they must be fetched from an off-chain Hermes instance. The `EvmPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
 Pyth prices and submit them to the network:
 
 ```typescript
 const connection = new EvmPriceServiceConnection(
-  "https://xc-testnet.pyth.network"
-); // See Price Service endpoints section below for other endpoints
+  "https://hermes-beta.pyth.network"
+); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
   // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
@@ -133,7 +133,7 @@ There are two examples in [examples](./src/examples/).
 [This example](./src/examples/EvmPriceServiceClient.ts) fetches `PriceFeed` updates using both a HTTP-request API and a streaming websocket API. You can run it with `npm run example-client`. A full command that prints BTC and ETH price feeds, in the testnet network, looks like so:
 
 ```bash
-npm run example-client -- --endpoint https://xc-testnet.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
+npm run example-client -- --endpoint https://hermes-beta.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
 ```
 
 #### EvmRelay
@@ -151,17 +151,12 @@ npm run example-relay -- \
   --network "https://data-seed-prebsc-1-s1.binance.org:8545" \
   --pyth-contract "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"\
   --mnemonic "my good mnemonic" \
-  --endpoint https://xc-testnet.pyth.network \
+  --endpoint https://hermes-beta.pyth.network \
   --price-ids \
     "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b" \
     "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"
 ```
 
-## Price Service endpoints
+## Hermes endpoints
 
-Public endpoints for the Price Service are provided for both mainnet and testnet. These can be used regardless of which network you deploy your own contracts to as long as it is a Pyth supported network. For example, you can use the testnet Price Service whether you are deploying your contract to the BNB or Polygon testnet.
-
-| network | url                             |
-| ------- | ------------------------------- |
-| mainnet | https://xc-mainnet.pyth.network |
-| testnet | https://xc-testnet.pyth.network |
+You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
