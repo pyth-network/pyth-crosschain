@@ -13,7 +13,11 @@ use {
 /// Run the entire random number generation protocol to produce a random number.
 pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let contract = Arc::new(
-        SignablePythContract::from_opts(&opts.config, &opts.chain_id, &opts.private_key).await?,
+        SignablePythContract::from_config(
+            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &opts.private_key,
+        )
+        .await?,
     );
 
     let user_randomness = rand::random::<[u8; 32]>();
@@ -32,7 +36,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let client = reqwest::Client::new();
     let request_url = client
         .get(opts.url.join(&format!(
-            "/v1/revelation/{}/{}",
+            "/v1/chains/{}/revelations/{}",
             opts.chain_id, sequence_number
         ))?)
         .build()?;

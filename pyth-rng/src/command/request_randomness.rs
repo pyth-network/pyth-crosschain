@@ -11,7 +11,11 @@ use {
 
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), Box<dyn Error>> {
     let contract = Arc::new(
-        SignablePythContract::from_opts(&opts.config, &opts.chain_id, &opts.private_key).await?,
+        SignablePythContract::from_config(
+            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &opts.private_key,
+        )
+        .await?,
     );
 
     let user_randomness = rand::random::<[u8; 32]>();

@@ -15,7 +15,11 @@ use {
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(
-        SignablePythContract::from_opts(&opts.config, &opts.chain_id, &opts.private_key).await?,
+        SignablePythContract::from_config(
+            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &opts.private_key,
+        )
+        .await?,
     );
 
     // Create a new random hash chain.

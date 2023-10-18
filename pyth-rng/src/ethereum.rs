@@ -43,12 +43,10 @@ pub type SignablePythContract = PythRandom<SignerMiddleware<Provider<Http>, Loca
 pub type PythContract = PythRandom<Provider<Http>>;
 
 impl SignablePythContract {
-    pub async fn from_opts(
-        opts: &ConfigOptions,
-        chain_id: &ChainId,
+    pub async fn from_config(
+        chain_config: &EthereumConfig,
         private_key: &str,
     ) -> Result<SignablePythContract, Box<dyn Error>> {
-        let chain_config = opts.load()?.get_chain_config(chain_id)?;
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
