@@ -70,9 +70,12 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         if chain_state.reveal(provider_info.original_commitment_sequence_number)?
             != provider_info.original_commitment
         {
-            return Err(anyhow!("The root of the generated hash chain does not match the commitment. Is the secret configured correctly?").into());
+            return Err(anyhow!(format!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_config.chain_id)).into());
         } else {
-            println!("Root of chain matches commitment");
+            println!(
+                "Root of chain id {} matches commitment",
+                &chain_config.chain_id
+            );
         }
 
         let state = api::BlockchainState {
@@ -81,7 +84,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
             provider_address: opts.provider,
         };
 
-        chains.insert(chain_config.chain_id, state);
+        chains.insert(chain_config.chain_id.clone(), state);
     }
 
     let api_state = api::ApiState {

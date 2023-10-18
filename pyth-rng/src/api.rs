@@ -24,8 +24,7 @@ pub use {
 mod index;
 mod revelation;
 
-// TODO: maybe this should be a string?
-pub type ChainId = u64;
+pub type ChainId = String;
 
 #[derive(Clone)]
 pub struct ApiState {

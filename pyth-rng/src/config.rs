@@ -10,6 +10,10 @@ use {
     },
     ethers::types::Address,
     std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
         error::Error,
         fs,
     },
@@ -103,8 +107,26 @@ pub struct Config {
 
 impl Config {
     pub fn check_is_valid(&self) -> Result<(), Box<dyn Error>> {
-        // TODO: check that chain ids are unique
-        Ok(())
+        let counts: HashMap<_, _> = self.chains.iter().fold(HashMap::new(), |mut map, s| {
+            *map.entry(s.chain_id.clone()).or_insert(0) += 1;
+            map
+        });
+
+        let duplicates: Vec<_> = counts
+            .iter()
+            .filter(|&(_, &c)| c > 1)
+            .map(|(id, _)| id.clone())
+            .collect();
+
+        if duplicates.len() > 0 {
+            Err(anyhow!(format!(
+                "Config has duplicated chain ids: {}",
+                duplicates.join(",")
+            ))
+            .into())
+        } else {
+            Ok(())
+        }
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig, Box<dyn Error>> {
@@ -114,7 +136,7 @@ impl Config {
             .map(|c| c.clone())
             .ok_or(
                 anyhow!(format!(
-                    "Could not find chain_id {} in the configuration file",
+                    "Could not find chain id {} in the configuration file",
                     &chain_id
                 ))
                 .into(),
