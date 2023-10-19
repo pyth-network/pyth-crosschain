@@ -6,13 +6,13 @@ use {
             UnixTimestamp,
         },
         api::{
+            doc_examples,
             rest::RestError,
             types::{
                 PriceIdInput,
                 RpcPriceFeed,
             },
         },
-        doc_examples,
     },
     anyhow::Result,
     axum::{

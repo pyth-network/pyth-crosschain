@@ -27,6 +27,7 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
+mod doc_examples;
 mod metrics_middleware;
 mod rest;
 mod types;

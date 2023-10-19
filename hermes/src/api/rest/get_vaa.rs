@@ -7,10 +7,10 @@ use {
             UnixTimestamp,
         },
         api::{
+            doc_examples,
             rest::RestError,
             types::PriceIdInput,
         },
-        doc_examples,
     },
     anyhow::Result,
     axum::{
