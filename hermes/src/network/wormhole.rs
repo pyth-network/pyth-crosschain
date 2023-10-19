@@ -160,6 +160,9 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     }
+
+    tracing::info!("Shutting down Wormhole gRPC service...");
+
     Ok(())
 }
 
