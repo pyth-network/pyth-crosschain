@@ -12,6 +12,6 @@ pub struct Options {
     /// Address and port the RPC server will bind to.
     #[arg(long = "metrics-server-listen-addr")]
     #[arg(default_value = DEFAULT_METRICS_SERVER_LISTEN_ADDR)]
-    #[arg(env = "METRICS_LISTEN_ADDR")]
+    #[arg(env = "METRICS_SERVER_LISTEN_ADDR")]
     pub server_listen_addr: SocketAddr,
 }
