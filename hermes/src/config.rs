@@ -8,6 +8,7 @@ use clap::{
 };
 
 mod benchmarks;
+mod metrics;
 mod pythnet;
 mod rpc;
 mod wormhole;
@@ -44,6 +45,10 @@ pub struct RunOptions {
     /// Benchmarks Options
     #[command(flatten)]
     pub benchmarks: benchmarks::Options,
+
+    /// Metrics Options
+    #[command(flatten)]
+    pub metrics: metrics::Options,
 }
 
 #[derive(Args, Clone, Debug)]

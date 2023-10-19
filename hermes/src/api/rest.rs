@@ -17,7 +17,6 @@ mod index;
 mod latest_price_feeds;
 mod latest_vaas;
 mod live;
-mod metrics;
 mod price_feed_ids;
 mod ready;
 
@@ -29,7 +28,6 @@ pub use {
     latest_price_feeds::*,
     latest_vaas::*,
     live::*,
-    metrics::*,
     price_feed_ids::*,
     ready::*,
 };
