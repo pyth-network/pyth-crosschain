@@ -93,7 +93,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load(path: &str) -> Result<Config, Box<dyn Error>> {
+    pub fn load(path: &str) -> Result<Config> {
         // Open and read the YAML file
         // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;

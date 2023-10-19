@@ -42,7 +42,7 @@ pub async fn revelation(
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
-        .counter
+        .request_counter
         .get_or_create(&Label {
             value: "/v1/chains/{chain_id}/revelations/{sequence}".to_string(),
         })

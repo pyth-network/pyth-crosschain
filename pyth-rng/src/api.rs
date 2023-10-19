@@ -65,8 +65,9 @@ pub struct BlockchainState {
 }
 
 pub struct Metrics {
-    pub registry: RwLock<Registry>,
-    pub counter:  Family<Label, Counter>,
+    pub registry:        RwLock<Registry>,
+    // TODO: track useful metrics. this counter is just a placeholder to get things set up.
+    pub request_counter: Family<Label, Counter>,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
@@ -89,8 +90,8 @@ impl Metrics {
         );
 
         Metrics {
-            registry: RwLock::new(metrics_registry),
-            counter:  http_requests,
+            registry:        RwLock::new(metrics_registry),
+            request_counter: http_requests,
         }
     }
 }
