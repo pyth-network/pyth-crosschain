@@ -1,6 +1,6 @@
 use {
     crate::config::{
-        EthereumOptions,
+        ConfigOptions,
         RandomnessOptions,
     },
     clap::Args,
@@ -12,7 +12,7 @@ use {
 #[derive(Args, Clone, Debug)]
 pub struct RunOptions {
     #[command(flatten)]
-    pub ethereum: EthereumOptions,
+    pub config: ConfigOptions,
 
     #[command(flatten)]
     pub randomness: RandomnessOptions,

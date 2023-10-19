@@ -1,7 +1,10 @@
 use {
     crate::{
-        config::RegisterProviderOptions,
-        ethereum::PythContract,
+        config::{
+            Config,
+            RegisterProviderOptions,
+        },
+        ethereum::SignablePythContract,
         state::PebbleHashChain,
     },
     std::{
@@ -14,11 +17,17 @@ use {
 /// hash chain from the configured secret & a newly generated random value.
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
+    let contract = Arc::new(
+        SignablePythContract::from_config(
+            &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
+            &opts.private_key,
+        )
+        .await?,
+    );
 
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
-    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+    let mut chain = PebbleHashChain::from_config(&opts.randomness, &opts.chain_id, random)?;
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = opts.fee;

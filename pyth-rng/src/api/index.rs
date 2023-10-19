@@ -7,5 +7,5 @@ use axum::{
 ///
 /// TODO: Dynamically generate this list if possible.
 pub async fn index() -> impl IntoResponse {
-    Json(["/v1/revelation"])
+    Json(["/v1/chains", "/v1/chains/:chain_id/revelations/:sequence"])
 }
