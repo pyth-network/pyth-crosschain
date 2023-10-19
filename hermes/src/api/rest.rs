@@ -15,6 +15,7 @@ mod get_vaa;
 mod get_vaa_ccip;
 mod index;
 mod latest_price_feeds;
+mod latest_twap_updates;
 mod latest_vaas;
 mod live;
 mod price_feed_ids;
@@ -26,6 +27,7 @@ pub use {
     get_vaa_ccip::*,
     index::*,
     latest_price_feeds::*,
+    latest_twap_updates::*,
     latest_vaas::*,
     live::*,
     price_feed_ids::*,
