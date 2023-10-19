@@ -19,6 +19,7 @@ use {
 mod aggregate;
 mod api;
 mod config;
+mod metrics_server;
 mod network;
 mod serde;
 mod state;
@@ -61,6 +62,7 @@ async fn init() -> Result<()> {
             let tasks = join_all([
                 Box::pin(spawn(network::wormhole::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(network::pythnet::spawn(opts.clone(), store.clone()))),
+                Box::pin(spawn(metrics_server::run(opts.clone(), store.clone()))),
                 Box::pin(spawn(api::spawn(opts.clone(), store.clone(), update_rx))),
             ])
             .await;
