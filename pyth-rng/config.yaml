@@ -1,4 +1,4 @@
 chains:
-  - chain_id: "optimism-goerli"
+  optimism-goerli:
     geth_rpc_addr: https://goerli.optimism.io
     contract_addr: 0x28F16Af4D87523910b843a801454AEde5F9B0459

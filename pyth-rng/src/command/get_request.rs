@@ -1,6 +1,9 @@
 use {
     crate::{
-        config::GetRequestOptions,
+        config::{
+            Config,
+            GetRequestOptions,
+        },
         ethereum::PythContract,
     },
     std::{
@@ -13,7 +16,7 @@ use {
 pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(PythContract::from_config(
-        &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+        &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
     )?);
 
     let r = contract

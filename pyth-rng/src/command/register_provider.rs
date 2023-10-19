@@ -1,6 +1,9 @@
 use {
     crate::{
-        config::RegisterProviderOptions,
+        config::{
+            Config,
+            RegisterProviderOptions,
+        },
         ethereum::SignablePythContract,
         state::PebbleHashChain,
     },
@@ -16,7 +19,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(
         SignablePythContract::from_config(
-            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
             &opts.private_key,
         )
         .await?,

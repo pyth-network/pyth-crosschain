@@ -1,6 +1,9 @@
 use {
     crate::{
-        config::RequestRandomnessOptions,
+        config::{
+            Config,
+            RequestRandomnessOptions,
+        },
         ethereum::SignablePythContract,
     },
     std::{
@@ -12,7 +15,7 @@ use {
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), Box<dyn Error>> {
     let contract = Arc::new(
         SignablePythContract::from_config(
-            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
             &opts.private_key,
         )
         .await?,

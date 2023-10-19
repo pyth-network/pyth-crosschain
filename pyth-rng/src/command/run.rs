@@ -1,7 +1,10 @@
 use {
     crate::{
         api,
-        config::RunOptions,
+        config::{
+            Config,
+            RunOptions,
+        },
         ethereum::PythContract,
         state::{
             HashChainState,
@@ -44,10 +47,10 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-    let config = opts.config.load()?;
+    let config = Config::load(&opts.config.config)?;
 
     let mut chains = HashMap::new();
-    for chain_config in &config.chains {
+    for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
@@ -59,8 +62,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
         // later when a user request comes in for that chain.
         let random: [u8; 32] = provider_info.commitment_metadata;
-        let hash_chain =
-            PebbleHashChain::from_config(&opts.randomness, &chain_config.chain_id, random)?;
+        let hash_chain = PebbleHashChain::from_config(&opts.randomness, &chain_id, random)?;
         let chain_state = HashChainState {
             offsets:     vec![provider_info
                 .original_commitment_sequence_number
@@ -71,12 +73,9 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         if chain_state.reveal(provider_info.original_commitment_sequence_number)?
             != provider_info.original_commitment
         {
-            return Err(anyhow!(format!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_config.chain_id)).into());
+            return Err(anyhow!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_id).into());
         } else {
-            println!(
-                "Root of chain id {} matches commitment",
-                &chain_config.chain_id
-            );
+            println!("Root of chain id {} matches commitment", &chain_id);
         }
 
         let state = api::BlockchainState {
@@ -85,7 +84,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
             provider_address: opts.provider,
         };
 
-        chains.insert(chain_config.chain_id.clone(), state);
+        chains.insert(chain_id.clone(), state);
     }
 
     let api_state = api::ApiState {

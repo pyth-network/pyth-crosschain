@@ -60,23 +60,11 @@ pub enum Options {
 #[command(next_help_heading = "Config Options")]
 #[group(id = "Config")]
 pub struct ConfigOptions {
-    /// A secret used for generating new hash chains. A 64-char hex string.
+    /// Path to a configuration file containing the list of supported blockchains
     #[arg(long = "config")]
     #[arg(env = "PYTH_CONFIG")]
     #[arg(default_value = "config.yaml")]
     pub config: String,
-}
-
-impl ConfigOptions {
-    pub fn load(&self) -> Result<Config, Box<dyn Error>> {
-        // Open and read the YAML file
-        let yaml_content = fs::read_to_string(&self.config)?;
-        let config: Config = serde_yaml::from_str(&yaml_content)?;
-
-        config.check_is_valid()?;
-
-        Ok(config)
-    }
 }
 
 #[derive(Args, Clone, Debug)]
@@ -98,54 +86,30 @@ pub struct RandomnessOptions {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains: Vec<EthereumConfig>,
+    pub chains: HashMap<ChainId, EthereumConfig>,
 }
 
 impl Config {
-    pub fn check_is_valid(&self) -> Result<(), Box<dyn Error>> {
-        let counts: HashMap<_, _> = self.chains.iter().fold(HashMap::new(), |mut map, s| {
-            *map.entry(s.chain_id.clone()).or_insert(0) += 1;
-            map
-        });
-
-        let duplicates: Vec<_> = counts
-            .iter()
-            .filter(|&(_, &c)| c > 1)
-            .map(|(id, _)| id.clone())
-            .collect();
-
-        if duplicates.len() > 0 {
-            Err(anyhow!(format!(
-                "Config has duplicated chain ids: {}",
-                duplicates.join(",")
-            ))
-            .into())
-        } else {
-            Ok(())
-        }
+    pub fn load(path: &str) -> Result<Config, Box<dyn Error>> {
+        // Open and read the YAML file
+        let yaml_content = fs::read_to_string(path)?;
+        let config: Config = serde_yaml::from_str(&yaml_content)?;
+        Ok(config)
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig, Box<dyn Error>> {
-        self.chains
-            .iter()
-            .find(|x| x.chain_id == *chain_id)
-            .map(|c| c.clone())
-            .ok_or(
-                anyhow!(format!(
-                    "Could not find chain id {} in the configuration file",
-                    &chain_id
-                ))
-                .into(),
+        self.chains.get(chain_id).map(|x| x.clone()).ok_or(
+            anyhow!(
+                "Could not find chain id {} in the configuration file",
+                &chain_id
             )
+            .into(),
+        )
     }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EthereumConfig {
-    /// A unique identifier for the chain. Endpoints of this server require users to pass
-    /// this value to identify which blockchain they are operating on.
-    pub chain_id: ChainId,
-
     /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
     pub geth_rpc_addr: String,
 

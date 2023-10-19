@@ -1,7 +1,10 @@
 use {
     crate::{
         api::GetRandomValueResponse,
-        config::GenerateOptions,
+        config::{
+            Config,
+            GenerateOptions,
+        },
         ethereum::SignablePythContract,
     },
     std::{
@@ -14,7 +17,7 @@ use {
 pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let contract = Arc::new(
         SignablePythContract::from_config(
-            &opts.config.load()?.get_chain_config(&opts.chain_id)?,
+            &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
             &opts.private_key,
         )
         .await?,
