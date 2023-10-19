@@ -98,13 +98,10 @@ impl Config {
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig, Box<dyn Error>> {
-        self.chains.get(chain_id).map(|x| x.clone()).ok_or(
-            anyhow!(
-                "Could not find chain id {} in the configuration file",
-                &chain_id
-            )
-            .into(),
-        )
+        self.chains
+            .get(chain_id)
+            .map(|x| x.clone())
+            .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
     }
 }
 
