@@ -1,11 +1,9 @@
 use {
-    crate::{
-        aggregate::{
-            PriceFeedUpdate,
-            Slot,
-            UnixTimestamp,
-        },
-        doc_examples,
+    super::doc_examples,
+    crate::aggregate::{
+        PriceFeedUpdate,
+        Slot,
+        UnixTimestamp,
     },
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,

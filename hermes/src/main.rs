@@ -19,7 +19,6 @@ use {
 mod aggregate;
 mod api;
 mod config;
-mod doc_examples;
 mod network;
 mod serde;
 mod state;
