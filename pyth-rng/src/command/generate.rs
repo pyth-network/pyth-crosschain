@@ -7,6 +7,7 @@ use {
         },
         ethereum::SignablePythContract,
     },
+    anyhow::Result,
     std::{
         error::Error,
         sync::Arc,
@@ -14,7 +15,7 @@ use {
 };
 
 /// Run the entire random number generation protocol to produce a random number.
-pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
+pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     let contract = Arc::new(
         SignablePythContract::from_config(
             &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
@@ -30,7 +31,8 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let sequence_number = contract
         .request_wrapper(&provider, &user_randomness, opts.blockhash)
         .await?;
-    println!(
+
+    tracing::info!(
         "Requested the random number with sequence number {:#?}",
         sequence_number
     );
@@ -44,7 +46,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     .json::<GetRandomValueResponse>()
     .await?;
 
-    println!(
+    tracing::info!(
         "Retrieved the provider's random value. Server response: {:#?}",
         resp
     );
@@ -60,7 +62,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
         )
         .await?;
 
-    println!("Generated random number: {:#?}", random_value);
+    tracing::info!("Generated random number: {:#?}", random_value);
 
     Ok(())
 }

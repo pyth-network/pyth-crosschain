@@ -1,6 +1,7 @@
 use {
     crate::api::{
         ChainId,
+        Label,
         RestError,
     },
     anyhow::Result,
@@ -39,6 +40,14 @@ pub async fn revelation(
     State(state): State<crate::api::ApiState>,
     Path(GetRandomValueQueryParams { chain_id, sequence }): Path<GetRandomValueQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
+    state
+        .metrics
+        .counter
+        .get_or_create(&Label {
+            value: "/v1/chains/{chain_id}/revelations/{sequence}".to_string(),
+        })
+        .inc();
+
     let sequence: u64 = sequence
         .try_into()
         .map_err(|_| RestError::InvalidSequenceNumber)?;

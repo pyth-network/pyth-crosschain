@@ -11,19 +11,37 @@ use {
         },
     },
     ethers::core::types::Address,
+    prometheus_client::{
+        encoding::{
+            EncodeLabelSet,
+            EncodeLabelValue,
+        },
+        metrics::{
+            counter::Counter,
+            family::Family,
+        },
+        registry::Registry,
+    },
     std::{
         collections::HashMap,
         sync::Arc,
     },
+    tokio::sync::RwLock,
 };
 pub use {
     chain_ids::*,
     index::*,
+    live::*,
+    metrics::*,
+    ready::*,
     revelation::*,
 };
 
 mod chain_ids;
 mod index;
+mod live;
+mod metrics;
+mod ready;
 mod revelation;
 
 pub type ChainId = String;
@@ -31,6 +49,9 @@ pub type ChainId = String;
 #[derive(Clone)]
 pub struct ApiState {
     pub chains: Arc<HashMap<ChainId, BlockchainState>>,
+
+    /// Prometheus metrics
+    pub metrics: Arc<Metrics>,
 }
 
 /// The state of the randomness service for a single blockchain.
@@ -41,6 +62,37 @@ pub struct BlockchainState {
     pub contract:         Arc<PythContract>,
     /// The EVM address of the provider that this server is operating for.
     pub provider_address: Address,
+}
+
+pub struct Metrics {
+    pub registry: RwLock<Registry>,
+    pub counter:  Family<Label, Counter>,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub struct Label {
+    value: String,
+}
+
+impl Metrics {
+    pub fn new() -> Self {
+        let mut metrics_registry = Registry::default();
+        let http_requests = Family::<Label, Counter>::default();
+
+        // Register the metric family with the registry.
+        metrics_registry.register(
+            // With the metric name.
+            "http_requests",
+            // And the metric help text.
+            "Number of HTTP requests received",
+            http_requests.clone(),
+        );
+
+        Metrics {
+            registry: RwLock::new(metrics_registry),
+            counter:  http_requests,
+        }
+    }
 }
 
 pub enum RestError {

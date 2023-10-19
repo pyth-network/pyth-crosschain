@@ -1,6 +1,9 @@
 use {
     crate::api::ChainId,
-    anyhow::anyhow,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     clap::{
         crate_authors,
         crate_description,
@@ -92,12 +95,13 @@ pub struct Config {
 impl Config {
     pub fn load(path: &str) -> Result<Config, Box<dyn Error>> {
         // Open and read the YAML file
+        // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;
         let config: Config = serde_yaml::from_str(&yaml_content)?;
         Ok(config)
     }
 
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig, Box<dyn Error>> {
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig> {
         self.chains
             .get(chain_id)
             .map(|x| x.clone())

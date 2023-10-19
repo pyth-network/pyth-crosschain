@@ -7,6 +7,7 @@ use {
         ethereum::SignablePythContract,
         state::PebbleHashChain,
     },
+    anyhow::Result,
     std::{
         error::Error,
         sync::Arc,
@@ -15,7 +16,7 @@ use {
 
 /// Register as a randomness provider. This method will generate and commit to a new random
 /// hash chain from the configured secret & a newly generated random value.
-pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
+pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(
         SignablePythContract::from_config(
@@ -48,7 +49,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
         .await?
         .await?
     {
-        println!("Registered provider: {:?}", r);
+        tracing::info!("Registered provider: {:?}", r);
     }
 
     Ok(())
