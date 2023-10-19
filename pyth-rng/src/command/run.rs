@@ -19,13 +19,10 @@ use {
         routing::get,
         Router,
     },
-    prometheus_client::registry::Registry,
     std::{
         collections::HashMap,
-        error::Error,
         sync::Arc,
     },
-    tokio::sync::RwLock,
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
@@ -89,7 +86,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         chains.insert(chain_id.clone(), state);
     }
 
-    let mut metrics_registry = api::Metrics::new();
+    let metrics_registry = api::Metrics::new();
     let api_state = api::ApiState {
         chains:  Arc::new(chains),
         metrics: Arc::new(metrics_registry),

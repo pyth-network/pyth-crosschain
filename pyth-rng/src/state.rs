@@ -11,7 +11,6 @@ use {
         Digest,
         Keccak256,
     },
-    std::error::Error,
 };
 
 /// A HashChain.

@@ -8,10 +8,7 @@ use {
         ethereum::SignablePythContract,
     },
     anyhow::Result,
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 /// Run the entire random number generation protocol to produce a random number.

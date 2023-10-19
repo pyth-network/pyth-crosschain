@@ -12,10 +12,7 @@ use {
     },
     ethers::core::types::Address,
     prometheus_client::{
-        encoding::{
-            EncodeLabelSet,
-            EncodeLabelValue,
-        },
+        encoding::EncodeLabelSet,
         metrics::{
             counter::Counter,
             family::Family,

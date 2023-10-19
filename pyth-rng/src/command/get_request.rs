@@ -7,10 +7,7 @@ use {
         ethereum::PythContract,
     },
     anyhow::Result,
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 /// Get the on-chain request metadata for a provider and sequence number.

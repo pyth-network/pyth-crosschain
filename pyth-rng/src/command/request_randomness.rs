@@ -7,10 +7,7 @@ use {
         ethereum::SignablePythContract,
     },
     anyhow::Result,
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<()> {

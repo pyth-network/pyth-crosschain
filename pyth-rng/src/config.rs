@@ -15,7 +15,6 @@ use {
     ethers::types::Address,
     std::{
         collections::HashMap,
-        error::Error,
         fs,
     },
 };

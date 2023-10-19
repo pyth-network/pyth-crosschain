@@ -8,10 +8,7 @@ use {
         state::PebbleHashChain,
     },
     anyhow::Result,
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 /// Register as a randomness provider. This method will generate and commit to a new random

@@ -4,10 +4,7 @@
 use {
     anyhow::Result,
     clap::Parser,
-    std::{
-        error::Error,
-        io::IsTerminal,
-    },
+    std::io::IsTerminal,
 };
 
 pub mod api;

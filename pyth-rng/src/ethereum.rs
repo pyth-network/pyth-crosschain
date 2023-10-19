@@ -26,10 +26,7 @@ use {
         Digest,
         Keccak256,
     },
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 // TODO: Programatically generate this so we don't have to keep committed ABI in sync with the
