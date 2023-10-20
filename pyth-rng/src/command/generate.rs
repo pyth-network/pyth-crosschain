@@ -29,10 +29,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         .request_wrapper(&provider, &user_randomness, opts.blockhash)
         .await?;
 
-    tracing::info!(
-        sequence_number = sequence_number,
-        "random number requested",
-    );
+    tracing::info!(sequence_number = sequence_number, "random number requested",);
 
     // Get the committed value from the provider
     let resp = reqwest::get(opts.url.join(&format!(
@@ -43,10 +40,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     .json::<GetRandomValueResponse>()
     .await?;
 
-    tracing::info!(
-        response = resp,
-        "Retrieved the provider's random value.",
-    );
+    tracing::info!(response = resp, "Retrieved the provider's random value.",);
     let provider_randomness = resp.value;
 
     // Submit the provider's and our values to the contract to reveal the random number.
