@@ -121,7 +121,7 @@ export class SuiPricePusher implements IPricePusher {
     private wormholePackageId: string,
     private wormholeStateId: string,
     endpoint: string,
-    mnemonic: string,
+    keypair: Ed25519Keypair,
     private gasBudget: number,
     private gasPool: SuiObjectRef[],
     private pythClient: SuiPythClient
@@ -162,14 +162,14 @@ export class SuiPricePusher implements IPricePusher {
 
   /**
    * Create a price pusher with a pool of `numGasObjects` gas coins that will be used to send transactions.
-   * The gas coins of the wallet for the provided mnemonic will be merged and then evenly split into `numGasObjects`.
+   * The gas coins of the wallet for the provided keypair will be merged and then evenly split into `numGasObjects`.
    */
   static async createWithAutomaticGasPool(
     priceServiceConnection: PriceServiceConnection,
     pythStateId: string,
     wormholeStateId: string,
     endpoint: string,
-    mnemonic: string,
+    keypair: Ed25519Keypair,
     gasBudget: number,
     numGasObjects: number
   ): Promise<SuiPricePusher> {
@@ -182,10 +182,7 @@ export class SuiPricePusher implements IPricePusher {
     const provider = new JsonRpcProvider(
       new Connection({ fullnode: endpoint })
     );
-    const signer = new RawSigner(
-      Ed25519Keypair.deriveKeypair(mnemonic),
-      provider
-    );
+    const signer = new RawSigner(keypair, provider);
     const pythPackageId = await SuiPricePusher.getPackageId(
       provider,
       pythStateId
@@ -214,7 +211,7 @@ export class SuiPricePusher implements IPricePusher {
       wormholePackageId,
       wormholeStateId,
       endpoint,
-      mnemonic,
+      keypair,
       gasBudget,
       gasPool,
       pythClient
