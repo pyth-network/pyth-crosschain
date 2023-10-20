@@ -10,6 +10,7 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        http::header,
         response::IntoResponse,
         routing::get,
         Router,
@@ -55,5 +56,11 @@ pub async fn metrics(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     // to write to the buffer.
     encode(&mut buffer, &registry).unwrap();
 
-    buffer
+    (
+        [(
+            header::CONTENT_TYPE,
+            "application/openmetrics-text; version=1.0.0; charset=utf-8",
+        )],
+        buffer,
+    )
 }
