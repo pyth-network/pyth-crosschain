@@ -15,7 +15,6 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly-2023-07-23
-          components: rustfmt, clippy
           override: true
       - name: Run executor tests
         run: cargo test --manifest-path ./fortuna/Cargo.toml
