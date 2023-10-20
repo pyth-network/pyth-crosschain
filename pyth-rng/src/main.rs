@@ -4,7 +4,7 @@
 use {
     anyhow::Result,
     clap::Parser,
-    std::error::Error,
+    std::io::IsTerminal,
 };
 
 pub mod api;
@@ -15,14 +15,25 @@ pub mod state;
 
 // Server TODO list:
 // - Tests
-// - Metrics / liveness / readiness endpoints
-// - replace println! with proper logging
 // - Reduce memory requirements for storing hash chains to increase scalability
 // - Name things nicely (service name, API resource names)
 // - README
-// - use anyhow::Result
+// - Choose data formats for binary data
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+#[tracing::instrument]
+async fn main() -> Result<()> {
+    // Initialize a Tracing Subscriber
+    tracing::subscriber::set_global_default(
+        tracing_subscriber::fmt()
+            .compact()
+            .with_file(false)
+            .with_line_number(true)
+            .with_thread_ids(true)
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_ansi(std::io::stderr().is_terminal())
+            .finish(),
+    )?;
+
     match config::Options::parse() {
         config::Options::GetRequest(opts) => command::get_request(&opts).await,
         config::Options::Generate(opts) => command::generate(&opts).await,

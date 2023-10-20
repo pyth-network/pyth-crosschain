@@ -6,14 +6,12 @@ use {
         },
         ethereum::PythContract,
     },
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    anyhow::Result,
+    std::sync::Arc,
 };
 
 /// Get the on-chain request metadata for a provider and sequence number.
-pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>> {
+pub async fn get_request(opts: &GetRequestOptions) -> Result<()> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(PythContract::from_config(
         &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
@@ -23,7 +21,7 @@ pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>>
         .get_request(opts.provider, opts.sequence)
         .call()
         .await?;
-    println!("Found request: {:?}", r);
+    tracing::info!("Found request: {:?}", r);
 
     Ok(())
 }

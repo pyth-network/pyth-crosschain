@@ -1,6 +1,9 @@
 use {
     crate::config::EthereumConfig,
-    anyhow::anyhow,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     ethers::{
         abi::RawLog,
         contract::{
@@ -23,10 +26,7 @@ use {
         Digest,
         Keccak256,
     },
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    std::sync::Arc,
 };
 
 // TODO: Programatically generate this so we don't have to keep committed ABI in sync with the
@@ -40,7 +40,7 @@ impl SignablePythContract {
     pub async fn from_config(
         chain_config: &EthereumConfig,
         private_key: &str,
-    ) -> Result<SignablePythContract, Box<dyn Error>> {
+    ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
@@ -64,7 +64,7 @@ impl SignablePythContract {
         provider: &Address,
         user_randomness: &[u8; 32],
         use_blockhash: bool,
-    ) -> Result<u64, Box<dyn Error>> {
+    ) -> Result<u64> {
         let fee = self.get_fee(*provider).call().await?;
 
         let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
@@ -98,7 +98,7 @@ impl SignablePythContract {
         sequence_number: u64,
         user_randomness: &[u8; 32],
         provider_randomness: &[u8; 32],
-    ) -> Result<[u8; 32], Box<dyn Error>> {
+    ) -> Result<[u8; 32]> {
         if let Some(r) = self
             .reveal(
                 *provider,
@@ -124,7 +124,7 @@ impl SignablePythContract {
 }
 
 impl PythContract {
-    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract, Box<dyn Error>> {
+    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
 
         Ok(PythRandom::new(

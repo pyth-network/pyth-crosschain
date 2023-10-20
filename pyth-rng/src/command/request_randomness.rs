@@ -6,13 +6,11 @@ use {
         },
         ethereum::SignablePythContract,
     },
-    std::{
-        error::Error,
-        sync::Arc,
-    },
+    anyhow::Result,
+    std::sync::Arc,
 };
 
-pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), Box<dyn Error>> {
+pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<()> {
     let contract = Arc::new(
         SignablePythContract::from_config(
             &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
@@ -26,7 +24,7 @@ pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), B
         .request_wrapper(&opts.provider, &user_randomness, false)
         .await?;
 
-    println!("sequence number: {:#?}", sequence_number);
+    tracing::info!("sequence number: {:#?}", sequence_number);
 
     Ok(())
 }

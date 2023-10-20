@@ -21,7 +21,6 @@ use {
     },
     std::{
         collections::HashMap,
-        error::Error,
         sync::Arc,
     },
     tower_http::cors::CorsLayer,
@@ -29,7 +28,7 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
+pub async fn run(opts: &RunOptions) -> Result<()> {
     #[derive(OpenApi)]
     #[openapi(
     paths(
@@ -75,7 +74,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         {
             return Err(anyhow!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_id).into());
         } else {
-            println!("Root of chain id {} matches commitment", &chain_id);
+            tracing::info!("Root of chain id {} matches commitment", &chain_id);
         }
 
         let state = api::BlockchainState {
@@ -87,8 +86,10 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         chains.insert(chain_id.clone(), state);
     }
 
+    let metrics_registry = api::Metrics::new();
     let api_state = api::ApiState {
-        chains: Arc::new(chains),
+        chains:  Arc::new(chains),
+        metrics: Arc::new(metrics_registry),
     };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
@@ -97,6 +98,9 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(api::index))
+        .route("/live", get(api::live))
+        .route("/metrics", get(api::metrics))
+        .route("/ready", get(api::ready))
         .route("/v1/chains", get(api::chain_ids))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
@@ -107,7 +111,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         .layer(CorsLayer::permissive());
 
 
-    println!("Starting server on: {:?}", &opts.addr);
+    tracing::info!("Starting server on: {:?}", &opts.addr);
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
     axum::Server::try_bind(&opts.addr)?
