@@ -8,6 +8,10 @@ use {
         ethereum::SignablePythContract,
     },
     anyhow::Result,
+    base64::{
+        engine::general_purpose::STANDARD as base64_standard_engine,
+        Engine as _,
+    },
     std::sync::Arc,
 };
 
@@ -40,7 +44,10 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     .json::<GetRandomValueResponse>()
     .await?;
 
-    tracing::info!(response = resp, "Retrieved the provider's random value.",);
+    tracing::info!(
+        response = base64_standard_engine.encode(resp.value),
+        "Retrieved the provider's random value.",
+    );
     let provider_randomness = resp.value;
 
     // Submit the provider's and our values to the contract to reveal the random number.
@@ -53,7 +60,10 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         )
         .await?;
 
-    tracing::info!(number = random_value, "Random number generated.");
+    tracing::info!(
+        number = base64_standard_engine.encode(random_value),
+        "Random number generated."
+    );
 
     Ok(())
 }
