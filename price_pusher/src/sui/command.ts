@@ -50,6 +50,12 @@ export default {
       required: true,
       default: 500_000_000,
     } as Options,
+    "account-index": {
+      description: "Index of the account to use derived by the mnemonic",
+      type: "number",
+      required: true,
+      default: 0,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -68,6 +74,7 @@ export default {
       wormholeStateId,
       numGasObjects,
       gasBudget,
+      accountIndex,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -88,10 +95,12 @@ export default {
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const keypair = Ed25519Keypair.deriveKeypair(
+      mnemonic,
+      `m/44'/784'/${accountIndex}'/0'/0'`
+    );
     console.log(
-      `Pushing updates from wallet address: ${Ed25519Keypair.deriveKeypair(
-        mnemonic
-      )
+      `Pushing updates from wallet address: ${keypair
         .getPublicKey()
         .toSuiAddress()}`
     );
@@ -115,7 +124,7 @@ export default {
       pythStateId,
       wormholeStateId,
       endpoint,
-      mnemonic,
+      keypair,
       gasBudget,
       numGasObjects
     );
