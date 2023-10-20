@@ -77,6 +77,7 @@ import "./PythRandomEvents.sol";
 // - gas optimizations
 // - function to check invariants??
 // - need to increment pyth fees if someone transfers funds to the contract via another method
+// - off-chain data ERC support?
 contract PythRandom is PythRandomState, PythRandomEvents {
     // TODO: Use an upgradeable proxy
     constructor(uint pythFeeInWei) {

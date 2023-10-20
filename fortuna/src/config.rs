@@ -64,7 +64,7 @@ pub enum Options {
 pub struct ConfigOptions {
     /// Path to a configuration file containing the list of supported blockchains
     #[arg(long = "config")]
-    #[arg(env = "PYTH_CONFIG")]
+    #[arg(env = "FORTUNA_CONFIG")]
     #[arg(default_value = "config.yaml")]
     pub config: String,
 }
@@ -75,13 +75,13 @@ pub struct ConfigOptions {
 pub struct RandomnessOptions {
     /// A secret used for generating new hash chains. A 64-char hex string.
     #[arg(long = "secret")]
-    #[arg(env = "PYTH_SECRET")]
+    #[arg(env = "FORTUNA_SECRET")]
     #[arg(default_value = "0000000000000000000000000000000000000000000000000000000000000000")]
     pub secret: String,
 
     /// The length of the hash chain to generate.
     #[arg(long = "chain-length")]
-    #[arg(env = "PYTH_CHAIN_LENGTH")]
+    #[arg(env = "FORTUNA_CHAIN_LENGTH")]
     #[arg(default_value = "32")]
     pub chain_length: u64,
 }
