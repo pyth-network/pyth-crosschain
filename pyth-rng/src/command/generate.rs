@@ -30,8 +30,8 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         .await?;
 
     tracing::info!(
-        "Requested the random number with sequence number {:#?}",
-        sequence_number
+        sequence_number = sequence_number,
+        "random number requested",
     );
 
     // Get the committed value from the provider
