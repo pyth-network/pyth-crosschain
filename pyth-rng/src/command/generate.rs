@@ -44,8 +44,8 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     .await?;
 
     tracing::info!(
-        "Retrieved the provider's random value. Server response: {:#?}",
-        resp
+        response = resp,
+        "Retrieved the provider's random value.",
     );
     let provider_randomness = resp.value;
 
