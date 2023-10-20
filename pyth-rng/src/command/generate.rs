@@ -59,7 +59,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         )
         .await?;
 
-    tracing::info!("Generated random number: {:#?}", random_value);
+    tracing::info!(number = random_value, "Random number generated.");
 
     Ok(())
 }
