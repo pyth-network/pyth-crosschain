@@ -17,7 +17,7 @@ pub struct GenerateOptions {
 
     /// Retrieve a randomness request to this provider
     #[arg(long = "chain-id")]
-    #[arg(env = "PYTH_CHAIN_ID")]
+    #[arg(env = "FORTUNA_CHAIN_ID")]
     pub chain_id: ChainId,
 
     /// A 20-byte (40 char) hex encoded Ethereum private key.
