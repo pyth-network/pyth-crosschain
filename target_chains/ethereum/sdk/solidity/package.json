@@ -17,7 +17,7 @@
     "solidity",
     "oracle"
   ],
-  "author": "Pyth Data Foundation",
+  "author": "Pyth Data Association",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"

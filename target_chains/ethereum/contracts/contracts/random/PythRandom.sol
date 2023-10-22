@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "./PythRandomState.sol";
-import "./PythRandomErrors.sol";
-import "./PythRandomEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomState.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomErrors.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomEvents.sol";
 
 // PythRandom implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
