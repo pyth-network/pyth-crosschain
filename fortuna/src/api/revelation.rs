@@ -88,6 +88,7 @@ pub struct GetRandomValueQueryParams {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct GetRandomValueResponse {
-    pub encoding: String,
-    pub value:    String,
+    // TODO: choose serialization format
+    #[serde(with = "array")]
+    pub value: [u8; 32],
 }
