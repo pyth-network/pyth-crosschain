@@ -48,6 +48,7 @@ export const RECEIVER_CHAINS = {
   chiliz: 60033,
   zetachain: 60034,
   astar: 60035,
+  coredao: 60036,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

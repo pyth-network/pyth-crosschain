@@ -302,7 +302,7 @@
   wormholeChainName: shimmer
   mainnet: false
   rpcUrl: https://json-rpc.evm.testnet.shimmer.network
-  networkId: 1072
+  networkId: 1073
   type: EvmChain
 - id: scroll_sepolia
   wormholeChainName: scroll
@@ -411,4 +411,16 @@
   mainnet: false
   rpcUrl: https://rpc.zkatana.gelato.digital
   networkId: 1261120
+  type: EvmChain
+- id: coredao_testnet
+  wormholeChainName: coredao
+  mainnet: false
+  rpcUrl: https://rpc.test.btcs.network
+  networkId: 1115
+  type: EvmChain
+- id: coredao
+  wormholeChainName: coredao
+  mainnet: true
+  rpcUrl: https://rpc3.coredao.org
+  networkId: 1116
   type: EvmChain
