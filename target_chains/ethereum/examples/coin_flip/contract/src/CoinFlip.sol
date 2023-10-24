@@ -17,7 +17,7 @@ contract CoinFlip {
     event FlipResult(bool isHeads);
 
     IEntropy private entropy;
-    address entropyProvider;
+    address private entropyProvider;
     mapping(uint64 => address) private requestedFlips;
 
     constructor(address _entropy, address _entropyProvider) {
@@ -59,16 +59,9 @@ contract CoinFlip {
 
     // Reinitialize the parameters of this contract.
     // (This function is for demo purposes only. You wouldn't include this on a real contract.)
-    function reinitialize(
-        bytes32 _baseTokenPriceId,
-        bytes32 _quoteTokenPriceId,
-        address _baseToken,
-        address _quoteToken
-    ) external {
-        baseTokenPriceId = _baseTokenPriceId;
-        quoteTokenPriceId = _quoteTokenPriceId;
-        baseToken = ERC20(_baseToken);
-        quoteToken = ERC20(_quoteToken);
+    function reinitialize(address _entropy, address _entropyProvider) {
+        entropy = IEntropy(_entropy);
+        entropyProvider = _entropyProvider;
     }
 
     receive() external payable {}
