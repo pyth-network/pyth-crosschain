@@ -114,7 +114,7 @@ pub fn construct_message_states_proofs(
 }
 
 pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Result<Vec<Vec<u8>>> {
-    tracing::info!("Constructing update data for {} messages", messages.len());
+    tracing::debug!("Constructing update data for {} messages", messages.len());
 
     messages.sort_by_key(|m| m.slot);
 
@@ -140,7 +140,7 @@ pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Re
             }
         }
 
-        tracing::info!(
+        tracing::debug!(
             slot = slot,
             "Combining {} messages in a single updateData",
             updates.len()
