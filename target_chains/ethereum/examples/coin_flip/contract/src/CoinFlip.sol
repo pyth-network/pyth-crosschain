@@ -26,7 +26,7 @@ contract CoinFlip {
     }
 
     function requestFlip(bytes32 userCommitment) external payable {
-        uint256 fee = entropy.getFee(provider);
+        uint256 fee = entropy.getFee(entropyProvider);
         if (msg.value < fee) {
             revert CoinFlipErrors.InsufficientFee();
         }
@@ -59,7 +59,7 @@ contract CoinFlip {
 
     // Reinitialize the parameters of this contract.
     // (This function is for demo purposes only. You wouldn't include this on a real contract.)
-    function reinitialize(address _entropy, address _entropyProvider) {
+    function reinitialize(address _entropy, address _entropyProvider) public {
         entropy = IEntropy(_entropy);
         entropyProvider = _entropyProvider;
     }
