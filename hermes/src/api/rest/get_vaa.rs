@@ -97,13 +97,22 @@ pub async fn get_vaa(
         .map(|bytes| base64_standard_engine.encode(bytes))
         .ok_or(RestError::UpdateDataNotFound)?;
 
-    let publish_time = price_feeds_with_update_data
+    let price_feed = price_feeds_with_update_data
         .price_feeds
-        .get(0)
-        .ok_or(RestError::UpdateDataNotFound)?
-        .price_feed
-        .get_price_unchecked()
-        .publish_time;
+        .into_iter()
+        .next()
+        .ok_or(RestError::UpdateDataNotFound)?;
+
+    let publish_time = price_feed.price_feed.get_price_unchecked().publish_time;
+
+    // Currently Benchmarks API doesn't support returning the previous publish time. So we
+    // are assuming that it is doing the same filter as us and returns not found if the
+    // price update is not unique.
+    if let Some(prev_publish_time) = price_feed.prev_publish_time {
+        if prev_publish_time == price_feed.price_feed.get_price_unchecked().publish_time {
+            return Err(RestError::BenchmarkPriceNotUnique);
+        }
+    }
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }

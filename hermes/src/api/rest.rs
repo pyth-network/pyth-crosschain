@@ -33,6 +33,7 @@ pub use {
 };
 
 pub enum RestError {
+    BenchmarkPriceNotUnique,
     UpdateDataNotFound,
     CcipUpdateDataNotFound,
     InvalidCCIPInput,
@@ -42,6 +43,9 @@ pub enum RestError {
 impl IntoResponse for RestError {
     fn into_response(self) -> Response {
         match self {
+            RestError::BenchmarkPriceNotUnique => {
+                (StatusCode::NOT_FOUND, "Benchmark price is not unique").into_response()
+            }
             RestError::UpdateDataNotFound => {
                 (StatusCode::NOT_FOUND, "Update data not found").into_response()
             }
