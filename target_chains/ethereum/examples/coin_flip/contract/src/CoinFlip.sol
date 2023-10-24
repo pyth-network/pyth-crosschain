@@ -54,7 +54,7 @@ contract CoinFlip {
             userRandom,
             providerRandom
         );
-        emit FlipResult(randomNumber % 2 == 0);
+        emit FlipResult(uint256(randomNumber) % 2 == 0);
     }
 
     // Reinitialize the parameters of this contract.
