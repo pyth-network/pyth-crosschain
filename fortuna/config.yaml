@@ -5,3 +5,6 @@ chains:
   avalanche-fuji:
     geth_rpc_addr: https://api.avax-test.network/ext/bc/C/rpc
     contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3
+  eos-evm-testnet:
+    geth_rpc_addr: https://api.testnet.evm.eosnetwork.com/
+    contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3

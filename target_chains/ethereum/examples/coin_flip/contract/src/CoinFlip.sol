@@ -1,13 +1,9 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
 import "entropy-sdk-solidity/IEntropy.sol";
 
-// import "entropy-sdk-solidity/EntropyStructs.sol";
-// import "../../../../entropy_sdk/solidity/IEntropy.sol";
-
 library CoinFlipErrors {
-    // An invariant of the contract failed to hold. This error indicates a software logic bug.
     error IncorrectSender();
 
     error InsufficientFee();
