@@ -8,8 +8,7 @@
     "directory": "target_chains/ethereum/entropy_sdk/solidity"
   },
   "scripts": {
-    "format": "npx prettier --write .",
-    "generate-abi": "node scripts/generateAbi.js"
+    "format": "npx prettier --write ."
   },
   "keywords": [
     "pyth",
