@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 # URL of the ethereum RPC node to use. Choose this based on your target network
-# (e.g., this deploys to goerli optimism testnet)
 RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
 
 # The address of the Pyth contract on your network. See the list of contract addresses here https://docs.pyth.network/documentation/pythnet-price-feeds/evm
