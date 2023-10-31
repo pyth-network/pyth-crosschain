@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-library PythRandomErrors {
+library EntropyErrors {
     // An invariant of the contract failed to hold. This error indicates a software logic bug.
     error AssertionFailure();
     // The provider being registered has already registered

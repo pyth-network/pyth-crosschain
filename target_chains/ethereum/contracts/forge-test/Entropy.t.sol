@@ -2,23 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
-
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "./utils/WormholeTestUtils.t.sol";
-import "./utils/PythTestUtils.t.sol";
-import "./utils/RandTestUtils.t.sol";
-import "../contracts/random/PythRandom.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "../contracts/entropy/Entropy.sol";
 
 // TODO
 // - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
 //   verify the provider's value.
 // - fuzz test?
-contract PythRandomTest is Test, RandTestUtils {
-    PythRandom public random;
+contract EntropyTest is Test {
+    Entropy public random;
 
     uint pythFeeInWei = 7;
 
@@ -39,7 +32,7 @@ contract PythRandomTest is Test, RandTestUtils {
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new PythRandom(pythFeeInWei);
+        random = new Entropy(pythFeeInWei);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -182,7 +175,7 @@ contract PythRandomTest is Test, RandTestUtils {
             random.getAccruedPythFees();
         assertEq(address(random).balance, expectedBalance);
 
-        PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assert(
@@ -191,7 +184,7 @@ contract PythRandomTest is Test, RandTestUtils {
         );
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
-        PythRandomStructs.ProviderInfo memory info2 = random.getProviderInfo(
+        EntropyStructs.ProviderInfo memory info2 = random.getProviderInfo(
             provider2
         );
         assert(
@@ -337,7 +330,7 @@ contract PythRandomTest is Test, RandTestUtils {
             10
         );
         assertInvariants();
-        PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assertEq(info1.endSequenceNumber, newHashChainOffset + 10);

@@ -1,9 +1,8 @@
-// contracts/State.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
 
-contract PythRandomStructs {
+contract EntropyStructs {
     struct State {
         uint pythFeeInWei;
         uint accruedPythFeesInWei;
@@ -48,8 +47,4 @@ contract PythRandomStructs {
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
         uint256 blockNumber;
     }
-}
-
-contract PythRandomState {
-    PythRandomStructs.State _state;
 }

@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/entropy-sdk-solidity/PythRandomState.sol";
-import "@pythnetwork/entropy-sdk-solidity/PythRandomErrors.sol";
-import "@pythnetwork/entropy-sdk-solidity/PythRandomEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
+import "./EntropyState.sol";
 
-// PythRandom implements a secure 2-party random number generation procedure. The protocol
+// Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
 //
 // 1. Two parties A and B each draw a random number x_{A,B}
@@ -20,7 +21,7 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 // Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
 // ensure that the result r is random.
 //
-// PythRandom implements a version of this protocol that is optimized for on-chain usage. The
+// Entropy implements a version of this protocol that is optimized for on-chain usage. The
 // key difference is that one of the participants (the provider) commits to a sequence of random numbers
 // up-front using a hash chain. Users of the protocol then simply grab the next random number in the sequence.
 //
@@ -51,9 +52,9 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 // be careful to ensure their off-chain service isn't compromised to reveal the random numbers -- if this occurs,
 // then users will be able to influence the random number r.
 //
-// The PythRandom implementation of the above protocol allows anyone to permissionlessly register to be a
+// The Entropy implementation of the above protocol allows anyone to permissionlessly register to be a
 // randomness provider. Users then choose which provider to request randomness from. Each provider can set
-// their own fee for the service. In addition, the PythRandom contract charges a flat fee that goes to the
+// their own fee for the service. In addition, the Entropy contract charges a flat fee that goes to the
 // Pyth protocol for each requested random number. Fees are paid in the native token of the network.
 //
 // This implementation has two intricacies that merit further explanation. First, the implementation supports
@@ -79,7 +80,7 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 // - function to check invariants??
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 // - off-chain data ERC support?
-contract PythRandom is IEntropy, PythRandomState {
+contract Entropy is IEntropy, EntropyState {
     // TODO: Use an upgradeable proxy
     constructor(uint pythFeeInWei) {
         _state.accruedPythFeesInWei = 0;
@@ -97,9 +98,9 @@ contract PythRandom is IEntropy, PythRandomState {
         bytes32 commitmentMetadata,
         uint64 chainLength
     ) public override {
-        if (chainLength == 0) revert PythRandomErrors.AssertionFailure();
+        if (chainLength == 0) revert EntropyErrors.AssertionFailure();
 
-        PythRandomStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
 
@@ -126,7 +127,7 @@ contract PythRandom is IEntropy, PythRandomState {
     // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
     // balance of fees in the contract).
     function withdraw(uint256 amount) public override {
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             msg.sender
         ];
 
@@ -157,26 +158,26 @@ contract PythRandom is IEntropy, PythRandomState {
         bytes32 userCommitment,
         bool useBlockHash
     ) public payable override returns (uint64 assignedSequenceNumber) {
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
         if (_state.providers[provider].sequenceNumber == 0)
-            revert PythRandomErrors.NoSuchProvider();
+            revert EntropyErrors.NoSuchProvider();
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
         if (assignedSequenceNumber >= providerInfo.endSequenceNumber)
-            revert PythRandomErrors.OutOfRandomness();
+            revert EntropyErrors.OutOfRandomness();
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
         uint requiredFee = getFee(provider);
-        if (msg.value < requiredFee) revert PythRandomErrors.InsufficientFee();
+        if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         providerInfo.accruedFeesInWei += providerInfo.feeInWei;
         _state.accruedPythFeesInWei += (msg.value - providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
-        PythRandomStructs.Request storage req = _state.requests[
+        EntropyStructs.Request storage req = _state.requests[
             requestKey(provider, assignedSequenceNumber)
         ];
         req.provider = provider;
@@ -210,11 +211,11 @@ contract PythRandom is IEntropy, PythRandomState {
         // TODO: do we need to check that this request exists?
         // TODO: this method may need to be authenticated to prevent griefing
         bytes32 key = requestKey(provider, sequenceNumber);
-        PythRandomStructs.Request storage req = _state.requests[key];
+        EntropyStructs.Request storage req = _state.requests[key];
         // This invariant should be guaranteed to hold by the key construction procedure above, but check it
         // explicitly to be extra cautious.
         if (req.sequenceNumber != sequenceNumber)
-            revert PythRandomErrors.AssertionFailure();
+            revert EntropyErrors.AssertionFailure();
 
         bool valid = isProofValid(
             req.providerCommitmentSequenceNumber,
@@ -222,9 +223,9 @@ contract PythRandom is IEntropy, PythRandomState {
             sequenceNumber,
             providerRevelation
         );
-        if (!valid) revert PythRandomErrors.IncorrectProviderRevelation();
+        if (!valid) revert EntropyErrors.IncorrectProviderRevelation();
         if (constructUserCommitment(userRandomness) != req.userCommitment)
-            revert PythRandomErrors.IncorrectUserRevelation();
+            revert EntropyErrors.IncorrectUserRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.blockNumber != 0) {
@@ -247,7 +248,7 @@ contract PythRandom is IEntropy, PythRandomState {
 
         delete _state.requests[key];
 
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
         if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
@@ -258,19 +259,14 @@ contract PythRandom is IEntropy, PythRandomState {
 
     function getProviderInfo(
         address provider
-    )
-        public
-        view
-        override
-        returns (PythRandomStructs.ProviderInfo memory info)
-    {
+    ) public view override returns (EntropyStructs.ProviderInfo memory info) {
         info = _state.providers[provider];
     }
 
     function getRequest(
         address provider,
         uint64 sequenceNumber
-    ) public view override returns (PythRandomStructs.Request memory req) {
+    ) public view override returns (EntropyStructs.Request memory req) {
         bytes32 key = requestKey(provider, sequenceNumber);
         req = _state.requests[key];
     }
@@ -323,7 +319,7 @@ contract PythRandom is IEntropy, PythRandomState {
         bytes32 revelation
     ) internal pure returns (bool valid) {
         if (sequenceNumber <= lastSequenceNumber)
-            revert PythRandomErrors.AssertionFailure();
+            revert EntropyErrors.AssertionFailure();
 
         bytes32 currentHash = revelation;
         while (sequenceNumber > lastSequenceNumber) {
