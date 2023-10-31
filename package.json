@@ -15,6 +15,7 @@
     "target_chains/ethereum/entropy_sdk/solidity",
     "target_chains/ethereum/sdk/js",
     "target_chains/ethereum/sdk/solidity",
+    "target_chains/ethereum/examples/coin_flip/app",
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
     "target_chains/sui/cli",

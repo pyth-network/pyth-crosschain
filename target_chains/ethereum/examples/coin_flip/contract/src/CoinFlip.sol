@@ -73,6 +73,11 @@ contract CoinFlip {
         emit FlipRequest(sequenceNumber);
     }
 
+    // Get the fee to flip a coin. See the comment above about fees.
+    function getFlipFee() public returns (uint256 fee) {
+        fee = entropy.getFee(entropyProvider);
+    }
+
     // Reveal the result of the coin flip. The caller must have an in-flight request for a coin flip, which is
     // identified by `sequenceNumber`. The caller must additionally provide the random number that they previously
     // committed to, as well as the entropy provider's random number. The provider's random number can be retrieved
