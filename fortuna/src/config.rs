@@ -117,5 +117,6 @@ pub struct EthereumConfig {
     pub contract_addr: Address,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
+    #[serde(default)]
     pub legacy_tx: bool,
 }

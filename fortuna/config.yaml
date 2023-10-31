@@ -8,3 +8,4 @@ chains:
   eos-evm-testnet:
     geth_rpc_addr: https://api.testnet.evm.eosnetwork.com/
     contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3
+    legacy_tx: true

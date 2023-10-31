@@ -42,7 +42,6 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
             commitment_metadata,
             commitment_length,
         )
-        .legacy()
         .send()
         .await?
         .await?
