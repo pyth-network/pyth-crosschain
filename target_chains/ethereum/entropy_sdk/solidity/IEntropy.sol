@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
-import "./PythRandomEvents.sol";
+import "./EntropyEvents.sol";
 
-interface IEntropy is PythRandomEvents {
+interface IEntropy is EntropyEvents {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
     // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
     // the feeInWei).
@@ -53,12 +53,12 @@ interface IEntropy is PythRandomEvents {
 
     function getProviderInfo(
         address provider
-    ) external view returns (PythRandomStructs.ProviderInfo memory info);
+    ) external view returns (EntropyStructs.ProviderInfo memory info);
 
     function getRequest(
         address provider,
         uint64 sequenceNumber
-    ) external view returns (PythRandomStructs.Request memory req);
+    ) external view returns (EntropyStructs.Request memory req);
 
     function getFee(address provider) external view returns (uint feeAmount);
 
