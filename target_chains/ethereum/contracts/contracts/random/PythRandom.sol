@@ -2,9 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "./PythRandomState.sol";
-import "./PythRandomErrors.sol";
-import "./PythRandomEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomState.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomErrors.sol";
+import "@pythnetwork/entropy-sdk-solidity/PythRandomEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
 // PythRandom implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
@@ -78,7 +79,7 @@ import "./PythRandomEvents.sol";
 // - function to check invariants??
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 // - off-chain data ERC support?
-contract PythRandom is PythRandomState, PythRandomEvents {
+contract PythRandom is IEntropy, PythRandomState {
     // TODO: Use an upgradeable proxy
     constructor(uint pythFeeInWei) {
         _state.accruedPythFeesInWei = 0;
@@ -95,7 +96,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         bytes32 commitment,
         bytes32 commitmentMetadata,
         uint64 chainLength
-    ) public {
+    ) public override {
         if (chainLength == 0) revert PythRandomErrors.AssertionFailure();
 
         PythRandomStructs.ProviderInfo storage provider = _state.providers[
@@ -124,7 +125,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
     // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
     // balance of fees in the contract).
-    function withdraw(uint256 amount) public {
+    function withdraw(uint256 amount) public override {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
             msg.sender
         ];
@@ -155,7 +156,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         address provider,
         bytes32 userCommitment,
         bool useBlockHash
-    ) public payable returns (uint64 assignedSequenceNumber) {
+    ) public payable override returns (uint64 assignedSequenceNumber) {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
@@ -205,7 +206,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         uint64 sequenceNumber,
         bytes32 userRandomness,
         bytes32 providerRevelation
-    ) public returns (bytes32 randomNumber) {
+    ) public override returns (bytes32 randomNumber) {
         // TODO: do we need to check that this request exists?
         // TODO: this method may need to be authenticated to prevent griefing
         bytes32 key = requestKey(provider, sequenceNumber);
@@ -257,25 +258,33 @@ contract PythRandom is PythRandomState, PythRandomEvents {
 
     function getProviderInfo(
         address provider
-    ) public view returns (PythRandomStructs.ProviderInfo memory info) {
+    )
+        public
+        view
+        override
+        returns (PythRandomStructs.ProviderInfo memory info)
+    {
         info = _state.providers[provider];
     }
 
     function getRequest(
         address provider,
         uint64 sequenceNumber
-    ) public view returns (PythRandomStructs.Request memory req) {
+    ) public view override returns (PythRandomStructs.Request memory req) {
         bytes32 key = requestKey(provider, sequenceNumber);
         req = _state.requests[key];
     }
 
-    function getFee(address provider) public view returns (uint feeAmount) {
+    function getFee(
+        address provider
+    ) public view override returns (uint feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
     function getAccruedPythFees()
         public
         view
+        override
         returns (uint accruedPythFeesInWei)
     {
         return _state.accruedPythFeesInWei;
@@ -283,7 +292,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
 
     function constructUserCommitment(
         bytes32 userRandomness
-    ) public pure returns (bytes32 userCommitment) {
+    ) public pure override returns (bytes32 userCommitment) {
         userCommitment = keccak256(bytes.concat(userRandomness));
     }
 
@@ -291,7 +300,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         bytes32 userRandomness,
         bytes32 providerRandomness,
         bytes32 blockHash
-    ) public pure returns (bytes32 combinedRandomness) {
+    ) public pure override returns (bytes32 combinedRandomness) {
         combinedRandomness = keccak256(
             abi.encodePacked(userRandomness, providerRandomness, blockHash)
         );
