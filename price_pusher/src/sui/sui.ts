@@ -299,10 +299,12 @@ export class SuiPricePusher implements IPricePusher {
       );
     } catch (e: any) {
       console.log("Error when signAndExecuteTransactionBlock");
-      if (String(e).includes("GasBalanceTooLow")) {
-        console.warn(
-          `The balance of gas object ${gasObject.objectId} is too low. Removing from pool.`
-        );
+      if (
+        String(e).includes("Balance of gas object") ||
+        String(e).includes("GasBalanceTooLow")
+      ) {
+        // If the error is caused by insufficient gas, we should panic
+        throw e;
       } else {
         // Refresh the coin object here in case the error is caused by an object version mismatch.
         nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
