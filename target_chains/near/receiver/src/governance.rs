@@ -280,7 +280,7 @@ impl Pyth {
                         emitter: vaa.emitter_address,
                         chain:   vaa.emitter_chain,
                     }),
-                UnknownSource
+                UnknownSource(vaa.emitter_address)
             );
         }
 
@@ -500,7 +500,7 @@ impl Pyth {
     fn is_valid_governance_source(&self, source: &Source) -> Result<(), Error> {
         (self.gov_source == *source)
             .then_some(())
-            .ok_or(UnknownSource)
+            .ok_or(UnknownSource(source.emitter))
     }
 }
 
