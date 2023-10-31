@@ -11,7 +11,15 @@ use {
             EthLogDecode,
         },
         core::types::Address,
-        middleware::SignerMiddleware,
+        middleware::{
+            transformer::{
+                Transformer,
+                TransformerError,
+                TransformerMiddleware,
+            },
+            SignerMiddleware,
+        },
+        prelude::TransactionRequest,
         providers::{
             Http,
             Middleware,
@@ -21,6 +29,7 @@ use {
             LocalWallet,
             Signer,
         },
+        types::transaction::eip2718::TypedTransaction,
     },
     sha3::{
         Digest,
@@ -33,8 +42,27 @@ use {
 // contract in the same repo.
 abigen!(PythRandom, "src/abi.json");
 
-pub type SignablePythContract = PythRandom<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type SignablePythContract = PythRandom<
+    TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
+>;
 pub type PythContract = PythRandom<Provider<Http>>;
+
+#[derive(Clone, Debug)]
+pub struct LegacyTxTransformer {
+    use_legacy_tx: bool,
+}
+
+impl Transformer for LegacyTxTransformer {
+    fn transform(&self, tx: &mut TypedTransaction) -> Result<(), TransformerError> {
+        if self.use_legacy_tx {
+            let legacy_request: TransactionRequest = (*tx).clone().into();
+            *tx = legacy_request.into();
+            Ok(())
+        } else {
+            Ok(())
+        }
+    }
+}
 
 impl SignablePythContract {
     pub async fn from_config(
@@ -44,6 +72,10 @@ impl SignablePythContract {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
+        let transformer = LegacyTxTransformer {
+            use_legacy_tx: chain_config.legacy_tx,
+        };
+
         let wallet__ = private_key
             .clone()
             .parse::<LocalWallet>()?
@@ -51,7 +83,10 @@ impl SignablePythContract {
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
-            Arc::new(SignerMiddleware::new(provider, wallet__)),
+            Arc::new(TransformerMiddleware::new(
+                SignerMiddleware::new(provider, wallet__),
+                transformer,
+            )),
         ))
     }
 
