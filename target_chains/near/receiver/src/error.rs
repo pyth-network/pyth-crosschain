@@ -37,8 +37,8 @@ pub enum Error {
     #[error("Governance Module Action not valid.")]
     InvalidGovernanceAction,
 
-    #[error("Source for attestation is not allowed.")]
-    UnknownSource,
+    #[error("Source for attestation is not allowed. {0:?}")]
+    UnknownSource([u8; 32]),
 
     #[error("Unauthorized Upgrade.")]
     UnauthorizedUpgrade,
@@ -57,6 +57,18 @@ pub enum Error {
 
     #[error("Unknown error.")]
     Unknown,
+
+    #[error("Invalid merkle proof.")]
+    InvalidMerkleProof,
+
+    #[error("Invalid accumulator message.")]
+    InvalidAccumulatorMessage,
+
+    #[error("Invalid accumulator message type.")]
+    InvalidAccumulatorMessageType,
+
+    #[error("Invalid wormhole message.")]
+    InvalidWormholeMessage,
 }
 
 /// Convert IO errors into Payload errors, the only I/O we do is parsing with `Cursor` so this is a

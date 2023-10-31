@@ -11,6 +11,7 @@ use {
         },
     },
     pyth_wormhole_attester_sdk::PriceAttestation,
+    pythnet_sdk::messages::PriceFeedMessage,
     wormhole::Chain as WormholeChain,
 };
 
@@ -75,6 +76,26 @@ impl From<&PriceAttestation> for PriceFeed {
                 conf:      price_attestation.ema_conf,
                 expo:      price_attestation.expo,
                 timestamp: price_attestation.publish_time.try_into().unwrap(),
+            },
+        }
+    }
+}
+
+impl From<&PriceFeedMessage> for PriceFeed {
+    fn from(price_feed_message: &PriceFeedMessage) -> Self {
+        Self {
+            id:        PriceIdentifier(price_feed_message.feed_id),
+            price:     Price {
+                price:     price_feed_message.price,
+                conf:      price_feed_message.conf,
+                expo:      price_feed_message.exponent,
+                timestamp: price_feed_message.publish_time.try_into().unwrap(),
+            },
+            ema_price: Price {
+                price:     price_feed_message.ema_price,
+                conf:      price_feed_message.ema_conf,
+                expo:      price_feed_message.exponent,
+                timestamp: price_feed_message.publish_time.try_into().unwrap(),
             },
         }
     }

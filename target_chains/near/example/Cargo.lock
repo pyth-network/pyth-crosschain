@@ -2126,7 +2126,6 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "hex 0.4.3",
- "lazy_static",
  "near-sdk",
  "nom",
  "num-derive",
@@ -2134,14 +2133,31 @@ dependencies = [
  "pyth-sdk 0.7.0",
  "pyth-wormhole-attester-sdk",
  "pythnet-sdk",
+ "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole)",
+ "strum",
+ "thiserror",
+ "wormhole-core 0.1.0 (git+https://github.com/wormhole-foundation/wormhole)",
+]
+
+[[package]]
+name = "pyth-near-example"
+version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "hex 0.4.3",
+ "lazy_static",
+ "near-sdk",
+ "num-derive",
+ "num-traits",
+ "pyth-near",
+ "pythnet-sdk",
  "serde",
  "serde_json",
- "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole)",
  "strum",
  "thiserror",
  "tokio",
  "workspaces",
- "wormhole-core",
+ "wormhole-core 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?rev=4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a)",
 ]
 
 [[package]]
@@ -3388,6 +3404,20 @@ dependencies = [
  "tokio-retry",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "wormhole-core"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?rev=4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a#4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a"
+dependencies = [
+ "anyhow",
+ "bstr",
+ "schemars",
+ "serde",
+ "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?rev=4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a)",
+ "sha3",
+ "thiserror",
 ]
 
 [[package]]
