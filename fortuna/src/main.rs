@@ -16,7 +16,7 @@ pub mod state;
 // Server TODO list:
 // - Tests
 // - Reduce memory requirements for storing hash chains to increase scalability
-// - Name things nicely (service name, API resource names)
+// - Name things nicely (API resource names)
 // - README
 // - Choose data formats for binary data
 #[tokio::main]

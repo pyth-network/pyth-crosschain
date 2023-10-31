@@ -36,6 +36,7 @@
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@pythnetwork/pyth-multisig-wh-message-builder": "*",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/entropy-sdk-solidity": "*",
     "contract_manager": "*",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
