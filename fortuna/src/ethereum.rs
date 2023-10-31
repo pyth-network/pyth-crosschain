@@ -47,6 +47,7 @@ pub type SignablePythContract = PythRandom<
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
 
+/// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
 pub struct LegacyTxTransformer {
     use_legacy_tx: bool,
