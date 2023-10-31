@@ -1,0 +1,107 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_entropy",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_entropyProvider",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFee",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "FlipRequest",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isHeads",
+        "type": "bool"
+      }
+    ],
+    "name": "FlipResult",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "getFlipFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "userCommitment",
+        "type": "bytes32"
+      }
+    ],
+    "name": "requestFlip",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userRandom",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRandom",
+        "type": "bytes32"
+      }
+    ],
+    "name": "revealFlip",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

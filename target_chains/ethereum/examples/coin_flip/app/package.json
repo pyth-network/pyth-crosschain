@@ -1,0 +1,23 @@
+{
+  "name": "@pythnetwork/eth-coin-flip-example",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@pythnetwork/pyth-evm-js": "*",
+    "@pythnetwork/pyth-sdk-solidity": "*",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.11.64",
+    "buffer": "^6.0.3",
+    "ethers": "^5.7.2",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "flip-coin": "npm run build && node lib/flip_coin.js",
+    "format": "prettier --write src/"
+  }
+}
