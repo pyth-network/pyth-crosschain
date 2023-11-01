@@ -16,10 +16,13 @@ These commands will build dependencies for the typescript project.
 Next, choose a network to run the example on.
 The example has been deployed on the following networks:
 
-| Chain Name | Address | RPC |
-| optimism-goerli | 0x3bA217Cd7840Cc5B34FD5B7263Cebd8CD8665788 | https://goerli.optimism.io |
-| avalanche-fuji | 0xE7E52C85907d59C45b2C56EF32B78F514F8c547a | https://api.avax-test.network/ext/bc/C/rpc |
-| eos-evm-testnet | 0x413405Aee2db95cb028B60CBAd87FC0B932947f4 | https://api.testnet.evm.eosnetwork.com/ |
+```
+| Chain Name      | Address                                    | RPC                                        |
+|-----------------|--------------------------------------------|--------------------------------------------|
+| optimism-goerli | 0x3bA217Cd7840Cc5B34FD5B7263Cebd8CD8665788 | https://goerli.optimism.io                 |
+| avalanche-fuji  | 0xE7E52C85907d59C45b2C56EF32B78F514F8c547a | https://api.avax-test.network/ext/bc/C/rpc |
+| eos-evm-testnet | 0x413405Aee2db95cb028B60CBAd87FC0B932947f4 | https://api.testnet.evm.eosnetwork.com/    |
+```
 
 You will also need the private key of a wallet with some gas tokens for your chosen network.
 Then, from the `coin_flip/app` directory, run the following command:
