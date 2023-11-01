@@ -9,7 +9,9 @@ Use this protocol at your own risk.
 
 ## Install
 
-TODO
+```shell
+npm install @pythnetwork/entropy-sdk-solidity
+```
 
 ## Setup
 
