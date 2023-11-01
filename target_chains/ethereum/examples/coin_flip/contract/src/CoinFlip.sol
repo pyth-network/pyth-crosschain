@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
+// Import the entropy SDK in order to interact with the entropy contracts
 import "entropy-sdk-solidity/IEntropy.sol";
 
 library CoinFlipErrors {
