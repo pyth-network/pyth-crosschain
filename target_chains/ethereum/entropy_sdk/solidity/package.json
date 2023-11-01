@@ -7,6 +7,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "target_chains/ethereum/entropy_sdk/solidity"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "format": "npx prettier --write ."
   },
