@@ -24,9 +24,9 @@ Then, from the `coin_flip/app` directory, run the following command:
 
 ```
 npm run flip-coin -- \
-  --private-key <hexadecimal evm private key>
-  --chain-name <chain name>
-  --address <address>
+  --private-key <hexadecimal evm private key> \
+  --chain-name <chain name> \
+  --address <address> \
   --rpc-url <rpc url>
 ```
 
