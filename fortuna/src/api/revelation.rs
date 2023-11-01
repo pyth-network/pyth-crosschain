@@ -8,18 +8,19 @@ use {
     axum::{
         extract::{
             Path,
+            Query,
             State,
         },
         Json,
     },
     pythnet_sdk::wire::array,
+    serde_with::serde_as,
     utoipa::{
         IntoParams,
         ToSchema,
     },
 };
 
-// TODO: this should probably take path parameters /v1/revelation/<chain_id>/<sequence_number>
 /// Reveal the random value for a given sequence number and blockchain.
 ///
 /// Given a sequence number, retrieve the corresponding random value that this provider has committed to.
@@ -34,11 +35,12 @@ responses(
 (status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
 (status = 403, description = "Random value cannot currently be retrieved", body = String)
 ),
-params(GetRandomValueQueryParams)
+params(RevelationPathParams, RevelationQueryParams)
 )]
 pub async fn revelation(
     State(state): State<crate::api::ApiState>,
-    Path(GetRandomValueQueryParams { chain_id, sequence }): Path<GetRandomValueQueryParams>,
+    Path(RevelationPathParams { chain_id, sequence }): Path<RevelationPathParams>,
+    Query(RevelationQueryParams { encoding }): Query<RevelationQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
@@ -70,8 +72,10 @@ pub async fn revelation(
             .state
             .reveal(sequence)
             .map_err(|_| RestError::Unknown)?;
+        let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
+
         Ok(Json(GetRandomValueResponse {
-            value: (*value).clone(),
+            value: encoded_value,
         }))
     } else {
         Err(RestError::NoPendingRequest)
@@ -80,15 +84,67 @@ pub async fn revelation(
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Path)]
-pub struct GetRandomValueQueryParams {
+pub struct RevelationPathParams {
     #[param(value_type = String)]
     pub chain_id: ChainId,
     pub sequence: u64,
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
+pub struct RevelationQueryParams {
+    pub encoding: Option<BinaryEncoding>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum BinaryEncoding {
+    #[serde(rename = "hex")]
+    Hex,
+    #[serde(rename = "base64")]
+    Base64,
+    #[serde(rename = "array")]
+    Array,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct GetRandomValueResponse {
     // TODO: choose serialization format
-    #[serde(with = "array")]
-    pub value: [u8; 32],
+    pub value: Blob,
+}
+
+#[serde_as]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[serde(tag = "encoding", rename_all = "kebab-case")]
+pub enum Blob {
+    Hex {
+        #[serde_as(as = "serde_with::hex::Hex")]
+        data: [u8; 32],
+    },
+    Base64 {
+        #[serde_as(as = "serde_with::base64::Base64")]
+        data: [u8; 32],
+    },
+    Array {
+        #[serde(with = "array")]
+        data: [u8; 32],
+    },
+}
+
+impl Blob {
+    pub fn new(encoding: BinaryEncoding, data: [u8; 32]) -> Blob {
+        match encoding {
+            BinaryEncoding::Hex => Blob::Hex { data },
+            BinaryEncoding::Base64 => Blob::Base64 { data },
+            BinaryEncoding::Array => Blob::Array { data },
+        }
+    }
+
+    pub fn data(&self) -> &[u8; 32] {
+        match self {
+            Blob::Hex { data } => data,
+            Blob::Base64 { data } => data,
+            Blob::Array { data } => data,
+        }
+    }
 }
