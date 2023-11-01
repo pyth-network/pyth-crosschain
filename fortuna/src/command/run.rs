@@ -38,6 +38,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     components(
     schemas(
     crate::api::GetRandomValueResponse,
+    crate::api::Blob,
+    crate::api::BinaryEncoding,
     )
     ),
     tags(
