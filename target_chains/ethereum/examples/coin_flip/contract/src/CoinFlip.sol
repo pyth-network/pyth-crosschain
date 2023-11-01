@@ -30,7 +30,7 @@ contract CoinFlip {
     // 1. Operating an off-chain service that reveals their random numbers once they've been committed to on-chain
     // 2. Maintaining the secrecy of the other random numbers
     // Users should choose a reliable provider who they trust to uphold these commitments.
-    // (For the moment, the only available provider is 0x368397bDc956b4F23847bE244f350Bde4615F25E)
+    // (For the moment, the only available provider is 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344)
     IEntropy private entropy;
     address private entropyProvider;
 
@@ -84,7 +84,7 @@ contract CoinFlip {
     // committed to, as well as the entropy provider's random number. The provider's random number can be retrieved
     // from them in a provider-dependent manner.
     //
-    // For the moment, the provider 0x368397bDc956b4F23847bE244f350Bde4615F25E hosts a webservice at
+    // For the moment, the provider 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344 hosts a webservice at
     // https://fortuna-staging.pyth.network/ that allows anyone to retrieve their random values.
     // Fetch the following url:
     // https://fortuna-staging.pyth.network/v1/chains/<chain id>/revelations/<sequence number>
