@@ -76,13 +76,12 @@ pub struct RandomnessOptions {
     /// A secret used for generating new hash chains. A 64-char hex string.
     #[arg(long = "secret")]
     #[arg(env = "FORTUNA_SECRET")]
-    #[arg(default_value = "0000000000000000000000000000000000000000000000000000000000000000")]
     pub secret: String,
 
     /// The length of the hash chain to generate.
     #[arg(long = "chain-length")]
     #[arg(env = "FORTUNA_CHAIN_LENGTH")]
-    #[arg(default_value = "32")]
+    #[arg(default_value = "10000")]
     pub chain_length: u64,
 }
 

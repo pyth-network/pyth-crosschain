@@ -17,9 +17,9 @@ To use the SDK, you need the address of an Entropy contract on your blockchain a
 The following table lists the current deployments of entropy.
 
 | Chain | Entropy Address | Provider |
-| avalanche-fuji | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
-| optimism-goerli | 0x28F16Af4D87523910b843a801454AEde5F9B0459 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
-| eos-evm-testnet | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
+| avalanche-fuji | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344
+| optimism-goerli | 0x28F16Af4D87523910b843a801454AEde5F9B0459 | 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344
+| eos-evm-testnet | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344
 
 Choose one of these networks and instantiate an `IEntropy` contract in your solidity contract:
 
@@ -55,7 +55,7 @@ If you are invoking this off-chain, the method also emits a `PythRandomEvents.Re
 ### 3. Fetch the provider's number
 
 Fetch the provider's random number from them.
-For the provider `0x368397bDc956b4F23847bE244f350Bde4615F25E` you can query the webservice at https://fortuna-staging.pyth.network :
+For the provider `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` you can query the webservice at https://fortuna-staging.pyth.network :
 
 ```typescript
 await axios.get(

@@ -106,7 +106,7 @@ async function main() {
   // Note that there is a potential race condition here: the server may not have observed the request ^
   // before this HTTP response. Hence, we retry fetching the url a couple of times.
   const response = await fetchWithRetry(url, 3);
-  const providerRandom = web3.utils.bytesToHex(response.value);
+  const providerRandom = `0x${response.value.data}`;
   console.log(`   number    : ${providerRandom}`);
 
   console.log("4. Revealing the result of the coin flip...");
