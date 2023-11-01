@@ -16,8 +16,7 @@ These commands will build dependencies for the typescript project.
 Next, choose a network to run the example on.
 The example has been deployed on the following networks:
 
-## | Chain Name | Address | RPC |
-
+| Chain Name | Address | RPC |
 | optimism-goerli | 0x075A5160FF6462924B4124595F6f987187496476 | https://goerli.optimism.io |
 
 You will also need the private key of a wallet with some gas tokens for your chosen network.

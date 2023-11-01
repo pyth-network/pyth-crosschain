@@ -16,8 +16,7 @@ TODO
 To use the SDK, you need the address of an Entropy contract on your blockchain and a randomness provider.
 The following table lists the current deployments of entropy.
 
-## | Chain | Entropy Address | Provider |
-
+| Chain | Entropy Address | Provider |
 | avalanche-fuji | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
 | optimism-goerli | 0x28F16Af4D87523910b843a801454AEde5F9B0459 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
 | eos-evm-testnet | 0xD42c7a708E74AD19401D907a14146F006c851Ee3 | 0x368397bDc956b4F23847bE244f350Bde4615F25E
