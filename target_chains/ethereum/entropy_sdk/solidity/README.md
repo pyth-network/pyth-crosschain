@@ -48,10 +48,13 @@ const commitment = web3.utils.keccak256(randomNumber);
 
 ### 2. Request a number from Entropy
 
-Invoke the `request` method of the `IEntropy` contract:
+Invoke the `request` method of the `IEntropy` contract.
+The `request` method requires paying a fee in native gas tokens which is configured per-provider.
+Use the `getFee` method to calculate the fee and send it as the value of the `request` call:
 
 ```solidity
-uint64 sequenceNumber = entropy.request(provider, commitment, true)
+uint fee = entropy.getFee(provider);
+uint64 sequenceNumber = entropy.request{value: fee}(provider, commitment, true);
 ```
 
 This method returns a sequence number. Store this sequence number for use in later steps.
@@ -84,3 +87,8 @@ bytes32 randomNumber = entropy.reveal(
 ```
 
 This method will combine the user and provider's random numbers, along with the blockhash, to construct the final secure random number.
+
+## Example Application
+
+The [Coin Flip](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
+interacts with Pyth Entropy as well as a typescript client for that application.
