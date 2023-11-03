@@ -1,11 +1,11 @@
 use {
     crate::{
         api,
+        chain::ethereum::PythContract,
         config::{
             Config,
             RunOptions,
         },
-        ethereum::PythContract,
         state::{
             HashChainState,
             PebbleHashChain,
@@ -43,7 +43,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     )
     ),
     tags(
-    (name = "pyth-rng", description = "Pyth Random Number Service")
+    (name = "fortuna", description = "Random number service for the Pyth Entropy protocol")
     )
     )]
     struct ApiDoc;
@@ -99,16 +99,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let app = Router::new();
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .route("/", get(api::index))
-        .route("/live", get(api::live))
-        .route("/metrics", get(api::metrics))
-        .route("/ready", get(api::ready))
-        .route("/v1/chains", get(api::chain_ids))
-        .route(
-            "/v1/chains/:chain_id/revelations/:sequence",
-            get(api::revelation),
-        )
-        .with_state(api_state)
+        .merge(api::v1_routes(api_state))
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
 

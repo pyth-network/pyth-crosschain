@@ -1,14 +1,17 @@
 use {
     crate::{
-        ethereum::PythContract,
+        chain::reader::EntropyRead,
         state::HashChainState,
     },
     axum::{
+        body::Body,
         http::StatusCode,
         response::{
             IntoResponse,
             Response,
         },
+        routing::get,
+        Router,
     },
     ethers::core::types::Address,
     prometheus_client::{
@@ -21,6 +24,7 @@ use {
     },
     std::{
         collections::HashMap,
+        ops::Add,
         sync::Arc,
     },
     tokio::sync::RwLock,
@@ -56,7 +60,7 @@ pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,
     /// The EVM contract where the protocol is running.
-    pub contract:         Arc<PythContract>,
+    pub contract:         Arc<dyn EntropyRead>,
     /// The EVM address of the provider that this server is operating for.
     pub provider_address: Address,
 }
@@ -135,5 +139,32 @@ impl IntoResponse for RestError {
             )
                 .into_response(),
         }
+    }
+}
+
+pub fn v1_routes(state: ApiState) -> Router<(), Body> {
+    Router::new()
+        .route("/", get(index))
+        .route("/live", get(live))
+        .route("/metrics", get(metrics))
+        .route("/ready", get(ready))
+        .route("/v1/chains", get(chain_ids))
+        .route(
+            "/v1/chains/:chain_id/revelations/:sequence",
+            get(revelation),
+        )
+        .with_state(state)
+}
+
+#[cfg(test)]
+mod test {
+    use {
+        crate::api,
+        axum_test::TestServer,
+    };
+
+    fn test_server() -> TestServer {
+        let app = api::v1_routes();
+        let server = TestServer::new(app).unwrap();
     }
 }

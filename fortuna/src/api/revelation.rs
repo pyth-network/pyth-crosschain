@@ -59,26 +59,25 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or_else(|| RestError::InvalidChainId)?;
 
-    let r = state
+    let maybe_request = state
         .contract
         .get_request(state.provider_address, sequence)
-        .call()
         .await
         .map_err(|_| RestError::TemporarilyUnavailable)?;
 
-    // sequence_number == 0 means the request does not exist.
-    if r.sequence_number != 0 {
-        let value = &state
-            .state
-            .reveal(sequence)
-            .map_err(|_| RestError::Unknown)?;
-        let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
+    match maybe_request {
+        Some(r) => {
+            let value = &state
+                .state
+                .reveal(sequence)
+                .map_err(|_| RestError::Unknown)?;
+            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
 
-        Ok(Json(GetRandomValueResponse {
-            value: encoded_value,
-        }))
-    } else {
-        Err(RestError::NoPendingRequest)
+            Ok(Json(GetRandomValueResponse {
+                value: encoded_value,
+            }))
+        }
+        None => Err(RestError::NoPendingRequest),
     }
 }
 
@@ -148,3 +147,21 @@ impl Blob {
         }
     }
 }
+
+/*
+#[cfg(test)]
+mod test {
+    use axum_test::TestServer;
+
+    #[test]
+    fn test_dummy() {
+        let my_app = Router::new()
+            .route("/users", put(route_put_user));
+
+        let server = TestServer::new(my_app)?;
+
+
+        assert!(true);
+    }
+}
+ */
