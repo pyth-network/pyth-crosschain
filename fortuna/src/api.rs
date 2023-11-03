@@ -190,11 +190,10 @@ mod test {
         std::sync::Arc,
     };
 
-    fn test_server() -> TestServer {
+    pub fn test_server(hash_chain: PebbleHashChain) -> TestServer {
         let provider_1 = Address::zero();
         let secret_1 = [0u8; 32];
-        let hash_chain_1 = PebbleHashChain::new(secret_1, 1000);
-        let hash_chain_state_1 = HashChainState::from_offset(0, hash_chain_1);
+        let hash_chain_state_1 = HashChainState::from_offset(0, hash_chain);
 
         let eth_read = mock_chain(&[(provider_1, 0)]);
 

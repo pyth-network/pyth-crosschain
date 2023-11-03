@@ -15,6 +15,7 @@ use {
 };
 
 /// A HashChain.
+#[derive(Clone)]
 pub struct PebbleHashChain {
     hash: Vec<[u8; 32]>,
     next: usize,

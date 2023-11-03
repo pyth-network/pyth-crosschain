@@ -106,14 +106,14 @@ pub enum BinaryEncoding {
     Array,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 pub struct GetRandomValueResponse {
     // TODO: choose serialization format
     pub value: Blob,
 }
 
 #[serde_as]
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 #[serde(tag = "encoding", rename_all = "kebab-case")]
 pub enum Blob {
     Hex {
@@ -148,20 +148,34 @@ impl Blob {
     }
 }
 
-/*
 #[cfg(test)]
 mod test {
-    use axum_test::TestServer;
+    use {
+        crate::{
+            api::{
+                test::test_server,
+                BinaryEncoding,
+                Blob,
+                GetRandomValueResponse,
+            },
+            state::PebbleHashChain,
+        },
+        axum::http::StatusCode,
+        axum_test::TestServer,
+    };
 
-    #[test]
-    fn test_dummy() {
-        let my_app = Router::new()
-            .route("/users", put(route_put_user));
+    #[tokio::test]
+    async fn test_basic() {
+        let hash_chain = PebbleHashChain::new([0u8; 32], 1000);
+        let server = test_server(hash_chain.clone());
 
-        let server = TestServer::new(my_app)?;
+        let response = server.get("/v1/chains/not_a_chain/revelations/0").await;
+        response.assert_status(StatusCode::BAD_REQUEST);
 
-
-        assert!(true);
+        let response = server.get("/v1/chains/ethereum/revelations/0").await;
+        response.assert_status(StatusCode::OK);
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, hash_chain.reveal_ith(0).unwrap()),
+        })
     }
 }
- */
