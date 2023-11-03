@@ -1,5 +1,6 @@
 use {
     crate::{
+        api,
         chain::reader::EntropyRead,
         state::HashChainState,
     },
@@ -55,7 +56,19 @@ pub struct ApiState {
     pub metrics: Arc<Metrics>,
 }
 
+impl ApiState {
+    pub fn new(chains: &[(ChainId, BlockchainState)]) -> ApiState {
+        let map: HashMap<ChainId, BlockchainState> =
+            chains.into_iter().map(|r| (*r).clone()).collect();
+        ApiState {
+            chains:  Arc::new(map),
+            metrics: Arc::new(Metrics::new()),
+        }
+    }
+}
+
 /// The state of the randomness service for a single blockchain.
+#[derive(Clone)]
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,
@@ -159,12 +172,41 @@ pub fn v1_routes(state: ApiState) -> Router<(), Body> {
 #[cfg(test)]
 mod test {
     use {
-        crate::api,
+        crate::{
+            api::{
+                self,
+                ApiState,
+                BlockchainState,
+                ChainId,
+            },
+            chain::reader::test::mock_chain,
+            state::{
+                HashChainState,
+                PebbleHashChain,
+            },
+        },
         axum_test::TestServer,
+        ethers::prelude::Address,
+        std::sync::Arc,
     };
 
     fn test_server() -> TestServer {
-        let app = api::v1_routes();
-        let server = TestServer::new(app).unwrap();
+        let provider_1 = Address::zero();
+        let secret_1 = [0u8; 32];
+        let hash_chain_1 = PebbleHashChain::new(secret_1, 1000);
+        let hash_chain_state_1 = HashChainState::from_offset(0, hash_chain_1);
+
+        let eth_read = mock_chain(&[(provider_1, 0)]);
+
+        let blockchain_state = BlockchainState {
+            state:            Arc::new(hash_chain_state_1),
+            contract:         Arc::new(eth_read),
+            provider_address: provider_1,
+        };
+
+        let api_state = ApiState::new(&[("ethereum".into(), blockchain_state)]);
+
+        let app = api::v1_routes(api_state);
+        TestServer::new(app).unwrap()
     }
 }

@@ -7,6 +7,7 @@ use {
         ensure,
         Result,
     },
+    ethabi::Hash,
     sha3::{
         Digest,
         Keccak256,
@@ -76,6 +77,13 @@ pub struct HashChainState {
 }
 
 impl HashChainState {
+    pub fn from_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
+        HashChainState {
+            offsets:     vec![offset],
+            hash_chains: vec![chain],
+        }
+    }
+
     pub fn reveal(&self, sequence_number: u64) -> Result<[u8; 32]> {
         let sequence_number: usize = sequence_number.try_into()?;
         let chain_index = self
