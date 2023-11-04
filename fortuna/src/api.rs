@@ -1,7 +1,6 @@
 use {
     crate::{
-        api,
-        chain::reader::EntropyRead,
+        chain::reader::EntropyReader,
         state::HashChainState,
     },
     axum::{
@@ -72,9 +71,9 @@ impl ApiState {
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:            Arc<HashChainState>,
-    /// The EVM contract where the protocol is running.
-    pub contract:         Arc<dyn EntropyRead>,
-    /// The EVM address of the provider that this server is operating for.
+    /// The contract that the server is fulfilling requests for.
+    pub contract:         Arc<dyn EntropyReader>,
+    /// The address of the provider that this server is operating for.
     pub provider_address: Address,
 }
 
@@ -155,7 +154,7 @@ impl IntoResponse for RestError {
     }
 }
 
-pub fn v1_routes(state: ApiState) -> Router<(), Body> {
+pub fn routes(state: ApiState) -> Router<(), Body> {
     Router::new()
         .route("/", get(index))
         .route("/live", get(live))
@@ -170,16 +169,15 @@ pub fn v1_routes(state: ApiState) -> Router<(), Body> {
 }
 
 #[cfg(test)]
-mod test {
+mod mock {
     use {
         crate::{
             api::{
                 self,
                 ApiState,
                 BlockchainState,
-                ChainId,
             },
-            chain::reader::test::mock_chain,
+            chain::reader::mock::MockEntropyReader,
             state::{
                 HashChainState,
                 PebbleHashChain,
@@ -190,12 +188,10 @@ mod test {
         std::sync::Arc,
     };
 
-    pub fn test_server(hash_chain: PebbleHashChain) -> TestServer {
-        let provider_1 = Address::zero();
-        let secret_1 = [0u8; 32];
+    pub fn test_server(provider_1: Address, hash_chain: PebbleHashChain) -> TestServer {
         let hash_chain_state_1 = HashChainState::from_offset(0, hash_chain);
 
-        let eth_read = mock_chain(&[(provider_1, 0)]);
+        let eth_read = MockEntropyReader::with_requests(&[(provider_1, 0)]);
 
         let blockchain_state = BlockchainState {
             state:            Arc::new(hash_chain_state_1),
@@ -205,7 +201,7 @@ mod test {
 
         let api_state = ApiState::new(&[("ethereum".into(), blockchain_state)]);
 
-        let app = api::v1_routes(api_state);
+        let app = api::routes(api_state);
         TestServer::new(app).unwrap()
     }
 }

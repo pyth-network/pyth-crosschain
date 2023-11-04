@@ -99,7 +99,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let app = Router::new();
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .merge(api::v1_routes(api_state))
+        .merge(api::routes(api_state))
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
 

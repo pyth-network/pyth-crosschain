@@ -2,7 +2,7 @@ use {
     crate::{
         chain::{
             reader,
-            reader::EntropyRead,
+            reader::EntropyReader,
         },
         config::EthereumConfig,
     },
@@ -178,7 +178,7 @@ impl PythContract {
 }
 
 #[async_trait]
-impl EntropyRead for PythContract {
+impl EntropyReader for PythContract {
     async fn get_request(
         &self,
         provider_address: Address,

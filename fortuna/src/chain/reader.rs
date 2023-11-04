@@ -5,20 +5,11 @@ use {
 };
 
 #[async_trait]
-pub trait EntropyRead: Send + Sync {
+pub trait EntropyReader: Send + Sync {
     // Note: this interface is likely not generic enough for other types of blockchains
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 }
-
-/*
-pub trait Entropy: EntropyRead {
-
-    async fn request(&self, provider: &Address,
-                     user_randomness: &[u8; 32],
-                     use_blockhash: bool)
-}
- */
 
 #[derive(Clone, Debug)]
 pub struct Request {
@@ -28,10 +19,10 @@ pub struct Request {
 
 
 #[cfg(test)]
-pub mod test {
+pub mod mock {
     use {
         crate::chain::reader::{
-            EntropyRead,
+            EntropyReader,
             Request,
         },
         anyhow::Result,
@@ -39,24 +30,26 @@ pub mod test {
         ethers::types::Address,
     };
 
-    pub struct MockEntropyRead {
+    pub struct MockEntropyReader {
         requests: Vec<Request>,
     }
 
-    pub fn mock_chain(requests: &[(Address, u64)]) -> MockEntropyRead {
-        MockEntropyRead {
-            requests: requests
-                .iter()
-                .map(|&(a, s)| Request {
-                    provider:        a,
-                    sequence_number: s,
-                })
-                .collect(),
+    impl MockEntropyReader {
+        pub fn with_requests(requests: &[(Address, u64)]) -> MockEntropyReader {
+            MockEntropyReader {
+                requests: requests
+                    .iter()
+                    .map(|&(a, s)| Request {
+                        provider:        a,
+                        sequence_number: s,
+                    })
+                    .collect(),
+            }
         }
     }
 
     #[async_trait]
-    impl EntropyRead for MockEntropyRead {
+    impl EntropyReader for MockEntropyReader {
         async fn get_request(
             &self,
             provider: Address,

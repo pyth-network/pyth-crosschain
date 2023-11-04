@@ -66,7 +66,7 @@ pub async fn revelation(
         .map_err(|_| RestError::TemporarilyUnavailable)?;
 
     match maybe_request {
-        Some(r) => {
+        Some(_) => {
             let value = &state
                 .state
                 .reveal(sequence)
@@ -108,7 +108,6 @@ pub enum BinaryEncoding {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 pub struct GetRandomValueResponse {
-    // TODO: choose serialization format
     pub value: Blob,
 }
 
@@ -153,7 +152,7 @@ mod test {
     use {
         crate::{
             api::{
-                test::test_server,
+                mock::test_server,
                 BinaryEncoding,
                 Blob,
                 GetRandomValueResponse,
@@ -161,21 +160,28 @@ mod test {
             state::PebbleHashChain,
         },
         axum::http::StatusCode,
-        axum_test::TestServer,
+        ethabi::ethereum_types::Address,
     };
 
     #[tokio::test]
-    async fn test_basic() {
+    async fn test_get() {
         let hash_chain = PebbleHashChain::new([0u8; 32], 1000);
-        let server = test_server(hash_chain.clone());
-
-        let response = server.get("/v1/chains/not_a_chain/revelations/0").await;
-        response.assert_status(StatusCode::BAD_REQUEST);
+        let server = test_server(Address::random(), hash_chain.clone());
 
         let response = server.get("/v1/chains/ethereum/revelations/0").await;
         response.assert_status(StatusCode::OK);
         response.assert_json(&GetRandomValueResponse {
             value: Blob::new(BinaryEncoding::Hex, hash_chain.reveal_ith(0).unwrap()),
-        })
+        });
+
+        let response = server.get("/v1/chains/not_a_chain/revelations/0").await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+
+        let response = server.get("/v1/chains/ethereum/revelations/1").await;
+        response.assert_status(StatusCode::FORBIDDEN);
+
+        // TODO:
+        // - test with multiple chain ids & different states
+        // - test with hash chain offset
     }
 }
