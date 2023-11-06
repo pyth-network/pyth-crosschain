@@ -28,23 +28,39 @@ pub mod mock {
         anyhow::Result,
         axum::async_trait,
         ethers::types::Address,
+        std::sync::RwLock,
     };
 
+    /// Mock version of the entropy contract intended for testing.
+    /// This class is internally locked to allow tests to modify the in-flight requests while
+    /// the API is also holding a pointer to the same data structure.
     pub struct MockEntropyReader {
-        requests: Vec<Request>,
+        /// The set of requests that are currently in-flight.
+        requests: RwLock<Vec<Request>>,
     }
 
     impl MockEntropyReader {
         pub fn with_requests(requests: &[(Address, u64)]) -> MockEntropyReader {
             MockEntropyReader {
-                requests: requests
-                    .iter()
-                    .map(|&(a, s)| Request {
-                        provider:        a,
-                        sequence_number: s,
-                    })
-                    .collect(),
+                requests: RwLock::new(
+                    requests
+                        .iter()
+                        .map(|&(a, s)| Request {
+                            provider:        a,
+                            sequence_number: s,
+                        })
+                        .collect(),
+                ),
             }
+        }
+
+        /// Insert a new request into the set of in-flight requests.
+        pub fn insert(&self, provider: Address, sequence: u64) -> &Self {
+            self.requests.write().unwrap().push(Request {
+                provider,
+                sequence_number: sequence,
+            });
+            self
         }
     }
 
@@ -57,8 +73,10 @@ pub mod mock {
         ) -> Result<Option<Request>> {
             Ok(self
                 .requests
+                .read()
+                .unwrap()
                 .iter()
-                .find(|&r| r.sequence_number == sequence_number)
+                .find(|&r| r.sequence_number == sequence_number && r.provider == provider)
                 .map(|r| (*r).clone()))
         }
     }

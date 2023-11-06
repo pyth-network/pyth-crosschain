@@ -169,13 +169,16 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
 }
 
 #[cfg(test)]
-mod mock {
+mod test {
     use {
         crate::{
             api::{
                 self,
                 ApiState,
+                BinaryEncoding,
+                Blob,
                 BlockchainState,
+                GetRandomValueResponse,
             },
             chain::reader::mock::MockEntropyReader,
             state::{
@@ -183,25 +186,196 @@ mod mock {
                 PebbleHashChain,
             },
         },
-        axum_test::TestServer,
+        axum::{
+            http::StatusCode,
+            response,
+        },
+        axum_test::{
+            TestResponse,
+            TestServer,
+        },
         ethers::prelude::Address,
+        once_cell::sync::Lazy,
         std::sync::Arc,
     };
 
-    pub fn test_server(provider_1: Address, hash_chain: PebbleHashChain) -> TestServer {
-        let hash_chain_state_1 = HashChainState::from_offset(0, hash_chain);
+    const PROVIDER: Address = Address::zero();
+    const OTHER_PROVIDER: Lazy<Address> = Lazy::new(|| Address::from_low_u64_be(1));
+    const ETH_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
+        Arc::new(HashChainState::from_offset(
+            0,
+            PebbleHashChain::new([0u8; 32], 1000),
+        ))
+    });
+    const AVAX_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
+        Arc::new(HashChainState::from_offset(
+            100,
+            PebbleHashChain::new([1u8; 32], 1000),
+        ))
+    });
 
-        let eth_read = MockEntropyReader::with_requests(&[(provider_1, 0)]);
+    fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
+        let eth_read = Arc::new(MockEntropyReader::with_requests(&[]));
 
-        let blockchain_state = BlockchainState {
-            state:            Arc::new(hash_chain_state_1),
-            contract:         Arc::new(eth_read),
-            provider_address: provider_1,
+        let eth_state = BlockchainState {
+            state:            ETH_CHAIN.clone(),
+            contract:         eth_read.clone(),
+            provider_address: PROVIDER,
         };
 
-        let api_state = ApiState::new(&[("ethereum".into(), blockchain_state)]);
+        let avax_read = Arc::new(MockEntropyReader::with_requests(&[]));
+
+        let avax_state = BlockchainState {
+            state:            AVAX_CHAIN.clone(),
+            contract:         avax_read.clone(),
+            provider_address: PROVIDER,
+        };
+
+        let api_state = ApiState::new(&[
+            ("ethereum".into(), eth_state),
+            ("avalanche".into(), avax_state),
+        ]);
 
         let app = api::routes(api_state);
-        TestServer::new(app).unwrap()
+        (TestServer::new(app).unwrap(), eth_read, avax_read)
+    }
+
+    async fn get_and_assert_status(
+        server: &TestServer,
+        path: &str,
+        status: StatusCode,
+    ) -> TestResponse {
+        let response = server.get(path).await;
+        response.assert_status(status);
+        response
+    }
+
+    #[tokio::test]
+    async fn test_revelation() {
+        let (server, eth_contract, avax_contract) = test_server();
+
+        // Can't access a revelation if it hasn't been requested
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/0",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        // Once someone requests the number, then it is accessible
+        eth_contract.insert(PROVIDER, 0);
+        let response =
+            get_and_assert_status(&server, "/v1/chains/ethereum/revelations/0", StatusCode::OK)
+                .await;
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, ETH_CHAIN.reveal(0).unwrap()),
+        });
+
+        // Each chain and provider has its own set of requests
+        eth_contract.insert(PROVIDER, 100);
+        eth_contract.insert(*OTHER_PROVIDER, 101);
+        eth_contract.insert(PROVIDER, 102);
+        avax_contract.insert(PROVIDER, 102);
+        avax_contract.insert(PROVIDER, 103);
+        avax_contract.insert(*OTHER_PROVIDER, 104);
+
+        let response = get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/100",
+            StatusCode::OK,
+        )
+        .await;
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, ETH_CHAIN.reveal(100).unwrap()),
+        });
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/101",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+        let response = get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/102",
+            StatusCode::OK,
+        )
+        .await;
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, ETH_CHAIN.reveal(102).unwrap()),
+        });
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/103",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/104",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/101",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+        let response = get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/102",
+            StatusCode::OK,
+        )
+        .await;
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, AVAX_CHAIN.reveal(102).unwrap()),
+        });
+        let response = get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/103",
+            StatusCode::OK,
+        )
+        .await;
+        response.assert_json(&GetRandomValueResponse {
+            value: Blob::new(BinaryEncoding::Hex, AVAX_CHAIN.reveal(103).unwrap()),
+        });
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/104",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        // Bad chain ids fail
+        get_and_assert_status(
+            &server,
+            "/v1/chains/not_a_chain/revelations/0",
+            StatusCode::BAD_REQUEST,
+        )
+        .await;
+
+        // Requesting a number that has a request, but isn't in the HashChainState also fails.
+        // (Note that this shouldn't happen in normal operation)
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/99",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+        avax_contract.insert(PROVIDER, 99);
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/99",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
+        .await;
     }
 }

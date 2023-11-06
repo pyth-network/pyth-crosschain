@@ -1498,6 +1498,7 @@ dependencies = [
  "ethabi",
  "ethers",
  "hex",
+ "once_cell",
  "prometheus-client",
  "pythnet-sdk",
  "rand",
