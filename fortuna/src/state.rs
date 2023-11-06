@@ -35,17 +35,18 @@ impl PebbleHashChain {
     }
 
     pub fn from_config(
-        opts: &RandomnessOptions,
+        secret: &str,
         chain_id: &ChainId,
-        random: [u8; 32],
+        random: &[u8; 32],
+        chain_length: u64,
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
-        input.extend_from_slice(&hex::decode(opts.secret.clone())?);
+        input.extend_from_slice(&hex::decode(secret)?);
         input.extend_from_slice(&chain_id.as_bytes());
-        input.extend_from_slice(&random);
+        input.extend_from_slice(random);
 
         let secret: [u8; 32] = Keccak256::digest(input).into();
-        Ok(Self::new(secret, opts.chain_length.try_into()?))
+        Ok(Self::new(secret, chain_length.try_into()?))
     }
 
     /// Reveal the next hash in the chain using the previous proof.

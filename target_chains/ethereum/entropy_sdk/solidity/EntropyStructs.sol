@@ -20,7 +20,7 @@ contract EntropyStructs {
         uint64 originalCommitmentSequenceNumber;
         // Metadata for the current commitment. Providers may optionally use this field to to help
         // manage rotations (i.e., to pick the sequence number from the correct hash chain).
-        bytes32 commitmentMetadata;
+        bytes commitmentMetadata;
         // The first sequence number that is *not* included in the current commitment (i.e., an exclusive end index).
         // The contract maintains the invariant that sequenceNumber <= endSequenceNumber.
         // If sequenceNumber == endSequenceNumber, the provider must rotate their commitment to add additional random values.
@@ -43,7 +43,6 @@ contract EntropyStructs {
         bytes32 userCommitment;
         bytes32 providerCommitment;
         uint64 providerCommitmentSequenceNumber;
-        bytes32 providerCommitmentMetadata;
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
         uint256 blockNumber;
     }

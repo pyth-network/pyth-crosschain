@@ -1446,12 +1446,13 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
  "base64 0.21.4",
+ "bincode",
  "byteorder",
  "clap",
  "ethabi",
