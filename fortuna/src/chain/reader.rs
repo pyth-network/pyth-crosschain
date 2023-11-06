@@ -4,13 +4,19 @@ use {
     ethers::types::Address,
 };
 
+/// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
 pub trait EntropyReader: Send + Sync {
-    // Note: this interface is likely not generic enough for other types of blockchains
+    /// Get an in-flight request (if it exists)
+    /// Note that if we support additional blockchains in the future, the type of `provider` may
+    /// need to become more generic.
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 }
 
+/// An in-flight request stored in the contract.
+/// (This struct is missing many fields that are defined in the contract, as they
+/// aren't used in fortuna anywhere. Feel free to add any missing fields as necessary.)
 #[derive(Clone, Debug)]
 pub struct Request {
     pub provider:        Address,

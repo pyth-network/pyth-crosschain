@@ -78,7 +78,7 @@ pub struct HashChainState {
 }
 
 impl HashChainState {
-    pub fn from_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
+    pub fn from_chain_at_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
         HashChainState {
             offsets:     vec![offset],
             hash_chains: vec![chain],

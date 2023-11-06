@@ -202,13 +202,13 @@ mod test {
     const PROVIDER: Address = Address::zero();
     const OTHER_PROVIDER: Lazy<Address> = Lazy::new(|| Address::from_low_u64_be(1));
     const ETH_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
-        Arc::new(HashChainState::from_offset(
+        Arc::new(HashChainState::from_chain_at_offset(
             0,
             PebbleHashChain::new([0u8; 32], 1000),
         ))
     });
     const AVAX_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
-        Arc::new(HashChainState::from_offset(
+        Arc::new(HashChainState::from_chain_at_offset(
             100,
             PebbleHashChain::new([1u8; 32], 1000),
         ))
