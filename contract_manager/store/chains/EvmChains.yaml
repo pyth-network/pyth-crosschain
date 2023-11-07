@@ -424,3 +424,15 @@
   rpcUrl: https://rpc3.coredao.org
   networkId: 1116
   type: EvmChain
+- id: tomochain
+  wormholeChainName: tomochain
+  mainnet: true
+  rpcUrl: https://rpc.tomochain.com
+  networkId: 88
+  type: EvmChain
+- id: tomochain_testnet
+  wormholeChainName: tomochain
+  mainnet: false
+  rpcUrl: https://rpc.testnet.tomochain.com
+  networkId: 89
+  type: EvmChain
