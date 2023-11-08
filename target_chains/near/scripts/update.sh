@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# This is an example payload for subitting a price update from Hermes to a NEAR contract.
 UPDATE_ARGS=$(
 	cat <<-EOF
 		{
@@ -8,12 +9,14 @@ UPDATE_ARGS=$(
 	EOF
 )
 
+# Feed through jq to get compressed JSON to avoid CLI weirdness.
 UPDATE_JSON=$(echo "$UPDATE_ARGS" | jq -c '.' -M)
 
+# Submit.
 near call \
-	--accountId "780e82bd52465f8a4f5ed8cf5a30666eb41208849956bf87a377da9d8174e2b7" \
+    --accountId "780e82bd52465f8a4f5ed8cf5a30666eb41208849956bf87a377da9d8174e2b7" \
     780e82bd52465f8a4f5ed8cf5a30666eb41208849956bf87a377da9d8174e2b7 \
-	update_price_feed \
+    update_price_feed \
     --gas 300000000000000 \
     --deposit 1 \
-	--args "$UPDATE_JSON"
+    --args "$UPDATE_JSON"
