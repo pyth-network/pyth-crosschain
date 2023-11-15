@@ -37,6 +37,7 @@ The parameters above are configured per price feed in a price configuration YAML
   time_difference: 60 # Time difference threshold (in seconds) to push a newer price feed.
   price_deviation: 0.5 # The price deviation (%) threshold to push a newer price feed.
   confidence_ratio: 1 # The confidence/price (%) threshold to push a newer price feed.
+
   # Optional block to configure whether this feed can be early updated. If at least one feed meets the
   # triggering conditions above, all other feeds who meet the early update conditions will be included in
   # the submitted batch of prices. This logic takes advantage of the fact that adding a feed to a larger
@@ -47,6 +48,24 @@ The parameters above are configured per price feed in a price configuration YAML
     price_deviation: 0.1
     confidence_ratio: 0.5
 - ...
+```
+
+By default, the price pusher will automatically update the price of all listed price feeds whenever the
+triggering condition for a single feed is met. This behavior takes advantage of the reduced cost of batch price updates
+provided by the [Perseus upgrade](https://medium.com/@antonia.vanna.delgado/pyth-network-perseus-first-party-data-matters-e3379bf0d019),
+and is typically the lowest cost way to schedule price updates for multiple feeds.
+
+However, if you would like to customize this behavior, you can add an `early_update` section to the YAML configuration file for
+the feed.
+
+```yaml
+- alias: A/USD # Arbitrary alias for the price feed. It is used in enhance logging.
+  ...
+  # If provided, only early update this price feed if at least one of the listed triggering conditions is met.
+  early_update:
+    time_difference: 30
+    price_deviation: 0.1
+    confidence_ratio: 0.5
 ```
 
 Two sample YAML configuration files are available in the root of this repo.
