@@ -35,6 +35,13 @@ export type PriceConfig = {
 
   // An early update happens when another price has met the conditions to be pushed, so this
   // price can be included in a batch update for minimal gas cost.
+  // By default, every price feed will be early updated in a batch if any other price update triggers
+  // the conditions. This configuration will typically minimize gas usage.
+  //
+  // However, if you would like to customize this behavior, set `customEarlyUpdate: true` in your config
+  // for the price feed, then set the specific conditions (time / price / confidence) under which you would
+  // like the early update to trigger.
+  customEarlyUpdate: boolean | undefined;
   earlyUpdateTimeDifference: DurationInSeconds | undefined;
   earlyUpdatePriceDeviation: PctNumber | undefined;
   earlyUpdateConfidenceRatio: PctNumber | undefined;
@@ -56,6 +63,7 @@ export function readPriceConfigFile(path: string): PriceConfig[] {
       priceDeviation: priceConfigRaw.price_deviation,
       confidenceRatio: priceConfigRaw.confidence_ratio,
 
+      customEarlyUpdate: priceConfigRaw.early_update !== undefined,
       earlyUpdateTimeDifference: priceConfigRaw.early_update?.time_difference,
       earlyUpdatePriceDeviation: priceConfigRaw.early_update?.price_deviation,
       earlyUpdateConfidenceRatio: priceConfigRaw.early_update?.confidence_ratio,
@@ -139,6 +147,8 @@ export function shouldUpdate(
   ) {
     return UpdateCondition.YES;
   } else if (
+    priceConfig.customEarlyUpdate === undefined ||
+    !priceConfig.customEarlyUpdate ||
     (priceConfig.earlyUpdateTimeDifference !== undefined &&
       timeDifference >= priceConfig.earlyUpdateTimeDifference) ||
     (priceConfig.earlyUpdatePriceDeviation !== undefined &&
