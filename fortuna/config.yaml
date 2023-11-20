@@ -9,3 +9,6 @@ chains:
     geth_rpc_addr: https://api.testnet.evm.eosnetwork.com/
     contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3
     legacy_tx: true
+  arbitrum-goerli:
+    geth_rpc_addr: https://arbitrum-goerli.publicnode.com
+    contract_addr: 0xd9eAcfFB8e80b7193042499485EF8369b08E85B6

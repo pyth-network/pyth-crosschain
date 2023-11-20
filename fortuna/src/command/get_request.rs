@@ -1,10 +1,10 @@
 use {
     crate::{
+        chain::ethereum::PythContract,
         config::{
             Config,
             GetRequestOptions,
         },
-        ethereum::PythContract,
     },
     anyhow::Result,
     std::sync::Arc,
