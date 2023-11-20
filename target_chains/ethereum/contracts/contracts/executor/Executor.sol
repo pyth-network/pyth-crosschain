@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 import "../pyth/PythGovernanceInstructions.sol";
 import "../wormhole/interfaces/IWormhole.sol";
@@ -136,10 +136,10 @@ contract Executor {
         index += 2;
 
         gi.executorAddress = encodedInstruction.toAddress(index);
-        index += 32;
+        index += 20;
 
         gi.callAddress = encodedInstruction.toAddress(index);
-        index += 32;
+        index += 20;
 
         // As solidity performs math operations in a checked mode
         // if the length of the encoded instruction be smaller than index
