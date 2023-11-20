@@ -15,10 +15,7 @@ use {
         anyhow,
         Result,
     },
-    axum::{
-        routing::get,
-        Router,
-    },
+    axum::Router,
     std::{
         collections::HashMap,
         sync::Arc,

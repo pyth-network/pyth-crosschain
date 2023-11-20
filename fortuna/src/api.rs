@@ -24,7 +24,6 @@ use {
     },
     std::{
         collections::HashMap,
-        ops::Add,
         sync::Arc,
     },
     tokio::sync::RwLock,
@@ -57,8 +56,7 @@ pub struct ApiState {
 
 impl ApiState {
     pub fn new(chains: &[(ChainId, BlockchainState)]) -> ApiState {
-        let map: HashMap<ChainId, BlockchainState> =
-            chains.into_iter().map(|r| (*r).clone()).collect();
+        let map: HashMap<ChainId, BlockchainState> = chains.into_iter().cloned().collect();
         ApiState {
             chains:  Arc::new(map),
             metrics: Arc::new(Metrics::new()),
@@ -186,33 +184,30 @@ mod test {
                 PebbleHashChain,
             },
         },
-        axum::{
-            http::StatusCode,
-            response,
-        },
+        axum::http::StatusCode,
         axum_test::{
             TestResponse,
             TestServer,
         },
         ethers::prelude::Address,
-        once_cell::sync::Lazy,
+        lazy_static::lazy_static,
         std::sync::Arc,
     };
 
     const PROVIDER: Address = Address::zero();
-    const OTHER_PROVIDER: Lazy<Address> = Lazy::new(|| Address::from_low_u64_be(1));
-    const ETH_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
-        Arc::new(HashChainState::from_chain_at_offset(
+    lazy_static! {
+        static ref OTHER_PROVIDER: Address = Address::from_low_u64_be(1);
+        // Note: these chains are immutable. They are wrapped in Arc because we need Arcs to
+        // initialize the BlockchainStates below, but they aren't cloneable (nor do they need to be cloned).
+        static ref ETH_CHAIN: Arc<HashChainState> = Arc::new(HashChainState::from_chain_at_offset(
             0,
             PebbleHashChain::new([0u8; 32], 1000),
-        ))
-    });
-    const AVAX_CHAIN: Lazy<Arc<HashChainState>> = Lazy::new(|| {
-        Arc::new(HashChainState::from_chain_at_offset(
+        ));
+        static ref AVAX_CHAIN: Arc<HashChainState> = Arc::new(HashChainState::from_chain_at_offset(
             100,
             PebbleHashChain::new([1u8; 32], 1000),
-        ))
-    });
+        ));
+    }
 
     fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
         let eth_read = Arc::new(MockEntropyReader::with_requests(&[]));

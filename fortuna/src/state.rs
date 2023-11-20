@@ -7,7 +7,6 @@ use {
         ensure,
         Result,
     },
-    ethabi::Hash,
     sha3::{
         Digest,
         Keccak256,
