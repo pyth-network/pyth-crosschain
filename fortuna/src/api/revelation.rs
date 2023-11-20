@@ -59,26 +59,25 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or_else(|| RestError::InvalidChainId)?;
 
-    let r = state
+    let maybe_request = state
         .contract
         .get_request(state.provider_address, sequence)
-        .call()
         .await
         .map_err(|_| RestError::TemporarilyUnavailable)?;
 
-    // sequence_number == 0 means the request does not exist.
-    if r.sequence_number != 0 {
-        let value = &state
-            .state
-            .reveal(sequence)
-            .map_err(|_| RestError::Unknown)?;
-        let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
+    match maybe_request {
+        Some(_) => {
+            let value = &state
+                .state
+                .reveal(sequence)
+                .map_err(|_| RestError::Unknown)?;
+            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
 
-        Ok(Json(GetRandomValueResponse {
-            value: encoded_value,
-        }))
-    } else {
-        Err(RestError::NoPendingRequest)
+            Ok(Json(GetRandomValueResponse {
+                value: encoded_value,
+            }))
+        }
+        None => Err(RestError::NoPendingRequest),
     }
 }
 
@@ -107,14 +106,13 @@ pub enum BinaryEncoding {
     Array,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 pub struct GetRandomValueResponse {
-    // TODO: choose serialization format
     pub value: Blob,
 }
 
 #[serde_as]
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 #[serde(tag = "encoding", rename_all = "kebab-case")]
 pub enum Blob {
     Hex {

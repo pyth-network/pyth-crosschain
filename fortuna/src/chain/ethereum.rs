@@ -1,9 +1,16 @@
 use {
-    crate::config::EthereumConfig,
+    crate::{
+        chain::{
+            reader,
+            reader::EntropyReader,
+        },
+        config::EthereumConfig,
+    },
     anyhow::{
         anyhow,
         Result,
     },
+    axum::async_trait,
     ethers::{
         abi::RawLog,
         contract::{
@@ -38,7 +45,7 @@ use {
     std::sync::Arc,
 };
 
-// TODO: Programatically generate this so we don't have to keep committed ABI in sync with the
+// TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
 abigen!(PythRandom, "src/abi.json");
 
@@ -167,5 +174,29 @@ impl PythContract {
             chain_config.contract_addr,
             Arc::new(provider),
         ))
+    }
+}
+
+#[async_trait]
+impl EntropyReader for PythContract {
+    async fn get_request(
+        &self,
+        provider_address: Address,
+        sequence_number: u64,
+    ) -> Result<Option<reader::Request>> {
+        let r = self
+            .get_request(provider_address, sequence_number)
+            .call()
+            .await?;
+
+        // sequence_number == 0 means the request does not exist.
+        if r.sequence_number != 0 {
+            Ok(Some(reader::Request {
+                provider:        r.provider,
+                sequence_number: r.sequence_number,
+            }))
+        } else {
+            Ok(None)
+        }
     }
 }

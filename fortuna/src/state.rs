@@ -14,6 +14,7 @@ use {
 };
 
 /// A HashChain.
+#[derive(Clone)]
 pub struct PebbleHashChain {
     hash: Vec<[u8; 32]>,
     next: usize,
@@ -76,6 +77,13 @@ pub struct HashChainState {
 }
 
 impl HashChainState {
+    pub fn from_chain_at_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
+        HashChainState {
+            offsets:     vec![offset],
+            hash_chains: vec![chain],
+        }
+    }
+
     pub fn reveal(&self, sequence_number: u64) -> Result<[u8; 32]> {
         let sequence_number: usize = sequence_number.try_into()?;
         let chain_index = self
