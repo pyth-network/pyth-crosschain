@@ -10,6 +10,8 @@ import {
   TxGrpcClient,
   TxResponse,
   createTransactionFromMsg,
+  GrpcAccountPortfolio,
+  ChainGrpcBankApi,
 } from "@injectivelabs/sdk-ts";
 import {
   ChainExecutor,
@@ -53,8 +55,21 @@ export class InjectiveExecutor implements ChainExecutor {
     return new InjectiveExecutor(network, wallet);
   }
 
-  private getAddress(): string {
+  getAddress(): string {
     return this.wallet.toBech32();
+  }
+
+  async getBalance(): Promise<number> {
+    const endpoints = getNetworkEndpoints(this.network);
+
+    const chainGrpcAuthApi = new ChainGrpcBankApi(endpoints.grpc);
+
+    const balance = await chainGrpcAuthApi.fetchBalance({
+      accountAddress: this.getAddress(),
+      denom: "inj",
+    });
+
+    return Number(balance.amount) / 10 ** 18;
   }
 
   private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
