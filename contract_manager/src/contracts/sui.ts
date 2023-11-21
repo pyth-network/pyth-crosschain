@@ -1,7 +1,5 @@
 import {
-  Connection,
   Ed25519Keypair,
-  JsonRpcProvider,
   ObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
@@ -377,7 +375,7 @@ export class SuiContract extends Contract {
   }
 
   getProvider() {
-    return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
+    return this.chain.getProvider();
   }
 
   private async getStateFields() {

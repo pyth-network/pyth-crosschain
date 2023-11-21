@@ -18,6 +18,7 @@ import {
   UpdateContractAdminResponse,
 } from "./chain-executor";
 import {
+  CosmWasmClient,
   DeliverTxResponse,
   MsgExecuteContractEncodeObject,
   MsgInstantiateContractEncodeObject,
@@ -63,7 +64,20 @@ export class CosmwasmExecutor implements ChainExecutor {
     );
   }
 
-  private async getAddress(): Promise<string> {
+  async getBalance(): Promise<number> {
+    const address = (await this.signer.getAccounts())[0].address;
+    const cosmwasmClient = await CosmWasmClient.connect(this.endpoint);
+
+    // We are interested only in the coin that we pay gas fees in.
+    const denom = GasPrice.fromString(this.gasPrice).denom;
+    const balance = await cosmwasmClient.getBalance(address, denom);
+
+    // By default the coins have 6 decimal places in CosmWasm
+    // and the denom is usually `u<chain>`.
+    return Number(balance.amount) / 10 ** 6;
+  }
+
+  async getAddress(): Promise<string> {
     return (await this.signer.getAccounts())[0].address;
   }
 
