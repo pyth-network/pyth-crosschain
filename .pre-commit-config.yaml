@@ -108,6 +108,6 @@ repos:
       - id: cargo-clippy-solana-receiver
         name: Cargo clippy for solana target chain contract
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged --features devnet -- -D warnings
         pass_filenames: false
         files: target_chains/solana

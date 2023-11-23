@@ -6,6 +6,16 @@ pub enum ReceiverError {
     EmitterChainNotSolanaOrPythnet,
     #[msg("The posted VAA has wrong magic number.")]
     PostedVaaHeaderWrongMagicNumber,
-    #[msg("An error occured when deserializeing the VAA.")]
+    #[msg("An error occured when deserializing the VAA.")]
     DeserializeVAAFailed,
+    #[msg("An error occurred when deserializing the updates.")]
+    DeserializeUpdateFailed,
+    #[msg("Received an invalid wormhole message")]
+    InvalidWormholeMessage,
+    #[msg("Received an invalid price update")]
+    InvalidPriceUpdate,
+    #[msg("Received an invalid accumulator message")]
+    InvalidAccumulatorMessage,
+    #[msg("Received an invalid accumulator message type")]
+    InvalidAccumulatorMessageType,
 }
