@@ -3073,6 +3073,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "byteorder",
+ "cfg-if",
  "clap 3.2.23",
  "pyth-solana-receiver",
  "pythnet-sdk",
