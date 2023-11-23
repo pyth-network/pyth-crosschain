@@ -21,6 +21,7 @@ import {
   WORMHOLE_ADDRESS,
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
+  getMaximumNumberOfPublishers,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -263,10 +264,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
       }
     })
 
-    // check that no price account has more than 32 publishers
+    // check that no price account has more than the maximum number of publishers
     Object.keys(jsonParsed).forEach((symbol) => {
-      if (jsonParsed[symbol].priceAccounts[0].publishers.length > 32) {
-        toast.error(`${symbol} has more than 32 publishers.`)
+      const maximumNumberOfPublishers = getMaximumNumberOfPublishers(cluster)
+      if (
+        jsonParsed[symbol].priceAccounts[0].publishers.length >
+        maximumNumberOfPublishers
+      ) {
+        toast.error(
+          `${symbol} has more than ${maximumNumberOfPublishers} publishers.`
+        )
         isValid = false
       }
     })

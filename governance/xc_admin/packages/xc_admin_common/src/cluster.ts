@@ -27,3 +27,22 @@ export function getMultisigCluster(cluster: PythCluster): Cluster | "localnet" {
       return cluster;
   }
 }
+
+export function getMaximumNumberOfPublishers(cluster: PythCluster) {
+  switch (cluster) {
+    case "mainnet-beta":
+      return 32;
+    case "devnet":
+      return 32;
+    case "testnet":
+      return 32;
+    case "pythnet":
+      return 32;
+    case "pythtest-conformance":
+      return 64;
+    case "pythtest-crosschain":
+      return 64;
+    case "localnet":
+      return 32;
+  }
+}
