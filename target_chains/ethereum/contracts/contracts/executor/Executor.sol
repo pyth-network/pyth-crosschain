@@ -73,7 +73,7 @@ contract Executor {
         if (
             gi.action != ExecutorAction.Execute ||
             gi.executorAddress != address(this)
-        ) revert ExecutorErrors.InvalidGovernanceMessage();
+        ) revert ExecutorErrors.DeserializationError();
 
         bool success;
         (success, response) = address(gi.callAddress).call(gi.callData);
@@ -109,10 +109,10 @@ contract Executor {
         if (
             vm.emitterChainId != ownerEmitterChainId ||
             vm.emitterAddress != ownerEmitterAddress
-        ) revert ExecutorErrors.InvalidGovernanceDataSource();
+        ) revert ExecutorErrors.UnauthorizedEmitter();
 
         if (vm.sequence <= lastExecutedSequence)
-            revert ExecutorErrors.OldGovernanceMessage();
+            revert ExecutorErrors.MessageOutOfOrder();
 
         lastExecutedSequence = vm.sequence;
 
@@ -127,7 +127,7 @@ contract Executor {
 
         uint32 magic = encodedInstruction.toUint32(index);
 
-        if (magic != MAGIC) revert ExecutorErrors.InvalidGovernanceMessage();
+        if (magic != MAGIC) revert ExecutorErrors.DeserializationError();
 
         index += 4;
 
