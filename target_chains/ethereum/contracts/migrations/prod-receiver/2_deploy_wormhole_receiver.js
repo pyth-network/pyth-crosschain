@@ -1,6 +1,4 @@
-const loadEnv = require("../../scripts/loadEnv");
-loadEnv("../../");
-
+require("dotenv").config({ path: ".env" });
 const tdr = require("truffle-deploy-registry");
 const governance = require("xc_admin_common");
 const { assert } = require("chai");
@@ -12,7 +10,7 @@ const { getDefaultConfig } = require("../../scripts/contractManagerConfig");
 
 // CONFIG
 
-const chainName = process.env.WORMHOLE_CHAIN_NAME;
+const chainName = process.env.MIGRATIONS_NETWORK;
 assert(chainName !== undefined);
 
 const wormholeReceiverChainId = governance.CHAINS[chainName];

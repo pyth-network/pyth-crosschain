@@ -314,11 +314,11 @@ export class EvmChain extends Chain {
   constructor(
     id: string,
     mainnet: boolean,
-    wormholeChainName: string,
     private rpcUrl: string,
     private networkId: number
   ) {
-    super(id, mainnet, wormholeChainName);
+    // On EVM networks we use the chain id as the wormhole chain name
+    super(id, mainnet, id);
   }
 
   static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
@@ -326,7 +326,6 @@ export class EvmChain extends Chain {
     return new EvmChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
       parsed.rpcUrl,
       parsed.networkId
     );

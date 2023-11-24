@@ -1,6 +1,4 @@
-const loadEnv = require("../../scripts/loadEnv");
-loadEnv("../../");
-
+require("dotenv").config({ path: ".env" });
 const PythUpgradable = artifacts.require("PythUpgradable");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
 

@@ -29,6 +29,9 @@ echo "Adding network metadata to the contract"
 # Merge the network addresses into the artifacts, if some contracts are already deployed.
 npx apply-registry
 
+# The channel to use for the price sources. Can be `stable` or `beta`.
+export CHANNEL=stable
+
 while [[ $# -ne 0 ]]; do
     NETWORK=$1
     shift
@@ -50,6 +53,11 @@ while [[ $# -ne 0 ]]; do
         echo "Migrating..."
         npx truffle migrate --network $MIGRATIONS_NETWORK --compile-none
         echo "Deployment to $NETWORK finished successfully"
+    fi
+
+    if [[ $CHANNEL == stable ]]; then
+        echo "=========== Syncing guardian sets to ${NETWORK} ==========="
+        npm run receiver-submit-guardian-sets -- --network $NETWORK
     fi
 done
 
