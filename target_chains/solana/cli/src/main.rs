@@ -67,15 +67,6 @@ use {
     },
 };
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "mainnet")] {
-        fn rpc_endpoint() -> &'static str { "https://api.mainnet-beta.solana.com" }
-    } else if #[cfg(feature = "devnet")] {
-        fn rpc_endpoint() -> &'static str { "https://api.devnet.solana.com"}
-    } else {
-        fn rpc_endpoint() -> &'static str { "http://localhost:8899" }
-    }
-}
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -83,9 +74,10 @@ fn main() -> Result<()> {
         Action::PostAndReceiveVAA {
             vaa: accumulator_update_data_str,
             keypair,
+            url,
         } => {
             let wormhole = wormhole_anchor_sdk::wormhole::program::id();
-            let rpc_client = RpcClient::new(rpc_endpoint());
+            let rpc_client = RpcClient::new(url);
 
             println!("[1/5] Decode the AccumulatorUpdateData");
             let accumulator_update_data_bytes: Vec<u8> =
@@ -95,6 +87,10 @@ fn main() -> Result<()> {
 
             match &accumulator_update_data.proof {
                 Proof::WormholeMerkle { vaa, updates } => {
+                    let parsed_vaa: Vaa<&RawMessage> =
+                        serde_wormhole::from_slice(vaa.as_ref()).unwrap();
+                    let (_, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
+
                     println!("[2/5] Get wormhole guardian set configuration");
                     let wormhole_config = WormholeConfig::key(&wormhole, ());
 
@@ -113,92 +109,105 @@ fn main() -> Result<()> {
                     let guardian_set_data =
                         GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?)?;
 
-                    println!("[3/5] Invoke wormhole on solana to verify the signatures on the VAA");
                     let payer = read_keypair_file(&*shellexpand::tilde(&keypair))
                         .expect("Keypair not found");
-                    let signature_set_keypair = Keypair::new();
-                    println!("signature_set_pubkey: {}", signature_set_keypair.pubkey());
-                    let verify_txs = verify_signatures_txs(
-                        vaa.as_ref(),
-                        WormholeSolanaGuardianSet {
-                            index:           guardian_set_data.index,
-                            keys:            guardian_set_data.keys,
-                            creation_time:   guardian_set_data.creation_time,
-                            expiration_time: guardian_set_data.expiration_time,
-                        },
-                        wormhole,
-                        payer.pubkey(),
-                        wormhole_config_data.guardian_set_index,
-                        signature_set_keypair.pubkey(),
-                    )?;
-
-                    for tx in verify_txs {
-                        process_transaction(
-                            &rpc_client,
-                            tx,
-                            &vec![&payer, &signature_set_keypair],
-                        )?;
-                    }
-
-                    println!("[4/5] Post the VAA data onto a solana account using pyth_solana_receiver::PostAccumulatorUpdateVaa");
-
-                    let mut accumulator_update_data_vaa_only = accumulator_update_data.clone();
-                    accumulator_update_data_vaa_only.proof =
-                        match accumulator_update_data_vaa_only.proof {
-                            Proof::WormholeMerkle { vaa, updates: _ } => Proof::WormholeMerkle {
-                                vaa,
-                                updates: vec![],
-                            },
-                        };
-                    let mut accumulator_update_data_only_vaa_bytes = Vec::new();
-                    let mut cursor =
-                        std::io::Cursor::new(&mut accumulator_update_data_only_vaa_bytes);
-                    let mut serializer: Serializer<_, byteorder::BE> = Serializer::new(&mut cursor);
-                    accumulator_update_data_vaa_only
-                        .serialize(&mut serializer)
-                        .unwrap();
-                    let parsed_vaa: Vaa<&RawMessage> =
-                        serde_wormhole::from_slice(vaa.as_ref()).unwrap();
-                    let (_, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
 
                     let vaa_hash = body.digest().unwrap().hash;
                     let vaa_pubkey = WormholeSolanaVAA::key(&wormhole, vaa_hash);
-
-                    let post_acc_update_data_vaa_accounts =
-                        pyth_solana_receiver::accounts::PostAccUpdateDataVaa {
-                            guardian_set,
-                            bridge_config: wormhole_config,
-                            signature_set: signature_set_keypair.pubkey(),
-                            vaa: vaa_pubkey,
-                            payer: payer.pubkey(),
-                            rent: Rent::id(),
-                            clock: Clock::id(),
-                            system_program: system_program::ID,
-                            wormhole_program: wormhole,
+                    let vaa_account = match rpc_client.get_account_data(&vaa_pubkey) {
+                        Ok(account_data) => {
+                            println!("[3/5] VAA already posted on solana. Skipping verifying signatures step");
+                            println!("[4/5] VAA already posted on solana. Skipping posting the VAA data onto a solana account using pyth-solana-receiver::PostAccumulatorUpdateVaa");
+                            Some(account_data)
                         }
-                        .to_account_metas(None);
-                    let post_acc_update_data_vaa_ix_data =
-                        pyth_solana_receiver::instruction::PostAccumulatorUpdateVaa {
-                            data: accumulator_update_data_only_vaa_bytes,
-                        }
-                        .data();
-                    let post_acc_update_data_vaa_ix = Instruction::new_with_bytes(
-                        pyth_solana_receiver::ID,
-                        &post_acc_update_data_vaa_ix_data,
-                        post_acc_update_data_vaa_accounts,
-                    );
-                    println!("Sending txn with PostAccumulatorUpdateVaa ix");
+                        Err(_) => {
+                            println!("[3/5] Invoke wormhole on solana to verify the signatures on the VAA");
+                            let signature_set_keypair = Keypair::new();
+                            println!("signature_set_pubkey: {}", signature_set_keypair.pubkey());
 
-                    process_transaction(
-                        &rpc_client,
-                        vec![post_acc_update_data_vaa_ix],
-                        &vec![&payer],
-                    )?;
+                            let verify_txs = verify_signatures_txs(
+                                vaa.as_ref(),
+                                WormholeSolanaGuardianSet {
+                                    index:           guardian_set_data.index,
+                                    keys:            guardian_set_data.keys,
+                                    creation_time:   guardian_set_data.creation_time,
+                                    expiration_time: guardian_set_data.expiration_time,
+                                },
+                                wormhole,
+                                payer.pubkey(),
+                                wormhole_config_data.guardian_set_index,
+                                signature_set_keypair.pubkey(),
+                            )?;
+
+                            for tx in verify_txs {
+                                process_transaction(
+                                    &rpc_client,
+                                    tx,
+                                    &vec![&payer, &signature_set_keypair],
+                                )?;
+                            }
+
+                            println!("[4/5] Post the VAA data onto a solana account using pyth-solana-receiver::PostAccumulatorUpdateVaa");
+
+                            let mut accumulator_update_data_vaa_only =
+                                accumulator_update_data.clone();
+                            accumulator_update_data_vaa_only.proof =
+                                match accumulator_update_data_vaa_only.proof {
+                                    Proof::WormholeMerkle { vaa, updates: _ } => {
+                                        Proof::WormholeMerkle {
+                                            vaa,
+                                            updates: vec![],
+                                        }
+                                    }
+                                };
+                            let mut accumulator_update_data_only_vaa_bytes = Vec::new();
+                            let mut cursor =
+                                std::io::Cursor::new(&mut accumulator_update_data_only_vaa_bytes);
+                            let mut serializer: Serializer<_, byteorder::BE> =
+                                Serializer::new(&mut cursor);
+                            accumulator_update_data_vaa_only
+                                .serialize(&mut serializer)
+                                .unwrap();
+
+                            let post_acc_update_data_vaa_accounts =
+                                pyth_solana_receiver::accounts::PostAccUpdateDataVaa {
+                                    guardian_set,
+                                    bridge_config: wormhole_config,
+                                    signature_set: signature_set_keypair.pubkey(),
+                                    vaa: vaa_pubkey,
+                                    payer: payer.pubkey(),
+                                    rent: Rent::id(),
+                                    clock: Clock::id(),
+                                    system_program: system_program::ID,
+                                    wormhole_program: wormhole,
+                                }
+                                .to_account_metas(None);
+                            let post_acc_update_data_vaa_ix_data =
+                                pyth_solana_receiver::instruction::PostAccumulatorUpdateVaa {
+                                    data: accumulator_update_data_only_vaa_bytes,
+                                }
+                                .data();
+                            let post_acc_update_data_vaa_ix = Instruction::new_with_bytes(
+                                pyth_solana_receiver::ID,
+                                &post_acc_update_data_vaa_ix_data,
+                                post_acc_update_data_vaa_accounts,
+                            );
+                            println!("Sending txn with PostAccumulatorUpdateVaa ix");
+
+                            process_transaction(
+                                &rpc_client,
+                                vec![post_acc_update_data_vaa_ix],
+                                &vec![&payer],
+                            )?;
+
+                            rpc_client.get_account_data(&vaa_pubkey).ok()
+                        }
+                    };
 
                     println!("Verifying updates using PostedVAA account");
 
-                    let vaa_account = rpc_client.get_account_data(&vaa_pubkey)?;
-                    let posted_vaa_data = AnchorVaa::try_deserialize(&mut vaa_account.as_slice())?;
+                    let posted_vaa_data =
+                        AnchorVaa::try_deserialize(&mut vaa_account.unwrap().as_slice())?;
                     let wormhole_message =
                         WormholeMessage::try_from_bytes(&posted_vaa_data.payload)?;
                     println!("wormhole_message: {wormhole_message:?}");
@@ -218,7 +227,7 @@ fn main() -> Result<()> {
                     }
                     println!("verified {verify_count}/{} updates", updates.len());
 
-                    println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth_solana_receiver::PostUpdates");
+                    println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
                     // TODO need to figure out max number of updates that can be sent in 1 txn
 
                     // update_bytes_len: 288 (1 price feed)

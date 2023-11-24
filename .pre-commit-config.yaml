@@ -99,13 +99,13 @@ repos:
         pass_filenames: false
         files: pythnet/pythnet_sdk
       # Hooks for solana receiver contract
-      - id: cargo-fmt-pyth_solana_receiver
+      - id: cargo-fmt-pyth-solana-receiver
         name: Cargo format for solana target chain contract
         language: "rust"
         entry: cargo +nightly-2023-03-01 fmt --manifest-path ./target_chains/solana/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: target_chains/solana
-      - id: cargo-clippy-pyth_solana_receiver
+      - id: cargo-clippy-pyth-solana-receiver
         name: Cargo clippy for solana target chain contract
         language: "rust"
         entry: cargo +nightly-2023-03-01 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged --features devnet -- -D warnings

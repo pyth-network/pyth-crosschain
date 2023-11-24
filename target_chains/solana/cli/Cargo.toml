@@ -17,7 +17,7 @@ solana-sdk = "1.16.20"
 solana-client = "1.16.20"
 anchor-client = "0.28.0"
 clap = {version ="3.2.22", features = ["derive"]}
-pyth-solana-receiver = {path = "../programs/pyth_solana_receiver" }
+pyth-solana-receiver = {path = "../programs/pyth-solana-receiver" }
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version = "2.0.0", features = ["strum"] }

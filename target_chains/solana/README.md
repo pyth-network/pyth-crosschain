@@ -6,8 +6,8 @@ The receiver program verifies that the VAA comes from wormhole (through the `own
 ```shell
 # Generate the program key
 # and use the key to replace the following two places
-#     "pyth_solana_receiver" in Anchor.toml
-#     "declare_id!()" in programs/pyth_solana_receiver/src/lib.rs
+#     "pyth-solana-receiver" in Anchor.toml
+#     "declare_id!()" in programs/pyth-solana-receiver/src/lib.rs
 > solana-keygen new -o program_address.json
 
 # Build and deploy the receiver program
