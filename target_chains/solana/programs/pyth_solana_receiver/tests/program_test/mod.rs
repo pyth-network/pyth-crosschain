@@ -1,5 +1,5 @@
 use {
-    crate::ID,
+    pyth_solana_receiver::ID,
     solana_program::{
         bpf_loader_upgradeable::{
             self,
@@ -40,7 +40,6 @@ pub struct ProgramSimulator {
     /// transaction; otherwise, replayed transactions in different states can return stale
     /// results.
     last_blockhash:        Hash,
-    programdata_id:        Pubkey,
     pub upgrade_authority: Keypair,
     pub genesis_keypair:   Keypair,
 }
@@ -48,64 +47,17 @@ pub struct ProgramSimulator {
 impl ProgramSimulator {
     /// Deploys the target chain contract as upgradable
     pub async fn new() -> ProgramSimulator {
-        let mut bpf_data = read_file(
-            std::env::current_dir()
-                .unwrap()
-                .join(Path::new("../../target/deploy/pyth_solana_receiver.so")),
-        );
-
-
-        let mut program_test = ProgramTest::default();
-        let program_key = Pubkey::try_from(ID).unwrap();
-        // This PDA is the actual address in the real world
-        // https://docs.rs/solana-program/1.6.4/solana_program/bpf_loader_upgradeable/index.html
-        let (programdata_key, _) =
-            Pubkey::find_program_address(&[&program_key.to_bytes()], &bpf_loader_upgradeable::id());
+        let mut program_test = ProgramTest::new("pyth_solana_receiver", ID, None);
 
         let upgrade_authority_keypair = Keypair::new();
-
-        let program_deserialized = UpgradeableLoaderState::Program {
-            programdata_address: programdata_key,
-        };
-        let programdata_deserialized = UpgradeableLoaderState::ProgramData {
-            slot:                      1,
-            upgrade_authority_address: Some(upgrade_authority_keypair.pubkey()),
-        };
-
-        // Program contains a pointer to progradata
-        let program_vec = bincode::serialize(&program_deserialized).unwrap();
-        // Programdata contains a header and the binary of the program
-        let mut programdata_vec = bincode::serialize(&programdata_deserialized).unwrap();
-        programdata_vec.append(&mut bpf_data);
-
-        let program_account = Account {
-            lamports:   Rent::default().minimum_balance(program_vec.len()),
-            data:       program_vec,
-            owner:      bpf_loader_upgradeable::ID,
-            executable: true,
-            rent_epoch: Epoch::default(),
-        };
-        let programdata_account = Account {
-            lamports:   Rent::default().minimum_balance(programdata_vec.len()),
-            data:       programdata_vec,
-            owner:      bpf_loader_upgradeable::ID,
-            executable: false,
-            rent_epoch: Epoch::default(),
-        };
-
-        // Add to both accounts to program test, now the program is deploy as upgradable
-        program_test.add_account(program_key, program_account);
-        program_test.add_account(programdata_key, programdata_account);
-
 
         // Start validator
         let (banks_client, genesis_keypair, recent_blockhash) = program_test.start().await;
 
         let mut result = ProgramSimulator {
-            program_id: program_key,
+            program_id: pyth_solana_receiver::ID,
             banks_client,
             last_blockhash: recent_blockhash,
-            programdata_id: programdata_key,
             upgrade_authority: upgrade_authority_keypair,
             genesis_keypair,
         };
@@ -118,7 +70,6 @@ impl ProgramSimulator {
 
         result
     }
-
 
     /// Process a transaction containing `instruction` signed by `signers`.
     /// `payer` is used to pay for and sign the transaction.

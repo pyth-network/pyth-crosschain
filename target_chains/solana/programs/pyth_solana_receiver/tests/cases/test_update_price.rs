@@ -1,13 +1,13 @@
 use {
-    crate::{
-        accounts as receiver_accounts,
-        instruction as receiver_instruction,
-        tests::simulator::ProgramSimulator,
-    },
+    crate::program_test::ProgramSimulator,
     anchor_lang::{
         prelude::*,
         InstructionData,
         ToAccountMetas,
+    },
+    pyth_solana_receiver::{
+        accounts as receiver_accounts,
+        instruction as receiver_instruction,
     },
     rand::rngs::OsRng,
     solana_program::instruction::Instruction,

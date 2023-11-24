@@ -16,6 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 mainnet = ["wormhole-anchor-sdk/mainnet"]
 devnet = ["wormhole-anchor-sdk/solana-devnet"]
+test-bpf = []
 
 [dependencies]
 anchor-lang = "0.28.0"

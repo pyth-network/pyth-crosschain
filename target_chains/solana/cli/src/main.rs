@@ -201,7 +201,7 @@ fn main() -> Result<()> {
                     let posted_vaa_data = AnchorVaa::try_deserialize(&mut vaa_account.as_slice())?;
                     let wormhole_message =
                         WormholeMessage::try_from_bytes(&posted_vaa_data.payload)?;
-                    println!("\n\nwormhole_message: {wormhole_message:?}");
+                    println!("wormhole_message: {wormhole_message:?}");
                     let root: MerkleRoot<Keccak160> =
                         MerkleRoot::new(match wormhole_message.payload {
                             WormholePayload::Merkle(merkle_root) => merkle_root.root,

@@ -1,9 +1,6 @@
 pub mod error;
 pub mod state;
 
-#[cfg(test)]
-mod tests;
-
 // official wormhole sdk
 use {
     crate::error::ReceiverError,
@@ -102,6 +99,7 @@ pub mod pyth_solana_receiver {
         recovery_id: u8,
         signature: [u8; 64],
     ) -> Result<()> {
+        msg!("udpate");
         // This costs about 10k compute units
         let message_hash = {
             let mut hasher = keccak::Hasher::default();
