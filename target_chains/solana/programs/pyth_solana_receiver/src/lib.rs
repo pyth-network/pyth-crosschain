@@ -46,7 +46,6 @@ use {
     wormhole_sdk::Vaa,
 };
 
-// declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
 declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
 pub const POST_VAA: u8 = 2;
 
@@ -99,7 +98,6 @@ pub mod pyth_solana_receiver {
         recovery_id: u8,
         signature: [u8; 64],
     ) -> Result<()> {
-        msg!("udpate");
         // This costs about 10k compute units
         let message_hash = {
             let mut hasher = keccak::Hasher::default();
