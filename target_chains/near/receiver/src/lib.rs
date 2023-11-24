@@ -151,7 +151,8 @@ impl Pyth {
     /// Instruction for processing VAA's relayed via Wormhole.
     ///
     /// Note that VAA verification requires calling Wormhole so processing of the VAA itself is
-    /// done in a callback handler, see `process_vaa_callback`.
+    /// done in a callback handler, see `process_vaa_callback`. The `data` parameter can be
+    /// retrieved from Hermes using the price feed APIs.
     #[payable]
     #[handle_result]
     pub fn update_price_feeds(&mut self, data: String) -> Result<(), Error> {
