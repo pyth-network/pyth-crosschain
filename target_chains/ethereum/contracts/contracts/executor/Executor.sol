@@ -15,15 +15,21 @@ contract Executor {
     PythGovernanceInstructions.GovernanceModule constant MODULE =
         PythGovernanceInstructions.GovernanceModule.EvmExecutor;
 
+    // Instruction indicating that the executor contract on
+    // targetChainId at executorAddress should call the contract at callAddress
+    // with the provided callData
     struct GovernanceInstruction {
         PythGovernanceInstructions.GovernanceModule module;
         ExecutorAction action;
         uint16 targetChainId;
+        // The address of the specific executor that should perform the call.
+        // This argument is included to support multiple Executors on the same blockchain.
         address executorAddress;
         address callAddress;
         bytes callData;
     }
 
+    // We have different actions here for potential future extensibility
     enum ExecutorAction {
         Execute // 0
     }
@@ -49,6 +55,9 @@ contract Executor {
         ownerEmitterAddress = _ownerEmitterAddress;
     }
 
+    // Execute the contract call in the provided wormhole message.
+    // The argument should be the bytes of a valid wormhole message
+    // whose payload is a serialized GovernanceInstruction.
     function execute(
         bytes memory encodedVm
     ) public returns (bytes memory response) {
@@ -64,9 +73,7 @@ contract Executor {
         if (
             gi.action != ExecutorAction.Execute ||
             gi.executorAddress != address(this)
-        )
-            // TODO
-            revert ExecutorErrors.InvalidGovernanceTarget();
+        ) revert ExecutorErrors.InvalidGovernanceMessage();
 
         bool success;
         (success, response) = address(gi.callAddress).call(gi.callData);
@@ -88,6 +95,8 @@ contract Executor {
     /// @dev Called when `msg.value` is not zero and the call data is empty.
     receive() external payable {}
 
+    // Check that the encoded VM is a valid wormhole VAA from the correct emitter
+    // and with a sufficiently recent sequence number.
     function verifyGovernanceVM(
         bytes memory encodedVM
     ) internal returns (IWormhole.VM memory parsedVM) {
