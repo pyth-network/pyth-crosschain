@@ -31,6 +31,7 @@ contract Executor {
 
     // We have different actions here for potential future extensibility
     enum ExecutorAction {
+        // TODO: add an instruction to change the governance data source.
         Execute // 0
     }
 
@@ -82,6 +83,8 @@ contract Executor {
         if (!success) {
             // If there is return data, the delegate call reverted with a reason or a custom error, which we bubble up.
             if (response.length > 0) {
+                // The first word of response is the length, so when we call revert we add 1 word (32 bytes)
+                // to give the pointer to the beginning of the revert data and pass the size as the second argument.
                 assembly {
                     let returndata_size := mload(response)
                     revert(add(32, response), returndata_size)

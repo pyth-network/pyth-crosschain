@@ -58,6 +58,18 @@ contract ExecutorTest is Test, WormholeTestUtils {
     }
 
     function testBasic() public {
+        callable.reset();
+
+        uint32 c = callable.fooCount();
+        assertEq(callable.lastCaller(), address(bytes20(0)));
+        testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 1);
+        assertEq(callable.fooCount(), c + 1);
+        assertEq(callable.lastCaller(), address(executor));
+        // Sanity check to make sure the check above is meaningful.
+        assert(address(executor) != address(this));
+    }
+
+    function testCallerAddress() public {
         uint32 c = callable.fooCount();
         testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 1);
         assertEq(callable.fooCount(), c + 1);
@@ -66,14 +78,23 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
 interface ICallable {
     function foo() external;
+
+    function reset() external;
 }
 
 contract TestCallable is ICallable {
     uint32 public fooCount = 0;
+    address public lastCaller = address(bytes20(0));
 
     constructor() {}
 
+    function reset() external override {
+        fooCount = 0;
+        lastCaller = address(bytes20(0));
+    }
+
     function foo() external override {
         fooCount += 1;
+        lastCaller = msg.sender;
     }
 }
