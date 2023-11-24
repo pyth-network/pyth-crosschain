@@ -366,7 +366,6 @@ export class EvmChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       networkId: this.networkId,
