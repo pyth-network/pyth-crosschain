@@ -11,7 +11,8 @@ const parser = yargs(hideBin(process.argv))
       desc: "Private key to use to sign transaction",
     },
     chain: {
-      type: "string",
+      type: "array",
+      string: true,
       desc: "Chain to get the balance for. If not provided the balance for all chains is returned.",
     },
   });
@@ -44,7 +45,7 @@ async function getBalance(
 async function main() {
   const argv = await parser.argv;
   const chains = argv.chain
-    ? [argv.chain]
+    ? argv.chain
     : Object.keys(DefaultStore.chains).filter((chain) => chain !== "global");
 
   const privateKey = toPrivateKey(argv["private-key"]);

@@ -6,11 +6,11 @@
   {
     "contractName": "WormholeReceiver",
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-    "transactionHash": "0x6f12923b7a7049e4fa226605db5565e11792866395b7a05bda18ceb9405bd141"
+    "transactionHash": "0x4d8d2c552d17816299e34a07a6ba03be79c6e903b72b2808b3e4eac9e95f7f2c"
   },
   {
     "contractName": "PythUpgradable",
-    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
-    "transactionHash": "0x9a3da9264864df38f3d7e63689a26bdb791975193af08c244f589fdec49998ae"
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "transactionHash": "0x5b125ddcfbce9256ba2fc396be3413c81901cb4cf029c10e991dbb4e3bad07e8"
   }
 ]

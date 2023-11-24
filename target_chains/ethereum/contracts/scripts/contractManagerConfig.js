@@ -13,10 +13,9 @@ function convertChainId(number) {
   return "0x" + number.toString(16);
 }
 
-function getDefaultConfig(chainName) {
-  const chain = DefaultStore.chains[chainName];
+function getDefaultConfig(_chainName) {
   const { dataSources, governanceDataSource, wormholeConfig } =
-    getDefaultDeploymentConfig(chain.isMainnet() ? "stable" : "beta");
+    getDefaultDeploymentConfig(process.env.CHANNEL);
 
   const emitterChainIds = dataSources.map((dataSource) =>
     convertChainId(dataSource.emitterChain)

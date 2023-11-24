@@ -1,13 +1,12 @@
+require("dotenv").config({ path: ".env" });
 import { utils, Wallet } from "zksync-web3";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import loadEnv from "../scripts/loadEnv";
 import { CHAINS } from "xc_admin_common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
 
 const { getDefaultConfig } = require("../scripts/contractManagerConfig");
-loadEnv("./");
 
 function envOrErr(name: string): string {
   const res = process.env[name];
@@ -48,7 +47,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     emitterChainIds,
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
 
-  const chainName = envOrErr("WORMHOLE_CHAIN_NAME");
+  const chainName = envOrErr("MIGRATIONS_NETWORK");
   const wormholeReceiverChainId = CHAINS[chainName];
   assert(wormholeReceiverChainId !== undefined);
 
