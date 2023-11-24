@@ -179,12 +179,13 @@ fn main() -> Result<()> {
                                     rent: Rent::id(),
                                     clock: Clock::id(),
                                     system_program: system_program::ID,
-                                    wormhole_program: wormhole,
+                                    post_vaa_program: wormhole,
                                 }
                                 .to_account_metas(None);
                             let post_acc_update_data_vaa_ix_data =
                                 pyth_solana_receiver::instruction::PostAccumulatorUpdateVaa {
-                                    data: accumulator_update_data_only_vaa_bytes,
+                                    emitter_chain: wormhole::Chain::Pythnet.into(),
+                                    data:          accumulator_update_data_only_vaa_bytes,
                                 }
                                 .data();
                             let post_acc_update_data_vaa_ix = Instruction::new_with_bytes(
@@ -246,12 +247,14 @@ fn main() -> Result<()> {
                     println!("update_bytes_len: {}", update_bytes_len);
 
                     let post_updates_accounts = pyth_solana_receiver::accounts::PostUpdates {
-                        payer:      payer.pubkey(),
-                        posted_vaa: vaa_pubkey,
+                        payer:            payer.pubkey(),
+                        posted_vaa:       vaa_pubkey,
+                        post_vaa_program: wormhole,
                     }
                     .to_account_metas(None);
                     let post_updates_ix_data = pyth_solana_receiver::instruction::PostUpdates {
                         vaa_hash,
+                        emitter_chain: wormhole::Chain::Pythnet.into(),
                         price_updates: update_bytes,
                     }
                     .data();

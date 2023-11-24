@@ -27,10 +27,6 @@ use {
     sha3::Digest,
     state::AnchorVaa,
     std::io::Write,
-    wormhole::Chain::{
-        self,
-        Pythnet,
-    },
     wormhole_anchor_sdk::{
         wormhole as wormhole_anchor,
         wormhole::SEED_PREFIX_POSTED_VAA,
@@ -64,6 +60,7 @@ pub mod pyth_solana_receiver {
     ///           all the data needed for postVaa can fit in one txn.
     pub fn post_accumulator_update_vaa(
         ctx: Context<PostAccUpdateDataVaa>,
+        emitter_chain: u16,
         data: Vec<u8>, // accumulatorUpdateData {vaa, updates: [] }
     ) -> Result<()> {
         // verify accumulator update data header
@@ -73,7 +70,11 @@ pub mod pyth_solana_receiver {
             Proof::WormholeMerkle { vaa, updates: _ } => {
                 let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa.as_ref()).unwrap();
                 let (header, body): (Header, Body<&RawMessage>) = vaa.into();
-
+                require_eq!(
+                    <wormhole_sdk::Chain as Into<u16>>::into(body.emitter_chain),
+                    emitter_chain,
+                    ReceiverError::InvalidEmitterChain
+                );
                 let post_vaa_ix_data = PostVAAInstructionData {
                     version:            header.version,
                     guardian_set_index: header.guardian_set_index,
@@ -86,7 +87,7 @@ pub mod pyth_solana_receiver {
                     payload:            body.payload.to_vec(),
                 };
                 let post_vaa_ix = Instruction {
-                    program_id: ctx.accounts.wormhole_program.key(),
+                    program_id: ctx.accounts.post_vaa_program.key(),
                     accounts:   vec![
                         AccountMeta::new_readonly(ctx.accounts.guardian_set.key(), false),
                         AccountMeta::new_readonly(ctx.accounts.bridge_config.key(), false),
@@ -105,13 +106,29 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    /// Verify the updates using the posted_vaa account
+    ///  * `vaa_hash` hash post of the post_vaa data to derive the address of the post_vaa account
+    ///  * `emitter_chain` expected emitter_chain from the post_vaa account
+    ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
+    ///
+    /// TODO:
+    ///    - use a `config` account that can only be modified by governance for checking emitter_chain
+    ///      and other constraints
+    ///
+
     #[allow(unused_variables)]
     pub fn post_updates(
         ctx: Context<PostUpdates>,
         vaa_hash: [u8; 32], // used for pda seeds
+        emitter_chain: u16,
         price_updates: Vec<Vec<u8>>,
     ) -> Result<()> {
         let vaa = &ctx.accounts.posted_vaa;
+        require_eq!(
+            vaa.emitter_chain(),
+            emitter_chain,
+            ReceiverError::InvalidEmitterChain
+        );
         let wh_message = WormholeMessage::try_from_bytes(vaa.payload.as_slice())
             .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
         msg!("constructed wh_message {:?}", wh_message);
@@ -151,27 +168,29 @@ pub mod pyth_solana_receiver {
 }
 
 #[derive(Accounts)]
-#[instruction(vaa_hash: [u8; 32])]
+#[instruction(vaa_hash: [u8; 32], emitter_chain: u16)]
 pub struct PostUpdates<'info> {
     #[account(mut)]
-    pub payer:      Signer<'info>,
+    pub payer:            Signer<'info>,
     #[account(
-        constraint = Chain::from(posted_vaa.emitter_chain()) == Pythnet @ ReceiverError::InvalidEmitterChain,
         seeds = [
             SEED_PREFIX_POSTED_VAA,
             &vaa_hash
         ],
-        seeds::program = wormhole_anchor::program::Wormhole::id(),
+        seeds::program = post_vaa_program.key(),
         bump
     )]
-    pub posted_vaa: Box<Account<'info, AnchorVaa>>,
+    pub posted_vaa:       Box<Account<'info, AnchorVaa>>,
+    /// CHECK: program that called post_vaa
+    pub post_vaa_program: AccountInfo<'info>,
 }
 
 impl crate::accounts::PostUpdates {
-    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
+    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey, post_vaa_program: &Pubkey) -> Self {
         crate::accounts::PostUpdates {
-            payer:      *payer,
-            posted_vaa: *posted_vaa,
+            payer:            *payer,
+            posted_vaa:       *posted_vaa,
+            post_vaa_program: *post_vaa_program,
         }
     }
 }
@@ -193,7 +212,8 @@ pub struct PostAccUpdateDataVaa<'info> {
     pub clock:            Sysvar<'info, Clock>,
     pub rent:             Sysvar<'info, Rent>,
     pub system_program:   Program<'info, System>,
-    pub wormhole_program: Program<'info, wormhole_anchor::program::Wormhole>,
+    /// CHECK: program that will call post_vaa
+    pub post_vaa_program: UncheckedAccount<'info>,
 }
 
 #[derive(Debug, Eq, PartialEq, AnchorSerialize, AnchorDeserialize)]

@@ -12,8 +12,6 @@ use {
 impl Owner for AnchorVaa {
     fn owner() -> Pubkey {
         PostedVaaData::owner()
-        // // wormhole address on solana devnet
-        // Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap()
     }
 }
 
