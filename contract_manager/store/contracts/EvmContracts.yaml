@@ -211,3 +211,6 @@
 - chain: zksync_goerli
   address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
   type: EvmContract
+- chain: optimism_sepolia
+  address: "0x0708325268dF9F66270F1401206434524814508b"
+  type: EvmContract
