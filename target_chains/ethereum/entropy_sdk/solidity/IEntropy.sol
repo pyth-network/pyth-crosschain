@@ -37,6 +37,12 @@ interface IEntropy is EntropyEvents {
         bool useBlockHash
     ) external payable returns (uint64 assignedSequenceNumber);
 
+    // Same as `request` above using the default randomness provider configured in the contract.
+    function request(
+        bytes32 userCommitment,
+        bool useBlockHash
+    ) external payable returns (uint64 assignedSequenceNumber);
+
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -51,9 +57,18 @@ interface IEntropy is EntropyEvents {
         bytes32 providerRevelation
     ) external returns (bytes32 randomNumber);
 
+    // Same as `reveal` above using the default randomness provider configured in the contract.
+    function reveal(
+        uint64 sequenceNumber,
+        bytes32 userRandomness,
+        bytes32 providerRevelation
+    ) external returns (bytes32 randomNumber);
+
     function getProviderInfo(
         address provider
     ) external view returns (EntropyStructs.ProviderInfo memory info);
+
+    function getDefaultProvider() external view returns (address provider);
 
     function getRequest(
         address provider,

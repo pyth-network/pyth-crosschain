@@ -32,7 +32,7 @@ contract EntropyTest is Test {
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei);
+        random = new Entropy(pythFeeInWei, provider1);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -485,5 +485,9 @@ contract EntropyTest is Test {
         vm.prank(provider1);
         vm.expectRevert();
         random.withdraw(providerOneBalance);
+    }
+
+    function testDefaultProvider() {
+        assert()
     }
 }

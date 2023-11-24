@@ -8,6 +8,7 @@ contract EntropyInternalStructs {
     struct State {
         uint pythFeeInWei;
         uint accruedPythFeesInWei;
+        address defaultProvider;
         mapping(address => EntropyStructs.ProviderInfo) providers;
         mapping(bytes32 => EntropyStructs.Request) requests;
     }

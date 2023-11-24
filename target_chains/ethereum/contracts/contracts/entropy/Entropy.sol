@@ -82,9 +82,10 @@ import "./EntropyState.sol";
 // - off-chain data ERC support?
 contract Entropy is IEntropy, EntropyState {
     // TODO: Use an upgradeable proxy
-    constructor(uint pythFeeInWei) {
+    constructor(uint pythFeeInWei, address defaultProvider) {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
+        _state.defaultProvider = defaultProvider;
     }
 
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
@@ -195,6 +196,17 @@ contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
+    function request(
+        bytes32 userCommitment,
+        bool useBlockHash
+    ) external payable override returns (uint64 assignedSequenceNumber) {
+        assignedSequenceNumber = request(
+            getDefaultProvider(),
+            userCommitment,
+            useBlockHash
+        );
+    }
+
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -257,10 +269,32 @@ contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    function reveal(
+        uint64 sequenceNumber,
+        bytes32 userRandomness,
+        bytes32 providerRevelation
+    ) external override returns (bytes32 randomNumber) {
+        randomNumber = reveal(
+            getDefaultProvider(),
+            sequenceNumber,
+            userRandomness,
+            providerRevelation
+        );
+    }
+
     function getProviderInfo(
         address provider
     ) public view override returns (EntropyStructs.ProviderInfo memory info) {
         info = _state.providers[provider];
+    }
+
+    function getDefaultProvider()
+        public
+        view
+        override
+        returns (address provider)
+    {
+        provider = _state.defaultProvider;
     }
 
     function getRequest(
