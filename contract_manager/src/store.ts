@@ -4,12 +4,14 @@ import {
   CosmWasmChain,
   EvmChain,
   GlobalChain,
+  NearChain,
   SuiChain,
 } from "./chains";
 import {
   AptosContract,
   CosmWasmContract,
   EvmContract,
+  NearContract, 
   SuiContract,
 } from "./contracts";
 import { Contract } from "./base";
@@ -58,6 +60,7 @@ export class Store {
       [SuiChain.type]: SuiChain,
       [EvmChain.type]: EvmChain,
       [AptosChain.type]: AptosChain,
+      [NearChain.type]: NearChain,
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
@@ -110,6 +113,7 @@ export class Store {
       [SuiContract.type]: SuiContract,
       [EvmContract.type]: EvmContract,
       [AptosContract.type]: AptosContract,
+      [NearContract.type]: NearContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));

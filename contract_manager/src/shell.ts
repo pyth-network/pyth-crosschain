@@ -11,6 +11,7 @@ repl.evalCode(
     "import { WormholeCosmWasmContract, CosmWasmContract } from './src/contracts/cosmwasm';" +
     "import { WormholeEvmContract, EvmContract } from './src/contracts/evm';" +
     "import { AptosContract } from './src/contracts/aptos';" +
+    "import { NearContract } from './src/contracts/near';" +
     "import { DefaultStore } from './src/store';" +
     "import { toPrivateKey } from './src/base';" +
     "DefaultStore"

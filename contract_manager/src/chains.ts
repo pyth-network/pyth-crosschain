@@ -510,3 +510,52 @@ export class AptosChain extends Chain {
     return Number(await coinClient.checkBalance(account)) / 10 ** 8;
   }
 }
+
+/** NEAR **/
+export class NearChain extends Chain {
+  static type = "NearChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName);
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte sha256 digest for the new code without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    return new NearAuthorizeUpgradeContract(
+      this.wormholeChainName,
+      digest
+    ).encode();
+  }
+
+  getType(): string {
+    return NearChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: NearChain.type,
+    };
+  }
+
+  static fromJson(parsed: ChainConfig): NearChain {
+    if (parsed.type !== NearChain.type) throw new Error("Invalid type");
+    return new NearChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.rpcUrl
+    );
+  }
+}
