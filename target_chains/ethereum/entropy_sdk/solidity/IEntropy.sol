@@ -77,6 +77,8 @@ interface IEntropy is EntropyEvents {
 
     function getFee(address provider) external view returns (uint feeAmount);
 
+    function getFee() external view returns (uint feeAmount);
+
     function getAccruedPythFees()
         external
         view

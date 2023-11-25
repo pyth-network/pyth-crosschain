@@ -311,6 +311,12 @@ contract Entropy is IEntropy, EntropyState {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
+    function getFee() public view override returns (uint feeAmount) {
+        return
+            _state.providers[_state.defaultProvider].feeInWei +
+            _state.pythFeeInWei;
+    }
+
     function getAccruedPythFees()
         public
         view

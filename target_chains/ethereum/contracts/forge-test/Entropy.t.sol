@@ -30,6 +30,7 @@ contract EntropyTest is Test {
     address public unregisteredProvider = address(7);
     uint256 MAX_UINT256 = 2 ** 256 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
+    address ALL_ZERO_ADDR = address(bytes20(uint160(0)));
 
     function setUp() public {
         random = new Entropy(pythFeeInWei, provider1);
@@ -64,7 +65,9 @@ contract EntropyTest is Test {
         uint64 startSequenceNumber,
         uint64 size
     ) public pure returns (bytes32[] memory hashChain) {
-        bytes32 initialValue = keccak256(abi.encodePacked(startSequenceNumber));
+        bytes32 initialValue = keccak256(
+            abi.encodePacked(provider, startSequenceNumber)
+        );
         hashChain = new bytes32[](size);
         for (uint64 i = 0; i < size; i++) {
             hashChain[size - (i + 1)] = initialValue;
@@ -73,15 +76,23 @@ contract EntropyTest is Test {
     }
 
     // Test helper method for requesting a random value as user from provider.
+    // If provider is all-zeros, use the default provider in the contract.
     function request(
         address user,
         address provider,
         uint randomNumber,
         bool useBlockhash
     ) public returns (uint64 sequenceNumber) {
+        uint fee = 0;
+        if (provider == ALL_ZERO_ADDR) {
+            fee = random.getFee();
+        } else {
+            fee = random.getFee(provider);
+        }
+
         sequenceNumber = requestWithFee(
             user,
-            random.getFee(provider),
+            fee,
             provider,
             randomNumber,
             useBlockhash
@@ -95,13 +106,22 @@ contract EntropyTest is Test {
         uint randomNumber,
         bool useBlockhash
     ) public returns (uint64 sequenceNumber) {
-        vm.deal(user, fee);
-        vm.prank(user);
-        sequenceNumber = random.request{value: fee}(
-            provider,
-            random.constructUserCommitment(bytes32(randomNumber)),
-            useBlockhash
-        );
+        if (provider == ALL_ZERO_ADDR) {
+            vm.deal(user, fee);
+            vm.prank(user);
+            sequenceNumber = random.request{value: fee}(
+                random.constructUserCommitment(bytes32(randomNumber)),
+                useBlockhash
+            );
+        } else {
+            vm.deal(user, fee);
+            vm.prank(user);
+            sequenceNumber = random.request{value: fee}(
+                provider,
+                random.constructUserCommitment(bytes32(randomNumber)),
+                useBlockhash
+            );
+        }
     }
 
     function assertRequestReverts(
@@ -136,12 +156,22 @@ contract EntropyTest is Test {
         bytes32 providerRevelation,
         bytes32 hash
     ) public {
-        bytes32 randomNumber = random.reveal(
-            provider,
-            sequenceNumber,
-            bytes32(userRandom),
-            providerRevelation
-        );
+        bytes32 randomNumber;
+
+        if (provider == ALL_ZERO_ADDR) {
+            randomNumber = random.reveal(
+                sequenceNumber,
+                bytes32(userRandom),
+                providerRevelation
+            );
+        } else {
+            randomNumber = random.reveal(
+                provider,
+                sequenceNumber,
+                bytes32(userRandom),
+                providerRevelation
+            );
+        }
         assertEq(
             randomNumber,
             random.combineRandomValues(
@@ -158,13 +188,22 @@ contract EntropyTest is Test {
         uint userRandom,
         bytes32 providerRevelation
     ) public {
-        vm.expectRevert();
-        random.reveal(
-            provider,
-            sequenceNumber,
-            bytes32(uint256(userRandom)),
-            providerRevelation
-        );
+        if (provider == ALL_ZERO_ADDR) {
+            vm.expectRevert();
+            random.reveal(
+                sequenceNumber,
+                bytes32(uint256(userRandom)),
+                providerRevelation
+            );
+        } else {
+            vm.expectRevert();
+            random.reveal(
+                provider,
+                sequenceNumber,
+                bytes32(uint256(userRandom)),
+                providerRevelation
+            );
+        }
     }
 
     function assertInvariants() public {
@@ -214,6 +253,26 @@ contract EntropyTest is Test {
             sequenceNumber,
             42,
             provider1Proofs[sequenceNumber]
+        );
+    }
+
+    function testDefaultProvider() public {
+        uint64 sequenceNumber = request(user2, ALL_ZERO_ADDR, 42, false);
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
+
+        assertRevealReverts(
+            ALL_ZERO_ADDR,
+            sequenceNumber,
+            42,
+            provider2Proofs[sequenceNumber]
+        );
+
+        assertRevealSucceeds(
+            ALL_ZERO_ADDR,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
         );
     }
 
@@ -485,9 +544,5 @@ contract EntropyTest is Test {
         vm.prank(provider1);
         vm.expectRevert();
         random.withdraw(providerOneBalance);
-    }
-
-    function testDefaultProvider() {
-        assert()
     }
 }
