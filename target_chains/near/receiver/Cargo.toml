@@ -9,6 +9,9 @@ description                = "A Pyth Receiver for Near"
 name                       = "pyth"
 crate-type                 = ["cdylib", "lib"]
 
+[features]
+library = []
+
 [dependencies]
 byteorder                  = { version = "1.4.3" }
 hex                        = { version = "0.4.3" }
@@ -18,13 +21,14 @@ num-traits                 = { version = "0.2.15" }
 num-derive                 = { version = "0.3.3" }
 pyth-wormhole-attester-sdk = { path = "../../../wormhole_attester/sdk/rust" }
 pyth-sdk                   = { version = "0.7.0" }
+pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole" }
 strum                      = { version = "0.24.1", features = ["derive"] }
 thiserror                  = { version = "1.0.38" }
 wormhole-core              = { git = "https://github.com/wormhole-foundation/wormhole" }
 
 [patch.crates-io]
-serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole" }
+serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", rev = "4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a" }
 
 [dev-dependencies]
 lazy_static                = { version = "1.4.0" }

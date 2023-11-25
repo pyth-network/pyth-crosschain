@@ -19,23 +19,8 @@
 - chain: arbitrum
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmContract
-- chain: chiado
-  address: "0xdDAf6D29b8bc81c1F0798a5e4c264ae89c16a72B"
-  type: EvmContract
-- chain: kcc_testnet
-  address: "0x15D35b8985e350f783fe3d95401401E194ff1E6f"
-  type: EvmContract
 - chain: gnosis
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
-- chain: mantle_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: syndr_nitro_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: bnb_testnet
-  address: "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"
   type: EvmContract
 - chain: polygon_zkevm
   address: "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65"
@@ -43,29 +28,14 @@
 - chain: conflux_espace
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmContract
-- chain: cronos_testnet
-  address: "0xBAEA4A1A2Eaa4E9bb78f2303C213Da152933170E"
-  type: EvmContract
-- chain: kava_testnet
-  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
-  type: EvmContract
-- chain: bnb
+- chain: bsc
   address: "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594"
-  type: EvmContract
-- chain: neon_devnet
-  address: "0x2FF312f50689ad279ABb164dB255Eb568733BD6c"
-  type: EvmContract
-- chain: base_goerli
-  address: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f"
   type: EvmContract
 - chain: kava
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: avalanche
   address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6"
-  type: EvmContract
-- chain: linea_goerli
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: canto
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
@@ -76,65 +46,20 @@
 - chain: neon
   address: "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5"
   type: EvmContract
-- chain: celo_alfajores_testnet
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
-- chain: fuji
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
 - chain: mantle
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: goerli
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmContract
 - chain: meter
   address: "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16"
   type: EvmContract
-- chain: meter_testnet
-  address: "0x5fF5B9039FbD8256864A4460B7EA77093A65B1b5"
-  type: EvmContract
 - chain: kcc
   address: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B"
-  type: EvmContract
-- chain: evmos_testnet
-  address: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12"
-  type: EvmContract
-- chain: zksync_goerli
-  address: "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE"
-  type: EvmContract
-- chain: fantom_testnet
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmContract
 - chain: eos
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
-- chain: wemix_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
 - chain: celo
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
-- chain: eos_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: mumbai
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
-- chain: aurora_testnet
-  address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6"
-  type: EvmContract
-- chain: optimism_goerli
-  address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
-- chain: conflux_espace_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: polygon_zkevm_testnet
-  address: "0xd54bf1758b1C932F86B178F8b1D5d1A7e2F62C2E"
-  type: EvmContract
-- chain: canto_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: wemix
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
@@ -148,66 +73,144 @@
 - chain: zksync
   address: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834"
   type: EvmContract
-- chain: scroll_sepolia
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: saigon
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
 - chain: ronin
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
-- chain: horizen_gobi
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: horizen_eon
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
-- chain: sepolia
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
 - chain: shimmer
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: arbitrum_sepolia
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: boba_goerli
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: boba
   address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
   type: EvmContract
-- chain: manta_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
 - chain: manta
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: optimism_sepolia
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
-- chain: chiliz_spicy
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: scroll
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
-- chain: zetachain_testnet
-  address: "0x87047526937246727E4869C5f76A347160e08672"
-  type: EvmContract
-- chain: astar_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
 - chain: chiliz
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
-- chain: coredao_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
 - chain: coredao
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
-- chain: shimmer_testnet
+- chain: tomochain
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmContract
+- chain: base_goerli
+  address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
+  type: EvmContract
+- chain: arbitrum_sepolia
+  address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
+  type: EvmContract
+- chain: fuji
+  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmContract
+- chain: canto_testnet
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmContract
+- chain: polygon_zkevm_testnet
+  address: "0xFf255f800044225f54Af4510332Aa3D67CC77635"
+  type: EvmContract
+- chain: aurora_testnet
+  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
+  type: EvmContract
+- chain: mantle_testnet
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
+  type: EvmContract
+- chain: chiado
+  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
+  type: EvmContract
+- chain: kava_testnet
+  address: "0xfA25E653b44586dBbe27eE9d252192F0e4956683"
+  type: EvmContract
+- chain: conflux_espace_testnet
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
+  type: EvmContract
+- chain: celo_alfajores_testnet
+  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
+  type: EvmContract
+- chain: bsc_testnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmContract
+- chain: syndr_nitro_testnet
+  address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
+  type: EvmContract
+- chain: kcc_testnet
+  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
+  type: EvmContract
+- chain: eos_testnet
+  address: "0x0708325268dF9F66270F1401206434524814508b"
+  type: EvmContract
+- chain: meter_testnet
+  address: "0x5a71C07a0588074443545eE0c08fb0375564c3E4"
+  type: EvmContract
+- chain: optimism_goerli
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
+  type: EvmContract
+- chain: shimmer_testnet
+  address: "0x8D254a21b3C86D32F7179855531CE99164721933"
+  type: EvmContract
+- chain: scroll_sepolia
+  address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
+  type: EvmContract
+- chain: saigon
+  address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
+  type: EvmContract
+- chain: boba_goerli
+  address: "0x8D254a21b3C86D32F7179855531CE99164721933"
+  type: EvmContract
+- chain: manta_testnet
+  address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
+  type: EvmContract
+- chain: chiliz_spicy
+  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmContract
+- chain: astar_testnet
+  address: "0x8D254a21b3C86D32F7179855531CE99164721933"
+  type: EvmContract
+- chain: coredao_testnet
+  address: "0x8D254a21b3C86D32F7179855531CE99164721933"
+  type: EvmContract
+- chain: tomochain_testnet
+  address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"
+  type: EvmContract
+- chain: cronos_testnet
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+  type: EvmContract
+- chain: wemix_testnet
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmContract
+- chain: mumbai
+  address: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379"
+  type: EvmContract
+- chain: fantom_testnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmContract
+- chain: sepolia
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmContract
+- chain: sepolia
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
+  type: EvmContract
+- chain: linea_goerli
+  address: "0xdF21D137Aadc95588205586636710ca2890538d5"
+  type: EvmContract
+- chain: evmos_testnet
+  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
+  type: EvmContract
+- chain: zetachain_testnet
+  address: "0x0708325268dF9F66270F1401206434524814508b"
+  type: EvmContract
+- chain: neon_devnet
+  address: "0x0708325268dF9F66270F1401206434524814508b"
+  type: EvmContract
+- chain: zksync_goerli
+  address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
+  type: EvmContract
+- chain: optimism_sepolia
+  address: "0x0708325268dF9F66270F1401206434524814508b"
   type: EvmContract

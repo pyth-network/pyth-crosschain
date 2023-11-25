@@ -1,10 +1,10 @@
 use {
     crate::{
+        chain::ethereum::SignablePythContract,
         config::{
             Config,
             RegisterProviderOptions,
         },
-        ethereum::SignablePythContract,
         state::PebbleHashChain,
     },
     anyhow::Result,

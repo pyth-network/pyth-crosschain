@@ -10,6 +10,7 @@ import axios from 'axios'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  getMaximumNumberOfPublishers,
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
@@ -144,7 +145,8 @@ const PermissionDepermissionKey = ({
           (selectedAssetType === 'All' ||
             product.metadata.asset_type === selectedAssetType) &&
           ((isPermission &&
-            product.priceAccounts[0].publishers.length < 32 &&
+            product.priceAccounts[0].publishers.length <
+              getMaximumNumberOfPublishers(cluster) &&
             !publisherExists) ||
             (!isPermission && publisherExists))
         ) {

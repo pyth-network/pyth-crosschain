@@ -8,9 +8,9 @@ use {
 };
 
 pub mod api;
+pub mod chain;
 pub mod command;
 pub mod config;
-pub mod ethereum;
 pub mod state;
 
 // Server TODO list:

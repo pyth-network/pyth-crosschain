@@ -1,0 +1,40 @@
+[package]
+name                       = "pyth-near-example"
+version                    = "0.1.0"
+authors                    = ["Pyth Data Association"]
+edition                    = "2021"
+description                = "A Pyth Receiver for Near"
+
+[lib]
+name                       = "pyth_example"
+crate-type                 = ["cdylib", "lib"]
+
+[dependencies]
+byteorder                  = { version = "1.4.3" }
+hex                        = { version = "0.4.3" }
+near-sdk                   = { version = "4.1.1" }
+num-traits                 = { version = "0.2.15" }
+num-derive                 = { version = "0.3.3" }
+pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
+pyth-near                  = { path = "../receiver", features = ["library"] }
+strum                      = { version = "0.24.1", features = ["derive"] }
+thiserror                  = { version = "1.0.38" }
+wormhole-core              = { git = "https://github.com/wormhole-foundation/wormhole", rev = "4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a" }
+
+[patch.crates-io]
+serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", rev = "4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a" }
+
+[dev-dependencies]
+lazy_static                = { version = "1.4.0" }
+serde_json                 = { version = "1.0.91" }
+serde                      = { version = "1.0.152", features = ["derive"] }
+tokio                      = { version = "1.23.0", features = ["full"] }
+workspaces                 = { version = "0.7.0" }
+
+[profile.release]
+codegen-units              = 1
+opt-level                  = 3
+lto                        = "fat"
+debug                      = false
+panic                      = "abort"
+overflow-checks            = true

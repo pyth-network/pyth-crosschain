@@ -1,11 +1,6 @@
 use {
+    byteorder::BigEndian,
     near_sdk::json_types::U128,
-    pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation,
-        Identifier,
-        PriceAttestation,
-        PriceStatus,
-    },
     pyth::{
         governance::{
             GovernanceAction,
@@ -17,6 +12,35 @@ use {
             Price,
             PriceIdentifier,
             Source,
+        },
+    },
+    pyth_wormhole_attester_sdk::{
+        BatchPriceAttestation,
+        Identifier,
+        PriceAttestation,
+        PriceStatus,
+    },
+    pythnet_sdk::{
+        accumulators::{
+            merkle::MerkleTree,
+            Accumulator,
+        },
+        hashers::keccak256_160::Keccak160,
+        messages::{
+            Message,
+            PriceFeedMessage,
+        },
+        wire::{
+            to_vec,
+            v1::{
+                AccumulatorUpdateData,
+                MerklePriceUpdate,
+                Proof,
+                WormholeMerkleRoot,
+                WormholeMessage,
+                WormholePayload,
+            },
+            PrefixedVec,
         },
     },
     serde_json::json,
@@ -347,21 +371,22 @@ async fn test_stale_threshold() {
         cur.write_all(
             &BatchPriceAttestation {
                 price_attestations: vec![PriceAttestation {
-                    product_id:         Identifier::default(),
-                    price_id:           Identifier::default(),
-                    price:              100,
-                    conf:               1,
-                    expo:               8,
-                    ema_price:          100,
-                    ema_conf:           1,
-                    status:             PriceStatus::Trading,
-                    num_publishers:     8,
-                    max_num_publishers: 8,
-                    attestation_time:   now.try_into().unwrap(),
-                    publish_time:       now.try_into().unwrap(),
-                    prev_publish_time:  now.try_into().unwrap(),
-                    prev_price:         100,
-                    prev_conf:          1,
+                    product_id:                 Identifier::default(),
+                    price_id:                   Identifier::default(),
+                    price:                      100,
+                    conf:                       1,
+                    expo:                       8,
+                    ema_price:                  100,
+                    ema_conf:                   1,
+                    status:                     PriceStatus::Trading,
+                    num_publishers:             8,
+                    max_num_publishers:         8,
+                    attestation_time:           now.try_into().unwrap(),
+                    publish_time:               now.try_into().unwrap(),
+                    prev_publish_time:          now.try_into().unwrap(),
+                    prev_price:                 100,
+                    prev_conf:                  1,
+                    last_attested_publish_time: now.try_into().unwrap(),
                 }],
             }
             .serialize()
@@ -375,7 +400,7 @@ async fn test_stale_threshold() {
         &contract
             .view("get_update_fee_estimate")
             .args_json(&json!({
-                "vaa": vaa,
+                "data": vaa,
             }))
             .await
             .unwrap()
@@ -385,11 +410,11 @@ async fn test_stale_threshold() {
 
     // Submit price. As there are no prices this should succeed despite being old.
     assert!(contract
-        .call("update_price_feed")
+        .call("update_price_feeds")
         .gas(300_000_000_000_000)
         .deposit(update_fee.into())
         .args_json(&json!({
-            "vaa_hex": vaa,
+            "data": vaa,
         }))
         .transact_async()
         .await
@@ -430,21 +455,22 @@ async fn test_stale_threshold() {
         cur.write_all(
             &BatchPriceAttestation {
                 price_attestations: vec![PriceAttestation {
-                    product_id:         Identifier::default(),
-                    price_id:           Identifier::default(),
-                    price:              1000,
-                    conf:               1,
-                    expo:               8,
-                    ema_price:          1000,
-                    ema_conf:           1,
-                    status:             PriceStatus::Trading,
-                    num_publishers:     8,
-                    max_num_publishers: 8,
-                    attestation_time:   (now - 1024).try_into().unwrap(),
-                    publish_time:       (now - 1024).try_into().unwrap(),
-                    prev_publish_time:  (now - 1024).try_into().unwrap(),
-                    prev_price:         90,
-                    prev_conf:          1,
+                    product_id:                 Identifier::default(),
+                    price_id:                   Identifier::default(),
+                    price:                      1000,
+                    conf:                       1,
+                    expo:                       8,
+                    ema_price:                  1000,
+                    ema_conf:                   1,
+                    status:                     PriceStatus::Trading,
+                    num_publishers:             8,
+                    max_num_publishers:         8,
+                    attestation_time:           (now - 1024).try_into().unwrap(),
+                    publish_time:               (now - 1024).try_into().unwrap(),
+                    prev_publish_time:          (now - 1024).try_into().unwrap(),
+                    prev_price:                 90,
+                    prev_conf:                  1,
+                    last_attested_publish_time: (now - 1024).try_into().unwrap(),
                 }],
             }
             .serialize()
@@ -456,11 +482,11 @@ async fn test_stale_threshold() {
 
     // The update handler should now succeed even if price is old, but simply not update the price.
     assert!(contract
-        .call("update_price_feed")
+        .call("update_price_feeds")
         .gas(300_000_000_000_000)
         .deposit(update_fee.into())
         .args_json(&json!({
-            "vaa_hex": vaa,
+            "data": vaa,
         }))
         .transact_async()
         .await
@@ -590,7 +616,7 @@ async fn test_contract_fees() {
         &contract
             .view("get_update_fee_estimate")
             .args_json(&json!({
-                "vaa": vaa,
+                "data": vaa,
             }))
             .await
             .unwrap()
@@ -622,7 +648,7 @@ async fn test_contract_fees() {
                 &contract
                     .view("get_update_fee_estimate")
                     .args_json(&json!({
-                        "vaa": vaa,
+                        "data": vaa,
                     }))
                     .await
                     .unwrap()
@@ -647,21 +673,22 @@ async fn test_contract_fees() {
         cur.write_all(
             &BatchPriceAttestation {
                 price_attestations: vec![PriceAttestation {
-                    product_id:         Identifier::default(),
-                    price_id:           Identifier::default(),
-                    price:              1000,
-                    conf:               1,
-                    expo:               8,
-                    ema_price:          1000,
-                    ema_conf:           1,
-                    status:             PriceStatus::Trading,
-                    num_publishers:     8,
-                    max_num_publishers: 8,
-                    attestation_time:   (now - 1024).try_into().unwrap(),
-                    publish_time:       (now - 1024).try_into().unwrap(),
-                    prev_publish_time:  (now - 1024).try_into().unwrap(),
-                    prev_price:         90,
-                    prev_conf:          1,
+                    product_id:                 Identifier::default(),
+                    price_id:                   Identifier::default(),
+                    price:                      1000,
+                    conf:                       1,
+                    expo:                       8,
+                    ema_price:                  1000,
+                    ema_conf:                   1,
+                    status:                     PriceStatus::Trading,
+                    num_publishers:             8,
+                    max_num_publishers:         8,
+                    attestation_time:           (now - 1024).try_into().unwrap(),
+                    publish_time:               (now - 1024).try_into().unwrap(),
+                    prev_publish_time:          (now - 1024).try_into().unwrap(),
+                    prev_price:                 90,
+                    prev_conf:                  1,
+                    last_attested_publish_time: (now - 1024).try_into().unwrap(),
                 }],
             }
             .serialize()
@@ -672,11 +699,11 @@ async fn test_contract_fees() {
     };
 
     assert!(contract
-        .call("update_price_feed")
+        .call("update_price_feeds")
         .gas(300_000_000_000_000)
         .deposit(update_fee.into())
         .args_json(&json!({
-            "vaa_hex": vaa,
+            "data": vaa,
         }))
         .transact_async()
         .await
@@ -939,4 +966,181 @@ async fn test_governance_target_fails_if_not_near() {
         .unwrap()
         .failures()
         .is_empty());
+}
+
+// A test to check accumulator style updates work as intended.
+#[tokio::test]
+async fn test_accumulator_updates() {
+    fn create_dummy_price_feed_message(value: i64) -> Message {
+        let mut dummy_id = [0; 32];
+        dummy_id[0] = value as u8;
+        let msg = PriceFeedMessage {
+            feed_id:           dummy_id,
+            price:             value,
+            conf:              value as u64,
+            exponent:          value as i32,
+            publish_time:      value,
+            prev_publish_time: value,
+            ema_price:         value,
+            ema_conf:          value as u64,
+        };
+        Message::PriceFeedMessage(msg)
+    }
+
+    fn create_accumulator_message_from_updates(
+        price_updates: Vec<MerklePriceUpdate>,
+        tree: MerkleTree<Keccak160>,
+        emitter_address: [u8; 32],
+        emitter_chain: u16,
+    ) -> Vec<u8> {
+        let mut root_hash = [0u8; 20];
+        root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
+        let wormhole_message = WormholeMessage::new(WormholePayload::Merkle(WormholeMerkleRoot {
+            slot:      0,
+            ring_size: 0,
+            root:      root_hash,
+        }));
+
+        let vaa = wormhole::Vaa {
+            emitter_chain: emitter_chain.into(),
+            emitter_address: wormhole::Address(emitter_address),
+            sequence: 2,
+            payload: (),
+            ..Default::default()
+        };
+
+        let vaa = {
+            let mut cur = Cursor::new(Vec::new());
+            serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
+            cur.write_all(&to_vec::<_, BigEndian>(&wormhole_message).unwrap())
+                .expect("Failed to write Payload");
+            cur.into_inner()
+        };
+
+        let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
+            vaa:     PrefixedVec::from(vaa),
+            updates: price_updates,
+        });
+
+        to_vec::<_, BigEndian>(&accumulator_update_data).unwrap()
+    }
+
+    fn create_accumulator_message(all_feeds: &[Message], updates: &[Message]) -> Vec<u8> {
+        let all_feeds_bytes: Vec<_> = all_feeds
+            .iter()
+            .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+            .collect();
+        let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
+        let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+        for update in updates {
+            let proof = tree
+                .prove(&to_vec::<_, BigEndian>(update).unwrap())
+                .unwrap();
+            price_updates.push(MerklePriceUpdate {
+                message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
+                proof,
+            });
+        }
+        create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            [1; 32],
+            wormhole::Chain::Any.into(),
+        )
+    }
+
+    let (_, contract, _) = initialize_chain().await;
+
+    // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        sequence: 1,
+        payload: (),
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Any),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetDataSources {
+                    data_sources: vec![
+                        Source::default(),
+                        Source {
+                            emitter: [1; 32],
+                            chain:   Chain::from(WormholeChain::Any),
+                        },
+                    ],
+                },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .expect("Failed to write Payload");
+        hex::encode(cur.into_inner())
+    };
+
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Create a couple of test feeds.
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1]);
+    let message = hex::encode(message);
+
+    // Call the usual UpdatePriceFeed function.
+    assert!(contract
+        .call("update_price_feeds")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "data": message,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Check the price feed actually updated. Check both types of serialized PriceIdentifier.
+    let mut identifier = [0; 32];
+    identifier[0] = 100;
+
+    assert_eq!(
+        Some(Price {
+            price:     100,
+            conf:      100,
+            expo:      100,
+            timestamp: 100,
+        }),
+        serde_json::from_slice::<Option<Price>>(
+            &contract
+                .view("get_price_unsafe")
+                .args_json(&json!({ "price_identifier": PriceIdentifier(identifier) }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+    );
 }

@@ -3,16 +3,26 @@ import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 // PYTH will have:
 // 1. Mainnet Deployment - which will have pyth mainnet governance and data sources
 // 2. Testnet Stable Deployment - which will also have pyth mainnet governance and data sources
-// 3. Testnet Edge Deployment - which will have pyth testnet governance and data sources.
-// Different chains will have different chain ids i.e., mainnet and testnet will have different chain ids.
-// Though stable and edge contracts on testnet will share the same chain id. They are governed by different
-// sources hence there is no chance of collision.
+// Different chains will have different chain ids i.e., mainnet and testnet will have different chain ids
+// to avoid collision of governance messages.
 
-// If there is already a chain id in wormhole sdk. Use that for Mainnet
-// Else add a chain id for mainnet too.
-// Add an id for the testnet
-// Currently we are deploying this for cosmos chains only. But this will be for all the chains in future.
+// For evm networks, always add a new chain id, for the other networks If there is already a chain id in wormhole sdk,
+// use that for mainnet, and else add a chain id for mainnet too. Also add an id for testnet.
 export const RECEIVER_CHAINS = {
+  unset: 0, // The global chain id. For messages that are not chain specific.
+
+  // On the following networks we use our own version of Wormhole receiver contract
+  ethereum: 2,
+  bsc: 4,
+  polygon: 5,
+  avalanche: 6,
+  aurora: 9,
+  fantom: 10,
+  celo: 14,
+  injective: 19,
+  arbitrum: 23,
+  optimism: 24,
+
   cronos: 60001,
   kcc: 60002,
   zksync: 60003,
@@ -25,30 +35,72 @@ export const RECEIVER_CHAINS = {
   meter: 60010,
   mantle: 60011,
   conflux_espace: 60012,
-  injective_testnet: 60013,
   osmosis: 60014,
-  osmosis_testnet_4: 60015,
-  osmosis_testnet_5: 60016,
   sei_pacific_1: 60017,
-  sei_testnet_atlantic_2: 60018,
   neutron: 60019,
   juno: 60020,
-  juno_testnet: 60021,
   kava: 60022,
   wemix: 60023,
   linea: 60024,
-  neutron_testnet_pion_1: 60025,
   eos: 60026,
   syndr: 60027,
   scroll: 60028,
   ronin: 60029,
-  horizen: 60030,
+  horizen_eon: 60030,
   boba: 60031,
   manta: 60032,
   chiliz: 60033,
   zetachain: 60034,
   astar: 60035,
   coredao: 60036,
+  tomochain: 60037,
+
+  // Testnets as a separate chain ids (to use stable data sources and governance for them)
+  injective_testnet: 60013,
+  osmosis_testnet_4: 60015,
+  osmosis_testnet_5: 60016,
+  sei_testnet_atlantic_2: 60018,
+  juno_testnet: 60021,
+  neutron_testnet_pion_1: 60025,
+
+  linea_goerli: 50001,
+  fuji: 50002, // Avalanche testnet
+  base_goerli: 50003,
+  cronos_testnet: 50004,
+  zksync_goerli: 50005,
+  canto_testnet: 50006,
+  polygon_zkevm_testnet: 50007,
+  aurora_testnet: 50008,
+  mantle_testnet: 50009,
+  fantom_testnet: 50010,
+  mumbai: 50011, // Polygon testnet
+  neon_devnet: 50012,
+  chiado: 50013, // Gnosis testnet
+  kava_testnet: 50014,
+  evmos_testnet: 50015,
+  bsc_testnet: 50016,
+  conflux_espace_testnet: 50017,
+  optimism_goerli: 50018,
+  wemix_testnet: 50019,
+  celo_alfajores_testnet: 50020,
+  syndr_nitro_testnet: 50021,
+  kcc_testnet: 50022,
+  eos_testnet: 50023,
+  meter_testnet: 50024,
+  shimmer_testnet: 50025,
+  scroll_sepolia: 50026,
+  saigon: 50027, // Ronin testnet
+  horizen_gobi: 50028,
+  sepolia: 50029, // Ethereum latest testnet
+  arbitrum_sepolia: 50030, // Arbitrum latest testnet
+  boba_goerli: 50031,
+  manta_testnet: 50032,
+  optimism_sepolia: 50033,
+  chiliz_spicy: 50034, // Chiliz testnet
+  zetachain_testnet: 50035,
+  astar_testnet: 50036,
+  coredao_testnet: 50037,
+  tomochain_testnet: 50038,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

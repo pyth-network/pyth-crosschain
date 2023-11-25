@@ -1,11 +1,11 @@
 use {
     crate::{
         api::GetRandomValueResponse,
+        chain::ethereum::SignablePythContract,
         config::{
             Config,
             GenerateOptions,
         },
-        ethereum::SignablePythContract,
     },
     anyhow::Result,
     base64::{
