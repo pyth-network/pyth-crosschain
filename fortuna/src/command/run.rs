@@ -49,14 +49,11 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     )]
     struct ApiDoc;
 
-    println!("load config");
     let config = Config::load(&opts.config.config)?;
-    println!("load chains");
 
     let mut chains = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
-        // FIXME: this is broken now
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
         // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
@@ -66,17 +63,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
         // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
         // later when a user request comes in for that chain.
-        // NOTE: this logic is implemented in a backward compatible way to handle contracts where the commitment is
-        // just a bytes32
-        println!("{:?}", provider_info.commitment_metadata);
-        let metadata = if provider_info.commitment_metadata.len() == 32 {
-            CommitmentMetadata {
-                seed:         provider_info.commitment_metadata[0..32].try_into()?,
-                chain_length: opts.randomness.chain_length,
-            }
-        } else {
-            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?
-        };
+        let metadata =
+            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
         let hash_chain = PebbleHashChain::from_config(
             &opts.randomness.secret,

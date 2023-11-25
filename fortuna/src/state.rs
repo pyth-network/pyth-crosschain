@@ -1,8 +1,5 @@
 use {
-    crate::{
-        api::ChainId,
-        config::RandomnessOptions,
-    },
+    crate::api::ChainId,
     anyhow::{
         ensure,
         Result,
