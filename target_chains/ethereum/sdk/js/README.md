@@ -1,6 +1,7 @@
 # Pyth EVM JS
 
-[Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities. This library allows you to use these real-time prices on EVM-based networks.
+[Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency,
+equities, FX and commodities. This library allows you to use these real-time prices on EVM-based networks.
 
 ## Installation
 
@@ -18,21 +19,20 @@ $ yarn add @pythnetwork/pyth-evm-js
 
 ## Quickstart
 
-Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach. In order to use Pyth prices on chain,
-they must be fetched from an off-chain Hermes instance. The `EvmPriceServiceConnection` class can be used to interact with these services,
-providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
-Pyth prices and submit them to the network:
+Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster
+update times. See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more
+information about this approach. In order to use Pyth prices on chain, they must be fetched from an off-chain Hermes
+instance. The `EvmPriceServiceConnection` class can be used to interact with these services, providing a way to fetch
+these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain Pyth
+prices and submit them to the network:
 
 ```typescript
-const connection = new EvmPriceServiceConnection(
-  "https://hermes-beta.pyth.network"
-); // See Hermes endpoints section below for other endpoints
+const connection = new EvmPriceServiceConnection("https://hermes.pyth.network"); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
-  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
-  "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b", // BTC/USD price id in testnet
-  "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6", // ETH/USD price id in testnet
+  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-stable
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // BTC/USD price id
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id
 ];
 
 // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
@@ -133,7 +133,11 @@ There are two examples in [examples](./src/examples/).
 [This example](./src/examples/EvmPriceServiceClient.ts) fetches `PriceFeed` updates using both a HTTP-request API and a streaming websocket API. You can run it with `npm run example-client`. A full command that prints BTC and ETH price feeds, in the testnet network, looks like so:
 
 ```bash
-npm run example-client -- --endpoint https://hermes-beta.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
+npm run example-client -- \
+  --endpoint https://hermes.pyth.network \
+  --price-ids \
+    0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43 \
+    0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
 ```
 
 #### EvmRelay
@@ -144,19 +148,23 @@ npm run example-client -- --endpoint https://hermes-beta.pyth.network --price-id
 2. Calls the pyth contract with the update data.
 3. Submits it to the network and prints the txhash if successful.
 
-You can run this example with `npm run example-relay`. A full command that updates BTC and ETH prices on the BNB Chain testnet network looks like so:
+You can run this example with `npm run example-relay`. A full command that updates BTC and ETH prices on the BNB Chain
+testnet network looks like so:
 
 ```bash
 npm run example-relay -- \
   --network "https://data-seed-prebsc-1-s1.binance.org:8545" \
-  --pyth-contract "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"\
+  --pyth-contract "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"\
   --mnemonic "my good mnemonic" \
-  --endpoint https://hermes-beta.pyth.network \
+  --endpoint https://hermes.pyth.network \
   --price-ids \
-    "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b" \
-    "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"
+    "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43" \
+    "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
 ```
 
 ## Hermes endpoints
 
-You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
+Pyth offers a free public endpoint at [https://hermes.pyth.network](https://hermes.pyth.network). However, it is
+recommended to obtain a private endpoint from one of the Hermes RPC providers for more reliability. You can find more
+information about Hermes RPC providers
+[here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoint).

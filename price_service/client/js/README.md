@@ -23,21 +23,18 @@ $ yarn add @pythnetwork/price-service-client
 Typical usage of the connection is along the following lines:
 
 ```typescript
-const connection = new PriceServiceConnection(
-  "https://hermes-beta.pyth.network",
-  {
-    priceFeedRequestConfig: {
-      // Provide this option to retrieve signed price updates for on-chain contracts.
-      // Ignore this option for off-chain use.
-      binary: true,
-    },
-  }
-); // See Hermes endpoints section below for other endpoints
+const connection = new PriceServiceConnection("https://hermes.pyth.network", {
+  priceFeedRequestConfig: {
+    // Provide this option to retrieve signed price updates for on-chain contracts.
+    // Ignore this option for off-chain use.
+    binary: true,
+  },
+}); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
-  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
-  "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b", // BTC/USD price id in testnet
-  "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6", // ETH/USD price id in testnet
+  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // BTC/USD price id
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id
 ];
 
 // Get the latest values of the price feeds as json objects.
@@ -80,9 +77,16 @@ You can run it with `npm run example`.
 A full command that prints BTC and ETH price feeds, in the testnet network, looks like so:
 
 ```bash
-npm run example -- --endpoint https://hermes-beta.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
+npm run example -- \
+  --endpoint https://hermes.pyth.network \
+  --price-ids \
+    0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43 \
+    0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
 ```
 
 ## Hermes endpoints
 
-You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
+Pyth offers a free public endpoint at [https://hermes.pyth.network](https://hermes.pyth.network). However, it is
+recommended to obtain a private endpoint from one of the Hermes RPC providers for more reliability. You can find more
+information about Hermes RPC providers
+[here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoint).
