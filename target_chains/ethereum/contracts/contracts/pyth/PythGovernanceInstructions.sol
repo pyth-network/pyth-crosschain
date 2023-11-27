@@ -19,7 +19,8 @@ contract PythGovernanceInstructions {
 
     enum GovernanceModule {
         Executor, // 0
-        Target // 1
+        Target, // 1
+        EvmExecutor // 2
     }
 
     GovernanceModule constant MODULE = GovernanceModule.Target;
