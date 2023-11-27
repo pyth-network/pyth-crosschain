@@ -38,11 +38,11 @@ contract EntropyStructs {
     }
 
     struct Request {
-        address provider;
+        // address provider;
         uint64 sequenceNumber;
+        uint64 providerCommitmentSequenceNumber;
         bytes32 userCommitment;
         bytes32 providerCommitment;
-        uint64 providerCommitmentSequenceNumber;
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
         uint256 blockNumber;
     }

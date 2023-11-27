@@ -6,7 +6,7 @@ import "./EntropyStructs.sol";
 interface EntropyEvents {
     event Registered(EntropyStructs.ProviderInfo provider);
 
-    event Requested(EntropyStructs.Request request);
+    event Requested(address provider, EntropyStructs.Request request);
 
     event Revealed(
         EntropyStructs.Request request,

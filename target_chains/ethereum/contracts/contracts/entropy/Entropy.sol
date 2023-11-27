@@ -180,7 +180,6 @@ contract Entropy is IEntropy, EntropyState {
         EntropyStructs.Request storage req = _state.requests[
             requestKey(provider, assignedSequenceNumber)
         ];
-        req.provider = provider;
         req.sequenceNumber = assignedSequenceNumber;
         req.userCommitment = userCommitment;
         req.providerCommitment = providerInfo.currentCommitment;
@@ -191,7 +190,7 @@ contract Entropy is IEntropy, EntropyState {
             req.blockNumber = block.number;
         }
 
-        emit Requested(req);
+        emit Requested(provider, req);
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
