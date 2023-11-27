@@ -16,6 +16,7 @@ use {
                 WormholePayload,
             },
         },
+        ACCUMULATOR_EMITTER_ADDRESS,
     },
     serde::Deserialize,
     sha3::Digest,
@@ -33,27 +34,27 @@ pub mod pyth_solana_receiver {
 
     /// Verify the updates using the posted_vaa account
     ///  * `vaa_hash` hash post of the post_vaa data to derive the address of the post_vaa account
-    ///  * `emitter_chain` expected emitter_chain from the post_vaa account
     ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
-    ///
-    /// TODO:
-    ///    - use a `config` account that can only be modified by governance for checking emitter_chain
-    ///      and other constraints
-    ///
 
     #[allow(unused_variables)]
     pub fn post_updates(
         ctx: Context<PostUpdates>,
         vaa_hash: [u8; 32], // used for pda seeds
-        emitter_chain: u16,
         price_updates: Vec<Vec<u8>>,
     ) -> Result<()> {
         let vaa = &ctx.accounts.posted_vaa;
+        // TODO: expected emitter_chain should come from config account that can only be modified by governance
         require_eq!(
             vaa.emitter_chain(),
-            emitter_chain,
+            <wormhole::Chain as Into<u16>>::into(wormhole::Chain::Pythnet),
             ReceiverError::InvalidEmitterChain
         );
+
+        // TODO: expected emitter_address should come from config account that can only be modified by governance
+        if vaa.emitter_address() != &ACCUMULATOR_EMITTER_ADDRESS {
+            return err!(ReceiverError::InvalidEmitterAddress);
+        }
+
         let wh_message = WormholeMessage::try_from_bytes(vaa.payload.as_slice())
             .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
         msg!("constructed wh_message {:?}", wh_message);

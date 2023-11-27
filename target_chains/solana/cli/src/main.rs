@@ -113,6 +113,8 @@ fn main() -> Result<()> {
 
             match &accumulator_update_data.proof {
                 Proof::WormholeMerkle { vaa, updates } => {
+                    let vaa_str = base64::encode(vaa.as_ref());
+                    println!("vaa_str: {}", vaa_str);
                     let parsed_vaa: Vaa<&RawMessage> =
                         serde_wormhole::from_slice(vaa.as_ref()).unwrap();
                     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
@@ -250,7 +252,6 @@ fn main() -> Result<()> {
                     .to_account_metas(None);
                     let post_updates_ix_data = pyth_solana_receiver::instruction::PostUpdates {
                         vaa_hash,
-                        emitter_chain: wormhole::Chain::Pythnet.into(),
                         price_updates: update_bytes,
                     }
                     .data();
