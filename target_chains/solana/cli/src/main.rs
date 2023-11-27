@@ -113,8 +113,6 @@ fn main() -> Result<()> {
 
             match &accumulator_update_data.proof {
                 Proof::WormholeMerkle { vaa, updates } => {
-                    let vaa_str = base64::encode(vaa.as_ref());
-                    println!("vaa_str: {}", vaa_str);
                     let parsed_vaa: Vaa<&RawMessage> =
                         serde_wormhole::from_slice(vaa.as_ref()).unwrap();
                     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
