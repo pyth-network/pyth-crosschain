@@ -35,7 +35,6 @@ pub mod pyth_solana_receiver {
     /// Verify the updates using the posted_vaa account
     ///  * `vaa_hash` hash post of the post_vaa data to derive the address of the post_vaa account
     ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
-
     #[allow(unused_variables)]
     pub fn post_updates(
         ctx: Context<PostUpdates>,
