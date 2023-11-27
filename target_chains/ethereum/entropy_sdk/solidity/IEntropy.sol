@@ -13,7 +13,8 @@ interface IEntropy is EntropyEvents {
         uint feeInWei,
         bytes32 commitment,
         bytes calldata commitmentMetadata,
-        uint64 chainLength
+        uint64 chainLength,
+        bytes calldata uri
     ) external;
 
     // Withdraw a portion of the accumulated fees for the provider msg.sender.

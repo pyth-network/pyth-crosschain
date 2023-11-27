@@ -72,14 +72,6 @@ import "./EntropyState.sol";
 // protocol prior to the random number being revealed (i.e., prior to step (6) above). Integrators should ensure that
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
-//
-// TODOs:
-// - governance??
-// - correct method access modifiers (public vs external)
-// - gas optimizations
-// - function to check invariants??
-// - need to increment pyth fees if someone transfers funds to the contract via another method
-// - off-chain data ERC support?
 contract Entropy is IEntropy, EntropyState {
     // TODO: Use an upgradeable proxy
     constructor(uint pythFeeInWei, address defaultProvider) {
@@ -97,7 +89,8 @@ contract Entropy is IEntropy, EntropyState {
         uint feeInWei,
         bytes32 commitment,
         bytes calldata commitmentMetadata,
-        uint64 chainLength
+        uint64 chainLength,
+        bytes calldata uri
     ) public override {
         if (chainLength == 0) revert EntropyErrors.AssertionFailure();
 
@@ -118,6 +111,7 @@ contract Entropy is IEntropy, EntropyState {
         provider.currentCommitmentSequenceNumber = provider.sequenceNumber;
         provider.commitmentMetadata = commitmentMetadata;
         provider.endSequenceNumber = provider.sequenceNumber + chainLength;
+        provider.uri = uri;
 
         provider.sequenceNumber += 1;
 

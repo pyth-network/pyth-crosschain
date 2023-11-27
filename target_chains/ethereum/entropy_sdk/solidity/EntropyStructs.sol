@@ -21,6 +21,10 @@ contract EntropyStructs {
         // Metadata for the current commitment. Providers may optionally use this field to to help
         // manage rotations (i.e., to pick the sequence number from the correct hash chain).
         bytes commitmentMetadata;
+        // Optional URI where clients can retrieve revelations for the provider.
+        // Client SDKs can use this field to automatically determine how to retrieve random values for each provider.
+        // TODO: specify the API that must be implemented at this URI
+        bytes uri;
         // The first sequence number that is *not* included in the current commitment (i.e., an exclusive end index).
         // The contract maintains the invariant that sequenceNumber <= endSequenceNumber.
         // If sequenceNumber == endSequenceNumber, the provider must rotate their commitment to add additional random values.
