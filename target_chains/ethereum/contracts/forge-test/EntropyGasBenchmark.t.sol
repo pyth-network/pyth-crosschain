@@ -50,7 +50,10 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1ChainLength
         );
 
-        assert(random.getProviderInfo(provider1).currentCommitmentSequenceNumber != 0);
+        assert(
+            random.getProviderInfo(provider1).currentCommitmentSequenceNumber !=
+                0
+        );
     }
 
     // Test helper method for requesting a random value as user from provider.
@@ -72,7 +75,12 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
 
     function testBenchmarkBasicFlow() public {
         uint userRandom = 42;
-        uint64 sequenceNumber = requestHelper(user1, provider1, userRandom, true);
+        uint64 sequenceNumber = requestHelper(
+            user1,
+            provider1,
+            userRandom,
+            true
+        );
 
         random.reveal(
             provider1,
