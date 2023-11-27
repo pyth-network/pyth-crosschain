@@ -41,8 +41,9 @@ contract EntropyStructs {
         // address provider;
         uint64 sequenceNumber;
         uint64 providerCommitmentSequenceNumber;
-        bytes32 userCommitment;
-        bytes32 providerCommitment;
+        // The commitment is keccak256(userCommitment, providerCommitment). Storing the hash saves 20k gas by
+        // eliminating 1 store.
+        bytes32 commitment;
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
         uint256 blockNumber;
     }

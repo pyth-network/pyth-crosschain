@@ -181,8 +181,10 @@ contract Entropy is IEntropy, EntropyState {
             requestKey(provider, assignedSequenceNumber)
         ];
         req.sequenceNumber = assignedSequenceNumber;
-        req.userCommitment = userCommitment;
-        req.providerCommitment = providerInfo.currentCommitment;
+        req.commitment = keccak256(
+            bytes.concat(userCommitment, providerInfo.currentCommitment)
+        );
+        // req.providerCommitment = providerInfo.currentCommitment;
         req.providerCommitmentSequenceNumber = providerInfo
             .currentCommitmentSequenceNumber;
 
@@ -214,15 +216,17 @@ contract Entropy is IEntropy, EntropyState {
         if (req.sequenceNumber != sequenceNumber)
             revert EntropyErrors.AssertionFailure();
 
-        bool valid = isProofValid(
+        bytes32 providerCommitment = constructProviderCommitment(
             req.providerCommitmentSequenceNumber,
-            req.providerCommitment,
             sequenceNumber,
             providerRevelation
         );
-        if (!valid) revert EntropyErrors.IncorrectProviderRevelation();
-        if (constructUserCommitment(userRandomness) != req.userCommitment)
-            revert EntropyErrors.IncorrectUserRevelation();
+        // if (!valid) revert EntropyErrors.IncorrectProviderRevelation();
+        bytes32 userCommitment = constructUserCommitment(userRandomness);
+        if (
+            keccak256(bytes.concat(userCommitment, providerCommitment)) !=
+            req.commitment
+        ) revert EntropyErrors.IncorrectUserRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.blockNumber != 0) {
@@ -309,21 +313,18 @@ contract Entropy is IEntropy, EntropyState {
 
     // Validate that revelation at sequenceNumber is the correct value in the hash chain for a provider whose
     // last known revealed random number was lastRevelation at lastSequenceNumber.
-    function isProofValid(
+    function constructProviderCommitment(
         uint64 lastSequenceNumber,
-        bytes32 lastRevelation,
         uint64 sequenceNumber,
         bytes32 revelation
-    ) internal pure returns (bool valid) {
+    ) internal pure returns (bytes32 currentHash) {
         if (sequenceNumber <= lastSequenceNumber)
             revert EntropyErrors.AssertionFailure();
 
-        bytes32 currentHash = revelation;
+        currentHash = revelation;
         while (sequenceNumber > lastSequenceNumber) {
             currentHash = keccak256(bytes.concat(currentHash));
             sequenceNumber -= 1;
         }
-
-        valid = currentHash == lastRevelation;
     }
 }

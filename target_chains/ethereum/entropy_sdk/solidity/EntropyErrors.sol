@@ -16,6 +16,7 @@ library EntropyErrors {
     // The transaction fee was not sufficient
     error InsufficientFee();
     // The user's revealed random value did not match their commitment.
+    // FIXME rename and delete the one below
     error IncorrectUserRevelation();
     // The provider's revealed random value did not match their commitment.
     error IncorrectProviderRevelation();
