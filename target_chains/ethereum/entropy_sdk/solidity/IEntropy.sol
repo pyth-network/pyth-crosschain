@@ -37,12 +37,6 @@ interface IEntropy is EntropyEvents {
         bool useBlockHash
     ) external payable returns (uint64 assignedSequenceNumber);
 
-    // Same as `request` above using the default randomness provider configured in the contract.
-    function request(
-        bytes32 userCommitment,
-        bool useBlockHash
-    ) external payable returns (uint64 assignedSequenceNumber);
-
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -52,13 +46,6 @@ interface IEntropy is EntropyEvents {
     // If you need to use the returned random number more than once, you are responsible for storing it.
     function reveal(
         address provider,
-        uint64 sequenceNumber,
-        bytes32 userRandomness,
-        bytes32 providerRevelation
-    ) external returns (bytes32 randomNumber);
-
-    // Same as `reveal` above using the default randomness provider configured in the contract.
-    function reveal(
         uint64 sequenceNumber,
         bytes32 userRandomness,
         bytes32 providerRevelation
@@ -76,8 +63,6 @@ interface IEntropy is EntropyEvents {
     ) external view returns (EntropyStructs.Request memory req);
 
     function getFee(address provider) external view returns (uint feeAmount);
-
-    function getFee() external view returns (uint feeAmount);
 
     function getAccruedPythFees()
         external

@@ -196,17 +196,6 @@ contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
-    function request(
-        bytes32 userCommitment,
-        bool useBlockHash
-    ) external payable override returns (uint64 assignedSequenceNumber) {
-        assignedSequenceNumber = request(
-            getDefaultProvider(),
-            userCommitment,
-            useBlockHash
-        );
-    }
-
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -269,19 +258,6 @@ contract Entropy is IEntropy, EntropyState {
         }
     }
 
-    function reveal(
-        uint64 sequenceNumber,
-        bytes32 userRandomness,
-        bytes32 providerRevelation
-    ) external override returns (bytes32 randomNumber) {
-        randomNumber = reveal(
-            getDefaultProvider(),
-            sequenceNumber,
-            userRandomness,
-            providerRevelation
-        );
-    }
-
     function getProviderInfo(
         address provider
     ) public view override returns (EntropyStructs.ProviderInfo memory info) {
@@ -309,12 +285,6 @@ contract Entropy is IEntropy, EntropyState {
         address provider
     ) public view override returns (uint feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
-    }
-
-    function getFee() public view override returns (uint feeAmount) {
-        return
-            _state.providers[_state.defaultProvider].feeInWei +
-            _state.pythFeeInWei;
     }
 
     function getAccruedPythFees()
