@@ -39,10 +39,22 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             hex"0100",
             provider1ChainLength
         );
+
+        // Register twice so the commitment sequence number is nonzero. Zero values can be misleading
+        // when gas benchmarking.
+        vm.prank(provider1);
+        random.register(
+            provider1FeeInWei,
+            provider1Proofs[0],
+            hex"0100",
+            provider1ChainLength
+        );
+
+        assert(random.getProviderInfo(provider1).currentCommitmentSequenceNumber != 0);
     }
 
     // Test helper method for requesting a random value as user from provider.
-    function request(
+    function requestHelper(
         address user,
         address provider,
         uint randomNumber,
@@ -60,7 +72,7 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
 
     function testBenchmarkBasicFlow() public {
         uint userRandom = 42;
-        uint64 sequenceNumber = request(user1, provider1, userRandom, false);
+        uint64 sequenceNumber = requestHelper(user1, provider1, userRandom, true);
 
         random.reveal(
             provider1,
