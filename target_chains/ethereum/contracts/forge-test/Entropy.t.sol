@@ -80,7 +80,6 @@ contract EntropyTest is Test {
     }
 
     // Test helper method for requesting a random value as user from provider.
-    // If provider is all-zeros, use the default provider in the contract.
     function request(
         address user,
         address provider,
