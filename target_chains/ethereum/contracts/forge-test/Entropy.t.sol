@@ -378,6 +378,8 @@ contract EntropyTest is Test, EntropyTestUtils {
         random.register(MAX_UINT128, provider1Proofs[0], hex"0100", 100);
         vm.expectRevert();
         random.getFee(provider1);
+
+        // TODO: does casting in solidity fail if the value is too large?
     }
 
     function testFees() public {

@@ -60,7 +60,7 @@ interface IEntropy is EntropyEvents {
         uint64 sequenceNumber
     ) external view returns (EntropyStructs.Request memory req);
 
-    function getFee(address provider) external view returns (uint feeAmount);
+    function getFee(address provider) external view returns (uint128 feeAmount);
 
     function getAccruedPythFees()
         external

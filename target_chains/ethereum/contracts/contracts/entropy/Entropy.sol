@@ -171,10 +171,11 @@ contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint requiredFee = getFee(provider);
+        uint128 requiredFee = getFee(provider);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         providerInfo.accruedFeesInWei += providerInfo.feeInWei;
-        _state.accruedPythFeesInWei += (msg.value - providerInfo.feeInWei);
+        _state.accruedPythFeesInWei += (uint128(msg.value) -
+            providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
         EntropyStructs.Request storage req = _state.requests[
@@ -270,7 +271,7 @@ contract Entropy is IEntropy, EntropyState {
 
     function getFee(
         address provider
-    ) public view override returns (uint feeAmount) {
+    ) public view override returns (uint128 feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 

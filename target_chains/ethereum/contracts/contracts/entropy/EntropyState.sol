@@ -6,8 +6,8 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 
 contract EntropyInternalStructs {
     struct State {
-        uint pythFeeInWei;
-        uint accruedPythFeesInWei;
+        uint128 pythFeeInWei;
+        uint128 accruedPythFeesInWei;
         mapping(address => EntropyStructs.ProviderInfo) providers;
         mapping(bytes32 => EntropyStructs.Request) requests;
     }

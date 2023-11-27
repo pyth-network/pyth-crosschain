@@ -3,13 +3,6 @@
 pragma solidity ^0.8.0;
 
 contract EntropyStructs {
-    struct State {
-        uint128 pythFeeInWei;
-        uint128 accruedPythFeesInWei;
-        mapping(address => ProviderInfo) providers;
-        mapping(bytes32 => Request) requests;
-    }
-
     struct ProviderInfo {
         uint128 feeInWei;
         uint128 accruedFeesInWei;
