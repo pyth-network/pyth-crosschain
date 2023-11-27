@@ -1,8 +1,8 @@
 # Pyth NEAR
 
 This directory contains the Pyth contract for NEAR, examples, and utilities to deploy. Within the `example/`
-directory you will find an example skeleton NEAR contract that updates and uses a price. You can find
-updates to test with from the Hermes API. Additionally see the `scripts/update.sh` script for an example
+directory you will find an example skeleton NEAR contract that updates and uses several prices. You can find
+payloads to test with from the Hermes API. Additionally see the `scripts/update.sh` script for an example
 of how to manually submit a price update from the CLI.
 
 ## Deployment
@@ -15,6 +15,7 @@ Deploying the NEAR contract has three steps:
    - `sha256sum pyth.wasm` after building the contract.
    - `list(bytes.fromhex(hash))` in Python to get a byte array.
    - Replace the `codehash` field in deploy.sh for the initial codehash.
+   - Replace the sources with the keys expected by the network you're deploying on (testnet vs mainnet).
 
 ## Further Documentation
 
