@@ -1,11 +1,9 @@
 pub mod cli;
+
 use {
     anchor_client::anchor_lang::{
         prelude::*,
-        solana_program::{
-            system_program,
-            sysvar::SysvarId,
-        },
+        solana_program::sysvar::SysvarId,
         AnchorDeserialize,
         InstructionData,
         ToAccountMetas,
@@ -16,10 +14,7 @@ use {
         Action,
         Cli,
     },
-    pyth_solana_receiver::{
-        state::AnchorVaa,
-        GuardianSet,
-    },
+    pyth_solana_receiver::state::AnchorVaa,
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -31,10 +26,8 @@ use {
                 WormholeMessage,
                 WormholePayload,
             },
-            Serializer,
         },
     },
-    serde::Serialize,
     serde_wormhole::RawMessage,
     solana_client::{
         rpc_client::RpcClient,
@@ -59,13 +52,46 @@ use {
         Vaa,
     },
     wormhole_solana::{
-        instructions::verify_signatures_txs,
+        instructions::{
+            post_vaa,
+            verify_signatures_txs,
+            PostVAAData,
+        },
         Account,
         Config as WormholeConfig,
         GuardianSet as WormholeSolanaGuardianSet,
         VAA as WormholeSolanaVAA,
     },
 };
+
+#[derive(Default, AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
+pub struct GuardianSet {
+    /// Index representing an incrementing version number for this guardian set.
+    pub index:           u32,
+    /// ETH style public keys
+    pub keys:            Vec<[u8; 20]>,
+    /// Timestamp representing the time this guardian became active.
+    pub creation_time:   u32,
+    /// Expiration time when VAAs issued by this set are no longer valid.
+    pub expiration_time: u32,
+}
+
+impl AccountDeserialize for GuardianSet {
+    fn try_deserialize_unchecked(
+        buf: &mut &[u8],
+    ) -> anchor_client::anchor_lang::prelude::Result<Self> {
+        Self::deserialize(buf).map_err(Into::into)
+    }
+}
+
+impl AccountSerialize for GuardianSet {
+}
+
+impl Owner for GuardianSet {
+    fn owner() -> Pubkey {
+        wormhole_anchor_sdk::wormhole::program::Wormhole::id()
+    }
+}
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -89,7 +115,7 @@ fn main() -> Result<()> {
                 Proof::WormholeMerkle { vaa, updates } => {
                     let parsed_vaa: Vaa<&RawMessage> =
                         serde_wormhole::from_slice(vaa.as_ref()).unwrap();
-                    let (_, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
+                    let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
 
                     println!("[2/5] Get wormhole guardian set configuration");
                     let wormhole_config = WormholeConfig::key(&wormhole, ());
@@ -147,57 +173,27 @@ fn main() -> Result<()> {
                                 )?;
                             }
 
-                            println!("[4/5] Post the VAA data onto a solana account using pyth-solana-receiver::PostAccumulatorUpdateVaa");
-
-                            let mut accumulator_update_data_vaa_only =
-                                accumulator_update_data.clone();
-                            accumulator_update_data_vaa_only.proof =
-                                match accumulator_update_data_vaa_only.proof {
-                                    Proof::WormholeMerkle { vaa, updates: _ } => {
-                                        Proof::WormholeMerkle {
-                                            vaa,
-                                            updates: vec![],
-                                        }
-                                    }
-                                };
-                            let mut accumulator_update_data_only_vaa_bytes = Vec::new();
-                            let mut cursor =
-                                std::io::Cursor::new(&mut accumulator_update_data_only_vaa_bytes);
-                            let mut serializer: Serializer<_, byteorder::BE> =
-                                Serializer::new(&mut cursor);
-                            accumulator_update_data_vaa_only
-                                .serialize(&mut serializer)
-                                .unwrap();
-
-                            let post_acc_update_data_vaa_accounts =
-                                pyth_solana_receiver::accounts::PostAccUpdateDataVaa {
-                                    guardian_set,
-                                    bridge_config: wormhole_config,
-                                    signature_set: signature_set_keypair.pubkey(),
-                                    vaa: vaa_pubkey,
-                                    payer: payer.pubkey(),
-                                    rent: Rent::id(),
-                                    clock: Clock::id(),
-                                    system_program: system_program::ID,
-                                    post_vaa_program: wormhole,
-                                }
-                                .to_account_metas(None);
-                            let post_acc_update_data_vaa_ix_data =
-                                pyth_solana_receiver::instruction::PostAccumulatorUpdateVaa {
-                                    emitter_chain: wormhole::Chain::Pythnet.into(),
-                                    data:          accumulator_update_data_only_vaa_bytes,
-                                }
-                                .data();
-                            let post_acc_update_data_vaa_ix = Instruction::new_with_bytes(
-                                pyth_solana_receiver::ID,
-                                &post_acc_update_data_vaa_ix_data,
-                                post_acc_update_data_vaa_accounts,
-                            );
-                            println!("Sending txn with PostAccumulatorUpdateVaa ix");
+                            println!("[4/5] Post the VAA data onto a solana account");
+                            let post_vaa_data = PostVAAData {
+                                version:            header.version,
+                                guardian_set_index: header.guardian_set_index,
+                                timestamp:          body.timestamp,
+                                nonce:              body.nonce,
+                                emitter_chain:      body.emitter_chain.into(),
+                                emitter_address:    body.emitter_address.0,
+                                sequence:           body.sequence,
+                                consistency_level:  body.consistency_level,
+                                payload:            body.payload.to_vec(),
+                            };
 
                             process_transaction(
                                 &rpc_client,
-                                vec![post_acc_update_data_vaa_ix],
+                                vec![post_vaa(
+                                    wormhole,
+                                    payer.pubkey(),
+                                    signature_set_keypair.pubkey(),
+                                    post_vaa_data,
+                                )?],
                                 &vec![&payer],
                             )?;
 
