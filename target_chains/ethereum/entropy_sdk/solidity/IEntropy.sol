@@ -12,7 +12,7 @@ interface IEntropy is EntropyEvents {
     function register(
         uint feeInWei,
         bytes32 commitment,
-        bytes32 commitmentMetadata,
+        bytes calldata commitmentMetadata,
         uint64 chainLength
     ) external;
 
