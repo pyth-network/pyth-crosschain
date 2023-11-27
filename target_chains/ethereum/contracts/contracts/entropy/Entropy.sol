@@ -180,16 +180,15 @@ contract Entropy is IEntropy, EntropyState {
         EntropyStructs.Request storage req = _state.requests[
             requestKey(provider, assignedSequenceNumber)
         ];
-        req.sequenceNumber = assignedSequenceNumber;
+        req.numHashes =
+            assignedSequenceNumber -
+            providerInfo.currentCommitmentSequenceNumber;
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
-        // req.providerCommitment = providerInfo.currentCommitment;
-        req.providerCommitmentSequenceNumber = providerInfo
-            .currentCommitmentSequenceNumber;
 
         if (useBlockHash) {
-            req.blockNumber = block.number;
+            req.blockNumber = uint128(block.number);
         }
 
         emit Requested(provider, req);
@@ -211,14 +210,11 @@ contract Entropy is IEntropy, EntropyState {
         // TODO: this method may need to be authenticated to prevent griefing
         bytes32 key = requestKey(provider, sequenceNumber);
         EntropyStructs.Request storage req = _state.requests[key];
-        // This invariant should be guaranteed to hold by the key construction procedure above, but check it
-        // explicitly to be extra cautious.
-        if (req.sequenceNumber != sequenceNumber)
-            revert EntropyErrors.AssertionFailure();
+        // Check that the request exists
+        if (req.numHashes == 0) revert EntropyErrors.AssertionFailure();
 
         bytes32 providerCommitment = constructProviderCommitment(
-            req.providerCommitmentSequenceNumber,
-            sequenceNumber,
+            req.numHashes,
             providerRevelation
         );
         // if (!valid) revert EntropyErrors.IncorrectProviderRevelation();
@@ -314,17 +310,13 @@ contract Entropy is IEntropy, EntropyState {
     // Validate that revelation at sequenceNumber is the correct value in the hash chain for a provider whose
     // last known revealed random number was lastRevelation at lastSequenceNumber.
     function constructProviderCommitment(
-        uint64 lastSequenceNumber,
-        uint64 sequenceNumber,
+        uint64 numHashes,
         bytes32 revelation
     ) internal pure returns (bytes32 currentHash) {
-        if (sequenceNumber <= lastSequenceNumber)
-            revert EntropyErrors.AssertionFailure();
-
         currentHash = revelation;
-        while (sequenceNumber > lastSequenceNumber) {
+        while (numHashes > 0) {
             currentHash = keccak256(bytes.concat(currentHash));
-            sequenceNumber -= 1;
+            numHashes -= 1;
         }
     }
 }

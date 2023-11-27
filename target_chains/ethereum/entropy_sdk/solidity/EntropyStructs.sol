@@ -38,13 +38,14 @@ contract EntropyStructs {
     }
 
     struct Request {
-        // address provider;
-        uint64 sequenceNumber;
-        uint64 providerCommitmentSequenceNumber;
-        // The commitment is keccak256(userCommitment, providerCommitment). Storing the hash saves 20k gas by
+        // The number of hashes
+        uint64 numHashes;
+        // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
+        // Note that we're using a uint128 such that this field fits into the same storage slot as numHashes above.
+        // Although block.number returns a uint256, 128 bits should be plenty to index all of the blocks ever generated.
+        uint128 blockNumber;
+        // The commitment is keccak256(userCommitment, providerCommitment). Storing the hash instead of both saves 20k gas by
         // eliminating 1 store.
         bytes32 commitment;
-        // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
-        uint256 blockNumber;
     }
 }
