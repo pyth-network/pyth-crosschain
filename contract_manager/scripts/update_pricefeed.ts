@@ -25,7 +25,7 @@ const parser = yargs(hideBin(process.argv))
     },
     endpoint: {
       type: "string",
-      desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
+      desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network",
     },
   });
 
@@ -39,11 +39,8 @@ async function main() {
       )}`
     );
   }
-  const defaultEndpoint = contract.getChain().isMainnet()
-    ? "https://hermes.pyth.network"
-    : "https://hermes-beta.pyth.network";
   const priceService = new PriceServiceConnection(
-    argv.endpoint || defaultEndpoint
+    argv.endpoint || "https://hermes.pyth.network"
   );
   const vaas = await priceService.getLatestVaas(argv["feed-id"] as string[]);
   const privateKey = toPrivateKey(argv["private-key"]);

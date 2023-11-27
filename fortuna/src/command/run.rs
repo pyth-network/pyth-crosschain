@@ -2,6 +2,7 @@ use {
     crate::{
         api,
         chain::ethereum::PythContract,
+        command::register_provider::CommitmentMetadata,
         config::{
             Config,
             RunOptions,
@@ -59,8 +60,15 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
         // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
         // later when a user request comes in for that chain.
-        let random: [u8; 32] = provider_info.commitment_metadata;
-        let hash_chain = PebbleHashChain::from_config(&opts.randomness, &chain_id, random)?;
+        let metadata =
+            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
+
+        let hash_chain = PebbleHashChain::from_config(
+            &opts.randomness.secret,
+            &chain_id,
+            &metadata.seed,
+            metadata.chain_length,
+        )?;
         let chain_state = HashChainState {
             offsets:     vec![provider_info
                 .original_commitment_sequence_number

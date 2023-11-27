@@ -96,7 +96,7 @@ contract Entropy is IEntropy, EntropyState {
     function register(
         uint feeInWei,
         bytes32 commitment,
-        bytes32 commitmentMetadata,
+        bytes calldata commitmentMetadata,
         uint64 chainLength
     ) public override {
         if (chainLength == 0) revert EntropyErrors.AssertionFailure();
@@ -187,7 +187,6 @@ contract Entropy is IEntropy, EntropyState {
         req.providerCommitment = providerInfo.currentCommitment;
         req.providerCommitmentSequenceNumber = providerInfo
             .currentCommitmentSequenceNumber;
-        req.providerCommitmentMetadata = providerInfo.commitmentMetadata;
 
         if (useBlockHash) {
             req.blockNumber = block.number;

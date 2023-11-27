@@ -1,0 +1,7 @@
+{
+  "endpoint": "https://eth-mainnet.public.blastapi.io",
+  "pyth-contract-address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+  "price-service-endpoint": "https://hermes.pyth.network",
+  "mnemonic-file": "./mnemonic",
+  "price-config-file": "./price-config.stable.sample.yaml"
+}

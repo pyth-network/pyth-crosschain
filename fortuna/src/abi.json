@@ -1,46 +1,5 @@
 [
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "pythFeeInWei",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "AssertionFailure",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "IncorrectProviderRevelation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "IncorrectUserRevelation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InsufficientFee",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NoSuchProvider",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OutOfRandomness",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -66,9 +25,9 @@
             "type": "uint64"
           },
           {
-            "internalType": "bytes32",
+            "internalType": "bytes",
             "name": "commitmentMetadata",
-            "type": "bytes32"
+            "type": "bytes"
           },
           {
             "internalType": "uint64",
@@ -92,7 +51,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct PythRandomStructs.ProviderInfo",
+        "internalType": "struct EntropyStructs.ProviderInfo",
         "name": "provider",
         "type": "tuple"
       }
@@ -131,18 +90,13 @@
             "type": "uint64"
           },
           {
-            "internalType": "bytes32",
-            "name": "providerCommitmentMetadata",
-            "type": "bytes32"
-          },
-          {
             "internalType": "uint256",
             "name": "blockNumber",
             "type": "uint256"
           }
         ],
         "indexed": false,
-        "internalType": "struct PythRandomStructs.Request",
+        "internalType": "struct EntropyStructs.Request",
         "name": "request",
         "type": "tuple"
       }
@@ -181,18 +135,13 @@
             "type": "uint64"
           },
           {
-            "internalType": "bytes32",
-            "name": "providerCommitmentMetadata",
-            "type": "bytes32"
-          },
-          {
             "internalType": "uint256",
             "name": "blockNumber",
             "type": "uint256"
           }
         ],
         "indexed": false,
-        "internalType": "struct PythRandomStructs.Request",
+        "internalType": "struct EntropyStructs.Request",
         "name": "request",
         "type": "tuple"
       },
@@ -337,9 +286,9 @@
             "type": "uint64"
           },
           {
-            "internalType": "bytes32",
+            "internalType": "bytes",
             "name": "commitmentMetadata",
-            "type": "bytes32"
+            "type": "bytes"
           },
           {
             "internalType": "uint64",
@@ -362,7 +311,7 @@
             "type": "uint64"
           }
         ],
-        "internalType": "struct PythRandomStructs.ProviderInfo",
+        "internalType": "struct EntropyStructs.ProviderInfo",
         "name": "info",
         "type": "tuple"
       }
@@ -413,17 +362,12 @@
             "type": "uint64"
           },
           {
-            "internalType": "bytes32",
-            "name": "providerCommitmentMetadata",
-            "type": "bytes32"
-          },
-          {
             "internalType": "uint256",
             "name": "blockNumber",
             "type": "uint256"
           }
         ],
-        "internalType": "struct PythRandomStructs.Request",
+        "internalType": "struct EntropyStructs.Request",
         "name": "req",
         "type": "tuple"
       }
@@ -444,9 +388,9 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
+        "internalType": "bytes",
         "name": "commitmentMetadata",
-        "type": "bytes32"
+        "type": "bytes"
       },
       {
         "internalType": "uint64",

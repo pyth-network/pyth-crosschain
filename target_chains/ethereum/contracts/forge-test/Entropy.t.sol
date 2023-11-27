@@ -44,19 +44,14 @@ contract EntropyTest is Test {
         random.register(
             provider1FeeInWei,
             provider1Proofs[0],
-            bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
+            hex"0100",
             provider1ChainLength
         );
 
         bytes32[] memory hashChain2 = generateHashChain(provider2, 0, 100);
         provider2Proofs = hashChain2;
         vm.prank(provider2);
-        random.register(
-            provider2FeeInWei,
-            provider2Proofs[0],
-            bytes32(keccak256(abi.encodePacked(uint256(0x0200)))),
-            100
-        );
+        random.register(provider2FeeInWei, provider2Proofs[0], hex"0200", 100);
     }
 
     function generateHashChain(
@@ -351,12 +346,7 @@ contract EntropyTest is Test {
             10
         );
         vm.prank(provider1);
-        random.register(
-            provider1FeeInWei,
-            newHashChain[0],
-            bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
-            10
-        );
+        random.register(provider1FeeInWei, newHashChain[0], hex"0100", 10);
         assertInvariants();
         EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
@@ -425,12 +415,7 @@ contract EntropyTest is Test {
 
         // Check that overflowing the fee arithmetic causes the transaction to revert.
         vm.prank(provider1);
-        random.register(
-            MAX_UINT256,
-            provider1Proofs[0],
-            bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
-            100
-        );
+        random.register(MAX_UINT256, provider1Proofs[0], hex"0100", 100);
         vm.expectRevert();
         random.getFee(provider1);
     }
@@ -480,12 +465,7 @@ contract EntropyTest is Test {
 
         // Reregistering updates the required fees
         vm.prank(provider1);
-        random.register(
-            12345,
-            provider1Proofs[0],
-            bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
-            100
-        );
+        random.register(12345, provider1Proofs[0], hex"0100", 100);
 
         assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
