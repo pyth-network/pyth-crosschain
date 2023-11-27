@@ -5,12 +5,13 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "../contracts/entropy/Entropy.sol";
+import "./utils/EntropyTestUtils.t.sol";
 
 // TODO
 // - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
 //   verify the provider's value.
 // - fuzz test?
-contract EntropyTest is Test {
+contract EntropyTest is Test, EntropyTestUtils {
     Entropy public random;
 
     uint pythFeeInWei = 7;
@@ -52,19 +53,6 @@ contract EntropyTest is Test {
         provider2Proofs = hashChain2;
         vm.prank(provider2);
         random.register(provider2FeeInWei, provider2Proofs[0], hex"0200", 100);
-    }
-
-    function generateHashChain(
-        address provider,
-        uint64 startSequenceNumber,
-        uint64 size
-    ) public pure returns (bytes32[] memory hashChain) {
-        bytes32 initialValue = keccak256(abi.encodePacked(startSequenceNumber));
-        hashChain = new bytes32[](size);
-        for (uint64 i = 0; i < size; i++) {
-            hashChain[size - (i + 1)] = initialValue;
-            initialValue = keccak256(bytes.concat(initialValue));
-        }
     }
 
     // Test helper method for requesting a random value as user from provider.
