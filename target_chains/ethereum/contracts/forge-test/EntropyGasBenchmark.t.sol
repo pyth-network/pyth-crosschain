@@ -86,7 +86,7 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1,
             sequenceNumber,
             bytes32(userRandom),
-            provider1Proofs[sequenceNumber]
+            provider1Proofs[sequenceNumber - random.getProviderInfo(provider1).originalCommitmentSequenceNumber]
         );
     }
 }
