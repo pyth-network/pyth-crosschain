@@ -50,6 +50,9 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1ChainLength
         );
 
+        // Make a request as well to increment the various counters
+        requestHelper(user1, provider1, 100, true);
+
         assert(
             random.getProviderInfo(provider1).currentCommitmentSequenceNumber !=
                 0
