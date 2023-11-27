@@ -82,7 +82,7 @@ import "./EntropyState.sol";
 // - off-chain data ERC support?
 contract Entropy is IEntropy, EntropyState {
     // TODO: Use an upgradeable proxy
-    constructor(uint pythFeeInWei) {
+    constructor(uint128 pythFeeInWei) {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
     }
@@ -93,7 +93,7 @@ contract Entropy is IEntropy, EntropyState {
     //
     // chainLength is the number of values in the hash chain *including* the commitment, that is, chainLength >= 1.
     function register(
-        uint feeInWei,
+        uint128 feeInWei,
         bytes32 commitment,
         bytes calldata commitmentMetadata,
         uint64 chainLength
@@ -126,7 +126,7 @@ contract Entropy is IEntropy, EntropyState {
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
     // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
     // balance of fees in the contract).
-    function withdraw(uint256 amount) public override {
+    function withdraw(uint128 amount) public override {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             msg.sender
         ];

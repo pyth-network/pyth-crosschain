@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 
 contract EntropyStructs {
     struct State {
-        uint pythFeeInWei;
-        uint accruedPythFeesInWei;
+        uint128 pythFeeInWei;
+        uint128 accruedPythFeesInWei;
         mapping(address => ProviderInfo) providers;
         mapping(bytes32 => Request) requests;
     }
 
     struct ProviderInfo {
-        uint feeInWei;
-        uint accruedFeesInWei;
+        uint128 feeInWei;
+        uint128 accruedFeesInWei;
         // The commitment that the provider posted to the blockchain, and the sequence number
         // where they committed to this. This value is not advanced after the provider commits,
         // and instead is stored to help providers track where they are in the hash chain.

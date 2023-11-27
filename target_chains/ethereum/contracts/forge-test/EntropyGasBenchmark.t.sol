@@ -14,11 +14,11 @@ import "./utils/EntropyTestUtils.t.sol";
 contract EntropyGasBenchmark is Test, EntropyTestUtils {
     Entropy public random;
 
-    uint pythFeeInWei = 7;
+    uint128 pythFeeInWei = 7;
 
     address public provider1 = address(1);
     bytes32[] provider1Proofs;
-    uint provider1FeeInWei = 8;
+    uint128 provider1FeeInWei = 8;
     uint64 provider1ChainLength = 100;
 
     address public user1 = address(3);
@@ -86,7 +86,12 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1,
             sequenceNumber,
             bytes32(userRandom),
-            provider1Proofs[sequenceNumber - random.getProviderInfo(provider1).originalCommitmentSequenceNumber]
+            provider1Proofs[
+                sequenceNumber -
+                    random
+                        .getProviderInfo(provider1)
+                        .originalCommitmentSequenceNumber
+            ]
         );
     }
 }

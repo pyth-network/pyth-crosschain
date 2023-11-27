@@ -10,7 +10,7 @@ interface IEntropy is EntropyEvents {
     //
     // chainLength is the number of values in the hash chain *including* the commitment, that is, chainLength >= 1.
     function register(
-        uint feeInWei,
+        uint128 feeInWei,
         bytes32 commitment,
         bytes calldata commitmentMetadata,
         uint64 chainLength
@@ -19,7 +19,7 @@ interface IEntropy is EntropyEvents {
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
     // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
     // balance of fees in the contract).
-    function withdraw(uint256 amount) external;
+    function withdraw(uint128 amount) external;
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that

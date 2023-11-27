@@ -14,22 +14,22 @@ import "./utils/EntropyTestUtils.t.sol";
 contract EntropyTest is Test, EntropyTestUtils {
     Entropy public random;
 
-    uint pythFeeInWei = 7;
+    uint128 pythFeeInWei = 7;
 
     address public provider1 = address(1);
     bytes32[] provider1Proofs;
-    uint provider1FeeInWei = 8;
+    uint128 provider1FeeInWei = 8;
     uint64 provider1ChainLength = 100;
 
     address public provider2 = address(2);
     bytes32[] provider2Proofs;
-    uint provider2FeeInWei = 20;
+    uint128 provider2FeeInWei = 20;
 
     address public user1 = address(3);
     address public user2 = address(4);
 
     address public unregisteredProvider = address(7);
-    uint256 MAX_UINT256 = 2 ** 256 - 1;
+    uint128 MAX_UINT128 = 2 ** 128 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
@@ -375,7 +375,7 @@ contract EntropyTest is Test, EntropyTestUtils {
 
         // Check that overflowing the fee arithmetic causes the transaction to revert.
         vm.prank(provider1);
-        random.register(MAX_UINT256, provider1Proofs[0], hex"0100", 100);
+        random.register(MAX_UINT128, provider1Proofs[0], hex"0100", 100);
         vm.expectRevert();
         random.getFee(provider1);
     }
@@ -430,7 +430,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
-        uint providerOneBalance = provider1FeeInWei * 3 + 12345;
+        uint128 providerOneBalance = provider1FeeInWei * 3 + 12345;
         assertEq(
             random.getProviderInfo(provider1).accruedFeesInWei,
             providerOneBalance
