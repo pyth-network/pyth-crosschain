@@ -1,482 +1,556 @@
 [
   {
-    "anonymous": false,
+    "type": "constructor",
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "feeInWei",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accruedFeesInWei",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "originalCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "originalCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes",
-            "name": "commitmentMetadata",
-            "type": "bytes"
-          },
-          {
-            "internalType": "uint64",
-            "name": "endSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "sequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "currentCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "currentCommitmentSequenceNumber",
-            "type": "uint64"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EntropyStructs.ProviderInfo",
-        "name": "provider",
-        "type": "tuple"
+        "name": "pythFeeInWei",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "defaultProvider",
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "name": "Registered",
-    "type": "event"
+    "stateMutability": "nonpayable"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "provider",
-            "type": "address"
-          },
-          {
-            "internalType": "uint64",
-            "name": "sequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "userCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "providerCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint256",
-            "name": "blockNumber",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EntropyStructs.Request",
-        "name": "request",
-        "type": "tuple"
-      }
-    ],
-    "name": "Requested",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "provider",
-            "type": "address"
-          },
-          {
-            "internalType": "uint64",
-            "name": "sequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "userCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "providerCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint256",
-            "name": "blockNumber",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EntropyStructs.Request",
-        "name": "request",
-        "type": "tuple"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "userRevelation",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "providerRevelation",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "blockHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "randomNumber",
-        "type": "bytes32"
-      }
-    ],
-    "name": "Revealed",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "userRandomness",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "providerRandomness",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "blockHash",
-        "type": "bytes32"
-      }
-    ],
+    "type": "function",
     "name": "combineRandomValues",
+    "inputs": [
+      {
+        "name": "userRandomness",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "providerRandomness",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "blockHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "outputs": [
       {
-        "internalType": "bytes32",
         "name": "combinedRandomness",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "stateMutability": "pure",
-    "type": "function"
+    "stateMutability": "pure"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "userRandomness",
-        "type": "bytes32"
-      }
-    ],
+    "type": "function",
     "name": "constructUserCommitment",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "userCommitment",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAccruedPythFees",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "accruedPythFeesInWei",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      }
-    ],
-    "name": "getFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "feeAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      }
-    ],
-    "name": "getProviderInfo",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "feeInWei",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accruedFeesInWei",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "originalCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "originalCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes",
-            "name": "commitmentMetadata",
-            "type": "bytes"
-          },
-          {
-            "internalType": "uint64",
-            "name": "endSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "sequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "currentCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "currentCommitmentSequenceNumber",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct EntropyStructs.ProviderInfo",
-        "name": "info",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
-      }
-    ],
-    "name": "getRequest",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "provider",
-            "type": "address"
-          },
-          {
-            "internalType": "uint64",
-            "name": "sequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "userCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "providerCommitment",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint256",
-            "name": "blockNumber",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct EntropyStructs.Request",
-        "name": "req",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "feeInWei",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "commitment",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "commitmentMetadata",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint64",
-        "name": "chainLength",
-        "type": "uint64"
-      }
-    ],
-    "name": "register",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "userCommitment",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bool",
-        "name": "useBlockHash",
-        "type": "bool"
-      }
-    ],
-    "name": "request",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "assignedSequenceNumber",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bytes32",
         "name": "userRandomness",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "providerRevelation",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "name": "reveal",
     "outputs": [
       {
-        "internalType": "bytes32",
-        "name": "randomNumber",
-        "type": "bytes32"
+        "name": "userCommitment",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "pure"
   },
   {
-    "inputs": [
+    "type": "function",
+    "name": "getAccruedPythFees",
+    "inputs": [],
+    "outputs": [
       {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "name": "accruedPythFeesInWei",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
-    "name": "withdraw",
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getDefaultProvider",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFee",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "feeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProviderInfo",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "info",
+        "type": "tuple",
+        "internalType": "struct EntropyStructs.ProviderInfo",
+        "components": [
+          {
+            "name": "feeInWei",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "accruedFeesInWei",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "originalCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "originalCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "commitmentMetadata",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "uri",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "endSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "currentCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "currentCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRequest",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "sequenceNumber",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "req",
+        "type": "tuple",
+        "internalType": "struct EntropyStructs.Request",
+        "components": [
+          {
+            "name": "provider",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "userCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "register",
+    "inputs": [
+      {
+        "name": "feeInWei",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "commitment",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "commitmentMetadata",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "chainLength",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "uri",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "request",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "userCommitment",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "useBlockHash",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "assignedSequenceNumber",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "reveal",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "sequenceNumber",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "userRandomness",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "providerRevelation",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "randomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdraw",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Registered",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct EntropyStructs.ProviderInfo",
+        "components": [
+          {
+            "name": "feeInWei",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "accruedFeesInWei",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "originalCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "originalCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "commitmentMetadata",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "uri",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "endSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "currentCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "currentCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Requested",
+    "inputs": [
+      {
+        "name": "request",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct EntropyStructs.Request",
+        "components": [
+          {
+            "name": "provider",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "userCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Revealed",
+    "inputs": [
+      {
+        "name": "request",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct EntropyStructs.Request",
+        "components": [
+          {
+            "name": "provider",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "sequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "userCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitment",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "userRevelation",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "providerRevelation",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "blockHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AssertionFailure",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "IncorrectProviderRevelation",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "IncorrectUserRevelation",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientFee",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoSuchProvider",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OutOfRandomness",
+    "inputs": []
   }
 ]
