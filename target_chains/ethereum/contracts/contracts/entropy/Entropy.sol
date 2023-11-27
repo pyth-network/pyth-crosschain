@@ -206,7 +206,6 @@ contract Entropy is IEntropy, EntropyState {
         bytes32 userRandomness,
         bytes32 providerRevelation
     ) public override returns (bytes32 randomNumber) {
-        // TODO: do we need to check that this request exists?
         // TODO: this method may need to be authenticated to prevent griefing
         bytes32 key = requestKey(provider, sequenceNumber);
         EntropyStructs.Request storage req = _state.requests[key];
