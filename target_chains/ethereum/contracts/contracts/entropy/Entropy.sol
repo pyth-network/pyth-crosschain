@@ -76,10 +76,12 @@ import "./EntropyState.sol";
 contract Entropy is IEntropy, EntropyState {
     // TODO: Use an upgradeable proxy
     constructor(
-        uint128 pythFeeInWei,
+        address admin,
+        uint pythFeeInWei,
         address defaultProvider,
         bool prefillRequestStorage
     ) {
+        _state.admin = admin;
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
         _state.defaultProvider = defaultProvider;

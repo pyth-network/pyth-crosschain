@@ -6,6 +6,8 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 
 contract EntropyInternalStructs {
     struct State {
+        // Admin has the rights to update pyth configs
+        address admin;
         // Fee charged by the pyth protocol in wei.
         uint128 pythFeeInWei;
         // Total quantity of fees (in wei) earned by the pyth protocol that are currently stored in the contract.
