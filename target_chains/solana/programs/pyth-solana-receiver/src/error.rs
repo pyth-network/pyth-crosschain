@@ -12,12 +12,16 @@ pub enum ReceiverError {
     DeserializeVAAFailed,
     #[msg("An error occurred when deserializing the updates.")]
     DeserializeUpdateFailed,
+    #[msg("An error occurred when deserializing the message")]
+    DeserializeMessageFailed,
     #[msg("Received an invalid wormhole message")]
     InvalidWormholeMessage,
     #[msg("Received an invalid price update")]
     InvalidPriceUpdate,
-    #[msg("Received an invalid accumulator message")]
-    InvalidAccumulatorMessage,
     #[msg("Received an invalid accumulator message type")]
     InvalidAccumulatorMessageType,
+    #[msg("Received an invalid signature set")]
+    InvalidSignatureSet,
+    #[msg("The pubkey of the the posted vaa account is invalid")]
+    InvalidVaaAccountKey,
 }

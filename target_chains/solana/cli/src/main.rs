@@ -243,13 +243,12 @@ fn main() -> Result<()> {
                     println!("update_bytes_len: {}", update_bytes_len);
 
                     let post_updates_accounts = pyth_solana_receiver::accounts::PostUpdates {
-                        payer:            payer.pubkey(),
-                        posted_vaa:       vaa_pubkey,
-                        post_vaa_program: wormhole,
+                        payer:         payer.pubkey(),
+                        posted_vaa:    vaa_pubkey,
+                        signature_set: *posted_vaa_data.vaa.signature_set(),
                     }
                     .to_account_metas(None);
                     let post_updates_ix_data = pyth_solana_receiver::instruction::PostUpdates {
-                        vaa_hash,
                         price_updates: update_bytes,
                     }
                     .data();
