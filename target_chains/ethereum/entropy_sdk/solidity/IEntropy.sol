@@ -13,7 +13,8 @@ interface IEntropy is EntropyEvents {
         uint128 feeInWei,
         bytes32 commitment,
         bytes calldata commitmentMetadata,
-        uint64 chainLength
+        uint64 chainLength,
+        bytes calldata uri
     ) external;
 
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
@@ -54,6 +55,8 @@ interface IEntropy is EntropyEvents {
     function getProviderInfo(
         address provider
     ) external view returns (EntropyStructs.ProviderInfo memory info);
+
+    function getDefaultProvider() external view returns (address provider);
 
     function getRequest(
         address provider,

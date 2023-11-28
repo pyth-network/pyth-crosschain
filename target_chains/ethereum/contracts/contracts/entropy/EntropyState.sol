@@ -12,6 +12,8 @@ contract EntropyInternalStructs {
         // This quantity is incremented when fees are paid and decremented when fees are withdrawn.
         // Note that u128 can store up to ~10^36 wei, which is ~10^18 in native base tokens, which should be plenty.
         uint128 accruedPythFeesInWei;
+        // The protocol sets a provider as default to simplify integration for developers.
+        address defaultProvider;
         // Hash table for storing in-flight requests. Table keys are hash(provider, sequenceNumber), and the value is
         // the current request (if one is currently in-flight).
         //

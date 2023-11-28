@@ -36,4 +36,10 @@ pub struct RegisterProviderOptions {
     #[arg(long = "pyth-contract-fee")]
     #[arg(default_value = "100")]
     pub fee: U256,
+
+    /// The URI where clients can retrieve random values from this provider,
+    /// i.e., wherever fortuna for this provider will be hosted.
+    #[arg(long = "uri")]
+    #[arg(default_value = "")]
+    pub uri: String,
 }
