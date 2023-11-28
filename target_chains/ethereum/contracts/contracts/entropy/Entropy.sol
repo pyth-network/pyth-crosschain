@@ -92,6 +92,7 @@ contract Entropy is IEntropy, EntropyState {
         for (uint8 i = 0; i < NUM_REQUESTS; i++) {
             EntropyStructs.Request storage req = _state.requests[i];
             req.provider = address(1);
+            // req.sequenceNumber = 1234;
             req.blockNumber = 1234;
             req.commitment = hex"0123";
         }
@@ -196,8 +197,10 @@ contract Entropy is IEntropy, EntropyState {
         );
         req.provider = provider;
         req.sequenceNumber = assignedSequenceNumber;
-        req.providerCommitmentSequenceNumber = providerInfo
-            .currentCommitmentSequenceNumber;
+        req.numHashes = uint32(
+            assignedSequenceNumber -
+                providerInfo.currentCommitmentSequenceNumber
+        );
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
@@ -233,7 +236,7 @@ contract Entropy is IEntropy, EntropyState {
         if (!requestIsPopulated(req)) revert EntropyErrors.AssertionFailure();
 
         bytes32 providerCommitment = constructProviderCommitment(
-            req.sequenceNumber - req.providerCommitmentSequenceNumber,
+            req.numHashes,
             providerRevelation
         );
         bytes32 userCommitment = constructUserCommitment(userRandomness);
@@ -373,7 +376,9 @@ contract Entropy is IEntropy, EntropyState {
 
         req = _state.requests[shortKey];
         if (requestIsPopulated(req)) {
-            _state.requestsOverflow[requestKey(provider, sequenceNumber)] = req;
+            _state.requestsOverflow[
+                requestKey(req.provider, req.sequenceNumber)
+            ] = req;
         }
     }
 
