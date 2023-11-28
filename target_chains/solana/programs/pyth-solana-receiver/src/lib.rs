@@ -66,10 +66,12 @@ pub mod pyth_solana_receiver {
             ReceiverError::InvalidEmitterChain
         );
 
-        // TODO: expected emitter_address should come from config account that can only be modified by governance
-        if vaa.emitter_address() != &ACCUMULATOR_EMITTER_ADDRESS {
-            return err!(ReceiverError::InvalidEmitterAddress);
-        }
+        require_keys_eq!(
+            Pubkey::new_from_array(*vaa.emitter_address()),
+            // TODO: expected emitter_address should come from config account that can only be modified by governance
+            Pubkey::new_from_array(ACCUMULATOR_EMITTER_ADDRESS),
+            ReceiverError::InvalidEmitterAddress
+        );
 
         let wh_message = WormholeMessage::try_from_bytes(vaa.payload.as_slice())
             .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
