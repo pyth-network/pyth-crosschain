@@ -10,7 +10,6 @@ import "./utils/EntropyTestUtils.t.sol";
 // TODO
 // - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
 //   verify the provider's value.
-// - fuzz test?
 contract EntropyGasBenchmark is Test, EntropyTestUtils {
     Entropy public random;
 
@@ -24,7 +23,7 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
     address public user1 = address(3);
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei);
+        random = new Entropy(pythFeeInWei, true);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -49,14 +48,6 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             hex"0100",
             provider1ChainLength
         );
-
-        vm.roll(2);
-        // uint64 sequenceNumber = requestHelper(user1, 1000, true);
-        // Make a request as well to increment the various counters
-        // for (uint8 i = 0; i < 10; i++) {
-        // uint64 sequenceNumber = requestHelper(user1, 100, true);
-        // revealHelper(sequenceNumber, 100);
-        // }
 
         assert(
             random.getProviderInfo(provider1).currentCommitmentSequenceNumber !=
@@ -97,8 +88,7 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
         );
     }
 
-    function testBenchmarkBasicFlow() public {
-        vm.roll(3);
+    function testBasicFlow() public {
         uint userRandom = 42;
         uint64 sequenceNumber = requestHelper(user1, userRandom, true);
 

@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 
 abstract contract EntropyTestUtils is Test {
+    // Generate a hash chain for a provider that can be used for test purposes.
     function generateHashChain(
         address provider,
         uint64 startSequenceNumber,

@@ -8,8 +8,6 @@ import "../contracts/entropy/Entropy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 
 // TODO
-// - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
-//   verify the provider's value.
 // - fuzz test?
 contract EntropyTest is Test, EntropyTestUtils {
     Entropy public random;
@@ -33,7 +31,7 @@ contract EntropyTest is Test, EntropyTestUtils {
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei);
+        random = new Entropy(pythFeeInWei, false);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,

@@ -65,7 +65,7 @@ interface IEntropy is EntropyEvents {
     function getAccruedPythFees()
         external
         view
-        returns (uint accruedPythFeesInWei);
+        returns (uint128 accruedPythFeesInWei);
 
     function constructUserCommitment(
         bytes32 userRandomness

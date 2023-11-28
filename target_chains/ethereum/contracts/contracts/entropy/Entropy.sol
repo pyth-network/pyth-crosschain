@@ -81,20 +81,21 @@ import "./EntropyState.sol";
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 // - off-chain data ERC support?
 contract Entropy is IEntropy, EntropyState {
-    uint8 constant NUM_REQUESTS = 8;
-
     // TODO: Use an upgradeable proxy
-    constructor(uint128 pythFeeInWei) {
+    constructor(uint128 pythFeeInWei, bool prefillRequestStorage) {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
 
-        // FIXME
-        for (uint8 i = 0; i < NUM_REQUESTS; i++) {
-            EntropyStructs.Request storage req = _state.requests[i];
-            req.provider = address(1);
-            // req.sequenceNumber = 1234;
-            req.blockNumber = 1234;
-            req.commitment = hex"0123";
+        if (prefillRequestStorage) {
+            // Write some data to every storage slot in the requests array such that new requests
+            // use a more consistent amount of gas.
+            // Note that these requests are not live because their sequenceNumber is 0.
+            for (uint8 i = 0; i < NUM_REQUESTS; i++) {
+                EntropyStructs.Request storage req = _state.requests[i];
+                req.provider = address(1);
+                req.blockNumber = 1234;
+                req.commitment = hex"0123";
+            }
         }
     }
 
@@ -232,8 +233,9 @@ contract Entropy is IEntropy, EntropyState {
             provider,
             sequenceNumber
         );
-        // Check that the request exists
-        if (!requestIsPopulated(req)) revert EntropyErrors.AssertionFailure();
+        // Check that there is a request for the given provider / sequence number.
+        if (req.provider != provider || req.sequenceNumber != sequenceNumber)
+            revert EntropyErrors.NoSuchRequest();
 
         bytes32 providerCommitment = constructProviderCommitment(
             req.numHashes,
@@ -243,7 +245,7 @@ contract Entropy is IEntropy, EntropyState {
         if (
             keccak256(bytes.concat(userCommitment, providerCommitment)) !=
             req.commitment
-        ) revert EntropyErrors.IncorrectUserRevelation();
+        ) revert EntropyErrors.IncorrectRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.blockNumber != 0) {
@@ -298,7 +300,7 @@ contract Entropy is IEntropy, EntropyState {
         public
         view
         override
-        returns (uint accruedPythFeesInWei)
+        returns (uint128 accruedPythFeesInWei)
     {
         return _state.accruedPythFeesInWei;
     }
@@ -319,16 +321,18 @@ contract Entropy is IEntropy, EntropyState {
         );
     }
 
-    // Create a unique key for an in-flight randomness request (to store it in the contract state)
+    // Create a unique key for an in-flight randomness request. Returns both a long key for use in the requestsOverflow
+    // mapping and a short key for use in the requests array.
     function requestKey(
         address provider,
         uint64 sequenceNumber
-    ) internal pure returns (bytes32 hash) {
+    ) internal pure returns (bytes32 hash, uint8 shortHash) {
         hash = keccak256(abi.encodePacked(provider, sequenceNumber));
+        shortHash = uint8(hash[0] & NUM_REQUESTS_MASK);
     }
 
-    // Validate that revelation at sequenceNumber is the correct value in the hash chain for a provider whose
-    // last known revealed random number was lastRevelation at lastSequenceNumber.
+    // Construct a provider's commitment given their revealed random number and the distance in the hash chain
+    // between the commitment and the revealed random number.
     function constructProviderCommitment(
         uint64 numHashes,
         bytes32 revelation
@@ -340,12 +344,14 @@ contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    // Find an in-flight request.
+    // Note that this method can return requests that are not currently active. The caller is responsible for checking
+    // that the returned request is active (if they care).
     function findRequest(
         address provider,
         uint64 sequenceNumber
     ) internal view returns (EntropyStructs.Request storage req) {
-        bytes32 key = requestKey(provider, sequenceNumber);
-        uint8 shortKey = uint8(key[0] & (0x03));
+        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
         req = _state.requests[shortKey];
         if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
@@ -355,9 +361,9 @@ contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    // Clear the storage for an in-flight request, deleting it from the hash table.
     function clearRequest(address provider, uint64 sequenceNumber) internal {
-        bytes32 key = requestKey(provider, sequenceNumber);
-        uint8 shortKey = uint8(key[0] & (0x03));
+        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
         EntropyStructs.Request storage req = _state.requests[shortKey];
         if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
@@ -367,24 +373,33 @@ contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    // Allocate storage space for a new in-flight request. This method returns a pointer to a storage slot
+    // that the caller should overwrite with the new request. Note that the memory at this storage slot may
+    // -- and will -- be filled with arbitrary values, so the caller *must* overwrite every field of the returned
+    // struct.
     function allocRequest(
         address provider,
         uint64 sequenceNumber
     ) internal returns (EntropyStructs.Request storage req) {
-        bytes32 key = requestKey(provider, sequenceNumber);
-        uint8 shortKey = uint8(key[0] & (0x03));
+        (, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
         req = _state.requests[shortKey];
-        if (requestIsPopulated(req)) {
-            _state.requestsOverflow[
-                requestKey(req.provider, req.sequenceNumber)
-            ] = req;
+        if (isActive(req)) {
+            // There's already a prior active request in the storage slot we want to use.
+            // Overflow the prior request to the requestsOverflow mapping.
+            // This operation is expensive, but should be rare. If overflow happens frequently, increase
+            // the size of the requests array to support more concurrent active requests.
+            (bytes32 reqKey, ) = requestKey(req.provider, req.sequenceNumber);
+            _state.requestsOverflow[reqKey] = req;
         }
     }
 
-    function requestIsPopulated(
+    // Returns true if a request is active, i.e., its corresponding random value has not yet been revealed.
+    function isActive(
         EntropyStructs.Request storage req
-    ) internal view returns (bool isPopulated) {
-        isPopulated = req.sequenceNumber != 0;
+    ) internal view returns (bool) {
+        // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
+        // a randomness request with sequence number 0.
+        return req.sequenceNumber != 0;
     }
 }
