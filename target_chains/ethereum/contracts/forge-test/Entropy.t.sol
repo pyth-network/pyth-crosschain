@@ -19,10 +19,13 @@ contract EntropyTest is Test {
     bytes32[] provider1Proofs;
     uint provider1FeeInWei = 8;
     uint64 provider1ChainLength = 100;
+    bytes provider1Uri = bytes("https://foo.com");
+    bytes provider1CommitmentMetadata = hex"0100";
 
     address public provider2 = address(2);
     bytes32[] provider2Proofs;
     uint provider2FeeInWei = 20;
+    bytes provider2Uri = bytes("https://bar.com");
 
     address public user1 = address(3);
     address public user2 = address(4);
@@ -32,7 +35,7 @@ contract EntropyTest is Test {
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei);
+        random = new Entropy(pythFeeInWei, provider1);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -44,14 +47,21 @@ contract EntropyTest is Test {
         random.register(
             provider1FeeInWei,
             provider1Proofs[0],
-            hex"0100",
-            provider1ChainLength
+            provider1CommitmentMetadata,
+            provider1ChainLength,
+            provider1Uri
         );
 
         bytes32[] memory hashChain2 = generateHashChain(provider2, 0, 100);
         provider2Proofs = hashChain2;
         vm.prank(provider2);
-        random.register(provider2FeeInWei, provider2Proofs[0], hex"0200", 100);
+        random.register(
+            provider2FeeInWei,
+            provider2Proofs[0],
+            hex"0200",
+            100,
+            provider2Uri
+        );
     }
 
     function generateHashChain(
@@ -59,7 +69,9 @@ contract EntropyTest is Test {
         uint64 startSequenceNumber,
         uint64 size
     ) public pure returns (bytes32[] memory hashChain) {
-        bytes32 initialValue = keccak256(abi.encodePacked(startSequenceNumber));
+        bytes32 initialValue = keccak256(
+            abi.encodePacked(provider, startSequenceNumber)
+        );
         hashChain = new bytes32[](size);
         for (uint64 i = 0; i < size; i++) {
             hashChain[size - (i + 1)] = initialValue;
@@ -212,6 +224,31 @@ contract EntropyTest is Test {
         );
     }
 
+    function testDefaultProvider() public {
+        uint64 sequenceNumber = request(
+            user2,
+            random.getDefaultProvider(),
+            42,
+            false
+        );
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
+
+        assertRevealReverts(
+            random.getDefaultProvider(),
+            sequenceNumber,
+            42,
+            provider2Proofs[sequenceNumber]
+        );
+
+        assertRevealSucceeds(
+            random.getDefaultProvider(),
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+    }
+
     function testNoSuchProvider() public {
         assertRequestReverts(10000000, unregisteredProvider, 42, false);
     }
@@ -318,7 +355,13 @@ contract EntropyTest is Test {
             10
         );
         vm.prank(provider1);
-        random.register(provider1FeeInWei, newHashChain[0], hex"0100", 10);
+        random.register(
+            provider1FeeInWei,
+            newHashChain[0],
+            hex"0100",
+            10,
+            provider1Uri
+        );
         assertInvariants();
         EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
@@ -387,7 +430,13 @@ contract EntropyTest is Test {
 
         // Check that overflowing the fee arithmetic causes the transaction to revert.
         vm.prank(provider1);
-        random.register(MAX_UINT256, provider1Proofs[0], hex"0100", 100);
+        random.register(
+            MAX_UINT256,
+            provider1Proofs[0],
+            hex"0100",
+            100,
+            provider1Uri
+        );
         vm.expectRevert();
         random.getFee(provider1);
     }
@@ -437,7 +486,13 @@ contract EntropyTest is Test {
 
         // Reregistering updates the required fees
         vm.prank(provider1);
-        random.register(12345, provider1Proofs[0], hex"0100", 100);
+        random.register(
+            12345,
+            provider1Proofs[0],
+            hex"0100",
+            100,
+            provider1Uri
+        );
 
         assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
@@ -465,5 +520,14 @@ contract EntropyTest is Test {
         vm.prank(provider1);
         vm.expectRevert();
         random.withdraw(providerOneBalance);
+    }
+
+    function testGetProviderInfo() public {
+        EntropyStructs.ProviderInfo memory providerInfo1 = random
+            .getProviderInfo(provider1);
+        // These two fields aren't used by the Entropy contract itself -- they're just convenient info to store
+        // on-chain -- so they aren't tested in the other tests.
+        assertEq(providerInfo1.uri, provider1Uri);
+        assertEq(providerInfo1.commitmentMetadata, provider1CommitmentMetadata);
     }
 }
