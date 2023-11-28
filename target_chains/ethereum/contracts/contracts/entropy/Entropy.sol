@@ -88,9 +88,10 @@ contract Entropy is IEntropy, EntropyState {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
 
+        // FIXME
         for (uint8 i = 0; i < NUM_REQUESTS; i++) {
             EntropyStructs.Request storage req = _state.requests[i];
-            req.sequenceNumber = 1234;
+            req.provider = address(1);
             req.blockNumber = 1234;
             req.commitment = hex"0123";
         }
@@ -187,16 +188,16 @@ contract Entropy is IEntropy, EntropyState {
             providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
-        // FIXME: we need to make sure to overwrite *every* field here
+        // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
+        // filled with arbitrary data.
         EntropyStructs.Request storage req = allocRequest(
             provider,
             assignedSequenceNumber
         );
         req.provider = provider;
         req.sequenceNumber = assignedSequenceNumber;
-        req.numHashes =
-            assignedSequenceNumber -
-            providerInfo.currentCommitmentSequenceNumber;
+        req.providerCommitmentSequenceNumber = providerInfo
+            .currentCommitmentSequenceNumber;
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
@@ -207,7 +208,7 @@ contract Entropy is IEntropy, EntropyState {
             req.blockNumber = 0;
         }
 
-        emit Requested(provider, req);
+        emit Requested(req);
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
@@ -229,13 +230,12 @@ contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
         // Check that the request exists
-        if (req.numHashes == 0) revert EntropyErrors.AssertionFailure();
+        if (!requestIsPopulated(req)) revert EntropyErrors.AssertionFailure();
 
         bytes32 providerCommitment = constructProviderCommitment(
-            req.numHashes,
+            req.sequenceNumber - req.providerCommitmentSequenceNumber,
             providerRevelation
         );
-        // if (!valid) revert EntropyErrors.IncorrectProviderRevelation();
         bytes32 userCommitment = constructUserCommitment(userRandomness);
         if (
             keccak256(bytes.concat(userCommitment, providerCommitment)) !=
@@ -261,9 +261,7 @@ contract Entropy is IEntropy, EntropyState {
             randomNumber
         );
 
-        // FIXME
-        req.numHashes = 0;
-        // delete _state.requests[key];
+        clearRequest(provider, sequenceNumber);
 
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -350,7 +348,19 @@ contract Entropy is IEntropy, EntropyState {
         if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
             return req;
         } else {
-            req = _state.requestsOverflow[requestKey(provider, sequenceNumber)];
+            req = _state.requestsOverflow[key];
+        }
+    }
+
+    function clearRequest(address provider, uint64 sequenceNumber) internal {
+        bytes32 key = requestKey(provider, sequenceNumber);
+        uint8 shortKey = uint8(key[0] & (0x03));
+
+        EntropyStructs.Request storage req = _state.requests[shortKey];
+        if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
+            req.sequenceNumber = 0;
+        } else {
+            delete _state.requestsOverflow[key];
         }
     }
 
@@ -370,6 +380,6 @@ contract Entropy is IEntropy, EntropyState {
     function requestIsPopulated(
         EntropyStructs.Request storage req
     ) internal view returns (bool isPopulated) {
-        isPopulated = req.numHashes != 0;
+        isPopulated = req.sequenceNumber != 0;
     }
 }
