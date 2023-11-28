@@ -206,7 +206,7 @@ contract Entropy is IEntropy, EntropyState {
         );
 
         if (useBlockHash) {
-            req.blockNumber = uint128(block.number);
+            req.blockNumber = uint96(block.number);
         } else {
             req.blockNumber = 0;
         }
