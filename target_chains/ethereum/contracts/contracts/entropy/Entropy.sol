@@ -81,10 +81,19 @@ import "./EntropyState.sol";
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 // - off-chain data ERC support?
 contract Entropy is IEntropy, EntropyState {
+    uint8 constant NUM_REQUESTS = 8;
+
     // TODO: Use an upgradeable proxy
     constructor(uint128 pythFeeInWei) {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
+
+        for (uint8 i = 0; i < NUM_REQUESTS; i++) {
+            EntropyStructs.Request storage req = _state.requests[i];
+            req.sequenceNumber = 1234;
+            req.blockNumber = 1234;
+            req.commitment = hex"0123";
+        }
     }
 
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
@@ -178,9 +187,13 @@ contract Entropy is IEntropy, EntropyState {
             providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
-        EntropyStructs.Request storage req = _state.requests[
-            requestKey(provider, assignedSequenceNumber)
-        ];
+        // FIXME: we need to make sure to overwrite *every* field here
+        EntropyStructs.Request storage req = allocRequest(
+            provider,
+            assignedSequenceNumber
+        );
+        req.provider = provider;
+        req.sequenceNumber = assignedSequenceNumber;
         req.numHashes =
             assignedSequenceNumber -
             providerInfo.currentCommitmentSequenceNumber;
@@ -190,6 +203,8 @@ contract Entropy is IEntropy, EntropyState {
 
         if (useBlockHash) {
             req.blockNumber = uint128(block.number);
+        } else {
+            req.blockNumber = 0;
         }
 
         emit Requested(provider, req);
@@ -209,8 +224,10 @@ contract Entropy is IEntropy, EntropyState {
         bytes32 providerRevelation
     ) public override returns (bytes32 randomNumber) {
         // TODO: this method may need to be authenticated to prevent griefing
-        bytes32 key = requestKey(provider, sequenceNumber);
-        EntropyStructs.Request storage req = _state.requests[key];
+        EntropyStructs.Request storage req = findRequest(
+            provider,
+            sequenceNumber
+        );
         // Check that the request exists
         if (req.numHashes == 0) revert EntropyErrors.AssertionFailure();
 
@@ -244,7 +261,9 @@ contract Entropy is IEntropy, EntropyState {
             randomNumber
         );
 
-        delete _state.requests[key];
+        // FIXME
+        req.numHashes = 0;
+        // delete _state.requests[key];
 
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -265,8 +284,7 @@ contract Entropy is IEntropy, EntropyState {
         address provider,
         uint64 sequenceNumber
     ) public view override returns (EntropyStructs.Request memory req) {
-        bytes32 key = requestKey(provider, sequenceNumber);
-        req = _state.requests[key];
+        req = findRequest(provider, sequenceNumber);
     }
 
     function getFee(
@@ -319,5 +337,39 @@ contract Entropy is IEntropy, EntropyState {
             currentHash = keccak256(bytes.concat(currentHash));
             numHashes -= 1;
         }
+    }
+
+    function findRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal view returns (EntropyStructs.Request storage req) {
+        bytes32 key = requestKey(provider, sequenceNumber);
+        uint8 shortKey = uint8(key[0] & (0x03));
+
+        req = _state.requests[shortKey];
+        if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
+            return req;
+        } else {
+            req = _state.requestsOverflow[requestKey(provider, sequenceNumber)];
+        }
+    }
+
+    function allocRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal returns (EntropyStructs.Request storage req) {
+        bytes32 key = requestKey(provider, sequenceNumber);
+        uint8 shortKey = uint8(key[0] & (0x03));
+
+        req = _state.requests[shortKey];
+        if (requestIsPopulated(req)) {
+            _state.requestsOverflow[requestKey(provider, sequenceNumber)] = req;
+        }
+    }
+
+    function requestIsPopulated(
+        EntropyStructs.Request storage req
+    ) internal view returns (bool isPopulated) {
+        isPopulated = req.numHashes != 0;
     }
 }

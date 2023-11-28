@@ -50,8 +50,13 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1ChainLength
         );
 
+        vm.roll(2);
+        // uint64 sequenceNumber = requestHelper(user1, 1000, true);
         // Make a request as well to increment the various counters
-        requestHelper(user1, provider1, 100, true);
+        // for (uint8 i = 0; i < 10; i++) {
+        // uint64 sequenceNumber = requestHelper(user1, 100, true);
+        // revealHelper(sequenceNumber, 100);
+        // }
 
         assert(
             random.getProviderInfo(provider1).currentCommitmentSequenceNumber !=
@@ -62,30 +67,24 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
     // Test helper method for requesting a random value as user from provider.
     function requestHelper(
         address user,
-        address provider,
         uint randomNumber,
         bool useBlockhash
     ) public returns (uint64 sequenceNumber) {
-        uint fee = random.getFee(provider);
+        uint fee = random.getFee(provider1);
         vm.deal(user, fee);
         vm.prank(user);
         sequenceNumber = random.request{value: fee}(
-            provider,
+            provider1,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
         );
     }
 
-    function testBenchmarkBasicFlow() public {
-        uint userRandom = 42;
-        uint64 sequenceNumber = requestHelper(
-            user1,
-            provider1,
-            userRandom,
-            true
-        );
-
-        random.reveal(
+    function revealHelper(
+        uint64 sequenceNumber,
+        uint userRandom
+    ) public returns (bytes32 randomNumber) {
+        randomNumber = random.reveal(
             provider1,
             sequenceNumber,
             bytes32(userRandom),
@@ -96,5 +95,13 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
                         .originalCommitmentSequenceNumber
             ]
         );
+    }
+
+    function testBenchmarkBasicFlow() public {
+        vm.roll(3);
+        uint userRandom = 42;
+        uint64 sequenceNumber = requestHelper(user1, userRandom, true);
+
+        revealHelper(sequenceNumber, userRandom);
     }
 }

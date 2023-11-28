@@ -31,6 +31,8 @@ contract EntropyStructs {
     }
 
     struct Request {
+        address provider;
+        uint64 sequenceNumber;
         // The number of hashes
         uint64 numHashes;
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
