@@ -8,7 +8,7 @@ import "./EntropyGovernanceInstructions.sol";
 import "../libraries/external/BytesLib.sol";
 
 /**
- * @dev `Governance` defines a means to enacting changes to the Pyth contract.
+ * @dev `Governance` defines a means to enacting changes to the Entropy contract.
  */
 abstract contract EntropyGovernance is
     EntropyState,
