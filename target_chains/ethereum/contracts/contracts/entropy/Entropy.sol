@@ -6,6 +6,7 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./EntropyState.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
@@ -186,7 +187,7 @@ contract Entropy is IEntropy, EntropyState {
         uint128 requiredFee = getFee(provider);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         providerInfo.accruedFeesInWei += providerInfo.feeInWei;
-        _state.accruedPythFeesInWei += (uint128(msg.value) -
+        _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
             providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
@@ -198,7 +199,7 @@ contract Entropy is IEntropy, EntropyState {
         );
         req.provider = provider;
         req.sequenceNumber = assignedSequenceNumber;
-        req.numHashes = uint32(
+        req.numHashes = SafeCast.toUint32(
             assignedSequenceNumber -
                 providerInfo.currentCommitmentSequenceNumber
         );
@@ -207,7 +208,7 @@ contract Entropy is IEntropy, EntropyState {
         );
 
         if (useBlockHash) {
-            req.blockNumber = uint96(block.number);
+            req.blockNumber = SafeCast.toUint96(block.number);
         } else {
             req.blockNumber = 0;
         }
