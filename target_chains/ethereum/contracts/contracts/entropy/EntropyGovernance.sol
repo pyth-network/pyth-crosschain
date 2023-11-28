@@ -5,7 +5,6 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 
 import "./EntropyState.sol";
 import "./EntropyGovernanceInstructions.sol";
-import "../libraries/external/BytesLib.sol";
 
 /**
  * @dev `Governance` defines a means to enacting changes to the Entropy contract.
@@ -14,8 +13,6 @@ abstract contract EntropyGovernance is
     EntropyState,
     EntropyGovernanceInstructions
 {
-    using BytesLib for bytes;
-
     modifier onlyAdmin() {
         require(msg.sender == _state.admin);
         _;
