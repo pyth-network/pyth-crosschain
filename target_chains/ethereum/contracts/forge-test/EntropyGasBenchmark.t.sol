@@ -23,7 +23,7 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
     address public user1 = address(3);
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei, true);
+        random = new Entropy(pythFeeInWei, provider1, true);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -36,7 +36,8 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1FeeInWei,
             provider1Proofs[0],
             hex"0100",
-            provider1ChainLength
+            provider1ChainLength,
+            ""
         );
 
         // Register twice so the commitment sequence number is nonzero. Zero values can be misleading
@@ -46,7 +47,8 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
             provider1FeeInWei,
             provider1Proofs[0],
             hex"0100",
-            provider1ChainLength
+            provider1ChainLength,
+            ""
         );
 
         assert(
