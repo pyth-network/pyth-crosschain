@@ -37,7 +37,7 @@ export function getMaximumNumberOfPublishers(cluster: PythCluster) {
     case "testnet":
       return 32;
     case "pythnet":
-      return 32;
+      return 64;
     case "pythtest-conformance":
       return 64;
     case "pythtest-crosschain":
