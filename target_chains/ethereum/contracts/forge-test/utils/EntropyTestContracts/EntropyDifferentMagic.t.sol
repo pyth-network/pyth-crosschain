@@ -6,10 +6,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 
-import "./EntropyGovernance.sol";
-import "./Entropy.sol";
+import "../../../contracts/entropy/EntropyGovernance.sol";
+import "../../../contracts/entropy/Entropy.sol";
 
-contract EntropyUpgradable is
+contract EntropyDifferentMagic is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -62,6 +62,7 @@ contract EntropyUpgradable is
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, new bytes(0), false);
 
+        // TODO: verify this works?
         magicCheck();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
@@ -75,6 +76,7 @@ contract EntropyUpgradable is
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, data, true);
 
+        // TODO: verify this works?
         magicCheck();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
@@ -84,11 +86,11 @@ contract EntropyUpgradable is
         // Calling a method using `this.<method>` will cause a contract call that will use
         // the new contract. This call will fail if the method does not exists or the magic
         // is different.
-        if (this.entropyUpgradableMagic() != 0x66697265)
+        if (this.entropyUpgradableMagic() != 0x666972)
             revert EntropyErrors.InvalidUpgradeMagic();
     }
 
     function entropyUpgradableMagic() public pure returns (uint32) {
-        return 0x66697265;
+        return 0x666972;
     }
 }

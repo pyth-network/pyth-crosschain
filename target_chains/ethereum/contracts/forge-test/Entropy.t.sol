@@ -7,13 +7,15 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
 import "./utils/Proxy.t.sol";
+import "./utils/EntropyTestContracts/EntropyDifferentMagic.t.sol";
 
 // TODO
 // - fuzz test?
 contract EntropyTest is Test, EntropyTestUtils {
-    EntropyUpgradable public _random;
     UUPSProxy public proxy;
     EntropyUpgradable public random;
+    EntropyUpgradable public random2;
+    EntropyDifferentMagic public randomDifferentMagic;
 
     uint128 pythFeeInWei = 7;
 
@@ -38,13 +40,17 @@ contract EntropyTest is Test, EntropyTestUtils {
 
     address public owner = address(8);
     address public admin = address(9);
+    address public admin2 = address(10);
 
     function setUp() public {
-        _random = new EntropyUpgradable();
+        EntropyUpgradable _random = new EntropyUpgradable();
         // deploy proxy contract and point it to implementation
         proxy = new UUPSProxy(address(_random), "");
         // wrap in ABI to support easier calls
         random = EntropyUpgradable(address(proxy));
+        // to test for upgrade
+        random2 = new EntropyUpgradable();
+        randomDifferentMagic = new EntropyDifferentMagic();
 
         random.initialize(owner, admin, pythFeeInWei, provider1);
 
@@ -539,5 +545,77 @@ contract EntropyTest is Test, EntropyTestUtils {
         // on-chain -- so they aren't tested in the other tests.
         assertEq(providerInfo1.uri, provider1Uri);
         assertEq(providerInfo1.commitmentMetadata, provider1CommitmentMetadata);
+    }
+
+    function testSetAdminByAdmin() public {
+        vm.prank(admin);
+        random.setAdmin(admin2);
+        assertEq(random.getAdmin(), admin2);
+    }
+
+    function testSetAdminByOwner() public {
+        vm.prank(owner);
+        random.setAdmin(admin2);
+        assertEq(random.getAdmin(), admin2);
+    }
+
+    function testFailSetAdminByUnauthorised() public {
+        vm.prank(admin2);
+        random.setAdmin(admin);
+    }
+
+    function testSetPythFeeByAdmin() public {
+        vm.prank(admin);
+        random.setPythFee(10);
+        assertEq(random.getPythFee(), 10);
+    }
+
+    function testSetPythFeeByOwner() public {
+        vm.prank(owner);
+        random.setPythFee(10);
+        assertEq(random.getPythFee(), 10);
+    }
+
+    function testFailSetPythFeeByUnauthorised() public {
+        vm.prank(admin2);
+        random.setPythFee(10);
+    }
+
+    function testSetDefaultProviderByOwner() public {
+        vm.prank(owner);
+        random.setDefaultProvider(provider2);
+        assertEq(random.getDefaultProvider(), provider2);
+    }
+
+    function testSetDefaultProviderByAdmin() public {
+        vm.prank(admin);
+        random.setDefaultProvider(provider2);
+        assertEq(random.getDefaultProvider(), provider2);
+    }
+
+    function testFailSetDefaultProviderByUnauthorised() public {
+        vm.prank(admin2);
+        random.setDefaultProvider(provider2);
+        assertEq(random.getDefaultProvider(), provider2);
+    }
+
+    function testUpgradeByOwner() public {
+        vm.prank(owner);
+        random.upgradeTo(address(random2));
+    }
+
+    function testFailUpgradeByAdmin() public {
+        vm.prank(admin);
+        random.upgradeTo(address(random2));
+    }
+
+    function testFailUpgradeByUnauthorised() public {
+        vm.prank(provider1);
+        random.upgradeTo(address(random2));
+    }
+
+    function testFailDifferentMagicContractUpgrade() public {
+        vm.prank(owner);
+        random.upgradeTo(address(randomDifferentMagic));
     }
 }

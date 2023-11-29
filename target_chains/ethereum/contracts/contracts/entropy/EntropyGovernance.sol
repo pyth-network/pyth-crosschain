@@ -10,11 +10,15 @@ import "./EntropyState.sol";
  */
 abstract contract EntropyGovernance is EntropyState {
     event AdminSet(address oldAdmin, address newAdmin);
-    event FeeSet(uint oldFee, uint newFee);
+    event PythFeeSet(uint oldPythFee, uint newPythFee);
     event DefaultProviderSet(
         address oldDefaultProvider,
         address newDefaultProvider
     );
+
+    function getAdmin() external view returns (address) {
+        return _state.admin;
+    }
 
     /**
      * @dev Set the admin of the contract.
@@ -37,15 +41,15 @@ abstract contract EntropyGovernance is EntropyState {
      *
      * Calls {_authoriseAdminAction}.
      *
-     * Emits an {FeeSet} event.
+     * Emits an {PythFeeSet} event.
      */
-    function setFee(uint newFee) external {
+    function setPythFee(uint newPythFee) external {
         _authoriseAdminAction();
 
-        uint oldFee = _state.pythFeeInWei;
-        _state.pythFeeInWei = newFee;
+        uint oldPythFee = _state.pythFeeInWei;
+        _state.pythFeeInWei = newPythFee;
 
-        emit FeeSet(oldFee, newFee);
+        emit PythFeeSet(oldPythFee, newPythFee);
     }
 
     /**
