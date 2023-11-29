@@ -396,6 +396,11 @@ contract Entropy is IEntropy, EntropyState {
         if (isActive(req)) {
             // There's already a prior active request in the storage slot we want to use.
             // Overflow the prior request to the requestsOverflow mapping.
+            // It is important that this code overflows the *prior* request to the mapping, and not the new request.
+            // There is a chance that some requests never get revealed and remain active forever. We do not want such
+            // requests to fill up all of the space in the array and cause all new requests to incur the higher gas cost
+            // of the mapping.
+            //
             // This operation is expensive, but should be rare. If overflow happens frequently, increase
             // the size of the requests array to support more concurrent active requests.
             (bytes32 reqKey, ) = requestKey(req.provider, req.sequenceNumber);
