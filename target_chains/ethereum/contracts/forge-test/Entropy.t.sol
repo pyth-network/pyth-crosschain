@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
-import "../contracts/entropy/Entropy.sol";
 import "./utils/EntropyTestUtils.t.sol";
+import "../contracts/entropy/EntropyUpgradable.sol";
+import "./utils/Proxy.t.sol";
 
 // TODO
 // - fuzz test?
 contract EntropyTest is Test, EntropyTestUtils {
-    Entropy public random;
+    EntropyUpgradable public _random;
+    UUPSProxy public proxy;
+    EntropyUpgradable public random;
 
     uint128 pythFeeInWei = 7;
 
@@ -33,8 +36,17 @@ contract EntropyTest is Test, EntropyTestUtils {
     uint128 MAX_UINT128 = 2 ** 128 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
+    address public owner = address(8);
+    address public admin = address(9);
+
     function setUp() public {
-        random = new Entropy(pythFeeInWei, provider1, false);
+        _random = new EntropyUpgradable();
+        // deploy proxy contract and point it to implementation
+        proxy = new UUPSProxy(address(_random), "");
+        // wrap in ABI to support easier calls
+        random = EntropyUpgradable(address(proxy));
+
+        random.initialize(owner, admin, pythFeeInWei, provider1);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
