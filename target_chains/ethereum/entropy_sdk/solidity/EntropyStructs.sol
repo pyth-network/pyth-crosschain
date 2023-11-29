@@ -3,16 +3,9 @@
 pragma solidity ^0.8.0;
 
 contract EntropyStructs {
-    struct State {
-        uint pythFeeInWei;
-        uint accruedPythFeesInWei;
-        mapping(address => ProviderInfo) providers;
-        mapping(bytes32 => Request) requests;
-    }
-
     struct ProviderInfo {
-        uint feeInWei;
-        uint accruedFeesInWei;
+        uint128 feeInWei;
+        uint128 accruedFeesInWei;
         // The commitment that the provider posted to the blockchain, and the sequence number
         // where they committed to this. This value is not advanced after the provider commits,
         // and instead is stored to help providers track where they are in the hash chain.
@@ -42,12 +35,21 @@ contract EntropyStructs {
     }
 
     struct Request {
+        // Storage slot 1 //
         address provider;
         uint64 sequenceNumber;
-        bytes32 userCommitment;
-        bytes32 providerCommitment;
-        uint64 providerCommitmentSequenceNumber;
+        // The number of hashes required to verify the provider revelation.
+        uint32 numHashes;
+        // Storage slot 2 //
+        // The commitment is keccak256(userCommitment, providerCommitment). Storing the hash instead of both saves 20k gas by
+        // eliminating 1 store.
+        bytes32 commitment;
+        // Storage slot 3 //
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
-        uint256 blockNumber;
+        // Note that we're using a uint96 such that we have an additional 20 bytes of storage afterward for an address.
+        // Although block.number returns a uint256, 96 bits should be plenty to index all of the blocks ever generated.
+        uint96 blockNumber;
+
+        // TODO: store the calling contract address here and authenticate the reveal method
     }
 }

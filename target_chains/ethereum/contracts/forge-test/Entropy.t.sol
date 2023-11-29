@@ -5,37 +5,36 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "../contracts/entropy/Entropy.sol";
+import "./utils/EntropyTestUtils.t.sol";
 
 // TODO
-// - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
-//   verify the provider's value.
 // - fuzz test?
-contract EntropyTest is Test {
+contract EntropyTest is Test, EntropyTestUtils {
     Entropy public random;
 
-    uint pythFeeInWei = 7;
+    uint128 pythFeeInWei = 7;
 
     address public provider1 = address(1);
     bytes32[] provider1Proofs;
-    uint provider1FeeInWei = 8;
+    uint128 provider1FeeInWei = 8;
     uint64 provider1ChainLength = 100;
     bytes provider1Uri = bytes("https://foo.com");
     bytes provider1CommitmentMetadata = hex"0100";
 
     address public provider2 = address(2);
     bytes32[] provider2Proofs;
-    uint provider2FeeInWei = 20;
+    uint128 provider2FeeInWei = 20;
     bytes provider2Uri = bytes("https://bar.com");
 
     address public user1 = address(3);
     address public user2 = address(4);
 
     address public unregisteredProvider = address(7);
-    uint256 MAX_UINT256 = 2 ** 256 - 1;
+    uint128 MAX_UINT128 = 2 ** 128 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei, provider1);
+        random = new Entropy(pythFeeInWei, provider1, false);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -62,21 +61,6 @@ contract EntropyTest is Test {
             100,
             provider2Uri
         );
-    }
-
-    function generateHashChain(
-        address provider,
-        uint64 startSequenceNumber,
-        uint64 size
-    ) public pure returns (bytes32[] memory hashChain) {
-        bytes32 initialValue = keccak256(
-            abi.encodePacked(provider, startSequenceNumber)
-        );
-        hashChain = new bytes32[](size);
-        for (uint64 i = 0; i < size; i++) {
-            hashChain[size - (i + 1)] = initialValue;
-            initialValue = keccak256(bytes.concat(initialValue));
-        }
     }
 
     // Test helper method for requesting a random value as user from provider.
@@ -431,7 +415,7 @@ contract EntropyTest is Test {
         // Check that overflowing the fee arithmetic causes the transaction to revert.
         vm.prank(provider1);
         random.register(
-            MAX_UINT256,
+            MAX_UINT128,
             provider1Proofs[0],
             hex"0100",
             100,
@@ -439,6 +423,20 @@ contract EntropyTest is Test {
         );
         vm.expectRevert();
         random.getFee(provider1);
+    }
+
+    function testOverflow() public {
+        // msg.value overflows the uint128 fee variable
+        assertRequestReverts(2 ** 128, provider1, 42, false);
+
+        // block number is too large
+        vm.roll(2 ** 96);
+        assertRequestReverts(
+            pythFeeInWei + provider1FeeInWei,
+            provider1,
+            42,
+            true
+        );
     }
 
     function testFees() public {
@@ -497,7 +495,7 @@ contract EntropyTest is Test {
         assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
-        uint providerOneBalance = provider1FeeInWei * 3 + 12345;
+        uint128 providerOneBalance = provider1FeeInWei * 3 + 12345;
         assertEq(
             random.getProviderInfo(provider1).accruedFeesInWei,
             providerOneBalance

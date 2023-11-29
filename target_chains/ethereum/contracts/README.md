@@ -89,7 +89,7 @@ A gas report should have a couple of tables like this:
 
 For most of the methods, the minimum gas usage is an indication of our desired gas usage. Because the calls that store something in the storage
 for the first time in `setUp` use significantly more gas. For example, in the above table, there are two calls to `updatePriceFeeds`. The first
-call has happend in the `setUp` method and costed over a million gas and is not intended for our Benchmark. So our desired value is the
+call has happened in the `setUp` method and costed over a million gas and is not intended for our Benchmark. So our desired value is the
 minimum value which is around 380k gas.
 
 If you like to optimize the contract and measure the gas optimization you can get gas snapshots using `forge snapshot` and evaluate your
