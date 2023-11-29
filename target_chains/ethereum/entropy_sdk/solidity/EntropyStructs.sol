@@ -49,7 +49,7 @@ contract EntropyStructs {
         // Note that we're using a uint96 such that we have an additional 20 bytes of storage afterward for an address.
         // Although block.number returns a uint256, 96 bits should be plenty to index all of the blocks ever generated.
         uint96 blockNumber;
-
-        // TODO: store the calling contract address here and authenticate the reveal method
+        // The address that requested this random number.
+        address requester;
     }
 }

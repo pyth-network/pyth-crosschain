@@ -87,12 +87,13 @@ contract EntropyTest is Test, EntropyTestUtils {
         bool useBlockhash
     ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
-        vm.prank(user);
+        vm.startPrank(user);
         sequenceNumber = random.request{value: fee}(
             provider,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
         );
+        vm.stopPrank();
     }
 
     function assertRequestReverts(
@@ -121,12 +122,14 @@ contract EntropyTest is Test, EntropyTestUtils {
     }
 
     function assertRevealSucceeds(
+        address user,
         address provider,
         uint64 sequenceNumber,
         uint userRandom,
         bytes32 providerRevelation,
         bytes32 hash
     ) public {
+        vm.prank(user);
         bytes32 randomNumber = random.reveal(
             provider,
             sequenceNumber,
@@ -144,11 +147,13 @@ contract EntropyTest is Test, EntropyTestUtils {
     }
 
     function assertRevealReverts(
+        address user,
         address provider,
         uint64 sequenceNumber,
         uint userRandom,
         bytes32 providerRevelation
     ) public {
+        vm.startPrank(user);
         vm.expectRevert();
         random.reveal(
             provider,
@@ -156,6 +161,7 @@ contract EntropyTest is Test, EntropyTestUtils {
             bytes32(uint256(userRandom)),
             providerRevelation
         );
+        vm.stopPrank();
     }
 
     function assertInvariants() public {
@@ -191,6 +197,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
 
         assertRevealSucceeds(
+            user2,
             provider1,
             sequenceNumber,
             42,
@@ -201,6 +208,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
         // the expected behavior.
         assertRevealReverts(
+            user2,
             provider1,
             sequenceNumber,
             42,
@@ -218,6 +226,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
 
         assertRevealReverts(
+            user2,
             random.getDefaultProvider(),
             sequenceNumber,
             42,
@@ -225,6 +234,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         );
 
         assertRevealSucceeds(
+            user2,
             random.getDefaultProvider(),
             sequenceNumber,
             42,
@@ -237,6 +247,29 @@ contract EntropyTest is Test, EntropyTestUtils {
         assertRequestReverts(10000000, unregisteredProvider, 42, false);
     }
 
+    function testAuthorization() public {
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+        assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
+
+        // user1 not authorized, must be user2.
+        assertRevealReverts(
+            user1,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber]
+        );
+
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+    }
+
     function testAdversarialReveal() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
 
@@ -244,6 +277,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         for (uint256 i = 0; i < 10; i++) {
             if (i != sequenceNumber) {
                 assertRevealReverts(
+                    user2,
                     provider1,
                     sequenceNumber,
                     42,
@@ -255,6 +289,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // test revealing with the wrong user revealed value.
         for (uint256 i = 0; i < 42; i++) {
             assertRevealReverts(
+                user2,
                 provider1,
                 sequenceNumber,
                 i,
@@ -265,13 +300,14 @@ contract EntropyTest is Test, EntropyTestUtils {
         // test revealing sequence numbers that haven't been requested yet.
         for (uint64 i = sequenceNumber + 1; i < sequenceNumber + 3; i++) {
             assertRevealReverts(
+                user2,
                 provider1,
                 i,
                 42,
                 provider1Proofs[sequenceNumber]
             );
 
-            assertRevealReverts(provider1, i, 42, provider1Proofs[i]);
+            assertRevealReverts(user2, provider1, i, 42, provider1Proofs[i]);
         }
     }
 
@@ -281,21 +317,56 @@ contract EntropyTest is Test, EntropyTestUtils {
         uint64 s3 = request(user1, provider1, 3, false);
         uint64 s4 = request(user1, provider1, 4, false);
 
-        assertRevealSucceeds(provider1, s3, 3, provider1Proofs[s3], ALL_ZEROS);
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            s3,
+            3,
+            provider1Proofs[s3],
+            ALL_ZEROS
+        );
         assertInvariants();
 
         uint64 s5 = request(user1, provider1, 5, false);
 
-        assertRevealSucceeds(provider1, s4, 4, provider1Proofs[s4], ALL_ZEROS);
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            s4,
+            4,
+            provider1Proofs[s4],
+            ALL_ZEROS
+        );
         assertInvariants();
 
-        assertRevealSucceeds(provider1, s1, 1, provider1Proofs[s1], ALL_ZEROS);
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            s1,
+            1,
+            provider1Proofs[s1],
+            ALL_ZEROS
+        );
         assertInvariants();
 
-        assertRevealSucceeds(provider1, s2, 2, provider1Proofs[s2], ALL_ZEROS);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            s2,
+            2,
+            provider1Proofs[s2],
+            ALL_ZEROS
+        );
         assertInvariants();
 
-        assertRevealSucceeds(provider1, s5, 5, provider1Proofs[s5], ALL_ZEROS);
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            s5,
+            5,
+            provider1Proofs[s5],
+            ALL_ZEROS
+        );
         assertInvariants();
     }
 
@@ -309,20 +380,12 @@ contract EntropyTest is Test, EntropyTestUtils {
         );
 
         assertRevealSucceeds(
+            user2,
             provider1,
             sequenceNumber,
             42,
             provider1Proofs[sequenceNumber],
             blockhash(1234)
-        );
-
-        // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
-        // the expected behavior.
-        assertRevealReverts(
-            provider1,
-            sequenceNumber,
-            42,
-            provider1Proofs[sequenceNumber]
         );
     }
 
@@ -359,6 +422,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // Requests that were in-flight at the time of rotation use the commitment from the time of request
         for (uint256 i = 0; i < 10; i++) {
             assertRevealReverts(
+                user2,
                 provider1,
                 sequenceNumber1,
                 userRandom,
@@ -366,6 +430,7 @@ contract EntropyTest is Test, EntropyTestUtils {
             );
         }
         assertRevealSucceeds(
+            user2,
             provider1,
             sequenceNumber1,
             userRandom,
@@ -376,12 +441,14 @@ contract EntropyTest is Test, EntropyTestUtils {
 
         // Requests after the rotation use the new commitment
         assertRevealReverts(
+            user2,
             provider1,
             sequenceNumber3,
             userRandom,
             provider1Proofs[sequenceNumber3]
         );
         assertRevealSucceeds(
+            user2,
             provider1,
             sequenceNumber3,
             userRandom,

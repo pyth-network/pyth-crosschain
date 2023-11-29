@@ -18,4 +18,6 @@ library EntropyErrors {
     error InsufficientFee();
     // Either the user's or the provider's revealed random values did not match their commitment.
     error IncorrectRevelation();
+    // The msg.sender is not allowed to invoke this call.
+    error Unauthorized();
 }

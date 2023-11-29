@@ -205,6 +205,7 @@ contract Entropy is IEntropy, EntropyState {
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
+        req.requester = msg.sender;
 
         if (useBlockHash) {
             req.blockNumber = SafeCast.toUint96(block.number);
@@ -222,13 +223,15 @@ contract Entropy is IEntropy, EntropyState {
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
     // If you need to use the returned random number more than once, you are responsible for storing it.
+    //
+    // This function must be called by the same `msg.sender` that originally requested the random number. This check
+    // prevents denial-of-service attacks where another actor front-runs the requester's reveal transaction.
     function reveal(
         address provider,
         uint64 sequenceNumber,
         bytes32 userRandomness,
         bytes32 providerRevelation
     ) public override returns (bytes32 randomNumber) {
-        // TODO: this method may need to be authenticated to prevent griefing
         EntropyStructs.Request storage req = findRequest(
             provider,
             sequenceNumber
@@ -236,6 +239,8 @@ contract Entropy is IEntropy, EntropyState {
         // Check that there is a request for the given provider / sequence number.
         if (req.provider != provider || req.sequenceNumber != sequenceNumber)
             revert EntropyErrors.NoSuchRequest();
+
+        if (req.requester != msg.sender) revert EntropyErrors.Unauthorized();
 
         bytes32 providerCommitment = constructProviderCommitment(
             req.numHashes,
