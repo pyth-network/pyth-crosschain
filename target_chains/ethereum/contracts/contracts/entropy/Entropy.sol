@@ -74,7 +74,6 @@ import "./EntropyState.sol";
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
-    // TODO: Use an upgradeable proxy
     function _initialize(
         address admin,
         uint128 pythFeeInWei,

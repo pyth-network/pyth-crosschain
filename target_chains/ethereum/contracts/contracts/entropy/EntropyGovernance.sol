@@ -4,44 +4,65 @@ pragma solidity ^0.8.0;
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 
 import "./EntropyState.sol";
-import "./EntropyGovernanceInstructions.sol";
 
 /**
  * @dev `Governance` defines a means to enacting changes to the Entropy contract.
  */
-abstract contract EntropyGovernance is
-    EntropyState,
-    EntropyGovernanceInstructions
-{
-    modifier onlyAdmin() {
-        require(msg.sender == _state.admin);
-        _;
+abstract contract EntropyGovernance is EntropyState {
+    event AdminSet(address oldAdmin, address newAdmin);
+    event FeeSet(uint oldFee, uint newFee);
+    event DefaultProviderSet(
+        address oldDefaultProvider,
+        address newDefaultProvider
+    );
+
+    /**
+     * @dev Set the admin of the contract.
+     *
+     * Calls {_authoriseAdminAction}.
+     *
+     * Emits an {AdminSet} event.
+     */
+    function setAdmin(address newAdmin) public {
+        _authoriseAdminAction();
+
+        address oldAdmin = _state.admin;
+        _state.admin = newAdmin;
+
+        emit AdminSet(oldAdmin, newAdmin);
     }
 
-    function executeGovernanceInstruction(
-        bytes memory payload
-    ) external onlyAdmin {
-        GovernanceInstruction memory gi = parseGovernanceInstruction(payload);
+    /**
+     * @dev Set the Pyth fee in Wei
+     *
+     * Calls {_authoriseAdminAction}.
+     *
+     * Emits an {FeeSet} event.
+     */
+    function setFee(uint newFee) public {
+        _authoriseAdminAction();
 
-        if (gi.action == GovernanceAction.UpgradeContract) {
-            // FIXME: this probably needs a check on the chain id
-            upgradeContract(parseUpgradeContractPayload(gi.payload));
-        } else if (gi.action == GovernanceAction.SetAdmin) {
-            _state.admin = parseSetAdminPayload(gi.payload).newAdmin;
-        } else if (gi.action == GovernanceAction.SetFee) {
-            _state.pythFeeInWei = parseSetFeePayload(gi.payload).newFee;
-        } else {
-            revert EntropyErrors.InvalidGovernanceMessage();
-        }
+        uint oldFee = _state.pythFeeInWei;
+        _state.pythFeeInWei = newFee;
+
+        emit FeeSet(oldFee, newFee);
     }
 
-    function upgradeContract(UpgradeContractPayload memory payload) internal {
-        // This method on this contract does not have enough access to execute this, it should be executed on the
-        // upgradable contract.
-        upgradeUpgradableContract(payload);
+    /**
+     * @dev Set the default provider of the contract
+     *
+     * Calls {_authoriseAdminAction}.
+     *
+     * Emits an {DefaultProviderSet} event.
+     */
+    function setDefaultProvider(address newDefaultProvider) public {
+        _authoriseAdminAction();
+
+        address oldDefaultProvider = _state.defaultProvider;
+        _state.defaultProvider = newDefaultProvider;
+
+        emit DefaultProviderSet(oldDefaultProvider, newDefaultProvider);
     }
 
-    function upgradeUpgradableContract(
-        UpgradeContractPayload memory payload
-    ) internal virtual;
+    function _authoriseAdminAction() internal virtual;
 }
