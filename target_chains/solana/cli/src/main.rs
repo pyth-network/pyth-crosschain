@@ -64,6 +64,9 @@ use {
     },
 };
 
+// Note: this is a reimplementation of the GuardianSet from wormhole_solana
+// because the wormhole_solana crate does uses an older versions of the dependencies.
+// This can be removed once the GuardianSet is added to the wormhole_anchor_sdk
 #[derive(Default, AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 pub struct GuardianSet {
     /// Index representing an incrementing version number for this guardian set.
@@ -213,6 +216,7 @@ fn main() -> Result<()> {
                             WormholePayload::Merkle(merkle_root) => merkle_root.root,
                         });
 
+                    // verify each merkle update using the posted vaa account.
                     let mut verify_count = 0;
                     for update in updates {
                         let message_vec = Vec::from(update.message.clone());
@@ -227,6 +231,12 @@ fn main() -> Result<()> {
                     println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
                     // TODO need to figure out max number of updates that can be sent in 1 txn
 
+                    let post_updates_accounts = pyth_solana_receiver::accounts::PostUpdates {
+                        payer:         payer.pubkey(),
+                        posted_vaa:    vaa_pubkey,
+                        signature_set: *posted_vaa_data.vaa.signature_set(),
+                    }
+                    .to_account_metas(None);
                     // update_bytes_len: 288 (1 price feed)
                     let update_bytes = updates
                         .iter()
@@ -241,13 +251,6 @@ fn main() -> Result<()> {
                         .sum();
 
                     println!("update_bytes_len: {}", update_bytes_len);
-
-                    let post_updates_accounts = pyth_solana_receiver::accounts::PostUpdates {
-                        payer:         payer.pubkey(),
-                        posted_vaa:    vaa_pubkey,
-                        signature_set: *posted_vaa_data.vaa.signature_set(),
-                    }
-                    .to_account_metas(None);
                     let post_updates_ix_data = pyth_solana_receiver::instruction::PostUpdates {
                         price_updates: update_bytes,
                     }

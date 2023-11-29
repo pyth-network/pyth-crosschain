@@ -9,7 +9,7 @@ pub enum ReceiverError {
     #[msg("The posted VAA has wrong magic number.")]
     PostedVaaHeaderWrongMagicNumber,
     #[msg("An error occured when deserializing the VAA.")]
-    DeserializeVAAFailed,
+    DeserializeVaaFailed,
     #[msg("An error occurred when deserializing the updates.")]
     DeserializeUpdateFailed,
     #[msg("An error occurred when deserializing the message")]

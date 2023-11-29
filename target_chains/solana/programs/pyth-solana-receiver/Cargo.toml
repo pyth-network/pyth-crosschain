@@ -24,6 +24,7 @@ wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reise
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
 pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version = "2.0.0", features = ["strum"] }
+
 solana-program = "1.16.20"
 hex = "0.4.3"
 serde = { version = "1.0.152", features = ["derive"] }
@@ -42,3 +43,4 @@ tokio = "1.14.1"
 bincode = "1.3.3"
 libsecp256k1 = "0.7.1"
 rand = "0.8.5"
+solana-bpf-loader-program = "1.16.20"

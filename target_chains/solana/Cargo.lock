@@ -3055,6 +3055,7 @@ dependencies = [
  "serde",
  "serde_wormhole",
  "sha3 0.10.6",
+ "solana-bpf-loader-program",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
