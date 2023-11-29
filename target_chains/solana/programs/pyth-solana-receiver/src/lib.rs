@@ -35,11 +35,20 @@ pub const POST_VAA: u8 = 2;
 pub mod pyth_solana_receiver {
     use super::*;
 
-    /// Verify the updates using the posted_vaa account
-    ///  * `vaa_hash` hash post of the post_vaa data to derive the address of the post_vaa account
+    /// Verify the updates using the posted_vaa account. This should be called after the client
+    /// has already called verify_signatures & post_vaa. Wormhole's verify_signatures & post_vaa
+    /// will perform the necessary checks so that we can assume that the posted_vaa account is
+    /// valid and the signatures have been verified.
+    ///
     ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
     #[allow(unused_variables)]
-    pub fn post_updates(ctx: Context<PostUpdates>, price_updates: Vec<Vec<u8>>) -> Result<()> {
+    pub fn post_updates(
+        ctx: Context<PostUpdates>,
+        // TODO: update pythnet_sdk to implement BorshSerialize, BorshDeserialize
+        // for MerklePriceUpdate as well as Keccak160 price_updates can be passed
+        // in as Vec<MerklePriceUpdate>
+        price_updates: Vec<Vec<u8>>,
+    ) -> Result<()> {
         let vaa = &ctx.accounts.posted_vaa;
         let signature_set = &ctx.accounts.signature_set;
         require_keys_eq!(
@@ -112,11 +121,14 @@ pub mod pyth_solana_receiver {
 }
 
 #[derive(Accounts)]
-#[instruction(vaa_hash: [u8; 32])]
 pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:         Signer<'info>,
     pub posted_vaa:    Box<Account<'info, AnchorVaa>>,
+    /// The signature set that signed the Vaa. This is used as an additional check to
+    /// ensure that the `posted_vaa.signature_set()` matches the `signature_set` account and for
+    /// checking the address of the `posted_vaa` by using the `signature_set.hash` as a seed to
+    /// derive the expected `posted_vaa` address.
     pub signature_set: Box<Account<'info, SignatureSetData>>,
 }
 

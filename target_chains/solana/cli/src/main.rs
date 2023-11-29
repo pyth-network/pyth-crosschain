@@ -15,17 +15,11 @@ use {
         Cli,
     },
     pyth_solana_receiver::state::AnchorVaa,
-    pythnet_sdk::{
-        accumulators::merkle::MerkleRoot,
-        hashers::keccak256_160::Keccak160,
-        wire::{
-            to_vec,
-            v1::{
-                AccumulatorUpdateData,
-                Proof,
-                WormholeMessage,
-                WormholePayload,
-            },
+    pythnet_sdk::wire::{
+        to_vec,
+        v1::{
+            AccumulatorUpdateData,
+            Proof,
         },
     },
     serde_wormhole::RawMessage,
@@ -63,7 +57,9 @@ use {
         VAA as WormholeSolanaVAA,
     },
 };
-
+// Note: this is a reimplementation of the GuardianSet from wormhole_solana
+// because the wormhole_solana crate does uses an older versions of the dependencies.
+// This can be removed once the GuardianSet is added to the wormhole_anchor_sdk
 #[derive(Default, AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 pub struct GuardianSet {
     /// Index representing an incrementing version number for this guardian set.
@@ -106,6 +102,7 @@ fn main() -> Result<()> {
             let rpc_client = RpcClient::new(url);
 
             println!("[1/5] Decode the AccumulatorUpdateData");
+            //TODO: refactor the various steps below
             let accumulator_update_data_bytes: Vec<u8> =
                 base64::decode(accumulator_update_data_str)?;
             let accumulator_update_data =
@@ -201,31 +198,11 @@ fn main() -> Result<()> {
                         }
                     };
 
-                    println!("Verifying updates using PostedVAA account");
+                    println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
+                    // TODO need to figure out max number of updates that can be sent in 1 txn
 
                     let posted_vaa_data =
                         AnchorVaa::try_deserialize(&mut vaa_account.unwrap().as_slice())?;
-                    let wormhole_message =
-                        WormholeMessage::try_from_bytes(&posted_vaa_data.payload)?;
-                    println!("wormhole_message: {wormhole_message:?}");
-                    let root: MerkleRoot<Keccak160> =
-                        MerkleRoot::new(match wormhole_message.payload {
-                            WormholePayload::Merkle(merkle_root) => merkle_root.root,
-                        });
-
-                    let mut verify_count = 0;
-                    for update in updates {
-                        let message_vec = Vec::from(update.message.clone());
-                        if !root.check(update.proof.clone(), &message_vec) {
-                            println!("[ERR] failed to verify update");
-                        } else {
-                            verify_count += 1;
-                        }
-                    }
-                    println!("verified {verify_count}/{} updates", updates.len());
-
-                    println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
-                    // TODO need to figure out max number of updates that can be sent in 1 txn
 
                     // update_bytes_len: 288 (1 price feed)
                     let update_bytes = updates

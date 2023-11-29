@@ -24,13 +24,13 @@ impl AccountDeserialize for AnchorVaa {
             *given_disc == *b"vaa",
             ReceiverError::PostedVaaHeaderWrongMagicNumber
         );
-        Self::try_deserialize_unchecked(&mut &buf[3..])
+        Self::try_deserialize_unchecked(buf)
     }
 
     // Manual implementation because this account does not have an anchor discriminator
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        AnchorDeserialize::deserialize(buf)
-            .map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
+        let mut data: &[u8] = &buf[3..];
+        AnchorDeserialize::deserialize(&mut data).map_err(Into::into)
     }
 }
 

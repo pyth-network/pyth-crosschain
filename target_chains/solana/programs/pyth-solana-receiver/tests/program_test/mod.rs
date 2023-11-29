@@ -47,9 +47,55 @@ pub struct ProgramSimulator {
 impl ProgramSimulator {
     /// Deploys the target chain contract as upgradable
     pub async fn new() -> ProgramSimulator {
-        let mut program_test = ProgramTest::new("pyth_solana_receiver", ID, None);
+        let mut bpf_data = read_file(
+            std::env::current_dir()
+                .unwrap()
+                .join(Path::new("../../target/deploy/pyth_solana_receiver.so")),
+        );
+
+        let mut program_test = ProgramTest::default();
+
+        // This PDA is the actual address in the real world
+        // https://docs.rs/solana-program/1.6.4/solana_program/bpf_loader_upgradeable/index.html
+        let (programdata_address, _) = Pubkey::find_program_address(
+            &[&pyth_solana_receiver::ID.to_bytes()],
+            &bpf_loader_upgradeable::id(),
+        );
 
         let upgrade_authority_keypair = Keypair::new();
+
+        let program_deserialized = UpgradeableLoaderState::Program {
+            programdata_address,
+        };
+        let programdata_deserialized = UpgradeableLoaderState::ProgramData {
+            slot:                      1,
+            upgrade_authority_address: Some(upgrade_authority_keypair.pubkey()),
+        };
+
+        // Program contains a pointer to programdata
+        let program_vec = bincode::serialize(&program_deserialized).unwrap();
+        // Programdata contains a header and the binary of the program
+        let mut programdata_vec = bincode::serialize(&programdata_deserialized).unwrap();
+        programdata_vec.append(&mut bpf_data);
+
+        let program_account = Account {
+            lamports:   Rent::default().minimum_balance(program_vec.len()),
+            data:       program_vec,
+            owner:      bpf_loader_upgradeable::ID,
+            executable: true,
+            rent_epoch: Epoch::default(),
+        };
+        let programdata_account = Account {
+            lamports:   Rent::default().minimum_balance(programdata_vec.len()),
+            data:       programdata_vec,
+            owner:      bpf_loader_upgradeable::ID,
+            executable: false,
+            rent_epoch: Epoch::default(),
+        };
+
+        // Add to both accounts to program test, now the program is deploy as upgradable
+        program_test.add_account(pyth_solana_receiver::ID, program_account);
+        program_test.add_account(programdata_address, programdata_account);
 
         // Start validator
         let (banks_client, genesis_keypair, recent_blockhash) = program_test.start().await;
