@@ -23,7 +23,7 @@ abstract contract EntropyGovernance is EntropyState {
      *
      * Emits an {AdminSet} event.
      */
-    function setAdmin(address newAdmin) public {
+    function setAdmin(address newAdmin) external {
         _authoriseAdminAction();
 
         address oldAdmin = _state.admin;
@@ -39,7 +39,7 @@ abstract contract EntropyGovernance is EntropyState {
      *
      * Emits an {FeeSet} event.
      */
-    function setFee(uint newFee) public {
+    function setFee(uint newFee) external {
         _authoriseAdminAction();
 
         uint oldFee = _state.pythFeeInWei;
@@ -55,7 +55,7 @@ abstract contract EntropyGovernance is EntropyState {
      *
      * Emits an {DefaultProviderSet} event.
      */
-    function setDefaultProvider(address newDefaultProvider) public {
+    function setDefaultProvider(address newDefaultProvider) external {
         _authoriseAdminAction();
 
         address oldDefaultProvider = _state.defaultProvider;
