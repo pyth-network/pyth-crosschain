@@ -55,7 +55,7 @@ contract EntropyUpgradable is
     // There are some actions which both and admin and owner can perform
     function _authoriseAdminAction() internal view override {
         if (msg.sender != owner() && msg.sender != _state.admin)
-            revert EntropyErrors.InvalidAuthorisation();
+            revert EntropyErrors.Unauthorized();
     }
 
     // We have not overridden these methods in Pyth contracts implementation.

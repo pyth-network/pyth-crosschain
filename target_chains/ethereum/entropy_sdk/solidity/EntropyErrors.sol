@@ -20,6 +20,6 @@ library EntropyErrors {
     error IncorrectRevelation();
     // Governance message is invalid (e.g., deserialization error).
     error InvalidUpgradeMagic();
-    // Invalid authorisation (e.g., invalid admin or owner).
-    error InvalidAuthorisation();
+    // Unauthorized (e.g., invalid admin or owner authorisation).
+    error Unauthorized();
 }
