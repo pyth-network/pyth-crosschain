@@ -101,6 +101,8 @@ export const RECEIVER_CHAINS = {
   astar_testnet: 50036,
   coredao_testnet: 50037,
   tomochain_testnet: 50038,
+  stacks: 50039,
+  stacks_testnet: 50040,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
