@@ -67,11 +67,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         program,
         deserializedData.name,
         deserializedData.data,
-        resolveAccountNames(
-          messageBuffer as Idl,
-          deserializedData.name,
-          instruction
-        )
+        resolveAccountNames(idl as Idl, deserializedData.name, instruction)
       );
     } else {
       return new AnchorMultisigInstruction(
