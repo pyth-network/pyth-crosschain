@@ -1,5 +1,9 @@
 use {
     crate::hashers::Hasher,
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
     serde::Serialize,
     sha3::{
         Digest,
@@ -7,7 +11,9 @@ use {
     },
 };
 
-#[derive(Clone, Default, Debug, Eq, Hash, PartialEq, Serialize)]
+#[derive(
+    Clone, Default, Debug, Eq, Hash, PartialEq, Serialize, BorshSerialize, BorshDeserialize,
+)]
 pub struct Keccak160 {}
 
 impl Hasher for Keccak160 {

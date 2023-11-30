@@ -1,11 +1,17 @@
-use serde::{
-    de::DeserializeSeed,
-    ser::{
-        SerializeSeq,
-        SerializeStruct,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    Deserialize,
-    Serialize,
+    serde::{
+        de::DeserializeSeed,
+        ser::{
+            SerializeSeq,
+            SerializeStruct,
+        },
+        Deserialize,
+        Serialize,
+    },
 };
 
 /// PrefixlessVec overrides the serialization to _not_ write a length prefix.
@@ -225,5 +231,29 @@ where
                 __phantom: std::marker::PhantomData,
             },
         )
+    }
+}
+
+impl<L, T> BorshSerialize for PrefixedVec<L, T>
+where
+    T: BorshSerialize,
+{
+    #[inline]
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        BorshSerialize::serialize(self.as_ref(), writer)
+    }
+}
+
+impl<L, T> BorshDeserialize for PrefixedVec<L, T>
+where
+    T: BorshDeserialize,
+    L: BorshDeserialize,
+    L: Into<usize>,
+    L: Copy,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, std::io::Error> {
+        let vec = <Vec<T> as BorshDeserialize>::deserialize(buf)?;
+        Ok(vec.into())
     }
 }

@@ -147,15 +147,21 @@ pub mod v1 {
 
 #[cfg(test)]
 mod tests {
-    use crate::wire::{
-        array,
-        v1::{
-            AccumulatorUpdateData,
-            Proof,
+    use {
+        crate::wire::{
+            array,
+            v1::{
+                AccumulatorUpdateData,
+                Proof,
+            },
+            Deserializer,
+            PrefixedVec,
+            Serializer,
         },
-        Deserializer,
-        PrefixedVec,
-        Serializer,
+        borsh::{
+            BorshDeserialize,
+            BorshSerialize,
+        },
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -532,5 +538,17 @@ mod tests {
         // Test if bumping major version makes it incompatible
         buffer[4] = 0x03;
         AccumulatorUpdateData::try_from_slice(&buffer).unwrap_err();
+    }
+
+    #[test]
+    fn test_borsh_prefixed_vec() {
+        let prefixed_vec: PrefixedVec<u16, u8> = PrefixedVec::from(vec![0u8, 1u8, 2u8]);
+        let mut buffer = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut buffer);
+        BorshSerialize::serialize(&prefixed_vec, &mut cursor).unwrap();
+
+        let deserialized_prefixed_vec =
+            BorshDeserialize::deserialize(&mut buffer.as_slice()).unwrap();
+        assert_eq!(prefixed_vec, deserialized_prefixed_vec);
     }
 }
