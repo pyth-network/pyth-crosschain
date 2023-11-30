@@ -59,10 +59,9 @@ contract EntropyUpgradable is
     }
 
     // We have not overridden these methods in Pyth contracts implementation.
-    // The reason to override them is they would have failed previously as there
-    // was no owner and `_authorizeUpgrade` would cause a revert in that case
-    // Now we have an owner, and because we want to test for the magic
-    // We are checking overriding these methods.
+    // But we are overriding them here because there was no owner before and
+    // `_authorizeUpgrade` would cause a revert for these. Now we have an owner, and
+    // because we want to test for the magic. We are overriding these methods.
     function upgradeTo(address newImplementation) external override onlyProxy {
         address oldImplementation = _getImplementation();
         _authorizeUpgrade(newImplementation);
