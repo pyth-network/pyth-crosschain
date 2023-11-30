@@ -3,7 +3,6 @@ pub mod cli;
 use {
     anchor_client::anchor_lang::{
         prelude::*,
-        solana_program::sysvar::SysvarId,
         AnchorDeserialize,
         InstructionData,
         ToAccountMetas,

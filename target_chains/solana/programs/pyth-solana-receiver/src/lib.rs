@@ -18,10 +18,7 @@ use {
         },
         ACCUMULATOR_EMITTER_ADDRESS,
     },
-    serde::Deserialize,
-    sha3::Digest,
     state::AnchorVaa,
-    std::io::Write,
 };
 
 declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
@@ -44,7 +41,16 @@ pub mod pyth_solana_receiver {
         // in as Vec<MerklePriceUpdate>
         price_updates: Vec<Vec<u8>>,
     ) -> Result<()> {
-        let vaa = &ctx.accounts.posted_vaa;
+        let unchecked_vaa = &ctx.accounts.posted_vaa;
+        require_keys_eq!(
+            *unchecked_vaa.owner,
+            //TODO: expected owner should come from config account that can only be modified by governance
+            wormhole_anchor_sdk::wormhole::program::id(),
+            ReceiverError::WrongVaaOwner
+        );
+        let vaa = AnchorVaa::try_deserialize(&mut &**(unchecked_vaa.try_borrow_data()?))
+            .map_err(|_| ReceiverError::DeserializeVaaFailed)?;
+
         // TODO: expected emitter_chain should come from config account that can only be modified by governance
         require_eq!(
             vaa.emitter_chain(),
@@ -101,12 +107,16 @@ pub mod pyth_solana_receiver {
 pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:      Signer<'info>,
-    /// Account with verified vaa. Wormhole's verify_signatures & post_vaa will perform the
+    /// CHECK: Account with verified vaa. Wormhole's verify_signatures & post_vaa will perform the
     /// necessary checks so that it is assumed that the posted_vaa account is valid and the
     /// signatures have been verified if the owner & discriminator are correct. The
     /// `posted_vaa.payload` contains a merkle root and the price_updates are verified against this
     /// merkle root.
-    pub posted_vaa: Box<Account<'info, AnchorVaa>>,
+    ///
+    /// Using `UncheckedAccount` so that we can deserialize the account without the `Owner` trait
+    /// being implemented to a hard-coded value. The owner is checked in the ix itself using the
+    /// `config` account.
+    pub posted_vaa: UncheckedAccount<'info>,
 }
 
 impl crate::accounts::PostUpdates {

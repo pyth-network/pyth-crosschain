@@ -6,8 +6,12 @@ pub enum ReceiverError {
     InvalidEmitterChain,
     #[msg("The emitter address of the VAA is invalid.")]
     InvalidEmitterAddress,
+    #[msg("The posted VAA account has the wrong owner.")]
+    WrongVaaOwner,
     #[msg("The posted VAA has wrong magic number.")]
     PostedVaaHeaderWrongMagicNumber,
+    #[msg("An error occurred when deserializing the VAA.")]
+    DeserializeVaaFailed,
     #[msg("An error occurred when deserializing the updates.")]
     DeserializeUpdateFailed,
     #[msg("An error occurred when deserializing the message")]
