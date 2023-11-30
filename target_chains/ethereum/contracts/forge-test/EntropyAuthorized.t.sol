@@ -112,6 +112,9 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.upgradeTo(address(random2));
     }
 
+    // There can be another case that the magic function doesn't
+    // exist but it's fine. (It will revert with no reason)
+    // The randomDifferentMagic contract do have a magic in this case
     function testExpectRevertDifferentMagicContractUpgrade() public {
         vm.expectRevert(EntropyErrors.InvalidUpgradeMagic.selector);
         vm.prank(owner);
