@@ -14,7 +14,6 @@ use {
         Action,
         Cli,
     },
-    pyth_solana_receiver::state::AnchorVaa,
     pythnet_sdk::wire::{
         to_vec,
         v1::{
@@ -137,7 +136,7 @@ fn main() -> Result<()> {
 
                     let vaa_hash = body.digest().unwrap().hash;
                     let vaa_pubkey = WormholeSolanaVAA::key(&wormhole, vaa_hash);
-                    let vaa_account = match rpc_client.get_account_data(&vaa_pubkey) {
+                    let _vaa_account = match rpc_client.get_account_data(&vaa_pubkey) {
                         Ok(account_data) => {
                             println!("[3/5] VAA already posted on solana. Skipping verifying signatures step");
                             println!("[4/5] VAA already posted on solana. Skipping posting the VAA data onto a solana account using pyth-solana-receiver::PostAccumulatorUpdateVaa");
@@ -200,9 +199,6 @@ fn main() -> Result<()> {
 
                     println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
                     // TODO need to figure out max number of updates that can be sent in 1 txn
-
-                    let _posted_vaa_data =
-                        AnchorVaa::try_deserialize(&mut vaa_account.unwrap().as_slice())?;
 
                     // update_bytes_len: 288 (1 price feed)
                     let update_bytes = updates
