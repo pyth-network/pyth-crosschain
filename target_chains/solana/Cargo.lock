@@ -3046,6 +3046,7 @@ dependencies = [
  "bincode",
  "byteorder",
  "hex",
+ "lazy_static",
  "libsecp256k1 0.7.1",
  "pyth-sdk 0.8.0",
  "pyth-sdk-solana",

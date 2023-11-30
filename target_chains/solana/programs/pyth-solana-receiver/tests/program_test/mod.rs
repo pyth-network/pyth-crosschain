@@ -1,5 +1,4 @@
 use {
-    pyth_solana_receiver::ID,
     solana_program::{
         bpf_loader_upgradeable::{
             self,
@@ -28,8 +27,46 @@ use {
         },
         transaction::Transaction,
     },
-    std::path::Path,
+    std::path::PathBuf,
 };
+
+lazy_static::lazy_static! {
+    // Build the oracle binary and make it available to the
+    // simulator. lazy_static makes this happen only once per test
+    // run.
+    static ref PYTH_RECEIVER_PROGRAM_BINARY_PATH: PathBuf = {
+
+    // Detect features and pass them onto cargo-build-bpf.
+    // IMPORTANT: All features of this crate must have gates added to this vector.
+    let features: Vec<&str> = vec![
+    #[cfg(feature = "devnet")]
+        "devnet",
+    #[cfg(feature = "mainnet")]
+        "mainnet",
+    ];
+
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg("build-bpf");
+
+    if !features.is_empty() {
+        cmd.arg("--features");
+        cmd.args(features);
+    }
+
+    let status = cmd.status().unwrap();
+
+    if !status.success() {
+        panic!(
+        "cargo-build-bpf did not exit with 0 (code {:?})",
+        status.code()
+        );
+    }
+
+    let target_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../target");
+
+    PathBuf::from(target_dir).join("deploy/pyth_solana_receiver.so")
+    };
+}
 
 /// Simulator for the state of the target chain program on Solana. You can run solana transactions against
 /// this struct to test how pyth instructions execute in the Solana runtime.
@@ -47,11 +84,7 @@ pub struct ProgramSimulator {
 impl ProgramSimulator {
     /// Deploys the target chain contract as upgradable
     pub async fn new() -> ProgramSimulator {
-        let mut bpf_data = read_file(
-            std::env::current_dir()
-                .unwrap()
-                .join(Path::new("../../target/deploy/pyth_solana_receiver.so")),
-        );
+        let mut bpf_data = read_file(&*PYTH_RECEIVER_PROGRAM_BINARY_PATH);
 
         let mut program_test = ProgramTest::default();
 
