@@ -18,6 +18,8 @@ library EntropyErrors {
     error InsufficientFee();
     // Either the user's or the provider's revealed random values did not match their commitment.
     error IncorrectRevelation();
+    // Governance message is invalid (e.g., deserialization error).
+    error InvalidUpgradeMagic();
     // The msg.sender is not allowed to invoke this call.
     error Unauthorized();
 }

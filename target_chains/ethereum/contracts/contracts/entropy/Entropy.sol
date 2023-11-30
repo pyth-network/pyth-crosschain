@@ -73,13 +73,14 @@ import "./EntropyState.sol";
 // protocol prior to the random number being revealed (i.e., prior to step (6) above). Integrators should ensure that
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
-contract Entropy is IEntropy, EntropyState {
-    // TODO: Use an upgradeable proxy
-    constructor(
+abstract contract Entropy is IEntropy, EntropyState {
+    function _initialize(
+        address admin,
         uint128 pythFeeInWei,
         address defaultProvider,
         bool prefillRequestStorage
-    ) {
+    ) internal {
+        _state.admin = admin;
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
         _state.defaultProvider = defaultProvider;
@@ -308,6 +309,10 @@ contract Entropy is IEntropy, EntropyState {
         address provider
     ) public view override returns (uint128 feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+    }
+
+    function getPythFee() public view returns (uint128 feeAmount) {
+        return _state.pythFeeInWei;
     }
 
     function getAccruedPythFees()

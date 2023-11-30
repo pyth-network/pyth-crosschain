@@ -4,14 +4,17 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
-import "../contracts/entropy/Entropy.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import "./utils/EntropyTestUtils.t.sol";
+import "../contracts/entropy/EntropyUpgradable.sol";
 
 // TODO
 // - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
 //   verify the provider's value.
 contract EntropyGasBenchmark is Test, EntropyTestUtils {
-    Entropy public random;
+    ERC1967Proxy public proxy;
+    EntropyUpgradable public random;
 
     uint128 pythFeeInWei = 7;
 
@@ -23,7 +26,19 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
     address public user1 = address(3);
 
     function setUp() public {
-        random = new Entropy(pythFeeInWei, provider1, true);
+        EntropyUpgradable _random = new EntropyUpgradable();
+        // deploy proxy contract and point it to implementation
+        proxy = new ERC1967Proxy(address(_random), "");
+        // wrap in ABI to support easier calls
+        random = EntropyUpgradable(address(proxy));
+
+        random.initialize(
+            address(4),
+            address(5),
+            pythFeeInWei,
+            provider1,
+            false
+        );
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
