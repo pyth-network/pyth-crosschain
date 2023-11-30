@@ -27,13 +27,19 @@ contract EntropyDifferentMagic is
     function initialize(
         address owner,
         address admin,
-        uint pythFeeInWei,
-        address defaultProvider
+        uint128 pythFeeInWei,
+        address defaultProvider,
+        bool prefillRequestStorage
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Entropy._initialize(admin, pythFeeInWei, defaultProvider);
+        Entropy._initialize(
+            admin,
+            pythFeeInWei,
+            defaultProvider,
+            prefillRequestStorage
+        );
 
         // We need to transfer the ownership from deployer to the new owner
         transferOwnership(owner);
@@ -49,37 +55,7 @@ contract EntropyDifferentMagic is
     // There are some actions which both and admin and owner can perform
     function _authoriseAdminAction() internal view override {
         if (msg.sender != owner() && msg.sender != _state.admin)
-            revert EntropyErrors.InvalidAuthorisation();
-    }
-
-    // We have not overridden these methods in Pyth contracts implementation.
-    // The reason to override them is they would have failed previously as there
-    // was no owner and `_authorizeUpgrade` would cause a revert in that case
-    // Now we have an owner, and because we want to test for the magic
-    // We are checking overriding these methods.
-    function upgradeTo(address newImplementation) external override onlyProxy {
-        address oldImplementation = _getImplementation();
-        _authorizeUpgrade(newImplementation);
-        _upgradeToAndCallUUPS(newImplementation, new bytes(0), false);
-
-        // TODO: verify this works?
-        magicCheck();
-
-        emit ContractUpgraded(oldImplementation, _getImplementation());
-    }
-
-    function upgradeToAndCall(
-        address newImplementation,
-        bytes memory data
-    ) external payable override onlyProxy {
-        address oldImplementation = _getImplementation();
-        _authorizeUpgrade(newImplementation);
-        _upgradeToAndCallUUPS(newImplementation, data, true);
-
-        // TODO: verify this works?
-        magicCheck();
-
-        emit ContractUpgraded(oldImplementation, _getImplementation());
+            revert EntropyErrors.Unauthorized();
     }
 
     function magicCheck() internal view {

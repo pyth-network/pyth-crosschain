@@ -52,7 +52,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         random2 = new EntropyUpgradable();
         randomDifferentMagic = new EntropyDifferentMagic();
 
-        random.initialize(owner, admin, pythFeeInWei, provider1);
+        random.initialize(owner, admin, pythFeeInWei, provider1, false);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
