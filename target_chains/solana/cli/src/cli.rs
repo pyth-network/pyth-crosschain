@@ -26,5 +26,12 @@ pub enum Action {
             help = "Keypair of the payer of transactions"
         )]
         keypair: String,
+        #[clap(
+            short = 'u',
+            long,
+            default_value = "http://localhost:8899",
+            help = "RPC endpoint of the solana"
+        )]
+        url:     String,
     },
 }

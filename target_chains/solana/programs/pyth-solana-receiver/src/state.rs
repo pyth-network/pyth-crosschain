@@ -1,31 +1,36 @@
 use {
+    crate::error::ReceiverError,
     anchor_lang::prelude::*,
     std::{
         io::Write,
         ops::Deref,
-        str::FromStr,
     },
-    wormhole_solana::VAA,
+    wormhole_anchor_sdk::wormhole::PostedVaaData,
 };
 
 // The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
     fn owner() -> Pubkey {
-        // wormhole address on solana devnet
-        Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap()
+        PostedVaaData::owner()
     }
 }
 
 impl AccountDeserialize for AnchorVaa {
     // Manual implementation because this account does not have an anchor discriminator
     fn try_deserialize(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
+        require!(buf.len() >= 3, ErrorCode::AccountDiscriminatorNotFound);
+        let given_disc = &buf[..3];
+        require!(
+            *given_disc == *b"vaa",
+            ReceiverError::PostedVaaHeaderWrongMagicNumber
+        );
         Self::try_deserialize_unchecked(buf)
     }
 
     // Manual implementation because this account does not have an anchor discriminator
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        AnchorDeserialize::deserialize(buf)
-            .map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
+        let mut data: &[u8] = &buf[3..];
+        AnchorDeserialize::deserialize(&mut data).map_err(Into::into)
     }
 }
 
@@ -37,15 +42,14 @@ impl AccountSerialize for AnchorVaa {
 }
 
 impl Deref for AnchorVaa {
-    type Target = VAA;
+    type Target = PostedVaaData;
 
     fn deref(&self) -> &Self::Target {
         &self.vaa
     }
 }
 
-#[derive(Clone, AnchorDeserialize, AnchorSerialize)]
+#[derive(Clone, PartialEq, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
-    pub magic: [u8; 3],
-    pub vaa:   VAA,
+    pub vaa: PostedVaaData,
 }
