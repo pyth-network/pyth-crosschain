@@ -201,7 +201,7 @@ fn main() -> Result<()> {
                     println!("[5/5] Post updates from AccumulatorUpdateData and use the PostedVAA on solana using pyth-solana-receiver::PostUpdates");
                     // TODO need to figure out max number of updates that can be sent in 1 txn
 
-                    let posted_vaa_data =
+                    let _posted_vaa_data =
                         AnchorVaa::try_deserialize(&mut vaa_account.unwrap().as_slice())?;
 
                     // update_bytes_len: 288 (1 price feed)
@@ -220,9 +220,8 @@ fn main() -> Result<()> {
                     println!("update_bytes_len: {}", update_bytes_len);
 
                     let post_updates_accounts = pyth_solana_receiver::accounts::PostUpdates {
-                        payer:         payer.pubkey(),
-                        posted_vaa:    vaa_pubkey,
-                        signature_set: *posted_vaa_data.vaa.signature_set(),
+                        payer:      payer.pubkey(),
+                        posted_vaa: vaa_pubkey,
                     }
                     .to_account_metas(None);
                     let post_updates_ix_data = pyth_solana_receiver::instruction::PostUpdates {

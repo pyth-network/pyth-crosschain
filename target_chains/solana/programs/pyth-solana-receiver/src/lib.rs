@@ -22,14 +22,9 @@ use {
     sha3::Digest,
     state::AnchorVaa,
     std::io::Write,
-    wormhole_anchor_sdk::wormhole::{
-        SignatureSetData,
-        SEED_PREFIX_POSTED_VAA,
-    },
 };
 
 declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
-pub const POST_VAA: u8 = 2;
 
 #[program]
 pub mod pyth_solana_receiver {
@@ -50,24 +45,6 @@ pub mod pyth_solana_receiver {
         price_updates: Vec<Vec<u8>>,
     ) -> Result<()> {
         let vaa = &ctx.accounts.posted_vaa;
-        let signature_set = &ctx.accounts.signature_set;
-        require_keys_eq!(
-            vaa.meta.signature_set,
-            signature_set.key(),
-            ReceiverError::InvalidSignatureSet
-        );
-
-        let (expected_vaa_pubkey, _) = Pubkey::find_program_address(
-            &[SEED_PREFIX_POSTED_VAA, &signature_set.hash],
-            //TODO: expected program owner of the posted_vaa account should come from config account that can only be modified by governance
-            &wormhole_anchor_sdk::wormhole::program::id(),
-        );
-        require_keys_eq!(
-            vaa.key(),
-            expected_vaa_pubkey,
-            ReceiverError::InvalidVaaAccountKey
-        );
-
         // TODO: expected emitter_chain should come from config account that can only be modified by governance
         require_eq!(
             vaa.emitter_chain(),
@@ -123,21 +100,20 @@ pub mod pyth_solana_receiver {
 #[derive(Accounts)]
 pub struct PostUpdates<'info> {
     #[account(mut)]
-    pub payer:         Signer<'info>,
-    pub posted_vaa:    Box<Account<'info, AnchorVaa>>,
-    /// The signature set that signed the Vaa. This is used as an additional check to
-    /// ensure that the `posted_vaa.signature_set()` matches the `signature_set` account and for
-    /// checking the address of the `posted_vaa` by using the `signature_set.hash` as a seed to
-    /// derive the expected `posted_vaa` address.
-    pub signature_set: Box<Account<'info, SignatureSetData>>,
+    pub payer:      Signer<'info>,
+    /// Account with verified vaa. Wormhole's verify_signatures & post_vaa will perform the
+    /// necessary checks so that it is assumed that the posted_vaa account is valid and the
+    /// signatures have been verified if the owner & discriminator are correct. The
+    /// `posted_vaa.payload` contains a merkle root and the price_updates are verified against this
+    /// merkle root.
+    pub posted_vaa: Box<Account<'info, AnchorVaa>>,
 }
 
 impl crate::accounts::PostUpdates {
-    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey, signature_set: &Pubkey) -> Self {
+    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
         crate::accounts::PostUpdates {
-            payer:         *payer,
-            posted_vaa:    *posted_vaa,
-            signature_set: *signature_set,
+            payer:      *payer,
+            posted_vaa: *posted_vaa,
         }
     }
 }
