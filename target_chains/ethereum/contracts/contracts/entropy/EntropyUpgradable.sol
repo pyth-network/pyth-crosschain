@@ -27,13 +27,19 @@ contract EntropyUpgradable is
     function initialize(
         address owner,
         address admin,
-        uint pythFeeInWei,
-        address defaultProvider
+        uint128 pythFeeInWei,
+        address defaultProvider,
+        bool prefillRequestStorage
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Entropy._initialize(admin, pythFeeInWei, defaultProvider);
+        Entropy._initialize(
+            admin,
+            pythFeeInWei,
+            defaultProvider,
+            prefillRequestStorage
+        );
 
         // We need to transfer the ownership from deployer to the new owner
         transferOwnership(owner);

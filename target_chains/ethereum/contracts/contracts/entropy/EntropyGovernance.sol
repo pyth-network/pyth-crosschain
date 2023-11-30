@@ -43,7 +43,7 @@ abstract contract EntropyGovernance is EntropyState {
      *
      * Emits an {PythFeeSet} event.
      */
-    function setPythFee(uint newPythFee) external {
+    function setPythFee(uint128 newPythFee) external {
         _authoriseAdminAction();
 
         uint oldPythFee = _state.pythFeeInWei;

@@ -306,7 +306,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
-    function getPythFee() public view returns (uint feeAmount) {
+    function getPythFee() public view returns (uint128 feeAmount) {
         return _state.pythFeeInWei;
     }
 
