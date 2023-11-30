@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
-import "./utils/Proxy.t.sol";
 import "./utils/EntropyTestContracts/EntropyDifferentMagic.t.sol";
 
 // TODO
 // - fuzz test?
 contract EntropyTest is Test, EntropyTestUtils {
-    UUPSProxy public proxy;
+    ERC1967Proxy public proxy;
     EntropyUpgradable public random;
     EntropyUpgradable public random2;
     EntropyDifferentMagic public randomDifferentMagic;
@@ -45,7 +45,7 @@ contract EntropyTest is Test, EntropyTestUtils {
     function setUp() public {
         EntropyUpgradable _random = new EntropyUpgradable();
         // deploy proxy contract and point it to implementation
-        proxy = new UUPSProxy(address(_random), "");
+        proxy = new ERC1967Proxy(address(_random), "");
         // wrap in ABI to support easier calls
         random = EntropyUpgradable(address(proxy));
         // to test for upgrade
