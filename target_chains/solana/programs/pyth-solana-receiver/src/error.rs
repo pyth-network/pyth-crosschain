@@ -8,8 +8,6 @@ pub enum ReceiverError {
     InvalidEmitterAddress,
     #[msg("The posted VAA has wrong magic number.")]
     PostedVaaHeaderWrongMagicNumber,
-    #[msg("An error occured when deserializing the VAA.")]
-    DeserializeVaaFailed,
     #[msg("An error occurred when deserializing the updates.")]
     DeserializeUpdateFailed,
     #[msg("An error occurred when deserializing the message")]
@@ -20,8 +18,4 @@ pub enum ReceiverError {
     InvalidPriceUpdate,
     #[msg("Received an invalid accumulator message type")]
     InvalidAccumulatorMessageType,
-    #[msg("Received an invalid signature set")]
-    InvalidSignatureSet,
-    #[msg("The pubkey of the the posted vaa account is invalid")]
-    InvalidVaaAccountKey,
 }
