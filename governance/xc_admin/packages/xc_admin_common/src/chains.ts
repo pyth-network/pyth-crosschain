@@ -54,6 +54,7 @@ export const RECEIVER_CHAINS = {
   astar: 60035,
   coredao: 60036,
   tomochain: 60037,
+  stacks: 60038,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -101,8 +102,7 @@ export const RECEIVER_CHAINS = {
   astar_testnet: 50036,
   coredao_testnet: 50037,
   tomochain_testnet: 50038,
-  stacks: 50039,
-  stacks_testnet: 50040,
+  stacks_testnet: 50039,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
