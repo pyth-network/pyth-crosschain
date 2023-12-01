@@ -154,20 +154,29 @@ pub mod v1 {
 #[cfg(test)]
 mod tests {
     use {
-        crate::wire::{
-            array,
-            v1::{
-                AccumulatorUpdateData,
-                Proof,
+        crate::{
+            accumulators::{
+                merkle::MerkleTree,
+                Accumulator,
             },
-            Deserializer,
-            PrefixedVec,
-            Serializer,
+            hashers::keccak256_160::Keccak160,
+            wire::{
+                array,
+                v1::{
+                    AccumulatorUpdateData,
+                    MerklePriceUpdate,
+                    Proof,
+                },
+                Deserializer,
+                PrefixedVec,
+                Serializer,
+            },
         },
         borsh::{
             BorshDeserialize,
             BorshSerialize,
         },
+        std::collections::BTreeSet,
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -547,14 +556,54 @@ mod tests {
     }
 
     #[test]
-    fn test_borsh_prefixed_vec() {
+    fn test_prefixed_vec_borsh() {
         let prefixed_vec: PrefixedVec<u16, u8> = PrefixedVec::from(vec![0u8, 1u8, 2u8]);
-        let mut buffer = Vec::new();
-        let mut cursor = std::io::Cursor::new(&mut buffer);
-        BorshSerialize::serialize(&prefixed_vec, &mut cursor).unwrap();
+        let serialized_prefixed_vec = BorshSerialize::try_to_vec(&prefixed_vec).unwrap();
 
         let deserialized_prefixed_vec =
-            BorshDeserialize::deserialize(&mut buffer.as_slice()).unwrap();
+            BorshDeserialize::try_from_slice(serialized_prefixed_vec.as_slice()).unwrap();
         assert_eq!(prefixed_vec, deserialized_prefixed_vec);
+    }
+
+    #[test]
+    fn test_merkle_price_update_borsh() {
+        fn verify_merkle_price_update_borsh(accumulator: &MerkleTree<Keccak160>, item: &[u8]) {
+            let proof = accumulator.prove(item).unwrap();
+            let merkle_price_update = MerklePriceUpdate {
+                message: PrefixedVec::from(item.to_vec()),
+                proof,
+            };
+            let serialized_merkle_price_update =
+                BorshSerialize::try_to_vec(&merkle_price_update).unwrap();
+            let deserialized_merkle_price_update: MerklePriceUpdate =
+                BorshDeserialize::try_from_slice(serialized_merkle_price_update.as_slice())
+                    .unwrap();
+            assert_eq!(merkle_price_update, deserialized_merkle_price_update);
+            assert!(accumulator.verify_path(
+                deserialized_merkle_price_update.proof.clone(),
+                deserialized_merkle_price_update.message.iter().as_ref(),
+            ),);
+        }
+
+
+        let mut set: BTreeSet<&[u8]> = BTreeSet::new();
+
+        let item_a = 81usize.to_be_bytes();
+        let item_b = 99usize.to_be_bytes();
+        let item_c = 100usize.to_be_bytes();
+        let item_d = 101usize.to_be_bytes();
+        set.insert(&item_a);
+        set.insert(&item_b);
+        set.insert(&item_c);
+        set.insert(&item_d);
+
+
+        // Accumulate into a 2 level tree.
+        let accumulator = MerkleTree::<Keccak160>::from_set(set.into_iter()).unwrap();
+
+        verify_merkle_price_update_borsh(&accumulator, &item_a);
+        verify_merkle_price_update_borsh(&accumulator, &item_b);
+        verify_merkle_price_update_borsh(&accumulator, &item_c);
+        verify_merkle_price_update_borsh(&accumulator, &item_d);
     }
 }
