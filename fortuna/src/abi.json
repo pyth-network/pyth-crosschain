@@ -245,8 +245,8 @@
           },
           {
             "name": "blockNumber",
-            "type": "uint96",
-            "internalType": "uint96"
+            "type": "int96",
+            "internalType": "int96"
           },
           {
             "name": "requester",
@@ -464,8 +464,8 @@
           },
           {
             "name": "blockNumber",
-            "type": "uint96",
-            "internalType": "uint96"
+            "type": "int96",
+            "internalType": "int96"
           },
           {
             "name": "requester",
@@ -509,8 +509,8 @@
           },
           {
             "name": "blockNumber",
-            "type": "uint96",
-            "internalType": "uint96"
+            "type": "int96",
+            "internalType": "int96"
           },
           {
             "name": "requester",

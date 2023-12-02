@@ -1,7 +1,10 @@
 use {
     anyhow::Result,
     axum::async_trait,
-    ethers::types::Address,
+    ethers::{
+        core::k256::U256,
+        types::Address,
+    },
 };
 
 /// EntropyReader is the read-only interface of the Entropy contract.
@@ -12,6 +15,8 @@ pub trait EntropyReader: Send + Sync {
     /// need to become more generic.
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
+
+    async fn get_block_number(&self) -> Result<U256>;
 }
 
 /// An in-flight request stored in the contract.
@@ -21,6 +26,9 @@ pub trait EntropyReader: Send + Sync {
 pub struct Request {
     pub provider:        Address,
     pub sequence_number: u64,
+    // The block number where this request was created
+    pub block_number:    u128,
+    pub use_blockhash:   bool,
 }
 
 

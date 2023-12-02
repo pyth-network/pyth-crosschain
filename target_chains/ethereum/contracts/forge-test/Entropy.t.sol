@@ -205,8 +205,9 @@ contract EntropyTest is Test, EntropyTestUtils {
     }
 
     function testBasicFlow() public {
+        vm.roll(17);
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, -17);
 
         assertRevealSucceeds(
             user2,
@@ -229,13 +230,14 @@ contract EntropyTest is Test, EntropyTestUtils {
     }
 
     function testDefaultProvider() public {
+        vm.roll(20);
         uint64 sequenceNumber = request(
             user2,
             random.getDefaultProvider(),
             42,
             false
         );
-        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, -20);
 
         assertRevealReverts(
             user2,

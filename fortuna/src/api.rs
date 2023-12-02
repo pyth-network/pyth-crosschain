@@ -115,6 +115,9 @@ pub enum RestError {
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
+    /// The request exists, but the server is waiting for more confirmations (more blocks
+    /// to be mined) before revealing the random number.
+    PendingConfirmation,
     /// The server cannot currently communicate with the blockchain, so is not able to verify
     /// which random values have been requested.
     TemporarilyUnavailable,
@@ -136,6 +139,10 @@ impl IntoResponse for RestError {
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The random value cannot currently be retrieved",
+            ).into_response(),
+            RestError::PendingConfirmation => (
+                StatusCode::FORBIDDEN,
+                "The request needs additional confirmations before the random value can be retrieved. Try your request again later.",
             )
                 .into_response(),
             RestError::TemporarilyUnavailable => (

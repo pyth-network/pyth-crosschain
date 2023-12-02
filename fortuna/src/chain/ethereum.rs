@@ -17,7 +17,10 @@ use {
             abigen,
             EthLogDecode,
         },
-        core::types::Address,
+        core::{
+            k256::U256,
+            types::Address,
+        },
         middleware::{
             transformer::{
                 Transformer,
@@ -36,7 +39,10 @@ use {
             LocalWallet,
             Signer,
         },
-        types::transaction::eip2718::TypedTransaction,
+        types::{
+            transaction::eip2718::TypedTransaction,
+            U64,
+        },
     },
     sha3::{
         Digest,
@@ -198,5 +204,9 @@ impl EntropyReader for PythContract {
         } else {
             Ok(None)
         }
+    }
+
+    async fn get_block_number(&self) -> Result<u64> {
+        Ok(self.client().get_block_number().await?.as_u64())
     }
 }
