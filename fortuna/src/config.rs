@@ -1,5 +1,8 @@
 use {
-    crate::api::ChainId,
+    crate::{
+        api::ChainId,
+        chain::reader::BlockNumber,
+    },
     anyhow::{
         anyhow,
         Result,
@@ -114,6 +117,9 @@ pub struct EthereumConfig {
 
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
+
+    /// How many blocks to wait before revealing the random number.
+    pub confirmation_blocks: BlockNumber,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]

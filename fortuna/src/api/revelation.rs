@@ -65,10 +65,15 @@ pub async fn revelation(
         .await
         .map_err(|_| RestError::TemporarilyUnavailable)?;
 
-    let current_block_number = state.contract.get_block_number().await;
+    // TODO: paralellize requests
+    let current_block_number = state
+        .contract
+        .get_block_number()
+        .await
+        .map_err(|_| RestError::TemporarilyUnavailable)?;
 
     match maybe_request {
-        Some(r) if current_block_number - state.reveal_delay >= r.block_number => {
+        Some(r) if current_block_number - state.confirmation_blocks >= r.block_number => {
             let value = &state
                 .state
                 .reveal(sequence)

@@ -2,7 +2,10 @@ use {
     crate::{
         chain::{
             reader,
-            reader::EntropyReader,
+            reader::{
+                BlockNumber,
+                EntropyReader,
+            },
         },
         config::EthereumConfig,
     },
@@ -17,10 +20,7 @@ use {
             abigen,
             EthLogDecode,
         },
-        core::{
-            k256::U256,
-            types::Address,
-        },
+        core::types::Address,
         middleware::{
             transformer::{
                 Transformer,
@@ -39,10 +39,7 @@ use {
             LocalWallet,
             Signer,
         },
-        types::{
-            transaction::eip2718::TypedTransaction,
-            U64,
-        },
+        types::transaction::eip2718::TypedTransaction,
     },
     sha3::{
         Digest,
@@ -200,13 +197,15 @@ impl EntropyReader for PythContract {
             Ok(Some(reader::Request {
                 provider:        r.provider,
                 sequence_number: r.sequence_number,
+                block_number:    r.block_number.abs().try_into()?,
+                use_blockhash:   r.block_number >= 0,
             }))
         } else {
             Ok(None)
         }
     }
 
-    async fn get_block_number(&self) -> Result<u64> {
+    async fn get_block_number(&self) -> Result<BlockNumber> {
         Ok(self.client().get_block_number().await?.as_u64())
     }
 }

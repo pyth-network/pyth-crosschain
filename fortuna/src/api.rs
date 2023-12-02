@@ -1,6 +1,9 @@
 use {
     crate::{
-        chain::reader::EntropyReader,
+        chain::reader::{
+            BlockNumber,
+            EntropyReader,
+        },
         state::HashChainState,
     },
     axum::{
@@ -68,11 +71,14 @@ impl ApiState {
 #[derive(Clone)]
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state:            Arc<HashChainState>,
+    pub state:               Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
-    pub contract:         Arc<dyn EntropyReader>,
+    pub contract:            Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
-    pub provider_address: Address,
+    pub provider_address:    Address,
+    /// The server will wait for this many block confirmations of a request before revealing
+    /// the random number.
+    pub confirmation_blocks: BlockNumber,
 }
 
 pub struct Metrics {
@@ -217,20 +223,22 @@ mod test {
     }
 
     fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
-        let eth_read = Arc::new(MockEntropyReader::with_requests(&[]));
+        let eth_read = Arc::new(MockEntropyReader::with_requests(1, &[]));
 
         let eth_state = BlockchainState {
-            state:            ETH_CHAIN.clone(),
-            contract:         eth_read.clone(),
-            provider_address: PROVIDER,
+            state:               ETH_CHAIN.clone(),
+            contract:            eth_read.clone(),
+            provider_address:    PROVIDER,
+            confirmation_blocks: 0,
         };
 
-        let avax_read = Arc::new(MockEntropyReader::with_requests(&[]));
+        let avax_read = Arc::new(MockEntropyReader::with_requests(1, &[]));
 
         let avax_state = BlockchainState {
-            state:            AVAX_CHAIN.clone(),
-            contract:         avax_read.clone(),
-            provider_address: PROVIDER,
+            state:               AVAX_CHAIN.clone(),
+            contract:            avax_read.clone(),
+            provider_address:    PROVIDER,
+            confirmation_blocks: 0,
         };
 
         let api_state = ApiState::new(&[
@@ -265,7 +273,7 @@ mod test {
         .await;
 
         // Once someone requests the number, then it is accessible
-        eth_contract.insert(PROVIDER, 0);
+        eth_contract.insert(PROVIDER, 0, 1, false);
         let response =
             get_and_assert_status(&server, "/v1/chains/ethereum/revelations/0", StatusCode::OK)
                 .await;
@@ -274,12 +282,12 @@ mod test {
         });
 
         // Each chain and provider has its own set of requests
-        eth_contract.insert(PROVIDER, 100);
-        eth_contract.insert(*OTHER_PROVIDER, 101);
-        eth_contract.insert(PROVIDER, 102);
-        avax_contract.insert(PROVIDER, 102);
-        avax_contract.insert(PROVIDER, 103);
-        avax_contract.insert(*OTHER_PROVIDER, 104);
+        eth_contract.insert(PROVIDER, 100, 1, false);
+        eth_contract.insert(*OTHER_PROVIDER, 101, 1, false);
+        eth_contract.insert(PROVIDER, 102, 1, false);
+        avax_contract.insert(PROVIDER, 102, 1, false);
+        avax_contract.insert(PROVIDER, 103, 1, false);
+        avax_contract.insert(*OTHER_PROVIDER, 104, 1, false);
 
         let response = get_and_assert_status(
             &server,
@@ -372,7 +380,7 @@ mod test {
             StatusCode::FORBIDDEN,
         )
         .await;
-        avax_contract.insert(PROVIDER, 99);
+        avax_contract.insert(PROVIDER, 99, 1, false);
         get_and_assert_status(
             &server,
             "/v1/chains/avalanche/revelations/99",
