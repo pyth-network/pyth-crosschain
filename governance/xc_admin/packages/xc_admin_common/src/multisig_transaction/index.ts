@@ -4,6 +4,7 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import {
   PublicKey,
+  StakeProgram,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -16,6 +17,7 @@ import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
 import { AnchorAccounts } from "./anchor";
+import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -24,6 +26,7 @@ export enum MultisigInstructionProgram {
   MessageBuffer,
   SystemProgram,
   BpfUpgradableLoader,
+  SolanaStakingProgram,
   UnrecognizedProgram,
 }
 
@@ -39,6 +42,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "System Program";
     case MultisigInstructionProgram.BpfUpgradableLoader:
       return "BPF Upgradable Loader";
+    case MultisigInstructionProgram.SolanaStakingProgram:
+      return "Solana Staking Program";
     case MultisigInstructionProgram.UnrecognizedProgram:
       return "Unknown";
   }
@@ -117,6 +122,10 @@ export class MultisigParser {
       return BpfUpgradableLoaderInstruction.fromTransactionInstruction(
         instruction
       );
+    } else if (instruction.programId.equals(StakeProgram.programId)) {
+      return SolanaStakingMultisigInstruction.fromTransactionInstruction(
+        instruction
+      );
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
@@ -128,3 +137,4 @@ export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { MessageBufferMultisigInstruction } from "./MessageBufferMultisigInstruction";
 export { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
+export { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
