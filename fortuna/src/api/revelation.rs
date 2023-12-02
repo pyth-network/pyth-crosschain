@@ -15,6 +15,7 @@ use {
     },
     pythnet_sdk::wire::array,
     serde_with::serde_as,
+    tokio::try_join,
     utoipa::{
         IntoParams,
         ToSchema,
@@ -59,18 +60,13 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or_else(|| RestError::InvalidChainId)?;
 
-    let maybe_request = state
-        .contract
-        .get_request(state.provider_address, sequence)
-        .await
-        .map_err(|_| RestError::TemporarilyUnavailable)?;
+    let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
 
-    // TODO: paralellize requests
-    let current_block_number = state
-        .contract
-        .get_block_number()
-        .await
-        .map_err(|_| RestError::TemporarilyUnavailable)?;
+    let current_block_number_fut = state.contract.get_block_number();
+
+    let (maybe_request, current_block_number) =
+        try_join!(maybe_request_fut, current_block_number_fut)
+            .map_err(|_| RestError::TemporarilyUnavailable)?;
 
     match maybe_request {
         Some(r) if current_block_number - state.confirmation_blocks >= r.block_number => {
