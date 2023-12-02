@@ -7,7 +7,6 @@ use {
         },
     },
     clap::Args,
-    ethers::types::U256,
 };
 
 #[derive(Args, Clone, Debug)]
@@ -35,7 +34,7 @@ pub struct RegisterProviderOptions {
     /// The fee to charge (in wei) for each requested random number
     #[arg(long = "pyth-contract-fee")]
     #[arg(default_value = "100")]
-    pub fee: U256,
+    pub fee: u128,
 
     /// The URI where clients can retrieve random values from this provider,
     /// i.e., wherever fortuna for this provider will be hosted.
