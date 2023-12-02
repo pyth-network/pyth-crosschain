@@ -38,14 +38,15 @@ import "./EntropyState.sol";
 //    of the provider's random numbers the user will receive.
 // 3. The user submits an off-chain request (e.g. via HTTP) to the provider to reveal the i'th random number.
 // 4. The provider checks the on-chain sequence number and ensures it is > i. If it is not, the provider
-//    refuses to reveal the ith random number.
+//    refuses to reveal the ith random number. The provider should wait for a sufficient number of block confirmations
+//    to ensure that the request does not get re-orged out of the blockchain.
 // 5. The provider reveals x_i to the user.
 // 6. The user submits both the provider's revealed number x_i and their own x_U to the contract.
 // 7. The contract verifies hash(x_i) == x_{i-1} to prove that x_i is the i'th random number. The contract also checks that hash(x_U) == h_U.
 //    The contract stores x_i as the i'th random number to reuse for future verifications.
 // 8. If both of the above conditions are satisfied, the random number r = hash(x_i, x_U).
-//    (Optional) as an added security mechanism, this step can further incorporate the blockhash of the request transaction,
-//    r = hash(x_i, x_U, blockhash).
+//    (Optional) as an added security mechanism, this step can further incorporate the blockhash of the block that the
+//    request transaction landed in: r = hash(x_i, x_U, blockhash).
 //
 // This protocol has the same security properties as the 2-party randomness protocol above: as long as either
 // the provider or user is honest, the number r is random. Honesty here means that the participant keeps their
@@ -63,12 +64,12 @@ import "./EntropyState.sol";
 // random number. Verification therefore may require computing multiple hashes (~ the number of concurrent requests).
 // Second, the implementation allows providers to rotate their commitment at any time. This operation allows
 // providers to commit to additional random numbers once they reach the end of their initial sequence, or rotate out
-// a compromised sequence. On rotation, any in-flight requests are continue to use the pre-rotation commitment.
-// Each commitment has a metadata field that providers can use to determine which commitment a request is for.
-// Providers *must* retrieve the metadata for a request from the blockchain itself to prevent user manipulation of this field.
+// a compromised sequence. On rotation, any in-flight requests continue to use the pre-rotation commitment.
+// Providers can use the sequence number of the request along with the event log of their registrations to determine
+// which hash chain contains the requested random number.
 //
 // Warning to integrators:
-// An important caveat for users of this protocol is that the user can compute the random number r before
+// An important caveat of this protocol is that the user can compute the random number r before
 // revealing their own number to the contract. This property means that the user can choose to halt the
 // protocol prior to the random number being revealed (i.e., prior to step (6) above). Integrators should ensure that
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
