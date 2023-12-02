@@ -223,22 +223,22 @@ mod test {
     }
 
     fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
-        let eth_read = Arc::new(MockEntropyReader::with_requests(1, &[]));
+        let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
             state:               ETH_CHAIN.clone(),
             contract:            eth_read.clone(),
             provider_address:    PROVIDER,
-            confirmation_blocks: 0,
+            confirmation_blocks: 1,
         };
 
-        let avax_read = Arc::new(MockEntropyReader::with_requests(1, &[]));
+        let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let avax_state = BlockchainState {
             state:               AVAX_CHAIN.clone(),
             contract:            avax_read.clone(),
             provider_address:    PROVIDER,
-            confirmation_blocks: 0,
+            confirmation_blocks: 2,
         };
 
         let api_state = ApiState::new(&[
@@ -385,6 +385,80 @@ mod test {
             &server,
             "/v1/chains/avalanche/revelations/99",
             StatusCode::INTERNAL_SERVER_ERROR,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_revelation_confirmation_delay() {
+        let (server, eth_contract, avax_contract) = test_server();
+
+        eth_contract.insert(PROVIDER, 0, 10, false);
+        eth_contract.insert(PROVIDER, 1, 11, false);
+        eth_contract.insert(PROVIDER, 2, 12, false);
+
+        avax_contract.insert(PROVIDER, 100, 10, false);
+        avax_contract.insert(PROVIDER, 101, 11, false);
+
+        eth_contract.set_block_number(10);
+        avax_contract.set_block_number(10);
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/0",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        eth_contract.set_block_number(11);
+        avax_contract.set_block_number(11);
+
+        get_and_assert_status(&server, "/v1/chains/ethereum/revelations/0", StatusCode::OK).await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/1",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        eth_contract.set_block_number(12);
+        avax_contract.set_block_number(12);
+
+        get_and_assert_status(&server, "/v1/chains/ethereum/revelations/1", StatusCode::OK).await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/2",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::OK,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/101",
+            StatusCode::FORBIDDEN,
         )
         .await;
     }

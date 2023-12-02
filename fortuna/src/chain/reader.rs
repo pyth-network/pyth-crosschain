@@ -49,7 +49,7 @@ pub mod mock {
     /// This class is internally locked to allow tests to modify the in-flight requests while
     /// the API is also holding a pointer to the same data structure.
     pub struct MockEntropyReader {
-        block_number: BlockNumber,
+        block_number: RwLock<BlockNumber>,
         /// The set of requests that are currently in-flight.
         requests:     RwLock<Vec<Request>>,
     }
@@ -60,8 +60,8 @@ pub mod mock {
             requests: &[(Address, u64, BlockNumber, bool)],
         ) -> MockEntropyReader {
             MockEntropyReader {
-                block_number,
-                requests: RwLock::new(
+                block_number: RwLock::new(block_number),
+                requests:     RwLock::new(
                     requests
                         .iter()
                         .map(|&(a, s, b, u)| Request {
@@ -91,6 +91,11 @@ pub mod mock {
             });
             self
         }
+
+        pub fn set_block_number(&self, block_number: BlockNumber) -> &Self {
+            *(self.block_number.write().unwrap()) = block_number;
+            self
+        }
     }
 
     #[async_trait]
@@ -109,8 +114,8 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self) -> Result<u64> {
-            Ok(self.block_number.try_into()?)
+        async fn get_block_number(&self) -> Result<BlockNumber> {
+            Ok(*self.block_number.read().unwrap())
         }
     }
 }
