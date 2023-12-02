@@ -1,19 +1,29 @@
 [
   {
-    "type": "constructor",
-    "inputs": [
+    "type": "function",
+    "name": "NUM_REQUESTS",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "pythFeeInWei",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "defaultProvider",
-        "type": "address",
-        "internalType": "address"
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "NUM_REQUESTS_MASK",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -70,8 +80,8 @@
     "outputs": [
       {
         "name": "accruedPythFeesInWei",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint128",
+        "internalType": "uint128"
       }
     ],
     "stateMutability": "view"
@@ -102,8 +112,8 @@
     "outputs": [
       {
         "name": "feeAmount",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint128",
+        "internalType": "uint128"
       }
     ],
     "stateMutability": "view"
@@ -126,13 +136,13 @@
         "components": [
           {
             "name": "feeInWei",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint128",
+            "internalType": "uint128"
           },
           {
             "name": "accruedFeesInWei",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint128",
+            "internalType": "uint128"
           },
           {
             "name": "originalCommitment",
@@ -181,6 +191,19 @@
   },
   {
     "type": "function",
+    "name": "getPythFee",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "feeAmount",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getRequest",
     "inputs": [
       {
@@ -211,24 +234,24 @@
             "internalType": "uint64"
           },
           {
-            "name": "userCommitment",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "numHashes",
+            "type": "uint32",
+            "internalType": "uint32"
           },
           {
-            "name": "providerCommitment",
+            "name": "commitment",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64",
-            "internalType": "uint64"
           },
           {
             "name": "blockNumber",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "requester",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       }
@@ -241,8 +264,8 @@
     "inputs": [
       {
         "name": "feeInWei",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint128",
+        "internalType": "uint128"
       },
       {
         "name": "commitment",
@@ -337,8 +360,8 @@
     "inputs": [
       {
         "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint128",
+        "internalType": "uint128"
       }
     ],
     "outputs": [],
@@ -356,13 +379,13 @@
         "components": [
           {
             "name": "feeInWei",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint128",
+            "internalType": "uint128"
           },
           {
             "name": "accruedFeesInWei",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint128",
+            "internalType": "uint128"
           },
           {
             "name": "originalCommitment",
@@ -430,24 +453,24 @@
             "internalType": "uint64"
           },
           {
-            "name": "userCommitment",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "numHashes",
+            "type": "uint32",
+            "internalType": "uint32"
           },
           {
-            "name": "providerCommitment",
+            "name": "commitment",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64",
-            "internalType": "uint64"
           },
           {
             "name": "blockNumber",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "requester",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       }
@@ -475,24 +498,24 @@
             "internalType": "uint64"
           },
           {
-            "name": "userCommitment",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "numHashes",
+            "type": "uint32",
+            "internalType": "uint32"
           },
           {
-            "name": "providerCommitment",
+            "name": "commitment",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "providerCommitmentSequenceNumber",
-            "type": "uint64",
-            "internalType": "uint64"
           },
           {
             "name": "blockNumber",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "requester",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       },
@@ -530,12 +553,7 @@
   },
   {
     "type": "error",
-    "name": "IncorrectProviderRevelation",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "IncorrectUserRevelation",
+    "name": "IncorrectRevelation",
     "inputs": []
   },
   {
@@ -550,7 +568,17 @@
   },
   {
     "type": "error",
+    "name": "NoSuchRequest",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "OutOfRandomness",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
     "inputs": []
   }
 ]
