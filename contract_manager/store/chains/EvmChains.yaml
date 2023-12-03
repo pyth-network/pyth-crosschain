@@ -358,3 +358,13 @@
   rpcUrl: https://rpc.testnet.tomochain.com
   networkId: 89
   type: EvmChain
+- id: mode_testnet
+  mainnet: false
+  rpcUrl: https://sepolia.mode.network/
+  networkId: 919
+  type: EvmChain
+- id: mode
+  mainnet: true
+  rpcUrl: https://mainnet.mode.network/
+  networkId: 34443
+  type: EvmChain

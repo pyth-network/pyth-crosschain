@@ -25,7 +25,6 @@ pub struct RegisterProviderOptions {
     /// This key is required to submit transactions (such as registering with the contract).
     #[arg(long = "private-key")]
     #[arg(env = "PRIVATE_KEY")]
-    #[arg(default_value = None)]
     pub private_key: String,
 
     #[command(flatten)]
