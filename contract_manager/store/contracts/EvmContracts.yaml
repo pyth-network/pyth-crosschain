@@ -214,3 +214,9 @@
 - chain: optimism_sepolia
   address: "0x0708325268dF9F66270F1401206434524814508b"
   type: EvmContract
+- chain: mode
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmContract
+- chain: mode_testnet
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmContract
