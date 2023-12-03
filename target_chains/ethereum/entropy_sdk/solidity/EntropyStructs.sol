@@ -45,13 +45,15 @@ contract EntropyStructs {
         // eliminating 1 store.
         bytes32 commitment;
         // Storage slot 3 //
-        // The number of the block where this request was created, using the sign as a boolean.
-        // If positive, the randomness requester wants the blockhash of this block to be incorporated into the random number.
-        // If negative, the randomness requester does not want ^.
-        // Note that we're using a uint96 such that we have an additional 20 bytes of storage afterward for an address.
-        // Although block.number returns a uint256, 95 bits should be plenty to index all of the blocks ever generated.
-        int96 blockNumber;
+        // The number of the block where this request was created.
+        // Note that we're using a uint64 such that we have an additional space for an address and other fields in
+        // this storage slot. Although block.number returns a uint256, 64 bits should be plenty to index all of the
+        // blocks ever generated.
+        uint64 blockNumber;
         // The address that requested this random number.
         address requester;
+        // If true, incorporate the blockhash of blockNumber into the generated random value.
+        bool useBlockhash;
+        // There are 3 remaining bytes of free space in this slot.
     }
 }
