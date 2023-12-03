@@ -197,8 +197,8 @@ impl EntropyReader for PythContract {
             Ok(Some(reader::Request {
                 provider:        r.provider,
                 sequence_number: r.sequence_number,
-                block_number:    r.block_number.abs().try_into()?,
-                use_blockhash:   r.block_number >= 0,
+                block_number:    r.block_number.try_into()?,
+                use_blockhash:   r.use_blockhash,
             }))
         } else {
             Ok(None)

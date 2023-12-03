@@ -245,13 +245,18 @@
           },
           {
             "name": "blockNumber",
-            "type": "int96",
-            "internalType": "int96"
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "requester",
             "type": "address",
             "internalType": "address"
+          },
+          {
+            "name": "useBlockhash",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -464,13 +469,18 @@
           },
           {
             "name": "blockNumber",
-            "type": "int96",
-            "internalType": "int96"
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "requester",
             "type": "address",
             "internalType": "address"
+          },
+          {
+            "name": "useBlockhash",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -509,13 +519,18 @@
           },
           {
             "name": "blockNumber",
-            "type": "int96",
-            "internalType": "int96"
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "requester",
             "type": "address",
             "internalType": "address"
+          },
+          {
+            "name": "useBlockhash",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       },
