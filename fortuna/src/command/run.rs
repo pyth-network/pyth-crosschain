@@ -88,7 +88,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             state: Arc::new(chain_state),
             contract,
             provider_address: opts.provider,
-            confirmation_blocks: chain_config.confirmation_blocks,
+            reveal_delay_blocks: chain_config.reveal_delay_blocks,
         };
 
         chains.insert(chain_id.clone(), state);

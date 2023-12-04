@@ -65,12 +65,14 @@ pub async fn revelation(
     let current_block_number_fut = state.contract.get_block_number();
 
     let (maybe_request, current_block_number) =
-        try_join!(maybe_request_fut, current_block_number_fut)
-            .map_err(|_| RestError::TemporarilyUnavailable)?;
+        try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+            tracing::error!("RPC request failed {}", e);
+            RestError::TemporarilyUnavailable
+        })?;
 
     match maybe_request {
         Some(r)
-            if current_block_number.saturating_sub(state.confirmation_blocks) >= r.block_number =>
+            if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
         {
             let value = &state
                 .state

@@ -119,7 +119,7 @@ pub struct EthereumConfig {
     pub contract_addr: Address,
 
     /// How many blocks to wait before revealing the random number.
-    pub confirmation_blocks: BlockNumber,
+    pub reveal_delay_blocks: BlockNumber,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]

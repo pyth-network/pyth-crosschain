@@ -78,7 +78,7 @@ pub struct BlockchainState {
     pub provider_address:    Address,
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
-    pub confirmation_blocks: BlockNumber,
+    pub reveal_delay_blocks: BlockNumber,
 }
 
 pub struct Metrics {
@@ -229,7 +229,7 @@ mod test {
             state:               ETH_CHAIN.clone(),
             contract:            eth_read.clone(),
             provider_address:    PROVIDER,
-            confirmation_blocks: 1,
+            reveal_delay_blocks: 1,
         };
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
@@ -238,7 +238,7 @@ mod test {
             state:               AVAX_CHAIN.clone(),
             contract:            avax_read.clone(),
             provider_address:    PROVIDER,
-            confirmation_blocks: 2,
+            reveal_delay_blocks: 2,
         };
 
         let api_state = ApiState::new(&[
