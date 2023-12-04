@@ -209,11 +209,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
         req.requester = msg.sender;
 
-        if (useBlockHash) {
-            req.blockNumber = SafeCast.toUint96(block.number);
-        } else {
-            req.blockNumber = 0;
-        }
+        req.blockNumber = SafeCast.toUint64(block.number);
+        req.useBlockhash = useBlockHash;
 
         emit Requested(req);
     }
@@ -255,7 +252,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         ) revert EntropyErrors.IncorrectRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
-        if (req.blockNumber != 0) {
+        if (req.useBlockhash) {
             blockHash = blockhash(req.blockNumber);
         }
 

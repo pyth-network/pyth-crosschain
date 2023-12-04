@@ -15,6 +15,7 @@ use {
     },
     pythnet_sdk::wire::array,
     serde_with::serde_as,
+    tokio::try_join,
     utoipa::{
         IntoParams,
         ToSchema,
@@ -59,14 +60,20 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or_else(|| RestError::InvalidChainId)?;
 
-    let maybe_request = state
-        .contract
-        .get_request(state.provider_address, sequence)
-        .await
-        .map_err(|_| RestError::TemporarilyUnavailable)?;
+    let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
+
+    let current_block_number_fut = state.contract.get_block_number();
+
+    let (maybe_request, current_block_number) =
+        try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+            tracing::error!("RPC request failed {}", e);
+            RestError::TemporarilyUnavailable
+        })?;
 
     match maybe_request {
-        Some(_) => {
+        Some(r)
+            if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
+        {
             let value = &state
                 .state
                 .reveal(sequence)
@@ -77,6 +84,7 @@ pub async fn revelation(
                 value: encoded_value,
             }))
         }
+        Some(_) => Err(RestError::PendingConfirmation),
         None => Err(RestError::NoPendingRequest),
     }
 }

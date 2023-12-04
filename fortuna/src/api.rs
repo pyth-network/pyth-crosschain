@@ -1,6 +1,9 @@
 use {
     crate::{
-        chain::reader::EntropyReader,
+        chain::reader::{
+            BlockNumber,
+            EntropyReader,
+        },
         state::HashChainState,
     },
     axum::{
@@ -68,11 +71,14 @@ impl ApiState {
 #[derive(Clone)]
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state:            Arc<HashChainState>,
+    pub state:               Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
-    pub contract:         Arc<dyn EntropyReader>,
+    pub contract:            Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
-    pub provider_address: Address,
+    pub provider_address:    Address,
+    /// The server will wait for this many block confirmations of a request before revealing
+    /// the random number.
+    pub reveal_delay_blocks: BlockNumber,
 }
 
 pub struct Metrics {
@@ -115,6 +121,9 @@ pub enum RestError {
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
+    /// The request exists, but the server is waiting for more confirmations (more blocks
+    /// to be mined) before revealing the random number.
+    PendingConfirmation,
     /// The server cannot currently communicate with the blockchain, so is not able to verify
     /// which random values have been requested.
     TemporarilyUnavailable,
@@ -136,6 +145,10 @@ impl IntoResponse for RestError {
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The random value cannot currently be retrieved",
+            ).into_response(),
+            RestError::PendingConfirmation => (
+                StatusCode::FORBIDDEN,
+                "The request needs additional confirmations before the random value can be retrieved. Try your request again later.",
             )
                 .into_response(),
             RestError::TemporarilyUnavailable => (
@@ -210,20 +223,22 @@ mod test {
     }
 
     fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
-        let eth_read = Arc::new(MockEntropyReader::with_requests(&[]));
+        let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
-            state:            ETH_CHAIN.clone(),
-            contract:         eth_read.clone(),
-            provider_address: PROVIDER,
+            state:               ETH_CHAIN.clone(),
+            contract:            eth_read.clone(),
+            provider_address:    PROVIDER,
+            reveal_delay_blocks: 1,
         };
 
-        let avax_read = Arc::new(MockEntropyReader::with_requests(&[]));
+        let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let avax_state = BlockchainState {
-            state:            AVAX_CHAIN.clone(),
-            contract:         avax_read.clone(),
-            provider_address: PROVIDER,
+            state:               AVAX_CHAIN.clone(),
+            contract:            avax_read.clone(),
+            provider_address:    PROVIDER,
+            reveal_delay_blocks: 2,
         };
 
         let api_state = ApiState::new(&[
@@ -258,7 +273,7 @@ mod test {
         .await;
 
         // Once someone requests the number, then it is accessible
-        eth_contract.insert(PROVIDER, 0);
+        eth_contract.insert(PROVIDER, 0, 1, false);
         let response =
             get_and_assert_status(&server, "/v1/chains/ethereum/revelations/0", StatusCode::OK)
                 .await;
@@ -267,12 +282,12 @@ mod test {
         });
 
         // Each chain and provider has its own set of requests
-        eth_contract.insert(PROVIDER, 100);
-        eth_contract.insert(*OTHER_PROVIDER, 101);
-        eth_contract.insert(PROVIDER, 102);
-        avax_contract.insert(PROVIDER, 102);
-        avax_contract.insert(PROVIDER, 103);
-        avax_contract.insert(*OTHER_PROVIDER, 104);
+        eth_contract.insert(PROVIDER, 100, 1, false);
+        eth_contract.insert(*OTHER_PROVIDER, 101, 1, false);
+        eth_contract.insert(PROVIDER, 102, 1, false);
+        avax_contract.insert(PROVIDER, 102, 1, false);
+        avax_contract.insert(PROVIDER, 103, 1, false);
+        avax_contract.insert(*OTHER_PROVIDER, 104, 1, false);
 
         let response = get_and_assert_status(
             &server,
@@ -365,11 +380,85 @@ mod test {
             StatusCode::FORBIDDEN,
         )
         .await;
-        avax_contract.insert(PROVIDER, 99);
+        avax_contract.insert(PROVIDER, 99, 1, false);
         get_and_assert_status(
             &server,
             "/v1/chains/avalanche/revelations/99",
             StatusCode::INTERNAL_SERVER_ERROR,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_revelation_confirmation_delay() {
+        let (server, eth_contract, avax_contract) = test_server();
+
+        eth_contract.insert(PROVIDER, 0, 10, false);
+        eth_contract.insert(PROVIDER, 1, 11, false);
+        eth_contract.insert(PROVIDER, 2, 12, false);
+
+        avax_contract.insert(PROVIDER, 100, 10, false);
+        avax_contract.insert(PROVIDER, 101, 11, false);
+
+        eth_contract.set_block_number(10);
+        avax_contract.set_block_number(10);
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/0",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        eth_contract.set_block_number(11);
+        avax_contract.set_block_number(11);
+
+        get_and_assert_status(&server, "/v1/chains/ethereum/revelations/0", StatusCode::OK).await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/1",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        eth_contract.set_block_number(12);
+        avax_contract.set_block_number(12);
+
+        get_and_assert_status(&server, "/v1/chains/ethereum/revelations/1", StatusCode::OK).await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/ethereum/revelations/2",
+            StatusCode::FORBIDDEN,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/100",
+            StatusCode::OK,
+        )
+        .await;
+
+        get_and_assert_status(
+            &server,
+            "/v1/chains/avalanche/revelations/101",
+            StatusCode::FORBIDDEN,
         )
         .await;
     }

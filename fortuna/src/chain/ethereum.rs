@@ -2,7 +2,10 @@ use {
     crate::{
         chain::{
             reader,
-            reader::EntropyReader,
+            reader::{
+                BlockNumber,
+                EntropyReader,
+            },
         },
         config::EthereumConfig,
     },
@@ -194,9 +197,15 @@ impl EntropyReader for PythContract {
             Ok(Some(reader::Request {
                 provider:        r.provider,
                 sequence_number: r.sequence_number,
+                block_number:    r.block_number.try_into()?,
+                use_blockhash:   r.use_blockhash,
             }))
         } else {
             Ok(None)
         }
+    }
+
+    async fn get_block_number(&self) -> Result<BlockNumber> {
+        Ok(self.client().get_block_number().await?.as_u64())
     }
 }
