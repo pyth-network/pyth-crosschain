@@ -500,10 +500,10 @@ async fn test_stale_threshold() {
     // timestamp and price should be unchanged.
     assert_eq!(
         Price {
-            price:     100,
-            conf:      1,
+            price:     100.into(),
+            conf:      1.into(),
             expo:      8,
-            timestamp: now,
+            timestamp: now.into(),
         },
         serde_json::from_slice::<Price>(
             &contract
@@ -560,10 +560,10 @@ async fn test_stale_threshold() {
     // [ref:failed_price_check]
     assert_eq!(
         Some(Price {
-            price:     100,
-            conf:      1,
+            price:     100.into(),
+            conf:      1.into(),
             expo:      8,
-            timestamp: now,
+            timestamp: now.into(),
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract
@@ -1128,10 +1128,10 @@ async fn test_accumulator_updates() {
 
     assert_eq!(
         Some(Price {
-            price:     100,
-            conf:      100,
+            price:     100.into(),
+            conf:      100.into(),
             expo:      100,
-            timestamp: 100,
+            timestamp: 100.into(),
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract

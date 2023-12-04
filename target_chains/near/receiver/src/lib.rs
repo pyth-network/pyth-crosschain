@@ -469,7 +469,7 @@ impl Pyth {
             // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
             // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
             // - Any other price around the current time is considered valid.
-            if u64::abs_diff(block_timestamp, price_timestamp) > age {
+            if u64::abs_diff(block_timestamp, price_timestamp.into()) > age {
                 return None;
             }
 
@@ -500,7 +500,7 @@ impl Pyth {
             // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
             // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
             // - Any other price around the current time is considered valid.
-            if u64::abs_diff(block_timestamp, price_timestamp) > age {
+            if u64::abs_diff(block_timestamp, price_timestamp.into()) > age {
                 return None;
             }
 
