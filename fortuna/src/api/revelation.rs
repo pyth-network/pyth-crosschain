@@ -69,7 +69,9 @@ pub async fn revelation(
             .map_err(|_| RestError::TemporarilyUnavailable)?;
 
     match maybe_request {
-        Some(r) if current_block_number - state.confirmation_blocks >= r.block_number => {
+        Some(r)
+            if current_block_number.saturating_sub(state.confirmation_blocks) >= r.block_number =>
+        {
             let value = &state
                 .state
                 .reveal(sequence)
