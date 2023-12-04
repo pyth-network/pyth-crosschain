@@ -50,6 +50,10 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "BPF Upgradable Loader";
     case MultisigInstructionProgram.SolanaStakingProgram:
       return "Solana Staking Program";
+    case MultisigInstructionProgram.Mesh:
+      return "Mesh Multisig Program";
+    case MultisigInstructionProgram.Staking:
+      return "Pyth Staking Program";
     case MultisigInstructionProgram.UnrecognizedProgram:
       return "Unknown";
   }
