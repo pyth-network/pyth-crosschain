@@ -5,7 +5,7 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import {
-  MessageBufferMultisigInstruction,
+  AnchorMultisigInstruction,
   MESSAGE_BUFFER_PROGRAM_ID,
   MultisigInstructionProgram,
   MultisigParser,
@@ -50,7 +50,7 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
     .then((instruction) => {
       const parsedInstruction = parser.parseInstruction(instruction);
 
-      if (parsedInstruction instanceof MessageBufferMultisigInstruction) {
+      if (parsedInstruction instanceof AnchorMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
           MultisigInstructionProgram.MessageBuffer
         );
@@ -164,7 +164,7 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
     .then((instruction) => {
       const parsedInstruction = parser.parseInstruction(instruction);
 
-      if (parsedInstruction instanceof MessageBufferMultisigInstruction) {
+      if (parsedInstruction instanceof AnchorMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
           MultisigInstructionProgram.MessageBuffer
         );

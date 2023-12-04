@@ -11,7 +11,7 @@ import {
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
-  MessageBufferMultisigInstruction,
+  AnchorMultisigInstruction,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
   getProgramName,
@@ -317,8 +317,7 @@ const Proposal = ({
               })
             return (
               parsedRemoteInstruction instanceof PythMultisigInstruction ||
-              parsedRemoteInstruction instanceof
-                MessageBufferMultisigInstruction
+              parsedRemoteInstruction instanceof AnchorMultisigInstruction
             )
           }) &&
           ix.governanceAction.targetChainId === 'pythnet')
