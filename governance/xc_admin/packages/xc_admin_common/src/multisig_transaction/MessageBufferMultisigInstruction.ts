@@ -5,7 +5,7 @@ import {
   UnrecognizedProgram,
 } from ".";
 import { AnchorAccounts, resolveAccountNames } from "./anchor";
-import messageBuffer from "message_buffer/idl/message_buffer.json";
+import messageBufferIdl from "message_buffer/idl/message_buffer.json";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Idl, BorshCoder } from "@coral-xyz/anchor";
 import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
@@ -44,7 +44,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
     let program: MultisigInstructionProgram;
     switch (instruction.programId.toBase58()) {
       case MESSAGE_BUFFER_PROGRAM_ID.toBase58():
-        idl = messageBuffer as Idl;
+        idl = messageBufferIdl as Idl;
         program = MultisigInstructionProgram.MessageBuffer;
         break;
       case MESH_PROGRAM_ID.toBase58():
@@ -58,7 +58,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
       default:
         return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
-    const instructionCoder = new BorshCoder(idl as Idl).instruction;
+    const instructionCoder = new BorshCoder(idl).instruction;
 
     const deserializedData = instructionCoder.decode(instruction.data);
 
@@ -67,7 +67,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         program,
         deserializedData.name,
         deserializedData.data,
-        resolveAccountNames(idl as Idl, deserializedData.name, instruction)
+        resolveAccountNames(idl, deserializedData.name, instruction)
       );
     } else {
       return new AnchorMultisigInstruction(
