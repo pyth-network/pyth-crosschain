@@ -22,6 +22,7 @@ use {
         collections::{
             BTreeMap,
             HashMap,
+            HashSet,
         },
         ops::Bound,
         sync::Arc,
@@ -169,6 +170,7 @@ impl Cache {
 pub trait AggregateCache {
     async fn message_state_keys(&self) -> Vec<MessageStateKey>;
     async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
+    async fn prune_removed_keys(&self, current_keys: HashSet<MessageStateKey>);
     async fn fetch_message_states(
         &self,
         ids: Vec<FeedId>,
@@ -206,7 +208,6 @@ impl AggregateCache for crate::state::State {
             let key = message_state.key();
             let time = message_state.time();
             let cache = message_cache.entry(key).or_insert_with(BTreeMap::new);
-
             cache.insert(time, message_state);
 
             // Remove the earliest message states if the cache size is exceeded
@@ -214,7 +215,32 @@ impl AggregateCache for crate::state::State {
                 cache.pop_first();
             }
         }
+
         Ok(())
+    }
+
+    /// This method takes the current feed ids and prunes the cache for the keys
+    /// that are not present in the current feed ids.
+    ///
+    /// There is a side-effect of this: if a key gets removed, we will
+    /// lose the cache for that key and cannot retrieve it for historical
+    /// price queries.
+    async fn prune_removed_keys(&self, current_keys: HashSet<MessageStateKey>) {
+        let mut message_cache = self.cache.message_cache.write().await;
+
+        // Sometimes, some keys are removed from the accumulator. We track which keys are not
+        // present in the message states and remove them from the cache.
+        let keys_in_cache = message_cache
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect::<HashSet<_>>();
+
+        for key in keys_in_cache {
+            if !current_keys.contains(&key) {
+                tracing::info!("Feed {:?} seems to be removed. Removing it from cache", key);
+                message_cache.remove(&key);
+            }
+        }
     }
 
     async fn fetch_message_states(

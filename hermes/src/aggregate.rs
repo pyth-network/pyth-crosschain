@@ -251,7 +251,15 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
 
     // Once the accumulator reaches a complete state for a specific slot
     // we can build the message states
-    build_message_states(state, accumulator_messages, wormhole_merkle_state).await?;
+    let message_states = build_message_states(accumulator_messages, wormhole_merkle_state)?;
+
+    let message_state_keys = message_states
+        .iter()
+        .map(|message_state| message_state.key())
+        .collect::<HashSet<_>>();
+
+    tracing::info!(len = message_states.len(), "Storing Message States.");
+    state.store_message_states(message_states).await?;
 
     // Update the aggregate state
     let mut aggregate_state = state.aggregate_state.write().await;
@@ -266,6 +274,7 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
                 .await?;
         }
         Some(latest) if slot > latest => {
+            state.prune_removed_keys(message_state_keys).await;
             aggregate_state.latest_completed_slot.replace(slot);
             state
                 .api_update_tx
@@ -296,18 +305,17 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(skip(state, accumulator_messages, wormhole_merkle_state))]
-async fn build_message_states(
-    state: &State,
+#[tracing::instrument(skip(accumulator_messages, wormhole_merkle_state))]
+fn build_message_states(
     accumulator_messages: AccumulatorMessages,
     wormhole_merkle_state: WormholeMerkleState,
-) -> Result<()> {
+) -> Result<Vec<MessageState>> {
     let wormhole_merkle_message_states_proofs =
         construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_state)?;
 
     let current_time: UnixTimestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
 
-    let message_states = accumulator_messages
+    accumulator_messages
         .raw_messages
         .into_iter()
         .enumerate()
@@ -326,13 +334,7 @@ async fn build_message_states(
                 current_time,
             ))
         })
-        .collect::<Result<Vec<_>>>()?;
-
-    tracing::info!(len = message_states.len(), "Storing Message States.");
-
-    state.store_message_states(message_states).await?;
-
-    Ok(())
+        .collect::<Result<Vec<_>>>()
 }
 
 async fn get_verified_price_feeds<S>(
@@ -675,6 +677,87 @@ mod test {
                 assert!(merkle_root.check(update.proof.clone(), message.as_ref()));
             }
         }
+    }
+
+    /// On this test we will initially have two price feeds. Then we will send an update with only
+    /// price feed 1 (without price feed 2) and make sure that price feed 2 is not stored anymore.
+    #[tokio::test]
+    pub async fn test_getting_price_ids_works_fine_after_price_removal() {
+        let (state, mut update_rx) = setup_state(10).await;
+
+        let price_feed_1 = create_dummy_price_feed_message(100, 10, 9);
+        let price_feed_2 = create_dummy_price_feed_message(200, 10, 9);
+
+        // Populate the state
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(
+                vec![
+                    Message::PriceFeedMessage(price_feed_1),
+                    Message::PriceFeedMessage(price_feed_2),
+                ],
+                10,
+                20,
+            ),
+        )
+        .await;
+
+        // Check that the update_rx channel has received a message
+        assert_eq!(
+            update_rx.recv().await,
+            Some(AggregationEvent::New { slot: 10 })
+        );
+
+        // Check the price ids are stored correctly
+        assert_eq!(
+            get_price_feed_ids(&*state).await,
+            vec![
+                PriceIdentifier::new([100; 32]),
+                PriceIdentifier::new([200; 32])
+            ]
+            .into_iter()
+            .collect()
+        );
+
+        // Check that price feed 2 exists
+        assert!(get_price_feeds_with_update_data(
+            &*state,
+            &[PriceIdentifier::new([200; 32])],
+            RequestTime::Latest,
+        )
+        .await
+        .is_ok());
+
+        // Now send an update with only price feed 1 (without price feed 2)
+        // and make sure that price feed 2 is not stored anymore.
+        let price_feed_1 = create_dummy_price_feed_message(100, 12, 10);
+
+        // Populate the state
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(vec![Message::PriceFeedMessage(price_feed_1)], 15, 30),
+        )
+        .await;
+
+        // Check that the update_rx channel has received a message
+        assert_eq!(
+            update_rx.recv().await,
+            Some(AggregationEvent::New { slot: 15 })
+        );
+
+        // Check that price feed 2 does not exist anymore
+        assert_eq!(
+            get_price_feed_ids(&*state).await,
+            vec![PriceIdentifier::new([100; 32]),].into_iter().collect()
+        );
+
+        assert!(get_price_feeds_with_update_data(
+            &*state,
+            &[PriceIdentifier::new([200; 32])],
+            RequestTime::Latest,
+        )
+        .await
+        .is_err());
     }
 
     #[tokio::test]

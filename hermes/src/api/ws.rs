@@ -350,22 +350,43 @@ impl Subscriber {
             .keys()
             .cloned()
             .collect::<Vec<_>>();
-        for update in crate::aggregate::get_price_feeds_with_update_data(
+
+        let updates = match crate::aggregate::get_price_feeds_with_update_data(
             &*self.store,
             &price_feed_ids,
             RequestTime::AtSlot(event.slot()),
         )
         .await
-        .map_err(|e| {
-            tracing::warn!(
-                "Failed to get price feeds {:?} with update data: {:?}",
-                price_feed_ids,
-                e
-            );
-            e
-        })?
-        .price_feeds
         {
+            Ok(updates) => updates,
+            Err(_) => {
+                // The error can only happen when a price feed was available
+                // and is no longer there as we check the price feed ids upon
+                // subscription. In this case we just remove the non-existing
+                // price feed from the list and will keep sending updates for
+                // the rest.
+                let available_price_feed_ids =
+                    crate::aggregate::get_price_feed_ids(&*self.store).await;
+
+                self.price_feeds_with_config
+                    .retain(|price_feed_id, _| available_price_feed_ids.contains(price_feed_id));
+
+                let price_feed_ids = self
+                    .price_feeds_with_config
+                    .keys()
+                    .cloned()
+                    .collect::<Vec<_>>();
+
+                crate::aggregate::get_price_feeds_with_update_data(
+                    &*self.store,
+                    &price_feed_ids,
+                    RequestTime::AtSlot(event.slot()),
+                )
+                .await?
+            }
+        };
+
+        for update in updates.price_feeds {
             let config = self
                 .price_feeds_with_config
                 .get(&update.price_feed.id)
