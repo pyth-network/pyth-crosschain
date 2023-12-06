@@ -7,6 +7,7 @@ import {
   SystemProgram,
   PACKET_DATA_SIZE,
   ConfirmOptions,
+  sendAndConfirmRawTransaction,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -17,7 +18,7 @@ import {
   deriveFeeCollectorKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
-import { getOpsKey, getProposalInstructions } from "./multisig";
+import { getOpsKey } from "./multisig";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import SquadsMesh, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
@@ -26,8 +27,8 @@ import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
-export const SIZE_OF_SIGNED_BATCH = 30;
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
+export const MAX_NUMBER_OF_RETRIES = 5;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -256,13 +257,7 @@ export class MultisigVault {
     ixToSend.push(await this.approveProposalIx(proposalAddress));
 
     const txToSend = batchIntoTransactions(ixToSend);
-    for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-      await this.getAnchorProvider().sendAll(
-        txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
-          return { tx, signers: [] };
-        })
-      );
-    }
+    await this.sendAllTransactions(txToSend);
     return proposalAddress;
   }
 
@@ -367,17 +362,57 @@ export class MultisigVault {
 
     const txToSend = batchIntoTransactions(ixToSend);
 
-    for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-      await this.getAnchorProvider({
-        preflightCommitment: "processed",
-        commitment: "confirmed",
-      }).sendAll(
-        txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
-          return { tx, signers: [] };
-        })
-      );
-    }
+    await this.sendAllTransactions(txToSend);
     return newProposals;
+  }
+
+  async sendAllTransactions(transactions: Transaction[]) {
+    const provider = this.getAnchorProvider({
+      preflightCommitment: "processed",
+      commitment: "processed",
+    });
+
+    let needToFetchBlockhash = true; // We don't fetch blockhash everytime to save time
+    let blockhash: string = "";
+    for (let [index, tx] of transactions.entries()) {
+      console.log("Trying to send transaction : " + index);
+      let numberOfRetries = 0;
+      let txHasLanded = false;
+
+      while (!txHasLanded) {
+        try {
+          if (needToFetchBlockhash) {
+            blockhash = (await provider.connection.getLatestBlockhash())
+              .blockhash;
+            needToFetchBlockhash = false;
+          }
+          tx.feePayer = tx.feePayer || provider.wallet.publicKey;
+          tx.recentBlockhash = blockhash;
+          provider.wallet.signTransaction(tx);
+          await sendAndConfirmRawTransaction(
+            provider.connection,
+            tx.serialize(),
+            provider.opts
+          );
+          txHasLanded = true;
+        } catch (e) {
+          if (numberOfRetries >= MAX_NUMBER_OF_RETRIES) {
+            // Cap the number of retries
+            throw Error("Maximum number of retries exceeded");
+          }
+          const message = (e as any).toString().split("\n")[0];
+          if (
+            message ==
+            "Error: failed to send transaction: Transaction simulation failed: Blockhash not found"
+          ) {
+            // If blockhash has expired, we need to fetch a new one
+            needToFetchBlockhash = true;
+          }
+          console.log(e);
+          numberOfRetries += 1;
+        }
+      }
+    }
   }
 }
 
