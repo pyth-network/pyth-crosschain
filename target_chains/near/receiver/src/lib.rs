@@ -464,12 +464,12 @@ impl Pyth {
     pub fn get_price_no_older_than(&self, price_id: PriceIdentifier, age: u64) -> Option<Price> {
         self.prices.get(&price_id).and_then(|feed| {
             let block_timestamp = env::block_timestamp() / 1_000_000_000;
-            let price_timestamp = feed.price.timestamp;
+            let price_timestamp = feed.price.publish_time;
 
             // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
             // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
             // - Any other price around the current time is considered valid.
-            if u64::abs_diff(block_timestamp, price_timestamp.into()) > age {
+            if u64::abs_diff(block_timestamp, price_timestamp.try_into().unwrap()) > age {
                 return None;
             }
 
@@ -495,12 +495,12 @@ impl Pyth {
     ) -> Option<Price> {
         self.prices.get(&price_id).and_then(|feed| {
             let block_timestamp = env::block_timestamp();
-            let price_timestamp = feed.ema_price.timestamp;
+            let price_timestamp = feed.ema_price.publish_time;
 
             // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
             // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
             // - Any other price around the current time is considered valid.
-            if u64::abs_diff(block_timestamp, price_timestamp.into()) > age {
+            if u64::abs_diff(block_timestamp, price_timestamp.try_into().unwrap()) > age {
                 return None;
             }
 
@@ -538,7 +538,7 @@ impl Pyth {
     fn update_price_feed_if_new(&mut self, price_feed: PriceFeed) -> bool {
         match self.prices.get(&price_feed.id) {
             Some(stored_price_feed) => {
-                let update = price_feed.price.timestamp > stored_price_feed.price.timestamp;
+                let update = price_feed.price.publish_time > stored_price_feed.price.publish_time;
                 update.then(|| self.prices.insert(&price_feed.id, &price_feed));
                 update
             }
