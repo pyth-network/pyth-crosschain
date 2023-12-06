@@ -372,7 +372,7 @@ export class MultisigVault {
       commitment: "processed",
     });
 
-    let needToFetchBlockhash = true;
+    let needToFetchBlockhash = true; // We don't fetch blockhash everytime to save time
     let blockhash: string = "";
     for (let [index, tx] of transactions.entries()) {
       console.log("Trying to send transaction : " + index);
@@ -397,6 +397,7 @@ export class MultisigVault {
           txHasLanded = true;
         } catch (e) {
           if (numberOfRetries >= MAX_NUMBER_OF_RETRIES) {
+            // Cap the number of retries
             throw Error("Maximum number of retries exceeded");
           }
           const message = (e as any).toString().split("\n")[0];
@@ -404,6 +405,7 @@ export class MultisigVault {
             message ==
             "Error: failed to send transaction: Transaction simulation failed: Blockhash not found"
           ) {
+            // If blockhash has expired, we need to fetch a new one
             needToFetchBlockhash = true;
           }
           console.log(e);
