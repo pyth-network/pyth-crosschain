@@ -88,13 +88,13 @@ impl near_sdk::serde::Serialize for PriceIdentifier {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Price {
-    pub price:     I64,
+    pub price:        I64,
     /// Confidence interval around the price
-    pub conf:      U64,
+    pub conf:         U64,
     /// The exponent
-    pub expo:      i32,
+    pub expo:         i32,
     /// Unix timestamp of when this price was computed
-    pub timestamp: U64,
+    pub publish_time: i64,
 }
 
 /// The PriceFeed structure is stored in the contract under a Price Feed Identifier.
@@ -117,20 +117,16 @@ impl From<&PriceAttestation> for PriceFeed {
         Self {
             id:        PriceIdentifier(price_attestation.price_id.to_bytes()),
             price:     Price {
-                price:     price_attestation.price.into(),
-                conf:      price_attestation.conf.into(),
-                expo:      price_attestation.expo,
-                timestamp: TryInto::<u64>::try_into(price_attestation.publish_time)
-                    .unwrap()
-                    .into(),
+                price:        price_attestation.price.into(),
+                conf:         price_attestation.conf.into(),
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.publish_time,
             },
             ema_price: Price {
-                price:     price_attestation.ema_price.into(),
-                conf:      price_attestation.ema_conf.into(),
-                expo:      price_attestation.expo,
-                timestamp: TryInto::<u64>::try_into(price_attestation.publish_time)
-                    .unwrap()
-                    .into(),
+                price:        price_attestation.ema_price.into(),
+                conf:         price_attestation.ema_conf.into(),
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.publish_time,
             },
         }
     }
@@ -141,20 +137,16 @@ impl From<&PriceFeedMessage> for PriceFeed {
         Self {
             id:        PriceIdentifier(price_feed_message.feed_id),
             price:     Price {
-                price:     price_feed_message.price.into(),
-                conf:      price_feed_message.conf.into(),
-                expo:      price_feed_message.exponent,
-                timestamp: TryInto::<u64>::try_into(price_feed_message.publish_time)
-                    .unwrap()
-                    .into(),
+                price:        price_feed_message.price.into(),
+                conf:         price_feed_message.conf.into(),
+                expo:         price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
             },
             ema_price: Price {
-                price:     price_feed_message.ema_price.into(),
-                conf:      price_feed_message.ema_conf.into(),
-                expo:      price_feed_message.exponent,
-                timestamp: TryInto::<u64>::try_into(price_feed_message.publish_time)
-                    .unwrap()
-                    .into(),
+                price:        price_feed_message.ema_price.into(),
+                conf:         price_feed_message.ema_conf.into(),
+                expo:         price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
             },
         }
     }

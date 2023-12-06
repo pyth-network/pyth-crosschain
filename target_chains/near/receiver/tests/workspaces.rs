@@ -500,10 +500,10 @@ async fn test_stale_threshold() {
     // timestamp and price should be unchanged.
     assert_eq!(
         Price {
-            price:     100.into(),
-            conf:      1.into(),
-            expo:      8,
-            timestamp: now.into(),
+            price:        100.into(),
+            conf:         1.into(),
+            expo:         8,
+            publish_time: now as i64,
         },
         serde_json::from_slice::<Price>(
             &contract
@@ -560,10 +560,10 @@ async fn test_stale_threshold() {
     // [ref:failed_price_check]
     assert_eq!(
         Some(Price {
-            price:     100.into(),
-            conf:      1.into(),
-            expo:      8,
-            timestamp: now.into(),
+            price:        100.into(),
+            conf:         1.into(),
+            expo:         8,
+            publish_time: now as i64,
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract
@@ -1128,10 +1128,10 @@ async fn test_accumulator_updates() {
 
     assert_eq!(
         Some(Price {
-            price:     100.into(),
-            conf:      100.into(),
-            expo:      100,
-            timestamp: 100.into(),
+            price:        100.into(),
+            conf:         100.into(),
+            expo:         100,
+            publish_time: 100,
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract
@@ -1142,5 +1142,66 @@ async fn test_accumulator_updates() {
                 .result
         )
         .unwrap(),
+    );
+}
+
+#[tokio::test]
+async fn test_sdk_compat() {
+    let price = pyth_sdk::Price {
+        price:        i64::MAX,
+        conf:         u64::MAX,
+        expo:         100,
+        publish_time: 100,
+    };
+
+    let encoded = serde_json::to_string(&price).unwrap();
+    let decoded_price: Price = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(
+        decoded_price,
+        Price {
+            price:        i64::MAX.into(),
+            conf:         u64::MAX.into(),
+            expo:         100,
+            publish_time: 100,
+        }
+    );
+}
+
+#[tokio::test]
+async fn test_borsh_field_cmopat() {
+    use near_sdk::borsh::{
+        self,
+        BorshDeserialize,
+        BorshSerialize,
+    };
+
+    let price = pyth_sdk::Price {
+        price:        i64::MAX,
+        conf:         u64::MAX,
+        expo:         100,
+        publish_time: 100,
+    };
+
+    // Verify that we can still BorshDeserialize a struct with a different field name. Confirms
+    // we don't have to migrate the state.
+    #[derive(Eq, PartialEq, Debug, BorshSerialize, BorshDeserialize)]
+    struct PriceTester {
+        price:          i64,
+        conf:           u64,
+        expo:           u32,
+        bad_field_name: u64,
+    }
+
+    let encoded = near_sdk::borsh::BorshSerialize::try_to_vec(&price).unwrap();
+    let decoded_price: PriceTester =
+        near_sdk::borsh::BorshDeserialize::try_from_slice(&encoded).unwrap();
+    assert_eq!(
+        decoded_price,
+        PriceTester {
+            price:          i64::MAX.into(),
+            conf:           u64::MAX.into(),
+            expo:           100,
+            bad_field_name: 100,
+        }
     );
 }
