@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache 2
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
@@ -61,7 +61,11 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         uint32 c = callable.fooCount();
         assertEq(callable.lastCaller(), address(bytes20(0)));
-        testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 1);
+        testExecute(
+            address(callable),
+            abi.encodeWithSelector(ICallable.foo.selector),
+            1
+        );
         assertEq(callable.fooCount(), c + 1);
         assertEq(callable.lastCaller(), address(executor));
         // Sanity check to make sure the check above is meaningful.
@@ -75,7 +79,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
         assertEq(callable.lastCaller(), address(bytes20(0)));
         testExecute(
             address(callable),
-            abi.encodeCall(ICallable.fooWithArgs, (17)),
+            abi.encodeWithSelector(ICallable.fooWithArgs.selector, 17),
             1
         );
         assertEq(callable.fooCount(), c + 17);
@@ -86,7 +90,11 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
     function testCallerAddress() public {
         uint32 c = callable.fooCount();
-        testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 1);
+        testExecute(
+            address(callable),
+            abi.encodeWithSelector(ICallable.foo.selector),
+            1
+        );
         assertEq(callable.fooCount(), c + 1);
     }
 
@@ -107,7 +115,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
                 CHAIN_ID,
                 address(executor),
                 address(callable),
-                abi.encodeCall(ICallable.foo, ())
+                abi.encodeWithSelector(ICallable.foo.selector)
             );
 
             bytes memory vaa = forgeVaa(
@@ -134,7 +142,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -158,7 +166,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -175,7 +183,11 @@ contract ExecutorTest is Test, WormholeTestUtils {
     }
 
     function testOutOfOrder() public {
-        testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 3);
+        testExecute(
+            address(callable),
+            abi.encodeWithSelector(ICallable.foo.selector),
+            3
+        );
 
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
@@ -184,7 +196,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -200,7 +212,11 @@ contract ExecutorTest is Test, WormholeTestUtils {
         executor.execute(vaa);
 
         callable.reset();
-        testExecute(address(callable), abi.encodeCall(ICallable.foo, ()), 4);
+        testExecute(
+            address(callable),
+            abi.encodeWithSelector(ICallable.foo.selector),
+            4
+        );
         assertEq(callable.fooCount(), 1);
     }
 
@@ -212,7 +228,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory shortPayload = BytesLib.slice(
@@ -241,7 +257,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             uint16(3),
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -265,7 +281,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(0x1),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -289,7 +305,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.foo, ())
+            abi.encodeWithSelector(ICallable.foo.selector)
         );
 
         bytes memory vaa = generateVaa(
@@ -313,7 +329,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
             CHAIN_ID,
             address(executor),
             address(callable),
-            abi.encodeCall(ICallable.reverts, ())
+            abi.encodeWithSelector(ICallable.reverts.selector)
         );
 
         bytes memory vaa = generateVaa(
