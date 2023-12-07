@@ -16,3 +16,7 @@ chains:
     geth_rpc_addr: https://arbitrum-goerli.publicnode.com
     contract_addr: 0xd9eAcfFB8e80b7193042499485EF8369b08E85B6
     reveal_delay_blocks: 0
+  optimism_sepolia:
+    geth_rpc_addr: https://sepolia.optimism.io
+    contract_addr: 0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167
+    reveal_delay_blocks: 0
