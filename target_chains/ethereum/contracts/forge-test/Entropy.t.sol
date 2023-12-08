@@ -35,7 +35,6 @@ contract EntropyTest is Test, EntropyTestUtils {
     uint128 MAX_UINT128 = 2 ** 128 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
-    address public owner = address(8);
     address public admin = address(9);
     address public admin2 = address(10);
 
@@ -46,7 +45,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // wrap in ABI to support easier calls
         random = EntropyUpgradable(address(proxy));
 
-        random.initialize(owner, admin, pythFeeInWei, provider1, false);
+        random.initialize(admin, pythFeeInWei, provider1, false);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,

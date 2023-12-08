@@ -21,11 +21,13 @@ contract EntropyUpgradable is
         address newImplementation
     );
 
+    event TransferOwnershipRequested(address oldOwner, address newOwner);
+    event OwnershipClaimed(address oldOwner, address newOwner);
+
     // The contract will have an owner and an admin
     // The owner will have all the power over it.
     // The admin can set some config parameters only.
     function initialize(
-        address owner,
         address admin,
         uint128 pythFeeInWei,
         address defaultProvider,
@@ -40,9 +42,6 @@ contract EntropyUpgradable is
             defaultProvider,
             prefillRequestStorage
         );
-
-        // We need to transfer the ownership from deployer to the new owner
-        transferOwnership(owner);
     }
 
     /// Ensures the contract cannot be uninitialized and taken over.
@@ -56,6 +55,31 @@ contract EntropyUpgradable is
     function _authoriseAdminAction() internal view override {
         if (msg.sender != owner() && msg.sender != _state.admin)
             revert EntropyErrors.Unauthorized();
+    }
+
+    //  Disabling transferOwnership as we don't want the owner to directly
+    //  transfer ownership to another address.
+    //  See `transferTo` if you want to transfer ownership.
+    function transferOwnership(address) public pure override {
+        revert EntropyErrors.InvalidTransferCall();
+    }
+
+    // Current owner can raise an ownership transfer request to another account
+    function transferTo(address account) external onlyOwner {
+        _state.ownershipTransferAccount = account;
+        emit TransferOwnershipRequested(owner(), account);
+    }
+
+    // The account to which the ownership transfer request has been raised will need
+    // to invoke this method to complete the transfer
+    function acceptTransfer() external {
+        if (_state.ownershipTransferAccount != msg.sender)
+            revert EntropyErrors.Unauthorized();
+
+        address oldOwner = owner();
+        _transferOwnership(_state.ownershipTransferAccount);
+        address newOwner = owner();
+        emit OwnershipClaimed(oldOwner, newOwner);
     }
 
     // We have not overridden these methods in Pyth contracts implementation.

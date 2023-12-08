@@ -16,6 +16,10 @@ abstract contract EntropyGovernance is EntropyState {
         address newDefaultProvider
     );
 
+    function getOwnershipTransferAccount() external view returns (address) {
+        return _state.ownershipTransferAccount;
+    }
+
     function getAdmin() external view returns (address) {
         return _state.admin;
     }
