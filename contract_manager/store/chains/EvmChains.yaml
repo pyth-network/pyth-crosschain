@@ -368,3 +368,13 @@
   rpcUrl: https://mainnet.mode.network/
   networkId: 34443
   type: EvmChain
+- id: bttc_testnet
+  mainnet: false
+  rpcUrl: https://pre-rpc.bt.io
+  networkId: 1029
+  type: EvmChain
+- id: bttc
+  mainnet: true
+  rpcUrl: https://rpc.bt.io
+  networkId: 199
+  type: EvmChain

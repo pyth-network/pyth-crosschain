@@ -56,6 +56,7 @@ export const RECEIVER_CHAINS = {
   tomochain: 60037,
   stacks: 60038,
   mode: 60039,
+  bttc: 60040,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -105,6 +106,7 @@ export const RECEIVER_CHAINS = {
   tomochain_testnet: 50038,
   stacks_testnet: 50039,
   mode_testnet: 50040,
+  bttc_testnet: 50041,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
