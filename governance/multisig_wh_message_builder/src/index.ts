@@ -53,12 +53,12 @@ export const CONFIG: Record<Cluster, Config> = {
   devnet: {
     wormholeClusterName: "TESTNET",
     vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
-    wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one",
+    wormholeRpcEndpoint: "https://api.testnet.wormholescan.io",
   },
   mainnet: {
     wormholeClusterName: "MAINNET",
     vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
-    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one",
+    wormholeRpcEndpoint: "https://api.wormholescan.io",
   },
   localdevnet: {
     wormholeClusterName: "DEVNET",
