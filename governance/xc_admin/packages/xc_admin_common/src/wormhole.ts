@@ -15,13 +15,13 @@ export const WORMHOLE_ADDRESS: Record<PythCluster, PublicKey | undefined> = {
   testnet: undefined,
 };
 
-// Source : https://book.wormhole.com/reference/rpcnodes.html
+// Source : https://docs.wormhole.com/wormhole/reference/sdk-docs#mainnet-guardian-rpc
 export const WORMHOLE_API_ENDPOINT: Record<PythCluster, string | undefined> = {
-  "mainnet-beta": "https://wormhole-v2-mainnet-api.certus.one",
-  "pythtest-conformance": "https://wormhole-v2-testnet-api.certus.one",
-  "pythtest-crosschain": "https://wormhole-v2-testnet-api.certus.one",
-  devnet: "https://wormhole-v2-testnet-api.certus.one",
-  pythnet: "https://wormhole-v2-mainnet-api.certus.one",
+  "mainnet-beta": "https://api.wormholescan.io",
+  "pythtest-conformance": "https://api.testnet.wormholescan.io",
+  "pythtest-crosschain": "https://api.testnet.wormholescan.io",
+  devnet: "https://api.testnet.wormholescan.io",
+  pythnet: "https://api.wormholescan.io",
   localnet: undefined,
   testnet: undefined,
 };
