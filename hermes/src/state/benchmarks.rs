@@ -112,6 +112,13 @@ impl Benchmarks for crate::state::State {
 
         let response = request.send().await?;
 
+        if response.status() != reqwest::StatusCode::OK {
+            return Err(anyhow::anyhow!(format!(
+                "Price update for price ids {:?} with publish time {} not found in benchmarks. Status code: {}, message: {}",
+                price_ids, publish_time, response.status(), response.text().await?
+            )));
+        }
+
         let benchmark_updates: BenchmarkUpdates = response.json().await?;
         benchmark_updates.try_into()
     }

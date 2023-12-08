@@ -1,6 +1,6 @@
 [package]
 name        = "hermes"
-version     = "0.4.4"
+version     = "0.4.5"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
@@ -44,7 +44,7 @@ tokio              = { version = "1.26.0", features = ["full"] }
 tonic              = { version = "0.10.1", features = ["tls"] }
 tower-http         = { version = "0.4.0", features = ["cors"] }
 tracing            = { version = "0.1.37", features = ["log"] }
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter", "json"] }
 utoipa             = { version = "3.4.0", features = ["axum_extras"] }
 utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }
 wormhole-sdk       = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
