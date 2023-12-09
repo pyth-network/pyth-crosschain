@@ -129,25 +129,25 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.transferOwnership(owner2);
     }
 
-    function testExpectRevertTransferToByUnauthorized() public {
+    function testExpectRevertRequestOwnershipTransferByUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(provider1);
         random.requestOwnershipTransfer(owner2);
     }
 
-    function testExpectRevertTransferToByAdmin() public {
+    function testExpectRevertRequestOwnershipTransferByAdmin() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(admin);
         random.requestOwnershipTransfer(owner2);
     }
 
-    function testTransferToByOwner() public {
+    function testRequestOwnershipTransferByOwner() public {
         vm.prank(owner);
         random.requestOwnershipTransfer(owner2);
         assertEq(random.getNextOwner(), owner2);
     }
 
-    function testTransferAndClaimOwnership() public {
+    function testRequestAndAcceptOwnershipTransfer() public {
         vm.prank(owner);
         random.requestOwnershipTransfer(owner2);
         assertEq(random.getNextOwner(), owner2);
