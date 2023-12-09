@@ -63,7 +63,7 @@ contract EntropyUpgradable is
 
     //  Disabling transferOwnership as we don't want the owner to directly
     //  transfer ownership to another address.
-    //  See `transferTo` if you want to transfer ownership.
+    //  See `requestOwnershipTransfer` if you want to transfer ownership.
     function transferOwnership(address) public pure override {
         revert EntropyErrors.UnsupportedOperation();
     }
