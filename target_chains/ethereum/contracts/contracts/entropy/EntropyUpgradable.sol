@@ -34,6 +34,7 @@ contract EntropyUpgradable is
         address defaultProvider,
         bool prefillRequestStorage
     ) public initializer {
+        // Initialize owner with the sender of this contract
         __Ownable_init();
         __UUPSUpgradeable_init();
 
@@ -43,8 +44,7 @@ contract EntropyUpgradable is
             defaultProvider,
             prefillRequestStorage
         );
-        // TODO: we don't have an owner check here.
-        // Does it matter?
+
         _transferOwnership(owner);
     }
 
