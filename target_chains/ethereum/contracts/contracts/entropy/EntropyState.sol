@@ -34,9 +34,9 @@ contract EntropyInternalStructs {
         mapping(bytes32 => EntropyStructs.Request) requestsOverflow;
         // Mapping from randomness providers to information about each them.
         mapping(address => EntropyStructs.ProviderInfo) providers;
-        // Account address to which the current owner raise a transfer request.
-        // This account will have to claim the ownership to become a new owner.
-        address ownershipTransferAccount;
+        // nextOwner is the account address to which the current owner raise a transfer request.
+        // If there is no pending transfer request, this value will hold `address(0)`.
+        address nextOwner;
     }
 }
 

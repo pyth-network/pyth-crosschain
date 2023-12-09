@@ -21,13 +21,14 @@ contract EntropyUpgradable is
         address newImplementation
     );
 
-    event TransferOwnershipRequested(address oldOwner, address newOwner);
-    event OwnershipClaimed(address oldOwner, address newOwner);
+    event OwnershipTransferRequested(address oldOwner, address nextOwner);
+    event OwnershipTransferAccepted(address oldOwner, address newOwner);
 
     // The contract will have an owner and an admin
     // The owner will have all the power over it.
     // The admin can set some config parameters only.
     function initialize(
+        address owner,
         address admin,
         uint128 pythFeeInWei,
         address defaultProvider,
@@ -42,6 +43,9 @@ contract EntropyUpgradable is
             defaultProvider,
             prefillRequestStorage
         );
+        // TODO: we don't have an owner check here.
+        // Does it matter?
+        _transferOwnership(owner);
     }
 
     /// Ensures the contract cannot be uninitialized and taken over.
@@ -61,25 +65,30 @@ contract EntropyUpgradable is
     //  transfer ownership to another address.
     //  See `transferTo` if you want to transfer ownership.
     function transferOwnership(address) public pure override {
-        revert EntropyErrors.InvalidTransferCall();
+        revert EntropyErrors.UnsupportedOperation();
     }
 
-    // Current owner can raise an ownership transfer request to another account
-    function transferTo(address account) external onlyOwner {
-        _state.ownershipTransferAccount = account;
-        emit TransferOwnershipRequested(owner(), account);
+    // Request to transfer ownership of this contract to another account. Only
+    // the current owner of the contract can call this method. The receiving account
+    // must accept the transfer (by calling acceptOwnershipTransfer below) before the
+    // transfer is complete.
+    function requestOwnershipTransfer(address nextOwner) external onlyOwner {
+        _state.nextOwner = nextOwner;
+        emit OwnershipTransferRequested(owner(), nextOwner);
     }
 
-    // The account to which the ownership transfer request has been raised will need
-    // to invoke this method to complete the transfer
-    function acceptTransfer() external {
-        if (_state.ownershipTransferAccount != msg.sender)
-            revert EntropyErrors.Unauthorized();
+    // Accepts a transfer request to become the owner of this contract. Only
+    // the new intended owner of the contract can call this method.
+    function acceptOwnershipTransfer() external {
+        if (_state.nextOwner != msg.sender) revert EntropyErrors.Unauthorized();
 
         address oldOwner = owner();
-        _transferOwnership(_state.ownershipTransferAccount);
+        _transferOwnership(_state.nextOwner);
+        // The transfer request is completed
+        _state.nextOwner = address(0);
+
         address newOwner = owner();
-        emit OwnershipClaimed(oldOwner, newOwner);
+        emit OwnershipTransferAccepted(oldOwner, newOwner);
     }
 
     // We have not overridden these methods in Pyth contracts implementation.

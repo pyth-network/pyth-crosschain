@@ -22,6 +22,6 @@ library EntropyErrors {
     error InvalidUpgradeMagic();
     // The msg.sender is not allowed to invoke this call.
     error Unauthorized();
-    // To transfer ownership one should not call transferOwnership
-    error InvalidTransferCall();
+    // (e.g., To transfer ownership one should not call transferOwnership)
+    error UnsupportedOperation();
 }
