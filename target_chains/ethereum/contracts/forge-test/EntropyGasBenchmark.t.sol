@@ -32,7 +32,13 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
         // wrap in ABI to support easier calls
         random = EntropyUpgradable(address(proxy));
 
-        random.initialize(address(5), pythFeeInWei, provider1, false);
+        random.initialize(
+            address(4),
+            address(5),
+            pythFeeInWei,
+            provider1,
+            false
+        );
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,

@@ -29,7 +29,6 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     uint128 pythFeeInWei = 7;
 
     function setUp() public {
-        vm.startPrank(owner);
         EntropyUpgradable _random = new EntropyUpgradable();
         // deploy proxy contract and point it to implementation
         proxy = new ERC1967Proxy(address(_random), "");
@@ -39,8 +38,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random2 = new EntropyUpgradable();
         randomDifferentMagic = new EntropyDifferentMagic();
 
-        random.initialize(admin, pythFeeInWei, provider1, false);
-        vm.stopPrank();
+        random.initialize(owner, admin, pythFeeInWei, provider1, false);
     }
 
     function testSetAdminByAdmin() public {
@@ -126,7 +124,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     }
 
     function textExpectRevertTransferOwnershipMethodCall() public {
-        vm.expectRevert(EntropyErrors.InvalidTransferCall.selector);
+        vm.expectRevert(EntropyErrors.UnsupportedOperation.selector);
         vm.prank(owner);
         random.transferOwnership(owner2);
     }
@@ -134,28 +132,28 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     function testExpectRevertTransferToByUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(provider1);
-        random.transferTo(owner2);
+        random.requestOwnershipTransfer(owner2);
     }
 
     function testExpectRevertTransferToByAdmin() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(admin);
-        random.transferTo(owner2);
+        random.requestOwnershipTransfer(owner2);
     }
 
     function testTransferToByOwner() public {
         vm.prank(owner);
-        random.transferTo(owner2);
-        assertEq(random.getOwnershipTransferAccount(), owner2);
+        random.requestOwnershipTransfer(owner2);
+        assertEq(random.getNextOwner(), owner2);
     }
 
     function testTransferAndClaimOwnership() public {
         vm.prank(owner);
-        random.transferTo(owner2);
-        assertEq(random.getOwnershipTransferAccount(), owner2);
+        random.requestOwnershipTransfer(owner2);
+        assertEq(random.getNextOwner(), owner2);
 
         vm.prank(owner2);
-        random.acceptTransfer();
+        random.acceptOwnershipTransfer();
         assertEq(random.owner(), owner2);
     }
 }
