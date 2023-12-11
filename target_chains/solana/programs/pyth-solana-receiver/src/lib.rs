@@ -40,14 +40,16 @@ pub mod pyth_solana_receiver {
 
     pub fn request_governance_authority_transfer(
         ctx: Context<Governance>,
-        governance_authority: Pubkey,
+        target_governance_authority: Pubkey,
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
-        config.target_governance_authority = Some(governance_authority);
+        config.target_governance_authority = Some(target_governance_authority);
         Ok(())
     }
 
-    pub fn authorize_governance_authority_transfer(ctx: Context<Governance>) -> Result<()> {
+    pub fn authorize_governance_authority_transfer(
+        ctx: Context<AuthorizeGovernanceAuthorityTransfer>,
+    ) -> Result<()> {
         let config = &mut ctx.accounts.config;
         config.governance_authority = config.target_governance_authority.unwrap();
         config.target_governance_authority = None;
@@ -159,7 +161,7 @@ pub const CONFIG_SEED: &str = "config";
 pub struct Initialize<'info> {
     #[account(mut)]
     pub payer:          Signer<'info>,
-    #[account(init, space = 1000, payer=payer, seeds = [CONFIG_SEED.as_ref()], bump)]
+    #[account(init, space = Config::LEN, payer=payer, seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:         Account<'info, Config>,
     pub system_program: Program<'info, System>,
 }
