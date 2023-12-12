@@ -171,7 +171,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.withdrawPythFees(10);
     }
 
-    function testWithdrawPythFeesByOwner() public {
+    function testWithdrawLessThanAccruedPythFeesByOwner() public {
         address provider = random.getDefaultProvider();
         uint128 fee = random.getFee(provider);
         uint randomNumber = 1;
@@ -185,7 +185,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.withdrawPythFees(1);
     }
 
-    function testWithdrawPythFeesByOwnerAll() public {
+    function testWithdrawAccruedPythFeesByOwner() public {
         address provider = random.getDefaultProvider();
         uint128 fee = random.getFee(provider);
         uint randomNumber = 1;
