@@ -254,6 +254,10 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
             bytes32 _blockHash = blockhash(req.blockNumber);
+
+            // The request can only be stale if the blockhash is zero. The other case when blockhash
+            // can be zero is when the request and reveal is in the same block which can't happen as
+            // the service will reveal only when the request is finalized in a block
             if (_blockHash == bytes32(uint256(0)))
                 revert EntropyErrors.StaleRequest();
 
