@@ -34,7 +34,7 @@ pub enum Action {
         )]
         url:     String,
     },
-    Initialize {        
+    Initialize {
     #[clap(
         short = 'k',
         long,

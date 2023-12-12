@@ -255,7 +255,7 @@ fn main() -> Result<()> {
 
             // let initialize_instruction = initialize(wormhole, payer.pubkey(), 0, 0, &vec![hex::decode(initial_guardian).unwrap().try_into().unwrap()]).unwrap();
             // process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
-            
+
             post_single_vaa(&rpc_client, &hex::decode(vaa1).unwrap(), wormhole, &payer)?;
 
             let update_guardian_set_instruction = set_gua
