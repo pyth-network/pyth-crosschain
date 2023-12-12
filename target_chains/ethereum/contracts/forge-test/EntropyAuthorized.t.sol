@@ -41,24 +41,6 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.initialize(owner, admin, pythFeeInWei, provider1, false);
     }
 
-    function testSetAdminByAdmin() public {
-        vm.prank(admin);
-        random.setAdmin(admin2);
-        assertEq(random.getAdmin(), admin2);
-    }
-
-    function testSetAdminByOwner() public {
-        vm.prank(owner);
-        random.setAdmin(admin2);
-        assertEq(random.getAdmin(), admin2);
-    }
-
-    function testExpectRevertSetAdminByUnauthorized() public {
-        vm.expectRevert(EntropyErrors.Unauthorized.selector);
-        vm.prank(admin2);
-        random.setAdmin(admin);
-    }
-
     function testSetPythFeeByAdmin() public {
         vm.prank(admin);
         random.setPythFee(10);
@@ -159,5 +141,43 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.prank(admin);
         vm.expectRevert("Ownable2Step: caller is not the new owner");
         random.acceptOwnership();
+    }
+
+    function testProposeAdminByOwner() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        assertEq(random.proposedAdmin(), admin2);
+    }
+
+    function testProposeAdminByAdmin() public {
+        vm.prank(admin);
+        random.proposeAdmin(admin2);
+
+        assertEq(random.proposedAdmin(), admin2);
+    }
+
+    function testProposeAdminByUnauthorized() public {
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.proposeAdmin(admin2);
+    }
+
+    function testAcceptAdminByPropsed() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        vm.prank(admin2);
+        random.acceptAdmin();
+
+        assertEq(random.getAdmin(), admin2);
+    }
+
+    function testAcceptAdminByUnauthorized() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        vm.prank(provider1);
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.acceptAdmin();
     }
 }
