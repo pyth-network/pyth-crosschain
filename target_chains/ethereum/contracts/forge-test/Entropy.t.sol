@@ -416,7 +416,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         );
     }
 
-    function testNoCheckOnBlockNumberWhenNoBlockHashUse() public {
+    function testNoCheckOnBlockNumberWhenNoBlockHashUsed() public {
         vm.roll(1234);
         uint64 sequenceNumber = request(user2, provider1, 42, false);
 
@@ -457,11 +457,24 @@ contract EntropyTest is Test, EntropyTestUtils {
         );
     }
 
-    function testBlockhashWhenBlockNotInLast256() public {
+    function testCheckOnBlockNumberWhenBlockHashUsed() public {
         vm.roll(1234);
         uint64 sequenceNumber = request(user2, provider1, 42, true);
 
-        vm.roll(1234 + 257);
+        vm.roll(1236);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            blockhash(1234)
+        );
+
+        vm.roll(1234);
+        sequenceNumber = request(user2, provider1, 42, true);
+
+        vm.roll(1234);
         assertRevealReverts(
             user2,
             provider1,
@@ -469,13 +482,11 @@ contract EntropyTest is Test, EntropyTestUtils {
             42,
             provider1Proofs[sequenceNumber]
         );
-    }
-
-    function testBlockhashWhenRequestRevealInSameBlock() public {
-        vm.roll(1234);
-        uint64 sequenceNumber = request(user2, provider1, 42, true);
 
         vm.roll(1234);
+        sequenceNumber = request(user2, provider1, 42, true);
+
+        vm.roll(1234 + 257);
         assertRevealReverts(
             user2,
             provider1,
