@@ -23,12 +23,12 @@ abstract contract EntropyGovernance is EntropyState {
     /**
      * @dev Set the admin of the contract.
      *
-     * Calls {_authoriseAdminAction}.
+     * Calls {_authorizeAdminAction}.
      *
      * Emits an {AdminSet} event.
      */
     function setAdmin(address newAdmin) external {
-        _authoriseAdminAction();
+        _authorizeAdminAction();
 
         address oldAdmin = _state.admin;
         _state.admin = newAdmin;
@@ -39,12 +39,12 @@ abstract contract EntropyGovernance is EntropyState {
     /**
      * @dev Set the Pyth fee in Wei
      *
-     * Calls {_authoriseAdminAction}.
+     * Calls {_authorizeAdminAction}.
      *
      * Emits an {PythFeeSet} event.
      */
     function setPythFee(uint128 newPythFee) external {
-        _authoriseAdminAction();
+        _authorizeAdminAction();
 
         uint oldPythFee = _state.pythFeeInWei;
         _state.pythFeeInWei = newPythFee;
@@ -55,12 +55,12 @@ abstract contract EntropyGovernance is EntropyState {
     /**
      * @dev Set the default provider of the contract
      *
-     * Calls {_authoriseAdminAction}.
+     * Calls {_authorizeAdminAction}.
      *
      * Emits an {DefaultProviderSet} event.
      */
     function setDefaultProvider(address newDefaultProvider) external {
-        _authoriseAdminAction();
+        _authorizeAdminAction();
 
         address oldDefaultProvider = _state.defaultProvider;
         _state.defaultProvider = newDefaultProvider;
@@ -73,7 +73,7 @@ abstract contract EntropyGovernance is EntropyState {
     // balance of fees has accrued in the contract).
     function withdrawPythFees(uint128 amount) public {
         // Use checks-effects-interactions pattern to prevent reentrancy attacks.
-        _authoriseOwner();
+        _authorizeOwner();
         require(_state.accruedPythFeesInWei >= amount, "Insufficient balance");
 
         _state.accruedPythFeesInWei -= amount;
@@ -83,7 +83,7 @@ abstract contract EntropyGovernance is EntropyState {
         require(sent, "withdrawal to msg.sender failed");
     }
 
-    function _authoriseAdminAction() internal virtual;
+    function _authorizeAdminAction() internal virtual;
 
-    function _authoriseOwner() internal virtual;
+    function _authorizeOwner() internal virtual;
 }
