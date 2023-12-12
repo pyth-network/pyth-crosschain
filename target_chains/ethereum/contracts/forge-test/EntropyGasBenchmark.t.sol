@@ -107,8 +107,9 @@ contract EntropyGasBenchmark is Test, EntropyTestUtils {
 
     function testBasicFlow() public {
         uint userRandom = 42;
+        vm.roll(10);
         uint64 sequenceNumber = requestHelper(user1, userRandom, true);
-
+        vm.roll(12);
         revealHelper(sequenceNumber, userRandom);
     }
 }

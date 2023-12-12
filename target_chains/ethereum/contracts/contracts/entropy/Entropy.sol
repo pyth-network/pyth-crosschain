@@ -253,7 +253,11 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
-            blockHash = blockhash(req.blockNumber);
+            bytes32 _blockHash = blockhash(req.blockNumber);
+            if (_blockHash == bytes32(uint256(0)))
+                revert EntropyErrors.StaleRequest();
+
+            blockHash = _blockHash;
         }
 
         randomNumber = combineRandomValues(
