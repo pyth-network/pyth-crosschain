@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 
 import "./EntropyGovernance.sol";
@@ -11,7 +11,7 @@ import "./Entropy.sol";
 
 contract EntropyUpgradable is
     Initializable,
-    OwnableUpgradeable,
+    Ownable2StepUpgradeable,
     UUPSUpgradeable,
     Entropy,
     EntropyGovernance
@@ -42,7 +42,7 @@ contract EntropyUpgradable is
         );
 
         // We need to transfer the ownership from deployer to the new owner
-        transferOwnership(owner);
+        _transferOwnership(owner);
     }
 
     /// Ensures the contract cannot be uninitialized and taken over.

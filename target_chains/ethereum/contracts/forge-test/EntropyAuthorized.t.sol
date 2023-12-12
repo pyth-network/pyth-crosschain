@@ -24,6 +24,8 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     address public provider1 = address(4);
     address public provider2 = address(5);
 
+    address public owner2 = address(6);
+
     uint128 pythFeeInWei = 7;
 
     function setUp() public {
@@ -119,5 +121,43 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.expectRevert(EntropyErrors.InvalidUpgradeMagic.selector);
         vm.prank(owner);
         random.upgradeTo(address(randomDifferentMagic));
+    }
+
+    function testExpectRevertRequestOwnershipTransferByUnauthorized() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(provider1);
+        random.transferOwnership(owner2);
+    }
+
+    function testExpectRevertRequestOwnershipTransferByAdmin() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(admin);
+        random.transferOwnership(owner2);
+    }
+
+    function testRequestOwnershipTransferByOwner() public {
+        vm.prank(owner);
+        random.transferOwnership(owner2);
+        assertEq(random.pendingOwner(), owner2);
+    }
+
+    function testRequestAndAcceptOwnershipTransfer() public {
+        vm.prank(owner);
+        random.transferOwnership(owner2);
+        assertEq(random.pendingOwner(), owner2);
+
+        vm.prank(owner2);
+        random.acceptOwnership();
+        assertEq(random.owner(), owner2);
+    }
+
+    function testRequestAndAcceptOwnershipTransferUnauthorizedAccept() public {
+        vm.prank(owner);
+        random.transferOwnership(owner2);
+        assertEq(random.pendingOwner(), owner2);
+
+        vm.prank(admin);
+        vm.expectRevert("Ownable2Step: caller is not the new owner");
+        random.acceptOwnership();
     }
 }
