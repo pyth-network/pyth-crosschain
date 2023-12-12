@@ -58,6 +58,9 @@ contract EntropyUpgradable is
             revert EntropyErrors.Unauthorized();
     }
 
+    // There are some actions which both and admin and owner can perform
+    function _authoriseOwner() internal view override onlyOwner {}
+
     // We have not overridden these methods in Pyth contracts implementation.
     // But we are overriding them here because there was no owner before and
     // `_authorizeUpgrade` would cause a revert for these. Now we have an owner, and

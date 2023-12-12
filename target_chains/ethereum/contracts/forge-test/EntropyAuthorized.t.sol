@@ -22,6 +22,12 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     // We are just checking for the default provider, which
     // only required an address.
     address public provider1 = address(4);
+    bytes32[] provider1Proofs;
+    uint128 provider1FeeInWei = 8;
+    uint64 provider1ChainLength = 100;
+    bytes provider1Uri = bytes("https://foo.com");
+    bytes provider1CommitmentMetadata = hex"0100";
+
     address public provider2 = address(5);
 
     uint128 pythFeeInWei = 7;
@@ -37,6 +43,21 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         randomDifferentMagic = new EntropyDifferentMagic();
 
         random.initialize(owner, admin, pythFeeInWei, provider1, false);
+
+        bytes32[] memory hashChain1 = generateHashChain(
+            provider1,
+            0,
+            provider1ChainLength
+        );
+        provider1Proofs = hashChain1;
+        vm.prank(provider1);
+        random.register(
+            provider1FeeInWei,
+            provider1Proofs[0],
+            provider1CommitmentMetadata,
+            provider1ChainLength,
+            provider1Uri
+        );
     }
 
     function testSetAdminByAdmin() public {
@@ -119,5 +140,63 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.expectRevert(EntropyErrors.InvalidUpgradeMagic.selector);
         vm.prank(owner);
         random.upgradeTo(address(randomDifferentMagic));
+    }
+
+    function testExpectRevertWithdrawPythFeesByUnauthorized() public {
+        address provider = random.getDefaultProvider();
+        uint128 fee = random.getFee(provider);
+        uint randomNumber = 1;
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(randomNumber)
+        );
+
+        random.request{value: fee}(provider, userCommitment, false);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        random.withdrawPythFees(1);
+    }
+
+    function testExpectRevertWithdrawPythFeesMoreThanAccrued() public {
+        address provider = random.getDefaultProvider();
+        uint128 fee = random.getFee(provider);
+        uint randomNumber = 1;
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(randomNumber)
+        );
+
+        random.request{value: fee}(provider, userCommitment, false);
+
+        vm.expectRevert("Insufficient balance");
+        vm.prank(owner);
+        random.withdrawPythFees(10);
+    }
+
+    function testWithdrawPythFeesByOwner() public {
+        address provider = random.getDefaultProvider();
+        uint128 fee = random.getFee(provider);
+        uint randomNumber = 1;
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(randomNumber)
+        );
+
+        random.request{value: fee}(provider, userCommitment, false);
+
+        vm.prank(owner);
+        random.withdrawPythFees(1);
+    }
+
+    function testWithdrawPythFeesByOwnerAll() public {
+        address provider = random.getDefaultProvider();
+        uint128 fee = random.getFee(provider);
+        uint randomNumber = 1;
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(randomNumber)
+        );
+
+        random.request{value: fee}(provider, userCommitment, false);
+
+        uint128 accruedPythFees = random.getAccruedPythFees();
+        vm.prank(owner);
+        random.withdrawPythFees(accruedPythFees);
     }
 }
