@@ -76,8 +76,16 @@ contract Executor {
             gi.executorAddress != address(this)
         ) revert ExecutorErrors.DeserializationError();
 
+        // Check if the gi.callAddress is a contract account.
+        uint len;
+        address callAddress = address(gi.callAddress);
+        assembly {
+            len := extcodesize(callAddress)
+        }
+        if (len == 0) revert ExecutorErrors.InvalidContractTarget();
+
         bool success;
-        (success, response) = address(gi.callAddress).call(gi.callData);
+        (success, response) = address(callAddress).call(gi.callData);
 
         // Check if the call was successful or not.
         if (!success) {

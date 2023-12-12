@@ -344,6 +344,30 @@ contract ExecutorTest is Test, WormholeTestUtils {
         vm.expectRevert("call should revert");
         executor.execute(vaa);
     }
+
+    function testCallToEoaReverts() public {
+        bytes memory payload = abi.encodePacked(
+            uint32(0x5054474d),
+            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            Executor.ExecutorAction.Execute,
+            CHAIN_ID,
+            address(executor),
+            address(100),
+            abi.encodeWithSelector(ICallable.foo.selector)
+        );
+
+        bytes memory vaa = generateVaa(
+            uint32(block.timestamp),
+            OWNER_CHAIN_ID,
+            OWNER_EMITTER,
+            1,
+            payload,
+            NUM_SIGNERS
+        );
+
+        vm.expectRevert(ExecutorErrors.InvalidContractTarget.selector);
+        executor.execute(vaa);
+    }
 }
 
 interface ICallable {
