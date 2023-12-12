@@ -3086,6 +3086,7 @@ dependencies = [
  "solana-sdk",
  "wormhole-anchor-sdk",
  "wormhole-core",
+ "wormhole-core-bridge-solana",
  "wormhole-sdk",
  "wormhole-solana",
 ]
@@ -3456,6 +3457,22 @@ dependencies = [
  "libc",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "ruint"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77e1574d439643c8962edf612a888e7cc5581bcdf36cb64e6bc88466b03b2daa"
+dependencies = [
+ "ruint-macro",
+ "thiserror",
+]
+
+[[package]]
+name = "ruint-macro"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e666a5496a0b2186dbcd0ff6106e29e093c15591bde62c20d3842007c6978a09"
 
 [[package]]
 name = "rustc-demangle"
@@ -6231,6 +6248,36 @@ dependencies = [
  "primitive-types",
  "sha3 0.10.6",
  "thiserror",
+]
+
+[[package]]
+name = "wormhole-core-bridge-solana"
+version = "0.0.1-alpha.3"
+source = "git+https://github.com/guibescos/wormhole?branch=wen/solana-rewrite#38c4051b84cdfc86518d760740f5244ded26044c"
+dependencies = [
+ "anchor-lang",
+ "cfg-if",
+ "hex",
+ "ruint",
+ "solana-program",
+ "wormhole-io",
+ "wormhole-raw-vaas",
+]
+
+[[package]]
+name = "wormhole-io"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4965f46f7a99debe3c2cf9337c6e3eb7068da348aecf074a3e35686937f25c65"
+
+[[package]]
+name = "wormhole-raw-vaas"
+version = "0.0.1-alpha.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cb59754ad91d99c0e3d7d159fffcbb4087c18a1c13b1b2a945775635ef9bd03"
+dependencies = [
+ "ruint",
+ "ruint-macro",
 ]
 
 [[package]]

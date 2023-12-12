@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 #![deny(warnings)]
+=======
+use std::str::FromStr;
+
+
+>>>>>>> d99f364c (Checkpoint)
 pub mod cli;
 
 use {
