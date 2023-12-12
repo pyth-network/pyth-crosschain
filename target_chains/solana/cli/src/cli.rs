@@ -34,4 +34,19 @@ pub enum Action {
         )]
         url:     String,
     },
+    Initialize {        
+    #[clap(
+        short = 'k',
+        long,
+        default_value = "~/.config/solana/id.json",
+        help = "Keypair of the payer of transactions"
+    )]
+    keypair: String,
+    #[clap(
+        short = 'u',
+        long,
+        default_value = "http://localhost:8899",
+        help = "RPC endpoint of the solana"
+    )]
+    url:     String,}
 }
