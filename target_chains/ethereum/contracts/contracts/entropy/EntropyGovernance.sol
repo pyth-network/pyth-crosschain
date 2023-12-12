@@ -72,10 +72,10 @@ abstract contract EntropyGovernance is EntropyState {
     // Calling this function will transfer `amount` wei to the owner (provided sufficient
     // balance of fees has accrued in the contract).
     function withdrawPythFees(uint128 amount) public {
-        _authoriseOwner();
-
         // Use checks-effects-interactions pattern to prevent reentrancy attacks.
+        _authoriseOwner();
         require(_state.accruedPythFeesInWei >= amount, "Insufficient balance");
+
         _state.accruedPythFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
