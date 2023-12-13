@@ -30,6 +30,8 @@ abstract contract EntropyGovernance is EntropyState {
      * Can only be called by either admin or owner.
      */
     function proposeAdmin(address newAdmin) public virtual {
+        require(newAdmin != address(0), "newAdmin is zero address");
+
         _authoriseAdminAction();
 
         _state.proposedAdmin = newAdmin;
@@ -78,6 +80,10 @@ abstract contract EntropyGovernance is EntropyState {
      * Emits an {DefaultProviderSet} event.
      */
     function setDefaultProvider(address newDefaultProvider) external {
+        require(
+            newDefaultProvider != address(0),
+            "newDefaultProvider is zero address"
+        );
         _authoriseAdminAction();
 
         address oldDefaultProvider = _state.defaultProvider;

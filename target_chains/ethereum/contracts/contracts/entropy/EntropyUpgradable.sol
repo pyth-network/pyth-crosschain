@@ -31,6 +31,13 @@ contract EntropyUpgradable is
         address defaultProvider,
         bool prefillRequestStorage
     ) public initializer {
+        require(owner != address(0), "owner is zero address");
+        require(admin != address(0), "admin is zero address");
+        require(
+            defaultProvider != address(0),
+            "defaultProvider is zero address"
+        );
+
         __Ownable_init();
         __UUPSUpgradeable_init();
 
