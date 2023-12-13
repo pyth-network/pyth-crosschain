@@ -9,31 +9,49 @@ import "./EntropyState.sol";
  * @dev `Governance` defines a means to enacting changes to the Entropy contract.
  */
 abstract contract EntropyGovernance is EntropyState {
-    event AdminSet(address oldAdmin, address newAdmin);
     event PythFeeSet(uint oldPythFee, uint newPythFee);
     event DefaultProviderSet(
         address oldDefaultProvider,
         address newDefaultProvider
     );
 
-    function getAdmin() external view returns (address) {
-        return _state.admin;
+    event NewAdminProposed(address oldAdmin, address newAdmin);
+    event NewAdminAccepted(address oldAdmin, address newAdmin);
+
+    /**
+     * @dev Returns the address of the proposed admin.
+     */
+    function proposedAdmin() public view virtual returns (address) {
+        return _state.proposedAdmin;
     }
 
     /**
-     * @dev Set the admin of the contract.
-     *
-     * Calls {_authoriseAdminAction}.
-     *
-     * Emits an {AdminSet} event.
+     * @dev Proposes a new admin of the contract. Replaces the proposed admin if there is one.
+     * Can only be called by either admin or owner.
      */
-    function setAdmin(address newAdmin) external {
+    function proposeAdmin(address newAdmin) public virtual {
         _authoriseAdminAction();
 
-        address oldAdmin = _state.admin;
-        _state.admin = newAdmin;
+        _state.proposedAdmin = newAdmin;
+        emit NewAdminProposed(_state.admin, newAdmin);
+    }
 
-        emit AdminSet(oldAdmin, newAdmin);
+    /**
+     * @dev The proposed admin accepts the admin transfer.
+     */
+    function acceptAdmin() external {
+        if (msg.sender != _state.proposedAdmin)
+            revert EntropyErrors.Unauthorized();
+
+        address oldAdmin = _state.admin;
+        _state.admin = msg.sender;
+
+        _state.proposedAdmin = address(0);
+        emit NewAdminAccepted(oldAdmin, msg.sender);
+    }
+
+    function getAdmin() external view returns (address) {
+        return _state.admin;
     }
 
     /**

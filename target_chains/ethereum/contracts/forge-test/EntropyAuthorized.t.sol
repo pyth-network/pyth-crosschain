@@ -24,6 +24,8 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     address public provider1 = address(4);
     address public provider2 = address(5);
 
+    address public owner2 = address(6);
+
     uint128 pythFeeInWei = 7;
 
     function setUp() public {
@@ -37,24 +39,6 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         randomDifferentMagic = new EntropyDifferentMagic();
 
         random.initialize(owner, admin, pythFeeInWei, provider1, false);
-    }
-
-    function testSetAdminByAdmin() public {
-        vm.prank(admin);
-        random.setAdmin(admin2);
-        assertEq(random.getAdmin(), admin2);
-    }
-
-    function testSetAdminByOwner() public {
-        vm.prank(owner);
-        random.setAdmin(admin2);
-        assertEq(random.getAdmin(), admin2);
-    }
-
-    function testExpectRevertSetAdminByUnauthorized() public {
-        vm.expectRevert(EntropyErrors.Unauthorized.selector);
-        vm.prank(admin2);
-        random.setAdmin(admin);
     }
 
     function testSetPythFeeByAdmin() public {
@@ -119,5 +103,75 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.expectRevert(EntropyErrors.InvalidUpgradeMagic.selector);
         vm.prank(owner);
         random.upgradeTo(address(randomDifferentMagic));
+    }
+
+    function testExpectRevertRequestOwnershipTransferByUnauthorized() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(provider1);
+        random.transferOwnership(owner2);
+    }
+
+    function testExpectRevertRequestOwnershipTransferByAdmin() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(admin);
+        random.transferOwnership(owner2);
+    }
+
+    function testRequestAndAcceptOwnershipTransfer() public {
+        vm.prank(owner);
+        random.transferOwnership(owner2);
+        assertEq(random.pendingOwner(), owner2);
+
+        vm.prank(owner2);
+        random.acceptOwnership();
+        assertEq(random.owner(), owner2);
+    }
+
+    function testRequestAndAcceptOwnershipTransferUnauthorizedAccept() public {
+        vm.prank(owner);
+        random.transferOwnership(owner2);
+        assertEq(random.pendingOwner(), owner2);
+
+        vm.prank(admin);
+        vm.expectRevert("Ownable2Step: caller is not the new owner");
+        random.acceptOwnership();
+    }
+
+    function testProposeAdminByOwner() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        assertEq(random.proposedAdmin(), admin2);
+    }
+
+    function testProposeAdminByAdmin() public {
+        vm.prank(admin);
+        random.proposeAdmin(admin2);
+
+        assertEq(random.proposedAdmin(), admin2);
+    }
+
+    function testProposeAdminByUnauthorized() public {
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.proposeAdmin(admin2);
+    }
+
+    function testAcceptAdminByPropsed() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        vm.prank(admin2);
+        random.acceptAdmin();
+
+        assertEq(random.getAdmin(), admin2);
+    }
+
+    function testAcceptAdminByUnauthorized() public {
+        vm.prank(owner);
+        random.proposeAdmin(admin2);
+
+        vm.prank(provider1);
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.acceptAdmin();
     }
 }

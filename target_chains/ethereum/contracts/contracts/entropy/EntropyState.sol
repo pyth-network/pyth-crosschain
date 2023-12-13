@@ -34,6 +34,9 @@ contract EntropyInternalStructs {
         mapping(bytes32 => EntropyStructs.Request) requestsOverflow;
         // Mapping from randomness providers to information about each them.
         mapping(address => EntropyStructs.ProviderInfo) providers;
+        // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
+        // If there is no pending transfer request, this value will hold `address(0)`.
+        address proposedAdmin;
     }
 }
 
