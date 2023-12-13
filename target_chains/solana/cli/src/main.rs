@@ -356,7 +356,7 @@ pub fn process_post_vaa(
     .0;
 
     let guardian_set_data = deserialize_guardian_set(
-        &mut &rpc_client.get_account_data(&guardian_set)?[8..],
+        &mut &rpc_client.get_account_data(&guardian_set)?[..],
         legacy_guardian_set,
     )?;
 
