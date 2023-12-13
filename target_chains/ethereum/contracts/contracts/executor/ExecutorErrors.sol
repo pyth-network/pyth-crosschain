@@ -14,6 +14,6 @@ library ExecutorErrors {
     error DeserializationError();
     // The message is not intended for this contract.
     error InvalidGovernanceTarget();
-    // The message is not intended for a valid contract address.
+    // The target address for the contract call is not a contract
     error InvalidContractTarget();
 }
