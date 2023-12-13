@@ -28,7 +28,7 @@ import { WORMHOLE_ADDRESS } from "./wormhole";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
-export const MAX_NUMBER_OF_RETRIES = 5;
+export const MAX_NUMBER_OF_RETRIES = 10;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
