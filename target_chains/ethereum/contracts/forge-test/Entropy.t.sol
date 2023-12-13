@@ -461,19 +461,6 @@ contract EntropyTest is Test, EntropyTestUtils {
         vm.roll(1234);
         uint64 sequenceNumber = request(user2, provider1, 42, true);
 
-        vm.roll(1236);
-        assertRevealSucceeds(
-            user2,
-            provider1,
-            sequenceNumber,
-            42,
-            provider1Proofs[sequenceNumber],
-            blockhash(1234)
-        );
-
-        vm.roll(1234);
-        sequenceNumber = request(user2, provider1, 42, true);
-
         vm.roll(1234);
         assertRevealReverts(
             user2,
@@ -482,9 +469,6 @@ contract EntropyTest is Test, EntropyTestUtils {
             42,
             provider1Proofs[sequenceNumber]
         );
-
-        vm.roll(1234);
-        sequenceNumber = request(user2, provider1, 42, true);
 
         vm.roll(1234 + 257);
         assertRevealReverts(
@@ -493,6 +477,16 @@ contract EntropyTest is Test, EntropyTestUtils {
             sequenceNumber,
             42,
             provider1Proofs[sequenceNumber]
+        );
+
+        vm.roll(1235);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            blockhash(1234)
         );
     }
 
