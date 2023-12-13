@@ -404,12 +404,6 @@ const Proposal = ({
     }, `Executed proposal ${proposal?.publicKey.toBase58()}`)
   }
 
-  const handleClickActivate = async () => {
-    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
-      await squad.activateTransaction(proposalKey)
-    }, `Activated proposal ${proposal?.publicKey.toBase58()}`)
-  }
-
   const handleClickCancel = async () => {
     await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
       await squad.cancelTransaction(proposalKey)
@@ -520,16 +514,6 @@ const Proposal = ({
               onClick={handleClickCancel}
             >
               {isTransactionLoading ? <Spinner /> : 'Cancel'}
-            </button>
-          </div>
-        ) : proposalStatus === 'draft' ? (
-          <div className="flex items-center justify-center space-x-8 pt-3">
-            <button
-              disabled={isTransactionLoading}
-              className="action-btn text-base"
-              onClick={handleClickActivate}
-            >
-              {isTransactionLoading ? <Spinner /> : 'Activate'}
             </button>
           </div>
         ) : null}
