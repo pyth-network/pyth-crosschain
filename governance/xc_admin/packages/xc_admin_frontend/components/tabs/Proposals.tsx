@@ -404,7 +404,7 @@ const Proposal = ({
     }, `Executed proposal ${proposal?.publicKey.toBase58()}`)
   }
 
-  const handleClickDraft = async () => {
+  const handleClickActivate = async () => {
     await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
       await squad.activateTransaction(proposalKey)
     }, `Activated proposal ${proposal?.publicKey.toBase58()}`)
@@ -527,7 +527,7 @@ const Proposal = ({
             <button
               disabled={isTransactionLoading}
               className="action-btn text-base"
-              onClick={handleClickDraft}
+              onClick={handleClickActivate}
             >
               {isTransactionLoading ? <Spinner /> : 'Activate'}
             </button>
