@@ -255,12 +255,14 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (req.useBlockhash) {
             bytes32 _blockHash = blockhash(req.blockNumber);
 
-            // The request can only be stale if the blockhash is zero. The other case when blockhash
-            // can be zero is when the request and reveal is in the same block which can't happen as
-            // the service will reveal only when the request is finalized in a block
-            // Though this will fail for that case too.
+            // The `blockhash` function will return zero if the req.blockNumber is equal to the current
+            // block number, or if it is not within the 256 most recent blocks. This allows the user to
+            // select between two random numbers by executing the reveal function in the same block as the
+            // request, or after 256 blocks. This gives each user two chances to get a favorable result on
+            // each request.
+            // Revert this transaction for when the blockHash is 0;
             if (_blockHash == bytes32(uint256(0)))
-                revert EntropyErrors.StaleRequest();
+                revert EntropyErrors.BlockhashUnavailable();
 
             blockHash = _blockHash;
         }
