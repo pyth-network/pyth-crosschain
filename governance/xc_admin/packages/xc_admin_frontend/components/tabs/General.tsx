@@ -169,7 +169,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const handleUploadJsonButtonClick = () => {
     const uploadAnchor = document.createElement('input')
     uploadAnchor.setAttribute('type', 'file')
-    uploadAnchor.setAttribute('accept', '.json')
+    uploadAnchor.setAttribute('', '.json')
     uploadAnchor.addEventListener('change', (e) => {
       const file = (e.target as HTMLInputElement).files![0]
       const reader = new FileReader()
