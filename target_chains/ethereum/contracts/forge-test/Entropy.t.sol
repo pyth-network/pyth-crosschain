@@ -405,7 +405,7 @@ contract EntropyTest is Test, EntropyTestUtils {
             true
         );
 
-        vm.roll(1236);
+        vm.roll(1235);
         assertRevealSucceeds(
             user2,
             provider1,
