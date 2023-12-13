@@ -1,6 +1,10 @@
-use clap::{
-    Parser,
-    Subcommand,
+use {
+    clap::{
+        Parser,
+        Subcommand,
+    },
+    solana_sdk::pubkey::Pubkey,
+    std::str::FromStr,
 };
 
 #[derive(Parser, Debug)]
@@ -25,8 +29,8 @@ pub struct Cli {
         help = "RPC endpoint of the solana"
     )]
     pub url:      String,
-    #[clap(short = 'w', long, help = "Wormhole address")]
-    pub wormhole: String,
+    #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Wormhole address")]
+    pub wormhole: Pubkey,
 }
 
 #[derive(Subcommand, Debug)]

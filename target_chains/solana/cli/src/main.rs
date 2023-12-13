@@ -1,5 +1,4 @@
 #![deny(warnings)]
-
 pub mod cli;
 
 use {
@@ -37,7 +36,6 @@ use {
         signer::Signer,
         transaction::Transaction,
     },
-    std::str::FromStr,
     wormhole_anchor_sdk::wormhole::BridgeData,
     wormhole_sdk::{
         vaa::{
@@ -107,7 +105,6 @@ fn main() -> Result<()> {
         url,
         wormhole,
     } = cli;
-    let wormhole_pubkey = Pubkey::from_str(&wormhole).unwrap();
 
     match action {
         Action::PostAndReceiveVAA {
@@ -256,7 +253,7 @@ fn main() -> Result<()> {
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
             let initialize_instruction = initialize(
-                wormhole_pubkey,
+                wormhole,
                 payer.pubkey(),
                 0,
                 0,
@@ -268,20 +265,23 @@ fn main() -> Result<()> {
             process_upgrade_guardian_set(
                 &rpc_client,
                 &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
-                wormhole_pubkey,
+                wormhole,
                 &payer,
+                true,
             )?;
             process_upgrade_guardian_set(
                 &rpc_client,
                 &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
-                wormhole_pubkey,
+                wormhole,
                 &payer,
+                false,
             )?;
             process_upgrade_guardian_set(
                 &rpc_client,
                 &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
-                wormhole_pubkey,
+                wormhole,
                 &payer,
+                false,
             )?;
         }
     }
@@ -294,8 +294,10 @@ pub fn process_upgrade_guardian_set(
     vaa: &[u8],
     wormhole: Pubkey,
     payer: &Keypair,
+    legacy_guardian_set: bool,
 ) -> Result<()> {
-    let posted_vaa = process_post_vaa(rpc_client, vaa, wormhole, payer).unwrap();
+    let posted_vaa =
+        process_post_vaa(rpc_client, vaa, wormhole, payer, legacy_guardian_set).unwrap();
     let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
     let guardian_set_index_old = header.guardian_set_index;
@@ -320,12 +322,21 @@ pub fn process_upgrade_guardian_set(
     Ok(())
 }
 
+fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Result<GuardianSet> {
+    if !legacy_guardian_set {
+        // Skip anchor discriminator
+        *buf = &buf[8..];
+    }
+    let guardian_set = GuardianSet::deserialize(buf)?;
+    Ok(guardian_set)
+}
 
 pub fn process_post_vaa(
     rpc_client: &RpcClient,
     vaa: &[u8],
     wormhole: Pubkey,
     payer: &Keypair,
+    legacy_guardian_set: bool,
 ) -> Result<Pubkey> {
     let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
@@ -344,14 +355,15 @@ pub fn process_post_vaa(
     )
     .0;
 
-    let guardian_set_data =
-        GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?[8..])?;
+    let guardian_set_data = deserialize_guardian_set(
+        &mut &rpc_client.get_account_data(&guardian_set)?[8..],
+        legacy_guardian_set,
+    )?;
 
     let vaa_hash = body.digest().unwrap().hash;
     let vaa_pubkey = WormholeSolanaVAA::key(&wormhole, vaa_hash);
 
     let signature_set_keypair = Keypair::new();
-
 
     let verify_txs = verify_signatures_txs(
         vaa,
