@@ -13,8 +13,6 @@ use {
     author = "Pyth Network Contributors"
 )]
 pub struct Cli {
-    #[clap(subcommand)]
-    pub action:   Action,
     #[clap(
         short = 'k',
         long,
@@ -31,6 +29,8 @@ pub struct Cli {
     pub url:      String,
     #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Wormhole address")]
     pub wormhole: Pubkey,
+    #[clap(subcommand)]
+    pub action:   Action,
 }
 
 #[derive(Subcommand, Debug)]
