@@ -117,12 +117,6 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random.transferOwnership(owner2);
     }
 
-    function testRequestOwnershipTransferByOwner() public {
-        vm.prank(owner);
-        random.transferOwnership(owner2);
-        assertEq(random.pendingOwner(), owner2);
-    }
-
     function testRequestAndAcceptOwnershipTransfer() public {
         vm.prank(owner);
         random.transferOwnership(owner2);
