@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, os::unix::process};
 
 
 pub mod cli;
@@ -48,6 +48,7 @@ use {
     },
     wormhole_solana::{
         instructions::{
+            upgrade_guardian_set,
             post_vaa,
             verify_signatures_txs,
             PostVAAData,
@@ -256,16 +257,39 @@ fn main() -> Result<()> {
             // let initialize_instruction = initialize(wormhole, payer.pubkey(), 0, 0, &vec![hex::decode(initial_guardian).unwrap().try_into().unwrap()]).unwrap();
             // process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
 
-            post_single_vaa(&rpc_client, &hex::decode(vaa1).unwrap(), wormhole, &payer)?;
-
-            let update_guardian_set_instruction = set_gua
-        }
+            process_upgrade_guardian_set(&rpc_client, &hex::decode(vaa3).unwrap(), wormhole, &payer)?;   }
     }
 
     Ok(())
 }
 
-pub fn post_single_vaa(
+pub fn process_upgrade_guardian_set(
+    rpc_client : &RpcClient,
+    vaa : &[u8],
+    wormhole: Pubkey,
+    payer : &Keypair) -> Result<()> {
+        let posted_vaa = process_post_vaa(rpc_client, vaa, wormhole, payer).unwrap();
+        let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
+            let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
+            let guardian_set_index_old = header.guardian_set_index;
+            let emitter =  Pubkey::from(body.emitter_address.0);
+            let sequence = body.sequence;
+
+            let update_guardian_set_instruction = upgrade_guardian_set(
+                wormhole,
+                payer.pubkey(),
+                posted_vaa,
+                guardian_set_index_old,  
+                 emitter,
+                sequence
+            ).unwrap();
+
+            process_transaction(&rpc_client, vec![update_guardian_set_instruction], &vec![&payer])?;
+            Ok(())
+        }
+    
+
+pub fn process_post_vaa(
     rpc_client : &RpcClient,
     vaa : &[u8],
     wormhole : Pubkey,
@@ -288,10 +312,9 @@ pub fn post_single_vaa(
         &wormhole,
     )
     .0;
-println!("guardian_set: {}", guardian_set.to_string());
-println!("guardian_set_data: {:?}", rpc_client.get_account_data(&guardian_set)?);
+
     let guardian_set_data =
-    GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?[..36])?;
+    GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?[8..])?;
 
     let vaa_hash = body.digest().unwrap().hash;
     let vaa_pubkey = WormholeSolanaVAA::key(&wormhole, vaa_hash);
