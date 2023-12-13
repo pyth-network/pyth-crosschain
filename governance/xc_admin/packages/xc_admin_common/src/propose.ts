@@ -407,9 +407,10 @@ export class MultisigVault {
           ) {
             // If blockhash has expired, we need to fetch a new one
             needToFetchBlockhash = true;
+          } else {
+            await new Promise((r) => setTimeout(r, 3000));
           }
           console.log(e);
-          await new Promise((r) => setTimeout(r, 1000));
           numberOfRetries += 1;
         }
       }
