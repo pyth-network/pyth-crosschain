@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 #![deny(warnings)]
-=======
-use std::str::FromStr;
-
->>>>>>> 594cb6ea (Cleanup)
 pub mod cli;
 
 use {
@@ -252,38 +247,19 @@ fn main() -> Result<()> {
                 }
             }
         }
-        Action::InitializeWormholeReceiver {} => {
+        Action::Initialize { keypair, url } => {
+            let wormhole =
+                Pubkey::from_str("G5QrYqAz9hnwgK5rwsgrBM5muk7nUBCrfZgrMuFJv5H9").unwrap();
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let initialize_instruction = initialize(
-                wormhole,
-                payer.pubkey(),
-                0,
-                0,
-                &[hex::decode(INITIAL_GUARDIAN).unwrap().try_into().unwrap()],
-            )
-            .unwrap();
-            process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
+            // let initialize_instruction = initialize(wormhole, payer.pubkey(), 0, 0, &vec![hex::decode(initial_guardian).unwrap().try_into().unwrap()]).unwrap();
+            // process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
 
             process_upgrade_guardian_set(
                 &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
-                wormhole,
-                &payer,
-                true,
-            )?;
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
-                wormhole,
-                &payer,
-                false,
-            )?;
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
+                &hex::decode(vaa3).unwrap(),
                 wormhole,
                 &payer,
                 false,
