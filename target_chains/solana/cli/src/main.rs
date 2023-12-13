@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 #![deny(warnings)]
+=======
+use std::str::FromStr;
+
+>>>>>>> 594cb6ea (Cleanup)
 pub mod cli;
 
 use {
