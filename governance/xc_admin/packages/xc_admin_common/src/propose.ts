@@ -409,6 +409,7 @@ export class MultisigVault {
             needToFetchBlockhash = true;
           }
           console.log(e);
+          await new Promise((r) => setTimeout(r, 2000));
           numberOfRetries += 1;
         }
       }
