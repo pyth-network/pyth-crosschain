@@ -247,7 +247,7 @@ fn main() -> Result<()> {
                 }
             }
         }
-        Action::Initialize {} => {
+        Action::InitializeWormholeReceiver {} => {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");

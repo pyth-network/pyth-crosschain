@@ -27,7 +27,7 @@ pub struct Cli {
         help = "RPC endpoint of the solana"
     )]
     pub url:      String,
-    #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Wormhole address")]
+    #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Address of the wormhole contract")]
     pub wormhole: Pubkey,
     #[clap(subcommand)]
     pub action:   Action,
@@ -40,5 +40,8 @@ pub enum Action {
         #[clap(short = 'v', long, help = "Price VAA from Pythnet")]
         vaa: String,
     },
-    Initialize {},
+    #[clap(
+        about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
+    )]
+    InitializeWormholeReceiver {},
 }
