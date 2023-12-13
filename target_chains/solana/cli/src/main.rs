@@ -1,4 +1,6 @@
 #![deny(warnings)]
+
+use solana_sdk::compute_budget::ComputeBudgetInstruction;
 pub mod cli;
 use {
     anchor_client::anchor_lang::{
@@ -80,8 +82,6 @@ fn main() -> Result<()> {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
-
-            println!("[1/5] Decode the AccumulatorUpdateData");
 
             let (vaa, _) = deserialize_accumulator_update_data(&payload)?;
 
@@ -264,7 +264,7 @@ pub fn process_write_encoded_vaa(
         &encoded_vaa_keypair.pubkey(),
         Rent::default().minimum_balance(encoded_vaa_size),
         encoded_vaa_size as u64,
-        &payer.pubkey(),
+        &wormhole,
     );
     let init_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::InitEncodedVaa {
         write_authority: payer.pubkey(),
@@ -310,6 +310,10 @@ pub fn process_write_encoded_vaa(
 
     let (header, _): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
     let guardian_set = GuardianSet::key(&wormhole, header.guardian_set_index);
+
+    let request_compute_units_instruction: Instruction =
+        ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
     let verify_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::VerifyEncodedVaaV1 {
         guardian_set,
         write_authority: payer.pubkey(),
@@ -324,7 +328,10 @@ pub fn process_write_encoded_vaa(
     };
     process_transaction(
         rpc_client,
-        vec![verify_encoded_vaa_instruction],
+        vec![
+            request_compute_units_instruction,
+            verify_encoded_vaa_instruction,
+        ],
         &vec![payer],
     )?;
     Ok(encoded_vaa_keypair.pubkey())
