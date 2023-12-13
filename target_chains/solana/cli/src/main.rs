@@ -247,9 +247,7 @@ fn main() -> Result<()> {
                 }
             }
         }
-        Action::Initialize { keypair, url } => {
-            let wormhole =
-                Pubkey::from_str("G5QrYqAz9hnwgK5rwsgrBM5muk7nUBCrfZgrMuFJv5H9").unwrap();
+        Action::InitializeWormholeReceiver {} => {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
