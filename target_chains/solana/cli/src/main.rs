@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 pub mod cli;
 
 use {
