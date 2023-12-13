@@ -35,10 +35,10 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Action {
-    #[clap(about = "Verify, post and receive the price VAA on solana")]
+    #[clap(about = "Post a price update from Hermes to Solana")]
     PostAndReceiveVAA {
-        #[clap(short = 'v', long, help = "Price VAA from Pythnet")]
-        vaa: String,
+        #[clap(short = 'p', long, help = "Payload from Hermes")]
+        payload: String,
     },
     #[clap(
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
