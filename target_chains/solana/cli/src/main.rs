@@ -36,7 +36,6 @@ use {
         signer::Signer,
         transaction::Transaction,
     },
-    std::str::FromStr,
     wormhole_anchor_sdk::wormhole::BridgeData,
     wormhole_sdk::{
         vaa::{
@@ -255,12 +254,33 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            // let initialize_instruction = initialize(wormhole, payer.pubkey(), 0, 0, &vec![hex::decode(initial_guardian).unwrap().try_into().unwrap()]).unwrap();
-            // process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
+            let initialize_instruction = initialize(
+                wormhole,
+                payer.pubkey(),
+                0,
+                0,
+                &[hex::decode(INITIAL_GUARDIAN).unwrap().try_into().unwrap()],
+            )
+            .unwrap();
+            process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
 
             process_upgrade_guardian_set(
                 &rpc_client,
-                &hex::decode(vaa3).unwrap(),
+                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
+                wormhole,
+                &payer,
+                true,
+            )?;
+            process_upgrade_guardian_set(
+                &rpc_client,
+                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
+                wormhole,
+                &payer,
+                false,
+            )?;
+            process_upgrade_guardian_set(
+                &rpc_client,
+                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
                 wormhole,
                 &payer,
                 false,
