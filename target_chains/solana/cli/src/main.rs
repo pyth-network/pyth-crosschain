@@ -1,8 +1,3 @@
-use {
-    std::str::FromStr,
-    wormhole_solana::instructions::initialize,
-};
-
 pub mod cli;
 
 use {
@@ -40,6 +35,7 @@ use {
         signer::Signer,
         transaction::Transaction,
     },
+    std::str::FromStr,
     wormhole_anchor_sdk::wormhole::BridgeData,
     wormhole_sdk::{
         vaa::{
@@ -50,6 +46,7 @@ use {
     },
     wormhole_solana::{
         instructions::{
+            initialize,
             post_vaa,
             upgrade_guardian_set,
             verify_signatures_txs,
