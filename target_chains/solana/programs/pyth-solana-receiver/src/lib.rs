@@ -51,7 +51,9 @@ pub mod pyth_solana_receiver {
         ctx: Context<AuthorizeGovernanceAuthorityTransfer>,
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
-        config.governance_authority = config.target_governance_authority.unwrap();
+        config.governance_authority = config.target_governance_authority.ok_or(error!(
+            ReceiverError::NonexistentGovernanceAuthorityTransferRequest
+        ))?;
         config.target_governance_authority = None;
         Ok(())
     }
@@ -180,7 +182,7 @@ pub struct Governance<'info> {
 #[derive(Accounts)]
 pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
     #[account(constraint =
-        payer.key() == config.target_governance_authority.ok_or(error!(ReceiverError::InexistentGovernanceAuthorityTransferRequest))? @
+        payer.key() == config.target_governance_authority.ok_or(error!(ReceiverError::NonexistentGovernanceAuthorityTransferRequest))? @
         ReceiverError::TargetGovernanceAuthorityMismatch
     )]
     pub payer:  Signer<'info>,

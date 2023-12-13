@@ -27,5 +27,5 @@ pub enum ReceiverError {
     #[msg("The signer is not authorized to accept the governance authority")]
     TargetGovernanceAuthorityMismatch,
     #[msg("The governance authority needs to request a transfer first")]
-    InexistentGovernanceAuthorityTransferRequest,
+    NonexistentGovernanceAuthorityTransferRequest,
 }
