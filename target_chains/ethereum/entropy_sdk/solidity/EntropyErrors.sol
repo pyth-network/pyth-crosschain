@@ -22,6 +22,6 @@ library EntropyErrors {
     error InvalidUpgradeMagic();
     // The msg.sender is not allowed to invoke this call.
     error Unauthorized();
-    // The request is not within the 256 most recent blocks. 
+    // The request is not within the 256 most recent blocks.
     error StaleRequest();
 }
