@@ -36,6 +36,7 @@ use {
         signer::Signer,
         transaction::Transaction,
     },
+    std::str::FromStr,
     wormhole_anchor_sdk::wormhole::BridgeData,
     wormhole_sdk::{
         vaa::{
