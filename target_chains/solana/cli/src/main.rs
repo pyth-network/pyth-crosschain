@@ -53,9 +53,9 @@ use {
             PostVAAData,
         },
         Account,
-        Config,
+        Config as BridgeConfig,
         GuardianSet,
-        VAA,
+        VAA as LegacyPostedVaa,
     },
 };
 
@@ -93,10 +93,11 @@ fn main() -> Result<()> {
                     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
 
                     println!("[2/5] Get wormhole guardian set configuration");
-                    let wormhole_config = Config::key(&wormhole, ());
+                    let wormhole_config = BridgeConfig::key(&wormhole, ());
 
-                    let wormhole_config_data =
-                        Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
+                    let wormhole_config_data = BridgeConfig::try_from_slice(
+                        &rpc_client.get_account_data(&wormhole_config)?,
+                    )?;
 
                     let guardian_set = Pubkey::find_program_address(
                         &[
@@ -113,7 +114,7 @@ fn main() -> Result<()> {
                         .expect("Keypair not found");
 
                     let vaa_hash = body.digest().unwrap().hash;
-                    let vaa_pubkey = VAA::key(&wormhole, vaa_hash);
+                    let vaa_pubkey = LegacyPostedVaa::key(&wormhole, vaa_hash);
                     let _vaa_account = match rpc_client.get_account_data(&vaa_pubkey) {
                         Ok(account_data) => {
                             println!("[3/5] VAA already posted on solana. Skipping verifying signatures step");
@@ -257,7 +258,7 @@ pub fn process_upgrade_guardian_set(
     legacy_guardian_set: bool,
 ) -> Result<()> {
     let posted_vaa =
-        process_post_vaa(rpc_client, vaa, wormhole, payer, legacy_guardian_set).unwrap();
+        process_legacy_post_vaa(rpc_client, vaa, wormhole, payer, legacy_guardian_set).unwrap();
     let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
     let guardian_set_index_old = header.guardian_set_index;
@@ -291,7 +292,7 @@ fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Resul
     Ok(guardian_set)
 }
 
-pub fn process_post_vaa(
+pub fn process_legacy_post_vaa(
     rpc_client: &RpcClient,
     vaa: &[u8],
     wormhole: Pubkey,
@@ -301,10 +302,10 @@ pub fn process_post_vaa(
     let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
 
-    let wormhole_config = Config::key(&wormhole, ());
+    let wormhole_config = BridgeConfig::key(&wormhole, ());
 
     let wormhole_config_data =
-        Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
+        BridgeConfig::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
     let guardian_set = Pubkey::find_program_address(
         &[
@@ -321,7 +322,7 @@ pub fn process_post_vaa(
     )?;
 
     let vaa_hash = body.digest().unwrap().hash;
-    let vaa_pubkey = VAA::key(&wormhole, vaa_hash);
+    let vaa_pubkey = LegacyPostedVaa::key(&wormhole, vaa_hash);
 
     let signature_set_keypair = Keypair::new();
 

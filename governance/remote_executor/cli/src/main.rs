@@ -64,7 +64,7 @@ use {
             PostVAAData,
         },
         Account,
-        Config,
+        Config as BridgeConfig,
         FeeCollector,
         GuardianSet,
         VAA as PostedVAA,
@@ -84,9 +84,9 @@ fn main() -> Result<()> {
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
             let wormhole = AnchorVaa::owner();
 
-            let wormhole_config = Config::key(&wormhole, ());
+            let wormhole_config = BridgeConfig::key(&wormhole, ());
             let wormhole_config_data =
-                Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
+                BridgeConfig::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
             let guardian_set = GuardianSet::key(&wormhole, wormhole_config_data.guardian_set_index);
             let guardian_set_data =
@@ -163,10 +163,10 @@ fn main() -> Result<()> {
             let wormhole = Pubkey::from_str("worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth")?;
 
             let fee_collector = FeeCollector::key(&wormhole, ());
-            let wormhole_config = Config::key(&wormhole, ());
+            let wormhole_config = BridgeConfig::key(&wormhole, ());
 
             let wormhole_config_data =
-                Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
+                BridgeConfig::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
             let payload = ExecutorPayload {
                 header:       GovernanceHeader::executor_governance_header(),
