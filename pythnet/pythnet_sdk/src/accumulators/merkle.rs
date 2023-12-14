@@ -245,6 +245,7 @@ mod test {
             mem::size_of,
         },
     };
+
     #[derive(Default, Clone, Debug, borsh::BorshSerialize)]
     struct PriceAccount {
         pub id:         u64,
@@ -331,11 +332,11 @@ mod test {
             ema:        50,
             ema_expo:   1,
         };
-        let item_a = borsh::to_vec(&price_account_a).unwrap();
+        let item_a = borsh::BorshSerialize::try_to_vec(&price_account_a).unwrap();
 
         let mut price_only_b = PriceOnly::from(price_account_a);
         price_only_b.price = 200;
-        let item_b = borsh::to_vec(&price_only_b).unwrap();
+        let item_b = BorshSerialize::try_to_vec(&price_only_b).unwrap();
         let item_c = 2usize.to_be_bytes();
         let item_d = 88usize.to_be_bytes();
 
