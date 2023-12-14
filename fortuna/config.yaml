@@ -1,18 +1,10 @@
 chains:
-  optimism-goerli:
-    geth_rpc_addr: https://goerli.optimism.io
-    contract_addr: 0x28F16Af4D87523910b843a801454AEde5F9B0459
+  optimism_sepolia:
+    geth_rpc_addr: https://sepolia.optimism.io
+    contract_addr: 0xdF21D137Aadc95588205586636710ca2890538d5
     reveal_delay_blocks: 0
-  avalanche-fuji:
-    geth_rpc_addr: https://api.avax-test.network/ext/bc/C/rpc
-    contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3
-    reveal_delay_blocks: 0
-  eos-evm-testnet:
-    geth_rpc_addr: https://api.testnet.evm.eosnetwork.com/
-    contract_addr: 0xD42c7a708E74AD19401D907a14146F006c851Ee3
+  lightlink_pegasus:
+    geth_rpc_addr: https://replicator-01.pegasus.lightlink.io/rpc/v1
+    contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
     reveal_delay_blocks: 0
     legacy_tx: true
-  arbitrum-goerli:
-    geth_rpc_addr: https://arbitrum-goerli.publicnode.com
-    contract_addr: 0xd9eAcfFB8e80b7193042499485EF8369b08E85B6
-    reveal_delay_blocks: 0
