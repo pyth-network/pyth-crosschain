@@ -1,6 +1,5 @@
 #![deny(warnings)]
 
-use solana_sdk::compute_budget::ComputeBudgetInstruction;
 pub mod cli;
 use {
     anchor_client::anchor_lang::{
@@ -26,6 +25,7 @@ use {
     },
     solana_sdk::{
         commitment_config::CommitmentConfig,
+        compute_budget::ComputeBudgetInstruction,
         instruction::Instruction,
         pubkey::Pubkey,
         rent::Rent,
@@ -183,6 +183,9 @@ fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Resul
     Ok(guardian_set)
 }
 
+/**
+ * This function posts a VAA to Solana using the legacy way, this way is still used for governance messages like guardian set updates
+ */
 pub fn process_legacy_post_vaa(
     rpc_client: &RpcClient,
     vaa: &[u8],
@@ -250,6 +253,9 @@ pub fn process_legacy_post_vaa(
     Ok(vaa_pubkey)
 }
 
+/**
+ * This function posts a VAA using the new way of interacting with wormhole, we will use it for price updates
+ */
 pub fn process_write_encoded_vaa(
     rpc_client: &RpcClient,
     vaa: &[u8],
