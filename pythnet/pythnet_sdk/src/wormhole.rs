@@ -27,12 +27,14 @@ use {
 };
 
 #[repr(transparent)]
-#[derive(Default)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PostedMessageUnreliableData {
     pub message: MessageData,
 }
 
-#[derive(Debug, Default, BorshSerialize, BorshDeserialize, Clone, Serialize, Deserialize)]
+#[derive(
+    Debug, Default, BorshSerialize, BorshDeserialize, Clone, Serialize, Deserialize, PartialEq,
+)]
 pub struct MessageData {
     pub vaa_version:           u8,
     pub consistency_level:     u8,
@@ -95,4 +97,28 @@ impl Clone for PostedMessageUnreliableData {
 #[derive(Default, Clone, Copy, BorshDeserialize, BorshSerialize)]
 pub struct AccumulatorSequenceTracker {
     pub sequence: u64,
+}
+
+#[test]
+fn test_borsh_roundtrip() {
+    let post_message_unreliable_data = PostedMessageUnreliableData {
+        message: MessageData {
+            vaa_version:           1,
+            consistency_level:     2,
+            vaa_time:              3,
+            vaa_signature_account: [4u8; 32],
+            submission_time:       5,
+            nonce:                 6,
+            sequence:              7,
+            emitter_chain:         8,
+            emitter_address:       [9u8; 32],
+            payload:               vec![10u8; 32],
+        },
+    };
+
+
+    let encoded = borsh::to_vec(&post_message_unreliable_data).unwrap();
+
+    let decoded = PostedMessageUnreliableData::try_from_slice(encoded.as_slice()).unwrap();
+    assert_eq!(decoded, post_message_unreliable_data);
 }
