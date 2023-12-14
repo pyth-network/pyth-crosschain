@@ -93,7 +93,7 @@ cd price_pusher
 npm run start -- evm --endpoint wss://example-rpc.com \
     --pyth-contract-address 0xff1a0f4744e8582DF...... \
     --price-service-endpoint https://example-hermes-rpc.com \
-    --price-config-file "path/to/price-config.testnet.sample.yaml" \
+    --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5] \
@@ -102,9 +102,10 @@ npm run start -- evm --endpoint wss://example-rpc.com \
 # For Injective
 npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-hermes-rpc.com" \
-    --price-config-file "path/to/price-config.testnet.sample.yaml" \
+    --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     --network testnet \
+    [--gas-price 500000000] \
     [--pushing-frequency 10] \
     [--polling-frequency 5]
 
@@ -112,7 +113,7 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
 npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 \
     --price-service-endpoint "https://example-hermes-rpc.com" \
-    --price-config-file "./price-config.testnet.sample.yaml" \
+    --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5]
@@ -127,7 +128,7 @@ npm run start -- sui \
   --price-feed-to-price-info-object-table-id 0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5 \
   --price-service-endpoint https://example-hermes-rpc.com \
   --mnemonic-file ./mnemonic \
-  --price-config-file ./price-config.testnet.sample.yaml \
+  --price-config-file ./price-config.beta.sample.yaml \
   [--pushing-frequency 10] \
   [--polling-frequency 5] \
   [--num-gas-objects 30]
