@@ -6219,7 +6219,7 @@ dependencies = [
 [[package]]
 name = "wormhole-core"
 version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#61bb2fb691a8df0aa0e42a21632e43b392ffa90f"
+source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#b0da20525fe68408ed2c8b331eb5f63101381936"
 dependencies = [
  "borsh 0.9.3",
  "bstr 0.2.17",
@@ -6249,7 +6249,7 @@ dependencies = [
 [[package]]
 name = "wormhole-solana"
 version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#61bb2fb691a8df0aa0e42a21632e43b392ffa90f"
+source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#b0da20525fe68408ed2c8b331eb5f63101381936"
 dependencies = [
  "borsh 0.9.3",
  "bstr 0.2.17",

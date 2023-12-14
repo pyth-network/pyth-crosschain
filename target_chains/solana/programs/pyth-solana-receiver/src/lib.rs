@@ -1,3 +1,5 @@
+use state::config::Config;
+
 pub mod error;
 pub mod state;
 
@@ -18,7 +20,10 @@ use {
         },
         ACCUMULATOR_EMITTER_ADDRESS,
     },
-    state::AnchorVaa,
+    state::{
+        anchor_vaa::AnchorVaa,
+        config::DataSource,
+    },
 };
 
 declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
@@ -26,6 +31,53 @@ declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        **config = initial_config;
+        Ok(())
+    }
+
+    pub fn request_governance_authority_transfer(
+        ctx: Context<Governance>,
+        target_governance_authority: Pubkey,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.target_governance_authority = Some(target_governance_authority);
+        Ok(())
+    }
+
+    pub fn authorize_governance_authority_transfer(
+        ctx: Context<AuthorizeGovernanceAuthorityTransfer>,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.governance_authority = config.target_governance_authority.ok_or(error!(
+            ReceiverError::NonexistentGovernanceAuthorityTransferRequest
+        ))?;
+        config.target_governance_authority = None;
+        Ok(())
+    }
+
+    pub fn set_data_sources(
+        ctx: Context<Governance>,
+        valid_data_sources: Vec<DataSource>,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.valid_data_sources = valid_data_sources;
+        Ok(())
+    }
+
+    pub fn set_fee(ctx: Context<Governance>, single_update_fee_in_lamports: u64) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.single_update_fee_in_lamports = single_update_fee_in_lamports;
+        Ok(())
+    }
+
+    pub fn set_wormhole_address(ctx: Context<Governance>, wormhole: Pubkey) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.wormhole = wormhole;
+        Ok(())
+    }
 
     /// Verify the updates using the posted_vaa account. This should be called after the client
     /// has already called verify_signatures & post_vaa. Wormhole's verify_signatures & post_vaa
@@ -103,6 +155,42 @@ pub mod pyth_solana_receiver {
     }
 }
 
+
+pub const CONFIG_SEED: &str = "config";
+
+#[derive(Accounts)]
+#[instruction(initial_config : Config)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub payer:          Signer<'info>,
+    #[account(init, space = Config::LEN, payer=payer, seeds = [CONFIG_SEED.as_ref()], bump)]
+    pub config:         Account<'info, Config>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Governance<'info> {
+    #[account(constraint =
+        payer.key() == config.governance_authority @
+        ReceiverError::GovernanceAuthorityMismatch
+    )]
+    pub payer:  Signer<'info>,
+    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
+pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
+    #[account(constraint =
+        payer.key() == config.target_governance_authority.ok_or(error!(ReceiverError::NonexistentGovernanceAuthorityTransferRequest))? @
+        ReceiverError::TargetGovernanceAuthorityMismatch
+    )]
+    pub payer:  Signer<'info>,
+    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    pub config: Account<'info, Config>,
+}
+
+
 #[derive(Accounts)]
 pub struct PostUpdates<'info> {
     #[account(mut)]
@@ -118,6 +206,7 @@ pub struct PostUpdates<'info> {
     /// `config` account.
     pub posted_vaa: UncheckedAccount<'info>,
 }
+
 
 impl crate::accounts::PostUpdates {
     pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
