@@ -81,6 +81,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         address defaultProvider,
         bool prefillRequestStorage
     ) internal {
+        require(admin != address(0), "admin is zero address");
+        require(
+            defaultProvider != address(0),
+            "defaultProvider is zero address"
+        );
+
         _state.admin = admin;
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;

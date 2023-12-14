@@ -49,6 +49,8 @@ contract Executor {
         uint16 _ownerEmitterChainId,
         bytes32 _ownerEmitterAddress
     ) {
+        require(_wormhole != address(0), "_wormhole is zero address");
+
         wormhole = IWormhole(_wormhole);
         lastExecutedSequence = _lastExecutedSequence;
         chainId = _chainId;
