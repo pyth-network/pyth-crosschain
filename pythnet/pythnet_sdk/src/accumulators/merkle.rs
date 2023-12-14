@@ -73,7 +73,7 @@ pub struct MerkleTree<H: Hasher = Keccak256> {
     pub root: MerkleRoot<H>,
 
     #[serde(skip)]
-    #[borsh(skip)]
+    #[borsh_skip]
     pub nodes: Vec<H::Hash>,
 }
 
