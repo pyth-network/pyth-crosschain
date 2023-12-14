@@ -25,6 +25,10 @@ export default {
       type: "string",
       required: true,
     } as Options,
+    "gas-price": {
+      description: "Gas price to be used for each transasction",
+      type: "number",
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -35,6 +39,7 @@ export default {
   handler: function (argv: any) {
     // FIXME: type checks for this
     const {
+      gasPrice,
       grpcEndpoint,
       priceConfigFile,
       priceServiceEndpoint,
@@ -87,6 +92,7 @@ export default {
       mnemonic,
       {
         chainId: getNetworkInfo(network).chainId,
+        gasPrice,
       }
     );
 
