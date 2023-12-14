@@ -189,6 +189,7 @@ impl EntropyReader for PythContract {
     ) -> Result<Option<reader::Request>> {
         let r = self
             .get_request(provider_address, sequence_number)
+            .block(ethers::core::types::BlockNumber::Finalized)
             .call()
             .await?;
 
