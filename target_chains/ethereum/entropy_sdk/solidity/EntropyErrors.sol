@@ -22,4 +22,6 @@ library EntropyErrors {
     error InvalidUpgradeMagic();
     // The msg.sender is not allowed to invoke this call.
     error Unauthorized();
+    // The blockhash is 0.
+    error BlockhashUnavailable();
 }

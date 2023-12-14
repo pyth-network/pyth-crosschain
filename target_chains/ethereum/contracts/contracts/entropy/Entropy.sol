@@ -259,7 +259,18 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
-            blockHash = blockhash(req.blockNumber);
+            bytes32 _blockHash = blockhash(req.blockNumber);
+
+            // The `blockhash` function will return zero if the req.blockNumber is equal to the current
+            // block number, or if it is not within the 256 most recent blocks. This allows the user to
+            // select between two random numbers by executing the reveal function in the same block as the
+            // request, or after 256 blocks. This gives each user two chances to get a favorable result on
+            // each request.
+            // Revert this transaction for when the blockHash is 0;
+            if (_blockHash == bytes32(uint256(0)))
+                revert EntropyErrors.BlockhashUnavailable();
+
+            blockHash = _blockHash;
         }
 
         randomNumber = combineRandomValues(

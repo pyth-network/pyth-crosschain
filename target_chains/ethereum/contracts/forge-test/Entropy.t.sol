@@ -405,6 +405,81 @@ contract EntropyTest is Test, EntropyTestUtils {
             true
         );
 
+        vm.roll(1235);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            blockhash(1234)
+        );
+    }
+
+    function testNoCheckOnBlockNumberWhenNoBlockHashUsed() public {
+        vm.roll(1234);
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+
+        vm.roll(1236);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+
+        vm.roll(1234);
+        sequenceNumber = request(user2, provider1, 42, false);
+
+        vm.roll(1234);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+
+        vm.roll(1234);
+        sequenceNumber = request(user2, provider1, 42, false);
+
+        vm.roll(1234 + 257);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+    }
+
+    function testCheckOnBlockNumberWhenBlockHashUsed() public {
+        vm.roll(1234);
+        uint64 sequenceNumber = request(user2, provider1, 42, true);
+
+        vm.roll(1234);
+        assertRevealReverts(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber]
+        );
+
+        vm.roll(1234 + 257);
+        assertRevealReverts(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber]
+        );
+
+        vm.roll(1235);
         assertRevealSucceeds(
             user2,
             provider1,
