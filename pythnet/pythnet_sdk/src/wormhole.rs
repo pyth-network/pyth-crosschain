@@ -54,7 +54,10 @@ impl BorshSerialize for PostedMessageUnreliableData {
 }
 
 impl BorshDeserialize for PostedMessageUnreliableData {
-    fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
+    fn deserialize_reader<R: std::io::prelude::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let mut vector = vec![];
+        reader.read_to_end(&mut vector)?;
+        let buf: &mut &[u8] = &mut vector.as_slice();
         if buf.len() < 3 {
             return Err(Error::new(InvalidData, "Not enough bytes"));
         }

@@ -236,9 +236,8 @@ where
 
 #[test]
 fn test_borsh_roundtrip() {
-    use borsh::BorshSerialize;
     let prefixed_vec = PrefixedVec::<u16, u8>::from(vec![1, 2, 3, 4, 5]);
-    let encoded = prefixed_vec.try_to_vec().unwrap();
+    let encoded = borsh::to_vec(&prefixed_vec).unwrap();
     assert_eq!(encoded, vec![5, 0, 0, 0, 1, 2, 3, 4, 5]);
 
     let decoded_prefixed_vec = PrefixedVec::<u16, u8>::try_from_slice(encoded.as_slice()).unwrap();
