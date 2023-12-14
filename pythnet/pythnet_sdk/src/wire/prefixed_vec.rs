@@ -1,15 +1,21 @@
-use serde::{
-    de::DeserializeSeed,
-    ser::{
-        SerializeSeq,
-        SerializeStruct,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    Deserialize,
-    Serialize,
+    serde::{
+        de::DeserializeSeed,
+        ser::{
+            SerializeSeq,
+            SerializeStruct,
+        },
+        Deserialize,
+        Serialize,
+    },
 };
 
 /// PrefixlessVec overrides the serialization to _not_ write a length prefix.
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
 struct PrefixlessVec<T> {
     inner: Vec<T>,
 }
@@ -99,7 +105,7 @@ where
 ///
 /// For non-Pyth formats this results in a struct which is the correct way to interpret our
 /// data on chain anyway.
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
 pub struct PrefixedVec<L, T> {
     __phantom: std::marker::PhantomData<L>,
     data:      PrefixlessVec<T>,
@@ -226,4 +232,15 @@ where
             },
         )
     }
+}
+
+#[test]
+fn test_borsh_roundtrip() {
+    use borsh::BorshSerialize;
+    let prefixed_vec = PrefixedVec::<u16, u8>::from(vec![1, 2, 3, 4, 5]);
+    let encoded = prefixed_vec.try_to_vec().unwrap();
+    assert_eq!(encoded, vec![5, 0, 0, 0, 1, 2, 3, 4, 5]);
+
+    let decoded_prefixed_vec = PrefixedVec::<u16, u8>::try_from_slice(encoded.as_slice()).unwrap();
+    assert_eq!(decoded_prefixed_vec, prefixed_vec);
 }
