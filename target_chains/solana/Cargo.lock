@@ -3076,6 +3076,7 @@ dependencies = [
  "byteorder",
  "cfg-if",
  "clap 3.2.23",
+ "hex",
  "pyth-solana-receiver",
  "pythnet-sdk",
  "serde",
