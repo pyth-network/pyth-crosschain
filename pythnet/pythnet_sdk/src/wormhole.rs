@@ -55,24 +55,18 @@ impl BorshSerialize for PostedMessageUnreliableData {
 
 impl BorshDeserialize for PostedMessageUnreliableData {
     fn deserialize_reader<R: std::io::prelude::Read>(reader: &mut R) -> std::io::Result<Self> {
-        let mut vector = vec![];
-        reader.read_to_end(&mut vector)?;
-        let buf: &mut &[u8] = &mut vector.as_slice();
-        if buf.len() < 3 {
-            return Err(Error::new(InvalidData, "Not enough bytes"));
-        }
+        let mut magic = [0u8; 3];
+        reader.read_exact(&mut magic)?;
 
         let expected = b"msu";
-        let magic: &[u8] = &buf[0..3];
-        if magic != expected {
+        if &magic != expected {
             return Err(Error::new(
                 InvalidData,
                 format!("Magic mismatch. Expected {expected:?} but got {magic:?}"),
             ));
         };
-        *buf = &buf[3..];
         Ok(PostedMessageUnreliableData {
-            message: <MessageData as BorshDeserialize>::deserialize(buf)?,
+            message: <MessageData as BorshDeserialize>::deserialize_reader(reader)?,
         })
     }
 }
