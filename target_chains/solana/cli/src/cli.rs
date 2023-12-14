@@ -36,7 +36,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Action {
     #[clap(about = "Post a price update from Hermes to Solana")]
-    PostAndReceiveVAA {
+    PostPriceUpdate {
         #[clap(short = 'p', long, help = "Payload from Hermes")]
         payload: String,
     },

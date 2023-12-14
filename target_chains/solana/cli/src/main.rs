@@ -78,7 +78,7 @@ fn main() -> Result<()> {
     } = cli;
 
     match action {
-        Action::PostAndReceiveVAA { payload } => {
+        Action::PostPriceUpdate { payload } => {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
