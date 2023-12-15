@@ -1,18 +1,9 @@
 use {
-    anchor_lang::system_program,
-    state::{
-        config::Config,
-        price_update::PriceUpdateV1,
-    },
-    wormhole_core_bridge_solana::state::EncodedVaa,
-};
-
-pub mod error;
-pub mod state;
-
-use {
     crate::error::ReceiverError,
-    anchor_lang::prelude::*,
+    anchor_lang::{
+        prelude::*,
+        system_program,
+    },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -26,22 +17,31 @@ use {
             },
         },
     },
-    state::config::DataSource,
+    serde_wormhole::RawMessage,
+    solana_program::system_instruction,
+    state::{
+        config::{
+            Config,
+            DataSource,
+        },
+        price_update::PriceUpdateV1,
+    },
+    wormhole_core_bridge_solana::state::EncodedVaa,
+    wormhole_sdk::vaa::{
+        Body,
+        Header,
+    },
 };
+
+pub mod error;
+pub mod state;
+
 
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 #[program]
 pub mod pyth_solana_receiver {
-    use {
-        super::*,
-        serde_wormhole::RawMessage,
-        solana_program::system_instruction,
-        wormhole_sdk::vaa::{
-            Body,
-            Header,
-        },
-    };
+    use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
         let config = &mut ctx.accounts.config;

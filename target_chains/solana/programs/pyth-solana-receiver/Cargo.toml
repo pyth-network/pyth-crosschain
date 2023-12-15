@@ -17,14 +17,9 @@ test-bpf = []
 
 [dependencies]
 anchor-lang = "0.28.0"
-wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", version = "2.0.0" }
 solana-program = "1.16.20"
-hex = "0.4.3"
-serde = { version = "1.0.152", features = ["derive"] }
 byteorder = "1.4.3"
-sha3 = "0.10.6"
 wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"}
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}

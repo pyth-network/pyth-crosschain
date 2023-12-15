@@ -12,14 +12,10 @@ solana-client = "1.16.20"
 anchor-client = "0.28.0"
 clap = {version ="3.2.22", features = ["derive"]}
 pyth-solana-receiver = {path = "../programs/pyth-solana-receiver" }
-wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"} # Used for initializing the wormhole receiver
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
-byteorder = "1.4.3"
-serde = "1.0.152"
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
-cfg-if = "1.0.0"
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" } # Used to deserialize VAAs
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"} # Used to deserialize VAAs
 hex = "0.4.3"
 borsh = "0.9.3" # Old version of borsh needed for wormhole-solana
-wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"}
+wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"} # Used to post VAAs to the wormhole receiver
