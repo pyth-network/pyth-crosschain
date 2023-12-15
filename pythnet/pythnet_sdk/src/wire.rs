@@ -40,6 +40,10 @@ pub mod v1 {
             hashers::keccak256_160::Keccak160,
             require,
         },
+        borsh::{
+            BorshDeserialize,
+            BorshSerialize,
+        },
         serde::{
             Deserialize,
             Serialize,
@@ -99,7 +103,9 @@ pub mod v1 {
         },
     }
 
-    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    #[derive(
+        Clone, Debug, Hash, PartialEq, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+    )]
     pub struct MerklePriceUpdate {
         pub message: PrefixedVec<u16, u8>,
         pub proof:   MerklePath<Keccak160>,
