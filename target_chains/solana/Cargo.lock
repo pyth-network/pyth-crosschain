@@ -263,19 +263,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor-spl"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78f860599da1c2354e7234c768783049eb42e2f54509ecfc942d2e0076a2da7b"
-dependencies = [
- "anchor-lang",
- "solana-program",
- "spl-associated-token-account 1.1.3",
- "spl-token 3.5.0",
- "spl-token-2022 0.6.1",
-]
-
-[[package]]
 name = "anchor-syn"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2622,15 +2609,6 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.5.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d829733185c1ca374f17e52b762f24f535ec625d2cc1f070e34c8a9068f341b"
-dependencies = [
- "num_enum_derive 0.5.9",
-]
-
-[[package]]
-name = "num_enum"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a015b430d3c108a207fd776d2e2196aaf8b1cf8cf93253e3a097ff3085076a1"
@@ -2645,18 +2623,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683751d591e6d81200c39fb0d1032608b77724f34114db54f571ff1317b337c0"
 dependencies = [
  "num_enum_derive 0.7.1",
-]
-
-[[package]]
-name = "num_enum_derive"
-version = "0.5.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2be1598bf1c313dcdd12092e3f1920f463462525a21b7b4e11b4168353d0123e"
-dependencies = [
- "proc-macro-crate 1.3.0",
- "proc-macro2 1.0.69",
- "quote 1.0.33",
- "syn 1.0.107",
 ]
 
 [[package]]
@@ -2996,19 +2962,6 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
-dependencies = [
- "borsh 0.9.3",
- "borsh-derive 0.9.3",
- "hex",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "pyth-sdk"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e7aeef4d5f0a9c98ff5af2ddd84a8b89919c512188305b497a9eb9afa97a949"
@@ -3032,7 +2985,7 @@ dependencies = [
  "bytemuck",
  "num-derive 0.3.3",
  "num-traits",
- "pyth-sdk 0.8.0",
+ "pyth-sdk",
  "serde",
  "solana-program",
  "thiserror",
@@ -3048,9 +3001,8 @@ dependencies = [
  "hex",
  "lazy_static",
  "libsecp256k1 0.7.1",
- "pyth-sdk 0.8.0",
+ "pyth-sdk",
  "pyth-sdk-solana",
- "pyth-wormhole-attester-sdk",
  "pythnet-sdk",
  "rand 0.8.5",
  "serde",
@@ -3060,8 +3012,8 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "tokio",
- "wormhole-anchor-sdk",
  "wormhole-core",
+ "wormhole-core-bridge-solana",
  "wormhole-sdk",
  "wormhole-solana",
 ]
@@ -3092,21 +3044,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-wormhole-attester-sdk"
-version = "0.1.2"
-dependencies = [
- "hex",
- "pyth-sdk 0.5.0",
- "serde",
-]
-
-[[package]]
 name = "pythnet-sdk"
 version = "2.0.0"
-source = "git+https://github.com/pyth-network/pyth-crosschain#a22b202772b75317f367f4c4846fee24105e91fb"
 dependencies = [
  "bincode",
- "borsh 0.9.3",
+ "borsh 0.10.3",
  "bytemuck",
  "byteorder",
  "fast-math",
@@ -3115,7 +3057,6 @@ dependencies = [
  "serde",
  "sha3 0.10.6",
  "slow_primes",
- "strum",
  "thiserror",
 ]
 
@@ -3953,8 +3894,8 @@ dependencies = [
  "solana-address-lookup-table-program",
  "solana-config-program",
  "solana-sdk",
- "spl-token 4.0.0",
- "spl-token-2022 0.9.0",
+ "spl-token",
+ "spl-token-2022",
  "spl-token-metadata-interface",
  "thiserror",
  "zstd",
@@ -4539,7 +4480,7 @@ dependencies = [
  "solana-sdk",
  "solana-transaction-status",
  "solana-version",
- "spl-token-2022 0.9.0",
+ "spl-token-2022",
  "thiserror",
 ]
 
@@ -4828,10 +4769,10 @@ dependencies = [
  "solana-account-decoder",
  "solana-address-lookup-table-program",
  "solana-sdk",
- "spl-associated-token-account 2.2.0",
- "spl-memo 4.0.0",
- "spl-token 4.0.0",
- "spl-token-2022 0.9.0",
+ "spl-associated-token-account",
+ "spl-memo",
+ "spl-token",
+ "spl-token-2022",
  "thiserror",
 ]
 
@@ -4975,22 +4916,6 @@ dependencies = [
 
 [[package]]
 name = "spl-associated-token-account"
-version = "1.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978dba3bcbe88d0c2c58366c254d9ea41c5f73357e72fc0bdee4d6b5fc99c8f4"
-dependencies = [
- "assert_matches",
- "borsh 0.9.3",
- "num-derive 0.3.3",
- "num-traits",
- "solana-program",
- "spl-token 3.5.0",
- "spl-token-2022 0.6.1",
- "thiserror",
-]
-
-[[package]]
-name = "spl-associated-token-account"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "385e31c29981488f2820b2022d8e731aae3b02e6e18e2fd854e4c9a94dc44fc3"
@@ -5000,8 +4925,8 @@ dependencies = [
  "num-derive 0.4.1",
  "num-traits",
  "solana-program",
- "spl-token 4.0.0",
- "spl-token-2022 0.9.0",
+ "spl-token",
+ "spl-token-2022",
  "thiserror",
 ]
 
@@ -5038,15 +4963,6 @@ dependencies = [
  "sha2 0.10.6",
  "syn 2.0.39",
  "thiserror",
-]
-
-[[package]]
-name = "spl-memo"
-version = "3.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd0dc6f70db6bacea7ff25870b016a65ba1d1b6013536f08e4fd79a8f9005325"
-dependencies = [
- "solana-program",
 ]
 
 [[package]]
@@ -5112,21 +5028,6 @@ dependencies = [
 
 [[package]]
 name = "spl-token"
-version = "3.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e85e168a785e82564160dcb87b2a8e04cee9bfd1f4d488c729d53d6a4bd300d"
-dependencies = [
- "arrayref",
- "bytemuck",
- "num-derive 0.3.3",
- "num-traits",
- "num_enum 0.5.9",
- "solana-program",
- "thiserror",
-]
-
-[[package]]
-name = "spl-token"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08459ba1b8f7c1020b4582c4edf0f5c7511a5e099a7a97570c9698d4f2337060"
@@ -5137,24 +5038,6 @@ dependencies = [
  "num-traits",
  "num_enum 0.6.1",
  "solana-program",
- "thiserror",
-]
-
-[[package]]
-name = "spl-token-2022"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0043b590232c400bad5ee9eb983ced003d15163c4c5d56b090ac6d9a57457b47"
-dependencies = [
- "arrayref",
- "bytemuck",
- "num-derive 0.3.3",
- "num-traits",
- "num_enum 0.5.9",
- "solana-program",
- "solana-zk-token-sdk",
- "spl-memo 3.0.1",
- "spl-token 3.5.0",
  "thiserror",
 ]
 
@@ -5171,9 +5054,9 @@ dependencies = [
  "num_enum 0.7.1",
  "solana-program",
  "solana-zk-token-sdk",
- "spl-memo 4.0.0",
+ "spl-memo",
  "spl-pod",
- "spl-token 4.0.0",
+ "spl-token",
  "spl-token-metadata-interface",
  "spl-transfer-hook-interface",
  "spl-type-length-value",
@@ -6224,17 +6107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wormhole-anchor-sdk"
-version = "0.1.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd5b515d674db0fd7b562bc6ecd1b3e35912e6a9a101f486513b8978205736a2"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "cfg-if",
-]
-
-[[package]]
 name = "wormhole-core"
 version = "0.1.0"
 source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#b0da20525fe68408ed2c8b331eb5f63101381936"
@@ -6253,7 +6125,7 @@ dependencies = [
 [[package]]
 name = "wormhole-core-bridge-solana"
 version = "0.0.1-alpha.3"
-source = "git+https://github.com/guibescos/wormhole?branch=variable-sigs#84ddd45906abf14f1e0ac3b80556c15904301fb6"
+source = "git+https://github.com/guibescos/wormhole?branch=variable-sigs#a9b970c1bc09b9678777949bcfcac8d498f7c1fc"
 dependencies = [
  "anchor-lang",
  "cfg-if",

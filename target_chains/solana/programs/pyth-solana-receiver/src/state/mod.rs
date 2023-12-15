@@ -1,2 +1,2 @@
-pub mod anchor_vaa;
 pub mod config;
+pub mod price_update;

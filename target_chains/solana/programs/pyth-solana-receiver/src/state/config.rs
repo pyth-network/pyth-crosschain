@@ -12,7 +12,7 @@ pub struct Config {
     pub single_update_fee_in_lamports: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
 pub struct DataSource {
     pub chain:   u16,
     pub emitter: Pubkey,
