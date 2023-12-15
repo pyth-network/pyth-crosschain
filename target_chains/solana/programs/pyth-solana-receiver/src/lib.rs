@@ -218,6 +218,7 @@ pub struct PostUpdates<'info> {
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
+    /// CHECK: This is just a PDA controlled by the program
     pub treasury:             AccountInfo<'info>,
     #[account(init, payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
