@@ -5,8 +5,8 @@ edition = "2021"
 
 [features]
 default = ["mainnet"]
-mainnet = ["wormhole-anchor-sdk/mainnet", "pyth-solana-receiver/mainnet"]
-devnet = ["wormhole-anchor-sdk/solana-devnet", "pyth-solana-receiver/devnet"]
+mainnet = ["pyth-solana-receiver/mainnet"]
+devnet = ["pyth-solana-receiver/devnet"]
 
 
 [dependencies]
@@ -25,6 +25,7 @@ byteorder = "1.4.3"
 serde = "1.0.152"
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
-wormhole-anchor-sdk = {  version = "0.1.0-alpha.2" , default-features = false }
 cfg-if = "1.0.0"
 hex = "0.4.3"
+borsh = "0.9.3" # Old version of borsh needed for wormhole-solana
+wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"}
