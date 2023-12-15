@@ -189,7 +189,8 @@ impl EntropyReader for PythContract {
     ) -> Result<Option<reader::Request>> {
         let r = self
             .get_request(provider_address, sequence_number)
-            .block(ethers::core::types::BlockNumber::Finalized)
+            // TODO: This doesn't work for lighlink right now. Figure out how to do this in lightlink
+            // .block(ethers::core::types::BlockNumber::Finalized)
             .call()
             .await?;
 
