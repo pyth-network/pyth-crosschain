@@ -1,6 +1,5 @@
 use {
     anchor_lang::system_program,
-    state::config::Config,
     state::{
         config::Config,
         price_update::PriceUpdateV1,
@@ -215,10 +214,12 @@ pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     #[account(owner = config.wormhole)]
+    pub encoded_vaa: Account<'info, EncodedVaa>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
     /// CHECK: This is just a PDA controlled by the program
+    #[account(mut)]
     pub treasury:             AccountInfo<'info>,
     #[account(init, payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
@@ -237,11 +238,17 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::PostUpdates {
-    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
+    pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
+        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &crate::ID).0;
+
         crate::accounts::PostUpdates {
-            payer:      *payer,
-            posted_vaa: *posted_vaa,
+            payer,
+            encoded_vaa,
+            config,
+            treasury,
+            price_update_account,
+            system_program: system_program::ID,
         }
     }
-
 }

@@ -85,9 +85,10 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let (vaa, _) = deserialize_accumulator_update_data(&payload)?;
+            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(&payload)?;
 
-            process_write_encoded_vaa(&rpc_client, &vaa, wormhole, &payer)?;
+            let encoded_vaa = process_write_encoded_vaa(&rpc_client, &vaa, wormhole, &payer)?;
+            process_post_price_update(&rpc_client, encoded_vaa, &payer, &merkle_price_updates[0])?;
         }
 
         Action::InitializeWormholeReceiver {} => {
@@ -206,6 +207,37 @@ pub fn process_upgrade_guardian_set(
         &vec![payer],
     )?;
     Ok(())
+}
+
+pub fn process_post_price_update(
+    rpc_client: &RpcClient,
+    encoded_vaa: Pubkey,
+    payer: &Keypair,
+    merkle_price_update: &MerklePriceUpdate,
+) -> Result<Pubkey> {
+    let price_update_keypair = Keypair::new();
+
+    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdates::populate(
+        payer.pubkey(),
+        encoded_vaa,
+        price_update_keypair.pubkey(),
+    )
+    .to_account_metas(None);
+    let post_update_instructions = Instruction {
+        program_id: pyth_solana_receiver::id(),
+        accounts:   post_update_accounts,
+        data:       pyth_solana_receiver::instruction::PostUpdates {
+            price_update: merkle_price_update.clone(),
+        }
+        .data(),
+    };
+
+    process_transaction(
+        rpc_client,
+        vec![post_update_instructions],
+        &vec![payer, &price_update_keypair],
+    )?;
+    Ok(price_update_keypair.pubkey())
 }
 
 fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Result<GuardianSet> {
