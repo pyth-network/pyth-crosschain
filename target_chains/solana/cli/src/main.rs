@@ -1,5 +1,7 @@
 #![deny(warnings)]
 
+use pyth_solana_receiver::state::config::DataSource;
+
 pub mod cli;
 use {
     anchor_client::anchor_lang::{
@@ -125,8 +127,41 @@ fn main() -> Result<()> {
                 false,
             )?;
         }
-    }
+        Action::InitializePythReceiver {
+            fee,
+            emitter,
+            chain,
+        } => {
+            let pyth_receiver_id: Pubkey = pyth_solana_receiver::ID;
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
+            let initialize_pyth_receiver_accounts =
+                pyth_solana_receiver::accounts::Initialize::populate(&payer.pubkey())
+                    .to_account_metas(None);
+            let initialize_pyth_receiver_instruction = Instruction {
+                program_id: pyth_receiver_id,
+                accounts:   initialize_pyth_receiver_accounts,
+                data:       pyth_solana_receiver::instruction::Initialize {
+                    initial_config: pyth_solana_receiver::state::config::Config {
+                        governance_authority: payer.pubkey(),
+                        target_governance_authority: None,
+                        wormhole,
+                        valid_data_sources: vec![DataSource { chain, emitter }],
+                        single_update_fee_in_lamports: fee,
+                    },
+                }
+                .data(),
+            };
+
+            process_transaction(
+                &rpc_client,
+                vec![initialize_pyth_receiver_instruction],
+                &vec![&payer],
+            )?;
+        }
+    }
     Ok(())
 }
 

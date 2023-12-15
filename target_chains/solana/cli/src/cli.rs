@@ -44,4 +44,12 @@ pub enum Action {
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
     InitializeWormholeReceiver {},
+    InitializePythReceiver {
+        #[clap(short = 'f', long, help = "Fee in lmaports")]
+        fee:     u64,
+        #[clap(short = 'e', long, parse(try_from_str = Pubkey::from_str), help = "Source emitter")]
+        emitter: Pubkey,
+        #[clap(short = 'c', long, help = "Source chain")]
+        chain:   u16,
+    },
 }
