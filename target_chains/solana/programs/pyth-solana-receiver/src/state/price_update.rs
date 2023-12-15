@@ -7,7 +7,7 @@ use {
 #[account]
 pub struct PriceUpdateV1 {
     pub write_authority:     Pubkey, // This write authority can close this account
-    pub verified_signatures: u8,     // The number of wormhole signatures that were verified
+    pub verified_signatures: u8, // The number of wormhole signatures that were verified by the wormhole receiver
     pub price_message:       PriceFeedMessage,
 }
 
