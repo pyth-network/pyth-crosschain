@@ -1,6 +1,5 @@
 #![deny(warnings)]
 
-use pyth_solana_receiver::state::config::DataSource;
 
 pub mod cli;
 use {
@@ -15,6 +14,7 @@ use {
         Action,
         Cli,
     },
+    pyth_solana_receiver::state::config::DataSource,
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,
         MerklePriceUpdate,
@@ -132,7 +132,6 @@ fn main() -> Result<()> {
             emitter,
             chain,
         } => {
-            let pyth_receiver_id: Pubkey = pyth_solana_receiver::ID;
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
@@ -141,7 +140,7 @@ fn main() -> Result<()> {
                 pyth_solana_receiver::accounts::Initialize::populate(&payer.pubkey())
                     .to_account_metas(None);
             let initialize_pyth_receiver_instruction = Instruction {
-                program_id: pyth_receiver_id,
+                program_id: pyth_solana_receiver::ID,
                 accounts:   initialize_pyth_receiver_accounts,
                 data:       pyth_solana_receiver::instruction::Initialize {
                     initial_config: pyth_solana_receiver::state::config::Config {
