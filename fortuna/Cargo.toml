@@ -15,7 +15,7 @@ ethabi      = "18.0.0"
 ethers      = "2.0.10"
 hex         = "0.4.3"
 prometheus-client  = { version = "0.21.2" }
-pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version = "2.0.0", features = ["strum"] }
+pythnet-sdk = { path = "../pythnet/pythnet_sdk", features = ["strum"] }
 rand        = "0.8.5"
 reqwest     = { version = "0.11.22", features = ["json", "blocking"] }
 serde       = { version = "1.0.188", features = ["derive"] }
