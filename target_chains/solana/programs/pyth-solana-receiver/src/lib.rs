@@ -29,7 +29,7 @@ use {
     },
 };
 
-declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
+declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 #[program]
 pub mod pyth_solana_receiver {
