@@ -1,0 +1,6 @@
+chains:
+  lightlink_pegasus:
+    geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
+    contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
+    reveal_delay_blocks: 0
+    legacy_tx: true
