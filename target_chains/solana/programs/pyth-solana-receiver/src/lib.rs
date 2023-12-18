@@ -90,20 +90,11 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    /// Verify the updates using the posted_vaa account. This should be called after the client
-    /// has already called verify_signatures & post_vaa. Wormhole's verify_signatures & post_vaa
-    /// will perform the necessary checks so that we can assume that the posted_vaa account is
-    /// valid and the signatures have been verified.
-    ///
-    ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
+    /// Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.
+    /// This should be called after the client has already verified the Vaa via the Wormhole contract.
+    /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
     #[allow(unused_variables)]
-    pub fn post_updates(
-        ctx: Context<PostUpdates>,
-        // TODO: update pythnet_sdk to implement BorshSerialize, BorshDeserialize
-        // for MerklePriceUpdate as well as Keccak160 price_updates can be passed
-        // in as Vec<MerklePriceUpdate>
-        price_update: MerklePriceUpdate,
-    ) -> Result<()> {
+    pub fn post_updates(ctx: Context<PostUpdates>, price_update: MerklePriceUpdate) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer = &ctx.accounts.payer;
         let encoded_vaa = &ctx.accounts.encoded_vaa;
@@ -214,11 +205,11 @@ pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     #[account(owner = config.wormhole)]
-    pub encoded_vaa: Account<'info, EncodedVaa>,
+    pub encoded_vaa:          Account<'info, EncodedVaa>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
-    /// CHECK: This is just a PDA controlled by the program
+    /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
     #[account(init, payer =payer, space = PriceUpdateV1::LEN)]

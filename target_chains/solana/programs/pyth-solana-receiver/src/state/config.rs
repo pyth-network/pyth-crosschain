@@ -5,11 +5,11 @@ use {
 
 #[account]
 pub struct Config {
-    pub governance_authority:          Pubkey,
-    pub target_governance_authority:   Option<Pubkey>,
-    pub wormhole:                      Pubkey,
-    pub valid_data_sources:            Vec<DataSource>,
-    pub single_update_fee_in_lamports: u64,
+    pub governance_authority:          Pubkey, // This authority can update the other fields
+    pub target_governance_authority:   Option<Pubkey>, // This field is used for a two-step governance authority transfer
+    pub wormhole:                      Pubkey,         // The address of the wormhole receiver
+    pub valid_data_sources:            Vec<DataSource>, // The list of valid data sources for oracle price updates
+    pub single_update_fee_in_lamports: u64, // The fee in lamports for a single price update
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
