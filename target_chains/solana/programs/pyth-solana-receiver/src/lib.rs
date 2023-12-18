@@ -1,4 +1,7 @@
-use state::config::Config;
+use {
+    anchor_lang::system_program,
+    state::config::Config,
+};
 
 pub mod error;
 pub mod state;
@@ -26,7 +29,7 @@ use {
     },
 };
 
-declare_id!("DvPfMBZJJwKgJsv2WJA8bFwUMn8nFd5Xpioc6foC3rse");
+declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 #[program]
 pub mod pyth_solana_receiver {
@@ -207,6 +210,16 @@ pub struct PostUpdates<'info> {
     pub posted_vaa: UncheckedAccount<'info>,
 }
 
+impl crate::accounts::Initialize {
+    pub fn populate(payer: &Pubkey) -> Self {
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
+        crate::accounts::Initialize {
+            payer: *payer,
+            config,
+            system_program: system_program::ID,
+        }
+    }
+}
 
 impl crate::accounts::PostUpdates {
     pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
