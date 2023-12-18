@@ -1,14 +1,9 @@
 use {
-    anchor_lang::system_program,
-    state::config::Config,
-};
-
-pub mod error;
-pub mod state;
-
-use {
     crate::error::ReceiverError,
-    anchor_lang::prelude::*,
+    anchor_lang::{
+        prelude::*,
+        system_program,
+    },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -21,13 +16,26 @@ use {
                 WormholePayload,
             },
         },
-        ACCUMULATOR_EMITTER_ADDRESS,
     },
+    serde_wormhole::RawMessage,
+    solana_program::system_instruction,
     state::{
-        anchor_vaa::AnchorVaa,
-        config::DataSource,
+        config::{
+            Config,
+            DataSource,
+        },
+        price_update::PriceUpdateV1,
+    },
+    wormhole_core_bridge_solana::state::EncodedVaa,
+    wormhole_sdk::vaa::{
+        Body,
+        Header,
     },
 };
+
+pub mod error;
+pub mod state;
+
 
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
@@ -82,84 +90,82 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    /// Verify the updates using the posted_vaa account. This should be called after the client
-    /// has already called verify_signatures & post_vaa. Wormhole's verify_signatures & post_vaa
-    /// will perform the necessary checks so that we can assume that the posted_vaa account is
-    /// valid and the signatures have been verified.
-    ///
-    ///  * `price_updates` Vec of bytes for the updates to verify and post on-chain
+    /// Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.
+    /// This should be called after the client has already verified the Vaa via the Wormhole contract.
+    /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
     #[allow(unused_variables)]
-    pub fn post_updates(
-        ctx: Context<PostUpdates>,
-        // TODO: update pythnet_sdk to implement BorshSerialize, BorshDeserialize
-        // for MerklePriceUpdate as well as Keccak160 price_updates can be passed
-        // in as Vec<MerklePriceUpdate>
-        price_updates: Vec<Vec<u8>>,
-    ) -> Result<()> {
-        let unchecked_vaa = &ctx.accounts.posted_vaa;
-        require_keys_eq!(
-            *unchecked_vaa.owner,
-            //TODO: expected owner should come from config account that can only be modified by governance
-            wormhole_anchor_sdk::wormhole::program::id(),
-            ReceiverError::WrongVaaOwner
-        );
-        let vaa = AnchorVaa::try_deserialize(&mut &**(unchecked_vaa.try_borrow_data()?))
-            .map_err(|_| ReceiverError::DeserializeVaaFailed)?;
+    pub fn post_updates(ctx: Context<PostUpdates>, price_update: MerklePriceUpdate) -> Result<()> {
+        let config = &ctx.accounts.config;
+        let payer = &ctx.accounts.payer;
+        let encoded_vaa = &ctx.accounts.encoded_vaa;
+        let treasury = &ctx.accounts.treasury;
+        let price_update_account = &mut ctx.accounts.price_update_account;
 
-        // TODO: expected emitter_chain should come from config account that can only be modified by governance
-        require_eq!(
-            vaa.emitter_chain(),
-            <wormhole::Chain as Into<u16>>::into(wormhole::Chain::Pythnet),
-            ReceiverError::InvalidEmitterChain
-        );
+        if payer.lamports()
+            < Rent::get()?
+                .minimum_balance(0)
+                .saturating_add(config.single_update_fee_in_lamports)
+        {
+            return err!(ReceiverError::InsufficientFunds);
+        };
 
-        require_keys_eq!(
-            Pubkey::new_from_array(*vaa.emitter_address()),
-            // TODO: expected emitter_address should come from config account that can only be modified by governance
-            Pubkey::new_from_array(ACCUMULATOR_EMITTER_ADDRESS),
-            ReceiverError::InvalidEmitterAddress
+        let transfer_instruction = system_instruction::transfer(
+            payer.key,
+            treasury.key,
+            config.single_update_fee_in_lamports,
         );
+        anchor_lang::solana_program::program::invoke(
+            &transfer_instruction,
+            &[
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.treasury.to_account_info(),
+            ],
+        )?;
 
-        let wh_message = WormholeMessage::try_from_bytes(vaa.payload.as_slice())
+        let (header, body): (Header, Body<&RawMessage>) =
+            serde_wormhole::from_slice(&ctx.accounts.encoded_vaa.buf).unwrap();
+
+        let valid_data_source = config.valid_data_sources.iter().any(|x| {
+            *x == DataSource {
+                chain:   body.emitter_chain.into(),
+                emitter: Pubkey::from(body.emitter_address.0),
+            }
+        });
+        if !valid_data_source {
+            return err!(ReceiverError::InvalidDataSource);
+        }
+
+        let wormhole_message = WormholeMessage::try_from_bytes(body.payload)
             .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
-        msg!("constructed wh_message {:?}", wh_message);
-        let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wh_message.payload {
+        let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
             WormholePayload::Merkle(merkle_root) => merkle_root.root,
         });
 
-        let mut count_updates = 0;
+        if !root.check(price_update.proof, price_update.message.as_ref()) {
+            return err!(ReceiverError::InvalidPriceUpdate);
+        }
 
-        let price_updates_len = price_updates.len();
-        for price_update in price_updates {
-            let merkle_price_update =
-                from_slice::<byteorder::BE, MerklePriceUpdate>(price_update.as_slice())
-                    .map_err(|_| ReceiverError::DeserializeUpdateFailed)?;
-            let message_vec = Vec::from(merkle_price_update.message);
-            if !root.check(merkle_price_update.proof, &message_vec) {
-                return err!(ReceiverError::InvalidPriceUpdate);
+        let message = from_slice::<byteorder::BE, Message>(price_update.message.as_ref())
+            .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
+
+        match message {
+            Message::PriceFeedMessage(price_feed_message) => {
+                price_update_account.write_authority = payer.key();
+                price_update_account.verified_signatures = encoded_vaa.header.verified_signatures;
+                price_update_account.price_message = price_feed_message;
             }
-            let msg = from_slice::<byteorder::BE, Message>(&message_vec)
-                .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
-
-            match msg {
-                Message::PriceFeedMessage(price_feed_message) => {
-                    count_updates += 1;
-                    msg!("price_feed_message: {:?}", price_feed_message);
-                }
-                Message::TwapMessage(twap_message) => {
-                    count_updates += 1;
-                    msg!("twap_message: {:?}", twap_message);
-                }
-                _ => return err!(ReceiverError::InvalidAccumulatorMessageType),
+            Message::TwapMessage(twap_message) => {
+                return err!(ReceiverError::UnsupportedMessageType);
             }
         }
-        msg!("verified {} / {} updates", count_updates, price_updates_len);
+
         Ok(())
     }
 }
 
 
 pub const CONFIG_SEED: &str = "config";
+pub const TREASURY_SEED: &str = "treasury";
 
 #[derive(Accounts)]
 #[instruction(initial_config : Config)]
@@ -197,17 +203,18 @@ pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
 #[derive(Accounts)]
 pub struct PostUpdates<'info> {
     #[account(mut)]
-    pub payer:      Signer<'info>,
-    /// CHECK: Account with verified vaa. Wormhole's verify_signatures & post_vaa will perform the
-    /// necessary checks so that it is assumed that the posted_vaa account is valid and the
-    /// signatures have been verified if the owner & discriminator are correct. The
-    /// `posted_vaa.payload` contains a merkle root and the price_updates are verified against this
-    /// merkle root.
-    ///
-    /// Using `UncheckedAccount` so that we can deserialize the account without the `Owner` trait
-    /// being implemented to a hard-coded value. The owner is checked in the ix itself using the
-    /// `config` account.
-    pub posted_vaa: UncheckedAccount<'info>,
+    pub payer:                Signer<'info>,
+    #[account(owner = config.wormhole)]
+    pub encoded_vaa:          Account<'info, EncodedVaa>,
+    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    pub config:               Account<'info, Config>,
+    #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
+    /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
+    #[account(mut)]
+    pub treasury:             AccountInfo<'info>,
+    #[account(init, payer =payer, space = PriceUpdateV1::LEN)]
+    pub price_update_account: Account<'info, PriceUpdateV1>,
+    pub system_program:       Program<'info, System>,
 }
 
 impl crate::accounts::Initialize {
@@ -222,10 +229,17 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::PostUpdates {
-    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
+    pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
+        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &crate::ID).0;
+
         crate::accounts::PostUpdates {
-            payer:      *payer,
-            posted_vaa: *posted_vaa,
+            payer,
+            encoded_vaa,
+            config,
+            treasury,
+            price_update_account,
+            system_program: system_program::ID,
         }
     }
 }

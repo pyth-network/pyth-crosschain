@@ -13,23 +13,14 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = ["mainnet"]
-mainnet = ["wormhole-anchor-sdk/mainnet"]
-devnet = ["wormhole-anchor-sdk/solana-devnet"]
 test-bpf = []
 
 [dependencies]
 anchor-lang = "0.28.0"
-wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
-pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version = "2.0.0", features = ["strum"] }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", version = "2.0.0" }
 solana-program = "1.16.20"
-hex = "0.4.3"
-serde = { version = "1.0.152", features = ["derive"] }
 byteorder = "1.4.3"
-wormhole-anchor-sdk = {  version = "0.1.0-alpha.2" , default-features = false }
-sha3 = "0.10.6"
+wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"}
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 
