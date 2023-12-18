@@ -107,6 +107,7 @@ export const RECEIVER_CHAINS = {
   stacks_testnet: 50039,
   mode_testnet: 50040,
   bttc_testnet: 50041,
+  zksync_sepolia: 50042,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

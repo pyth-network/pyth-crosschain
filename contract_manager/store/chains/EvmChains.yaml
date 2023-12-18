@@ -378,3 +378,8 @@
   rpcUrl: https://rpc.bt.io
   networkId: 199
   type: EvmChain
+- id: zksync_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.era.zksync.dev/
+  networkId: 300
+  type: EvmChain
