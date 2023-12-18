@@ -1,36 +1,46 @@
-# Solana program for receiving price VAA from Pythnet
+# Pyth Solana Receiver
 
-The program under `cli` receives a VAA string from the shell, verifies the VAA with wormhole, posts the VAA on solana and then invokes the receiver program under `programs`.
-The receiver program verifies that the VAA comes from wormhole (through the `owner` function in `state.rs`) and deserializes the price information (in `decode_posted_vaa` function of `lib.rs`).
+This folder contains:
 
-```shell
-# Generate the program key
-# and use the key to replace the following two places
-#     "pyth-solana-receiver" in Anchor.toml
-#     "declare_id!()" in programs/pyth-solana-receiver/src/lib.rs
-> solana-keygen new -o program_address.json
+- A Pyth receiver program to receive Pythnet price feeds on Solana in `programs/pyth-solana-receiver`
+- A Cli that acts as a simple client to interact with the Pyth receiver program in `cli/`
 
-# Build and deploy the receiver program
- > anchor build -- features devnet # use --features mainnet for mainnet
-> anchor run deploy
+# Overview of the design
 
-# Build and test the cli program
-> anchor run cli_build_devnet
-> anchor run cli_test_devnet
-# Example output
-...
-[1/5] Decode the VAA
-[2/5] Get wormhole guardian set configuration
-[3/5] Invoke wormhole on solana to verify the VAA
-Transaction successful : 3VbrqQBCf1RsNLxrcvxN3aTb5fZRht4n8XDUVPM8NKniRmo84NZQUu5iFw5groAQgQYox3YCqaMjKc2WTpPU1yqV
-[4/5] Post the VAA data onto a solana account
-Transaction successful : 3L1vxzSHQv6B6TwtoMv2Y6m7vFGz3hzqApGHEhHSLA9Jn5dNKeWRWKv29UDPDc3vsgt1mYueamUPPt6bHGGEkbxh
-[5/5] Receive and deserialize the VAA on solana
-Receiver program ID is 5dXnHcDXdXaiEp9QgknCDPsEhJStSqZqJ4ATirWfEqeY
-Transaction successful : u5y9Hqc18so3BnjSUvZkLZR4mvA8zkiBgzGKHSEYyWkHQhH3uQatM7xWf4kdrhjZFVGbfBLdR8RJJUmuf28ePtG
+Receiving a price update from Pythnet involves two steps:
+
+- First, verifying the VAA i.e. verifying the Wormhole guardians' signatures on the accumulator root that contains all the price updates for a given Pythnet slot. This happens in the Wormhole receiver contract (Note: this contract is in the Wormhole monorepo, we're currently using this branch https://github.com/guibescos/wormhole/tree/variable-sigs).
+- Second, verifying the price update by providing an inclusion proof that proves the price update is part of the accumulator root that was verified in the first step. This happens in the Pyth receiver contract.
+
+The Pyth receiver program:
+
+- verifies that the VAA has been verified by the Wormhole program (through the owner of the account that contains the VAA, the anchor discriminator and the field `verified_signatures`).
+- checks that the VAA was emitted by the right data source
+- checks the inclusion proof is valid
+- posts the price update to a `PriceUpdateV1` account
+
+# Devnet deployment
+
+The program is currently deployed on Devnet with addresses:
+
+- `HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ` for the Wormhole receiver
+- `rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ` for the Pyth receiver
+
+# Example flow
+
+The `cli` folder contains some useful client code to interact with both the Wormhole receiver and the Pyth receiver.
+
+To run the full flow of posting a price update (on devnet) please follow the following steps:
+
+Get a Hermes update from Hermes stable:
+
+```
+curl  "https://hermes.pyth.network/api/latest_vaas?ids[]=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+
 ```
 
-## Unit tests
+Post it to devnet:
 
-Run `anchor run test` to run the unit tests in the `src/tests/` directory.
-**Warning**: do not confuse this command with `anchor test`, which doesn't do anything useful.
+```
+cargo run --package pyth-solana-receiver-cli -- --url https://api.devnet.solana.com --keypair ${PATH_TO_KEYPAIR} --wormhole HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ post-price-update -p ${HERMES_UPDATE_IN_BASE_64}
+```
