@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
-import "../contracts/executor/Executor.sol";
+import "../contracts/executor/ExecutorUpgradable.sol";
 import "./utils/WormholeTestUtils.t.sol";
 
 contract ExecutorTest is Test, WormholeTestUtils {
     Wormhole public wormhole;
-    Executor public executor;
+    ExecutorUpgradable public executor;
     TestCallable public callable;
 
     uint16 OWNER_CHAIN_ID = 7;
@@ -19,7 +19,11 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
     function setUp() public {
         address _wormhole = setUpWormholeReceiver(NUM_SIGNERS);
-        executor = new Executor(
+        ExecutorUpgradable _executor = new ExecutorUpgradable();
+        ERC1967Proxy _proxy = new ERC1967Proxy(address(_executor), "");
+        executor = ExecutorUpgradable(payable(address(_proxy)));
+
+        executor.initialize(
             _wormhole,
             0,
             CHAIN_ID,

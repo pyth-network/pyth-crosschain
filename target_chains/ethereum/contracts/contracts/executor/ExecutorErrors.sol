@@ -16,4 +16,6 @@ library ExecutorErrors {
     error InvalidGovernanceTarget();
     // The target address for the contract call is not a contract
     error InvalidContractTarget();
+    // The governance message is not valid
+    error InvalidGovernanceMessage();
 }
