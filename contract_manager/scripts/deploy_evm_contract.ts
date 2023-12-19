@@ -14,7 +14,7 @@ const parser = yargs(hideBin(process.argv))
     "std-output": {
       type: "string",
       demandOption: true,
-      desc: "Path to the standard output of the contract (build artifact)",
+      desc: "Path to the standard JSON output of the contract (build artifact)",
     },
     "private-key": {
       type: "string",
@@ -28,23 +28,32 @@ const parser = yargs(hideBin(process.argv))
     },
     "deploy-args": {
       type: "array",
-      desc: "Arguments to pass to the contract constructor",
+      desc: "Arguments to pass to the contract constructor. Each argument must begin with 0x if it's a hex string",
     },
   });
 
 async function main() {
   const argv = await parser.argv;
 
-  const chain = DefaultStore.chains[argv.chain] as EvmChain;
-  const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
-  const address = await chain.deploy(
-    toPrivateKey(argv["private-key"]),
-    artifact["abi"],
-    artifact["bytecode"],
-    argv["deploy-args"] || []
-  );
+  const chain = DefaultStore.chains[argv.chain];
 
-  console.log(`Deployed contract at ${address}`);
+  if (!chain) {
+    throw new Error(`Chain ${argv.contract} not found`);
+  }
+
+  if (chain instanceof EvmChain) {
+    const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
+    const address = await chain.deploy(
+      toPrivateKey(argv["private-key"]),
+      artifact["abi"],
+      artifact["bytecode"],
+      argv["deploy-args"] || []
+    );
+
+    console.log(`Deployed contract at ${address}`);
+  } else {
+    throw new Error("Chain is not an EVM chain");
+  }
 }
 
 main();

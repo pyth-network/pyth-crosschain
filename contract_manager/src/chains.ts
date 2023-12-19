@@ -392,7 +392,7 @@ export class EvmChain extends Chain {
    * @param privateKey hex string of the 32 byte private key without the 0x prefix
    * @param abi the abi of the contract, can be obtained from the compiled contract json file
    * @param bytecode bytecode of the contract, can be obtained from the compiled contract json file
-   * @param deployArgs arguments to pass to the constructor
+   * @param deployArgs arguments to pass to the constructor. Each argument must begin with 0x if it's a hex string
    * @returns the address of the deployed contract
    */
   async deploy(
