@@ -21,7 +21,7 @@ registering a new randomness provider, or drawing a random value. To see the ava
 
 To start an instance of the webserver for local testing, you first need to perform a few setup steps:
 
-1. Edit `config.yaml` to point to the desired blockchains and Entropy contracts.
+1. Create `config.yaml` file to point to the desired blockchains and Entropy contracts. Copy the content in `config.sample.yaml` to start with.
 1. Generate a secret key. The secret key is a 32-byte random value used to construct the hash chains.
    You can generate this value using the `openssl` command:
    `openssl rand -hex 32`
