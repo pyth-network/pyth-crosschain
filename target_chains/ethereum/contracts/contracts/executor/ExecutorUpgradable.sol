@@ -50,10 +50,10 @@ contract ExecutorUpgradable is
     // Only allow the owner to upgrade the proxy to a new implementation.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
-    // We have not overridden these methods in Pyth contracts implementation.
-    // But we are overriding them here because there was no owner before and
-    // `_authorizeUpgrade` would cause a revert for these. Now we have an owner, and
-    // because we want to test for the magic. We are overriding these methods.
+    // Upgrade the contract to the given newImplementation. The `newImplementation`
+    // should implement the method  `entropyUpgradableMagic`, see below. If it the method
+    // is not implemented or if the magic is different from the current contract, this call
+    // will revert.
     function upgradeTo(address newImplementation) external override onlyProxy {
         address oldImplementation = _getImplementation();
         _authorizeUpgrade(newImplementation);
@@ -64,6 +64,10 @@ contract ExecutorUpgradable is
         emit ContractUpgraded(oldImplementation, _getImplementation());
     }
 
+    // Upgrade the contract to the given newImplementation and call it with the given data.
+    // The `newImplementation` should implement the method  `entropyUpgradableMagic`, see
+    // below. If it the method is not implemented or if the magic is different from the current
+    // contract, this call will revert.
     function upgradeToAndCall(
         address newImplementation,
         bytes memory data
