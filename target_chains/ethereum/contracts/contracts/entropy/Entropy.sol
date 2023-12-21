@@ -241,9 +241,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             provider,
             sequenceNumber
         );
-        // Check that there is a request for the given provider / sequence number.
-        if (req.provider != provider || req.sequenceNumber != sequenceNumber)
-            revert EntropyErrors.NoSuchRequest();
+        // Check that there is an active request for the given provider / sequence number.
+        if (
+            req.sequenceNumber == 0 ||
+            req.provider != provider ||
+            req.sequenceNumber != sequenceNumber
+        ) revert EntropyErrors.NoSuchRequest();
 
         if (req.requester != msg.sender) revert EntropyErrors.Unauthorized();
 
