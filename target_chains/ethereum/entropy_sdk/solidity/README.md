@@ -16,16 +16,9 @@ npm install @pythnetwork/entropy-sdk-solidity
 ## Setup
 
 To use the SDK, you need the address of an Entropy contract on your blockchain and a randomness provider.
-The following table lists the current deployments of entropy.
+You can find current deployments on this [page](https://docs.pyth.network/documentation/entropy/evm).
 
-```
-| Chain             | Entropy Address                            | Provider                                   |
-|-------------------|--------------------------------------------|--------------------------------------------|
-| lightlink-pegasus | 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a | 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344 |
-
-```
-
-Choose one of these networks and instantiate an `IEntropy` contract in your solidity contract:
+Choose one of the networks and instantiate an `IEntropy` contract in your solidity contract:
 
 ```solidity
  IEntropy entropy = IEntropy(<address>);
