@@ -90,7 +90,7 @@ pub struct RandomnessOptions {
     pub chain_length: u64,
 }
 
-impl RandomnessOptions { 
+impl RandomnessOptions {
     pub fn load_secret(&self) -> Result<String> {
         let secret = fs::read_to_string(&self.secret_file)?;
         Ok(secret)

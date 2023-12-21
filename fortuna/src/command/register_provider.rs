@@ -38,12 +38,8 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
     }
 
     let commitment_length = opts.randomness.chain_length;
-    let mut chain = PebbleHashChain::from_config(
-        &secret,
-        &opts.chain_id,
-        &random,
-        commitment_length,
-    )?;
+    let mut chain =
+        PebbleHashChain::from_config(&secret, &opts.chain_id, &random, commitment_length)?;
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = opts.fee;
