@@ -31,9 +31,15 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
 
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
+    let secret: String;
+    match opts.randomness.load_secret() {
+        Ok(loaded_secret) => secret = loaded_secret,
+        Err(_err) => secret = opts.randomness.secret_file.clone(),
+    }
+
     let commitment_length = opts.randomness.chain_length;
     let mut chain = PebbleHashChain::from_config(
-        &opts.randomness.secret,
+        &secret,
         &opts.chain_id,
         &random,
         commitment_length,
