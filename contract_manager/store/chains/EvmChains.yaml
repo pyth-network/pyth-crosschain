@@ -5,7 +5,7 @@
   type: EvmChain
 - id: kava
   mainnet: true
-  rpcUrl: https://evm.kava.io
+  rpcUrl: https://kava-evm.publicnode.com
   networkId: 2222
   type: EvmChain
 - id: evmos
@@ -95,7 +95,7 @@
   type: EvmChain
 - id: meter
   mainnet: true
-  rpcUrl: https://rpc-meter.jellypool.xyz
+  rpcUrl: https://meter.blockpi.network/v1/rpc/public
   networkId: 82
   type: EvmChain
 - id: chiado
@@ -345,7 +345,7 @@
   type: EvmChain
 - id: coredao
   mainnet: true
-  rpcUrl: https://rpc3.coredao.org
+  rpcUrl: https://rpc.coredao.org
   networkId: 1116
   type: EvmChain
 - id: tomochain
@@ -382,4 +382,9 @@
   mainnet: false
   rpcUrl: https://sepolia.era.zksync.dev/
   networkId: 300
+  type: EvmChain
+- id: base_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.base.org
+  networkId: 84532
   type: EvmChain
