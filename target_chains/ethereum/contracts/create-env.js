@@ -1,7 +1,7 @@
 /**
  * This script is used to generate the .env file for a specific network.
  * You can call it like this:
- *  node create-env.js <contract-id>
+ *  node create-env.js <chain-id>
  */
 
 const { DefaultStore, EvmChain } = require("contract_manager");
