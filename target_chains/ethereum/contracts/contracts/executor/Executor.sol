@@ -42,13 +42,13 @@ contract Executor {
     uint16 private ownerEmitterChainId;
     bytes32 private ownerEmitterAddress;
 
-    constructor(
+    function _initialize(
         address _wormhole,
         uint64 _lastExecutedSequence,
         uint16 _chainId,
         uint16 _ownerEmitterChainId,
         bytes32 _ownerEmitterAddress
-    ) {
+    ) internal {
         require(_wormhole != address(0), "_wormhole is zero address");
 
         wormhole = IWormhole(_wormhole);

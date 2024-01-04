@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
-import "./utils/EntropyTestContracts/EntropyDifferentMagic.t.sol";
+import "./utils/InvalidMagic.t.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 
@@ -12,7 +12,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
     ERC1967Proxy public proxy;
     EntropyUpgradable public random;
     EntropyUpgradable public random2;
-    EntropyDifferentMagic public randomDifferentMagic;
+    InvalidMagic public randomDifferentMagic;
 
     address public owner = address(1);
     address public admin = address(2);
@@ -36,7 +36,7 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         random = EntropyUpgradable(address(proxy));
         // to test for upgrade
         random2 = new EntropyUpgradable();
-        randomDifferentMagic = new EntropyDifferentMagic();
+        randomDifferentMagic = new InvalidMagic();
 
         random.initialize(owner, admin, pythFeeInWei, provider1, false);
     }

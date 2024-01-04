@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
-import "../contracts/executor/Executor.sol";
+import "../contracts/executor/ExecutorUpgradable.sol";
 import "./utils/WormholeTestUtils.t.sol";
+import "./utils/InvalidMagic.t.sol";
 
 contract ExecutorTest is Test, WormholeTestUtils {
     Wormhole public wormhole;
-    Executor public executor;
+    ExecutorUpgradable public executor;
+    ExecutorUpgradable public executor2;
     TestCallable public callable;
+    InvalidMagic public executorInvalidMagic;
 
     uint16 OWNER_CHAIN_ID = 7;
     bytes32 OWNER_EMITTER = bytes32(uint256(1));
@@ -19,7 +22,13 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
     function setUp() public {
         address _wormhole = setUpWormholeReceiver(NUM_SIGNERS);
-        executor = new Executor(
+        ExecutorUpgradable _executor = new ExecutorUpgradable();
+        ERC1967Proxy _proxy = new ERC1967Proxy(address(_executor), "");
+        executor = ExecutorUpgradable(payable(address(_proxy)));
+        executor2 = new ExecutorUpgradable();
+        executorInvalidMagic = new InvalidMagic();
+
+        executor.initialize(
             _wormhole,
             0,
             CHAIN_ID,
@@ -53,6 +62,51 @@ contract ExecutorTest is Test, WormholeTestUtils {
             NUM_SIGNERS
         );
 
+        executor.execute(vaa);
+    }
+
+    function getTestUpgradeVaa(
+        address newImplementation
+    ) internal returns (bytes memory vaa) {
+        bytes memory payload = abi.encodePacked(
+            uint32(0x5054474d),
+            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            Executor.ExecutorAction.Execute,
+            CHAIN_ID,
+            address(executor),
+            address(executor),
+            abi.encodeWithSelector(
+                ExecutorUpgradable.upgradeTo.selector,
+                newImplementation
+            )
+        );
+
+        vaa = generateVaa(
+            uint32(block.timestamp),
+            OWNER_CHAIN_ID,
+            OWNER_EMITTER,
+            1,
+            payload,
+            NUM_SIGNERS
+        );
+    }
+
+    function testUpgradeCallSucceedsForContractWithCorrectMagic() public {
+        bytes memory vaa = getTestUpgradeVaa(address(executor2));
+        executor.execute(vaa);
+    }
+
+    function testUpgradeCallFailsForNotUUPSContract() public {
+        bytes memory vaa = getTestUpgradeVaa(address(callable));
+
+        vm.expectRevert("ERC1967Upgrade: new implementation is not UUPS");
+        executor.execute(vaa);
+    }
+
+    function testUpgradeCallFailsForInvalidMagic() public {
+        bytes memory vaa = getTestUpgradeVaa(address(executorInvalidMagic));
+
+        vm.expectRevert(ExecutorErrors.InvalidMagicValue.selector);
         executor.execute(vaa);
     }
 
