@@ -78,7 +78,6 @@ pub struct ConfigOptions {
 pub struct RandomnessOptions {
     /// Path to file containing a secret which is a 64-char hex string.
     /// The secret is used for generating new hash chains
-    /// Or the secret itself. TODO: this will be removed in another PR.
     #[arg(long = "secret")]
     #[arg(env = "FORTUNA_SECRET")]
     pub secret_file: String,

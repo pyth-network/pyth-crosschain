@@ -47,11 +47,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     struct ApiDoc;
 
     let config = Config::load(&opts.config.config)?;
-    let secret: String;
-    match opts.randomness.load_secret() {
-        Ok(loaded_secret) => secret = loaded_secret,
-        Err(_err) => secret = opts.randomness.secret_file.clone(),
-    }
+    let secret= opts.randomness.load_secret()?;
 
 
     let mut chains = HashMap::new();
