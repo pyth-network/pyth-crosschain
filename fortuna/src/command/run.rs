@@ -47,7 +47,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     struct ApiDoc;
 
     let config = Config::load(&opts.config.config)?;
-    let secret= opts.randomness.load_secret()?;
+    let secret = opts.randomness.load_secret()?;
 
 
     let mut chains = HashMap::new();
