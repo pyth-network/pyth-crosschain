@@ -346,19 +346,21 @@ pub struct PostUpdates<'info> {
 pub struct PostUpdatesAtomic<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
-    #[account(owner = config.wormhole,
+    #[account(
         seeds = [
             GuardianSet::SEED_PREFIX,
             guardian_set.inner().index.to_be_bytes().as_ref()
         ],
-        bump,)]
+        seeds::program = config.wormhole,
+        bump,
+        owner = config.wormhole)]
     pub guardian_set:         Account<'info, AccountVariant<GuardianSet>>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(mut, seeds = [TREASURY_SEED.as_ref()], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     pub treasury:             AccountInfo<'info>,
-    #[account(init, payer =payer, space = PriceUpdateV1::LEN)]
+    #[account(init, payer = payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
 }

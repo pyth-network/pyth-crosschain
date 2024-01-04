@@ -104,7 +104,10 @@ fn main() -> Result<()> {
                 &merkle_price_updates[0],
             )?;
         }
-        Action::PostPriceUpdateAtomic { payload } => {
+        Action::PostPriceUpdateAtomic {
+            payload,
+            n_signatures,
+        } => {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
@@ -114,6 +117,7 @@ fn main() -> Result<()> {
             process_post_price_update_atomic(
                 &rpc_client,
                 &vaa,
+                n_signatures,
                 &wormhole,
                 &payer,
                 &merkle_price_updates[0],
@@ -273,6 +277,7 @@ pub fn process_post_price_update(
 pub fn process_post_price_update_atomic(
     rpc_client: &RpcClient,
     vaa: &[u8],
+    n_signatures: usize,
     wormhole: &Pubkey,
     payer: &Keypair,
     merkle_price_update: &MerklePriceUpdate,
@@ -281,9 +286,12 @@ pub fn process_post_price_update_atomic(
 
     let (mut header, body): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
     header = Header {
-        signatures: header.signatures[..1].to_vec(),
+        signatures: header.signatures[..(n_signatures)].to_vec(),
         ..header
     };
+
+    let request_compute_units_instruction: Instruction =
+        ComputeBudgetInstruction::set_compute_unit_limit(400_000);
 
 
     let post_update_accounts = pyth_solana_receiver::accounts::PostUpdatesAtomic::populate(
@@ -308,7 +316,7 @@ pub fn process_post_price_update_atomic(
 
     process_transaction(
         rpc_client,
-        vec![post_update_instruction],
+        vec![request_compute_units_instruction, post_update_instruction],
         &vec![payer, &price_update_keypair],
     )?;
     Ok(price_update_keypair.pubkey())
