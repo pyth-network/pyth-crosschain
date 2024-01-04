@@ -51,7 +51,7 @@ contract ExecutorUpgradable is
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
     // Upgrade the contract to the given newImplementation. The `newImplementation`
-    // should implement the method  `entropyUpgradableMagic`, see below. If it the method
+    // should implement the method  `entropyUpgradableMagic`, see below. If the method
     // is not implemented or if the magic is different from the current contract, this call
     // will revert.
     function upgradeTo(address newImplementation) external override onlyProxy {
@@ -66,7 +66,7 @@ contract ExecutorUpgradable is
 
     // Upgrade the contract to the given newImplementation and call it with the given data.
     // The `newImplementation` should implement the method  `entropyUpgradableMagic`, see
-    // below. If it the method is not implemented or if the magic is different from the current
+    // below. If the method is not implemented or if the magic is different from the current
     // contract, this call will revert.
     function upgradeToAndCall(
         address newImplementation,
@@ -86,7 +86,7 @@ contract ExecutorUpgradable is
         // the new contract. This call will fail if the method does not exists or the magic
         // is different.
         if (this.entropyUpgradableMagic() != 0x66697288)
-            revert ExecutorErrors.InvalidGovernanceMessage();
+            revert ExecutorErrors.InvalidMagicValue();
     }
 
     function entropyUpgradableMagic() public pure returns (uint32) {
