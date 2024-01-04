@@ -2,8 +2,7 @@
 
 Install aptos cli with the same version specified in the ci workflows.
 
-All the commands which submit transactions require an environment variable for the private key to be set.
-Depending on the network, this can be either `APTOS_LOCALNET_KEY`, `APTOS_TESTNET_KEY` or `APTOS_MAINNET_KEY`.
+All the commands which submit transactions require an environment variable `APTOS_PRIVATE_KEY` for the private key to be set.
 
 # Deploying from scratch
 
@@ -13,7 +12,7 @@ capability. You can read more about it [here](https://github.com/wormhole-founda
 Assuming the wormhole and deployer contracts are already deployed, we can deploy the pyth oracle with the following command:
 
 ```bash
-npm run cli deploy-pyth -- ../contracts <seed> -n testnet
+npm run cli deploy-pyth -- ../contracts <seed> -n aptos_testnet
 ```
 
 `seed` can be any random string that is used for determining a specific contract address based on the seed value and the signer address.
@@ -33,7 +32,7 @@ wormhole = "_"
 You can run the following to initialize the pyth contract, the following is a sample (testnet) config:
 
 ```bash
-npm run cli init-pyth -- <seed> -n testnet \
+npm run cli init-pyth -- <seed> -n aptos_testnet \
 --stale-price-threshold 60 \
 --update-fee 1 \
 --governance-emitter-chain-id 1 \
@@ -49,7 +48,7 @@ npm run cli init-pyth -- <seed> -n testnet \
 The following is a sample mainnet config:
 
 ```bash
-npm run cli init-pyth -- <seed> -n mainnet \
+npm run cli init-pyth -- <seed> -n aptos_mainnet \
 --stale-price-threshold 60 \
 --update-fee 1 \
 --governance-emitter-chain-id 1 \

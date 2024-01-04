@@ -10,7 +10,7 @@ repl.evalCode(
     "import { SuiContract } from './src/contracts/sui';" +
     "import { WormholeCosmWasmContract, CosmWasmContract } from './src/contracts/cosmwasm';" +
     "import { WormholeEvmContract, EvmContract } from './src/contracts/evm';" +
-    "import { AptosContract } from './src/contracts/aptos';" +
+    "import { WormholeAptosContract, AptosContract } from './src/contracts/aptos';" +
     "import { DefaultStore } from './src/store';" +
     "import { toPrivateKey } from './src/base';" +
     "DefaultStore"

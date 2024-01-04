@@ -1,8 +1,69 @@
 import { Contract, PriceFeed, PrivateKey, TxResult } from "../base";
-import { ApiError, AptosAccount, BCS, TxnBuilderTypes } from "aptos";
+import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { CoinClient } from "aptos";
+import { WormholeContract } from "./wormhole";
+
+type WormholeState = {
+  chain_id: { number: string };
+  guardian_set_index: { number: string };
+  guardian_sets: { handle: string };
+};
+
+type GuardianSet = {
+  guardians: { address: { bytes: string } }[];
+  expiration_time: { number: string };
+  index: { number: string };
+};
+
+export class WormholeAptosContract extends WormholeContract {
+  constructor(public chain: AptosChain, public address: string) {
+    super();
+  }
+
+  async getState(): Promise<WormholeState> {
+    const client = this.chain.getClient();
+    const resources = await client.getAccountResources(this.address);
+    const type = "WormholeState";
+    for (const resource of resources) {
+      if (resource.type === `${this.address}::state::${type}`) {
+        return resource.data as WormholeState;
+      }
+    }
+    throw new Error(`${type} resource not found in account ${this.address}`);
+  }
+
+  async getCurrentGuardianSetIndex(): Promise<number> {
+    const data = await this.getState();
+    return Number(data.guardian_set_index.number);
+  }
+
+  async getGuardianSet(): Promise<string[]> {
+    const data = await this.getState();
+    const client = this.chain.getClient();
+    const result = (await client.getTableItem(data.guardian_sets.handle, {
+      key_type: `u64`,
+      value_type: `${this.address}::structs::GuardianSet`,
+      key: data.guardian_set_index.number.toString(),
+    })) as GuardianSet;
+    return result.guardians.map((guardian) => guardian.address.bytes);
+  }
+
+  async upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ): Promise<TxResult> {
+    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
+      TxnBuilderTypes.EntryFunction.natural(
+        `${this.address}::guardian_set_upgrade`,
+        "submit_vaa_entry",
+        [],
+        [BCS.bcsSerializeBytes(vaa)]
+      )
+    );
+    return this.chain.sendTransaction(senderPrivateKey, txPayload);
+  }
+}
 
 export class AptosContract extends Contract {
   static type = "AptosContract";
@@ -45,25 +106,11 @@ export class AptosContract extends Contract {
         [BCS.bcsSerializeBytes(vaa)]
       )
     );
-    return this.sendTransaction(senderPrivateKey, txPayload);
+    return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
 
-  private async sendTransaction(
-    senderPrivateKey: PrivateKey,
-    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
-  ): Promise<TxResult> {
-    const client = this.chain.getClient();
-    const sender = new AptosAccount(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
-    );
-    const result = await client.generateSignSubmitWaitForTransaction(
-      sender,
-      txPayload,
-      {
-        maxGasAmount: BigInt(30000),
-      }
-    );
-    return { id: result.hash, info: result };
+  public getWormholeContract(): WormholeAptosContract {
+    return new WormholeAptosContract(this.chain, this.wormholeStateId);
   }
 
   async executeUpdatePriceFeed(
@@ -78,7 +125,7 @@ export class AptosContract extends Contract {
         [BCS.serializeVectorWithFunc(vaas, "serializeBytes")]
       )
     );
-    return this.sendTransaction(senderPrivateKey, txPayload);
+    return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
 
   getStateResources() {
