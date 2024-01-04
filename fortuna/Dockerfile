@@ -8,6 +8,7 @@ RUN rustup default nightly-2023-07-23
 # Build
 WORKDIR /src
 COPY fortuna fortuna
+COPY pythnet pythnet
 
 WORKDIR /src/fortuna
 
