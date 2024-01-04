@@ -34,12 +34,10 @@ const CHANNEL_OPTION = {
 const DEPLOYER_OPTION = {
   describe: "deployer contract address deployed in the network",
   type: "string",
-  default: "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
 } as const;
 const WORMHOLE_OPTION = {
   describe: "wormhole contract address deployed in the network",
   type: "string",
-  default: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
 } as const;
 const PYTH_OPTION = {
   describe: "pyth contract address deployed in the network",
@@ -151,15 +149,20 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       }
     )
     .command(
-      "derived-address <seed> <signer>",
+      "derived-address <seed>",
       "Generate the derived address for the given seed and sender address",
       (yargs) => {
         return yargs
           .positional("seed", { type: "string", demandOption: true })
-          .positional("signer", { type: "string", demandOption: true });
+          .option("signer", { type: "string" });
       },
       async (argv) => {
-        console.log(generateDerivedAddress(argv.signer, argv.seed));
+        console.log(
+          generateDerivedAddress(
+            argv.signer || getSender().address().toString(),
+            argv.seed
+          )
+        );
       }
     )
     .command(
@@ -172,7 +175,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       },
       async (argv) => {
         const chain_id = DefaultStore.chains[argv.network].getWormholeChainId();
-        const config = getDefaultDeploymentConfig("stable").wormholeConfig;
+        const config = getDefaultDeploymentConfig(argv.channel).wormholeConfig;
 
         const governance_contract = config.governanceContract;
         const governance_chain_id = config.governanceChainId;
@@ -219,57 +222,37 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
             type: "number",
             demandOption: true,
           })
-          .option("governance-emitter-chain-id", {
-            describe: "Governance emitter chain id",
-            type: "number",
-            demandOption: true,
-          })
-          .option("governance-emitter-address", {
-            describe: "Governance emitter address",
-            type: "string",
-            demandOption: true,
-          })
           .option("update-fee", {
             describe: "Update fee",
             type: "number",
             demandOption: true,
           })
-          .option("data-source-chain-ids", {
-            describe: "Data source chain IDs",
-            type: "array",
-            demandOption: true,
-          })
-          .option("data-source-emitter-addresses", {
-            describe: "Data source emitter addresses",
-            type: "array",
-            demandOption: true,
-          });
+          .option("channel", CHANNEL_OPTION);
       },
       async (argv) => {
         const stale_price_threshold = argv["stale-price-threshold"];
-        const governance_emitter_chain_id = argv["governance-emitter-chain-id"];
-        const governance_emitter_address = evm_address(
-          argv["governance-emitter-address"]
-        );
+        const update_fee = argv["update-fee"];
+
+        const config = getDefaultDeploymentConfig(argv.channel);
+        const governance_emitter_chain_id =
+          config.governanceDataSource.emitterChain;
+        const governance_emitter_address =
+          config.governanceDataSource.emitterAddress;
 
         const dataSourceChainIdsSerializer = new BCS.Serializer();
         dataSourceChainIdsSerializer.serializeU32AsUleb128(
-          argv["data-source-chain-ids"].length
+          config.dataSources.length
         );
-        argv["data-source-chain-ids"].forEach((chain_id: number) =>
-          dataSourceChainIdsSerializer.serializeU64(chain_id)
-        );
-
         const dataSourceEmitterAddressesSerializer = new BCS.Serializer();
         dataSourceEmitterAddressesSerializer.serializeU32AsUleb128(
-          argv["data-source-emitter-addresses"].length
+          config.dataSources.length
         );
-        argv["data-source-emitter-addresses"].forEach((emitter_address) => {
+        config.dataSources.forEach((ds) => {
+          dataSourceChainIdsSerializer.serializeU64(ds.emitterChain);
           dataSourceEmitterAddressesSerializer.serializeBytes(
-            Buffer.from(emitter_address as string, "hex")
+            Buffer.from(ds.emitterAddress, "hex")
           );
         });
-        const update_fee = argv["update-fee"];
 
         const args = [
           BCS.bcsSerializeUint64(stale_price_threshold),
