@@ -1,5 +1,7 @@
 #![deny(warnings)]
 
+use pyth_solana_receiver::PostUpdatesAtomicParams;
+
 
 pub mod cli;
 use {
@@ -90,6 +92,21 @@ fn main() -> Result<()> {
             let encoded_vaa = process_write_encoded_vaa(&rpc_client, &vaa, wormhole, &payer)?;
             process_post_price_update(&rpc_client, encoded_vaa, &payer, &merkle_price_updates[0])?;
         }
+        Action::PostPriceUpdateAtomic { payload } => {
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+
+            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(&payload)?;
+
+            process_post_price_update_atomic(
+                &rpc_client,
+                &vaa,
+                &wormhole,
+                &payer,
+                &merkle_price_updates[0],
+            )?;
+        }
 
         Action::InitializeWormholeReceiver {} => {
             let rpc_client = RpcClient::new(url);
@@ -128,6 +145,7 @@ fn main() -> Result<()> {
                 false,
             )?;
         }
+
         Action::InitializePythReceiver {
             fee,
             emitter,
@@ -235,6 +253,50 @@ pub fn process_post_price_update(
     process_transaction(
         rpc_client,
         vec![post_update_instructions],
+        &vec![payer, &price_update_keypair],
+    )?;
+    Ok(price_update_keypair.pubkey())
+}
+
+pub fn process_post_price_update_atomic(
+    rpc_client: &RpcClient,
+    vaa: &[u8],
+    wormhole: &Pubkey,
+    payer: &Keypair,
+    merkle_price_update: &MerklePriceUpdate,
+) -> Result<Pubkey> {
+    let price_update_keypair = Keypair::new();
+
+    let (mut header, body): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
+    header = Header {
+        signatures: header.signatures[..1].to_vec(),
+        ..header
+    };
+
+
+    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdatesAtomic::populate(
+        payer.pubkey(),
+        price_update_keypair.pubkey(),
+        *wormhole,
+        header.guardian_set_index,
+    )
+    .to_account_metas(None);
+
+    let post_update_instruction = Instruction {
+        program_id: pyth_solana_receiver::id(),
+        accounts:   post_update_accounts,
+        data:       pyth_solana_receiver::instruction::PostUpdatesAtomic {
+            params: PostUpdatesAtomicParams {
+                merkle_price_update: merkle_price_update.clone(),
+                vaa:                 serde_wormhole::to_vec(&(header, body)).unwrap(),
+            },
+        }
+        .data(),
+    };
+
+    process_transaction(
+        rpc_client,
+        vec![post_update_instruction],
         &vec![payer, &price_update_keypair],
     )?;
     Ok(price_update_keypair.pubkey())

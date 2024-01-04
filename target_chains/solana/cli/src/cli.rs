@@ -40,6 +40,11 @@ pub enum Action {
         #[clap(short = 'p', long, help = "Payload from Hermes")]
         payload: String,
     },
+    #[clap(about = "Post a price update atomically from Hermes to Solana")]
+    PostPriceUpdateAtomic {
+        #[clap(short = 'p', long, help = "Payload from Hermes")]
+        payload: String,
+    },
     #[clap(
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
