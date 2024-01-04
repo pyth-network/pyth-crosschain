@@ -4,6 +4,12 @@ export abstract class WormholeContract {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
 
   /**
+   * Returns the chain id set in this contract.
+   * This should match to the chain ids stored in this repo in the chains.ts file based on the network
+   */
+  abstract getChainId(): Promise<number>;
+
+  /**
    * Returns an array of guardian addresses used for VAA verification in this contract
    */
   abstract getGuardianSet(): Promise<string[]>;
