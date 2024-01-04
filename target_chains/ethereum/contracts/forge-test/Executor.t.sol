@@ -106,7 +106,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testUpgradeCallFailsForInvalidMagic() public {
         bytes memory vaa = getTestUpgradeVaa(address(executorInvalidMagic));
 
-        vm.expectRevert(ExecutorErrors.InvalidGovernanceMessage.selector);
+        vm.expectRevert(ExecutorErrors.InvalidMagicValue.selector);
         executor.execute(vaa);
     }
 
