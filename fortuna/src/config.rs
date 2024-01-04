@@ -76,16 +76,24 @@ pub struct ConfigOptions {
 #[command(next_help_heading = "Randomness Options")]
 #[group(id = "Randomness")]
 pub struct RandomnessOptions {
-    /// A secret used for generating new hash chains. A 64-char hex string.
+    /// Path to file containing a secret which is a 64-char hex string.
+    /// The secret is used for generating new hash chains
+    /// Or the secret itself. TODO: this will be removed in another PR.
     #[arg(long = "secret")]
     #[arg(env = "FORTUNA_SECRET")]
-    pub secret: String,
+    pub secret_file: String,
 
     /// The length of the hash chain to generate.
     #[arg(long = "chain-length")]
     #[arg(env = "FORTUNA_CHAIN_LENGTH")]
     #[arg(default_value = "10000")]
     pub chain_length: u64,
+}
+
+impl RandomnessOptions {
+    pub fn load_secret(&self) -> Result<String> {
+        return Ok((fs::read_to_string(&self.secret_file))?);
+    }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]

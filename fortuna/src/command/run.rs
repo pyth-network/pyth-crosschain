@@ -47,6 +47,12 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     struct ApiDoc;
 
     let config = Config::load(&opts.config.config)?;
+    let secret: String;
+    match opts.randomness.load_secret() {
+        Ok(loaded_secret) => secret = loaded_secret,
+        Err(_err) => secret = opts.randomness.secret_file.clone(),
+    }
+
 
     let mut chains = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
@@ -64,7 +70,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
         let hash_chain = PebbleHashChain::from_config(
-            &opts.randomness.secret,
+            &secret,
             &chain_id,
             &metadata.seed,
             metadata.chain_length,

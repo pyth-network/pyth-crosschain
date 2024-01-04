@@ -31,13 +31,14 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
 
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
+    let secret = match opts.randomness.load_secret() {
+        Ok(loaded_secret) => loaded_secret,
+        Err(_err) => opts.randomness.secret_file.clone(),
+    };
+
     let commitment_length = opts.randomness.chain_length;
-    let mut chain = PebbleHashChain::from_config(
-        &opts.randomness.secret,
-        &opts.chain_id,
-        &random,
-        commitment_length,
-    )?;
+    let mut chain =
+        PebbleHashChain::from_config(&secret, &opts.chain_id, &random, commitment_length)?;
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = opts.fee;

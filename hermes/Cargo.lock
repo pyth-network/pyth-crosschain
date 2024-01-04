@@ -2848,7 +2848,7 @@ name = "pythnet-sdk"
 version = "2.0.0"
 dependencies = [
  "bincode",
- "borsh 0.9.3",
+ "borsh 0.10.3",
  "bytemuck",
  "byteorder",
  "fast-math",
