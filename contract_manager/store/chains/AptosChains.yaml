@@ -8,3 +8,8 @@
   mainnet: true
   rpcUrl: https://fullnode.mainnet.aptoslabs.com/v1
   type: AptosChain
+- id: movement_move_devnet
+  wormholeChainName: movement_move_devnet
+  mainnet: false
+  rpcUrl: https://devnet.m1.movementlabs.xyz/v1
+  type: AptosChain
