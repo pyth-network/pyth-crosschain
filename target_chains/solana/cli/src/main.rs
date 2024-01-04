@@ -1,9 +1,8 @@
 #![deny(warnings)]
 
-use pyth_solana_receiver::PostUpdatesAtomicParams;
-
-
 pub mod cli;
+
+
 use {
     anchor_client::anchor_lang::{
         InstructionData,
@@ -16,7 +15,10 @@ use {
         Action,
         Cli,
     },
-    pyth_solana_receiver::state::config::DataSource,
+    pyth_solana_receiver::{
+        state::config::DataSource,
+        PostUpdatesAtomicParams,
+    },
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,
         MerklePriceUpdate,
