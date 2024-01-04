@@ -78,7 +78,7 @@ pub struct ConfigOptions {
 pub struct RandomnessOptions {
     /// Path to file containing a secret which is a 64-char hex string.
     /// The secret is used for generating new hash chains
-    /// Or the secret itself. TODO: this will be remove in another PR.
+    /// Or the secret itself. TODO: this will be removed in another PR.
     #[arg(long = "secret")]
     #[arg(env = "FORTUNA_SECRET")]
     pub secret_file: String,
@@ -92,8 +92,7 @@ pub struct RandomnessOptions {
 
 impl RandomnessOptions {
     pub fn load_secret(&self) -> Result<String> {
-        let secret = fs::read_to_string(&self.secret_file)?;
-        Ok(secret)
+        return Ok((fs::read_to_string(&self.secret_file))?);
     }
 }
 
