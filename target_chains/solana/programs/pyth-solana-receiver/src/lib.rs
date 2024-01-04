@@ -394,7 +394,7 @@ impl crate::accounts::PostUpdatesAtomic {
         let guardian_set = Pubkey::find_program_address(
             &[
                 GuardianSet::SEED_PREFIX,
-                guardian_set_index.to_le_bytes().as_ref(),
+                guardian_set_index.to_be_bytes().as_ref(),
             ],
             &wormhole_address,
         )
