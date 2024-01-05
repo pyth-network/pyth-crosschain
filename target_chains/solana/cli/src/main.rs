@@ -245,37 +245,6 @@ pub fn process_upgrade_guardian_set(
     Ok(())
 }
 
-pub fn process_post_price_update(
-    rpc_client: &RpcClient,
-    encoded_vaa: Pubkey,
-    payer: &Keypair,
-    merkle_price_update: &MerklePriceUpdate,
-) -> Result<Pubkey> {
-    let price_update_keypair = Keypair::new();
-
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdates::populate(
-        payer.pubkey(),
-        encoded_vaa,
-        price_update_keypair.pubkey(),
-    )
-    .to_account_metas(None);
-    let post_update_instructions = Instruction {
-        program_id: pyth_solana_receiver::id(),
-        accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdates {
-            price_update: merkle_price_update.clone(),
-        }
-        .data(),
-    };
-
-    process_transaction(
-        rpc_client,
-        vec![post_update_instructions],
-        &vec![payer, &price_update_keypair],
-    )?;
-    Ok(price_update_keypair.pubkey())
-}
-
 pub fn process_post_price_update_atomic(
     rpc_client: &RpcClient,
     vaa: &[u8],
