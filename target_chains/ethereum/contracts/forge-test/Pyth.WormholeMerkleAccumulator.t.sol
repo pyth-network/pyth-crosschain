@@ -898,6 +898,85 @@ contract PythWormholeMerkleAccumulatorTest is
         );
     }
 
+    function testParsePriceFeedUniqueWithWormholeMerkleUpdatesLatestPriceIfNecessary(
+        uint seed
+    ) public {
+        setRandSeed(seed);
+
+        uint64 numPriceFeeds = (getRandUint64() % 10) + 2;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        uint64 publishTime = getRandUint64();
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceFeedMessages[0].priceId;
+        for (uint64 i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i].priceId = priceFeedMessages[0].priceId;
+            priceFeedMessages[i].publishTime = publishTime;
+            priceFeedMessages[i].prevPublishTime = publishTime;
+        }
+
+        // firstUpdate is the one we expect to be returned and latestUpdate is the one we expect to be stored
+        uint latestUpdate = (getRandUint() % numPriceFeeds);
+        priceFeedMessages[latestUpdate].prevPublishTime = publishTime + 1000;
+        priceFeedMessages[latestUpdate].publishTime = publishTime + 1000;
+
+        uint firstUpdate = (getRandUint() % numPriceFeeds);
+        while (firstUpdate == latestUpdate) {
+            firstUpdate = (getRandUint() % numPriceFeeds);
+        }
+        priceFeedMessages[firstUpdate].prevPublishTime = publishTime - 1;
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+
+        // firstUpdate is returned but latestUpdate is stored
+        PythStructs.PriceFeed[] memory priceFeeds = pyth
+            .parsePriceFeedUpdatesUnique{value: updateFee}(
+            updateData,
+            priceIds,
+            publishTime,
+            MAX_UINT64
+        );
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages[firstUpdate],
+            priceIds[0]
+        );
+        assertPriceFeedMessageStored(priceFeedMessages[latestUpdate]);
+
+        // increase the latestUpdate publish time and make a new updateData
+        priceFeedMessages[latestUpdate].publishTime = publishTime + 2000;
+        (updateData, updateFee) = createWormholeMerkleUpdateData(
+            priceFeedMessages
+        );
+
+        // since there is a revert, the latestUpdate is not stored
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdatesUnique{value: updateFee}(
+            updateData,
+            priceIds,
+            publishTime - 1,
+            MAX_UINT64
+        );
+        assertEq(
+            pyth.getPriceUnsafe(priceIds[0]).publishTime,
+            publishTime + 1000
+        );
+
+        // there is no revert, the latestPrice is updated with the latestUpdate
+        pyth.parsePriceFeedUpdatesUnique{value: updateFee}(
+            updateData,
+            priceIds,
+            publishTime,
+            MAX_UINT64
+        );
+        assertPriceFeedMessageStored(priceFeedMessages[latestUpdate]);
+    }
+
     function testParsePriceFeedWithWormholeMerkleWorksRandomDistinctUpdatesInput(
         uint seed
     ) public {
