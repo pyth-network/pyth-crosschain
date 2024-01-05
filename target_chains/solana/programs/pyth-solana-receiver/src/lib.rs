@@ -150,10 +150,9 @@ pub mod pyth_solana_receiver {
         // End borrowed section
 
         let config = &ctx.accounts.config;
-        let payer: &Signer<'_> = &ctx.accounts.payer;
-        let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
-        let price_update_account: &mut Account<'_, PriceUpdateV1> =
-            &mut ctx.accounts.price_update_account;
+        let payer = &ctx.accounts.payer;
+        let treasury = &ctx.accounts.treasury;
+        let price_update_account = &mut ctx.accounts.price_update_account;
 
         let vaa_components = VaaComponents {
             verified_signatures: vaa.signature_count(),
