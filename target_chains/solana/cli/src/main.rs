@@ -256,10 +256,7 @@ pub fn process_post_price_update_atomic(
     let price_update_keypair = Keypair::new();
 
     let (mut header, body): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
-    header = Header {
-        signatures: header.signatures[..(n_signatures)].to_vec(),
-        ..header
-    };
+    trim_signatures(&mut header, n_signatures);
 
     let request_compute_units_instruction: Instruction =
         ComputeBudgetInstruction::set_compute_unit_limit(400_000);
@@ -291,6 +288,10 @@ pub fn process_post_price_update_atomic(
         &vec![payer, &price_update_keypair],
     )?;
     Ok(price_update_keypair.pubkey())
+}
+
+fn trim_signatures(header: &mut Header, n_signatures: usize) {
+    header.signatures = header.signatures[..(n_signatures)].to_vec();
 }
 
 fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Result<GuardianSet> {

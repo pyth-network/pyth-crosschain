@@ -40,14 +40,14 @@ pub enum Action {
         #[clap(short = 'p', long, help = "Payload from Hermes")]
         payload: String,
     },
-    #[clap(about = "Post a price update atomically from Hermes to Solana")]
+    #[clap(about = "Post a price update from Hermes to Solana in one transaction")]
     PostPriceUpdateAtomic {
         #[clap(short = 'p', long, help = "Payload from Hermes")]
         payload:      String,
         #[clap(
             short = 'n',
             default_value = "5",
-            help = "Number of signatures to verify"
+            help = "Number of signatures to verify. If n >= 5 this will fail because of the transaction size limit."
         )]
         n_signatures: usize,
     },
