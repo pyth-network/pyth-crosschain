@@ -371,7 +371,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     priceId,
                     prevPublishTime
                 ) = extractPriceInfoFromMerkleProof(digest, encoded, offset);
-                uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
                 updateLatestPriceIfNecessary(priceId, priceInfo);
             }
         }

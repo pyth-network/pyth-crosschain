@@ -428,7 +428,6 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
         updateLatestPriceIfNecessary(priceId, info);
     }
 
@@ -450,8 +449,6 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
         updateLatestPriceIfNecessary(priceId, info);
     }
 
@@ -469,8 +466,6 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
         updateLatestPriceIfNecessary(priceId, info);
     }
 
@@ -485,8 +480,6 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
         updateLatestPriceIfNecessary(priceId, info);
     }
 

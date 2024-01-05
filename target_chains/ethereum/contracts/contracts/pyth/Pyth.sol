@@ -168,7 +168,6 @@ abstract contract Pyth is
                 index += attestationSize;
 
                 // Store the attestation
-                uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
                 updateLatestPriceIfNecessary(priceId, info);
             }
 
@@ -490,12 +489,7 @@ abstract contract Pyth is
                             encoded,
                             offset
                         );
-                        {
-                            uint64 latestPublishTime = latestPriceInfoPublishTime(
-                                    priceId
-                                );
-                            updateLatestPriceIfNecessary(priceId, priceInfo);
-                        }
+                        updateLatestPriceIfNecessary(priceId, priceInfo);
                         {
                             // check whether caller requested for this data
                             uint k = findIndexOfPriceId(priceIds, priceId);
@@ -581,12 +575,7 @@ abstract contract Pyth is
                                 attestationSize
                             );
 
-                        {
-                            uint64 latestPublishTime = latestPriceInfoPublishTime(
-                                    priceId
-                                );
-                            updateLatestPriceIfNecessary(priceId, priceInfo);
-                        }
+                        updateLatestPriceIfNecessary(priceId, priceInfo);
 
                         uint publishTime = uint(priceInfo.publishTime);
                         // Check the publish time of the price is within the given range
