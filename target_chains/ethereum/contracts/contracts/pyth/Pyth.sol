@@ -486,12 +486,12 @@ abstract contract Pyth is
                     );
 
                     for (uint j = 0; j < numUpdates; j++) {
-                        PythInternalStructs.PriceInfo memory info;
+                        PythInternalStructs.PriceInfo memory priceInfo;
                         bytes32 priceId;
                         uint64 prevPublishTime;
                         (
                             offset,
-                            info,
+                            priceInfo,
                             priceId,
                             prevPublishTime
                         ) = extractPriceInfoFromMerkleProof(
@@ -499,6 +499,20 @@ abstract contract Pyth is
                             encoded,
                             offset
                         );
+                        {
+                            uint64 latestPublishTime = latestPriceInfoPublishTime(
+                                    priceId
+                                );
+                            if (priceInfo.publishTime > latestPublishTime) {
+                                setLatestPriceInfo(priceId, priceInfo);
+                                emit PriceFeedUpdate(
+                                    priceId,
+                                    priceInfo.publishTime,
+                                    priceInfo.price,
+                                    priceInfo.conf
+                                );
+                            }
+                        }
                         {
                             // check whether caller requested for this data
                             uint k = findIndexOfPriceId(priceIds, priceId);
@@ -509,7 +523,7 @@ abstract contract Pyth is
                                 continue;
                             }
 
-                            uint publishTime = uint(info.publishTime);
+                            uint publishTime = uint(priceInfo.publishTime);
                             // Check the publish time of the price is within the given range
                             // and only fill the priceFeedsInfo if it is.
                             // If is not, default id value of 0 will still be set and
@@ -524,7 +538,7 @@ abstract contract Pyth is
                                     priceFeeds,
                                     k,
                                     priceId,
-                                    info,
+                                    priceInfo,
                                     publishTime
                                 );
                             }
@@ -576,7 +590,7 @@ abstract contract Pyth is
                         }
 
                         (
-                            PythInternalStructs.PriceInfo memory info,
+                            PythInternalStructs.PriceInfo memory priceInfo,
 
                         ) = parseSingleAttestationFromBatch(
                                 encoded,
@@ -584,7 +598,22 @@ abstract contract Pyth is
                                 attestationSize
                             );
 
-                        uint publishTime = uint(info.publishTime);
+                        {
+                            uint64 latestPublishTime = latestPriceInfoPublishTime(
+                                    priceId
+                                );
+                            if (priceInfo.publishTime > latestPublishTime) {
+                                setLatestPriceInfo(priceId, priceInfo);
+                                emit PriceFeedUpdate(
+                                    priceId,
+                                    priceInfo.publishTime,
+                                    priceInfo.price,
+                                    priceInfo.conf
+                                );
+                            }
+                        }
+
+                        uint publishTime = uint(priceInfo.publishTime);
                         // Check the publish time of the price is within the given range
                         // and only fill the priceFeedsInfo if it is.
                         // If is not, default id value of 0 will still be set and
@@ -598,7 +627,7 @@ abstract contract Pyth is
                                 priceFeeds,
                                 k,
                                 priceId,
-                                info,
+                                priceInfo,
                                 publishTime
                             );
                         }
@@ -727,6 +756,6 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.3.3";
+        return "1.4.3";
     }
 }
