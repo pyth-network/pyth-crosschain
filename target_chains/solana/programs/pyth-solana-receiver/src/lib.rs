@@ -104,6 +104,11 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+
+    /// Post a price update using a VAA and a MerklePriceUpdate.
+    /// This function allows you to post a price update in a single transaction.
+    /// Compared to post_updates, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.
+    /// Typically, you can fit 5 guardian signatures in a transaction that uses this.
     pub fn post_updates_atomic(
         ctx: Context<PostUpdatesAtomic>,
         params: PostUpdatesAtomicParams,
@@ -165,7 +170,7 @@ pub mod pyth_solana_receiver {
             payer,
             treasury,
             price_update_account,
-            vaa_components,
+            &vaa_components,
             vaa.payload().as_ref(),
             &params.merkle_price_update,
         )?;
@@ -199,7 +204,7 @@ pub mod pyth_solana_receiver {
             payer,
             treasury,
             price_update_account,
-            vaa_components,
+            &vaa_components,
             body.payload,
             &price_update,
         )?;
@@ -350,14 +355,14 @@ struct VaaComponents {
     verified_signatures: u8,
     emitter_address:     [u8; 32],
     emitter_chain:       u16,
-    // payload: &'a [u8],
 }
+
 fn post_price_update_from_vaa<'info>(
     config: &Account<'info, Config>,
     payer: &Signer<'info>,
     treasury: &AccountInfo<'info>,
     price_update_account: &mut Account<'_, PriceUpdateV1>,
-    vaa_components: VaaComponents,
+    vaa_components: &VaaComponents,
     vaa_payload: &[u8],
     price_update: &MerklePriceUpdate,
 ) -> Result<()> {
