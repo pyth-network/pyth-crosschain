@@ -73,7 +73,7 @@ const UPGRADE_GUARDIAN_SET_VAA_3 : &str = "01000000020d00ce45474d9e1b1e7790a2d21
 /**
  * The VAA is split at this index when writing the encoded VAA, this allow us to
  * optimize the number of transactions by putting the maximum possible amount of data in the first transaction.
- *
+ * This constant is chosen to pack the first transaction maximally.
  */
 const VAA_SPLIT_INDEX: usize = 846;
 
