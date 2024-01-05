@@ -169,16 +169,7 @@ abstract contract Pyth is
 
                 // Store the attestation
                 uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-                if (info.publishTime > latestPublishTime) {
-                    setLatestPriceInfo(priceId, info);
-                    emit PriceFeedUpdate(
-                        priceId,
-                        info.publishTime,
-                        info.price,
-                        info.conf
-                    );
-                }
+                updateLatestPriceIfNecessary(priceId, info);
             }
 
             emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
@@ -503,15 +494,7 @@ abstract contract Pyth is
                             uint64 latestPublishTime = latestPriceInfoPublishTime(
                                     priceId
                                 );
-                            if (priceInfo.publishTime > latestPublishTime) {
-                                setLatestPriceInfo(priceId, priceInfo);
-                                emit PriceFeedUpdate(
-                                    priceId,
-                                    priceInfo.publishTime,
-                                    priceInfo.price,
-                                    priceInfo.conf
-                                );
-                            }
+                            updateLatestPriceIfNecessary(priceId, priceInfo);
                         }
                         {
                             // check whether caller requested for this data
@@ -602,15 +585,7 @@ abstract contract Pyth is
                             uint64 latestPublishTime = latestPriceInfoPublishTime(
                                     priceId
                                 );
-                            if (priceInfo.publishTime > latestPublishTime) {
-                                setLatestPriceInfo(priceId, priceInfo);
-                                emit PriceFeedUpdate(
-                                    priceId,
-                                    priceInfo.publishTime,
-                                    priceInfo.price,
-                                    priceInfo.conf
-                                );
-                            }
+                            updateLatestPriceIfNecessary(priceId, priceInfo);
                         }
 
                         uint publishTime = uint(priceInfo.publishTime);

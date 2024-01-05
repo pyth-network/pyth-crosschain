@@ -4,17 +4,27 @@
 pragma solidity ^0.8.0;
 
 import "./PythState.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 
-contract PythSetters is PythState {
+contract PythSetters is PythState, IPythEvents {
     function setWormhole(address wh) internal {
         _state.wormhole = payable(wh);
     }
 
-    function setLatestPriceInfo(
+    function updateLatestPriceIfNecessary(
         bytes32 priceId,
         PythInternalStructs.PriceInfo memory info
     ) internal {
-        _state.latestPriceInfo[priceId] = info;
+        uint64 latestPublishTime = _state.latestPriceInfo[priceId].publishTime;
+        if (info.publishTime > latestPublishTime) {
+            _state.latestPriceInfo[priceId] = info;
+            emit PriceFeedUpdate(
+                priceId,
+                info.publishTime,
+                info.price,
+                info.conf
+            );
+        }
     }
 
     function setSingleUpdateFeeInWei(uint fee) internal {
