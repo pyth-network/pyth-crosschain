@@ -51,7 +51,6 @@ use {
 pub mod error;
 pub mod state;
 
-
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 #[program]
@@ -109,6 +108,7 @@ pub mod pyth_solana_receiver {
         ctx: Context<PostUpdatesAtomic>,
         params: PostUpdatesAtomicParams,
     ) -> Result<()> {
+        // This section is borrowed from https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L59
         let vaa = Vaa::parse(&params.vaa).map_err(|_| ReceiverError::DeserializeVaaFailed)?;
         // Must be V1.
         require_eq!(vaa.version(), 1, ReceiverError::InvalidVaaVersion);
@@ -147,148 +147,67 @@ pub mod pyth_solana_receiver {
 
             last_guardian_index = Some(index);
         }
+        // End borrowed section
 
         let config = &ctx.accounts.config;
-        let payer = &ctx.accounts.payer;
-        let treasury = &ctx.accounts.treasury;
-        let price_update_account = &mut ctx.accounts.price_update_account;
+        let payer: &Signer<'_> = &ctx.accounts.payer;
+        let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
+        let price_update_account: &mut Account<'_, PriceUpdateV1> =
+            &mut ctx.accounts.price_update_account;
 
-        if payer.lamports()
-            < Rent::get()?
-                .minimum_balance(0)
-                .saturating_add(config.single_update_fee_in_lamports)
-        {
-            return err!(ReceiverError::InsufficientFunds);
+        let vaa_components = VaaComponents {
+            verified_signatures: vaa.signature_count(),
+            emitter_address:     vaa.body().emitter_address(),
+            emitter_chain:       vaa.body().emitter_chain(),
         };
 
-        let transfer_instruction = system_instruction::transfer(
-            payer.key,
-            treasury.key,
-            config.single_update_fee_in_lamports,
-        );
-        anchor_lang::solana_program::program::invoke(
-            &transfer_instruction,
-            &[
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.treasury.to_account_info(),
-            ],
+        post_price_update_from_vaa(
+            config,
+            payer,
+            treasury,
+            price_update_account,
+            vaa_components,
+            vaa.payload().as_ref(),
+            &params.merkle_price_update,
         )?;
 
 
-        let valid_data_source = config.valid_data_sources.iter().any(|x| {
-            *x == DataSource {
-                chain:   vaa.body().emitter_chain(),
-                emitter: Pubkey::from(vaa.body().emitter_address()),
-            }
-        });
-        if !valid_data_source {
-            return err!(ReceiverError::InvalidDataSource);
-        }
-
-        let wormhole_message = WormholeMessage::try_from_bytes(vaa.payload())
-            .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
-        let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
-            WormholePayload::Merkle(merkle_root) => merkle_root.root,
-        });
-
-        if !root.check(
-            params.merkle_price_update.proof,
-            params.merkle_price_update.message.as_ref(),
-        ) {
-            return err!(ReceiverError::InvalidPriceUpdate);
-        }
-
-        let message =
-            from_slice::<byteorder::BE, Message>(params.merkle_price_update.message.as_ref())
-                .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
-
-        match message {
-            Message::PriceFeedMessage(price_feed_message) => {
-                price_update_account.write_authority = payer.key();
-                price_update_account.verified_signatures = vaa.signature_count();
-                price_update_account.price_message = price_feed_message;
-            }
-            Message::TwapMessage(_) => {
-                return err!(ReceiverError::UnsupportedMessageType);
-            }
-        }
-
         Ok(())
     }
-
 
     /// Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.
     /// This should be called after the client has already verified the Vaa via the Wormhole contract.
     /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
     pub fn post_updates(ctx: Context<PostUpdates>, price_update: MerklePriceUpdate) -> Result<()> {
         let config = &ctx.accounts.config;
-        let payer = &ctx.accounts.payer;
+        let payer: &Signer<'_> = &ctx.accounts.payer;
         let encoded_vaa = &ctx.accounts.encoded_vaa;
-        let treasury = &ctx.accounts.treasury;
-        let price_update_account = &mut ctx.accounts.price_update_account;
-
-        if payer.lamports()
-            < Rent::get()?
-                .minimum_balance(0)
-                .saturating_add(config.single_update_fee_in_lamports)
-        {
-            return err!(ReceiverError::InsufficientFunds);
-        };
-
-        let transfer_instruction = system_instruction::transfer(
-            payer.key,
-            treasury.key,
-            config.single_update_fee_in_lamports,
-        );
-        anchor_lang::solana_program::program::invoke(
-            &transfer_instruction,
-            &[
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.treasury.to_account_info(),
-            ],
-        )?;
+        let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
+        let price_update_account: &mut Account<'_, PriceUpdateV1> =
+            &mut ctx.accounts.price_update_account;
 
         let (_, body): (Header, Body<&RawMessage>) =
-            serde_wormhole::from_slice(&ctx.accounts.encoded_vaa.buf).unwrap();
+            serde_wormhole::from_slice(&encoded_vaa.buf).unwrap();
 
-        let valid_data_source = config.valid_data_sources.iter().any(|x| {
-            *x == DataSource {
-                chain:   body.emitter_chain.into(),
-                emitter: Pubkey::from(body.emitter_address.0),
-            }
-        });
-        if !valid_data_source {
-            return err!(ReceiverError::InvalidDataSource);
-        }
+        let vaa_components = VaaComponents {
+            verified_signatures: encoded_vaa.header.verified_signatures,
+            emitter_address:     body.emitter_address.0,
+            emitter_chain:       body.emitter_chain.into(),
+        };
 
-        let wormhole_message = WormholeMessage::try_from_bytes(body.payload)
-            .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
-        let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
-            WormholePayload::Merkle(merkle_root) => merkle_root.root,
-        });
-
-        if !root.check(price_update.proof, price_update.message.as_ref()) {
-            return err!(ReceiverError::InvalidPriceUpdate);
-        }
-
-        let message = from_slice::<byteorder::BE, Message>(price_update.message.as_ref())
-            .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
-
-        match message {
-            Message::PriceFeedMessage(price_feed_message) => {
-                price_update_account.write_authority = payer.key();
-                price_update_account.verified_signatures = encoded_vaa.header.verified_signatures;
-                price_update_account.price_message = price_feed_message;
-            }
-            Message::TwapMessage(_) => {
-                return err!(ReceiverError::UnsupportedMessageType);
-            }
-        }
+        post_price_update_from_vaa(
+            config,
+            payer,
+            treasury,
+            price_update_account,
+            vaa_components,
+            body.payload,
+            &price_update,
+        )?;
 
         Ok(())
     }
 }
-
 
 pub const CONFIG_SEED: &str = "config";
 pub const TREASURY_SEED: &str = "treasury";
@@ -371,7 +290,6 @@ pub struct PostUpdatesAtomicParams {
     pub merkle_price_update: MerklePriceUpdate,
 }
 
-
 impl crate::accounts::Initialize {
     pub fn populate(payer: &Pubkey) -> Self {
         let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
@@ -413,7 +331,6 @@ impl crate::accounts::PostUpdatesAtomic {
     }
 }
 
-
 impl crate::accounts::PostUpdates {
     pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
         let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
@@ -430,7 +347,78 @@ impl crate::accounts::PostUpdates {
     }
 }
 
+struct VaaComponents {
+    verified_signatures: u8,
+    emitter_address:     [u8; 32],
+    emitter_chain:       u16,
+    // payload: &'a [u8],
+}
+fn post_price_update_from_vaa<'info>(
+    config: &Account<'info, Config>,
+    payer: &Signer<'info>,
+    treasury: &AccountInfo<'info>,
+    price_update_account: &mut Account<'_, PriceUpdateV1>,
+    vaa_components: VaaComponents,
+    vaa_payload: &[u8],
+    price_update: &MerklePriceUpdate,
+) -> Result<()> {
+    if payer.lamports()
+        < Rent::get()?
+            .minimum_balance(0)
+            .saturating_add(config.single_update_fee_in_lamports)
+    {
+        return err!(ReceiverError::InsufficientFunds);
+    };
 
+    let transfer_instruction = system_instruction::transfer(
+        payer.key,
+        treasury.key,
+        config.single_update_fee_in_lamports,
+    );
+    anchor_lang::solana_program::program::invoke(
+        &transfer_instruction,
+        &[payer.to_account_info(), treasury.to_account_info()],
+    )?;
+
+    let valid_data_source = config.valid_data_sources.iter().any(|x| {
+        *x == DataSource {
+            chain:   vaa_components.emitter_chain,
+            emitter: Pubkey::from(vaa_components.emitter_address),
+        }
+    });
+    if !valid_data_source {
+        return err!(ReceiverError::InvalidDataSource);
+    }
+
+    let wormhole_message = WormholeMessage::try_from_bytes(vaa_payload)
+        .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
+    let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
+        WormholePayload::Merkle(merkle_root) => merkle_root.root,
+    });
+
+    if !root.check(price_update.proof.clone(), price_update.message.as_ref()) {
+        return err!(ReceiverError::InvalidPriceUpdate);
+    }
+
+    let message = from_slice::<byteorder::BE, Message>(price_update.message.as_ref())
+        .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
+
+    match message {
+        Message::PriceFeedMessage(price_feed_message) => {
+            price_update_account.write_authority = payer.key();
+            price_update_account.verified_signatures = vaa_components.verified_signatures;
+            price_update_account.price_message = price_feed_message;
+        }
+        Message::TwapMessage(_) => {
+            return err!(ReceiverError::UnsupportedMessageType);
+        }
+    }
+    Ok(())
+}
+
+/**
+ * Borrowed from https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L121
+ */
 fn verify_guardian_signature(
     sig: &GuardianSetSig,
     guardian_pubkey: &[u8; 20],
