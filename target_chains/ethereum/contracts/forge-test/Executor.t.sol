@@ -91,6 +91,15 @@ contract ExecutorTest is Test, WormholeTestUtils {
         );
     }
 
+    function testExecutorOwner() public {
+        assertEq(address(executor), executor.owner());
+    }
+
+    function testExternaUpgradeCallFails() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        executor.upgradeTo(address(executor2));
+    }
+
     function testUpgradeCallSucceedsForContractWithCorrectMagic() public {
         bytes memory vaa = getTestUpgradeVaa(address(executor2));
         executor.execute(vaa);
