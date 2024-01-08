@@ -241,7 +241,7 @@ pub struct Governance<'info> {
         ReceiverError::GovernanceAuthorityMismatch
     )]
     pub payer:  Signer<'info>,
-    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    #[account(mut, seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
 }
 
