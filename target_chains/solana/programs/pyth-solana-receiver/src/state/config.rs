@@ -10,6 +10,7 @@ pub struct Config {
     pub wormhole:                      Pubkey,         // The address of the wormhole receiver
     pub valid_data_sources:            Vec<DataSource>, // The list of valid data sources for oracle price updates
     pub single_update_fee_in_lamports: u64, // The fee in lamports for a single price update
+    pub minimum_signatures:            u8, // The minimum number of signatures required to accept a VAA
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
@@ -51,11 +52,12 @@ pub mod tests {
                 },
             ],
             single_update_fee_in_lamports: 0,
+            minimum_signatures:            0,
         };
 
         assert_eq!(
             test_config.try_to_vec().unwrap().len(),
-            32 + 1 + 32 + 32 + 4 + 1 + 33 + 1 + 33 + 8
+            32 + 1 + 32 + 32 + 4 + 1 + 33 + 1 + 33 + 8 + 1
         );
         assert!(
             Config::discriminator().len() + test_config.try_to_vec().unwrap().len() <= Config::LEN

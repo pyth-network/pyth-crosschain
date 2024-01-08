@@ -3021,14 +3021,12 @@ dependencies = [
  "pyth-sdk-solana",
  "pythnet-sdk",
  "rand 0.8.5",
- "serde_wormhole",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "tokio",
- "wormhole-core-bridge-solana",
+ "wormhole-core-bridge-solana 0.0.1-alpha.3 (git+https://github.com/wormhole-foundation/wormhole?branch=wen/solana-rewrite)",
  "wormhole-raw-vaas",
- "wormhole-sdk",
 ]
 
 [[package]]
@@ -3047,7 +3045,7 @@ dependencies = [
  "shellexpand",
  "solana-client",
  "solana-sdk",
- "wormhole-core-bridge-solana",
+ "wormhole-core-bridge-solana 0.0.1-alpha.3 (git+https://github.com/guibescos/wormhole?branch=variable-sigs)",
  "wormhole-sdk",
  "wormhole-solana",
 ]
@@ -6144,6 +6142,20 @@ dependencies = [
 name = "wormhole-core-bridge-solana"
 version = "0.0.1-alpha.3"
 source = "git+https://github.com/guibescos/wormhole?branch=variable-sigs#a9b970c1bc09b9678777949bcfcac8d498f7c1fc"
+dependencies = [
+ "anchor-lang",
+ "cfg-if",
+ "hex",
+ "ruint",
+ "solana-program",
+ "wormhole-io",
+ "wormhole-raw-vaas",
+]
+
+[[package]]
+name = "wormhole-core-bridge-solana"
+version = "0.0.1-alpha.3"
+source = "git+https://github.com/wormhole-foundation/wormhole?branch=wen/solana-rewrite#1020390d1bf64f6fe2f3a4845df686ff2c5fea70"
 dependencies = [
  "anchor-lang",
  "cfg-if",

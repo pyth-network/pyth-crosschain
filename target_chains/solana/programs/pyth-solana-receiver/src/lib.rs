@@ -17,7 +17,6 @@ use {
             },
         },
     },
-    serde_wormhole::RawMessage,
     solana_program::{
         keccak,
         program_memory::sol_memcpy,
@@ -29,22 +28,21 @@ use {
             Config,
             DataSource,
         },
-        price_update::PriceUpdateV1,
+        price_update::{
+            PriceUpdateV1,
+            VerificationLevel,
+        },
     },
     wormhole_core_bridge_solana::{
-        sdk::legacy::AccountVariant,
-        state::{
-            EncodedVaa,
-            GuardianSet,
+        sdk::{
+            legacy::AccountVariant,
+            VaaAccount,
         },
+        state::GuardianSet,
     },
     wormhole_raw_vaas::{
         GuardianSetSig,
         Vaa,
-    },
-    wormhole_sdk::vaa::{
-        Body,
-        Header,
     },
 };
 
@@ -104,6 +102,11 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    pub fn set_minimum_signatures(ctx: Context<Governance>, minimum_signatures: u8) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.minimum_signatures = minimum_signatures;
+        Ok(())
+    }
 
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
@@ -126,7 +129,6 @@ pub mod pyth_solana_receiver {
             ReceiverError::GuardianSetMismatch
         );
 
-        // Do we have enough signatures for quorum?
         let guardian_keys = &guardian_set.keys;
 
         // Generate the same message hash (using keccak) that the Guardians used to generate their
@@ -159,10 +161,16 @@ pub mod pyth_solana_receiver {
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
 
+        require_gte!(
+            vaa.signature_count(),
+            config.minimum_signatures,
+            ReceiverError::InsufficientGuardianSignatures
+        );
+
         let vaa_components = VaaComponents {
-            verified_signatures: vaa.signature_count(),
-            emitter_address:     vaa.body().emitter_address(),
-            emitter_chain:       vaa.body().emitter_chain(),
+            verification_level: VerificationLevel::Partial(vaa.signature_count()),
+            emitter_address:    vaa.body().emitter_address(),
+            emitter_chain:      vaa.body().emitter_chain(),
         };
 
         post_price_update_from_vaa(
@@ -185,18 +193,15 @@ pub mod pyth_solana_receiver {
     pub fn post_updates(ctx: Context<PostUpdates>, price_update: MerklePriceUpdate) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
-        let encoded_vaa = &ctx.accounts.encoded_vaa;
+        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?;
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
             &mut ctx.accounts.price_update_account;
 
-        let (_, body): (Header, Body<&RawMessage>) =
-            serde_wormhole::from_slice(&encoded_vaa.buf).unwrap();
-
         let vaa_components = VaaComponents {
-            verified_signatures: encoded_vaa.header.verified_signatures,
-            emitter_address:     body.emitter_address.0,
-            emitter_chain:       body.emitter_chain.into(),
+            verification_level: VerificationLevel::Full,
+            emitter_address:    encoded_vaa.try_emitter_address()?,
+            emitter_chain:      encoded_vaa.try_emitter_chain()?,
         };
 
         post_price_update_from_vaa(
@@ -205,7 +210,7 @@ pub mod pyth_solana_receiver {
             treasury,
             price_update_account,
             &vaa_components,
-            body.payload,
+            encoded_vaa.try_payload()?.as_ref(),
             &price_update,
         )?;
 
@@ -253,7 +258,8 @@ pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     #[account(owner = config.wormhole)]
-    pub encoded_vaa:          Account<'info, EncodedVaa>,
+    /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
+    pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
@@ -351,10 +357,17 @@ impl crate::accounts::PostUpdates {
     }
 }
 
+impl crate::accounts::Governance {
+    pub fn populate(payer: Pubkey) -> Self {
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
+        crate::accounts::Governance { payer, config }
+    }
+}
+
 struct VaaComponents {
-    verified_signatures: u8,
-    emitter_address:     [u8; 32],
-    emitter_chain:       u16,
+    verification_level: VerificationLevel,
+    emitter_address:    [u8; 32],
+    emitter_chain:      u16,
 }
 
 fn post_price_update_from_vaa<'info>(
@@ -410,7 +423,7 @@ fn post_price_update_from_vaa<'info>(
     match message {
         Message::PriceFeedMessage(price_feed_message) => {
             price_update_account.write_authority = payer.key();
-            price_update_account.verified_signatures = vaa_components.verified_signatures;
+            price_update_account.verification_level = vaa_components.verification_level;
             price_update_account.price_message = price_feed_message;
         }
         Message::TwapMessage(_) => {
