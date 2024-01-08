@@ -20,7 +20,7 @@ anchor-lang = "0.28.0"
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", version = "2.0.0" }
 solana-program = "1.16.20"
 byteorder = "1.4.3"
-wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"}
+wormhole-core-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", branch = "wen/solana-rewrite", features = ["cpi"]}
 wormhole-raw-vaas = {version = "0.0.1-alpha.1", features = ["ruint", "on-chain"], default-features = false }
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}

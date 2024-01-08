@@ -186,6 +186,7 @@ fn main() -> Result<()> {
                         wormhole,
                         valid_data_sources: vec![DataSource { chain, emitter }],
                         single_update_fee_in_lamports: fee,
+                        minimum_signatures: 5,
                     },
                 }
                 .data(),
