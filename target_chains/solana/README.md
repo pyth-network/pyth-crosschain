@@ -9,15 +9,18 @@ This folder contains:
 
 Receiving a price update from Pythnet involves two steps:
 
-- First, verifying the VAA i.e. verifying the Wormhole guardians' signatures on the accumulator root that contains all the price updates for a given Pythnet slot. This happens in the Wormhole receiver contract (Note: this contract is in the Wormhole monorepo, we're currently using this branch https://github.com/guibescos/wormhole/tree/variable-sigs).
-- Second, verifying the price update by providing an inclusion proof that proves the price update is part of the accumulator root that was verified in the first step. This happens in the Pyth receiver contract.
+- First, verifying the VAA i.e. verifying the Wormhole guardians' signatures on the accumulator root that contains all the price updates for a given Pythnet slot.
+- Second, verifying the price update by providing an inclusion proof that proves the price update is part of the accumulator root that was verified in the first step.
 
-The Pyth receiver program:
+# Implementation
 
-- verifies that the VAA has been verified by the Wormhole program (through the owner of the account that contains the VAA, the anchor discriminator and the field `verified_signatures`).
-- checks that the VAA was emitted by the right data source
-- checks the inclusion proof is valid
-- posts the price update to a `PriceUpdateV1` account
+This contract offers two ways to post a price update from Pythnet onto Solana:
+
+- `post_updates` allows you to do it in 2 transactions but checks all the Wormhole guardian signatures. It relies on the Wormhole contract to verify the signatures.
+- `post_updates_atomic` allows you to do it in 1 transaction but only partially checks the Wormhole guardian signatures (5 signatures seems like the best it can currently do). It relies on a guardian set account from the Wormhole contract to check the signatures against the guardian keys.
+
+`post_updates` is also a more efficient way to post updates if you're looking to post data for many different price feeds at a single point in time.
+This is because it persists a verified encoded VAA, so guardian signatures will only get checked once. Then that single posted VAA can be used to prove the price update for all price feeds for that given point in time.
 
 # Devnet deployment
 
@@ -40,6 +43,12 @@ curl  "https://hermes.pyth.network/api/latest_vaas?ids[]=0xff61491a931112ddf1bd8
 ```
 
 Post it to devnet:
+
+```
+cargo run --package pyth-solana-receiver-cli -- --url https://api.devnet.solana.com --keypair ${PATH_TO_KEYPAIR} --wormhole HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ post-price-update-atomic -p ${HERMES_UPDATE_IN_BASE_64}
+```
+
+or
 
 ```
 cargo run --package pyth-solana-receiver-cli -- --url https://api.devnet.solana.com --keypair ${PATH_TO_KEYPAIR} --wormhole HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ post-price-update -p ${HERMES_UPDATE_IN_BASE_64}
