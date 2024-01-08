@@ -118,7 +118,7 @@ pub mod pyth_solana_receiver {
     ) -> Result<()> {
         let config = &ctx.accounts.config;
         let guardian_set =
-            deserialize_checked_guardian_set(&ctx.accounts.guardian_set, &config.wormhole)?;
+            deserialize_guardian_set_checked(&ctx.accounts.guardian_set, &config.wormhole)?;
 
         // This section is borrowed from https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L59
         let vaa = Vaa::parse(&params.vaa).map_err(|_| ReceiverError::DeserializeVaaFailed)?;
@@ -278,14 +278,9 @@ pub struct PostUpdates<'info> {
 pub struct PostUpdatesAtomic<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
-    /// CHECK: The checks happen in the program
+    /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
+    /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
-        // seeds = [
-        //     GuardianSet::SEED_PREFIX,
-        //     guardian_set.inner().index.to_be_bytes().as_ref()
-        // ],
-        // seeds::program = config.wormhole,
-        // bump,
         owner = config.wormhole)]
     pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
@@ -368,7 +363,7 @@ impl crate::accounts::Governance {
     }
 }
 
-fn deserialize_checked_guardian_set(
+fn deserialize_guardian_set_checked(
     account_info: &AccountInfo<'_>,
     wormhole: &Pubkey,
 ) -> Result<AccountVariant<GuardianSet>> {
