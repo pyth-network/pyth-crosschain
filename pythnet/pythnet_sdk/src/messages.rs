@@ -3,6 +3,7 @@ use quickcheck::Arbitrary;
 use {
     borsh::{
         BorshDeserialize,
+        BorshSchema,
         BorshSerialize,
     },
     serde::{
@@ -75,7 +76,15 @@ pub type FeedId = [u8; 32];
 
 #[repr(C)]
 #[derive(
-    Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
 )]
 pub struct PriceFeedMessage {
     pub feed_id:           FeedId,
