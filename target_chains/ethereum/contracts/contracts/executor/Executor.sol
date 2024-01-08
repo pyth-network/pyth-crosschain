@@ -26,6 +26,8 @@ contract Executor {
         // This argument is included to support multiple Executors on the same blockchain.
         address executorAddress;
         address callAddress;
+        // callAddress will be called with given value
+        uint value;
         bytes callData;
     }
 
@@ -87,7 +89,9 @@ contract Executor {
         if (len == 0) revert ExecutorErrors.InvalidContractTarget();
 
         bool success;
-        (success, response) = address(callAddress).call(gi.callData);
+        (success, response) = address(callAddress).call{value: gi.value}(
+            gi.callData
+        );
 
         // Check if the call was successful or not.
         if (!success) {
@@ -162,6 +166,9 @@ contract Executor {
 
         gi.callAddress = encodedInstruction.toAddress(index);
         index += 20;
+
+        gi.value = encodedInstruction.toUint256(index);
+        index += 32;
 
         // As solidity performs math operations in a checked mode
         // if the length of the encoded instruction be smaller than index
