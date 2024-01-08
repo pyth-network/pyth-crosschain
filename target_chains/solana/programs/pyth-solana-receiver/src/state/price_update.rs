@@ -11,7 +11,7 @@ use {
 /**
  * This enum represents how many guardian signatures were checked for a Pythnet price update
  * If full, guardian quorum has been attained
- * If partial, it is at least config.minimum signatures, but in the case config.minimum_signatures changes in the future we also include the number of signatures */
+ * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked */
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema)]
 pub enum VerificationLevel {
     Partial(u8),
