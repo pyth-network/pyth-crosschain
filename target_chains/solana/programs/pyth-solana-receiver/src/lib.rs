@@ -269,7 +269,9 @@ pub struct PostUpdates<'info> {
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
-    #[account(init, payer =payer, space = PriceUpdateV1::LEN)]
+    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key(), payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
 }
@@ -288,7 +290,9 @@ pub struct PostUpdatesAtomic<'info> {
     #[account(mut, seeds = [TREASURY_SEED.as_ref()], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     pub treasury:             AccountInfo<'info>,
-    #[account(init, payer = payer, space = PriceUpdateV1::LEN)]
+    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key(), payer = payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
 }
