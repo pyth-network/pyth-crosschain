@@ -28,4 +28,15 @@ pub enum ReceiverError {
     NonexistentGovernanceAuthorityTransferRequest,
     #[msg("Funds are insufficient to pay the receiving fee")]
     InsufficientFunds,
+    // Wormhole errors
+    #[msg("Invalid VAA version")]
+    InvalidVaaVersion,
+    #[msg("Guardian set version in the VAA doesn't match the guardian set passed")]
+    GuardianSetMismatch,
+    #[msg("Guardian index exceeds the number of guardians in the set")]
+    InvalidGuardianIndex,
+    #[msg("A VAA signature is invalid")]
+    InvalidSignature,
+    #[msg("The recovered guardian public key doesn't match the guardian set")]
+    InvalidGuardianKeyRecovery,
 }

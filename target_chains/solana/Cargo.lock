@@ -3027,6 +3027,7 @@ dependencies = [
  "solana-sdk",
  "tokio",
  "wormhole-core-bridge-solana",
+ "wormhole-raw-vaas",
  "wormhole-sdk",
 ]
 

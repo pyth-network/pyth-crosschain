@@ -1,7 +1,8 @@
 #![deny(warnings)]
 
-
 pub mod cli;
+
+
 use {
     anchor_client::anchor_lang::{
         InstructionData,
@@ -14,7 +15,10 @@ use {
         Action,
         Cli,
     },
-    pyth_solana_receiver::state::config::DataSource,
+    pyth_solana_receiver::{
+        state::config::DataSource,
+        PostUpdatesAtomicParams,
+    },
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,
         MerklePriceUpdate,
@@ -102,6 +106,25 @@ fn main() -> Result<()> {
                 &merkle_price_updates[0],
             )?;
         }
+        Action::PostPriceUpdateAtomic {
+            payload,
+            n_signatures,
+        } => {
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+
+            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(&payload)?;
+
+            process_post_price_update_atomic(
+                &rpc_client,
+                &vaa,
+                n_signatures,
+                &wormhole,
+                &payer,
+                &merkle_price_updates[0],
+            )?;
+        }
 
         Action::InitializeWormholeReceiver {} => {
             let rpc_client = RpcClient::new(url);
@@ -140,6 +163,7 @@ fn main() -> Result<()> {
                 false,
             )?;
         }
+
         Action::InitializePythReceiver {
             fee,
             emitter,
@@ -219,6 +243,55 @@ pub fn process_upgrade_guardian_set(
         &vec![payer],
     )?;
     Ok(())
+}
+
+pub fn process_post_price_update_atomic(
+    rpc_client: &RpcClient,
+    vaa: &[u8],
+    n_signatures: usize,
+    wormhole: &Pubkey,
+    payer: &Keypair,
+    merkle_price_update: &MerklePriceUpdate,
+) -> Result<Pubkey> {
+    let price_update_keypair = Keypair::new();
+
+    let (mut header, body): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
+    trim_signatures(&mut header, n_signatures);
+
+    let request_compute_units_instruction: Instruction =
+        ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
+
+    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdatesAtomic::populate(
+        payer.pubkey(),
+        price_update_keypair.pubkey(),
+        *wormhole,
+        header.guardian_set_index,
+    )
+    .to_account_metas(None);
+
+    let post_update_instruction = Instruction {
+        program_id: pyth_solana_receiver::id(),
+        accounts:   post_update_accounts,
+        data:       pyth_solana_receiver::instruction::PostUpdatesAtomic {
+            params: PostUpdatesAtomicParams {
+                merkle_price_update: merkle_price_update.clone(),
+                vaa:                 serde_wormhole::to_vec(&(header, body)).unwrap(),
+            },
+        }
+        .data(),
+    };
+
+    process_transaction(
+        rpc_client,
+        vec![request_compute_units_instruction, post_update_instruction],
+        &vec![payer, &price_update_keypair],
+    )?;
+    Ok(price_update_keypair.pubkey())
+}
+
+fn trim_signatures(header: &mut Header, n_signatures: usize) {
+    header.signatures = header.signatures[..(n_signatures)].to_vec();
 }
 
 fn deserialize_guardian_set(buf: &mut &[u8], legacy_guardian_set: bool) -> Result<GuardianSet> {
