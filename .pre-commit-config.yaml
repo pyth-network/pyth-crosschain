@@ -89,13 +89,13 @@ repos:
       - id: cargo-fmt-pythnet-sdk
         name: Cargo format for pythnet SDK
         language: "rust"
-        entry: cargo +nightly-2023-03-01 fmt --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: pythnet/pythnet_sdk
       - id: cargo-clippy-pythnet-sdk
         name: Cargo clippy for pythnet SDK
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly-2023-07-23 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: pythnet/pythnet_sdk
       # Hooks for solana receiver contract
