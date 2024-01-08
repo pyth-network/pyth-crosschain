@@ -157,6 +157,8 @@ contract ExecutorTest is Test, WormholeTestUtils {
         );
         assertEq(callable.fooCount(), c + 1);
         assertEq(callable.lastCaller(), address(executor));
+        assertEq(address(executor).balance, 0);
+        assertEq(address(callable).balance, value);
         // Sanity check to make sure the check above is meaningful.
         assert(address(executor) != address(this));
     }
@@ -227,6 +229,8 @@ contract ExecutorTest is Test, WormholeTestUtils {
         );
         assertEq(callable.fooCount(), c + 17);
         assertEq(callable.lastCaller(), address(executor));
+        assertEq(address(executor).balance, 0);
+        assertEq(address(callable).balance, value);
         // Sanity check to make sure the check above is meaningful.
         assert(address(executor) != address(this));
     }

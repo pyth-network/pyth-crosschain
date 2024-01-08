@@ -89,13 +89,9 @@ contract Executor {
         if (len == 0) revert ExecutorErrors.InvalidContractTarget();
 
         bool success;
-        if (gi.value > 0) {
-            (success, response) = address(callAddress).call{value: gi.value}(
-                gi.callData
-            );
-        } else {
-            (success, response) = address(callAddress).call(gi.callData);
-        }
+        (success, response) = address(callAddress).call{value: gi.value}(
+            gi.callData
+        );
 
         // Check if the call was successful or not.
         if (!success) {
