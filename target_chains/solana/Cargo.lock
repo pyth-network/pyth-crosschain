@@ -3021,14 +3021,12 @@ dependencies = [
  "pyth-sdk-solana",
  "pythnet-sdk",
  "rand 0.8.5",
- "serde_wormhole",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "tokio",
  "wormhole-core-bridge-solana 0.0.1-alpha.3 (git+https://github.com/wormhole-foundation/wormhole?branch=wen/solana-rewrite)",
  "wormhole-raw-vaas",
- "wormhole-sdk",
 ]
 
 [[package]]

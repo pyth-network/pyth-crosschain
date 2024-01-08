@@ -17,7 +17,6 @@ use {
             },
         },
     },
-    serde_wormhole::RawMessage,
     solana_program::{
         keccak,
         program_memory::sol_memcpy,
@@ -44,10 +43,6 @@ use {
     wormhole_raw_vaas::{
         GuardianSetSig,
         Vaa,
-    },
-    wormhole_sdk::vaa::{
-        Body,
-        Header,
     },
 };
 
@@ -203,16 +198,10 @@ pub mod pyth_solana_receiver {
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
             &mut ctx.accounts.price_update_account;
 
-        let vaa_payload = &encoded_vaa.try_payload()?;
-
-        let (_, body): (Header, Body<&RawMessage>) =
-            serde_wormhole::from_slice(vaa_payload.as_ref()).unwrap();
-
-
         let vaa_components = VaaComponents {
             verification_level: VerificationLevel::Full,
-            emitter_address:    body.emitter_address.0,
-            emitter_chain:      body.emitter_chain.into(),
+            emitter_address:    encoded_vaa.try_emitter_address()?,
+            emitter_chain:      encoded_vaa.try_emitter_chain()?,
         };
 
         post_price_update_from_vaa(
@@ -221,7 +210,7 @@ pub mod pyth_solana_receiver {
             treasury,
             price_update_account,
             &vaa_components,
-            body.payload,
+            encoded_vaa.try_payload()?.as_ref(),
             &price_update,
         )?;
 
@@ -365,6 +354,13 @@ impl crate::accounts::PostUpdates {
             price_update_account,
             system_program: system_program::ID,
         }
+    }
+}
+
+impl crate::accounts::Governance {
+    pub fn populate(payer: Pubkey) -> Self {
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
+        crate::accounts::Governance { payer, config }
     }
 }
 
