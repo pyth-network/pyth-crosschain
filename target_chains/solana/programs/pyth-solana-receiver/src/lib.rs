@@ -116,13 +116,17 @@ pub mod pyth_solana_receiver {
         ctx: Context<PostUpdatesAtomic>,
         params: PostUpdatesAtomicParams,
     ) -> Result<()> {
+        let config = &ctx.accounts.config;
+        let guardian_set =
+            deserialize_guardian_set_checked(&ctx.accounts.guardian_set, &config.wormhole)?;
+
         // This section is borrowed from https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L59
         let vaa = Vaa::parse(&params.vaa).map_err(|_| ReceiverError::DeserializeVaaFailed)?;
         // Must be V1.
         require_eq!(vaa.version(), 1, ReceiverError::InvalidVaaVersion);
 
         // Make sure the encoded guardian set index agrees with the guardian set account's index.
-        let guardian_set = ctx.accounts.guardian_set.inner();
+        let guardian_set = guardian_set.inner();
         require_eq!(
             vaa.guardian_set_index(),
             guardian_set.index,
@@ -156,7 +160,6 @@ pub mod pyth_solana_receiver {
         }
         // End borrowed section
 
-        let config = &ctx.accounts.config;
         let payer = &ctx.accounts.payer;
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
@@ -275,15 +278,11 @@ pub struct PostUpdates<'info> {
 pub struct PostUpdatesAtomic<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
+    /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
+    /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
-        seeds = [
-            GuardianSet::SEED_PREFIX,
-            guardian_set.inner().index.to_be_bytes().as_ref()
-        ],
-        seeds::program = config.wormhole,
-        bump,
         owner = config.wormhole)]
-    pub guardian_set:         Account<'info, AccountVariant<GuardianSet>>,
+    pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
     #[account(mut, seeds = [TREASURY_SEED.as_ref()], bump)]
@@ -363,6 +362,32 @@ impl crate::accounts::Governance {
         crate::accounts::Governance { payer, config }
     }
 }
+
+fn deserialize_guardian_set_checked(
+    account_info: &AccountInfo<'_>,
+    wormhole: &Pubkey,
+) -> Result<AccountVariant<GuardianSet>> {
+    let mut guardian_set_data: &[u8] = &account_info.try_borrow_data()?;
+    let guardian_set =
+        AccountVariant::<GuardianSet>::try_deserialize_unchecked(&mut guardian_set_data)?;
+
+    let expected_address = Pubkey::find_program_address(
+        &[
+            GuardianSet::SEED_PREFIX,
+            guardian_set.inner().index.to_be_bytes().as_ref(),
+        ],
+        wormhole,
+    )
+    .0;
+
+    require!(
+        expected_address == *account_info.key,
+        ReceiverError::InvalidGuardianSetPda
+    );
+
+    Ok(guardian_set)
+}
+
 
 struct VaaComponents {
     verification_level: VerificationLevel,

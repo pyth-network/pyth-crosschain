@@ -30,6 +30,8 @@ pub enum ReceiverError {
     InsufficientFunds,
     #[msg("The number of guardian signatures is below the minimum")]
     InsufficientGuardianSignatures,
+    #[msg("The Guardian Set account doesn't match the PDA derivation")]
+    InvalidGuardianSetPda,
     // Wormhole errors
     #[msg("Invalid VAA version")]
     InvalidVaaVersion,
