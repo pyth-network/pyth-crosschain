@@ -525,4 +525,79 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
             MAX_UINT64
         );
     }
+
+    function testParsePriceFeedUpdatesLatestPriceIfNecessary() public {
+        uint numAttestations = 10;
+        (
+            bytes32[] memory priceIds,
+            PriceAttestation[] memory attestations
+        ) = generateRandomPriceAttestations(numAttestations);
+
+        for (uint i = 0; i < numAttestations; i++) {
+            // Set status to Trading so publishTime is used
+            attestations[i].status = PriceAttestationStatus.Trading;
+            attestations[i].publishTime = uint64((getRandUint() % 101)); // All between [0, 100]
+        }
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromAttestations(attestations);
+
+        // Request for parse within the given time range should work and update the latest price
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            100
+        );
+
+        // Check if the latest price is updated
+        for (uint i = 0; i < numAttestations; i++) {
+            assertEq(
+                pyth.getPriceUnsafe(priceIds[i]).publishTime,
+                attestations[i].publishTime
+            );
+        }
+
+        for (uint i = 0; i < numAttestations; i++) {
+            // Set status to Trading so publishTime is used
+            attestations[i].status = PriceAttestationStatus.Trading;
+            attestations[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
+        }
+
+        (updateData, updateFee) = createBatchedUpdateDataFromAttestations(
+            attestations
+        );
+
+        // Request for parse after the time range should revert.
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            300,
+            400
+        );
+
+        // parse function reverted so publishTimes should remain less than or equal to 100
+        for (uint i = 0; i < numAttestations; i++) {
+            assertGe(100, pyth.getPriceUnsafe(priceIds[i]).publishTime);
+        }
+
+        // Time range is now fixed, so parse should work and update the latest price
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            100,
+            200
+        );
+
+        // Check if the latest price is updated
+        for (uint i = 0; i < numAttestations; i++) {
+            assertEq(
+                pyth.getPriceUnsafe(priceIds[i]).publishTime,
+                attestations[i].publishTime
+            );
+        }
+    }
 }

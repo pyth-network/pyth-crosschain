@@ -428,17 +428,7 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-        if (info.publishTime > latestPublishTime) {
-            setLatestPriceInfo(priceId, info);
-            emit PriceFeedUpdate(
-                priceId,
-                info.publishTime,
-                info.price,
-                info.conf
-            );
-        }
+        updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Update a single price feed via a threshold-signed merkle proof.
@@ -459,17 +449,7 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-        if (info.publishTime > latestPublishTime) {
-            setLatestPriceInfo(priceId, info);
-            emit PriceFeedUpdate(
-                priceId,
-                info.publishTime,
-                info.price,
-                info.conf
-            );
-        }
+        updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Update a single price feed via a threshold-signed price update.
@@ -486,17 +466,7 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-        if (info.publishTime > latestPublishTime) {
-            setLatestPriceInfo(priceId, info);
-            emit PriceFeedUpdate(
-                priceId,
-                info.publishTime,
-                info.price,
-                info.conf
-            );
-        }
+        updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Update a single price feed via a "native" price update (i.e., using the default ethereum tx signature for authentication).
@@ -510,17 +480,7 @@ contract PythExperimental is Pyth {
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
-        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-        if (info.publishTime > latestPublishTime) {
-            setLatestPriceInfo(priceId, info);
-            emit PriceFeedUpdate(
-                priceId,
-                info.publishTime,
-                info.price,
-                info.conf
-            );
-        }
+        updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Verify that signature is a valid ECDSA signature of messageHash by signer.
