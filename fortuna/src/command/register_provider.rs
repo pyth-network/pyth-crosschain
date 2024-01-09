@@ -8,6 +8,13 @@ use {
         state::PebbleHashChain,
     },
     anyhow::Result,
+    ethers::{
+        signers::{
+            LocalWallet,
+            Signer,
+        },
+        types::Address,
+    },
     std::sync::Arc,
 };
 
@@ -20,22 +27,24 @@ pub struct CommitmentMetadata {
 /// Register as a randomness provider. This method will generate and commit to a new random
 /// hash chain from the configured secret & a newly generated random value.
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
-    // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(
-        SignablePythContract::from_config(
-            &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
-            &opts.private_key,
-        )
-        .await?,
-    );
+    let chain_config = Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?;
 
+    // Initialize a Provider to interface with the EVM contract.
+    let contract =
+        Arc::new(SignablePythContract::from_config(&chain_config, &opts.private_key).await?);
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
     let secret = opts.randomness.load_secret()?;
 
     let commitment_length = opts.randomness.chain_length;
-    let mut chain =
-        PebbleHashChain::from_config(&secret, &opts.chain_id, &random, commitment_length)?;
+    let mut chain = PebbleHashChain::from_config(
+        &secret,
+        &opts.chain_id,
+        &opts.private_key.clone().parse::<LocalWallet>()?.address(),
+        &chain_config.contract_addr,
+        &random,
+        commitment_length,
+    )?;
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = opts.fee;

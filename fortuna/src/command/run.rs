@@ -68,6 +68,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let hash_chain = PebbleHashChain::from_config(
             &secret,
             &chain_id,
+            &opts.provider,
+            &chain_config.contract_addr,
             &metadata.seed,
             metadata.chain_length,
         )?;
