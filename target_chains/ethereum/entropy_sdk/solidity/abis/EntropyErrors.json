@@ -1,0 +1,52 @@
+[
+  {
+    "inputs": [],
+    "name": "AssertionFailure",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BlockhashUnavailable",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectRevelation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidUpgradeMagic",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoSuchProvider",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoSuchRequest",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OutOfRandomness",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ProviderAlreadyRegistered",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Unauthorized",
+    "type": "error"
+  }
+]
