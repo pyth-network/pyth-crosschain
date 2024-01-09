@@ -4,11 +4,11 @@ use {
         ensure,
         Result,
     },
+    ethers::types::Address,
     sha3::{
         Digest,
         Keccak256,
     },
-    ethers::types::Address,
 };
 
 /// A HashChain.
