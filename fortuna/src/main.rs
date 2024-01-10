@@ -4,8 +4,8 @@
 use {
     anyhow::Result,
     clap::Parser,
-    std::io::IsTerminal,
     dotenv::dotenv,
+    std::io::IsTerminal,
 };
 
 pub mod api;
