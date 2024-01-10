@@ -10,6 +10,7 @@
   "scripts": {
     "format": "npx prettier --write .",
     "generate-abi": "node scripts/generateAbi.js",
+    "check-abi": "git diff --exit-code abis",
     "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
   },
   "keywords": [
