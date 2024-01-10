@@ -4,6 +4,7 @@ use {
         ensure,
         Result,
     },
+    ethers::types::Address,
     sha3::{
         Digest,
         Keccak256,
@@ -35,12 +36,16 @@ impl PebbleHashChain {
     pub fn from_config(
         secret: &str,
         chain_id: &ChainId,
+        provider_address: &Address,
+        contract_address: &Address,
         random: &[u8; 32],
         chain_length: u64,
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
         input.extend_from_slice(&hex::decode(secret)?);
         input.extend_from_slice(&chain_id.as_bytes());
+        input.extend_from_slice(&provider_address.as_bytes());
+        input.extend_from_slice(&contract_address.as_bytes());
         input.extend_from_slice(random);
 
         let secret: [u8; 32] = Keccak256::digest(input).into();
