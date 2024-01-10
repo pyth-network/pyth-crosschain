@@ -121,6 +121,10 @@ impl Config {
             .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
     }
 
+    // Inject environment variables in the given string. 
+    // It will replace substrings that matches the pattern ${VAR_NAME} with an 
+    // environment variable VAR_NAME. If there is no such env var, it will return 
+    // an error.
     fn inject_env(yaml_content: &str) -> Result<String> {
         let re = Regex::new(r"\$\{([a-zA-Z_][0-9a-zA-Z_]*)\}").unwrap();
         let mut var_error: Option<env::VarError> = None;
