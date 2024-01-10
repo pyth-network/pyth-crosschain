@@ -8,7 +8,13 @@ equities, FX and commodities. This library allows you to use these real-time pri
 ### npm
 
 ```
-$ npm install --save @pythnetwork/pyth-evm-js
+$ npm install --save @pythnetwork/entropy-sdk-js
+```
+
+Note that you will probably want to install a blockchain SDK as well in order to interact with on-chain contracts:
+
+```
+$ npm install --save @pythnetwork/entropy-sdk-solidity
 ```
 
 ### Yarn
