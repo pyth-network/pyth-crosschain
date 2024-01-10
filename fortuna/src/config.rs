@@ -1,3 +1,5 @@
+use std::{env::VarError, borrow::Borrow};
+
 use {
     crate::{
         api::ChainId,
@@ -6,6 +8,7 @@ use {
     anyhow::{
         anyhow,
         Result,
+        Error
     },
     clap::{
         crate_authors,
@@ -16,8 +19,13 @@ use {
         Parser,
     },
     ethers::types::Address,
+    regex::{
+        Captures,
+        Regex,
+    },
     std::{
         collections::HashMap,
+        env,
         fs,
     },
 };
@@ -105,15 +113,35 @@ impl Config {
         // Open and read the YAML file
         // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;
-        let config: Config = serde_yaml::from_str(&yaml_content)?;
+        let config: Config = serde_yaml::from_str(Config::inject_env(&yaml_content)?.as_str())?;
         Ok(config)
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig> {
         self.chains
             .get(chain_id)
-            .map(|x| x.clone())
+            .map(|x: &EthereumConfig| x.clone())
             .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
+    }
+
+    fn inject_env(yaml_content: &str) -> Result<String> {
+        let re = Regex::new(r"\$\{([a-zA-Z_][0-9a-zA-Z_]*)\}").unwrap();
+        let mut var_error: Option<env::VarError>= None;
+        let new_yaml_content = re.replace_all(&yaml_content, |caps: &Captures| {
+            match env::var(&caps[1]) {
+                Ok(val) => val,
+                Err(err) => {
+                    var_error = Some(err);
+                    (&caps[0]).to_string()
+                },
+            }
+        });
+
+        if let Some(error) = var_error {
+            Err(anyhow!("Missing env var: {}", error))
+        } else {
+            Ok(new_yaml_content.to_string())
+        }
     }
 }
 

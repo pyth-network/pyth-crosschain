@@ -5,6 +5,7 @@ use {
     anyhow::Result,
     clap::Parser,
     std::io::IsTerminal,
+    dotenv::dotenv,
 };
 
 pub mod api;
@@ -22,6 +23,9 @@ pub mod state;
 #[tokio::main]
 #[tracing::instrument]
 async fn main() -> Result<()> {
+    // Load the environment variable from .env file
+    dotenv().ok();
+
     // Initialize a Tracing Subscriber
     tracing::subscriber::set_global_default(
         tracing_subscriber::fmt()
