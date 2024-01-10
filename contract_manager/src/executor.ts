@@ -23,8 +23,16 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
           parsedVaa.emitterAddress.toString("hex") &&
         governanceSource.emitterChain === parsedVaa.emitterChain
       ) {
-        // TODO: check governance sequence number as well
+        const lastExecutedSequence =
+          await contract.getLastExecutedGovernanceSequence();
+        if (lastExecutedSequence >= parsedVaa.sequence) {
+          console.log(
+            `Skipping on contract ${contract.getId()} as it was already executed`
+          );
+          continue;
+        }
         await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
+        console.log(`Executed on contract ${contract.getId()}`);
       }
     }
   }

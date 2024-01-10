@@ -296,6 +296,16 @@ export class Vault extends Storable {
     return squad.getAuthorityPDA(this.key, 1);
   }
 
+  public async getLastSequenceNumber(): Promise<number> {
+    const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
+    const emitter = await this.getEmitter();
+    const response = await fetch(
+      `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`
+    );
+    const { data } = await response.json();
+    return data[0].sequence;
+  }
+
   public async proposeWormholeMessage(
     payloads: Buffer[],
     proposalAddress?: PublicKey
