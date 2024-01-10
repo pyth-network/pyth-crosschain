@@ -12,19 +12,8 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     required: true,
   })
-  .option("fortuna-url", {
-    description: "URL for Fortuna. e.g: https://endpoint/example",
-    type: "string",
-    required: true,
-  })
   .option("contract", {
     description: "Entropy contract address.",
-    type: "string",
-    required: true,
-  })
-  .option("provider", {
-    description:
-      "The randomness provider to query" + " e.g: 0xf9c0172ba10dfa4d19088d...",
     type: "string",
     required: true,
   })
@@ -32,6 +21,17 @@ const argv = yargs(hideBin(process.argv))
     description: "Mnemonic (private key) for sender",
     type: "string",
     required: true,
+  })
+  .option("fortuna-url", {
+    description: "URL for Fortuna. e.g: https://endpoint/example",
+    type: "string",
+    required: false,
+  })
+  .option("provider", {
+    description:
+      "The randomness provider to query" + " e.g: 0xf9c0172ba10dfa4d19088d...",
+    type: "string",
+    required: false,
   })
   .help()
   .alias("help", "h")
@@ -41,11 +41,6 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 const network = argv.network;
-const provider = argv.provider;
-const fortunaUrl = argv.fortunaUrl;
-
-// const url = `${fortunaUrl}/v1/chains/${chainName}/revelations/${sequenceNumber}`;
-const connection = new FortunaConnection(argv.fortunaUrl);
 
 async function run() {
   const walletProvider = new HDWalletProvider({
@@ -65,6 +60,14 @@ async function run() {
 
   const entropy = new web3.eth.Contract(IEntropy as any, argv.contract);
 
+  let provider;
+  if (argv.provider) {
+    provider = argv.provider;
+  } else {
+    provider = await entropy.methods.getDefaultProvider().call();
+    console.log(`using default provider ${provider}`);
+  }
+
   console.log("1. getFee");
   const fee = await entropy.methods.getFee(provider).call();
   console.log("2. request");
@@ -79,6 +82,17 @@ async function run() {
   console.log(`   block     : ${blockNumber}`);
 
   console.log("3. Retrieving provider's random number...");
+
+  let fortunaUrl;
+  if (argv.fortunaUrl) {
+    fortunaUrl = argv.fortunaUrl;
+  } else {
+    const providerInfo = await entropy.methods.getProviderInfo(provider);
+    fortunaUrl = providerInfo.uri;
+    console.log(`querying provider's configured URI ${fortunaUrl}`);
+  }
+
+  const connection = new FortunaConnection(fortunaUrl);
   const providerRandomHex = await connection.retrieveRandomNumber(
     sequenceNumber
   );
@@ -108,7 +122,5 @@ async function run() {
 
   walletProvider.engine.stop();
 }
-
-async function tryReveal() {}
 
 run();
