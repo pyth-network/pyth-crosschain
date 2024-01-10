@@ -8,12 +8,9 @@ use {
         state::PebbleHashChain,
     },
     anyhow::Result,
-    ethers::{
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-        types::Address,
+    ethers::signers::{
+        LocalWallet,
+        Signer,
     },
     std::sync::Arc,
 };
