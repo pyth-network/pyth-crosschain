@@ -1,0 +1,59 @@
+{
+  "name": "@pythnetwork/entropy-sdk-js",
+  "version": "0.0.1",
+  "description": "Pyth Network Javascript Entropy SDK",
+  "homepage": "https://pyth.network",
+  "author": {
+    "name": "Pyth Data Association"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "target_chains/ethereum/entropy_sdk/js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "build": "tsc",
+    "evm-example": "npm run build && node lib/examples/EvmRandomDraw.js",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@pythnetwork/entropy-sdk-solidity": "*",
+    "@truffle/hdwallet-provider": "^2.1.5",
+    "@types/ethereum-protocol": "^1.0.2",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.11.18",
+    "@types/web3-provider-engine": "^14.0.1",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.14.0",
+    "jest": "^29.4.1",
+    "prettier": "^2.6.2",
+    "ts-jest": "^29.0.5",
+    "typescript": "^4.6.3",
+    "web3": "^1.8.2",
+    "yargs": "^17.4.1"
+  },
+  "dependencies": {
+    "axios": "^1.5.1",
+    "axios-retry": "^3.8.0"
+  }
+}
