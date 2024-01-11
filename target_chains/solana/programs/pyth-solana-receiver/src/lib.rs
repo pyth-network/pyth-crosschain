@@ -49,6 +49,10 @@ use {
 pub mod error;
 pub mod state;
 
+#[cfg(test)]
+mod tests;
+
+
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 #[program]
