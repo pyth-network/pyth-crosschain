@@ -3,8 +3,14 @@ import { hideBin } from "yargs/helpers";
 import { DefaultStore, EvmChain, loadHotWallet, toPrivateKey } from "../src";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 
+const CACHE_FILE = ".cache-upgrade-evm";
+
 const parser = yargs(hideBin(process.argv))
-  .usage("Usage: $0")
+  .usage(
+    "Deploys a new PythUpgradable contract to a set of chains and creates a governance proposal for it.\n" +
+      `Uses a cache file (${CACHE_FILE}) to avoid deploying contracts twice\n` +
+      "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output>"
+  )
   .options({
     testnet: {
       type: "boolean",
@@ -38,8 +44,6 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-const CACHE_FILE = ".cache-upgrade-evm";
-
 async function run_if_not_cached(
   cache_key: string,
   fn: () => Promise<string>
@@ -72,7 +76,6 @@ async function main() {
     )
       selectedChains.push(chain);
   }
-  console.table(selectedChains);
   if (argv.chain && selectedChains.length !== argv.chain.length)
     throw new Error(
       `Some chains were not found ${selectedChains
@@ -117,11 +120,8 @@ async function main() {
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet ", wallet.publicKey.toBase58());
   await vault.connect(wallet);
-  const proposalAddress = await run_if_not_cached("proposal", async () => {
-    const proposal = await vault.proposeWormholeMessage(payloads);
-    return proposal.address.toBase58();
-  });
-  console.log("Proposal address", proposalAddress);
+  const proposal = await vault.proposeWormholeMessage(payloads);
+  console.log("Proposal address", proposal.address.toBase58());
 }
 
 main();
