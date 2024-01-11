@@ -57,6 +57,7 @@ export const RECEIVER_CHAINS = {
   stacks: 60038,
   mode: 60039,
   bttc: 60040,
+  zkfair: 60041,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -111,6 +112,8 @@ export const RECEIVER_CHAINS = {
   base_sepolia: 50043,
   movement_evm_devnet: 50044,
   movement_move_devnet: 50045,
+  zkfair_testnet: 50046,
+  blast_s2_testnet: 50047,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
