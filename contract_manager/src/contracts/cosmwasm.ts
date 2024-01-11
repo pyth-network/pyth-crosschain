@@ -54,6 +54,11 @@ export class WormholeCosmWasmContract extends WormholeContract {
     return JSON.parse(config["\x00\x06config"])["guardian_set_index"];
   }
 
+  async getChainId(): Promise<number> {
+    const config = await this.getConfig();
+    return JSON.parse(config["\x00\x06config"])["chain_id"];
+  }
+
   async getGuardianSet(): Promise<string[]> {
     const config = await this.getConfig();
     const guardianSetIndex = JSON.parse(config["\x00\x06config"])[

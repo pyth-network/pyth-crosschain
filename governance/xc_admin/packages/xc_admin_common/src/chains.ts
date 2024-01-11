@@ -109,6 +109,8 @@ export const RECEIVER_CHAINS = {
   bttc_testnet: 50041,
   zksync_sepolia: 50042,
   base_sepolia: 50043,
+  movement_evm_devnet: 50044,
+  movement_move_devnet: 50045,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

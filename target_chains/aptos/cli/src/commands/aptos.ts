@@ -4,34 +4,40 @@ import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
 import fs from "fs";
 import sha3 from "js-sha3";
 import { ethers } from "ethers";
+import {
+  AptosChain,
+  DefaultStore,
+  getDefaultDeploymentConfig,
+} from "contract_manager";
 
-const LOCALNET: string = "localnet";
-const TESTNET: string = "testnet";
-const MAINNET: string = "mainnet";
-
-interface Network {
-  // RPC endpoint of the network
-  endpoint: string;
-  // Private key of the network
-  key: string | undefined;
-}
+const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
+  .filter(([chain, config]) => {
+    return config instanceof AptosChain;
+  })
+  .map(([chain, _]) => {
+    return chain;
+  });
 
 const NETWORK_OPTION = {
   alias: "n",
   describe: "network",
   type: "string",
-  choices: [LOCALNET, TESTNET, MAINNET],
+  choices: NETWORK_CHOICES,
+  demandOption: true,
+} as const;
+const CHANNEL_OPTION = {
+  describe: "channel",
+  type: "string",
+  choices: ["stable", "beta"],
   demandOption: true,
 } as const;
 const DEPLOYER_OPTION = {
   describe: "deployer contract address deployed in the network",
   type: "string",
-  default: "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
 } as const;
 const WORMHOLE_OPTION = {
   describe: "wormhole contract address deployed in the network",
   type: "string",
-  default: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
 } as const;
 const PYTH_OPTION = {
   describe: "pyth contract address deployed in the network",
@@ -50,29 +56,6 @@ interface PackageBCS {
   codeHash: Uint8Array;
 }
 
-const networks = new Map<string, Network>([
-  [
-    LOCALNET,
-    {
-      key: process.env["APTOS_LOCALNET_KEY"],
-      endpoint: "http://0.0.0.0:8080",
-    },
-  ],
-  [
-    TESTNET,
-    {
-      key: process.env["APTOS_TESTNET_KEY"],
-      endpoint: "https://fullnode.testnet.aptoslabs.com/v1",
-    },
-  ],
-  [
-    MAINNET,
-    {
-      key: process.env["APTOS_MAINNET_KEY"],
-      endpoint: "https://fullnode.mainnet.aptoslabs.com/v1",
-    },
-  ],
-]);
 export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
   yargs
     .command(
@@ -102,6 +85,37 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       }
     )
     .command(
+      "deploy-wormhole <package-dir> <seed>",
+      "Deploy the wormhole package using a resource account.",
+      (yargs) => {
+        return yargs
+          .positional("package-dir", { type: "string" })
+          .positional("seed", { type: "string" })
+          .option("deployer", DEPLOYER_OPTION)
+          .option("network", NETWORK_OPTION);
+      },
+      async (argv) => {
+        const sender = getSender();
+        const derivedAddress = generateDerivedAddress(
+          sender.address().toString(),
+          argv.seed!
+        );
+
+        const namedAddresses = `deployer=${argv.deployer},wormhole=0x${derivedAddress}`;
+        console.log("Building the package with the following named addresses:");
+        console.log(`Deployer=${argv.deployer}`);
+        console.log(`Wormhole=${derivedAddress}`);
+        const txPayload = createDeployDerivedTransaction(
+          argv["package-dir"],
+          argv.deployer,
+          argv.seed,
+          namedAddresses
+        );
+
+        await executeTransaction(argv.network, txPayload);
+      }
+    )
+    .command(
       "deploy-pyth <package-dir> <seed>",
       "Deploy the pyth package using a resource account.",
       (yargs) => {
@@ -113,7 +127,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           .option("network", NETWORK_OPTION);
       },
       async (argv) => {
-        const sender = getSender(argv.network);
+        const sender = getSender();
         const derivedAddress = generateDerivedAddress(
           sender.address().toString(),
           argv.seed!
@@ -124,36 +138,31 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         console.log(`Wormhole=${argv.wormhole}`);
         console.log(`Deployer=${argv.deployer}`);
         console.log(`Pyth=${derivedAddress}`);
-        const artifact = serializePackage(
-          buildPackage(argv["package-dir"]!, namedAddresses)
-        );
-
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            argv.deployer + "::deployer",
-            "deploy_derived",
-            [],
-            [
-              artifact.meta,
-              artifact.bytecodes,
-              BCS.bcsSerializeBytes(Buffer.from(argv["seed"]!, "ascii")),
-            ]
-          )
+        const txPayload = createDeployDerivedTransaction(
+          argv["package-dir"],
+          argv.deployer,
+          argv.seed,
+          namedAddresses
         );
 
         await executeTransaction(argv.network, txPayload);
       }
     )
     .command(
-      "derived-address <seed> <signer>",
+      "derived-address <seed>",
       "Generate the derived address for the given seed and sender address",
       (yargs) => {
         return yargs
           .positional("seed", { type: "string", demandOption: true })
-          .positional("signer", { type: "string", demandOption: true });
+          .option("signer", { type: "string" });
       },
       async (argv) => {
-        console.log(generateDerivedAddress(argv.signer, argv.seed));
+        console.log(
+          generateDerivedAddress(
+            argv.signer || getSender().address().toString(),
+            argv.seed
+          )
+        );
       }
     )
     .command(
@@ -162,39 +171,15 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       (yargs) => {
         return yargs
           .option("network", NETWORK_OPTION)
-          .option("chain-id", {
-            describe: "Chain id",
-            type: "number",
-            default: 22,
-            demandOption: false,
-          })
-          .option("governance-chain-id", {
-            describe: "Governance chain id",
-            type: "number",
-            default: 1,
-            demandOption: false,
-          })
-          .option("governance-address", {
-            describe: "Governance address",
-            type: "string",
-            default:
-              "0x0000000000000000000000000000000000000000000000000000000000000004",
-            demandOption: false,
-          })
-          .option("guardian-address", {
-            alias: "g",
-            demandOption: true,
-            describe: "Initial guardian's address",
-            type: "string",
-          });
+          .option("channel", CHANNEL_OPTION);
       },
       async (argv) => {
-        const guardian_address = evm_address(
-          argv["guardian-address"]
-        ).substring(24);
-        const chain_id = argv["chain-id"];
-        const governance_address = evm_address(argv["governance-address"]);
-        const governance_chain_id = argv["governance-chain-id"];
+        const chain_id = DefaultStore.chains[argv.network].getWormholeChainId();
+        const config = getDefaultDeploymentConfig(argv.channel).wormholeConfig;
+
+        const governance_contract = config.governanceContract;
+        const governance_chain_id = config.governanceChainId;
+        const guardian_address = config.initialGuardianSet[0]; // assuming only one guardian for now
 
         const guardian_addresses_serializer = new BCS.Serializer();
         guardian_addresses_serializer.serializeU32AsUleb128(1);
@@ -205,10 +190,10 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const args = [
           BCS.bcsSerializeUint64(chain_id),
           BCS.bcsSerializeUint64(governance_chain_id),
-          BCS.bcsSerializeBytes(Buffer.from(governance_address, "hex")),
+          BCS.bcsSerializeBytes(Buffer.from(governance_contract, "hex")),
           guardian_addresses_serializer.getBytes(),
         ];
-        const sender = getSender(argv.network);
+        const sender = getSender();
         const wormholeAddress = generateDerivedAddress(
           sender.address().hex(),
           "wormhole"
@@ -216,7 +201,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${wormholeAddress}::wormhole`,
-            "init_2",
+            "init",
             [],
             args
           )
@@ -237,57 +222,37 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
             type: "number",
             demandOption: true,
           })
-          .option("governance-emitter-chain-id", {
-            describe: "Governance emitter chain id",
-            type: "number",
-            demandOption: true,
-          })
-          .option("governance-emitter-address", {
-            describe: "Governance emitter address",
-            type: "string",
-            demandOption: true,
-          })
           .option("update-fee", {
             describe: "Update fee",
             type: "number",
             demandOption: true,
           })
-          .option("data-source-chain-ids", {
-            describe: "Data source chain IDs",
-            type: "array",
-            demandOption: true,
-          })
-          .option("data-source-emitter-addresses", {
-            describe: "Data source emitter addresses",
-            type: "array",
-            demandOption: true,
-          });
+          .option("channel", CHANNEL_OPTION);
       },
       async (argv) => {
         const stale_price_threshold = argv["stale-price-threshold"];
-        const governance_emitter_chain_id = argv["governance-emitter-chain-id"];
-        const governance_emitter_address = evm_address(
-          argv["governance-emitter-address"]
-        );
+        const update_fee = argv["update-fee"];
+
+        const config = getDefaultDeploymentConfig(argv.channel);
+        const governance_emitter_chain_id =
+          config.governanceDataSource.emitterChain;
+        const governance_emitter_address =
+          config.governanceDataSource.emitterAddress;
 
         const dataSourceChainIdsSerializer = new BCS.Serializer();
         dataSourceChainIdsSerializer.serializeU32AsUleb128(
-          argv["data-source-chain-ids"].length
+          config.dataSources.length
         );
-        argv["data-source-chain-ids"].forEach((chain_id: number) =>
-          dataSourceChainIdsSerializer.serializeU64(chain_id)
-        );
-
         const dataSourceEmitterAddressesSerializer = new BCS.Serializer();
         dataSourceEmitterAddressesSerializer.serializeU32AsUleb128(
-          argv["data-source-emitter-addresses"].length
+          config.dataSources.length
         );
-        argv["data-source-emitter-addresses"].forEach((emitter_address) => {
+        config.dataSources.forEach((ds) => {
+          dataSourceChainIdsSerializer.serializeU64(ds.emitterChain);
           dataSourceEmitterAddressesSerializer.serializeBytes(
-            Buffer.from(emitter_address as string, "hex")
+            Buffer.from(ds.emitterAddress, "hex")
           );
         });
-        const update_fee = argv["update-fee"];
 
         const args = [
           BCS.bcsSerializeUint64(stale_price_threshold),
@@ -297,7 +262,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           dataSourceEmitterAddressesSerializer.getBytes(),
           BCS.bcsSerializeUint64(update_fee),
         ];
-        const sender = getSender(argv.network);
+        const sender = getSender();
         const pythAddress = generateDerivedAddress(
           sender.address().hex(),
           argv.seed
@@ -383,7 +348,8 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           .option("network", NETWORK_OPTION);
       },
       async (argv) => {
-        const endpoint = networks.get(argv.network)!.endpoint;
+        const endpoint = (DefaultStore.chains[argv.network] as AptosChain)
+          .rpcUrl;
         const addr1 = argv["addr-1"];
         const addr2 = argv["addr-2"];
         const url = `${endpoint}/accounts/${addr1}/resource/0x1::code::PackageRegistry`;
@@ -416,22 +382,23 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
     )
     .demandCommand();
 
-function getSender(network: string) {
-  if (networks.get(network)!.key === undefined) {
+function getSender() {
+  const key = process.env["APTOS_PRIVATE_KEY"];
+  if (key === undefined) {
     throw new Error(
-      `No key for network ${network}. Please set the APTOS_${network.toUpperCase()}_KEY environment variable.`
+      `Please set the APTOS_PRIVATE_KEY environment variable to the private key of the sender in hex format`
     );
   }
-  return new AptosAccount(
-    new Uint8Array(Buffer.from(networks.get(network)!.key!, "hex"))
-  );
+  return new AptosAccount(new Uint8Array(Buffer.from(key, "hex")));
 }
+
 async function executeTransaction(
   network: string,
   txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
 ) {
-  const client = new AptosClient(networks.get(network)!.endpoint);
-  const sender = getSender(network);
+  const endpoint = (DefaultStore.chains[network] as AptosChain).rpcUrl;
+  const client = new AptosClient(endpoint);
+  const sender = getSender();
   console.log(
     await client.generateSignSubmitWaitForTransaction(sender, txPayload, {
       maxGasAmount: BigInt(30000),
@@ -526,6 +493,28 @@ function serializePackage(p: Package): PackageBCS {
     bytecodes: serializedModules,
     codeHash,
   };
+}
+
+function createDeployDerivedTransaction(
+  packageDir: string,
+  deployer: string,
+  seed: string,
+  namedAddresses: string
+) {
+  const artifact = serializePackage(buildPackage(packageDir, namedAddresses));
+
+  return new TxnBuilderTypes.TransactionPayloadEntryFunction(
+    TxnBuilderTypes.EntryFunction.natural(
+      deployer + "::deployer",
+      "deploy_derived",
+      [],
+      [
+        artifact.meta,
+        artifact.bytecodes,
+        BCS.bcsSerializeBytes(Buffer.from(seed, "ascii")),
+      ]
+    )
+  );
 }
 
 function hex(x: string): string {

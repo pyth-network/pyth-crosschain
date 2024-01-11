@@ -1,4 +1,4 @@
-import { KeyValueConfig, PrivateKey, Storable } from "./base";
+import { KeyValueConfig, PrivateKey, Storable, TxResult } from "./base";
 import {
   ChainName,
   SetFee,
@@ -12,7 +12,7 @@ import {
   DataSource,
   EvmSetWormholeAddress,
 } from "xc_admin_common";
-import { AptosClient, AptosAccount, CoinClient } from "aptos";
+import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import Web3 from "web3";
 import {
   CosmwasmExecutor,
@@ -53,6 +53,10 @@ export abstract class Chain extends Storable {
       throw new Error(
         `Invalid chain name ${wormholeChainName}. Try rebuilding xc_admin_common package`
       );
+  }
+
+  public getWormholeChainId(): number {
+    return toChainId(this.wormholeChainName);
   }
 
   getId(): string {
@@ -508,5 +512,23 @@ export class AptosChain extends Chain {
     );
     const coinClient = new CoinClient(client);
     return Number(await coinClient.checkBalance(account)) / 10 ** 8;
+  }
+
+  async sendTransaction(
+    senderPrivateKey: PrivateKey,
+    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
+  ): Promise<TxResult> {
+    const client = this.getClient();
+    const sender = new AptosAccount(
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+    );
+    const result = await client.generateSignSubmitWaitForTransaction(
+      sender,
+      txPayload,
+      {
+        maxGasAmount: BigInt(30000),
+      }
+    );
+    return { id: result.hash, info: result };
   }
 }

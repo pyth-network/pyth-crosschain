@@ -155,6 +155,19 @@ const WORMHOLE_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "chainId",
+    outputs: [
+      {
+        internalType: "uint16",
+        name: "",
+        type: "uint16",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint32",
@@ -226,6 +239,11 @@ export class WormholeEvmContract extends WormholeContract {
     return Number(
       await wormholeContract.methods.getCurrentGuardianSetIndex().call()
     );
+  }
+
+  async getChainId(): Promise<number> {
+    const wormholeContract = this.getContract();
+    return Number(await wormholeContract.methods.chainId().call());
   }
 
   /**

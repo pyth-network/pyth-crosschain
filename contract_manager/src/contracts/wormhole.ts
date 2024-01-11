@@ -4,6 +4,12 @@ export abstract class WormholeContract {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
 
   /**
+   * Returns the chain id set in this contract.
+   * This should match to the chain ids stored in this repo in the chains.ts file based on the network
+   */
+  abstract getChainId(): Promise<number>;
+
+  /**
    * Returns an array of guardian addresses used for VAA verification in this contract
    */
   abstract getGuardianSet(): Promise<string[]>;
@@ -31,7 +37,11 @@ export abstract class WormholeContract {
     const currentIndex = await this.getCurrentGuardianSetIndex();
     for (let i = currentIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
       const vaa = MAINNET_UPGRADE_VAAS[i];
-      await this.upgradeGuardianSets(senderPrivateKey, Buffer.from(vaa, "hex"));
+      const result = await this.upgradeGuardianSets(
+        senderPrivateKey,
+        Buffer.from(vaa, "hex")
+      );
+      console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {
         await new Promise((resolve) => setTimeout(resolve, 5000));

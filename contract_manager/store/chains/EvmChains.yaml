@@ -388,3 +388,8 @@
   rpcUrl: https://sepolia.base.org
   networkId: 84532
   type: EvmChain
+- id: movement_evm_devnet
+  mainnet: false
+  rpcUrl: https://mevm.devnet.m1.movementlabs.xyz/v1
+  networkId: 336
+  type: EvmChain

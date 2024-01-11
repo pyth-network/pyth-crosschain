@@ -2,8 +2,7 @@
 
 Install aptos cli with the same version specified in the ci workflows.
 
-All the commands which submit transactions require an environment variable for the private key to be set.
-Depending on the network, this can be either `APTOS_LOCALNET_KEY`, `APTOS_TESTNET_KEY` or `APTOS_MAINNET_KEY`.
+All the commands which submit transactions require an environment variable `APTOS_PRIVATE_KEY` for the private key to be set.
 
 # Deploying from scratch
 
@@ -13,7 +12,10 @@ capability. You can read more about it [here](https://github.com/wormhole-founda
 Assuming the wormhole and deployer contracts are already deployed, we can deploy the pyth oracle with the following command:
 
 ```bash
-npm run cli deploy-pyth -- ../contracts <seed> -n testnet
+npm run cli deploy-pyth -- ../contracts <seed> \
+-n aptos_testnet \
+--deployer <deployer-address> \
+--wormhole <wormhole-address>
 ```
 
 `seed` can be any random string that is used for determining a specific contract address based on the seed value and the signer address.
@@ -30,39 +32,14 @@ wormhole = "_"
 
 ### Initializing pyth
 
-You can run the following to initialize the pyth contract, the following is a sample (testnet) config:
+You can run the following to initialize the pyth contract:
 
 ```bash
-npm run cli init-pyth -- <seed> -n testnet \
+npm run cli init-pyth -- <seed> -n <network> \
 --stale-price-threshold 60 \
 --update-fee 1 \
---governance-emitter-chain-id 1 \
---governance-emitter-address 63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385 \
---data-source-chain-ids 1 \
---data-source-chain-ids 26 \
---data-source-chain-ids 26 \
---data-source-emitter-addresses f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0 \
---data-source-emitter-addresses a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6 \
---data-source-emitter-addresses e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
+--channel <stable-or-beta>
 ```
-
-The following is a sample mainnet config:
-
-```bash
-npm run cli init-pyth -- <seed> -n mainnet \
---stale-price-threshold 60 \
---update-fee 1 \
---governance-emitter-chain-id 1 \
---governance-emitter-address 5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e \
---data-source-chain-ids 1 \
---data-source-chain-ids 26 \
---data-source-chain-ids 26 \
---data-source-emitter-addresses 6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25 \
---data-source-emitter-addresses f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0 \
---data-source-emitter-addresses e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
-```
-
-Note that the `data-source-chain-ids` are paired with `data-source-emitter-addresses` and their order matters.
 
 # Upgrade process:
 
