@@ -125,7 +125,7 @@
   type: EvmChain
 - id: ethereum
   mainnet: true
-  rpcUrl: https://eth.llamarpc.com
+  rpcUrl: https://eth-mainnet.blastapi.io/$ENV_BLAST_API_KEY
   networkId: 1
   type: EvmChain
 - id: bsc_testnet
@@ -392,4 +392,19 @@
   mainnet: false
   rpcUrl: https://mevm.devnet.m1.movementlabs.xyz/v1
   networkId: 336
+  type: EvmChain
+- id: zkfair_testnet
+  mainnet: false
+  rpcUrl: https://testnet-rpc.zkfair.io
+  networkId: 43851
+  type: EvmChain
+- id: zkfair
+  mainnet: true
+  rpcUrl: https://rpc.zkfair.io
+  networkId: 42766
+  type: EvmChain
+- id: blast_s2_testnet
+  mainnet: false
+  rpcUrl: https://rpc.s2.testblast.io/$ENV_BLAST_S2_TESTNET_API_KEY
+  networkId: 168587773
   type: EvmChain
