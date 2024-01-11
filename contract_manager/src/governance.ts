@@ -200,13 +200,16 @@ export class WormholeEmitter {
   }
 }
 
-export class WormholeMultiSigTransaction {
+export class WormholeMultisigProposal {
   constructor(
     public address: PublicKey,
     public squad: SquadsMesh,
     public cluster: PythCluster
   ) {}
 
+  /**
+   * Gets the current state of the proposal which can be "active", "draft", "executed", etc.
+   */
   async getState() {
     const proposal = await this.squad.getTransaction(this.address);
     // Converts the status object to a string e.g
@@ -214,6 +217,10 @@ export class WormholeMultiSigTransaction {
     return Object.keys(proposal.status)[0];
   }
 
+  /**
+   * Executes the proposal and returns the wormhole messages that were sent
+   * The proposal must be already approved.
+   */
   async execute(): Promise<SubmittedWormholeMessage[]> {
     const proposal = await this.squad.getTransaction(this.address);
     const signatures = await executeProposal(
@@ -239,6 +246,10 @@ export class WormholeMultiSigTransaction {
   }
 }
 
+/**
+ * A vault represents a pyth multisig governance realm which exists in solana mainnet or testnet.
+ * It can be used for proposals to send wormhole messages to the wormhole bridge.
+ */
 export class Vault extends Storable {
   static type = "vault";
   key: PublicKey;
@@ -276,6 +287,11 @@ export class Vault extends Storable {
     };
   }
 
+  /**
+   * Connects the vault to a wallet that can be used to submit proposals
+   * The wallet should be a multisig signer of the vault
+   * @param wallet
+   */
   public connect(wallet: Wallet): void {
     this.squad = SquadsMesh.endpoint(
       getPythClusterApiUrl(this.cluster),
@@ -288,6 +304,9 @@ export class Vault extends Storable {
     return this.squad;
   }
 
+  /**
+   * Gets the emitter address of the vault
+   */
   public async getEmitter() {
     const squad = SquadsMesh.endpoint(
       getPythClusterApiUrl(this.cluster),
@@ -296,10 +315,33 @@ export class Vault extends Storable {
     return squad.getAuthorityPDA(this.key, 1);
   }
 
+  /**
+   * Gets the last sequence number of the vault emitter
+   * This is used to determine the sequence number of the next wormhole message
+   * Fetches the sequence number from the wormholescan API
+   * @returns the last sequence number
+   */
+  public async getLastSequenceNumber(): Promise<number> {
+    const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
+    const emitter = await this.getEmitter();
+    const response = await fetch(
+      `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`
+    );
+    const { data } = await response.json();
+    return data[0].sequence;
+  }
+
+  /**
+   * Proposes sending an array of wormhole messages to the wormhole bridge
+   * Requires a wallet to be connected to the vault
+   *
+   * @param payloads the payloads to send to the wormhole bridge
+   * @param proposalAddress if specified, will continue an existing proposal
+   */
   public async proposeWormholeMessage(
     payloads: Buffer[],
     proposalAddress?: PublicKey
-  ): Promise<WormholeMultiSigTransaction> {
+  ): Promise<WormholeMultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
       squad.wallet,
@@ -313,14 +355,19 @@ export class Vault extends Storable {
         squad.wallet.publicKey,
         proposalAddress
       );
-    return new WormholeMultiSigTransaction(txAccount, squad, this.cluster);
+    return new WormholeMultisigProposal(txAccount, squad, this.cluster);
   }
 }
 
-export async function loadHotWallet(wallet: string): Promise<Wallet> {
+/**
+ * Loads a solana wallet from a file. The file should contain the secret key in array of integers format
+ * This wallet can be used to connect to a vault and submit proposals
+ * @param walletPath path to the wallet file
+ */
+export async function loadHotWallet(walletPath: string): Promise<Wallet> {
   return new NodeWallet(
     Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(readFileSync(wallet, "ascii")))
+      Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii")))
     )
   );
 }
