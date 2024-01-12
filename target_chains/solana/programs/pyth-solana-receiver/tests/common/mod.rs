@@ -19,8 +19,14 @@ use {
             Accumulator,
         },
         hashers::keccak256_160::Keccak160,
-        messages::PriceFeedMessage,
-        wire::v1::MerklePriceUpdate,
+        messages::{
+            Message,
+            PriceFeedMessage,
+        },
+        wire::{
+            v1::MerklePriceUpdate,
+            PrefixedVec,
+        },
     },
     serde_wormhole::RawMessage,
     solana_program::{
@@ -62,26 +68,26 @@ pub async fn get_guardian_keys() -> Vec<SecretKey> {
 
 pub async fn create_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) {
     let price_feed_message = vec![
-        PriceFeedMessage {
+        Message::PriceFeedMessage(PriceFeedMessage {
             feed_id:           [0u8; 32],
-            price:             0,
-            conf:              0,
-            exponent:          0,
-            publish_time:      0,
-            prev_publish_time: 0,
-            ema_price:         0,
-            ema_conf:          0,
-        },
-        PriceFeedMessage {
-            feed_id:           [0u8; 32],
-            price:             0,
-            conf:              0,
-            exponent:          0,
-            publish_time:      0,
-            prev_publish_time: 0,
-            ema_price:         0,
-            ema_conf:          0,
-        },
+            price:             1,
+            conf:              2,
+            exponent:          3,
+            publish_time:      4,
+            prev_publish_time: 5,
+            ema_price:         6,
+            ema_conf:          7,
+        }),
+        Message::PriceFeedMessage(PriceFeedMessage {
+            feed_id:           [8u8; 32],
+            price:             9,
+            conf:              10,
+            exponent:          11,
+            publish_time:      12,
+            prev_publish_time: 13,
+            ema_price:         14,
+            ema_conf:          15,
+        }),
     ];
     let price_feed_message_as_vec: Vec<Vec<u8>> = price_feed_message
         .iter()
@@ -94,10 +100,11 @@ pub async fn create_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUp
     let merkle_price_updates: Vec<MerklePriceUpdate> = price_feed_message_as_vec
         .iter()
         .map(|x| MerklePriceUpdate {
-            message: x.clone().into(),
+            message: PrefixedVec::<u16, u8>::from(x.clone()),
             proof:   merkle_tree_accumulator.prove(x.as_ref()).unwrap(),
         })
         .collect();
+
     (merkle_tree_accumulator, merkle_price_updates)
 }
 
