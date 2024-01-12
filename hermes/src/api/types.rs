@@ -207,7 +207,7 @@ impl Default for EncodingType {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct BinaryPriceUpdate {
     pub encoding: EncodingType,
-    pub data:     Vec<Base64String>,
+    pub data:     Vec<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
