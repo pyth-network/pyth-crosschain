@@ -19,7 +19,7 @@ use {
 
 impl accounts::Initialize {
     pub fn populate(payer: &Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0;
+        let config = get_config_address();
         accounts::Initialize {
             payer: *payer,
             config,
@@ -35,8 +35,8 @@ impl accounts::PostUpdatesAtomic {
         wormhole_address: Pubkey,
         guardian_set_index: u32,
     ) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0;
-        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &ID).0;
+        let config = get_config_address();
+        let treasury = get_treasury_address();
 
         let guardian_set = Pubkey::find_program_address(
             &[
@@ -60,9 +60,8 @@ impl accounts::PostUpdatesAtomic {
 
 impl accounts::PostUpdates {
     pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0;
-        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &ID).0;
-
+        let config = get_config_address();
+        let treasury = get_treasury_address();
         accounts::PostUpdates {
             payer,
             encoded_vaa,
@@ -76,7 +75,7 @@ impl accounts::PostUpdates {
 
 impl accounts::Governance {
     pub fn populate(payer: Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0;
+        let config = get_config_address();
         accounts::Governance { payer, config }
     }
 }
@@ -110,4 +109,12 @@ impl instruction::PostUpdates {
             .data(),
         }
     }
+}
+
+pub fn get_treasury_address() -> Pubkey {
+    Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &ID).0
+}
+
+pub fn get_config_address() -> Pubkey {
+    Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0
 }

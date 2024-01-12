@@ -44,7 +44,7 @@ use {
 };
 
 pub mod error;
-mod sdk;
+pub mod sdk;
 pub mod state;
 
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");

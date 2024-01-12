@@ -7,6 +7,7 @@ use {
     program_simulator::ProgramSimulator,
     pyth_solana_receiver::{
         instruction::Initialize,
+        sdk::get_treasury_address,
         state::config::{
             Config,
             DataSource,
@@ -189,6 +190,12 @@ pub async fn setup_pyth_receiver() -> (ProgramSimulator, Pubkey, Vec<MerklePrice
         )
         .await
         .unwrap();
+
+    program_simulator
+        .airdrop(&get_treasury_address(), Rent::default().minimum_balance(0))
+        .await
+        .unwrap();
+
 
     (program_simulator, encoded_vaa_address, merkle_price_updates)
 }
