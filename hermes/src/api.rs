@@ -152,6 +152,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
+        .route("/v2/updates/price/latest", get(rest::latest_price_updates))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
         .route("/ws", get(ws::ws_route_handler))

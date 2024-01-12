@@ -59,6 +59,16 @@ pub struct RpcPriceFeedMetadata {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+pub struct RpcPriceFeedMetadataV2 {
+    #[schema(value_type = Option<u64>, example=85480034)]
+    pub slot:                 Option<Slot>,
+    #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
+    pub proof_available_time: Option<UnixTimestamp>,
+    #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
+    pub prev_publish_time:    Option<UnixTimestamp>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
@@ -177,5 +187,85 @@ impl RpcPriceIdentifier {
 
     pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
         RpcPriceIdentifier(id.to_bytes())
+    }
+}
+
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
+pub enum EncodingType {
+    #[serde(rename = "base64")]
+    Base64,
+    #[serde(rename = "hex")]
+    Hex,
+}
+
+impl Default for EncodingType {
+    fn default() -> Self {
+        EncodingType::Hex
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+pub struct BinaryPriceUpdate {
+    pub encoding: EncodingType,
+    pub data:     Vec<Base64String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+pub struct ParsedPriceUpdate {
+    pub id:        String,
+    pub price:     RpcPrice,
+    pub ema_price: RpcPrice,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+pub struct PriceUpdate {
+    pub binary:   BinaryPriceUpdate,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parsed:   Option<Vec<ParsedPriceUpdate>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<RpcPriceFeedMetadataV2>,
+}
+
+impl PriceUpdate {
+    pub fn from_price_feed_update(
+        price_feed_update: PriceFeedUpdate,
+        verbose: bool,
+        parsed: bool,
+        encoding: EncodingType,
+    ) -> Self {
+        let price_feed = price_feed_update.price_feed;
+
+        Self {
+            binary:   BinaryPriceUpdate {
+                encoding,
+                data: match price_feed_update.update_data {
+                    Some(data) => match encoding {
+                        EncodingType::Base64 => vec![base64_standard_engine.encode(data)],
+                        EncodingType::Hex => vec![hex::encode(data)],
+                    },
+                    None => vec![],
+                },
+            },
+            parsed:   parsed.then_some(vec![ParsedPriceUpdate {
+                id:        price_feed.id.to_string(),
+                price:     RpcPrice {
+                    price:        price_feed.get_price_unchecked().price,
+                    conf:         price_feed.get_price_unchecked().conf,
+                    expo:         price_feed.get_price_unchecked().expo,
+                    publish_time: price_feed.get_price_unchecked().publish_time,
+                },
+                ema_price: RpcPrice {
+                    price:        price_feed.get_ema_price_unchecked().price,
+                    conf:         price_feed.get_ema_price_unchecked().conf,
+                    expo:         price_feed.get_ema_price_unchecked().expo,
+                    publish_time: price_feed.get_ema_price_unchecked().publish_time,
+                },
+            }]),
+            metadata: verbose.then_some(RpcPriceFeedMetadataV2 {
+                proof_available_time: price_feed_update.received_at,
+                slot:                 price_feed_update.slot,
+                prev_publish_time:    price_feed_update.prev_publish_time,
+            }),
+        }
     }
 }
