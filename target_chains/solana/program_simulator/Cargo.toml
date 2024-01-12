@@ -1,0 +1,16 @@
+[package]
+name = "program-simulator"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+name = "program_simulator"
+
+
+[dependencies]
+solana-sdk = "1.16.20"
+solana-client = "1.16.20"
+solana-program-test = "1.16.20"
+solana-program = "1.16.20"
+bincode = "1.3.3"

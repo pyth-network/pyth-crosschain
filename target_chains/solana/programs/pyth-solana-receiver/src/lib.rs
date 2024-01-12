@@ -1,9 +1,6 @@
 use {
     crate::error::ReceiverError,
-    anchor_lang::{
-        prelude::*,
-        system_program,
-    },
+    anchor_lang::prelude::*,
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -47,6 +44,7 @@ use {
 };
 
 pub mod error;
+mod sdk;
 pub mod state;
 
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
@@ -303,69 +301,6 @@ pub struct PostUpdatesAtomicParams {
     pub merkle_price_update: MerklePriceUpdate,
 }
 
-impl crate::accounts::Initialize {
-    pub fn populate(payer: &Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
-        crate::accounts::Initialize {
-            payer: *payer,
-            config,
-            system_program: system_program::ID,
-        }
-    }
-}
-
-impl crate::accounts::PostUpdatesAtomic {
-    pub fn populate(
-        payer: Pubkey,
-        price_update_account: Pubkey,
-        wormhole_address: Pubkey,
-        guardian_set_index: u32,
-    ) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
-        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &crate::ID).0;
-
-        let guardian_set = Pubkey::find_program_address(
-            &[
-                GuardianSet::SEED_PREFIX,
-                guardian_set_index.to_be_bytes().as_ref(),
-            ],
-            &wormhole_address,
-        )
-        .0;
-
-        crate::accounts::PostUpdatesAtomic {
-            payer,
-            guardian_set,
-            config,
-            treasury,
-            price_update_account,
-            system_program: system_program::ID,
-        }
-    }
-}
-
-impl crate::accounts::PostUpdates {
-    pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
-        let treasury = Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &crate::ID).0;
-
-        crate::accounts::PostUpdates {
-            payer,
-            encoded_vaa,
-            config,
-            treasury,
-            price_update_account,
-            system_program: system_program::ID,
-        }
-    }
-}
-
-impl crate::accounts::Governance {
-    pub fn populate(payer: Pubkey) -> Self {
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &crate::ID).0;
-        crate::accounts::Governance { payer, config }
-    }
-}
 
 fn deserialize_guardian_set_checked(
     account_info: &AccountInfo<'_>,
