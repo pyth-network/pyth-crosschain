@@ -12,6 +12,7 @@ use {
         system_program,
         InstructionData,
     },
+    pythnet_sdk::wire::v1::MerklePriceUpdate,
     solana_program::instruction::Instruction,
     wormhole_core_bridge_solana::state::GuardianSet,
 };
@@ -86,6 +87,27 @@ impl instruction::Initialize {
             program_id: ID,
             accounts:   accounts::Initialize::populate(payer).to_account_metas(None),
             data:       instruction::Initialize { initial_config }.data(),
+        }
+    }
+}
+
+impl instruction::PostUpdates {
+    pub fn populate(
+        payer: Pubkey,
+        encoded_vaa: Pubkey,
+        price_update_account: Pubkey,
+        merkle_price_update: MerklePriceUpdate,
+    ) -> Instruction {
+        let post_update_accounts =
+            accounts::PostUpdates::populate(payer, encoded_vaa, price_update_account)
+                .to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   post_update_accounts,
+            data:       instruction::PostUpdates {
+                price_update: merkle_price_update,
+            }
+            .data(),
         }
     }
 }
