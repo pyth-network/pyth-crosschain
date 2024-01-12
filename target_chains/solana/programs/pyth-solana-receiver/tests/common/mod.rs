@@ -22,6 +22,7 @@ use {
         messages::PriceFeedMessage,
         wire::v1::MerklePriceUpdate,
     },
+    serde_wormhole::RawMessage,
     solana_program::{
         native_token::LAMPORTS_PER_SOL,
         pubkey::Pubkey,
@@ -106,7 +107,7 @@ pub async fn build_merkle_root_encoded_vaa(
 ) -> Account {
     let merkle_tree_payload: Vec<u8> = merkle_tree_accumulator.serialize(1, 1);
 
-    let vaa_header: Vaa<Vec<u8>> = Vaa {
+    let vaa_header: Vaa<Box<RawMessage>> = Vaa {
         version:            1,
         guardian_set_index: 0,
         signatures:         vec![],
@@ -116,7 +117,7 @@ pub async fn build_merkle_root_encoded_vaa(
         emitter_address:    wormhole_sdk::Address(EMITTER_ADDRESS),
         sequence:           0,
         consistency_level:  0,
-        payload:            merkle_tree_payload,
+        payload:            <Box<RawMessage>>::from(merkle_tree_payload),
     };
 
     let encoded_vaa_data = (
