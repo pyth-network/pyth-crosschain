@@ -215,28 +215,26 @@ pub struct ParsedPriceUpdate {
     pub id:        String,
     pub price:     RpcPrice,
     pub ema_price: RpcPrice,
+    pub metadata:  RpcPriceFeedMetadataV2,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct PriceUpdate {
-    pub binary:   BinaryPriceUpdate,
+    pub binary: BinaryPriceUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed:   Option<Vec<ParsedPriceUpdate>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<RpcPriceFeedMetadataV2>,
+    pub parsed: Option<Vec<ParsedPriceUpdate>>,
 }
 
 impl PriceUpdate {
     pub fn from_price_feed_update(
         price_feed_update: PriceFeedUpdate,
-        verbose: bool,
         parsed: bool,
         encoding: EncodingType,
     ) -> Self {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            binary:   BinaryPriceUpdate {
+            binary: BinaryPriceUpdate {
                 encoding,
                 data: match price_feed_update.update_data {
                     Some(data) => match encoding {
@@ -246,7 +244,7 @@ impl PriceUpdate {
                     None => vec![],
                 },
             },
-            parsed:   parsed.then_some(vec![ParsedPriceUpdate {
+            parsed: parsed.then_some(vec![ParsedPriceUpdate {
                 id:        price_feed.id.to_string(),
                 price:     RpcPrice {
                     price:        price_feed.get_price_unchecked().price,
@@ -260,12 +258,12 @@ impl PriceUpdate {
                     expo:         price_feed.get_ema_price_unchecked().expo,
                     publish_time: price_feed.get_ema_price_unchecked().publish_time,
                 },
+                metadata:  RpcPriceFeedMetadataV2 {
+                    proof_available_time: price_feed_update.received_at,
+                    slot:                 price_feed_update.slot,
+                    prev_publish_time:    price_feed_update.prev_publish_time,
+                },
             }]),
-            metadata: verbose.then_some(RpcPriceFeedMetadataV2 {
-                proof_available_time: price_feed_update.received_at,
-                slot:                 price_feed_update.slot,
-                prev_publish_time:    price_feed_update.prev_publish_time,
-            }),
         }
     }
 }

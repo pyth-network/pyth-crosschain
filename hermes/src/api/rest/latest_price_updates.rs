@@ -5,7 +5,9 @@ use {
         api::{
             rest::RestError,
             types::{
+                BinaryPriceUpdate,
                 EncodingType,
+                ParsedPriceUpdate,
                 PriceIdInput,
                 PriceUpdate,
             },
@@ -15,6 +17,10 @@ use {
     axum::{
         extract::State,
         Json,
+    },
+    base64::{
+        engine::general_purpose::STANDARD as base64_standard_engine,
+        Engine as _,
     },
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
@@ -44,11 +50,6 @@ pub struct LatestPriceUpdatesQueryParams {
     /// If true, include the parsed price update in the `parsed` field of each returned feed.
     #[serde(default = "default_true")]
     parsed: bool,
-
-    /// If true, include the `metadata` field in the response with additional metadata about
-    /// the price update.
-    #[serde(default = "default_true")]
-    verbose: bool,
 }
 
 fn default_true() -> bool {
@@ -62,7 +63,7 @@ fn default_true() -> bool {
     get,
     path = "/v2/updates/price/latest",
     responses(
-        (status = 200, description = "Price updates retrieved successfully", body = Vec<RpcPriceFeed>)
+        (status = 200, description = "Price updates retrieved successfully", body = Vec<PriceUpdate>)
     ),
     params(
         LatestPriceUpdatesQueryParams
@@ -91,18 +92,44 @@ pub async fn latest_price_updates(
         RestError::UpdateDataNotFound
     })?;
 
-    Ok(Json(
-        price_feeds_with_update_data
-            .price_feeds
-            .into_iter()
-            .map(|price_feed| {
-                PriceUpdate::from_price_feed_update(
-                    price_feed,
-                    params.verbose,
-                    params.parsed,
-                    params.encoding,
-                )
-            })
-            .collect(),
-    ))
+    let price_updates: Vec<PriceUpdate> = price_feeds_with_update_data
+        .price_feeds
+        .into_iter()
+        .map(|price_feed| {
+            PriceUpdate::from_price_feed_update(price_feed, params.parsed, params.encoding)
+        })
+        .collect();
+
+    let compressed_update_data = price_feeds_with_update_data.update_data;
+    let encoded_data: Vec<String> = compressed_update_data
+        .into_iter()
+        .map(|data| match params.encoding {
+            EncodingType::Base64 => base64_standard_engine.encode(data),
+            EncodingType::Hex => hex::encode(data),
+        })
+        .collect();
+    let binary_price_update = BinaryPriceUpdate {
+        encoding: params.encoding,
+        data:     encoded_data,
+    };
+    let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> = if params.parsed {
+        Some(
+            price_updates
+                .clone()
+                .into_iter()
+                .filter_map(|price_update| price_update.parsed)
+                .flatten()
+                .collect(),
+        )
+    } else {
+        None
+    };
+
+    let compressed_price_update = PriceUpdate {
+        binary: binary_price_update,
+        parsed: parsed_price_updates,
+    };
+
+
+    Ok(Json(vec![compressed_price_update]))
 }
