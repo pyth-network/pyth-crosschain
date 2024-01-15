@@ -34,5 +34,5 @@ libsecp256k1 = "0.7.1"
 rand = "0.8.5"
 lazy_static = "1.4.0"
 program-simulator = { path = "../../program_simulator" }
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" } # Used to deserialize VAAs
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"} # Used to deserialize VAAs
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
