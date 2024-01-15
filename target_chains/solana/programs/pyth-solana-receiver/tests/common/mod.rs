@@ -27,7 +27,6 @@ use {
     },
     serde_wormhole::RawMessage,
     solana_program::{
-        native_token::LAMPORTS_PER_SOL,
         pubkey::Pubkey,
         rent::Rent,
     },
@@ -50,6 +49,23 @@ use {
         Vaa,
     },
 };
+
+pub fn dummy_receiver_config(
+    emitter_address: [u8; 32],
+    emitter_chain: wormhole_sdk::Chain,
+) -> Config {
+    Config {
+        governance_authority:          Pubkey::new_unique(),
+        target_governance_authority:   None,
+        wormhole:                      BRIDGE_ID,
+        valid_data_sources:            vec![DataSource {
+            chain:   emitter_chain.into(),
+            emitter: Pubkey::from(emitter_address),
+        }],
+        single_update_fee_in_lamports: 1,
+        minimum_signatures:            5,
+    }
+}
 
 pub fn dummy_data_source() -> ([u8; 32], Chain) {
     let emitter_address = Pubkey::new_unique().to_bytes();
@@ -170,29 +186,14 @@ pub async fn setup_pyth_receiver() -> ProgramTestFixtures {
 
     let mut program_simulator = ProgramSimulator::start_from_program_test(program_test).await;
 
-    let governance_authority_keypair = Keypair::new();
-    let emitter_address = Pubkey::new_unique().to_bytes();
-    let initial_config = Config {
-        governance_authority:          governance_authority_keypair.pubkey(),
-        target_governance_authority:   None,
-        wormhole:                      BRIDGE_ID,
-        valid_data_sources:            vec![DataSource {
-            chain:   emitter_chain.into(),
-            emitter: Pubkey::from(emitter_address),
-        }],
-        single_update_fee_in_lamports: 1,
-        minimum_signatures:            5,
-    };
+    let initial_config = dummy_receiver_config(emitter_address, emitter_chain);
 
-    program_simulator
-        .airdrop(&governance_authority_keypair.pubkey(), LAMPORTS_PER_SOL)
-        .await
-        .unwrap();
+    let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
 
     program_simulator
         .process_ix(
-            Initialize::populate(&governance_authority_keypair.pubkey(), initial_config),
-            &vec![&governance_authority_keypair],
+            Initialize::populate(&setup_keypair.pubkey(), initial_config),
+            &vec![&setup_keypair],
             None,
         )
         .await

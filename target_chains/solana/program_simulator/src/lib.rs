@@ -2,6 +2,7 @@ use {
     solana_program::{
         hash::Hash,
         instruction::Instruction,
+        native_token::LAMPORTS_PER_SOL,
         pubkey::Pubkey,
         system_instruction,
     },
@@ -70,5 +71,11 @@ impl ProgramSimulator {
             system_instruction::transfer(&self.genesis_keypair.pubkey(), to, lamports);
 
         self.process_ix(instruction, &vec![], None).await
+    }
+
+    pub async fn get_funded_keypair(&mut self) -> Result<Keypair, BanksClientError> {
+        let keypair = Keypair::new();
+        self.airdrop(&keypair.pubkey(), LAMPORTS_PER_SOL).await?;
+        Ok(keypair)
     }
 }

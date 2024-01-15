@@ -5,7 +5,6 @@ mod common;
 use {
     common::setup_pyth_receiver,
     pyth_solana_receiver::instruction::PostUpdates,
-    solana_program::native_token::LAMPORTS_PER_SOL,
     solana_sdk::{
         signature::Keypair,
         signer::Signer,
@@ -20,13 +19,8 @@ async fn test_post_updates() {
         merkle_price_updates,
     } = setup_pyth_receiver().await;
 
-    let poster = Keypair::new();
+    let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
-
-    program_simulator
-        .airdrop(&poster.pubkey(), LAMPORTS_PER_SOL)
-        .await
-        .unwrap();
 
     program_simulator
         .process_ix(
