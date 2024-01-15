@@ -1,4 +1,5 @@
 use {
+    borsh::BorshDeserialize,
     solana_program::{
         hash::Hash,
         instruction::Instruction,
@@ -77,5 +78,18 @@ impl ProgramSimulator {
         let keypair = Keypair::new();
         self.airdrop(&keypair.pubkey(), LAMPORTS_PER_SOL).await?;
         Ok(keypair)
+    }
+
+    pub async fn get_anchor_account_data<T: BorshDeserialize>(
+        &mut self,
+        pubkey: Pubkey,
+    ) -> Result<T, BanksClientError> {
+        let account = self
+            .banks_client
+            .get_account(pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+        Ok(T::try_from_slice(&account.data[..8])?)
     }
 }

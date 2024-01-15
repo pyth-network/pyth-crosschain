@@ -73,9 +73,9 @@ pub fn dummy_data_source() -> ([u8; 32], Chain) {
     (emitter_address, emitter_chain)
 }
 
-pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) {
-    let price_feed_message = vec![
-        Message::PriceFeedMessage(PriceFeedMessage {
+pub fn dummy_price_messages() -> Vec<PriceFeedMessage> {
+    vec![
+        PriceFeedMessage {
             feed_id:           [0u8; 32],
             price:             1,
             conf:              2,
@@ -84,8 +84,8 @@ pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) 
             prev_publish_time: 5,
             ema_price:         6,
             ema_conf:          7,
-        }),
-        Message::PriceFeedMessage(PriceFeedMessage {
+        },
+        PriceFeedMessage {
             feed_id:           [8u8; 32],
             price:             9,
             conf:              10,
@@ -94,9 +94,16 @@ pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) 
             prev_publish_time: 13,
             ema_price:         14,
             ema_conf:          15,
-        }),
-    ];
-    let price_feed_message_as_vec: Vec<Vec<u8>> = price_feed_message
+        },
+    ]
+}
+
+pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) {
+    let price_feed_messages: Vec<Message> = dummy_price_messages()
+        .iter()
+        .map(|x| Message::PriceFeedMessage(*x))
+        .collect::<Vec<Message>>();
+    let price_feed_message_as_vec: Vec<Vec<u8>> = price_feed_messages
         .iter()
         .map(|x| pythnet_sdk::wire::to_vec::<_, byteorder::BigEndian>(&x).unwrap())
         .collect();

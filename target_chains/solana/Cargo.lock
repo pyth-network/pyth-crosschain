@@ -2982,6 +2982,7 @@ name = "program-simulator"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "borsh 0.10.3",
  "solana-client",
  "solana-program",
  "solana-program-test",
