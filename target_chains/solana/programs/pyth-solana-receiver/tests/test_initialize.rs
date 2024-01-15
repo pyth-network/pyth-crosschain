@@ -1,3 +1,5 @@
+use crate::common::ProgramTestFixtures;
+
 mod common;
 
 use {
@@ -12,8 +14,11 @@ use {
 
 #[tokio::test]
 async fn test_post_updates() {
-    let (mut program_simulator, encoded_vaa_address, merkle_price_updates) =
-        setup_pyth_receiver().await;
+    let ProgramTestFixtures {
+        mut program_simulator,
+        encoded_vaa_address,
+        merkle_price_updates,
+    } = setup_pyth_receiver().await;
 
     let poster = Keypair::new();
     let price_update_keypair = Keypair::new();
