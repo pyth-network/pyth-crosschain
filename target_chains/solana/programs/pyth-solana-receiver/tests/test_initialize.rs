@@ -33,7 +33,7 @@ async fn test_post_updates() {
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
 
-    // post one update to the same account
+    // post one update
     program_simulator
         .process_ix(
             PostUpdates::populate(
