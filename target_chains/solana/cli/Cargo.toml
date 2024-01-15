@@ -18,4 +18,4 @@ wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = 
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"} # Used to deserialize VAAs
 hex = "0.4.3"
 borsh = "0.9.3" # Old version of borsh needed for wormhole-solana
-wormhole-core-bridge-solana = {git = "https://github.com/guibescos/wormhole", branch = "variable-sigs"} # Used to post VAAs to the wormhole receiver
+wormhole-core-bridge-solana = {workspace = true}
