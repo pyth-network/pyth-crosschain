@@ -20,15 +20,13 @@ use {
     },
 };
 
-/// Simulator for the state of the target chain program on Solana. You can run solana transactions against
-/// this struct to test how pyth instructions execute in the Solana runtime.
 pub struct ProgramSimulator {
-    banks_client:        BanksClient,
+    banks_client:    BanksClient,
     /// Hash used to submit the last transaction. The hash must be advanced for each new
     /// transaction; otherwise, replayed transactions in different states can return stale
     /// results.
-    last_blockhash:      Hash,
-    pub genesis_keypair: Keypair,
+    last_blockhash:  Hash,
+    genesis_keypair: Keypair,
 }
 
 impl ProgramSimulator {
