@@ -4,6 +4,7 @@ use {
 };
 
 #[account]
+#[derive(Debug, PartialEq)]
 pub struct Config {
     pub governance_authority:          Pubkey, // This authority can update the other fields
     pub target_governance_authority:   Option<Pubkey>, // This field is used for a two-step governance authority transfer
@@ -13,7 +14,7 @@ pub struct Config {
     pub minimum_signatures:            u8, // The minimum number of signatures required to accept a VAA
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
 pub struct DataSource {
     pub chain:   u16,
     pub emitter: Pubkey,

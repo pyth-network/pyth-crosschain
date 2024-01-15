@@ -90,6 +90,7 @@ impl ProgramSimulator {
             .await
             .unwrap()
             .unwrap();
-        Ok(T::try_from_slice(&account.data[..8])?)
+
+        Ok(T::deserialize(&mut &account.data[8..])?)
     }
 }

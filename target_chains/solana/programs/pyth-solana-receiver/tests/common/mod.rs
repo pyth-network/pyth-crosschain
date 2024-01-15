@@ -3,7 +3,10 @@ use {
     program_simulator::ProgramSimulator,
     pyth_solana_receiver::{
         instruction::Initialize,
-        sdk::get_treasury_address,
+        sdk::{
+            get_config_address,
+            get_treasury_address,
+        },
         state::config::{
             Config,
             DataSource,
@@ -50,27 +53,27 @@ use {
     },
 };
 
-pub fn dummy_receiver_config(
-    emitter_address: [u8; 32],
-    emitter_chain: wormhole_sdk::Chain,
-) -> Config {
+pub fn dummy_receiver_config(data_source: DataSource) -> Config {
     Config {
         governance_authority:          Pubkey::new_unique(),
         target_governance_authority:   None,
         wormhole:                      BRIDGE_ID,
         valid_data_sources:            vec![DataSource {
-            chain:   emitter_chain.into(),
-            emitter: Pubkey::from(emitter_address),
+            chain:   data_source.chain,
+            emitter: data_source.emitter,
         }],
         single_update_fee_in_lamports: 1,
         minimum_signatures:            5,
     }
 }
 
-pub fn dummy_data_source() -> ([u8; 32], Chain) {
+pub fn dummy_data_source() -> DataSource {
     let emitter_address = Pubkey::new_unique().to_bytes();
     let emitter_chain = Chain::Pythnet;
-    (emitter_address, emitter_chain)
+    DataSource {
+        chain:   emitter_chain.into(),
+        emitter: Pubkey::from(emitter_address),
+    }
 }
 
 pub fn dummy_price_messages() -> Vec<PriceFeedMessage> {
@@ -125,22 +128,21 @@ pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) 
 
 pub async fn build_merkle_root_encoded_vaa(
     merkle_tree_accumulator: MerkleTree<Keccak160>,
-    emitter_address: [u8; 32],
-    emitter_chain: wormhole_sdk::Chain,
+    data_source: &DataSource,
 ) -> Account {
     let merkle_tree_payload: Vec<u8> = merkle_tree_accumulator.serialize(1, 1);
 
     let vaa_header: Vaa<Box<RawMessage>> = Vaa {
-        version: 1,
+        version:            1,
         guardian_set_index: 0,
-        signatures: vec![],
-        timestamp: 0,
-        nonce: 0,
-        emitter_chain,
-        emitter_address: wormhole_sdk::Address(emitter_address),
-        sequence: 0,
-        consistency_level: 0,
-        payload: <Box<RawMessage>>::from(merkle_tree_payload),
+        signatures:         vec![],
+        timestamp:          0,
+        nonce:              0,
+        emitter_chain:      Chain::from(data_source.chain),
+        emitter_address:    wormhole_sdk::Address(data_source.emitter.to_bytes()),
+        sequence:           0,
+        consistency_level:  0,
+        payload:            <Box<RawMessage>>::from(merkle_tree_payload),
     };
 
     let encoded_vaa_data = (
@@ -182,10 +184,9 @@ pub async fn setup_pyth_receiver() -> ProgramTestFixtures {
     program_test.add_program("pyth_solana_receiver", ID, None);
 
     let (merkle_tree_accumulator, merkle_price_updates) = dummy_price_updates();
-    let (emitter_address, emitter_chain) = dummy_data_source();
+    let data_source = dummy_data_source();
     let merkle_root_encoded_vaa =
-        build_merkle_root_encoded_vaa(merkle_tree_accumulator, emitter_address, emitter_chain)
-            .await;
+        build_merkle_root_encoded_vaa(merkle_tree_accumulator, &data_source).await;
 
     let encoded_vaa_address = Pubkey::new_unique();
     program_test.add_account(encoded_vaa_address, merkle_root_encoded_vaa);
@@ -193,18 +194,24 @@ pub async fn setup_pyth_receiver() -> ProgramTestFixtures {
 
     let mut program_simulator = ProgramSimulator::start_from_program_test(program_test).await;
 
-    let initial_config = dummy_receiver_config(emitter_address, emitter_chain);
+    let initial_config = dummy_receiver_config(data_source);
 
     let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
 
     program_simulator
         .process_ix(
-            Initialize::populate(&setup_keypair.pubkey(), initial_config),
+            Initialize::populate(&setup_keypair.pubkey(), initial_config.clone()),
             &vec![&setup_keypair],
             None,
         )
         .await
         .unwrap();
+
+    let config_account = program_simulator
+        .get_anchor_account_data::<Config>(get_config_address())
+        .await
+        .unwrap();
+    assert_eq!(config_account, initial_config);
 
     program_simulator
         .airdrop(&get_treasury_address(), Rent::default().minimum_balance(0))
