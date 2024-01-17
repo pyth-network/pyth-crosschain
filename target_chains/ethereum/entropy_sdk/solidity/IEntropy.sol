@@ -74,7 +74,6 @@ interface IEntropy is EntropyEvents {
 
     function setProviderUri(bytes calldata newUri) external;
 
-
     function constructUserCommitment(
         bytes32 userRandomness
     ) external pure returns (bytes32 userCommitment);

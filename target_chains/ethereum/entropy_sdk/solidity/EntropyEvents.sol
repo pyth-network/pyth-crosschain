@@ -16,15 +16,7 @@ interface EntropyEvents {
         bytes32 randomNumber
     );
 
-    event ProviderFeeUpdated(
-        address provider, 
-        uint128 oldFee,
-        uint128 newFee
-    );
+    event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
-    event ProviderUriUpdated(
-        address provider, 
-        bytes oldUri,
-        bytes newUri
-    );
+    event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
 }
