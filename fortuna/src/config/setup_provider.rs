@@ -12,9 +12,9 @@ use {
 };
 
 #[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Register Provider On All Options")]
-#[group(id = "RegisterProviderOnAll")]
-pub struct RegisterProviderOnAllOptions {
+#[command(next_help_heading = "Setup Provider Options")]
+#[group(id = "SetupProviderOptions")]
+pub struct SetupProviderOptions {
     #[command(flatten)]
     pub config: ConfigOptions,
 
@@ -39,7 +39,7 @@ pub struct RegisterProviderOnAllOptions {
     pub uri: String,
 }
 
-impl RegisterProviderOnAllOptions {
+impl SetupProviderOptions {
     pub fn load_private_key(&self) -> Result<String> {
         return Ok((fs::read_to_string(&self.private_key_file))?);
     }

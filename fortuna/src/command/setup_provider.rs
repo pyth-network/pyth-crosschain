@@ -1,10 +1,14 @@
 use {
     crate::{
         chain::ethereum::SignablePythContract,
-        command::register_provider::CommitmentMetadata,
+        command::{
+            register_provider,
+            register_provider::CommitmentMetadata,
+        },
         config::{
             Config,
-            RegisterProviderOnAllOptions,
+            SetupProviderOptions,
+            RegisterProviderOptions,
         },
         state::{
             HashChainState,
@@ -26,7 +30,7 @@ use {
 /// Re-register
 /// Update fee for the randomness provider.
 /// Update uri for the randomness provider.
-pub async fn register_provider_on_all(opts: &RegisterProviderOnAllOptions) -> Result<()> {
+pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
@@ -76,51 +80,22 @@ pub async fn register_provider_on_all(opts: &RegisterProviderOnAllOptions) -> Re
         }
 
         if register {
-            // Create a new random hash chain.
-            let random = rand::random::<[u8; 32]>();
-
-            let commitment_length = opts.randomness.chain_length;
-            let mut chain = PebbleHashChain::from_config(
-                &secret,
-                &chain_id,
-                &provider_address,
-                &chain_config.contract_addr,
-                &random,
-                commitment_length,
-            )?;
-
-            // Arguments to the contract to register our new provider.
-            let fee_in_wei = opts.fee;
-            let commitment = chain.reveal()?;
-            // Store the random seed and chain length in the metadata field so that we can regenerate the hash
-            // chain at-will. (This is secure because you can't generate the chain unless you also have the secret)
-            let commitment_metadata = CommitmentMetadata {
-                seed:         random,
-                chain_length: commitment_length,
-            };
-
-            if let Some(r) = contract
-                .register(
-                    fee_in_wei,
-                    commitment,
-                    bincode::serialize(&commitment_metadata)?.into(),
-                    commitment_length,
-                    bincode::serialize(&opts.uri)?.into(),
-                )
-                .send()
-                .await?
-                .await?
-            {
-                tracing::info!("Registered provider: {:?}", r);
-            }
+            register_provider(&RegisterProviderOptions {
+                config: opts.config.clone(),
+                chain_id: chain_id.clone(),
+                private_key: private_key.clone(),
+                randomness: opts.randomness.clone(),
+                fee: opts.fee,
+                uri: opts.uri.clone(),
+            }).await?;
         } else {
             if provider_info.fee_in_wei != opts.fee {
-                if let Some(r) = contract.setProviderFee(fee_in_wei).send().await?.await? {
+                if let Some(r) = contract.setProviderFee(opts.fee).send().await?.await? {
                     tracing::info!("Updated provider fee: {:?}", r);
                 }
             }
 
-            if provider_info.uri != opts.uri {
+            if bincode::deserialize::<String>(&provider_info.uri)? != opts.uri {
                 if let Some(r) = contract
                     .setProviderUri(bincode::serialize(&opts.uri)?.into())
                     .send()
