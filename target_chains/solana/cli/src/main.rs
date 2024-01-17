@@ -43,9 +43,9 @@ use {
         system_instruction,
         transaction::Transaction,
     },
-    wormhole_core_bridge_solana::{
-        processor::WriteEncodedVaaArgs,
-        state::EncodedVaa,
+    wormhole_core_bridge_solana::sdk::{
+        WriteEncodedVaaArgs,
+        VAA_START,
     },
     wormhole_sdk::{
         vaa::{
@@ -385,7 +385,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     merkle_price_update: &MerklePriceUpdate,
 ) -> Result<Pubkey> {
     let encoded_vaa_keypair = Keypair::new();
-    let encoded_vaa_size: usize = vaa.len() + EncodedVaa::VAA_START;
+    let encoded_vaa_size: usize = vaa.len() + VAA_START;
 
     let create_encoded_vaa = system_instruction::create_account(
         &payer.pubkey(),
