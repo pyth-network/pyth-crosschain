@@ -22,13 +22,13 @@ mod common;
 
 #[tokio::test]
 async fn test_post_updates() {
+    let dummy_price_messages = dummy_price_messages();
+
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_address,
         merkle_price_updates,
-    } = setup_pyth_receiver().await;
-
-    let dummy_price_messages = dummy_price_messages();
+    } = setup_pyth_receiver(dummy_price_messages.clone()).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();

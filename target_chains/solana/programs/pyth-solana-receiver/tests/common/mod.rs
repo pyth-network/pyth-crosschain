@@ -101,12 +101,14 @@ pub fn dummy_price_messages() -> Vec<PriceFeedMessage> {
     ]
 }
 
-pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) {
-    let price_feed_messages: Vec<Message> = dummy_price_messages()
+pub fn dummy_price_updates(
+    price_feed_messages: Vec<PriceFeedMessage>,
+) -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) {
+    let messages = price_feed_messages
         .iter()
         .map(|x| Message::PriceFeedMessage(*x))
         .collect::<Vec<Message>>();
-    let price_feed_message_as_vec: Vec<Vec<u8>> = price_feed_messages
+    let price_feed_message_as_vec: Vec<Vec<u8>> = messages
         .iter()
         .map(|x| pythnet_sdk::wire::to_vec::<_, byteorder::BigEndian>(&x).unwrap())
         .collect();
@@ -179,11 +181,13 @@ pub struct ProgramTestFixtures {
  * - The pubkey of an encoded VAA account, which is pre-populated and can be used to test post_updates
  * - A vector of MerklePriceUpdate, corresponding to that VAA
  */
-pub async fn setup_pyth_receiver() -> ProgramTestFixtures {
+pub async fn setup_pyth_receiver(
+    price_feed_messages: Vec<PriceFeedMessage>,
+) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", ID, None);
 
-    let (merkle_tree_accumulator, merkle_price_updates) = dummy_price_updates();
+    let (merkle_tree_accumulator, merkle_price_updates) = dummy_price_updates(price_feed_messages);
     let data_source = dummy_data_source();
     let merkle_root_encoded_vaa =
         build_merkle_root_encoded_vaa(merkle_tree_accumulator, &data_source);
