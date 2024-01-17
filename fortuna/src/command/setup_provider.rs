@@ -26,10 +26,12 @@ use {
     std::sync::Arc,
 };
 
-/// Register as a randomness provider.
-/// Re-register
-/// Update fee for the randomness provider.
-/// Update uri for the randomness provider.
+/// Setup provider for all the chains.
+/// 1. Register if there was no previous registration.
+/// 2. Re-register if there are no more random numbers to request on the contract. 
+/// 3. Re-register if there is a mismatch in generated hash chain.
+/// 4. Update provider fee if there is a mismatch with the fee set on contract.  
+/// 4. Update provider uri if there is a mismatch with the uri set on contract.
 pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let private_key = opts.load_private_key()?;
@@ -44,8 +46,8 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
         let mut register = false;
 
-        // this covers both end_sequence_number == 0 && sequence_number == 0
-        // and end_sequence_number <= sequence_number
+        // This condition satisfies for both when there is no registration and when there are no
+        // more random numbers left to request
         if provider_info.end_sequence_number <= provider_info.sequence_number {
             tracing::info!("endSequenceNumber is lte sequenceNumber.");
             tracing::info!("Registering to {}", &chain_id);
