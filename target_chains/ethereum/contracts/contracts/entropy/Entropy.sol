@@ -342,6 +342,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         return _state.accruedPythFeesInWei;
     }
 
+    // Set provider fee. It will revert if provider is not registered.
     function setProviderFee(uint128 newFeeInWei) external override {
         EntropyStructs.ProviderInfo storage provider = _state.providers[
             msg.sender
@@ -355,6 +356,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
     }
 
+    // Set provider uri. It will revert if provider is not registered.
     function setProviderUri(bytes calldata newUri) external override {
         EntropyStructs.ProviderInfo storage provider = _state.providers[
             msg.sender
