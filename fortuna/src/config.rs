@@ -25,6 +25,7 @@ pub use {
     generate::GenerateOptions,
     get_request::GetRequestOptions,
     register_provider::RegisterProviderOptions,
+    register_provider_on_all::RegisterProviderOnAllOptions,
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
 };
@@ -32,6 +33,7 @@ pub use {
 mod generate;
 mod get_request;
 mod register_provider;
+mod register_provider_on_all;
 mod request_randomness;
 mod run;
 
@@ -50,6 +52,9 @@ pub enum Options {
 
     /// Register a new provider with the Pyth Random oracle.
     RegisterProvider(RegisterProviderOptions),
+
+    /// Register a new provider with the Pyth Random oracle.
+    RegisterProviderOnAll(RegisterProviderOnAllOptions),
 
     /// Request a random number from the contract.
     RequestRandomness(RequestRandomnessOptions),
