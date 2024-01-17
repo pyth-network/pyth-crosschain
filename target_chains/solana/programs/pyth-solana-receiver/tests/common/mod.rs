@@ -126,7 +126,7 @@ pub fn dummy_price_updates() -> (MerkleTree<Keccak160>, Vec<MerklePriceUpdate>) 
 }
 
 
-pub async fn build_merkle_root_encoded_vaa(
+pub fn build_merkle_root_encoded_vaa(
     merkle_tree_accumulator: MerkleTree<Keccak160>,
     data_source: &DataSource,
 ) -> Account {
@@ -186,7 +186,7 @@ pub async fn setup_pyth_receiver() -> ProgramTestFixtures {
     let (merkle_tree_accumulator, merkle_price_updates) = dummy_price_updates();
     let data_source = dummy_data_source();
     let merkle_root_encoded_vaa =
-        build_merkle_root_encoded_vaa(merkle_tree_accumulator, &data_source).await;
+        build_merkle_root_encoded_vaa(merkle_tree_accumulator, &data_source);
 
     let encoded_vaa_address = Pubkey::new_unique();
     program_test.add_account(encoded_vaa_address, merkle_root_encoded_vaa);
