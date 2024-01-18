@@ -696,4 +696,37 @@ contract EntropyTest is Test, EntropyTestUtils {
         assertEq(providerInfo1.uri, provider1Uri);
         assertEq(providerInfo1.commitmentMetadata, provider1CommitmentMetadata);
     }
+
+    function testSetProviderFee() public {
+        assertNotEq(random.getProviderInfo(provider1).feeInWei, 1);
+
+        vm.prank(provider1);
+        random.setProviderFee(1);
+
+        assertEq(random.getProviderInfo(provider1).feeInWei, 1);
+    }
+
+    function testSetProviderFeeByUnregistered() public {
+        vm.prank(unregisteredProvider);
+        vm.expectRevert();
+        random.setProviderFee(1);
+    }
+
+    function testSetProviderUri() public {
+        bytes memory newUri = bytes("https://new.com");
+
+        assertNotEq0(random.getProviderInfo(provider1).uri, newUri);
+
+        vm.prank(provider1);
+        random.setProviderUri(newUri);
+
+        assertEq0(random.getProviderInfo(provider1).uri, newUri);
+    }
+
+    function testSetProviderUriByUnregistered() public {
+        bytes memory newUri = bytes("https://new.com");
+        vm.prank(unregisteredProvider);
+        vm.expectRevert();
+        random.setProviderUri(newUri);
+    }
 }

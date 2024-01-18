@@ -70,6 +70,10 @@ interface IEntropy is EntropyEvents {
         view
         returns (uint128 accruedPythFeesInWei);
 
+    function setProviderFee(uint128 newFeeInWei) external;
+
+    function setProviderUri(bytes calldata newUri) external;
+
     function constructUserCommitment(
         bytes32 userRandomness
     ) external pure returns (bytes32 userCommitment);

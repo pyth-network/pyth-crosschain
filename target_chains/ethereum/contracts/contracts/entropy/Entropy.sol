@@ -342,6 +342,33 @@ abstract contract Entropy is IEntropy, EntropyState {
         return _state.accruedPythFeesInWei;
     }
 
+    // Set provider fee. It will revert if provider is not registered.
+    function setProviderFee(uint128 newFeeInWei) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+        uint128 oldFeeInWei = provider.feeInWei;
+        provider.feeInWei = newFeeInWei;
+        emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
+    }
+
+    // Set provider uri. It will revert if provider is not registered.
+    function setProviderUri(bytes calldata newUri) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+        bytes memory oldUri = provider.uri;
+        provider.uri = newUri;
+        emit ProviderUriUpdated(msg.sender, oldUri, newUri);
+    }
+
     function constructUserCommitment(
         bytes32 userRandomness
     ) public pure override returns (bytes32 userCommitment) {
