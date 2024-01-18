@@ -92,14 +92,14 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             }).await?;
         } else {
             if provider_info.fee_in_wei != opts.fee {
-                if let Some(r) = contract.setProviderFee(opts.fee).send().await?.await? {
+                if let Some(r) = contract.set_provider_fee(opts.fee).send().await?.await? {
                     tracing::info!("Updated provider fee: {:?}", r);
                 }
             }
 
             if bincode::deserialize::<String>(&provider_info.uri)? != opts.uri {
                 if let Some(r) = contract
-                    .setProviderUri(bincode::serialize(&opts.uri)?.into())
+                    .set_provider_uri(bincode::serialize(&opts.uri)?.into())
                     .send()
                     .await?
                     .await?
