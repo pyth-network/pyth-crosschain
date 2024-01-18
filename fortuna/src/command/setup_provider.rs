@@ -7,8 +7,8 @@ use {
         },
         config::{
             Config,
-            SetupProviderOptions,
             RegisterProviderOptions,
+            SetupProviderOptions,
         },
         state::{
             HashChainState,
@@ -83,13 +83,14 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
         if register {
             register_provider(&RegisterProviderOptions {
-                config: opts.config.clone(),
-                chain_id: chain_id.clone(),
+                config:      opts.config.clone(),
+                chain_id:    chain_id.clone(),
                 private_key: private_key.clone(),
-                randomness: opts.randomness.clone(),
-                fee: opts.fee,
-                uri: opts.uri.clone(),
-            }).await?;
+                randomness:  opts.randomness.clone(),
+                fee:         opts.fee,
+                uri:         opts.uri.clone(),
+            })
+            .await?;
         } else {
             if provider_info.fee_in_wei != opts.fee {
                 if let Some(r) = contract.set_provider_fee(opts.fee).send().await?.await? {

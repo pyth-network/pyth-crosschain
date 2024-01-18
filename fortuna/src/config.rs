@@ -25,17 +25,17 @@ pub use {
     generate::GenerateOptions,
     get_request::GetRequestOptions,
     register_provider::RegisterProviderOptions,
-    setup_provider::SetupProviderOptions,
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
+    setup_provider::SetupProviderOptions,
 };
 
 mod generate;
 mod get_request;
 mod register_provider;
-mod setup_provider;
 mod request_randomness;
 mod run;
+mod setup_provider;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";

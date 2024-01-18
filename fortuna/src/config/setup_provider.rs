@@ -6,9 +6,9 @@ use {
             RandomnessOptions,
         },
     },
+    anyhow::Result,
     clap::Args,
     std::fs,
-    anyhow::Result,
 };
 
 #[derive(Args, Clone, Debug)]
