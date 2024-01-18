@@ -190,18 +190,13 @@ impl RpcPriceIdentifier {
     }
 }
 
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
 pub enum EncodingType {
-    #[serde(rename = "base64")]
-    Base64,
+    #[default]
     #[serde(rename = "hex")]
     Hex,
-}
-
-impl Default for EncodingType {
-    fn default() -> Self {
-        EncodingType::Hex
-    }
+    #[serde(rename = "base64")]
+    Base64,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
