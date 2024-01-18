@@ -28,9 +28,9 @@ use {
 
 /// Setup provider for all the chains.
 /// 1. Register if there was no previous registration.
-/// 2. Re-register if there are no more random numbers to request on the contract. 
+/// 2. Re-register if there are no more random numbers to request on the contract.
 /// 3. Re-register if there is a mismatch in generated hash chain.
-/// 4. Update provider fee if there is a mismatch with the fee set on contract.  
+/// 4. Update provider fee if there is a mismatch with the fee set on contract.
 /// 4. Update provider uri if there is a mismatch with the uri set on contract.
 pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
