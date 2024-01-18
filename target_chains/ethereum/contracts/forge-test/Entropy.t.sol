@@ -698,6 +698,8 @@ contract EntropyTest is Test, EntropyTestUtils {
     }
 
     function testSetProviderFee() public {
+        assertNotEq(random.getProviderInfo(provider1).feeInWei, 1);
+
         vm.prank(provider1);
         random.setProviderFee(1);
 
@@ -712,8 +714,13 @@ contract EntropyTest is Test, EntropyTestUtils {
 
     function testSetProviderUri() public {
         bytes memory newUri = bytes("https://new.com");
+
+        assertNotEq0(random.getProviderInfo(provider1).uri, newUri);
+
         vm.prank(provider1);
         random.setProviderUri(newUri);
+
+        assertEq0(random.getProviderInfo(provider1).uri, newUri);
     }
 
     function testSetProviderUriByUnregistered() public {
