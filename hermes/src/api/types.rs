@@ -213,8 +213,8 @@ pub struct ParsedPriceUpdate {
     pub metadata:  RpcPriceFeedMetadataV2,
 }
 
-impl ParsedPriceUpdate {
-    pub fn from_price_feed_update(price_feed_update: PriceFeedUpdate) -> Self {
+impl From<PriceFeedUpdate> for ParsedPriceUpdate {
+    fn from(price_feed_update: PriceFeedUpdate) -> Self {
         let price_feed = price_feed_update.price_feed;
 
         Self {

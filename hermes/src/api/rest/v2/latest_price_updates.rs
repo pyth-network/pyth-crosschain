@@ -112,7 +112,7 @@ pub async fn latest_price_updates(
             price_feeds_with_update_data
                 .price_feeds
                 .into_iter()
-                .map(|price_feed| ParsedPriceUpdate::from_price_feed_update(price_feed))
+                .map(|price_feed| price_feed.into())
                 .collect(),
         )
     } else {
