@@ -95,17 +95,8 @@ pub async fn latest_price_updates(
         RestError::UpdateDataNotFound
     })?;
 
-    // let price_updates: Vec<PriceUpdate> = price_feeds_with_update_data
-    //     .price_feeds
-    //     .into_iter()
-    //     .map(|price_feed| {
-    //         PriceUpdate::from_price_feed_update(price_feed, params.parsed, params.encoding)
-    //     })
-    //     .collect();
-
-
-    let compressed_update_data = price_feeds_with_update_data.update_data;
-    let encoded_data: Vec<String> = compressed_update_data
+    let price_update_data = price_feeds_with_update_data.update_data;
+    let encoded_data: Vec<String> = price_update_data
         .into_iter()
         .map(|data| match params.encoding {
             EncodingType::Base64 => base64_standard_engine.encode(data),
