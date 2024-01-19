@@ -1,9 +1,11 @@
 use {
-    super::verify_price_ids_exist,
     crate::{
         aggregate::RequestTime,
         api::{
-            rest::RestError,
+            rest::{
+                verify_price_ids_exist,
+                RestError,
+            },
             types::{
                 BinaryPriceUpdate,
                 EncodingType,
@@ -63,7 +65,8 @@ fn default_true() -> bool {
     get,
     path = "/v2/updates/price/latest",
     responses(
-        (status = 200, description = "Price updates retrieved successfully", body = Vec<PriceUpdate>)
+        (status = 200, description = "Price updates retrieved successfully", body = Vec<PriceUpdate>),
+        (status = 404, description = "Price ids not found", body = String)
     ),
     params(
         LatestPriceUpdatesQueryParams
@@ -92,13 +95,14 @@ pub async fn latest_price_updates(
         RestError::UpdateDataNotFound
     })?;
 
-    let price_updates: Vec<PriceUpdate> = price_feeds_with_update_data
-        .price_feeds
-        .into_iter()
-        .map(|price_feed| {
-            PriceUpdate::from_price_feed_update(price_feed, params.parsed, params.encoding)
-        })
-        .collect();
+    // let price_updates: Vec<PriceUpdate> = price_feeds_with_update_data
+    //     .price_feeds
+    //     .into_iter()
+    //     .map(|price_feed| {
+    //         PriceUpdate::from_price_feed_update(price_feed, params.parsed, params.encoding)
+    //     })
+    //     .collect();
+
 
     let compressed_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = compressed_update_data
@@ -114,11 +118,10 @@ pub async fn latest_price_updates(
     };
     let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> = if params.parsed {
         Some(
-            price_updates
-                .clone()
+            price_feeds_with_update_data
+                .price_feeds
                 .into_iter()
-                .filter_map(|price_update| price_update.parsed)
-                .flatten()
+                .map(|price_feed| ParsedPriceUpdate::from_price_feed_update(price_feed))
                 .collect(),
         )
     } else {

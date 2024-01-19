@@ -15,11 +15,11 @@ mod get_vaa;
 mod get_vaa_ccip;
 mod index;
 mod latest_price_feeds;
-mod latest_price_updates;
 mod latest_vaas;
 mod live;
 mod price_feed_ids;
 mod ready;
+mod v2;
 
 pub use {
     get_price_feed::*,
@@ -27,11 +27,11 @@ pub use {
     get_vaa_ccip::*,
     index::*,
     latest_price_feeds::*,
-    latest_price_updates::*,
     latest_vaas::*,
     live::*,
     price_feed_ids::*,
     ready::*,
+    v2::latest_price_updates::*,
 };
 
 pub enum RestError {

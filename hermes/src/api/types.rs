@@ -213,6 +213,33 @@ pub struct ParsedPriceUpdate {
     pub metadata:  RpcPriceFeedMetadataV2,
 }
 
+impl ParsedPriceUpdate {
+    pub fn from_price_feed_update(price_feed_update: PriceFeedUpdate) -> Self {
+        let price_feed = price_feed_update.price_feed;
+
+        Self {
+            id:        price_feed.id.to_string(),
+            price:     RpcPrice {
+                price:        price_feed.get_price_unchecked().price,
+                conf:         price_feed.get_price_unchecked().conf,
+                expo:         price_feed.get_price_unchecked().expo,
+                publish_time: price_feed.get_price_unchecked().publish_time,
+            },
+            ema_price: RpcPrice {
+                price:        price_feed.get_ema_price_unchecked().price,
+                conf:         price_feed.get_ema_price_unchecked().conf,
+                expo:         price_feed.get_ema_price_unchecked().expo,
+                publish_time: price_feed.get_ema_price_unchecked().publish_time,
+            },
+            metadata:  RpcPriceFeedMetadataV2 {
+                proof_available_time: price_feed_update.received_at,
+                slot:                 price_feed_update.slot,
+                prev_publish_time:    price_feed_update.prev_publish_time,
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct PriceUpdate {
     pub binary: BinaryPriceUpdate,
