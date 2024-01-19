@@ -98,8 +98,12 @@ contract MockPyth is AbstractPyth {
                     (PythStructs.PriceFeed, uint64)
                 );
 
+                uint publishTime = feeds[i].price.publishTime;
+                if (priceFeeds[feeds[i].id].price.publishTime < publishTime) {
+                    priceFeeds[feeds[i].id] = feeds[i];
+                }
+
                 if (feeds[i].id == priceIds[i]) {
-                    uint publishTime = feeds[i].price.publishTime;
                     if (
                         minPublishTime <= publishTime &&
                         publishTime <= maxPublishTime &&
