@@ -19,6 +19,7 @@ mod latest_vaas;
 mod live;
 mod price_feed_ids;
 mod ready;
+mod v2;
 
 pub use {
     get_price_feed::*,
@@ -30,6 +31,7 @@ pub use {
     live::*,
     price_feed_ids::*,
     ready::*,
+    v2::latest_price_updates::*,
 };
 
 pub enum RestError {
