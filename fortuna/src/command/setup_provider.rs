@@ -49,8 +49,8 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         if provider_info.end_sequence_number <= provider_info.sequence_number {
             tracing::info!(
                 "endSequenceNumber <= sequenceNumber. endSequenceNumber={0}, sequenceNumber={1}",
-                end_sequence_number,
-                sequence_number
+                provider_info.end_sequence_number,
+                provider_info.sequence_number
             );
             tracing::info!("Registering to {}", &chain_id);
             register = true;
