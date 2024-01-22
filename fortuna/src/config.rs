@@ -53,7 +53,8 @@ pub enum Options {
     /// Register a new provider with the Pyth Random oracle.
     RegisterProvider(RegisterProviderOptions),
 
-    /// Register a new provider with the Pyth Random oracle.
+    /// Set up the provider for all the provided chains.
+    /// It registers, re-registers, or updates provider config on chain.
     SetupProvider(SetupProviderOptions),
 
     /// Request a random number from the contract.
