@@ -16,12 +16,9 @@ use {
         },
     },
     anyhow::Result,
-    ethers::{
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-        types::Address,
+    ethers::signers::{
+        LocalWallet,
+        Signer,
     },
     std::sync::Arc,
 };
@@ -31,7 +28,7 @@ use {
 /// 2. Re-register if there are no more random numbers to request on the contract.
 /// 3. Re-register if there is a mismatch in generated hash chain.
 /// 4. Update provider fee if there is a mismatch with the fee set on contract.
-/// 4. Update provider uri if there is a mismatch with the uri set on contract.
+/// 5. Update provider uri if there is a mismatch with the uri set on contract.
 pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let private_key = opts.load_private_key()?;
@@ -49,7 +46,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
         if provider_info.end_sequence_number <= provider_info.sequence_number {
-            tracing::info!("endSequenceNumber is lte sequenceNumber.");
+            tracing::info!("endSequenceNumber <= sequenceNumber.");
             tracing::info!("Registering to {}", &chain_id);
             register = true;
         } else {
@@ -99,10 +96,11 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             }
 
             if bincode::deserialize::<String>(&provider_info.uri)? != opts.uri {
-                if let Some(r) = contract
+                if let Some(receipt) = contract
                     .set_provider_uri(bincode::serialize(&opts.uri)?.into())
                     .send()
                     .await?
+                    .log_msg("Pending transfer hash")
                     .await?
                 {
                     tracing::info!("Updated provider uri: {:?}", r);
