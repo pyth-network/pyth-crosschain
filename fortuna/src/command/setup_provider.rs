@@ -40,13 +40,14 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         let contract =
             Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
         let provider_info = contract.get_provider_info(provider_address).call().await?;
+        tracing::info!("Provider info: {:?}", provider_info);
 
         let mut register = false;
 
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
         if provider_info.end_sequence_number <= provider_info.sequence_number {
-            tracing::info!("endSequenceNumber <= sequenceNumber.");
+            tracing::info!("endSequenceNumber <= sequenceNumber. endSequenceNumber={0}, sequenceNumber={1}", end_sequence_number, sequence_number);
             tracing::info!("Registering to {}", &chain_id);
             register = true;
         } else {
