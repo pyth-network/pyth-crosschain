@@ -3,6 +3,7 @@ mod get_request;
 mod register_provider;
 mod request_randomness;
 mod run;
+mod setup_provider;
 
 pub use {
     generate::generate,
@@ -10,4 +11,5 @@ pub use {
     register_provider::register_provider,
     request_randomness::request_randomness,
     run::run,
+    setup_provider::setup_provider,
 };

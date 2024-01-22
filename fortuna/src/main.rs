@@ -39,6 +39,7 @@ async fn main() -> Result<()> {
         config::Options::Generate(opts) => command::generate(&opts).await,
         config::Options::Run(opts) => command::run(&opts).await,
         config::Options::RegisterProvider(opts) => command::register_provider(&opts).await,
+        config::Options::SetupProvider(opts) => command::setup_provider(&opts).await,
         config::Options::RequestRandomness(opts) => command::request_randomness(&opts).await,
     }
 }

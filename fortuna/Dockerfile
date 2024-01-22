@@ -9,6 +9,7 @@ RUN rustup default nightly-2023-07-23
 WORKDIR /src
 COPY fortuna fortuna
 COPY pythnet pythnet
+COPY target_chains/ethereum/entropy_sdk/solidity/abis target_chains/ethereum/entropy_sdk/solidity/abis
 
 WORKDIR /src/fortuna
 

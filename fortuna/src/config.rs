@@ -27,6 +27,7 @@ pub use {
     register_provider::RegisterProviderOptions,
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
+    setup_provider::SetupProviderOptions,
 };
 
 mod generate;
@@ -34,6 +35,7 @@ mod get_request;
 mod register_provider;
 mod request_randomness;
 mod run;
+mod setup_provider;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
@@ -50,6 +52,10 @@ pub enum Options {
 
     /// Register a new provider with the Pyth Random oracle.
     RegisterProvider(RegisterProviderOptions),
+
+    /// Set up the provider for all the provided chains.
+    /// It registers, re-registers, or updates provider config on chain.
+    SetupProvider(SetupProviderOptions),
 
     /// Request a random number from the contract.
     RequestRandomness(RequestRandomnessOptions),

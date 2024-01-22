@@ -50,7 +50,10 @@ use {
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
-abigen!(PythRandom, "src/abi.json");
+abigen!(
+    PythRandom,
+    "../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
+);
 
 pub type SignablePythContract = PythRandom<
     TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
