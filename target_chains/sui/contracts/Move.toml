@@ -9,7 +9,9 @@ subdir = "crates/sui-framework/packages/sui-framework"
 rev = "09b2081498366df936abae26eea4b2d5cafb2788"
 
 [dependencies.Wormhole]
-local = "../../../../wormhole/sui/wormhole"
+git = "https://github.com/wormhole-foundation/wormhole.git"
+subdir = "sui/wormhole"
+rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
 
 [addresses]
 pyth = "0x0"
