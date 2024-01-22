@@ -408,3 +408,23 @@
   rpcUrl: https://rpc.s2.testblast.io/$ENV_BLAST_S2_TESTNET_API_KEY
   networkId: 168587773
   type: EvmChain
+- id: hedera_testnet
+  mainnet: false
+  rpcUrl: https://testnet.hashio.io/api
+  networkId: 296
+  type: EvmChain
+- id: hedera
+  mainnet: true
+  rpcUrl: https://mainnet.hashio.io/api
+  networkId: 295
+  type: EvmChain
+- id: filecoin_calibration
+  mainnet: false
+  rpcUrl: https://rpc.ankr.com/filecoin_testnet
+  networkId: 314159
+  type: EvmChain
+- id: filecoin
+  mainnet: true
+  rpcUrl: https://rpc.ankr.com/filecoin
+  networkId: 314
+  type: EvmChain
