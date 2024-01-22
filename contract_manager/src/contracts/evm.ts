@@ -269,6 +269,9 @@ export class WormholeEvmContract extends WormholeContract {
       from: address,
       gas: 100000000,
     });
+    // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
+    // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
+    // `0x2` to the transaction configuration parameters.
     const result = await transactionObject.send({
       from: address,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
