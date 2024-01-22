@@ -104,7 +104,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                     .log_msg("Pending transfer hash")
                     .await?
                 {
-                    tracing::info!("Updated provider uri: {:?}", r);
+                    tracing::info!("Updated provider uri: {:?}", receipt);
                 }
             }
         }
