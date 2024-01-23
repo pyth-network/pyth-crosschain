@@ -41,10 +41,11 @@ const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
 
 const GUARDIAN_RPC = process.env.GUARDIAN_RPC;
+const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL;
 
 async function run() {
   const provider = new AnchorProvider(
-    new Connection(getPythClusterApiUrl(CLUSTER), COMMITMENT),
+    new Connection(SOLANA_RPC_URL ?? getPythClusterApiUrl(CLUSTER), COMMITMENT),
     new NodeWallet(KEYPAIR),
     {
       commitment: COMMITMENT,
