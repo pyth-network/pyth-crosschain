@@ -1,5 +1,9 @@
 use {
     anchor_lang::AnchorSerialize,
+    libsecp256k1::{
+        PublicKey,
+        SecretKey,
+    },
     program_simulator::ProgramSimulator,
     pyth_solana_receiver::{
         instruction::Initialize,
@@ -30,6 +34,7 @@ use {
     },
     serde_wormhole::RawMessage,
     solana_program::{
+        keccak,
         pubkey::Pubkey,
         rent::Rent,
     },
@@ -42,6 +47,7 @@ use {
     wormhole_core_bridge_solana::{
         state::{
             EncodedVaa,
+            GuardianSet,
             Header,
             ProcessingStatus,
         },
@@ -52,6 +58,18 @@ use {
         Vaa,
     },
 };
+
+pub const NUM_GUARDIANS: u8 = 19;
+
+pub fn dummy_guardians() -> Vec<SecretKey> {
+    let mut result: Vec<SecretKey> = vec![];
+    for i in 0..NUM_GUARDIANS {
+        let mut secret_key_bytes = [0u8; 32];
+        secret_key_bytes[0] = i + 1;
+        result.push(SecretKey::parse(&secret_key_bytes).unwrap());
+    }
+    result
+}
 
 pub fn dummy_receiver_config(data_source: DataSource) -> Config {
     Config {
@@ -186,6 +204,23 @@ pub async fn setup_pyth_receiver(
 ) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", ID, None);
+    program_test.add_program("wormhole_core_bridge_solana", BRIDGE_ID, None);
+
+    let _guardian_set = GuardianSet {
+        index:           0,
+        keys:            dummy_guardians()
+            .iter()
+            .map(|x| {
+                let mut result: [u8; 20] = [0u8; 20];
+                result.copy_from_slice(
+                    &keccak::hashv(&[&PublicKey::from_secret_key(x).serialize()[1..]]).0[12..],
+                );
+                result
+            })
+            .collect::<Vec<[u8; 20]>>(),
+        creation_time:   0.into(),
+        expiration_time: 0.into(),
+    };
 
     let (merkle_tree_accumulator, merkle_price_updates) = dummy_price_updates(price_feed_messages);
     let data_source = dummy_data_source();
