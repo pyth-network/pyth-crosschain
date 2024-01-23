@@ -265,7 +265,8 @@ impl Pyth {
         {
             let vaa = hex::decode(&vaa).map_err(|_| InvalidHex)?;
             let vaa: wormhole_sdk::Vaa<&RawMessage> =
-                serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
+                serde_wormhole::from_slice(&vaa);
+            let vaa = vaa.map_err(|_| InvalidVaa)?;
 
 
             // Convert to local VAA type to catch API changes.
@@ -325,7 +326,7 @@ impl Pyth {
         // deserialize into an Action.
         let vaa = hex::decode(vaa).map_err(|_| InvalidPayload)?;
         let vaa: wormhole_sdk::Vaa<&RawMessage> =
-            serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
+            serde_wormhole::from_slice(&vaa).map_err(|_| InvalidPayload)?;
 
         // Deserialize and verify the action is destined for this chain.
         let instruction = GovernanceInstruction::deserialize(vaa.payload)?;
