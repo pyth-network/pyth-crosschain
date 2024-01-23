@@ -1102,7 +1102,7 @@ async fn test_accumulator_updates() {
     // Create a couple of test feeds.
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1]);
     let message = hex::encode(message);
 
     // Call the usual UpdatePriceFeed function.
