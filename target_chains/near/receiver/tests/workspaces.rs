@@ -24,10 +24,13 @@ use {
         accumulators::{
             merkle::MerkleTree,
             Accumulator,
-        }, hashers::keccak256_160::Keccak160, messages::{
+        },
+        hashers::keccak256_160::Keccak160,
+        messages::{
             Message,
             PriceFeedMessage,
-        }, wire::{
+        },
+        wire::{
             to_vec,
             v1::{
                 AccumulatorUpdateData,
@@ -38,7 +41,7 @@ use {
                 WormholePayload,
             },
             PrefixedVec,
-        }
+        },
     },
     serde_json::json,
     std::io::{
