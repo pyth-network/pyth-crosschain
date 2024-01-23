@@ -1,0 +1,27 @@
+name: Test Near Contract
+
+on:
+  pull_request:
+    paths:
+      - target_chains/near/**
+      - wormhole_attester/sdk/rust/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/near/**
+      - wormhole_attester/sdk/rust/**
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/near/receiver
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: ./workspace-test.sh
