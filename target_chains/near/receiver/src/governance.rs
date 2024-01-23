@@ -15,7 +15,8 @@ use {
         },
         Pyth,
         PythExt,
-    }, near_sdk::{
+    },
+    near_sdk::{
         borsh::{
             self,
             BorshDeserialize,
@@ -32,7 +33,11 @@ use {
         Gas,
         Promise,
         PromiseOrValue,
-    }, num_traits::FromPrimitive, serde_wormhole::RawMessage, strum::EnumDiscriminants, wormhole_sdk::Chain as WormholeChain
+    },
+    num_traits::FromPrimitive,
+    serde_wormhole::RawMessage,
+    strum::EnumDiscriminants,
+    wormhole_sdk::Chain as WormholeChain,
 };
 
 /// Magic Header for identifying Governance VAAs.
@@ -260,7 +265,7 @@ impl Pyth {
         {
             let vaa = hex::decode(&vaa).map_err(|_| InvalidHex)?;
             let vaa: wormhole_sdk::Vaa<&RawMessage> =
-            serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
+                serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
 
 
             // Convert to local VAA type to catch API changes.

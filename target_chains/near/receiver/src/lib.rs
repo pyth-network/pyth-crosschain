@@ -1,7 +1,9 @@
 //#![deny(warnings)]
 
 use {
-    error::Error, ext::ext_wormhole, near_sdk::{
+    error::Error,
+    ext::ext_wormhole,
+    near_sdk::{
         borsh::{
             self,
             BorshDeserialize,
@@ -24,10 +26,12 @@ use {
         PanicOnDefault,
         Promise,
         StorageUsage,
-    }, pyth_wormhole_attester_sdk::{
+    },
+    pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
         P2W_MAGIC,
-    }, pythnet_sdk::{
+    },
+    pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
         messages::Message,
@@ -41,16 +45,19 @@ use {
                 PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
             },
         },
-    }, serde_wormhole::RawMessage, state::{
+    },
+    serde_wormhole::RawMessage,
+    state::{
         Price,
         PriceFeed,
         PriceIdentifier,
         Source,
         Vaa,
-    }, std::io::{
+    },
+    std::io::{
         Cursor,
         Read,
-    }
+    },
 };
 
 pub mod error;
@@ -267,8 +274,7 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(&vaa).unwrap();
-        let decoded_vaa : wormhole_sdk::Vaa<&RawMessage> =
-            serde_wormhole::from_slice(&vaa).unwrap();
+        let decoded_vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
 
         // Attempt to deserialize the Payload based on header.
         let bytes = &mut Cursor::new(decoded_vaa.payload);
@@ -544,8 +550,7 @@ impl Pyth {
 impl Pyth {
     /// Verify a VAA source from a serialized VAA.
     fn verify_encoded_vaa_source(&self, vaa: &[u8]) -> Result<(), Error> {
-        let vaa_1 : wormhole_sdk::Vaa<&RawMessage> =
-            serde_wormhole::from_slice(vaa).unwrap();
+        let vaa_1: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
 
         // Convert to local VAA type to catch API changes.
         let vaa: Vaa<&RawMessage> = Vaa::from(vaa_1);
