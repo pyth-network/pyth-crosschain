@@ -1,9 +1,7 @@
 //#![deny(warnings)]
 
 use {
-    error::Error,
-    ext::ext_wormhole,
-    near_sdk::{
+    error::Error, ext::ext_wormhole, near_sdk::{
         borsh::{
             self,
             BorshDeserialize,
@@ -26,12 +24,10 @@ use {
         PanicOnDefault,
         Promise,
         StorageUsage,
-    },
-    pyth_wormhole_attester_sdk::{
+    }, pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
         P2W_MAGIC,
-    },
-    pythnet_sdk::{
+    }, pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
         messages::Message,
@@ -53,11 +49,10 @@ use {
         PriceIdentifier,
         Source,
         Vaa,
-    },
-    std::io::{
+    }, std::io::{
         Cursor,
         Read,
-    },
+    }
 };
 
 pub mod error;
