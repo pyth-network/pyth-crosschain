@@ -831,6 +831,7 @@ mod test {
                 merkle::MerkleTree,
                 Accumulator,
             },
+            gen::create_accumulator_message as create_accumulator_message_v1,
             messages::{
                 PriceFeedMessage,
                 TwapMessage,
@@ -1235,29 +1236,7 @@ mod test {
         updates: &[Message],
         corrupt_wormhole_message: bool,
     ) -> Binary {
-        let all_feeds_bytes: Vec<_> = all_feeds
-            .iter()
-            .map(|f| to_vec::<_, BigEndian>(f).unwrap())
-            .collect();
-        let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
-        let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
-        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
-        for update in updates {
-            let proof = tree
-                .prove(&to_vec::<_, BigEndian>(update).unwrap())
-                .unwrap();
-            price_updates.push(MerklePriceUpdate {
-                message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
-                proof,
-            });
-        }
-        create_accumulator_message_from_updates(
-            price_updates,
-            tree,
-            corrupt_wormhole_message,
-            default_emitter_addr(),
-            EMITTER_CHAIN,
-        )
+        create_accumulator_message_v1(all_feeds, updates, corrupt_wormhole_message).into()
     }
 
 
