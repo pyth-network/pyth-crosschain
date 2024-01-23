@@ -58,7 +58,7 @@ contract MockPyth is AbstractPyth {
                 priceFeeds[priceFeed.id] = priceFeed;
                 emit PriceFeedUpdate(
                     priceFeed.id,
-                    uint64(lastPublishTime),
+                    uint64(priceFeed.price.publishTime),
                     priceFeed.price.price,
                     priceFeed.price.conf
                 );
@@ -101,6 +101,12 @@ contract MockPyth is AbstractPyth {
                 uint publishTime = feeds[i].price.publishTime;
                 if (priceFeeds[feeds[i].id].price.publishTime < publishTime) {
                     priceFeeds[feeds[i].id] = feeds[i];
+                    emit PriceFeedUpdate(
+                        feeds[i].id,
+                        uint64(publishTime),
+                        feeds[i].price.price,
+                        feeds[i].price.conf
+                    );
                 }
 
                 if (feeds[i].id == priceIds[i]) {
