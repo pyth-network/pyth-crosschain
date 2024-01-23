@@ -24,13 +24,10 @@ use {
         accumulators::{
             merkle::MerkleTree,
             Accumulator,
-        },
-        hashers::keccak256_160::Keccak160,
-        messages::{
+        }, gen::create_accumulator_message, hashers::keccak256_160::Keccak160, messages::{
             Message,
             PriceFeedMessage,
-        },
-        wire::{
+        }, wire::{
             to_vec,
             v1::{
                 AccumulatorUpdateData,
@@ -41,14 +38,14 @@ use {
                 WormholePayload,
             },
             PrefixedVec,
-        },
+        }
     },
     serde_json::json,
     std::io::{
         Cursor,
         Write,
     },
-    wormhole::Chain as WormholeChain,
+    wormhole_sdk::Chain as WormholeChain,
 };
 
 async fn initialize_chain() -> (
@@ -112,9 +109,9 @@ async fn test_set_sources() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 1,
         payload: (),
         ..Default::default()
@@ -178,18 +175,18 @@ async fn test_set_governance_source() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 2,
         ..Default::default()
     };
 
     let vaa = {
-        let request_vaa = wormhole::Vaa {
-            emitter_chain: wormhole::Chain::Solana,
-            emitter_address: wormhole::Address([1; 32]),
+        let request_vaa = wormhole_sdk::Vaa {
+            emitter_chain: wormhole_sdk::Chain::Solana,
+            emitter_address: wormhole_sdk::Address([1; 32]),
             payload: (),
             sequence: 1,
             ..Default::default()
@@ -247,10 +244,10 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // An action from the new source should now be accepted.
-    let vaa = wormhole::Vaa {
+    let vaa = wormhole_sdk::Vaa {
         sequence: 3, // NOTE: Incremented Governance Sequence
-        emitter_chain: wormhole::Chain::Solana,
-        emitter_address: wormhole::Address([1; 32]),
+        emitter_chain: wormhole_sdk::Chain::Solana,
+        emitter_address: wormhole_sdk::Address([1; 32]),
         payload: (),
         ..Default::default()
     };
@@ -295,10 +292,10 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // But not from the old source.
-    let vaa = wormhole::Vaa {
+    let vaa = wormhole_sdk::Vaa {
         sequence: 4, // NOTE: Incremented Governance Sequence
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         ..Default::default()
     };
@@ -348,9 +345,9 @@ async fn test_stale_threshold() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a Price Attestation to the contract.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -440,9 +437,9 @@ async fn test_stale_threshold() {
 
     // Submit another Price Attestation to the contract with an even older timestamp. Which
     // should now fail due to the existing newer price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 2,
         payload: (),
         ..Default::default()
@@ -516,9 +513,9 @@ async fn test_stale_threshold() {
     );
 
     // Now we extend the staleness threshold with a Governance VAA.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 3,
         payload: (),
         ..Default::default()
@@ -586,9 +583,9 @@ async fn test_contract_fees() {
         .as_secs();
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -658,9 +655,9 @@ async fn test_contract_fees() {
     );
 
     // Attempt to update the price feed with a now too low deposit.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 2,
         payload: (),
         ..Default::default()
@@ -734,9 +731,9 @@ async fn test_same_governance_sequence_fails() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -798,9 +795,9 @@ async fn test_out_of_order_sequences_fail() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -839,9 +836,9 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 3.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 3,
         ..Default::default()
@@ -880,9 +877,9 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 2.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 2,
         ..Default::default()
@@ -926,9 +923,9 @@ async fn test_out_of_order_sequences_fail() {
 async fn test_governance_target_fails_if_not_near() {
     let (_, contract, _) = initialize_chain().await;
 
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -1000,9 +997,9 @@ async fn test_accumulator_updates() {
             root:      root_hash,
         }));
 
-        let vaa = wormhole::Vaa {
+        let vaa = wormhole_sdk::Vaa {
             emitter_chain: emitter_chain.into(),
-            emitter_address: wormhole::Address(emitter_address),
+            emitter_address: wormhole_sdk::Address(emitter_address),
             sequence: 2,
             payload: (),
             ..Default::default()
@@ -1024,37 +1021,37 @@ async fn test_accumulator_updates() {
         to_vec::<_, BigEndian>(&accumulator_update_data).unwrap()
     }
 
-    fn create_accumulator_message(all_feeds: &[Message], updates: &[Message]) -> Vec<u8> {
-        let all_feeds_bytes: Vec<_> = all_feeds
-            .iter()
-            .map(|f| to_vec::<_, BigEndian>(f).unwrap())
-            .collect();
-        let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
-        let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
-        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
-        for update in updates {
-            let proof = tree
-                .prove(&to_vec::<_, BigEndian>(update).unwrap())
-                .unwrap();
-            price_updates.push(MerklePriceUpdate {
-                message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
-                proof,
-            });
-        }
-        create_accumulator_message_from_updates(
-            price_updates,
-            tree,
-            [1; 32],
-            wormhole::Chain::Any.into(),
-        )
-    }
+    // fn create_accumulator_message(all_feeds: &[Message], updates: &[Message]) -> Vec<u8> {
+    //     let all_feeds_bytes: Vec<_> = all_feeds
+    //         .iter()
+    //         .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+    //         .collect();
+    //     let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
+    //     let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
+    //     let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+    //     for update in updates {
+    //         let proof = tree
+    //             .prove(&to_vec::<_, BigEndian>(update).unwrap())
+    //             .unwrap();
+    //         price_updates.push(MerklePriceUpdate {
+    //             message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
+    //             proof,
+    //         });
+    //     }
+    //     create_accumulator_message_from_updates(
+    //         price_updates,
+    //         tree,
+    //         [1; 32],
+    //         wormhole_sdk::Chain::Any.into(),
+    //     )
+    // }
 
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 1,
         payload: (),
         ..Default::default()
@@ -1102,7 +1099,7 @@ async fn test_accumulator_updates() {
     // Create a couple of test feeds.
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1]);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1], false);
     let message = hex::encode(message);
 
     // Call the usual UpdatePriceFeed function.
