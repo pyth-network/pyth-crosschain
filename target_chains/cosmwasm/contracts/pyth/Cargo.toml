@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 # IMPORTANT: if you want to build for injective or osmosis, enable injective default feature for injective
 # and osmosis default feature for osmosis
 # default=["injective"]
-# default=["osmosis"]
+default=["osmosis"]
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all init/handle/query exports
 library = []
@@ -40,6 +40,7 @@ cosmwasm-schema = "1.1.9"
 osmosis-std = "0.15.2"
 pyth-sdk-cw = { path = "../../sdk/rust" }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole"}
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }

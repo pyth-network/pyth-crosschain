@@ -34,10 +34,6 @@ use {
             ConfigInfo,
             PythDataSource,
         },
-        wormhole::{
-            ParsedVAA,
-            WormholeQueryMsg,
-        },
     },
     byteorder::BigEndian,
     cosmwasm_std::{
@@ -59,6 +55,10 @@ use {
         StdResult,
         WasmMsg,
         WasmQuery,
+    },
+    cw_wormhole::{
+        msg::QueryMsg as WormholeQueryMsg,
+        state::ParsedVAA,
     },
     pyth_sdk::{
         Identifier,
@@ -1095,28 +1095,28 @@ mod test {
     #[cfg(feature = "osmosis")]
     fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
         let mut info = mock_info("123", coins(100, "foo").as_slice());
-        let result = is_fee_sufficient(&deps, info.clone(), &data);
+        let result = is_fee_sufficient(deps, info.clone(), data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in base denom -> false
         info.funds = coins(50, "foo");
-        let result = is_fee_sufficient(&deps, info.clone(), &data);
+        let result = is_fee_sufficient(deps, info.clone(), data);
         assert_eq!(result, Ok(false));
 
         // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
         // a valid denom other than base denom with sufficient fee
         info.funds = coins(100, "uion");
-        let result = is_fee_sufficient(&deps, info.clone(), &data);
+        let result = is_fee_sufficient(deps, info.clone(), data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in valid denom -> false
         info.funds = coins(50, "uion");
-        let result = is_fee_sufficient(&deps, info.clone(), &data);
+        let result = is_fee_sufficient(deps, info.clone(), data);
         assert_eq!(result, Ok(false));
 
         // an invalid denom -> Err invalid fee denom
         info.funds = coins(100, "invalid_denom");
-        let result = is_fee_sufficient(&deps, info, &data);
+        let result = is_fee_sufficient(deps, info, data);
         assert_eq!(
             result,
             Err(PythContractError::InvalidFeeDenom {

@@ -1486,6 +1486,7 @@ dependencies = [
  "sha3 0.9.1",
  "terraswap",
  "thiserror",
+ "wormhole-cosmwasm",
 ]
 
 [[package]]
@@ -2643,6 +2644,22 @@ name = "windows_x86_64_msvc"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
+
+[[package]]
+name = "wormhole-cosmwasm"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "generic-array",
+ "hex",
+ "k256",
+ "schemars",
+ "serde",
+ "sha3 0.9.1",
+ "thiserror",
+]
 
 [[package]]
 name = "zeroize"
