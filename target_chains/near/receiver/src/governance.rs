@@ -15,7 +15,8 @@ use {
         },
         Pyth,
         PythExt,
-    }, near_sdk::{
+    },
+    near_sdk::{
         borsh::{
             self,
             BorshDeserialize,
@@ -32,15 +33,8 @@ use {
         Gas,
         Promise,
         PromiseOrValue,
-<<<<<<< HEAD
     },
-    num_traits::FromPrimitive,
-    serde_wormhole::RawMessage,
-    strum::EnumDiscriminants,
-    wormhole_sdk::Chain as WormholeChain,
-=======
-    }, num_traits::FromPrimitive, serde_wormhole::RawMessage, strum::EnumDiscriminants, wormhole_sdk::Chain as WormholeChain
->>>>>>> 574ed178 (Near)
+    num_traits::FromPrimitive, serde_wormhole::RawMessage, strum::EnumDiscriminants, wormhole_sdk::Chain as WormholeChain
 };
 
 /// Magic Header for identifying Governance VAAs.
