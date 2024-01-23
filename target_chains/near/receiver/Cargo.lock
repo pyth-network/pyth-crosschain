@@ -286,8 +286,18 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15bf3650200d8bffa99015595e10f1fbd17de07abbc25bb067da79e769939bfa"
 dependencies = [
- "borsh-derive",
+ "borsh-derive 0.9.3",
  "hashbrown 0.11.2",
+]
+
+[[package]]
+name = "borsh"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4114279215a005bc675e386011e594e1d9b800918cea18fcadadcce864a2046b"
+dependencies = [
+ "borsh-derive 0.10.3",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -296,8 +306,21 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6441c552f230375d18e3cc377677914d2ca2b0d36e52129fe15450a2dce46775"
 dependencies = [
- "borsh-derive-internal",
- "borsh-schema-derive-internal",
+ "borsh-derive-internal 0.9.3",
+ "borsh-schema-derive-internal 0.9.3",
+ "proc-macro-crate 0.1.5",
+ "proc-macro2",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "borsh-derive"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0754613691538d51f329cce9af41d7b7ca150bc973056f1156611489475f54f7"
+dependencies = [
+ "borsh-derive-internal 0.10.3",
+ "borsh-schema-derive-internal 0.10.3",
  "proc-macro-crate 0.1.5",
  "proc-macro2",
  "syn 1.0.107",
@@ -315,10 +338,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "borsh-derive-internal"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afb438156919598d2c7bad7e1c0adf3d26ed3840dbc010db1a882a65583ca2fb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.107",
+]
+
+[[package]]
 name = "borsh-schema-derive-internal"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdbd5696d8bfa21d53d9fe39a714a18538bad11492a42d066dbbc395fb1951c0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "borsh-schema-derive-internal"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "634205cc43f74a1b9046ef87c4540ebda95696ec0f315024860cad7c5b0f5ccd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1018,6 +1063,9 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+dependencies = [
+ "ahash",
+]
 
 [[package]]
 name = "heck"
@@ -1371,7 +1419,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "885db39b08518fa700b73fa2214e8adbbfba316ba82dd510f50519173eadaf73"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "schemars",
  "semver",
  "serde",
@@ -1383,7 +1431,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d258582a1878e6db67400b0504a5099db85718d22c2e07f747fe1706ae7150"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "serde",
 ]
 
@@ -1393,7 +1441,7 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d924011380de759c3dc6fdbcda37a19a5c061f56dab69d28a34ecee765e23e4"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "serde",
 ]
 
@@ -1424,7 +1472,7 @@ checksum = "1e75673d69fd7365508f3d32483669fe45b03bfb34e4d9363e90adae9dfb416c"
 dependencies = [
  "arrayref",
  "blake2",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "c2-chacha",
  "curve25519-dalek",
@@ -1450,7 +1498,7 @@ checksum = "7754612b47737d277fb818e9fdbb1406e90f9e57151c55c3584d714421976cb6"
 dependencies = [
  "arrayref",
  "blake2",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "c2-chacha",
  "curve25519-dalek",
@@ -1473,7 +1521,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d1335ffce1476da6516dcd22b26cece1a495fc725c0e8fec1879073752ac068d"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "lazy_static",
  "log",
  "near-chain-configs",
@@ -1508,7 +1556,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ad1a9a1640539c81f065425c31bffcfbf6b31ef1aeaade59ce905f5df6ac860"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "byteorder",
  "bytesize",
  "chrono",
@@ -1537,7 +1585,7 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97670b302dce15f09bba50f24c67aa08130fd01528cc61d4415892401e88e974"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "byteorder",
  "bytesize",
  "cfg-if 1.0.0",
@@ -1568,7 +1616,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91d508f0fc340f6461e4e256417685720d3c4c00bb5a939b105160e49137caba"
 dependencies = [
  "base64 0.11.0",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "derive_more",
  "near-account-id 0.14.0",
@@ -1585,7 +1633,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7929e19d862221949734c4a0063a8f55e7069de3a2ebc2d4f4c13497a5e953cb"
 dependencies = [
  "base64 0.13.1",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "derive_more",
  "near-account-id 0.15.0",
@@ -1662,7 +1710,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15eb3de2defe3626260cc209a6cdb985c6b27b0bd4619fad97dcfae002c3c5bd"
 dependencies = [
  "base64 0.13.1",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "near-abi",
  "near-crypto 0.14.0",
@@ -1702,7 +1750,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0da466a30f0446639cbd788c30865086fac3e8dcb07a79e51d2b0775ed4261e"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "near-account-id 0.14.0",
  "near-rpc-error-macro 0.14.0",
  "serde",
@@ -1714,7 +1762,7 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5591c9c8afa83a040cb5c3f29bc52b2efae2c32d4bcaee1bba723738da1a5cf6"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "near-account-id 0.15.0",
  "near-rpc-error-macro 0.15.0",
  "serde",
@@ -1728,7 +1776,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81b534828419bacbf1f7b11ef7b00420f248c548c485d3f0cfda8bb6931152f2"
 dependencies = [
  "base64 0.13.1",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "byteorder",
  "near-account-id 0.14.0",
@@ -2136,12 +2184,12 @@ dependencies = [
  "pythnet-sdk",
  "serde",
  "serde_json",
- "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole)",
+ "serde_wormhole",
  "strum",
  "thiserror",
  "tokio",
  "workspaces",
- "wormhole-core",
+ "wormhole-sdk",
 ]
 
 [[package]]
@@ -2150,8 +2198,8 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
 dependencies = [
- "borsh",
- "borsh-derive",
+ "borsh 0.9.3",
+ "borsh-derive 0.9.3",
  "hex 0.4.3",
  "schemars",
  "serde",
@@ -2163,8 +2211,8 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00bf2540203ca3c7a5712fdb8b5897534b7f6a0b6e7b0923ff00466c5f9efcb3"
 dependencies = [
- "borsh",
- "borsh-derive",
+ "borsh 0.9.3",
+ "borsh-derive 0.9.3",
  "hex 0.4.3",
  "schemars",
  "serde",
@@ -2184,16 +2232,18 @@ name = "pythnet-sdk"
 version = "2.0.0"
 dependencies = [
  "bincode",
- "borsh",
+ "borsh 0.10.3",
  "bytemuck",
  "byteorder",
  "fast-math",
  "hex 0.4.3",
  "rustc_version",
  "serde",
+ "serde_wormhole",
  "sha3",
  "slow_primes",
  "thiserror",
+ "wormhole-sdk",
 ]
 
 [[package]]
@@ -2530,22 +2580,31 @@ checksum = "58bc9567378fc7690d6b2addae4e60ac2eeea07becb2c64b9f218b53865cba2a"
 
 [[package]]
 name = "serde"
-version = "1.0.152"
+version = "1.0.193"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb7d1f0d3021d347a83e556fc4683dea2ea09d87bccdf88ff5c12545d89d5efb"
+checksum = "25dd9975e68d0cb5aa1120c288333fc98731bd1dd12f561e468ea4728c042b89"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
-name = "serde_derive"
-version = "1.0.152"
+name = "serde_bytes"
+version = "0.11.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af487d118eecd09402d70a5d72551860e788df87b464af30e5ea6a38c75c541e"
+checksum = "8b8497c313fd43ab992087548117643f6fcd935cbf36f176ffda0aacf9591734"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.193"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43576ca501357b9b071ac53cdc7da8ef0cbd9493d8df094cd821777ea6e894d3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.107",
+ "syn 2.0.38",
 ]
 
 [[package]]
@@ -2596,20 +2655,12 @@ dependencies = [
 [[package]]
 name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?rev=4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a#4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a"
+source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
 dependencies = [
+ "base64 0.13.1",
  "itoa",
  "serde",
- "thiserror",
-]
-
-[[package]]
-name = "serde_wormhole"
-version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a"
-dependencies = [
- "itoa",
- "serde",
+ "serde_bytes",
  "thiserror",
 ]
 
@@ -3366,7 +3417,7 @@ dependencies = [
  "async-process",
  "async-trait",
  "base64 0.13.1",
- "borsh",
+ "borsh 0.9.3",
  "bs58",
  "chrono",
  "dirs 3.0.2",
@@ -3391,15 +3442,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "wormhole-core"
+name = "wormhole-sdk"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a"
+source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
 dependencies = [
  "anyhow",
  "bstr",
  "schemars",
  "serde",
- "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?rev=4ddeca4dbdba50e2cbf6e603242f8c75d9246e2a)",
+ "serde_wormhole",
  "sha3",
  "thiserror",
 ]
@@ -3446,7 +3497,7 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71e61de68ede9ffdd69c01664f65a178c5188b73f78faa21f0936016a888ff7c"
 dependencies = [
- "borsh",
+ "borsh 0.9.3",
  "byteorder",
  "crunchy",
  "lazy_static",

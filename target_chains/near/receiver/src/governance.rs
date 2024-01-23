@@ -15,8 +15,7 @@ use {
         },
         Pyth,
         PythExt,
-    },
-    near_sdk::{
+    }, near_sdk::{
         borsh::{
             self,
             BorshDeserialize,
@@ -33,10 +32,7 @@ use {
         Gas,
         Promise,
         PromiseOrValue,
-    },
-    num_traits::FromPrimitive,
-    strum::EnumDiscriminants,
-    wormhole::Chain as WormholeChain,
+    }, num_traits::FromPrimitive, serde_wormhole::RawMessage, strum::EnumDiscriminants, wormhole_sdk::Chain as WormholeChain
 };
 
 /// Magic Header for identifying Governance VAAs.
@@ -263,9 +259,9 @@ impl Pyth {
         // signatures. Avoids a cross-contract call early.
         {
             let vaa = hex::decode(&vaa).map_err(|_| InvalidHex)?;
-            let vaa = serde_wormhole::from_slice_with_payload::<wormhole::Vaa<()>>(&vaa);
-            let vaa = vaa.map_err(|_| InvalidVaa)?;
-            let (vaa, _rest) = vaa;
+            let vaa: wormhole_sdk::Vaa<&RawMessage> =
+            serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
+
 
             // Convert to local VAA type to catch API changes.
             let vaa = Vaa::from(vaa);
@@ -323,11 +319,11 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(vaa).map_err(|_| InvalidPayload)?;
-        let (vaa, rest): (wormhole::Vaa<()>, _) =
-            serde_wormhole::from_slice_with_payload(&vaa).map_err(|_| InvalidPayload)?;
+        let vaa: wormhole_sdk::Vaa<&RawMessage> =
+            serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
 
         // Deserialize and verify the action is destined for this chain.
-        let instruction = GovernanceInstruction::deserialize(rest)?;
+        let instruction = GovernanceInstruction::deserialize(vaa.payload)?;
 
         ensure!(
             instruction.target == Chain::from(WormholeChain::Near)
@@ -345,7 +341,7 @@ impl Pyth {
 
         self.executed_governance_vaa = vaa.sequence;
 
-        match GovernanceInstruction::deserialize(rest)?.action {
+        match GovernanceInstruction::deserialize(vaa.payload)?.action {
             SetDataSources { data_sources } => self.set_sources(data_sources),
             SetFee { base, expo } => self.set_update_fee(base, expo)?,
             SetValidPeriod { valid_seconds } => self.set_valid_period(valid_seconds),
@@ -428,15 +424,15 @@ impl Pyth {
         ensure!(is_promise_success(), VaaVerificationFailed);
 
         let vaa = hex::decode(claim_vaa).map_err(|_| InvalidPayload)?;
-        let (vaa, rest): (wormhole::Vaa<()>, _) =
-            serde_wormhole::from_slice_with_payload(&vaa).expect("Failed to deserialize VAA");
+        let vaa: wormhole_sdk::Vaa<&RawMessage> =
+            serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
 
         // Convert to local VAA type to catch API changes.
         let vaa = Vaa::from(vaa);
 
         // Parse GovernanceInstruction from Payload.
         let instruction =
-            GovernanceInstruction::deserialize(rest).expect("Failed to deserialize action");
+            GovernanceInstruction::deserialize(vaa.payload).expect("Failed to deserialize action");
 
         // Execute the embedded VAA action.
         match instruction.action {
@@ -722,9 +718,9 @@ mod tests {
 
             GovernanceActionId::AuthorizeGovernanceDataSourceTransfer => {
                 let vaa = {
-                    let vaa = wormhole::Vaa {
-                        emitter_chain: wormhole::Chain::Any,
-                        emitter_address: wormhole::Address([0; 32]),
+                    let vaa = wormhole_sdk::Vaa {
+                        emitter_chain: wormhole_sdk::Chain::Any,
+                        emitter_address: wormhole_sdk::Address([0; 32]),
                         sequence: 1,
                         payload: (),
                         ..Default::default()
