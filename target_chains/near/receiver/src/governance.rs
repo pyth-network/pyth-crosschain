@@ -265,9 +265,7 @@ impl Pyth {
         {
             let vaa = hex::decode(&vaa).map_err(|_| InvalidHex)?;
             let vaa: wormhole_sdk::Vaa<&RawMessage> =
-                serde_wormhole::from_slice(&vaa);
-            let vaa = vaa.map_err(|_| InvalidVaa)?;
-
+                serde_wormhole::from_slice(&vaa).map_err(|_| InvalidVaa)?;
 
             // Convert to local VAA type to catch API changes.
             let vaa = Vaa::from(vaa);
