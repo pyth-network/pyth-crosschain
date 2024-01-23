@@ -274,10 +274,10 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(&vaa).unwrap();
-        let decoded_vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+        let vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
 
         // Attempt to deserialize the Payload based on header.
-        let bytes = &mut Cursor::new(decoded_vaa.payload);
+        let bytes = &mut Cursor::new(vaa.payload);
         let mut header = [0u8; 4];
         bytes.clone().read_exact(&mut header).unwrap();
 
@@ -550,10 +550,10 @@ impl Pyth {
 impl Pyth {
     /// Verify a VAA source from a serialized VAA.
     fn verify_encoded_vaa_source(&self, vaa: &[u8]) -> Result<(), Error> {
-        let vaa_1: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
+        let vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
 
         // Convert to local VAA type to catch API changes.
-        let vaa: Vaa<&RawMessage> = Vaa::from(vaa_1);
+        let vaa: Vaa<&RawMessage> = Vaa::from(vaa);
 
         if !self.sources.contains(&Source {
             emitter: vaa.emitter_address,
