@@ -24,7 +24,7 @@ use {
         accumulators::{
             merkle::MerkleTree,
             Accumulator,
-        }, gen::create_accumulator_message, hashers::keccak256_160::Keccak160, messages::{
+        }, hashers::keccak256_160::Keccak160, messages::{
             Message,
             PriceFeedMessage,
         }, wire::{
@@ -1021,30 +1021,30 @@ async fn test_accumulator_updates() {
         to_vec::<_, BigEndian>(&accumulator_update_data).unwrap()
     }
 
-    // fn create_accumulator_message(all_feeds: &[Message], updates: &[Message]) -> Vec<u8> {
-    //     let all_feeds_bytes: Vec<_> = all_feeds
-    //         .iter()
-    //         .map(|f| to_vec::<_, BigEndian>(f).unwrap())
-    //         .collect();
-    //     let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
-    //     let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
-    //     let mut price_updates: Vec<MerklePriceUpdate> = vec![];
-    //     for update in updates {
-    //         let proof = tree
-    //             .prove(&to_vec::<_, BigEndian>(update).unwrap())
-    //             .unwrap();
-    //         price_updates.push(MerklePriceUpdate {
-    //             message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
-    //             proof,
-    //         });
-    //     }
-    //     create_accumulator_message_from_updates(
-    //         price_updates,
-    //         tree,
-    //         [1; 32],
-    //         wormhole_sdk::Chain::Any.into(),
-    //     )
-    // }
+    fn create_accumulator_message(all_feeds: &[Message], updates: &[Message]) -> Vec<u8> {
+        let all_feeds_bytes: Vec<_> = all_feeds
+            .iter()
+            .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+            .collect();
+        let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
+        let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+        for update in updates {
+            let proof = tree
+                .prove(&to_vec::<_, BigEndian>(update).unwrap())
+                .unwrap();
+            price_updates.push(MerklePriceUpdate {
+                message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
+                proof,
+            });
+        }
+        create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            [1; 32],
+            wormhole_sdk::Chain::Any.into(),
+        )
+    }
 
     let (_, contract, _) = initialize_chain().await;
 
