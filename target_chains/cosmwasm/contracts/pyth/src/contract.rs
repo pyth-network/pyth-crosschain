@@ -938,7 +938,7 @@ mod test {
     }
 
     fn create_batch_price_update_msg(
-        emitter_address: &[u8],
+        emitter_address: [u8; 32],
         emitter_chain: u16,
         attestations: Vec<PriceAttestation>,
     ) -> Binary {
@@ -946,22 +946,19 @@ mod test {
             price_attestations: attestations,
         };
 
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = emitter_address.to_vec();
-        vaa.emitter_chain = emitter_chain;
-        vaa.payload = batch_attestation.serialize().unwrap();
-
-        to_binary(&vaa).unwrap()
+        let vaa = create_vaa_from_payload(
+            &batch_attestation.serialize().unwrap(),
+            emitter_address,
+            emitter_chain,
+            0,
+        );
+        serde_wormhole::to_vec(&vaa).unwrap().into()
     }
 
     fn create_batch_price_update_msg_from_attestations(
         attestations: Vec<PriceAttestation>,
     ) -> Binary {
-        create_batch_price_update_msg(
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            attestations,
-        )
+        create_batch_price_update_msg(default_emitter_addr(), EMITTER_CHAIN, attestations)
     }
 
 
@@ -1014,7 +1011,7 @@ mod test {
 
     fn apply_price_update(
         config_info: &ConfigInfo,
-        emitter_address: &[u8],
+        emitter_address: [u8; 32],
         emitter_chain: u16,
         attestations: Vec<PriceAttestation>,
     ) -> StdResult<(usize, Vec<PriceFeed>)> {
@@ -1170,7 +1167,7 @@ mod test {
     fn test_parse_batch_attestation_empty_array() {
         let (num_attestations, new_attestations) = apply_price_update(
             &default_config_info(),
-            default_emitter_addr().as_slice(),
+            default_emitter_addr(),
             EMITTER_CHAIN,
             vec![],
         )
@@ -1786,7 +1783,7 @@ mod test {
     fn test_verify_vaa_sender_ok() {
         let result = apply_price_update(
             &default_config_info(),
-            default_emitter_addr().as_slice(),
+            default_emitter_addr(),
             EMITTER_CHAIN,
             vec![PriceAttestation::default()],
         );
@@ -1795,10 +1792,10 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address = [17, 23, 14];
+        let emitter_address: [u8; 32] = [17; 32];
         let result = apply_price_update(
             &default_config_info(),
-            emitter_address.as_slice(),
+            emitter_address,
             EMITTER_CHAIN,
             vec![PriceAttestation::default()],
         );
@@ -1809,7 +1806,7 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
         let result = apply_price_update(
             &default_config_info(),
-            default_emitter_addr().as_slice(),
+            default_emitter_addr(),
             EMITTER_CHAIN + 1,
             vec![PriceAttestation::default()],
         );
@@ -2119,7 +2116,7 @@ mod test {
         ConfigInfo {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
-                emitter:  Binary(vec![1u8, 2u8]),
+                emitter:  Binary(default_governance_addr().to_vec()),
                 chain_id: 3,
             },
             governance_sequence_number: 4,
@@ -2203,32 +2200,35 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_success() {
+        let emitter_2 = [2u8; 32];
+
         let source_2 = PythDataSource {
-            emitter:  Binary::from([2u8; 32]),
+            emitter:  Binary::from(emitter_2),
             chain_id: 4,
         };
 
         let test_config = governance_test_config();
+
+        let claim_vaa = create_vaa_from_payload(
+            &GovernanceInstruction {
+                module:          Target,
+                target_chain_id: test_config.chain_id,
+                action:          RequestGovernanceDataSourceTransfer {
+                    governance_data_source_index: 1,
+                },
+            }
+            .serialize()
+            .unwrap(),
+            emitter_2,
+            source_2.chain_id,
+            12,
+        );
+
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: test_config.chain_id,
             action:          AuthorizeGovernanceDataSourceTransfer {
-                claim_vaa: to_binary(&ParsedVAA {
-                    emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.chain_id,
-                    sequence: 12,
-                    payload: GovernanceInstruction {
-                        module:          Target,
-                        target_chain_id: test_config.chain_id,
-                        action:          RequestGovernanceDataSourceTransfer {
-                            governance_data_source_index: 1,
-                        },
-                    }
-                    .serialize()
-                    .unwrap(),
-                    ..create_zero_vaa()
-                })
-                .unwrap(),
+                claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
 
@@ -2241,6 +2241,7 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_source_index() {
+        let emitter_2 = [2u8; 32];
         let source_2 = PythDataSource {
             emitter:  Binary::from([2u8; 32]),
             chain_id: 4,
@@ -2248,26 +2249,27 @@ mod test {
 
         let mut test_config = governance_test_config();
         test_config.governance_source_index = 10;
+
+        let claim_vaa = create_vaa_from_payload(
+            &GovernanceInstruction {
+                module:          Target,
+                target_chain_id: test_config.chain_id,
+                action:          RequestGovernanceDataSourceTransfer {
+                    governance_data_source_index: 10,
+                },
+            }
+            .serialize()
+            .unwrap(),
+            emitter_2,
+            source_2.chain_id,
+            12,
+        );
+
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: test_config.chain_id,
             action:          AuthorizeGovernanceDataSourceTransfer {
-                claim_vaa: to_binary(&ParsedVAA {
-                    emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.chain_id,
-                    sequence: 12,
-                    payload: GovernanceInstruction {
-                        module:          Target,
-                        target_chain_id: test_config.chain_id,
-                        action:          RequestGovernanceDataSourceTransfer {
-                            governance_data_source_index: 10,
-                        },
-                    }
-                    .serialize()
-                    .unwrap(),
-                    ..create_zero_vaa()
-                })
-                .unwrap(),
+                claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
 
@@ -2280,32 +2282,34 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_target_chain() {
+        let emitter_2 = [2u8; 32];
         let source_2 = PythDataSource {
-            emitter:  Binary::from([2u8; 32]),
+            emitter:  Binary::from(emitter_2),
             chain_id: 4,
         };
 
         let test_config = governance_test_config();
+
+        let claim_vaa = create_vaa_from_payload(
+            &GovernanceInstruction {
+                module:          Target,
+                target_chain_id: test_config.chain_id + 1,
+                action:          RequestGovernanceDataSourceTransfer {
+                    governance_data_source_index: 11,
+                },
+            }
+            .serialize()
+            .unwrap(),
+            emitter_2,
+            source_2.chain_id,
+            12,
+        );
+
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: test_config.chain_id,
             action:          AuthorizeGovernanceDataSourceTransfer {
-                claim_vaa: to_binary(&ParsedVAA {
-                    emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.chain_id,
-                    sequence: 12,
-                    payload: GovernanceInstruction {
-                        module:          Target,
-                        target_chain_id: test_config.chain_id + 1,
-                        action:          RequestGovernanceDataSourceTransfer {
-                            governance_data_source_index: 11,
-                        },
-                    }
-                    .serialize()
-                    .unwrap(),
-                    ..create_zero_vaa()
-                })
-                .unwrap(),
+                claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
 
