@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { getWormholeConfig } from "./configs";
 import {
   CosmWasmChain,
-  CosmWasmContract,
+  CosmWasmPriceFeedContract,
   DefaultStore,
   toPrivateKey,
   WormholeCosmWasmContract,
@@ -47,7 +47,7 @@ async function run() {
     throw new Error(`Chain ${argv.chain} not found or not a CosmWasmChain`);
   }
   const privateKey = toPrivateKey(argv["private-key"]);
-  const storeCodeRes = await CosmWasmContract.storeCode(
+  const storeCodeRes = await CosmWasmPriceFeedContract.storeCode(
     chain,
     privateKey,
     wasmFilePath

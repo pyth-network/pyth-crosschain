@@ -4,7 +4,7 @@ import {
   DefaultStore,
   getDefaultDeploymentConfig,
   SuiChain,
-  SuiContract,
+  SuiPriceFeedContract,
 } from "contract_manager";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
@@ -49,8 +49,8 @@ const OPTIONS = {
   },
 } as const;
 
-function getContract(contractId: string): SuiContract {
-  const contract = DefaultStore.contracts[contractId] as SuiContract;
+function getContract(contractId: string): SuiPriceFeedContract {
+  const contract = DefaultStore.contracts[contractId] as SuiPriceFeedContract;
   if (!contract) {
     throw new Error(`Contract ${contractId} not found`);
   }
@@ -58,7 +58,7 @@ function getContract(contractId: string): SuiContract {
 }
 
 function getPriceService(
-  contract: SuiContract,
+  contract: SuiPriceFeedContract,
   endpointOverride: string | undefined
 ): PriceServiceConnection {
   const defaultEndpoint = contract.getChain().isMainnet()

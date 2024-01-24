@@ -1,5 +1,5 @@
 const {
-  EvmContract,
+  EvmPriceFeedContract,
   DefaultStore,
   Store,
   getDefaultDeploymentConfig,
@@ -47,7 +47,7 @@ function getDefaultConfig(_chainName) {
 }
 function saveConfig(chainName, address) {
   const chain = DefaultStore.chains[chainName];
-  const contract = new EvmContract(chain, address);
+  const contract = new EvmPriceFeedContract(chain, address);
   DefaultStore.contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
   console.log("Added the following to your evm contract configs");

@@ -15,7 +15,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   private client: SuiPythClient;
 
   /**
-   * Given the ids of the pyth state and wormhole state, create a new SuiContract
+   * Given the ids of the pyth state and wormhole state, create a new SuiPriceFeedContract
    * The package ids are derived based on the state ids
    *
    * @param chain the chain which this contract is deployed on
