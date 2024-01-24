@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/cosmwasm/tools
+        working-directory: target_chains/cosmwasm/deploy-scripts
     steps:
       - uses: actions/checkout@v2
       - name: Setup tool
