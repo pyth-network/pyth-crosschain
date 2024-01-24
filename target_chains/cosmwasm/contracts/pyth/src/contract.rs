@@ -921,22 +921,6 @@ mod test {
         }
     }
 
-    fn create_zero_vaa() -> ParsedVAA {
-        ParsedVAA {
-            version:            0,
-            guardian_set_index: 0,
-            timestamp:          0,
-            nonce:              0,
-            len_signers:        0,
-            emitter_chain:      0,
-            emitter_address:    vec![],
-            sequence:           0,
-            consistency_level:  0,
-            payload:            vec![],
-            hash:               vec![],
-        }
-    }
-
     fn create_batch_price_update_msg(
         emitter_address: [u8; 32],
         emitter_chain: u16,
