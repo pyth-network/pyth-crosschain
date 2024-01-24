@@ -1,14 +1,16 @@
 name: Release Pyth Cosmwasm Contract
 
-on: pull_request
-
+on:
+  push:
+    tags:
+      - pyth-cosmwasm-contract-v*
 jobs:
   release-contract:
     name: Build and Release cosmwasm contract
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/cosmwasm/deploy-scripts
+        working-directory: target_chains/cosmwasm/tools
     steps:
       - uses: actions/checkout@v2
       - name: Setup tool
@@ -16,9 +18,20 @@ jobs:
       - name: Build generic cosmwasm contract
         run: |
           npm run build-contract -- --cosmwasm
+          mv ../artifacts ../cosmwasm
+          zip -r cosmwasm.zip ../cosmwasm
       - name: Build injective cosmwasm contract
         run: |
           npm run build-contract -- --injective
+          mv ../artifacts ../injective
+          zip -r injective.zip ../injective
       - name: Build osmosis cosmwasm contract
         run: |
           npm run build-contract -- --osmosis
+          mv ../artifacts ../osmosis
+          zip -r osmosis.zip ../osmosis
+
+      - name: Set env
+        run: |
+          PREFIX="refs/tags/pyth-cosmwasm-contract-"
+          echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
