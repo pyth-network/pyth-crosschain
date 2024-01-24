@@ -2653,7 +2653,7 @@ dependencies = [
 [[package]]
 name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.23.37#846c2e9c9dce18a48745e79ba2ee7eaa5acaf1f4"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -3442,7 +3442,7 @@ dependencies = [
 [[package]]
 name = "wormhole-sdk"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.23.37#846c2e9c9dce18a48745e79ba2ee7eaa5acaf1f4"
 dependencies = [
  "anyhow",
  "bstr",
