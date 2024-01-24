@@ -841,6 +841,8 @@ mod test {
                 create_vaa_from_payload,
                 default_emitter_addr,
                 default_governance_addr,
+                default_new_governance_addr,
+                default_wrong_emitter_addr,
                 EMITTER_CHAIN,
             },
             wire::{
@@ -1229,7 +1231,7 @@ mod test {
 
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address: [u8; 32] = [3; 32];
+        let emitter_address: [u8; 32] = default_wrong_emitter_addr();
         test_accumulator_wrong_source(emitter_address, EMITTER_CHAIN);
     }
 
@@ -1713,7 +1715,7 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address: [u8; 32] = [17; 32];
+        let emitter_address: [u8; 32] = default_wrong_emitter_addr();
         let result = apply_price_update(
             &default_config_info(),
             emitter_address,
@@ -2071,7 +2073,7 @@ mod test {
 
         // Wrong emitter address
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.emitter_address = Address([3u8; 32]);
+        vaa_copy.emitter_address = Address(default_wrong_emitter_addr());
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // wrong source chain
@@ -2121,10 +2123,8 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_success() {
-        let emitter_2 = [2u8; 32];
-
         let source_2 = PythDataSource {
-            emitter:  Binary::from(emitter_2),
+            emitter:  Binary::from(default_new_governance_addr()),
             chain_id: 4,
         };
 
@@ -2140,7 +2140,7 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            emitter_2,
+            default_new_governance_addr(),
             source_2.chain_id,
             12,
         );
@@ -2162,9 +2162,8 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_source_index() {
-        let emitter_2 = [2u8; 32];
         let source_2 = PythDataSource {
-            emitter:  Binary::from([2u8; 32]),
+            emitter:  Binary::from(default_new_governance_addr()),
             chain_id: 4,
         };
 
@@ -2181,7 +2180,7 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            emitter_2,
+            default_new_governance_addr(),
             source_2.chain_id,
             12,
         );
@@ -2203,9 +2202,8 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_target_chain() {
-        let emitter_2 = [2u8; 32];
         let source_2 = PythDataSource {
-            emitter:  Binary::from(emitter_2),
+            emitter:  Binary::from(default_new_governance_addr()),
             chain_id: 4,
         };
 
@@ -2221,7 +2219,7 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            emitter_2,
+            default_new_governance_addr(),
             source_2.chain_id,
             12,
         );

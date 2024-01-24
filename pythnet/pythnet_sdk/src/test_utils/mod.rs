@@ -47,6 +47,10 @@ pub fn default_new_governance_addr() -> [u8; 32] {
     [3u8; 32]
 }
 
+pub fn default_wrong_emitter_addr() -> [u8; 32] {
+    [4u8; 32]
+}
+
 pub fn create_accumulator_message(
     all_feeds: &[Message],
     updates: &[Message],
