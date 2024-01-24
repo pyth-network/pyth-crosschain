@@ -118,13 +118,16 @@ export const RECEIVER_CHAINS = {
   blast_s2_testnet: 50047,
   hedera_testnet: 50048,
   filecoin_calibration: 50049, // Filecoin testnet
+  lightlink_pegasus_testnet: 50050,
+  sei_evm_devnet: 50051,
+  fantom_sonic_testnet: 50052,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
 // value and that is an expected behavior.
 export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
 export declare type ChainName = keyof typeof CHAINS;
-export declare type ChainId = typeof CHAINS[ChainName];
+export declare type ChainId = (typeof CHAINS)[ChainName];
 
 export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
