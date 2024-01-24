@@ -45,3 +45,4 @@ wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole", t
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }
 serde_json = "1.0"
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
