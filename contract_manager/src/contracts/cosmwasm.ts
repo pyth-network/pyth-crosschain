@@ -11,7 +11,7 @@ import { Coin } from "@cosmjs/stargate";
 import { DataSource } from "xc_admin_common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import {
-  Contract,
+  PriceFeedContract,
   getDefaultDeploymentConfig,
   PrivateKey,
   TxResult,
@@ -89,7 +89,8 @@ export class WormholeCosmWasmContract extends WormholeContract {
   }
 }
 
-export class CosmWasmContract extends Contract {
+export class CosmWasmPriceFeedContract extends PriceFeedContract {
+  static type = "CosmWasmPriceFeedContract";
   async getDataSources(): Promise<DataSource[]> {
     const config = await this.getConfig();
     return config.config_v1.data_sources.map(
@@ -112,8 +113,6 @@ export class CosmWasmContract extends Contract {
     };
   }
 
-  static type = "CosmWasmContract";
-
   constructor(public chain: CosmWasmChain, public address: string) {
     super();
   }
@@ -121,15 +120,16 @@ export class CosmWasmContract extends Contract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; address: string }
-  ): CosmWasmContract {
-    if (parsed.type !== CosmWasmContract.type) throw new Error("Invalid type");
+  ): CosmWasmPriceFeedContract {
+    if (parsed.type !== CosmWasmPriceFeedContract.type)
+      throw new Error("Invalid type");
     if (!(chain instanceof CosmWasmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new CosmWasmContract(chain, parsed.address);
+    return new CosmWasmPriceFeedContract(chain, parsed.address);
   }
 
   getType(): string {
-    return CosmWasmContract.type;
+    return CosmWasmPriceFeedContract.type;
   }
 
   /**
@@ -161,7 +161,7 @@ export class CosmWasmContract extends Contract {
     codeId: number,
     config: DeploymentConfig,
     privateKey: PrivateKey
-  ): Promise<CosmWasmContract> {
+  ): Promise<CosmWasmPriceFeedContract> {
     const executor = await chain.getExecutor(privateKey);
     const result = await executor.instantiateContract({
       codeId: codeId,
@@ -172,7 +172,7 @@ export class CosmWasmContract extends Contract {
       newAdminAddr: result.contractAddr,
       contractAddr: result.contractAddr,
     });
-    return new CosmWasmContract(chain, result.contractAddr);
+    return new CosmWasmPriceFeedContract(chain, result.contractAddr);
   }
 
   getId(): string {
@@ -183,7 +183,7 @@ export class CosmWasmContract extends Contract {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: CosmWasmContract.type,
+      type: CosmWasmPriceFeedContract.type,
     };
   }
 

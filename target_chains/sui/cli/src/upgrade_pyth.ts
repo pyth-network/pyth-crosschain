@@ -6,7 +6,7 @@ import {
   TransactionBlock,
 } from "@mysten/sui.js";
 import { execSync } from "child_process";
-import { SuiContract } from "contract_manager";
+import { SuiPriceFeedContract } from "contract_manager";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -33,7 +33,7 @@ export async function upgradePyth(
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
-  contract: SuiContract
+  contract: SuiPriceFeedContract
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
 
@@ -78,7 +78,7 @@ export async function upgradePyth(
 export async function migratePyth(
   signer: RawSigner,
   signedUpgradeVaa: Buffer,
-  contract: SuiContract,
+  contract: SuiPriceFeedContract,
   pythPackageOld: string
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);

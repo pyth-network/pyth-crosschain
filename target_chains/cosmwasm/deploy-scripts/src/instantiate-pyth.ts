@@ -4,7 +4,7 @@ import { sha256 } from "@cosmjs/crypto";
 import { getPythConfig } from "./configs";
 import {
   CosmWasmChain,
-  CosmWasmContract,
+  CosmWasmPriceFeedContract,
   DefaultStore,
   Store,
   toPrivateKey,
@@ -96,7 +96,7 @@ async function run() {
   });
   console.log(`Contract admin set to ${address}`);
 
-  const contract = new CosmWasmContract(chain, address);
+  const contract = new CosmWasmPriceFeedContract(chain, address);
   DefaultStore.contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
   console.log("Added the following to your CosmWasm contracts configs");

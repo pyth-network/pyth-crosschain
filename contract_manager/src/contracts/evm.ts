@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { Contract, PrivateKey } from "../base";
+import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
+import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
@@ -281,8 +282,71 @@ export class WormholeEvmContract extends WormholeContract {
   }
 }
 
-export class EvmContract extends Contract {
-  static type = "EvmContract";
+interface EntropyProviderInfo {
+  feeInWei: string;
+  accruedFeesInWei: string;
+  originalCommitment: string;
+  originalCommitmentSequenceNumber: string;
+  commitmentMetadata: string;
+  uri: string;
+  endSequenceNumber: string;
+  sequenceNumber: string;
+  currentCommitment: string;
+  currentCommitmentSequenceNumber: string;
+}
+
+export class EvmEntropyContract extends Storable {
+  static type = "EvmEntropyContract";
+
+  constructor(public chain: EvmChain, public address: string) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return EvmEntropyContract.type;
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmEntropyContract {
+    if (parsed.type !== EvmEntropyContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmEntropyContract(chain, parsed.address);
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmPriceFeedContract.type,
+    };
+  }
+
+  getContract() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return new web3.eth.Contract(EntropyAbi as any, this.address); // eslint-disable-line  @typescript-eslint/no-explicit-any
+  }
+
+  async getDefaultProvider(): Promise<string> {
+    const contract = this.getContract();
+    return await contract.methods.getDefaultProvider().call();
+  }
+
+  async getProviderInfo(address: string): Promise<EntropyProviderInfo> {
+    const contract = this.getContract();
+    return await contract.methods.getProviderInfo(address).call();
+  }
+}
+
+export class EvmPriceFeedContract extends PriceFeedContract {
+  static type = "EvmPriceFeedContract";
 
   constructor(public chain: EvmChain, public address: string) {
     super();
@@ -291,11 +355,12 @@ export class EvmContract extends Contract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; address: string }
-  ): EvmContract {
-    if (parsed.type !== EvmContract.type) throw new Error("Invalid type");
+  ): EvmPriceFeedContract {
+    if (parsed.type !== EvmPriceFeedContract.type)
+      throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmContract(chain, parsed.address);
+    return new EvmPriceFeedContract(chain, parsed.address);
   }
 
   getId(): string {
@@ -303,7 +368,7 @@ export class EvmContract extends Contract {
   }
 
   getType(): string {
-    return EvmContract.type;
+    return EvmPriceFeedContract.type;
   }
 
   async getVersion(): Promise<string> {
@@ -496,7 +561,7 @@ export class EvmContract extends Contract {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: EvmContract.type,
+      type: EvmPriceFeedContract.type,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Contract, PriceFeed, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract, PriceFeed, PrivateKey, TxResult } from "../base";
 import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
@@ -70,8 +70,8 @@ export class WormholeAptosContract extends WormholeContract {
   }
 }
 
-export class AptosContract extends Contract {
-  static type = "AptosContract";
+export class AptosPriceFeedContract extends PriceFeedContract {
+  static type = "AptosPriceFeedContract";
 
   /**
    * Given the ids of the pyth state and wormhole state, create a new AptosContract
@@ -92,11 +92,16 @@ export class AptosContract extends Contract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; stateId: string; wormholeStateId: string }
-  ): AptosContract {
-    if (parsed.type !== AptosContract.type) throw new Error("Invalid type");
+  ): AptosPriceFeedContract {
+    if (parsed.type !== AptosPriceFeedContract.type)
+      throw new Error("Invalid type");
     if (!(chain instanceof AptosChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new AptosContract(chain, parsed.stateId, parsed.wormholeStateId);
+    return new AptosPriceFeedContract(
+      chain,
+      parsed.stateId,
+      parsed.wormholeStateId
+    );
   }
 
   async executeGovernanceInstruction(
@@ -252,7 +257,7 @@ export class AptosContract extends Contract {
   }
 
   getType(): string {
-    return AptosContract.type;
+    return AptosPriceFeedContract.type;
   }
 
   async getTotalFee(): Promise<bigint> {
@@ -272,7 +277,7 @@ export class AptosContract extends Contract {
       chain: this.chain.getId(),
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
-      type: AptosContract.type,
+      type: AptosPriceFeedContract.type,
     };
   }
 }

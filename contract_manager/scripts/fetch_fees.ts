@@ -1,10 +1,10 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
-  AptosContract,
-  CosmWasmContract,
+  AptosPriceFeedContract,
+  CosmWasmPriceFeedContract,
   DefaultStore,
-  EvmContract,
+  EvmPriceFeedContract,
 } from "../src";
 
 const parser = yargs(hideBin(process.argv))
@@ -22,9 +22,9 @@ async function main() {
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (
-      contract instanceof AptosContract ||
-      contract instanceof EvmContract ||
-      contract instanceof CosmWasmContract
+      contract instanceof AptosPriceFeedContract ||
+      contract instanceof EvmPriceFeedContract ||
+      contract instanceof CosmWasmPriceFeedContract
     ) {
       try {
         console.log(`${contract.getId()} ${await contract.getTotalFee()}`);

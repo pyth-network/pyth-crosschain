@@ -1,252 +1,255 @@
 - chain: evmos
   address: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: ethereum
   address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: polygon
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: aurora
   address: "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: fantom
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: optimism
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: arbitrum
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: gnosis
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: polygon_zkevm
   address: "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: conflux_espace
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: bsc
   address: "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: kava
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: avalanche
   address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: canto
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: linea
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: neon
   address: "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: mantle
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: meter
   address: "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: kcc
   address: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: eos
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: celo
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: wemix
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: base
   address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: cronos
   address: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zksync
   address: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: ronin
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: horizen_eon
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: shimmer
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: boba
   address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: manta
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: scroll
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: chiliz
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: coredao
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: tomochain
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: base_goerli
   address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: arbitrum_sepolia
   address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: fuji
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: canto_testnet
   address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: polygon_zkevm_testnet
   address: "0xFf255f800044225f54Af4510332Aa3D67CC77635"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: aurora_testnet
   address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: mantle_testnet
   address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: chiado
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: kava_testnet
   address: "0xfA25E653b44586dBbe27eE9d252192F0e4956683"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: conflux_espace_testnet
   address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: celo_alfajores_testnet
   address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: bsc_testnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: syndr_nitro_testnet
   address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: kcc_testnet
   address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: eos_testnet
   address: "0x0708325268dF9F66270F1401206434524814508b"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: meter_testnet
   address: "0x5a71C07a0588074443545eE0c08fb0375564c3E4"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: optimism_goerli
   address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: shimmer_testnet
   address: "0x8D254a21b3C86D32F7179855531CE99164721933"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: scroll_sepolia
   address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: saigon
   address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: boba_goerli
   address: "0x8D254a21b3C86D32F7179855531CE99164721933"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: manta_testnet
   address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: chiliz_spicy
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: astar_testnet
   address: "0x8D254a21b3C86D32F7179855531CE99164721933"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: coredao_testnet
   address: "0x8D254a21b3C86D32F7179855531CE99164721933"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: tomochain_testnet
   address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: cronos_testnet
   address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: wemix_testnet
   address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: mumbai
   address: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: fantom_testnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: sepolia
   address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: sepolia
   address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: linea_goerli
   address: "0xdF21D137Aadc95588205586636710ca2890538d5"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: evmos_testnet
   address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zetachain_testnet
   address: "0x0708325268dF9F66270F1401206434524814508b"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: neon_devnet
   address: "0x0708325268dF9F66270F1401206434524814508b"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zksync_goerli
   address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: optimism_sepolia
   address: "0x0708325268dF9F66270F1401206434524814508b"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: mode
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: mode_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: bttc_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: bttc
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zksync_sepolia
   address: "0x056f829183Ec806A78c26C98961678c24faB71af"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: base_sepolia
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: movement_evm_devnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zkfair_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: blast_s2_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: zkfair
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: filecoin_calibration
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
 - chain: filecoin
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-  type: EvmContract
+  type: EvmPriceFeedContract
+- chain: base_goerli
+  address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
+  type: EvmEntropyContract

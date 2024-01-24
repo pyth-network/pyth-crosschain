@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { CosmWasmChain } from "../src/chains";
-import { CosmWasmContract } from "../src/contracts/cosmwasm";
+import { CosmWasmPriceFeedContract } from "../src/contracts/cosmwasm";
 import { DefaultStore } from "../src/store";
 import { toPrivateKey } from "../src";
 
@@ -30,7 +30,7 @@ const parser = yargs(hideBin(process.argv))
 async function main() {
   const argv = await parser.argv;
   const { code } = argv;
-  const { codeId } = await CosmWasmContract.storeCode(
+  const { codeId } = await CosmWasmPriceFeedContract.storeCode(
     DefaultStore.chains[argv.chain] as CosmWasmChain,
     toPrivateKey(argv["private-key"]),
     code

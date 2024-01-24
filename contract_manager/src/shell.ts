@@ -7,10 +7,10 @@ repl.start();
 repl.evalCode(
   "import { loadHotWallet, Vault } from './src/governance';" +
     "import { SuiChain, CosmWasmChain, AptosChain, EvmChain } from './src/chains';" +
-    "import { SuiContract } from './src/contracts/sui';" +
-    "import { WormholeCosmWasmContract, CosmWasmContract } from './src/contracts/cosmwasm';" +
-    "import { WormholeEvmContract, EvmContract } from './src/contracts/evm';" +
-    "import { WormholeAptosContract, AptosContract } from './src/contracts/aptos';" +
+    "import { SuiPriceFeedContract } from './src/contracts/sui';" +
+    "import { WormholeCosmWasmContract, CosmWasmPriceFeedContract } from './src/contracts/cosmwasm';" +
+    "import { WormholeEvmContract, EvmPriceFeedContract } from './src/contracts/evm';" +
+    "import { WormholeAptosContract, AptosPriceFeedContract } from './src/contracts/aptos';" +
     "import { DefaultStore } from './src/store';" +
     "import { toPrivateKey } from './src/base';" +
     "DefaultStore"
