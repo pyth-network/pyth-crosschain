@@ -2648,7 +2648,7 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 [[package]]
 name = "wormhole-cosmwasm"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#65abbde534507d3b434119d3f4510a9b9ae969b9"
+source = "git+https://github.com/wormhole-foundation/wormhole?rev=a2cb2a1226d00bada5679dc34f9d4393c9b0795d#a2cb2a1226d00bada5679dc34f9d4393c9b0795d"
 dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -2670,4 +2670,4 @@ checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
 [[patch.unused]]
 name = "cw20-wrapped-2"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.14.8#7e982cb03264cf1cccfbb5d947c00d6ad3e2f8f1"
+source = "git+https://github.com/wormhole-foundation/wormhole?rev=a2cb2a1226d00bada5679dc34f9d4393c9b0795d#a2cb2a1226d00bada5679dc34f9d4393c9b0795d"

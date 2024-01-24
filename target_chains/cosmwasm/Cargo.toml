@@ -14,4 +14,4 @@ incremental = false
 overflow-checks = true
 
 [patch.crates-io]
-cw20-wrapped-2 = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}
+cw20-wrapped-2 = { git = "https://github.com/wormhole-foundation/wormhole", rev = "a2cb2a1226d00bada5679dc34f9d4393c9b0795d"}
