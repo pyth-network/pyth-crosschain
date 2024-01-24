@@ -1,9 +1,6 @@
 name: Release Pyth Cosmwasm Contract
 
-on:
-  push:
-    tags:
-      - pyth-cosmwasm-contract-v*
+on: pull_request
 jobs:
   release-contract:
     name: Build and Release cosmwasm contract
@@ -36,19 +33,19 @@ jobs:
           PREFIX="refs/tags/pyth-cosmwasm-contract-"
           echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            target_chains/cosmwasm/tools/cosmwasm.zip
-            target_chains/cosmwasm/tools/injective.zip
-            target_chains/cosmwasm/tools/osmosis.zip
-          body: |
-            Contracts
-            - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
-            - injective.zip contains injective specific contract.
-            - osmosis.zip contains osmosis specific contract.
-          draft: false
-          # Setting VERSION in set env step and hence it will be available
-          name: Pyth Cosmwasm Contract ${{ env.VERSION }}
-          tag_name: ${{ github.ref_name }}
+      # - name: Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: |
+      #       target_chains/cosmwasm/tools/cosmwasm.zip
+      #       target_chains/cosmwasm/tools/injective.zip
+      #       target_chains/cosmwasm/tools/osmosis.zip
+      #     body: |
+      #       Contracts
+      #       - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
+      #       - injective.zip contains injective specific contract.
+      #       - osmosis.zip contains osmosis specific contract.
+      #     draft: false
+      #     # Setting VERSION in set env step and hence it will be available
+      #     name: Pyth Cosmwasm Contract ${{ env.VERSION }}
+      #     tag_name: ${{ github.ref_name }}
