@@ -92,4 +92,8 @@ contract ExecutorUpgradable is
     function entropyUpgradableMagic() public pure returns (uint32) {
         return 0x66697288;
     }
+
+    function version() public pure returns (string memory) {
+        return "0.0.1";
+    }
 }
