@@ -836,10 +836,7 @@ mod test {
                 TwapMessage,
             },
             test_utils::{
-                create_accumulator_message,
-                create_accumulator_message_from_updates,
-                default_emitter_addr,
-                EMITTER_CHAIN,
+                create_accumulator_message, create_accumulator_message_from_updates, create_vaa_from_payload, default_emitter_addr, default_governance_addr, EMITTER_CHAIN
             },
             wire::{
                 to_vec,
@@ -2091,14 +2088,14 @@ mod test {
     /// against it. Returns the response of the governance instruction along with the resulting config.
     fn apply_governance_vaa(
         initial_config: &ConfigInfo,
-        vaa: &ParsedVAA,
+        vaa: &Binary,
     ) -> StdResult<(Response<MsgWrapper>, ConfigInfo)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(initial_config).unwrap();
 
         let info = mock_info("123", &[]);
 
-        let result = execute_governance_instruction(deps.as_mut(), env, info, &to_binary(&vaa)?);
+        let result = execute_governance_instruction(deps.as_mut(), env, info, vaa);
 
         result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
     }
@@ -2116,14 +2113,8 @@ mod test {
         }
     }
 
-    fn governance_vaa(instruction: &GovernanceInstruction) -> ParsedVAA {
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8, 2u8];
-        vaa.emitter_chain = 3;
-        vaa.sequence = 7;
-        vaa.payload = instruction.serialize().unwrap();
-
-        vaa
+    fn governance_vaa(instruction: &GovernanceInstruction) -> Binary {
+        create_vaa_from_payload(&instruction.serialize().unwrap(),  default_governance_addr(), 3).into()
     }
 
     #[test]
