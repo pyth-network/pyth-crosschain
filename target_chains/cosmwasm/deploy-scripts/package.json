@@ -14,6 +14,10 @@
   "dependencies": {
     "rimraf": "^5.0.0",
     "@pythnetwork/cosmwasm-deploy-tools": "*",
-    "contract_manager": "*"
+    "contract_manager": "*",
+    "yargs": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.18"
   }
 }
