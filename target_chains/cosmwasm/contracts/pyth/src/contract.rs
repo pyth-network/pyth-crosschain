@@ -876,18 +876,15 @@ mod test {
         (dependencies, mock_env())
     }
 
-    /// Mock handler for wormhole queries.
-    /// Warning: the interface for the `VerifyVAA` action is slightly different than the real wormhole contract.
-    /// In the mock, you pass in a binary-encoded `ParsedVAA`, and that exact vaa will be returned by wormhole.
-    /// The real contract uses a different binary VAA format (see `ParsedVAA::deserialize`) which includes
-    /// the guardian signatures.
     fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
         match wasm_query {
             WasmQuery::Smart { contract_addr, msg } if *contract_addr == WORMHOLE_ADDR => {
                 let query_msg = from_binary::<WormholeQueryMsg>(msg);
                 match query_msg {
                     Ok(WormholeQueryMsg::VerifyVAA { vaa, .. }) => {
-                        SystemResult::Ok(ContractResult::Ok(vaa))
+                        SystemResult::Ok(ContractResult::Ok(
+                            to_binary(&ParsedVAA::deserialize(&vaa).unwrap()).unwrap(),
+                        ))
                     }
                     Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
                         error:   "Invalid message".into(),
