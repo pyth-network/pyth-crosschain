@@ -40,6 +40,7 @@ cosmwasm-schema = "1.1.9"
 osmosis-std = "0.15.2"
 pyth-sdk-cw = { path = "../../sdk/rust" }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37"}
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }

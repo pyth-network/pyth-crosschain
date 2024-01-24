@@ -1486,6 +1486,7 @@ dependencies = [
  "sha3 0.9.1",
  "terraswap",
  "thiserror",
+ "wormhole-cosmwasm",
 ]
 
 [[package]]
@@ -2645,12 +2646,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 
 [[package]]
+name = "wormhole-cosmwasm"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.23.37#846c2e9c9dce18a48745e79ba2ee7eaa5acaf1f4"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "generic-array",
+ "hex",
+ "k256",
+ "schemars",
+ "serde",
+ "sha3 0.9.1",
+ "thiserror",
+]
+
+[[package]]
 name = "zeroize"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
-
-[[patch.unused]]
-name = "cw20-wrapped-2"
-version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.14.8#7e982cb03264cf1cccfbb5d947c00d6ad3e2f8f1"
