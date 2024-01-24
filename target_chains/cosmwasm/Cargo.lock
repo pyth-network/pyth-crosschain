@@ -1494,10 +1494,12 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_repr",
+ "serde_wormhole",
  "sha3 0.9.1",
  "terraswap",
  "thiserror",
  "wormhole-cosmwasm",
+ "wormhole-sdk",
 ]
 
 [[package]]

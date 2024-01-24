@@ -92,10 +92,10 @@ pub fn create_accumulator_message_from_updates(
         vaa_payload[0] = 0;
     }
 
-    let vaa = create_vaa_from_payload(&vaa_payload, emitter_address, emitter_chain);
+    let vaa = create_vaa_from_payload(&vaa_payload, emitter_address, emitter_chain, 2);
 
     let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-        vaa:     PrefixedVec::from(vaa),
+        vaa:     PrefixedVec::from(serde_wormhole::to_vec(&vaa).unwrap()),
         updates: price_updates,
     });
 
@@ -106,13 +106,14 @@ pub fn create_vaa_from_payload(
     payload: &[u8],
     emitter_address: [u8; 32],
     emitter_chain: u16,
-) -> Vec<u8> {
+    sequence: u64,
+) -> Vaa<Box<RawMessage>> {
     let vaa: Vaa<Box<RawMessage>> = Vaa {
         emitter_chain: Chain::from(emitter_chain),
         emitter_address: Address(emitter_address),
-        sequence: 2,
+        sequence,
         payload: <Box<RawMessage>>::from(payload.to_vec()),
         ..Default::default()
     };
-    serde_wormhole::to_vec(&vaa).unwrap()
+    vaa
 }

@@ -836,7 +836,12 @@ mod test {
                 TwapMessage,
             },
             test_utils::{
-                create_accumulator_message, create_accumulator_message_from_updates, create_vaa_from_payload, default_emitter_addr, default_governance_addr, EMITTER_CHAIN
+                create_accumulator_message,
+                create_accumulator_message_from_updates,
+                create_vaa_from_payload,
+                default_emitter_addr,
+                default_governance_addr,
+                EMITTER_CHAIN,
             },
             wire::{
                 to_vec,
@@ -844,7 +849,12 @@ mod test {
                 PrefixedVec,
             },
         },
+        serde_wormhole::RawMessage,
         std::time::Duration,
+        wormhole_sdk::{
+            Address,
+            Vaa,
+        },
     };
 
     /// Default valid time period for testing purposes.
@@ -2088,14 +2098,19 @@ mod test {
     /// against it. Returns the response of the governance instruction along with the resulting config.
     fn apply_governance_vaa(
         initial_config: &ConfigInfo,
-        vaa: &Binary,
+        vaa: &Vaa<Box<RawMessage>>,
     ) -> StdResult<(Response<MsgWrapper>, ConfigInfo)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(initial_config).unwrap();
 
         let info = mock_info("123", &[]);
 
-        let result = execute_governance_instruction(deps.as_mut(), env, info, vaa);
+        let result = execute_governance_instruction(
+            deps.as_mut(),
+            env,
+            info,
+            &serde_wormhole::to_vec(vaa).unwrap().into(),
+        );
 
         result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
     }
@@ -2113,8 +2128,13 @@ mod test {
         }
     }
 
-    fn governance_vaa(instruction: &GovernanceInstruction) -> Binary {
-        create_vaa_from_payload(&instruction.serialize().unwrap(),  default_governance_addr(), 3).into()
+    fn governance_vaa(instruction: &GovernanceInstruction) -> Vaa<Box<RawMessage>> {
+        create_vaa_from_payload(
+            &instruction.serialize().unwrap(),
+            default_governance_addr(),
+            3,
+            7,
+        )
     }
 
     #[test]
@@ -2133,12 +2153,12 @@ mod test {
 
         // Wrong emitter address
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.emitter_address = vec![2u8, 3u8];
+        vaa_copy.emitter_address = Address([3u8; 32]);
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // wrong source chain
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.emitter_chain = 4;
+        vaa_copy.emitter_chain = 4.into();
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // sequence number too low
@@ -2148,33 +2168,36 @@ mod test {
 
         // wrong magic number
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.payload[0] = 0;
+        let mut new_payload = vaa_copy.payload.to_vec();
+        new_payload[0] = 0;
+        vaa_copy.payload = <Box<RawMessage>>::from(new_payload);
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // wrong target chain
         let mut instruction_copy = test_instruction.clone();
         instruction_copy.target_chain_id = 6;
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        vaa_copy.payload = <Box<RawMessage>>::from(instruction_copy.serialize().unwrap());
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // target chain == 0 is allowed
         let mut instruction_copy = test_instruction.clone();
         instruction_copy.target_chain_id = 0;
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        vaa_copy.payload = <Box<RawMessage>>::from(instruction_copy.serialize().unwrap());
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_ok());
 
         // wrong module
-        let mut instruction_copy = test_instruction.clone();
+        let mut instruction_copy = test_instruction;
         instruction_copy.module = Executor;
         let mut vaa_copy = test_vaa;
-        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        vaa_copy.payload = <Box<RawMessage>>::from(instruction_copy.serialize().unwrap());
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // invalid action index
-        let _instruction_copy = test_instruction;
-        vaa_copy.payload[9] = 100;
+        let mut new_payload = vaa_copy.payload.to_vec();
+        new_payload[9] = 100;
+        vaa_copy.payload = <Box<RawMessage>>::from(new_payload);
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
     }
 
