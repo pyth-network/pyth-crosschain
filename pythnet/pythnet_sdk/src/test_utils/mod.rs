@@ -32,15 +32,20 @@ use {
     },
 };
 
+pub const EMITTER_CHAIN: u16 = 0;
+pub const DEFAULT_SEQUENCE: u64 = 2;
+
 pub fn default_emitter_addr() -> [u8; 32] {
     [1u8; 32]
 }
 
 pub fn default_governance_addr() -> [u8; 32] {
-    [0u8; 32]
+    [2u8; 32]
 }
 
-pub const EMITTER_CHAIN: u16 = 0;
+pub fn default_new_governance_addr() -> [u8; 32] {
+    [3u8; 32]
+}
 
 pub fn create_accumulator_message(
     all_feeds: &[Message],
@@ -92,7 +97,12 @@ pub fn create_accumulator_message_from_updates(
         vaa_payload[0] = 0;
     }
 
-    let vaa = create_vaa_from_payload(&vaa_payload, emitter_address, emitter_chain, 2);
+    let vaa = create_vaa_from_payload(
+        &vaa_payload,
+        emitter_address,
+        emitter_chain,
+        DEFAULT_SEQUENCE,
+    );
 
     let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
         vaa:     PrefixedVec::from(serde_wormhole::to_vec(&vaa).unwrap()),

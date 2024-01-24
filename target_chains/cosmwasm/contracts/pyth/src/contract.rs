@@ -1193,69 +1193,6 @@ mod test {
         Message::PriceFeedMessage(msg)
     }
 
-    // fn create_accumulator_message_from_updates(
-    //     price_updates: Vec<MerklePriceUpdate>,
-    //     tree: MerkleTree<Keccak160>,
-    //     corrupt_wormhole_message: bool,
-    //     emitter_address: Vec<u8>,
-    //     emitter_chain: u16,
-    // ) -> Binary {
-    //     let mut root_hash = [0u8; 20];
-    //     root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
-    //     let wormhole_message = WormholeMessage::new(WormholePayload::Merkle(WormholeMerkleRoot {
-    //         slot:      0,
-    //         ring_size: 0,
-    //         root:      root_hash,
-    //     }));
-
-    //     let mut vaa = create_zero_vaa();
-    //     vaa.emitter_address = emitter_address;
-    //     vaa.emitter_chain = emitter_chain;
-    //     vaa.payload = to_vec::<_, BigEndian>(&wormhole_message).unwrap();
-    //     if corrupt_wormhole_message {
-    //         vaa.payload[0] = 0;
-    //     }
-
-    //     let vaa_binary = to_binary(&vaa).unwrap();
-    //     let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-    //         vaa:     PrefixedVec::from(vaa_binary.to_vec()),
-    //         updates: price_updates,
-    //     });
-
-    //     Binary::from(to_vec::<_, BigEndian>(&accumulator_update_data).unwrap())
-    // }
-
-    // fn create_accumulator_message(
-    //     all_feeds: &[Message],
-    //     updates: &[Message],
-    //     corrupt_wormhole_message: bool,
-    // ) -> Binary {
-    //     let all_feeds_bytes: Vec<_> = all_feeds
-    //         .iter()
-    //         .map(|f| to_vec::<_, BigEndian>(f).unwrap())
-    //         .collect();
-    //     let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
-    //     let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
-    //     let mut price_updates: Vec<MerklePriceUpdate> = vec![];
-    //     for update in updates {
-    //         let proof = tree
-    //             .prove(&to_vec::<_, BigEndian>(update).unwrap())
-    //             .unwrap();
-    //         price_updates.push(MerklePriceUpdate {
-    //             message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
-    //             proof,
-    //         });
-    //     }
-    //     create_accumulator_message_from_updates(
-    //         price_updates,
-    //         tree,
-    //         corrupt_wormhole_message,
-    //         default_emitter_addr(),
-    //         EMITTER_CHAIN,
-    //     )
-    // }
-
-
     fn check_price_match(deps: &OwnedDeps<MockStorage, MockApi, MockQuerier>, msg: &Message) {
         match msg {
             Message::PriceFeedMessage(feed_msg) => {
