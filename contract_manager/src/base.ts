@@ -50,7 +50,7 @@ export interface PriceFeed {
   emaPrice: Price;
 }
 
-export abstract class Contract extends Storable {
+export abstract class PriceFeedContract extends Storable {
   /**
    * Returns the time period in seconds that stale data is considered valid for.
    */

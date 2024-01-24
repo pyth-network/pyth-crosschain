@@ -7,11 +7,11 @@ import {
 } from "@mysten/sui.js";
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { Contract, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 
-export class SuiContract extends Contract {
-  static type = "SuiContract";
+export class SuiPriceFeedContract extends PriceFeedContract {
+  static type = "SuiPriceFeedContract";
   private client: SuiPythClient;
 
   /**
@@ -38,15 +38,20 @@ export class SuiContract extends Contract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; stateId: string; wormholeStateId: string }
-  ): SuiContract {
-    if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
+  ): SuiPriceFeedContract {
+    if (parsed.type !== SuiPriceFeedContract.type)
+      throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiContract(chain, parsed.stateId, parsed.wormholeStateId);
+    return new SuiPriceFeedContract(
+      chain,
+      parsed.stateId,
+      parsed.wormholeStateId
+    );
   }
 
   getType(): string {
-    return SuiContract.type;
+    return SuiPriceFeedContract.type;
   }
 
   getChain(): SuiChain {
@@ -58,7 +63,7 @@ export class SuiContract extends Contract {
       chain: this.chain.getId(),
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
-      type: SuiContract.type,
+      type: SuiPriceFeedContract.type,
     };
   }
 

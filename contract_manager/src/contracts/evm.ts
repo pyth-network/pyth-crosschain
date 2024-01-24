@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { Contract, PrivateKey } from "../base";
+import { PriceFeedContract, PrivateKey } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
@@ -281,8 +281,8 @@ export class WormholeEvmContract extends WormholeContract {
   }
 }
 
-export class EvmContract extends Contract {
-  static type = "EvmContract";
+export class EvmPriceFeedContract extends PriceFeedContract {
+  static type = "EvmPriceFeedContract";
 
   constructor(public chain: EvmChain, public address: string) {
     super();
@@ -291,11 +291,12 @@ export class EvmContract extends Contract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; address: string }
-  ): EvmContract {
-    if (parsed.type !== EvmContract.type) throw new Error("Invalid type");
+  ): EvmPriceFeedContract {
+    if (parsed.type !== EvmPriceFeedContract.type)
+      throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmContract(chain, parsed.address);
+    return new EvmPriceFeedContract(chain, parsed.address);
   }
 
   getId(): string {
@@ -303,7 +304,7 @@ export class EvmContract extends Contract {
   }
 
   getType(): string {
-    return EvmContract.type;
+    return EvmPriceFeedContract.type;
   }
 
   async getVersion(): Promise<string> {
@@ -496,7 +497,7 @@ export class EvmContract extends Contract {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: EvmContract.type,
+      type: EvmPriceFeedContract.type,
     };
   }
 }

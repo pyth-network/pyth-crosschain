@@ -7,19 +7,19 @@ import {
   SuiChain,
 } from "./chains";
 import {
-  AptosContract,
-  CosmWasmContract,
-  EvmContract,
-  SuiContract,
+  AptosPriceFeedContract,
+  CosmWasmPriceFeedContract,
+  EvmPriceFeedContract,
+  SuiPriceFeedContract,
 } from "./contracts";
-import { Contract } from "./base";
+import { PriceFeedContract } from "./base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
-  public contracts: Record<string, Contract> = {};
+  public contracts: Record<string, PriceFeedContract> = {};
   public vaults: Record<string, Vault> = {};
 
   constructor(public path: string) {
@@ -28,7 +28,7 @@ export class Store {
     this.loadAllVaults();
   }
 
-  static serialize(obj: Contract | Chain | Vault) {
+  static serialize(obj: PriceFeedContract | Chain | Vault) {
     return stringify([obj.toJson()]);
   }
 
@@ -73,7 +73,7 @@ export class Store {
   }
 
   saveAllContracts() {
-    const contractsByType: Record<string, Contract[]> = {};
+    const contractsByType: Record<string, PriceFeedContract[]> = {};
     for (const contract of Object.values(this.contracts)) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -106,10 +106,10 @@ export class Store {
 
   loadAllContracts() {
     const allContractClasses = {
-      [CosmWasmContract.type]: CosmWasmContract,
-      [SuiContract.type]: SuiContract,
-      [EvmContract.type]: EvmContract,
-      [AptosContract.type]: AptosContract,
+      [CosmWasmPriceFeedContract.type]: CosmWasmPriceFeedContract,
+      [SuiPriceFeedContract.type]: SuiPriceFeedContract,
+      [EvmPriceFeedContract.type]: EvmPriceFeedContract,
+      [AptosPriceFeedContract.type]: AptosPriceFeedContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
