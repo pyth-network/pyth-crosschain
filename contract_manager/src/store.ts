@@ -9,6 +9,7 @@ import {
 import {
   AptosPriceFeedContract,
   CosmWasmPriceFeedContract,
+  EvmEntropyContract,
   EvmPriceFeedContract,
   SuiPriceFeedContract,
 } from "./contracts";
@@ -20,6 +21,7 @@ import { Vault } from "./governance";
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
+  public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public vaults: Record<string, Vault> = {};
 
   constructor(public path: string) {
@@ -110,6 +112,7 @@ export class Store {
       [SuiPriceFeedContract.type]: SuiPriceFeedContract,
       [EvmPriceFeedContract.type]: EvmPriceFeedContract,
       [AptosPriceFeedContract.type]: AptosPriceFeedContract,
+      [EvmEntropyContract.type]: EvmEntropyContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
@@ -122,11 +125,18 @@ export class Store {
           chain,
           parsed
         );
-        if (this.contracts[chainContract.getId()])
+        if (
+          this.contracts[chainContract.getId()] ||
+          this.entropy_contracts[chainContract.getId()]
+        )
           throw new Error(
             `Multiple contracts with id ${chainContract.getId()} found`
           );
-        this.contracts[chainContract.getId()] = chainContract;
+        if (chainContract instanceof EvmEntropyContract) {
+          this.entropy_contracts[chainContract.getId()] = chainContract;
+        } else {
+          this.contracts[chainContract.getId()] = chainContract;
+        }
       }
     });
   }

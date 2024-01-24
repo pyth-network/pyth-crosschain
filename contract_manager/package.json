@@ -24,6 +24,7 @@
     "@injectivelabs/networks": "1.0.68",
     "@mysten/sui.js": "^0.37.1",
     "@pythnetwork/cosmwasm-deploy-tools": "*",
+    "@pythnetwork/entropy-sdk-solidity": "*",
     "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-sui-js": "*",
     "aptos": "^1.5.0",
