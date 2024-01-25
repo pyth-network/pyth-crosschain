@@ -61,6 +61,8 @@ pub const SECONDARY_GOVERNANCE_SOURCE: DataSource = DataSource {
     chain:   Chain::Avalanche,
 };
 
+pub const DEFAULT_CHAIN_ID: Chain = Chain::Oasis;
+
 const DEFAULT_SEQUENCE: u64 = 2;
 
 

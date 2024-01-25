@@ -840,6 +840,7 @@ mod test {
                 create_accumulator_message_from_updates,
                 create_dummy_price_feed_message,
                 create_vaa_from_payload,
+                DEFAULT_CHAIN_ID,
                 DEFAULT_DATA_SOURCE,
                 DEFAULT_GOVERNANCE_SOURCE,
                 SECONDARY_GOVERNANCE_SOURCE,
@@ -2026,10 +2027,10 @@ mod test {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
                 emitter:  Binary(DEFAULT_GOVERNANCE_SOURCE.address.0.to_vec()),
-                chain_id: 3,
+                chain_id: DEFAULT_GOVERNANCE_SOURCE.chain.into(),
             },
             governance_sequence_number: 4,
-            chain_id: 5,
+            chain_id: DEFAULT_CHAIN_ID.into(),
             ..create_zero_config_info()
         }
     }
@@ -2038,7 +2039,7 @@ mod test {
         create_vaa_from_payload(
             &instruction.serialize().unwrap(),
             DEFAULT_GOVERNANCE_SOURCE.address.0,
-            3,
+            DEFAULT_GOVERNANCE_SOURCE.chain.into(),
             7,
         )
     }
@@ -2049,7 +2050,7 @@ mod test {
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
-            target_chain_id: 5,
+            target_chain_id: DEFAULT_CHAIN_ID.into(),
             action:          SetFee { val: 6, expo: 0 },
         };
         let test_vaa = governance_vaa(&test_instruction);
@@ -2267,7 +2268,7 @@ mod test {
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
-            target_chain_id: 5,
+            target_chain_id: DEFAULT_CHAIN_ID.into(),
             action:          SetFee { val: 6, expo: 1 },
         };
         let test_vaa = governance_vaa(&test_instruction);
@@ -2279,7 +2280,7 @@ mod test {
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
-            target_chain_id: 5,
+            target_chain_id: DEFAULT_CHAIN_ID.into(),
             action:          SetFee { val: 6, expo: 0 },
         };
         let test_vaa = governance_vaa(&test_instruction);
@@ -2297,7 +2298,7 @@ mod test {
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
-            target_chain_id: 5,
+            target_chain_id: DEFAULT_CHAIN_ID.into(),
             action:          SetValidPeriod { valid_seconds: 20 },
         };
         let test_vaa = governance_vaa(&test_instruction);
