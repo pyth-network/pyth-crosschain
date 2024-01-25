@@ -22,22 +22,19 @@ num-derive                 = { version = "0.3.3" }
 pyth-wormhole-attester-sdk = { path = "../../../wormhole_attester/sdk/rust" }
 pyth-sdk                   = { version = "0.7.0" }
 pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
-serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
+serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 strum                      = { version = "0.24.1", features = ["derive"] }
 thiserror                  = { version = "1.0.38" }
-wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
-
-[patch.crates-io]
-serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
+wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 
 [dev-dependencies]
 lazy_static                = { version = "1.4.0" }
 serde_json                 = { version = "1.0.91" }
 serde                      = { version = "1.0.152", features = ["derive"] }
 tokio                      = { version = "1.23.0", features = ["full"] }
-serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
+serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 workspaces                 = { version = "0.7.0" }
-wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
+wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk", features = ["test-utils"] }
 
 

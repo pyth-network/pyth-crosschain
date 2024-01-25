@@ -2655,7 +2655,7 @@ dependencies = [
 [[package]]
 name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.23.37#846c2e9c9dce18a48745e79ba2ee7eaa5acaf1f4"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25#55faa9ca1fe456e90e957b33aa7bcc565a33c3fa"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -3444,7 +3444,7 @@ dependencies = [
 [[package]]
 name = "wormhole-sdk"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.23.37#846c2e9c9dce18a48745e79ba2ee7eaa5acaf1f4"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25#55faa9ca1fe456e90e957b33aa7bcc565a33c3fa"
 dependencies = [
  "anyhow",
  "bstr",

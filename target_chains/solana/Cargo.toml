@@ -13,8 +13,7 @@ opt-level = 3
 incremental = false
 codegen-units = 1
 
-[patch.crates-io]
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-
 [workspace.dependencies]
 wormhole-core-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", branch = "wen/solana-rewrite"}
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
