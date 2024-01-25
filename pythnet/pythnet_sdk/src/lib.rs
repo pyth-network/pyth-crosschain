@@ -5,6 +5,9 @@ pub mod messages;
 pub mod wire;
 pub mod wormhole;
 
+#[cfg(feature = "test-utils")]
+pub mod test_utils;
+
 pub(crate) type Pubkey = [u8; 32];
 
 /// Official Message Buffer Program Id

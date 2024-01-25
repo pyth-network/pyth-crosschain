@@ -38,6 +38,7 @@ tokio                      = { version = "1.23.0", features = ["full"] }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
 workspaces                 = { version = "0.7.0" }
 wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="v2.23.37" }
+pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk", features = ["test-utils"] }
 
 
 
