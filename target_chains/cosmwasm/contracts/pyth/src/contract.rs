@@ -840,11 +840,10 @@ mod test {
                 create_accumulator_message_from_updates,
                 create_dummy_price_feed_message,
                 create_vaa_from_payload,
-                default_emitter_addr,
-                default_governance_addr,
-                default_new_governance_addr,
-                default_wrong_emitter_addr,
-                EMITTER_CHAIN,
+                DEFAULT_DATA_SOURCE,
+                DEFAULT_GOVERNANCE_SOURCE,
+                SECONDARY_GOVERNANCE_SOURCE,
+                WRONG_SOURCE,
             },
             wire::{
                 to_vec,
@@ -854,10 +853,7 @@ mod test {
         },
         serde_wormhole::RawMessage,
         std::time::Duration,
-        wormhole_sdk::{
-            Address,
-            Vaa,
-        },
+        wormhole_sdk::Vaa,
     };
 
     /// Default valid time period for testing purposes.
@@ -867,7 +863,10 @@ mod test {
     fn default_config_info() -> ConfigInfo {
         ConfigInfo {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
-            data_sources: create_data_sources(default_emitter_addr().to_vec(), EMITTER_CHAIN),
+            data_sources: create_data_sources(
+                DEFAULT_DATA_SOURCE.address.0.to_vec(),
+                DEFAULT_DATA_SOURCE.chain.into(),
+            ),
             ..create_zero_config_info()
         }
     }
@@ -945,7 +944,11 @@ mod test {
     fn create_batch_price_update_msg_from_attestations(
         attestations: Vec<PriceAttestation>,
     ) -> Binary {
-        create_batch_price_update_msg(default_emitter_addr(), EMITTER_CHAIN, attestations)
+        create_batch_price_update_msg(
+            DEFAULT_DATA_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
+            attestations,
+        )
     }
 
 
@@ -1154,8 +1157,8 @@ mod test {
     fn test_parse_batch_attestation_empty_array() {
         let (num_attestations, new_attestations) = apply_price_update(
             &default_config_info(),
-            default_emitter_addr(),
-            EMITTER_CHAIN,
+            DEFAULT_DATA_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
             vec![],
         )
         .unwrap();
@@ -1216,13 +1219,12 @@ mod test {
 
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address: [u8; 32] = default_wrong_emitter_addr();
-        test_accumulator_wrong_source(emitter_address, EMITTER_CHAIN);
+        test_accumulator_wrong_source(WRONG_SOURCE.address.0, DEFAULT_DATA_SOURCE.chain.into());
     }
 
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
-        test_accumulator_wrong_source(default_emitter_addr(), EMITTER_CHAIN + 1);
+        test_accumulator_wrong_source(DEFAULT_DATA_SOURCE.address.0, WRONG_SOURCE.chain.into());
     }
 
     #[test]
@@ -1472,8 +1474,8 @@ mod test {
             price_updates,
             tree,
             false,
-            default_emitter_addr(),
-            EMITTER_CHAIN,
+            DEFAULT_DATA_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1506,8 +1508,8 @@ mod test {
             price_updates,
             tree,
             false,
-            default_emitter_addr(),
-            EMITTER_CHAIN,
+            DEFAULT_DATA_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1691,8 +1693,8 @@ mod test {
     fn test_verify_vaa_sender_ok() {
         let result = apply_price_update(
             &default_config_info(),
-            default_emitter_addr(),
-            EMITTER_CHAIN,
+            DEFAULT_DATA_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
             vec![PriceAttestation::default()],
         );
         assert!(result.is_ok());
@@ -1700,11 +1702,10 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address: [u8; 32] = default_wrong_emitter_addr();
         let result = apply_price_update(
             &default_config_info(),
-            emitter_address,
-            EMITTER_CHAIN,
+            WRONG_SOURCE.address.0,
+            DEFAULT_DATA_SOURCE.chain.into(),
             vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
@@ -1714,8 +1715,8 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
         let result = apply_price_update(
             &default_config_info(),
-            default_emitter_addr(),
-            EMITTER_CHAIN + 1,
+            DEFAULT_DATA_SOURCE.address.0,
+            WRONG_SOURCE.chain.into(),
             vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
@@ -2024,7 +2025,7 @@ mod test {
         ConfigInfo {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
-                emitter:  Binary(default_governance_addr().to_vec()),
+                emitter:  Binary(DEFAULT_GOVERNANCE_SOURCE.address.0.to_vec()),
                 chain_id: 3,
             },
             governance_sequence_number: 4,
@@ -2036,7 +2037,7 @@ mod test {
     fn governance_vaa(instruction: &GovernanceInstruction) -> Vaa<Box<RawMessage>> {
         create_vaa_from_payload(
             &instruction.serialize().unwrap(),
-            default_governance_addr(),
+            DEFAULT_GOVERNANCE_SOURCE.address.0,
             3,
             7,
         )
@@ -2058,7 +2059,7 @@ mod test {
 
         // Wrong emitter address
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.emitter_address = Address(default_wrong_emitter_addr());
+        vaa_copy.emitter_address = WRONG_SOURCE.address;
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // wrong source chain
@@ -2109,8 +2110,8 @@ mod test {
     #[test]
     fn test_authorize_governance_transfer_success() {
         let source_2 = PythDataSource {
-            emitter:  Binary::from(default_new_governance_addr()),
-            chain_id: 4,
+            emitter:  Binary::from(SECONDARY_GOVERNANCE_SOURCE.address.0),
+            chain_id: SECONDARY_GOVERNANCE_SOURCE.chain.into(),
         };
 
         let test_config = governance_test_config();
@@ -2125,8 +2126,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            default_new_governance_addr(),
-            source_2.chain_id,
+            SECONDARY_GOVERNANCE_SOURCE.address.0,
+            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
             12,
         );
 
@@ -2147,9 +2148,9 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_source_index() {
-        let source_2 = PythDataSource {
-            emitter:  Binary::from(default_new_governance_addr()),
-            chain_id: 4,
+        let _source_2 = PythDataSource {
+            emitter:  Binary::from(SECONDARY_GOVERNANCE_SOURCE.address.0),
+            chain_id: SECONDARY_GOVERNANCE_SOURCE.chain.into(),
         };
 
         let mut test_config = governance_test_config();
@@ -2165,8 +2166,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            default_new_governance_addr(),
-            source_2.chain_id,
+            SECONDARY_GOVERNANCE_SOURCE.address.0,
+            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
             12,
         );
 
@@ -2187,11 +2188,6 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_target_chain() {
-        let source_2 = PythDataSource {
-            emitter:  Binary::from(default_new_governance_addr()),
-            chain_id: 4,
-        };
-
         let test_config = governance_test_config();
 
         let claim_vaa = create_vaa_from_payload(
@@ -2204,8 +2200,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            default_new_governance_addr(),
-            source_2.chain_id,
+            SECONDARY_GOVERNANCE_SOURCE.address.0,
+            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
             12,
         );
 

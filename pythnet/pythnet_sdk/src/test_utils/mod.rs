@@ -31,24 +31,38 @@ use {
     },
 };
 
-pub const EMITTER_CHAIN: u16 = 0;
-pub const DEFAULT_SEQUENCE: u64 = 2;
-
-pub fn default_emitter_addr() -> [u8; 32] {
-    [1u8; 32]
+pub struct DataSource {
+    pub address: Address,
+    pub chain:   Chain,
 }
 
-pub fn default_governance_addr() -> [u8; 32] {
-    [2u8; 32]
-}
+pub const DEFAULT_DATA_SOURCE: DataSource = DataSource {
+    address: Address([1u8; 32]),
+    chain:   Chain::Solana,
+};
 
-pub fn default_new_governance_addr() -> [u8; 32] {
-    [3u8; 32]
-}
+pub const DEFAULT_GOVERNANCE_SOURCE: DataSource = DataSource {
+    address: Address([2u8; 32]),
+    chain:   Chain::Ethereum,
+};
 
-pub fn default_wrong_emitter_addr() -> [u8; 32] {
-    [4u8; 32]
-}
+pub const WRONG_SOURCE: DataSource = DataSource {
+    address: Address([3u8; 32]),
+    chain:   Chain::Bsc,
+};
+
+pub const SECONDARY_DATA_SOURCE: DataSource = DataSource {
+    address: Address([4u8; 32]),
+    chain:   Chain::Polygon,
+};
+
+pub const SECONDARY_GOVERNANCE_SOURCE: DataSource = DataSource {
+    address: Address([5u8; 32]),
+    chain:   Chain::Avalanche,
+};
+
+const DEFAULT_SEQUENCE: u64 = 2;
+
 
 pub fn create_dummy_price_feed_message(value: i64) -> Message {
     let mut dummy_id = [0; 32];
@@ -91,8 +105,8 @@ pub fn create_accumulator_message(
         price_updates,
         tree,
         corrupt_wormhole_message,
-        default_emitter_addr(),
-        EMITTER_CHAIN,
+        DEFAULT_DATA_SOURCE.address.0,
+        DEFAULT_DATA_SOURCE.chain.into(),
     )
 }
 
