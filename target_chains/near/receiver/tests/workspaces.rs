@@ -20,7 +20,14 @@ use {
         PriceStatus,
     },
     pythnet_sdk::test_utils::{
-        create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload, DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD, SECONDARY_DATA_SOURCE, SECONDARY_GOVERNANCE_SOURCE
+        create_accumulator_message,
+        create_dummy_price_feed_message,
+        create_vaa_from_payload,
+        DEFAULT_DATA_SOURCE,
+        DEFAULT_GOVERNANCE_SOURCE,
+        DEFAULT_VALID_TIME_PERIOD,
+        SECONDARY_DATA_SOURCE,
+        SECONDARY_GOVERNANCE_SOURCE,
     },
     serde_json::json,
     wormhole_sdk::Chain as WormholeChain,
@@ -824,12 +831,10 @@ async fn test_accumulator_updates() {
             target: Chain::from(WormholeChain::Any),
             module: GovernanceModule::Target,
             action: GovernanceAction::SetDataSources {
-                data_sources: vec![
-                    Source {
-                        emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   DEFAULT_DATA_SOURCE.chain.into(),
-                    },
-                ],
+                data_sources: vec![Source {
+                    emitter: DEFAULT_DATA_SOURCE.address.0,
+                    chain:   DEFAULT_DATA_SOURCE.chain.into(),
+                }],
             },
         }
         .serialize()
