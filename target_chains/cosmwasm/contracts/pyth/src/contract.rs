@@ -2066,7 +2066,7 @@ mod test {
 
         // wrong source chain
         let mut vaa_copy = test_vaa.clone();
-        vaa_copy.emitter_chain = 4.into();
+        vaa_copy.emitter_chain = WRONG_SOURCE.chain;
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // sequence number too low
