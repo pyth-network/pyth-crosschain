@@ -24,10 +24,17 @@ use {
         accumulators::{
             merkle::MerkleTree,
             Accumulator,
-        }, hashers::keccak256_160::Keccak160, messages::{
+        },
+        hashers::keccak256_160::Keccak160,
+        messages::{
             Message,
             PriceFeedMessage,
-        }, test_utils::{create_accumulator_message, create_dummy_price_feed_message}, wire::{
+        },
+        test_utils::{
+            create_accumulator_message,
+            create_dummy_price_feed_message,
+        },
+        wire::{
             to_vec,
             v1::{
                 AccumulatorUpdateData,
@@ -38,7 +45,7 @@ use {
                 WormholePayload,
             },
             PrefixedVec,
-        }
+        },
     },
     serde_json::json,
     std::io::{
