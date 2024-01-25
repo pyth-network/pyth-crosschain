@@ -2194,7 +2194,7 @@ mod test {
         let claim_vaa = create_vaa_from_payload(
             &GovernanceInstruction {
                 module:          Target,
-                target_chain_id: test_config.chain_id + 1,
+                target_chain_id: WRONG_CHAIN_ID.into(),
                 action:          RequestGovernanceDataSourceTransfer {
                     governance_data_source_index: 11,
                 },
