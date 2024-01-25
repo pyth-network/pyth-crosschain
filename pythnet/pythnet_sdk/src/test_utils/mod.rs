@@ -109,8 +109,8 @@ pub fn create_accumulator_message(
         price_updates,
         tree,
         corrupt_wormhole_message,
-        DEFAULT_DATA_SOURCE.address.0,
-        DEFAULT_DATA_SOURCE.chain.into(),
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
     )
 }
 
@@ -118,8 +118,8 @@ pub fn create_accumulator_message_from_updates(
     price_updates: Vec<MerklePriceUpdate>,
     tree: MerkleTree<Keccak160>,
     corrupt_wormhole_message: bool,
-    emitter_address: [u8; 32],
-    emitter_chain: u16,
+    emitter_address: Address,
+    emitter_chain: Chain,
 ) -> Vec<u8> {
     let mut root_hash = [0u8; 20];
     root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
@@ -151,13 +151,13 @@ pub fn create_accumulator_message_from_updates(
 
 pub fn create_vaa_from_payload(
     payload: &[u8],
-    emitter_address: [u8; 32],
-    emitter_chain: u16,
+    emitter_address: Address,
+    emitter_chain: Chain,
     sequence: u64,
 ) -> Vaa<Box<RawMessage>> {
     let vaa: Vaa<Box<RawMessage>> = Vaa {
-        emitter_chain: Chain::from(emitter_chain),
-        emitter_address: Address(emitter_address),
+        emitter_chain: emitter_chain,
+        emitter_address: emitter_address,
         sequence,
         payload: <Box<RawMessage>>::from(payload.to_vec()),
         ..Default::default()

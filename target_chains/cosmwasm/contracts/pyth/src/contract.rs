@@ -856,7 +856,11 @@ mod test {
         },
         serde_wormhole::RawMessage,
         std::time::Duration,
-        wormhole_sdk::Vaa,
+        wormhole_sdk::{
+            Address,
+            Chain,
+            Vaa,
+        },
     };
 
     /// Default valid time period for testing purposes.
@@ -926,8 +930,8 @@ mod test {
     }
 
     fn create_batch_price_update_msg(
-        emitter_address: [u8; 32],
-        emitter_chain: u16,
+        emitter_address: Address,
+        emitter_chain: Chain,
         attestations: Vec<PriceAttestation>,
     ) -> Binary {
         let batch_attestation = BatchPriceAttestation {
@@ -947,8 +951,8 @@ mod test {
         attestations: Vec<PriceAttestation>,
     ) -> Binary {
         create_batch_price_update_msg(
-            DEFAULT_DATA_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
             attestations,
         )
     }
@@ -1003,8 +1007,8 @@ mod test {
 
     fn apply_price_update(
         config_info: &ConfigInfo,
-        emitter_address: [u8; 32],
-        emitter_chain: u16,
+        emitter_address: Address,
+        emitter_chain: Chain,
         attestations: Vec<PriceAttestation>,
     ) -> StdResult<(usize, Vec<PriceFeed>)> {
         let (mut deps, env) = setup_test();
@@ -1159,8 +1163,8 @@ mod test {
     fn test_parse_batch_attestation_empty_array() {
         let (num_attestations, new_attestations) = apply_price_update(
             &default_config_info(),
-            DEFAULT_DATA_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
             vec![],
         )
         .unwrap();
@@ -1191,7 +1195,7 @@ mod test {
         };
     }
 
-    fn test_accumulator_wrong_source(emitter_address: [u8; 32], emitter_chain: u16) {
+    fn test_accumulator_wrong_source(emitter_address: Address, emitter_chain: Chain) {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage)
             .save(&default_config_info())
@@ -1221,12 +1225,12 @@ mod test {
 
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_address() {
-        test_accumulator_wrong_source(WRONG_SOURCE.address.0, DEFAULT_DATA_SOURCE.chain.into());
+        test_accumulator_wrong_source(WRONG_SOURCE.address, DEFAULT_DATA_SOURCE.chain);
     }
 
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
-        test_accumulator_wrong_source(DEFAULT_DATA_SOURCE.address.0, WRONG_SOURCE.chain.into());
+        test_accumulator_wrong_source(DEFAULT_DATA_SOURCE.address, WRONG_SOURCE.chain);
     }
 
     #[test]
@@ -1476,8 +1480,8 @@ mod test {
             price_updates,
             tree,
             false,
-            DEFAULT_DATA_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1510,8 +1514,8 @@ mod test {
             price_updates,
             tree,
             false,
-            DEFAULT_DATA_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1695,8 +1699,8 @@ mod test {
     fn test_verify_vaa_sender_ok() {
         let result = apply_price_update(
             &default_config_info(),
-            DEFAULT_DATA_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
             vec![PriceAttestation::default()],
         );
         assert!(result.is_ok());
@@ -1706,8 +1710,8 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
         let result = apply_price_update(
             &default_config_info(),
-            WRONG_SOURCE.address.0,
-            DEFAULT_DATA_SOURCE.chain.into(),
+            WRONG_SOURCE.address,
+            DEFAULT_DATA_SOURCE.chain,
             vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
@@ -1717,8 +1721,8 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
         let result = apply_price_update(
             &default_config_info(),
-            DEFAULT_DATA_SOURCE.address.0,
-            WRONG_SOURCE.chain.into(),
+            DEFAULT_DATA_SOURCE.address,
+            WRONG_SOURCE.chain,
             vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
@@ -2039,8 +2043,8 @@ mod test {
     fn governance_vaa(instruction: &GovernanceInstruction) -> Vaa<Box<RawMessage>> {
         create_vaa_from_payload(
             &instruction.serialize().unwrap(),
-            DEFAULT_GOVERNANCE_SOURCE.address.0,
-            DEFAULT_GOVERNANCE_SOURCE.chain.into(),
+            DEFAULT_GOVERNANCE_SOURCE.address,
+            DEFAULT_GOVERNANCE_SOURCE.chain,
             7,
         )
     }
@@ -2128,8 +2132,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            SECONDARY_GOVERNANCE_SOURCE.address.0,
-            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
+            SECONDARY_GOVERNANCE_SOURCE.address,
+            SECONDARY_GOVERNANCE_SOURCE.chain,
             12,
         );
 
@@ -2163,8 +2167,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            SECONDARY_GOVERNANCE_SOURCE.address.0,
-            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
+            SECONDARY_GOVERNANCE_SOURCE.address,
+            SECONDARY_GOVERNANCE_SOURCE.chain,
             12,
         );
 
@@ -2197,8 +2201,8 @@ mod test {
             }
             .serialize()
             .unwrap(),
-            SECONDARY_GOVERNANCE_SOURCE.address.0,
-            SECONDARY_GOVERNANCE_SOURCE.chain.into(),
+            SECONDARY_GOVERNANCE_SOURCE.address,
+            SECONDARY_GOVERNANCE_SOURCE.chain,
             12,
         );
 

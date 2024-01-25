@@ -20,9 +20,7 @@ use {
         PriceStatus,
     },
     pythnet_sdk::test_utils::{
-        create_accumulator_message,
-        create_dummy_price_feed_message,
-        create_vaa_from_payload,
+        create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload, DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD, SECONDARY_DATA_SOURCE, SECONDARY_GOVERNANCE_SOURCE
     },
     serde_json::json,
     wormhole_sdk::Chain as WormholeChain,
@@ -69,10 +67,16 @@ async fn initialize_chain() -> (
         .args_json(&json!({
             "wormhole":        wormhole.id(),
             "codehash":        codehash,
-            "initial_source":  Source::default(),
-            "gov_source":      Source::default(),
+            "initial_source":  Source {
+                emitter: DEFAULT_DATA_SOURCE.address.0,
+                chain:   DEFAULT_DATA_SOURCE.chain.into(),
+            },
+            "gov_source":      Source {
+                emitter: DEFAULT_GOVERNANCE_SOURCE.address.0,
+                chain:   DEFAULT_GOVERNANCE_SOURCE.chain.into(),
+            },
             "update_fee":      U128::from(1u128),
-            "stale_threshold": 32,
+            "stale_threshold": DEFAULT_VALID_TIME_PERIOD,
         }))
         .gas(300_000_000_000_000)
         .transact_async()
@@ -95,18 +99,21 @@ async fn test_set_sources() {
             module: GovernanceModule::Target,
             action: GovernanceAction::SetDataSources {
                 data_sources: vec![
-                    Source::default(),
                     Source {
-                        emitter: [1; 32],
-                        chain:   Chain::from(WormholeChain::Solana),
+                        emitter: DEFAULT_DATA_SOURCE.address.0,
+                        chain:   DEFAULT_DATA_SOURCE.chain.into(),
+                    },
+                    Source {
+                        emitter: SECONDARY_DATA_SOURCE.address.0,
+                        chain:   SECONDARY_DATA_SOURCE.chain.into(),
                     },
                 ],
             },
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -131,10 +138,13 @@ async fn test_set_sources() {
         serde_json::from_slice::<Vec<Source>>(&contract.view("get_sources").await.unwrap().result)
             .unwrap(),
         &[
-            Source::default(),
             Source {
-                emitter: [1; 32],
-                chain:   Chain::from(WormholeChain::Solana),
+                emitter: DEFAULT_DATA_SOURCE.address.0,
+                chain:   DEFAULT_DATA_SOURCE.chain.into(),
+            },
+            Source {
+                emitter: SECONDARY_DATA_SOURCE.address.0,
+                chain:   SECONDARY_DATA_SOURCE.chain.into(),
             },
         ]
     );
@@ -156,8 +166,8 @@ async fn test_set_governance_source() {
         }
         .serialize()
         .unwrap(),
-        [1; 32],
-        WormholeChain::Solana.into(),
+        SECONDARY_GOVERNANCE_SOURCE.address,
+        SECONDARY_GOVERNANCE_SOURCE.chain,
         1,
     );
 
@@ -172,8 +182,8 @@ async fn test_set_governance_source() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         2,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -199,18 +209,21 @@ async fn test_set_governance_source() {
             module: GovernanceModule::Target,
             action: GovernanceAction::SetDataSources {
                 data_sources: vec![
-                    Source::default(),
                     Source {
-                        emitter: [2; 32],
-                        chain:   Chain::from(WormholeChain::Solana),
+                        emitter: DEFAULT_DATA_SOURCE.address.0,
+                        chain:   DEFAULT_DATA_SOURCE.chain.into(),
+                    },
+                    Source {
+                        emitter: SECONDARY_DATA_SOURCE.address.0,
+                        chain:   SECONDARY_DATA_SOURCE.chain.into(),
                     },
                 ],
             },
         }
         .serialize()
         .unwrap(),
-        [1; 32],
-        WormholeChain::Solana.into(),
+        SECONDARY_GOVERNANCE_SOURCE.address,
+        SECONDARY_GOVERNANCE_SOURCE.chain,
         2,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -239,16 +252,20 @@ async fn test_set_governance_source() {
                 data_sources: vec![
                     Source::default(),
                     Source {
-                        emitter: [2; 32],
-                        chain:   Chain::from(WormholeChain::Solana),
+                        emitter: DEFAULT_DATA_SOURCE.address.0,
+                        chain:   DEFAULT_DATA_SOURCE.chain.into(),
+                    },
+                    Source {
+                        emitter: SECONDARY_DATA_SOURCE.address.0,
+                        chain:   SECONDARY_DATA_SOURCE.chain.into(),
                     },
                 ],
             },
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         4,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -280,7 +297,7 @@ async fn test_stale_threshold() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp")
         .as_secs()
-        - 60;
+        - DEFAULT_VALID_TIME_PERIOD;
 
     // Submit a Price Attestation to the contract.
     let vaa = create_vaa_from_payload(
@@ -306,8 +323,8 @@ async fn test_stale_threshold() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -380,8 +397,8 @@ async fn test_stale_threshold() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
         2,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -431,8 +448,8 @@ async fn test_stale_threshold() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         3,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -491,8 +508,8 @@ async fn test_contract_fees() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -568,8 +585,8 @@ async fn test_contract_fees() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
         2,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -619,8 +636,8 @@ async fn test_same_governance_sequence_fails() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -674,8 +691,8 @@ async fn test_out_of_order_sequences_fail() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -705,8 +722,8 @@ async fn test_out_of_order_sequences_fail() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         3,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -736,8 +753,8 @@ async fn test_out_of_order_sequences_fail() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         2,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -772,8 +789,8 @@ async fn test_governance_target_fails_if_not_near() {
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
@@ -808,18 +825,17 @@ async fn test_accumulator_updates() {
             module: GovernanceModule::Target,
             action: GovernanceAction::SetDataSources {
                 data_sources: vec![
-                    Source::default(),
                     Source {
-                        emitter: [1; 32],
-                        chain:   Chain::from(WormholeChain::Any),
+                        emitter: DEFAULT_DATA_SOURCE.address.0,
+                        chain:   DEFAULT_DATA_SOURCE.chain.into(),
                     },
                 ],
             },
         }
         .serialize()
         .unwrap(),
-        [0; 32],
-        WormholeChain::Any.into(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
