@@ -67,3 +67,4 @@ export * from "./SetDataSources";
 export * from "./SetValidPeriod";
 export * from "./SetFee";
 export * from "./SetWormholeAddress";
+export * from "./ExecuteAction";

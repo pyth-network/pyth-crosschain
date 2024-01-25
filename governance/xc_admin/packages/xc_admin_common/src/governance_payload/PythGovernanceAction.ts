@@ -17,6 +17,10 @@ export const TargetAction = {
   SetWormholeAddress: 6,
 } as const;
 
+export const EvmExecutorAction = {
+  Execute: 0,
+} as const;
+
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>
@@ -40,13 +44,19 @@ export function toActionName(
       case 6:
         return "SetWormholeAddress";
     }
+  } else if (
+    deserialized.moduleId == MODULE_EVM_EXECUTOR &&
+    deserialized.actionId == 0
+  ) {
+    return "Execute";
   }
   return undefined;
 }
 
 export declare type ActionName =
   | keyof typeof ExecutorAction
-  | keyof typeof TargetAction;
+  | keyof typeof TargetAction
+  | keyof typeof EvmExecutorAction;
 
 /** Governance header that should be in every Pyth crosschain governance message*/
 export class PythGovernanceHeader {
@@ -109,9 +119,12 @@ export class PythGovernanceHeader {
     if (this.action in ExecutorAction) {
       module = MODULE_EXECUTOR;
       action = ExecutorAction[this.action as keyof typeof ExecutorAction];
-    } else {
+    } else if (this.action in TargetAction) {
       module = MODULE_TARGET;
       action = TargetAction[this.action as keyof typeof TargetAction];
+    } else {
+      module = MODULE_EVM_EXECUTOR;
+      action = EvmExecutorAction[this.action as keyof typeof EvmExecutorAction];
     }
     if (toChainId(this.targetChainId) === undefined)
       throw new Error(`Invalid chain id ${this.targetChainId}`);
@@ -131,10 +144,12 @@ export class PythGovernanceHeader {
 export const MAGIC_NUMBER = 0x4d475450;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
-export const MODULES = [MODULE_EXECUTOR, MODULE_TARGET];
+export const MODULE_EVM_EXECUTOR = 2;
+export const MODULES = [MODULE_EXECUTOR, MODULE_TARGET, MODULE_EVM_EXECUTOR];
 
 export interface PythGovernanceAction {
   readonly targetChainId: ChainName;
+
   encode(): Buffer;
 }
 
