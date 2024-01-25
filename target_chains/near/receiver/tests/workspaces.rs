@@ -27,7 +27,7 @@ use {
         }, hashers::keccak256_160::Keccak160, messages::{
             Message,
             PriceFeedMessage,
-        }, test_utils::create_accumulator_message, wire::{
+        }, test_utils::{create_accumulator_message, create_dummy_price_feed_message}, wire::{
             to_vec,
             v1::{
                 AccumulatorUpdateData,
@@ -967,22 +967,6 @@ async fn test_governance_target_fails_if_not_near() {
 // A test to check accumulator style updates work as intended.
 #[tokio::test]
 async fn test_accumulator_updates() {
-    fn create_dummy_price_feed_message(value: i64) -> Message {
-        let mut dummy_id = [0; 32];
-        dummy_id[0] = value as u8;
-        let msg = PriceFeedMessage {
-            feed_id:           dummy_id,
-            price:             value,
-            conf:              value as u64,
-            exponent:          value as i32,
-            publish_time:      value,
-            prev_publish_time: value,
-            ema_price:         value,
-            ema_conf:          value as u64,
-        };
-        Message::PriceFeedMessage(msg)
-    }
-
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole

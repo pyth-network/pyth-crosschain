@@ -838,6 +838,7 @@ mod test {
             test_utils::{
                 create_accumulator_message,
                 create_accumulator_message_from_updates,
+                create_dummy_price_feed_message,
                 create_vaa_from_payload,
                 default_emitter_addr,
                 default_governance_addr,
@@ -1161,22 +1162,6 @@ mod test {
 
         assert_eq!(num_attestations, 0);
         assert_eq!(new_attestations.len(), 0);
-    }
-
-    fn create_dummy_price_feed_message(value: i64) -> Message {
-        let mut dummy_id = [0; 32];
-        dummy_id[0] = value as u8;
-        let msg = PriceFeedMessage {
-            feed_id:           dummy_id,
-            price:             value,
-            conf:              value as u64,
-            exponent:          value as i32,
-            publish_time:      value,
-            prev_publish_time: value,
-            ema_price:         value,
-            ema_conf:          value as u64,
-        };
-        Message::PriceFeedMessage(msg)
     }
 
     fn check_price_match(deps: &OwnedDeps<MockStorage, MockApi, MockQuerier>, msg: &Message) {

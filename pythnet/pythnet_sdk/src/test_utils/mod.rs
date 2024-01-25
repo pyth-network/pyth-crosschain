@@ -5,7 +5,10 @@ use {
             Accumulator,
         },
         hashers::keccak256_160::Keccak160,
-        messages::Message,
+        messages::{
+            Message,
+            PriceFeedMessage,
+        },
         wire::{
             to_vec,
             v1::{
@@ -49,6 +52,22 @@ pub fn default_new_governance_addr() -> [u8; 32] {
 
 pub fn default_wrong_emitter_addr() -> [u8; 32] {
     [4u8; 32]
+}
+
+pub fn create_dummy_price_feed_message(value: i64) -> Message {
+    let mut dummy_id = [0; 32];
+    dummy_id[0] = value as u8;
+    let msg = PriceFeedMessage {
+        feed_id:           dummy_id,
+        price:             value,
+        conf:              value as u64,
+        exponent:          value as i32,
+        publish_time:      value,
+        prev_publish_time: value,
+        ema_price:         value,
+        ema_conf:          value as u64,
+    };
+    Message::PriceFeedMessage(msg)
 }
 
 pub fn create_accumulator_message(
