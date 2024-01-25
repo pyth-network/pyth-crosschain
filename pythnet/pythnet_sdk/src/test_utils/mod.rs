@@ -24,10 +24,6 @@ use {
     },
     byteorder::BigEndian,
     serde_wormhole::RawMessage,
-    std::io::{
-        Cursor,
-        Write,
-    },
     wormhole_sdk::{
         Address,
         Chain,
