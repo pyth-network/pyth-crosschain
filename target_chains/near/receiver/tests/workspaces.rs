@@ -1,5 +1,4 @@
 use {
-    byteorder::BigEndian,
     near_sdk::json_types::U128,
     pyth::{
         governance::{
@@ -21,30 +20,9 @@ use {
         PriceStatus,
     },
     pythnet_sdk::{
-        accumulators::{
-            merkle::MerkleTree,
-            Accumulator,
-        },
-        hashers::keccak256_160::Keccak160,
-        messages::{
-            Message,
-            PriceFeedMessage,
-        },
         test_utils::{
             create_accumulator_message,
             create_dummy_price_feed_message,
-        },
-        wire::{
-            to_vec,
-            v1::{
-                AccumulatorUpdateData,
-                MerklePriceUpdate,
-                Proof,
-                WormholeMerkleRoot,
-                WormholeMessage,
-                WormholePayload,
-            },
-            PrefixedVec,
         },
     },
     serde_json::json,
@@ -1122,8 +1100,8 @@ async fn test_borsh_field_cmopat() {
     assert_eq!(
         decoded_price,
         PriceTester {
-            price:          i64::MAX.into(),
-            conf:           u64::MAX.into(),
+            price:          i64::MAX,
+            conf:           u64::MAX,
             expo:           100,
             bad_field_name: 100,
         }
