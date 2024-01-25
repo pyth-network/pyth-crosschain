@@ -13,7 +13,7 @@ import {
   EvmPriceFeedContract,
   SuiPriceFeedContract,
 } from "./contracts";
-import { PriceFeedContract } from "./base";
+import { PriceFeedContract, Storable } from "./base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
@@ -30,7 +30,7 @@ export class Store {
     this.loadAllVaults();
   }
 
-  static serialize(obj: PriceFeedContract | Chain | Vault) {
+  static serialize(obj: Storable) {
     return stringify([obj.toJson()]);
   }
 
@@ -75,8 +75,10 @@ export class Store {
   }
 
   saveAllContracts() {
-    const contractsByType: Record<string, PriceFeedContract[]> = {};
-    for (const contract of Object.values(this.contracts)) {
+    const contractsByType: Record<string, Storable[]> = {};
+    const contracts: Storable[] = Object.values(this.contracts);
+    contracts.push(...Object.values(this.entropy_contracts));
+    for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
       }
