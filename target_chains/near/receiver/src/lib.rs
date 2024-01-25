@@ -46,6 +46,7 @@ use {
             },
         },
     },
+    serde_wormhole::RawMessage,
     state::{
         Price,
         PriceFeed,
@@ -273,11 +274,10 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(&vaa).unwrap();
-        let (_, rest): (wormhole::Vaa<()>, _) =
-            serde_wormhole::from_slice_with_payload(&vaa).unwrap();
+        let vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
 
         // Attempt to deserialize the Payload based on header.
-        let bytes = &mut Cursor::new(rest);
+        let bytes = &mut Cursor::new(vaa.payload);
         let mut header = [0u8; 4];
         bytes.clone().read_exact(&mut header).unwrap();
 
@@ -357,9 +357,9 @@ impl Pyth {
 
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
-                let (_, rest): (wormhole::Vaa<()>, _) =
-                    serde_wormhole::from_slice_with_payload(vaa.as_ref()).unwrap();
-                let message = WormholeMessage::try_from_bytes(rest)
+                let vaa: wormhole_sdk::Vaa<&RawMessage> =
+                    serde_wormhole::from_slice(vaa.as_ref()).unwrap();
+                let message = WormholeMessage::try_from_bytes(vaa.payload)
                     .map_err(|_| Error::InvalidWormholeMessage)?;
                 let root: MerkleRoot<Keccak160> = MerkleRoot::new(match message.payload {
                     WormholePayload::Merkle(merkle_root) => merkle_root.root,
@@ -550,11 +550,10 @@ impl Pyth {
 impl Pyth {
     /// Verify a VAA source from a serialized VAA.
     fn verify_encoded_vaa_source(&self, vaa: &[u8]) -> Result<(), Error> {
-        let (vaa, _): (wormhole::Vaa<()>, _) =
-            serde_wormhole::from_slice_with_payload(vaa).unwrap();
+        let vaa: wormhole_sdk::Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
 
         // Convert to local VAA type to catch API changes.
-        let vaa = Vaa::from(vaa);
+        let vaa: Vaa<&RawMessage> = Vaa::from(vaa);
 
         if !self.sources.contains(&Source {
             emitter: vaa.emitter_address,

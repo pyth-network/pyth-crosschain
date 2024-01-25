@@ -48,7 +48,7 @@ use {
         Cursor,
         Write,
     },
-    wormhole::Chain as WormholeChain,
+    wormhole_sdk::Chain as WormholeChain,
 };
 
 async fn initialize_chain() -> (
@@ -112,9 +112,9 @@ async fn test_set_sources() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 1,
         payload: (),
         ..Default::default()
@@ -178,18 +178,18 @@ async fn test_set_governance_source() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 2,
         ..Default::default()
     };
 
     let vaa = {
-        let request_vaa = wormhole::Vaa {
-            emitter_chain: wormhole::Chain::Solana,
-            emitter_address: wormhole::Address([1; 32]),
+        let request_vaa = wormhole_sdk::Vaa {
+            emitter_chain: wormhole_sdk::Chain::Solana,
+            emitter_address: wormhole_sdk::Address([1; 32]),
             payload: (),
             sequence: 1,
             ..Default::default()
@@ -247,10 +247,10 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // An action from the new source should now be accepted.
-    let vaa = wormhole::Vaa {
+    let vaa = wormhole_sdk::Vaa {
         sequence: 3, // NOTE: Incremented Governance Sequence
-        emitter_chain: wormhole::Chain::Solana,
-        emitter_address: wormhole::Address([1; 32]),
+        emitter_chain: wormhole_sdk::Chain::Solana,
+        emitter_address: wormhole_sdk::Address([1; 32]),
         payload: (),
         ..Default::default()
     };
@@ -295,10 +295,10 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // But not from the old source.
-    let vaa = wormhole::Vaa {
+    let vaa = wormhole_sdk::Vaa {
         sequence: 4, // NOTE: Incremented Governance Sequence
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         ..Default::default()
     };
@@ -348,9 +348,9 @@ async fn test_stale_threshold() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a Price Attestation to the contract.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -440,9 +440,9 @@ async fn test_stale_threshold() {
 
     // Submit another Price Attestation to the contract with an even older timestamp. Which
     // should now fail due to the existing newer price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 2,
         payload: (),
         ..Default::default()
@@ -516,9 +516,9 @@ async fn test_stale_threshold() {
     );
 
     // Now we extend the staleness threshold with a Governance VAA.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 3,
         payload: (),
         ..Default::default()
@@ -586,9 +586,9 @@ async fn test_contract_fees() {
         .as_secs();
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -658,9 +658,9 @@ async fn test_contract_fees() {
     );
 
     // Attempt to update the price feed with a now too low deposit.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 2,
         payload: (),
         ..Default::default()
@@ -734,9 +734,9 @@ async fn test_same_governance_sequence_fails() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -798,9 +798,9 @@ async fn test_out_of_order_sequences_fail() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -839,9 +839,9 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 3.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 3,
         ..Default::default()
@@ -880,9 +880,9 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 2.
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 2,
         ..Default::default()
@@ -926,9 +926,9 @@ async fn test_out_of_order_sequences_fail() {
 async fn test_governance_target_fails_if_not_near() {
     let (_, contract, _) = initialize_chain().await;
 
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         payload: (),
         sequence: 1,
         ..Default::default()
@@ -1000,9 +1000,9 @@ async fn test_accumulator_updates() {
             root:      root_hash,
         }));
 
-        let vaa = wormhole::Vaa {
+        let vaa = wormhole_sdk::Vaa {
             emitter_chain: emitter_chain.into(),
-            emitter_address: wormhole::Address(emitter_address),
+            emitter_address: wormhole_sdk::Address(emitter_address),
             sequence: 2,
             payload: (),
             ..Default::default()
@@ -1045,16 +1045,16 @@ async fn test_accumulator_updates() {
             price_updates,
             tree,
             [1; 32],
-            wormhole::Chain::Any.into(),
+            wormhole_sdk::Chain::Any.into(),
         )
     }
 
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = wormhole::Vaa {
-        emitter_chain: wormhole::Chain::Any,
-        emitter_address: wormhole::Address([0; 32]),
+    let vaa = wormhole_sdk::Vaa {
+        emitter_chain: wormhole_sdk::Chain::Any,
+        emitter_address: wormhole_sdk::Address([0; 32]),
         sequence: 1,
         payload: (),
         ..Default::default()

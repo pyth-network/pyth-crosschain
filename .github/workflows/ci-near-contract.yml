@@ -1,0 +1,29 @@
+name: Test Near Contract
+
+on:
+  pull_request:
+    paths:
+      - target_chains/near/**
+      - wormhole_attester/sdk/rust/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/near/**
+      - wormhole_attester/sdk/rust/**
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/near/receiver
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install nextest
+        run: curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
+      - name: Test
+        run: ./workspace-test.sh

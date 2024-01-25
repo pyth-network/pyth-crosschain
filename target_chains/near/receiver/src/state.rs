@@ -16,7 +16,7 @@ use {
     },
     pyth_wormhole_attester_sdk::PriceAttestation,
     pythnet_sdk::messages::PriceFeedMessage,
-    wormhole::Chain as WormholeChain,
+    wormhole_sdk::Chain as WormholeChain,
 };
 
 /// Type alias for Wormhole's compact Signature format.
@@ -225,8 +225,8 @@ pub struct Vaa<P> {
     pub payload:            P,
 }
 
-impl<P> From<wormhole::Vaa<P>> for Vaa<P> {
-    fn from(vaa: wormhole::Vaa<P>) -> Self {
+impl<P> From<wormhole_sdk::Vaa<P>> for Vaa<P> {
+    fn from(vaa: wormhole_sdk::Vaa<P>) -> Self {
         Self {
             version:            vaa.version,
             guardian_set_index: vaa.guardian_set_index,
