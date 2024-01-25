@@ -2148,11 +2148,6 @@ mod test {
 
     #[test]
     fn test_authorize_governance_transfer_bad_source_index() {
-        let _source_2 = PythDataSource {
-            emitter:  Binary::from(SECONDARY_GOVERNANCE_SOURCE.address.0),
-            chain_id: SECONDARY_GOVERNANCE_SOURCE.chain.into(),
-        };
-
         let mut test_config = governance_test_config();
         test_config.governance_source_index = 10;
 
