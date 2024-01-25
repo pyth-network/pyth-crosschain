@@ -152,7 +152,8 @@ contract Executor {
         gi.module = PythGovernanceInstructions.GovernanceModule(modNumber);
         index += 1;
 
-        if (gi.module != MODULE) revert PythErrors.InvalidGovernanceTarget();
+        if (gi.module != MODULE)
+            revert ExecutorErrors.InvalidGovernanceTarget();
 
         uint8 actionNumber = encodedInstruction.toUint8(index);
         gi.action = ExecutorAction(actionNumber);
