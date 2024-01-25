@@ -19,16 +19,12 @@ use {
         PriceAttestation,
         PriceStatus,
     },
-    pythnet_sdk::{
-        test_utils::{
-            create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload
-        },
+    pythnet_sdk::test_utils::{
+        create_accumulator_message,
+        create_dummy_price_feed_message,
+        create_vaa_from_payload,
     },
     serde_json::json,
-    std::io::{
-        Cursor,
-        Write,
-    },
     wormhole_sdk::Chain as WormholeChain,
 };
 
@@ -93,21 +89,26 @@ async fn test_set_sources() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Any),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetDataSources {
-            data_sources: vec![
-                Source::default(),
-                Source {
-                    emitter: [1; 32],
-                    chain:   Chain::from(WormholeChain::Solana),
-                },
-            ],
-        },
-    }
-    .serialize()
-    .unwrap(), [0;32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Any),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetDataSources {
+                data_sources: vec![
+                    Source::default(),
+                    Source {
+                        emitter: [1; 32],
+                        chain:   Chain::from(WormholeChain::Solana),
+                    },
+                ],
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
@@ -145,26 +146,36 @@ async fn test_set_governance_source() {
 
     // Data Source Upgrades are submitted with an embedded VAA, generate that one here first
     // before we embed it.
-    let request_vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::RequestGovernanceDataSourceTransfer {
-            governance_data_source_index: 1,
-        },
-    }
-    .serialize()
-    .unwrap(), [1;32], WormholeChain::Solana.into(), 1);
+    let request_vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::RequestGovernanceDataSourceTransfer {
+                governance_data_source_index: 1,
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [1; 32],
+        WormholeChain::Solana.into(),
+        1,
+    );
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
-            claim_vaa: serde_wormhole::to_vec(&request_vaa).unwrap(),
-        },
-    }
-    .serialize()
-    .unwrap(), [0;32], WormholeChain::Any.into(), 2);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
+                claim_vaa: serde_wormhole::to_vec(&request_vaa).unwrap(),
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        2,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
@@ -182,21 +193,26 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // An action from the new source should now be accepted.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetDataSources {
-            data_sources: vec![
-                Source::default(),
-                Source {
-                    emitter: [2; 32],
-                    chain:   Chain::from(WormholeChain::Solana),
-                },
-            ],
-        },
-    }
-    .serialize()
-    .unwrap(), [1;32], WormholeChain::Solana.into(), 2);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetDataSources {
+                data_sources: vec![
+                    Source::default(),
+                    Source {
+                        emitter: [2; 32],
+                        chain:   Chain::from(WormholeChain::Solana),
+                    },
+                ],
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [1; 32],
+        WormholeChain::Solana.into(),
+        2,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
@@ -215,21 +231,26 @@ async fn test_set_governance_source() {
         .is_empty());
 
     // But not from the old source.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetDataSources {
-            data_sources: vec![
-                Source::default(),
-                Source {
-                    emitter: [2; 32],
-                    chain:   Chain::from(WormholeChain::Solana),
-                },
-            ],
-        },
-    }
-    .serialize()
-    .unwrap(), [0;32], WormholeChain::Any.into(), 4);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetDataSources {
+                data_sources: vec![
+                    Source::default(),
+                    Source {
+                        emitter: [2; 32],
+                        chain:   Chain::from(WormholeChain::Solana),
+                    },
+                ],
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        4,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
 
@@ -262,28 +283,33 @@ async fn test_stale_threshold() {
         - 60;
 
     // Submit a Price Attestation to the contract.
-    let vaa = create_vaa_from_payload(&BatchPriceAttestation {
-        price_attestations: vec![PriceAttestation {
-            product_id:                 Identifier::default(),
-            price_id:                   Identifier::default(),
-            price:                      100,
-            conf:                       1,
-            expo:                       8,
-            ema_price:                  100,
-            ema_conf:                   1,
-            status:                     PriceStatus::Trading,
-            num_publishers:             8,
-            max_num_publishers:         8,
-            attestation_time:           now.try_into().unwrap(),
-            publish_time:               now.try_into().unwrap(),
-            prev_publish_time:          now.try_into().unwrap(),
-            prev_price:                 100,
-            prev_conf:                  1,
-            last_attested_publish_time: now.try_into().unwrap(),
-        }],
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &BatchPriceAttestation {
+            price_attestations: vec![PriceAttestation {
+                product_id:                 Identifier::default(),
+                price_id:                   Identifier::default(),
+                price:                      100,
+                conf:                       1,
+                expo:                       8,
+                ema_price:                  100,
+                ema_conf:                   1,
+                status:                     PriceStatus::Trading,
+                num_publishers:             8,
+                max_num_publishers:         8,
+                attestation_time:           now.try_into().unwrap(),
+                publish_time:               now.try_into().unwrap(),
+                prev_publish_time:          now.try_into().unwrap(),
+                prev_price:                 100,
+                prev_conf:                  1,
+                last_attested_publish_time: now.try_into().unwrap(),
+            }],
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     let update_fee = serde_json::from_slice::<U128>(
@@ -331,28 +357,33 @@ async fn test_stale_threshold() {
 
     // Submit another Price Attestation to the contract with an even older timestamp. Which
     // should now fail due to the existing newer price.
-    let vaa = create_vaa_from_payload(&BatchPriceAttestation {
-        price_attestations: vec![PriceAttestation {
-            product_id:                 Identifier::default(),
-            price_id:                   Identifier::default(),
-            price:                      1000,
-            conf:                       1,
-            expo:                       8,
-            ema_price:                  1000,
-            ema_conf:                   1,
-            status:                     PriceStatus::Trading,
-            num_publishers:             8,
-            max_num_publishers:         8,
-            attestation_time:           (now - 1024).try_into().unwrap(),
-            publish_time:               (now - 1024).try_into().unwrap(),
-            prev_publish_time:          (now - 1024).try_into().unwrap(),
-            prev_price:                 90,
-            prev_conf:                  1,
-            last_attested_publish_time: (now - 1024).try_into().unwrap(),
-        }],
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 2);
+    let vaa = create_vaa_from_payload(
+        &BatchPriceAttestation {
+            price_attestations: vec![PriceAttestation {
+                product_id:                 Identifier::default(),
+                price_id:                   Identifier::default(),
+                price:                      1000,
+                conf:                       1,
+                expo:                       8,
+                ema_price:                  1000,
+                ema_conf:                   1,
+                status:                     PriceStatus::Trading,
+                num_publishers:             8,
+                max_num_publishers:         8,
+                attestation_time:           (now - 1024).try_into().unwrap(),
+                publish_time:               (now - 1024).try_into().unwrap(),
+                prev_publish_time:          (now - 1024).try_into().unwrap(),
+                prev_price:                 90,
+                prev_conf:                  1,
+                last_attested_publish_time: (now - 1024).try_into().unwrap(),
+            }],
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        2,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     // The update handler should now succeed even if price is old, but simply not update the price.
@@ -392,13 +423,18 @@ async fn test_stale_threshold() {
     );
 
     // Now we extend the staleness threshold with a Governance VAA.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetValidPeriod { valid_seconds: 256 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 3);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetValidPeriod { valid_seconds: 256 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        3,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
@@ -447,13 +483,18 @@ async fn test_contract_fees() {
         .as_secs();
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     // Fetch Update fee before changing it.
@@ -504,28 +545,33 @@ async fn test_contract_fees() {
     );
 
     // Attempt to update the price feed with a now too low deposit.
-    let vaa = create_vaa_from_payload(&BatchPriceAttestation {
-        price_attestations: vec![PriceAttestation {
-            product_id:                 Identifier::default(),
-            price_id:                   Identifier::default(),
-            price:                      1000,
-            conf:                       1,
-            expo:                       8,
-            ema_price:                  1000,
-            ema_conf:                   1,
-            status:                     PriceStatus::Trading,
-            num_publishers:             8,
-            max_num_publishers:         8,
-            attestation_time:           (now - 1024).try_into().unwrap(),
-            publish_time:               (now - 1024).try_into().unwrap(),
-            prev_publish_time:          (now - 1024).try_into().unwrap(),
-            prev_price:                 90,
-            prev_conf:                  1,
-            last_attested_publish_time: (now - 1024).try_into().unwrap(),
-        }],
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 2);
+    let vaa = create_vaa_from_payload(
+        &BatchPriceAttestation {
+            price_attestations: vec![PriceAttestation {
+                product_id:                 Identifier::default(),
+                price_id:                   Identifier::default(),
+                price:                      1000,
+                conf:                       1,
+                expo:                       8,
+                ema_price:                  1000,
+                ema_conf:                   1,
+                status:                     PriceStatus::Trading,
+                num_publishers:             8,
+                max_num_publishers:         8,
+                attestation_time:           (now - 1024).try_into().unwrap(),
+                publish_time:               (now - 1024).try_into().unwrap(),
+                prev_publish_time:          (now - 1024).try_into().unwrap(),
+                prev_price:                 90,
+                prev_conf:                  1,
+                last_attested_publish_time: (now - 1024).try_into().unwrap(),
+            }],
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        2,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
@@ -565,13 +611,18 @@ async fn test_same_governance_sequence_fails() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
 
@@ -615,13 +666,18 @@ async fn test_out_of_order_sequences_fail() {
     let (_, contract, _) = initialize_chain().await;
 
     // Set a high fee for the contract needed to submit a price.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     // Attempt our first SetFee.
@@ -641,13 +697,18 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 3.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 3);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        3,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     // This should succeed.
@@ -667,13 +728,18 @@ async fn test_out_of_order_sequences_fail() {
         .is_empty());
 
     // Generate another VAA with sequence 2.
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Near),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 2);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        2,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     // This should fail due to being out of order.
@@ -698,13 +764,18 @@ async fn test_out_of_order_sequences_fail() {
 async fn test_governance_target_fails_if_not_near() {
     let (_, contract, _) = initialize_chain().await;
 
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Solana),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetFee { base: 128, expo: 8 },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Solana),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee { base: 128, expo: 8 },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
 
@@ -731,21 +802,26 @@ async fn test_accumulator_updates() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
-    let vaa = create_vaa_from_payload(&GovernanceInstruction {
-        target: Chain::from(WormholeChain::Any),
-        module: GovernanceModule::Target,
-        action: GovernanceAction::SetDataSources {
-            data_sources: vec![
-                Source::default(),
-                Source {
-                    emitter: [1; 32],
-                    chain:   Chain::from(WormholeChain::Any),
-                },
-            ],
-        },
-    }
-    .serialize()
-    .unwrap(), [0; 32], WormholeChain::Any.into(), 1);
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Any),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetDataSources {
+                data_sources: vec![
+                    Source::default(),
+                    Source {
+                        emitter: [1; 32],
+                        chain:   Chain::from(WormholeChain::Any),
+                    },
+                ],
+            },
+        }
+        .serialize()
+        .unwrap(),
+        [0; 32],
+        WormholeChain::Any.into(),
+        1,
+    );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
     assert!(contract
