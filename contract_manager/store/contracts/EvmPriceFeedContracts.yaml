@@ -259,3 +259,9 @@
 - chain: sei_evm_devnet
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
   type: EvmPriceFeedContract
+- chain: lightlink_pegasus_testnet
+  address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"
+  type: EvmPriceFeedContract
+- chain: fantom_sonic_testnet
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+  type: EvmPriceFeedContract
