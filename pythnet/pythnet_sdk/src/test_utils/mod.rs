@@ -62,6 +62,8 @@ pub const SECONDARY_GOVERNANCE_SOURCE: DataSource = DataSource {
 };
 
 pub const DEFAULT_CHAIN_ID: Chain = Chain::Oasis;
+pub const WRONG_CHAIN_ID: Chain = Chain::Algorand;
+pub const DEFAULT_VALID_TIME_PERIOD: u64 = 180;
 
 const DEFAULT_SEQUENCE: u64 = 2;
 

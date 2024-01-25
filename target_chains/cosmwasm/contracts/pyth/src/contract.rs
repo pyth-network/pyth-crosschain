@@ -843,7 +843,9 @@ mod test {
                 DEFAULT_CHAIN_ID,
                 DEFAULT_DATA_SOURCE,
                 DEFAULT_GOVERNANCE_SOURCE,
+                DEFAULT_VALID_TIME_PERIOD,
                 SECONDARY_GOVERNANCE_SOURCE,
+                WRONG_CHAIN_ID,
                 WRONG_SOURCE,
             },
             wire::{
@@ -858,7 +860,6 @@ mod test {
     };
 
     /// Default valid time period for testing purposes.
-    const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
     const WORMHOLE_ADDR: &str = "Wormhole";
 
     fn default_config_info() -> ConfigInfo {
@@ -879,7 +880,7 @@ mod test {
         let mut config = config(dependencies.as_mut().storage);
         config
             .save(&ConfigInfo {
-                valid_time_period: VALID_TIME_PERIOD,
+                valid_time_period: Duration::from_secs(DEFAULT_VALID_TIME_PERIOD),
                 ..create_zero_config_info()
             })
             .unwrap();
@@ -2082,7 +2083,7 @@ mod test {
 
         // wrong target chain
         let mut instruction_copy = test_instruction.clone();
-        instruction_copy.target_chain_id = 6;
+        instruction_copy.target_chain_id = WRONG_CHAIN_ID.into();
         let mut vaa_copy = test_vaa.clone();
         vaa_copy.payload = <Box<RawMessage>>::from(instruction_copy.serialize().unwrap());
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
