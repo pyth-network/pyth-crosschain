@@ -59,7 +59,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
             commitment,
             bincode::serialize(&commitment_metadata)?.into(),
             commitment_length,
-            bincode::serialize(&opts.uri)?.into(),
+            bincode::serialize(&chain_config.provider_uri)?.into(),
         )
         .send()
         .await?

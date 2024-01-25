@@ -90,7 +90,6 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 private_key: private_key.clone(),
                 randomness:  opts.randomness.clone(),
                 fee:         opts.fee,
-                uri:         opts.uri.clone(),
             })
             .await?;
         } else {
@@ -100,9 +99,9 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 }
             }
 
-            if bincode::deserialize::<String>(&provider_info.uri)? != opts.uri {
+            if bincode::deserialize::<String>(&provider_info.uri)? != chain_config.provider_uri {
                 if let Some(receipt) = contract
-                    .set_provider_uri(bincode::serialize(&opts.uri)?.into())
+                    .set_provider_uri(bincode::serialize(&chain_config.provider_uri)?.into())
                     .send()
                     .await?
                     .log_msg("Pending transfer hash")

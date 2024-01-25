@@ -134,6 +134,10 @@ pub struct EthereumConfig {
     /// How many blocks to wait before revealing the random number.
     pub reveal_delay_blocks: BlockNumber,
 
+    /// The provider uri to register on chain.
+    #[serde(default)]
+    pub provider_uri: String,
+
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]
     pub legacy_tx: bool,
