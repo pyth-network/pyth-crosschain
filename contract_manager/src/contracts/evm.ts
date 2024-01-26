@@ -373,6 +373,7 @@ export class EvmEntropyContract extends Storable {
       this.chain.wormholeChainName,
       executor,
       this.address,
+      0n,
       payload
     ).encode();
   }
