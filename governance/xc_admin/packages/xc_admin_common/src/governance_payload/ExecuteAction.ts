@@ -9,11 +9,13 @@ export class EvmExecute extends PythGovernanceActionImpl {
     Readonly<{
       executorAddress: string;
       callAddress: string;
+      value: bigint;
       calldata: Uint8Array;
     }>
   > = BufferLayout.struct([
     BufferLayoutExt.hexBytes(20, "executorAddress"),
     BufferLayoutExt.hexBytes(20, "callAddress"),
+    BufferLayoutExt.u256be("value"),
     BufferLayout.blob(new BufferLayout.GreedyCount(), "calldata"),
   ]);
 
@@ -21,7 +23,8 @@ export class EvmExecute extends PythGovernanceActionImpl {
     targetChainId: ChainName,
     readonly executorAddress: string,
     readonly callAddress: string,
-    readonly calldata: Uint8Array
+    readonly value: bigint,
+    readonly calldata: Buffer
   ) {
     super(targetChainId, "Execute");
   }
@@ -38,15 +41,32 @@ export class EvmExecute extends PythGovernanceActionImpl {
       decoded[0].targetChainId,
       decoded[1].executorAddress,
       decoded[1].callAddress,
-      decoded[1].calldata
+      decoded[1].value,
+      Buffer.from(decoded[1].calldata)
     );
   }
 
   encode(): Buffer {
-    //TODO: create the layout based on the calldata length
-    return super.encodeWithPayload(EvmExecute.layout, {
+    // encodeWithPayload creates a buffer using layout.span but EvmExecute.layout span is -1
+    // because the calldata length is unknown. So we create a layout with a known calldata length
+    // and use that for encoding
+    const layout_with_known_span: BufferLayout.Structure<
+      Readonly<{
+        executorAddress: string;
+        callAddress: string;
+        value: bigint;
+        calldata: Uint8Array;
+      }>
+    > = BufferLayout.struct([
+      BufferLayoutExt.hexBytes(20, "executorAddress"),
+      BufferLayoutExt.hexBytes(20, "callAddress"),
+      BufferLayoutExt.u256be("value"),
+      BufferLayout.blob(this.calldata.length, "calldata"),
+    ]);
+    return super.encodeWithPayload(layout_with_known_span, {
       executorAddress: this.executorAddress,
       callAddress: this.callAddress,
+      value: this.value,
       calldata: this.calldata,
     });
   }
