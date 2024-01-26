@@ -10,6 +10,8 @@ import {
   PythGovernanceAction,
   decodeGovernancePayload,
   EvmSetWormholeAddress,
+  EvmExecutorAction,
+  EvmExecute,
 } from "..";
 import * as fc from "fast-check";
 import { ChainName, CHAINS } from "../chains";
@@ -65,6 +67,14 @@ test("GovernancePayload ser/de", (done) => {
   governanceHeader = PythGovernanceHeader.decode(buffer);
   expect(governanceHeader?.targetChainId).toBe("solana");
   expect(governanceHeader?.action).toBe("SetFee");
+
+  // Valid header 3
+  expectedGovernanceHeader = new PythGovernanceHeader("solana", "Execute");
+  buffer = expectedGovernanceHeader.encode();
+  expect(buffer.equals(Buffer.from([80, 84, 71, 77, 2, 0, 0, 1]))).toBeTruthy();
+  governanceHeader = PythGovernanceHeader.decode(buffer);
+  expect(governanceHeader?.targetChainId).toBe("solana");
+  expect(governanceHeader?.action).toBe("Execute");
 
   // Wrong magic number
   expect(
@@ -157,6 +167,7 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
   const actions = [
     ...Object.keys(ExecutorAction),
     ...Object.keys(TargetAction),
+    ...Object.keys(EvmExecutorAction),
   ] as ActionName[];
   const actionArb = fc.constantFrom(...actions);
   const targetChainIdArb = fc.constantFrom(
@@ -260,6 +271,24 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return hexBytesArb({ minLength: 20, maxLength: 20 }).map((address) => {
         return new EvmSetWormholeAddress(header.targetChainId, address);
       });
+    } else if (header.action === "Execute") {
+      return fc
+        .record({
+          executerAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
+          callAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
+          value: fc.bigUintN(256),
+          callData: bufferArb(),
+        })
+        .map(
+          ({ executerAddress, callAddress, value, callData }) =>
+            new EvmExecute(
+              header.targetChainId,
+              executerAddress,
+              callAddress,
+              value,
+              callData
+            )
+        );
     } else {
       throw new Error("Unsupported action type");
     }
