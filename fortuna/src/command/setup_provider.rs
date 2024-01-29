@@ -1,19 +1,16 @@
 use {
     crate::{
-        chain::ethereum::SignablePythContract,
-        command::{
+        api::get_register_uri, chain::ethereum::SignablePythContract, command::{
             register_provider,
             register_provider::CommitmentMetadata,
-        },
-        config::{
+        }, config::{
             Config,
             RegisterProviderOptions,
             SetupProviderOptions,
-        },
-        state::{
+        }, state::{
             HashChainState,
             PebbleHashChain,
-        },
+        }
     },
     anyhow::Result,
     ethers::signers::{
@@ -43,6 +40,8 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         tracing::info!("Provider info: {:?}", provider_info);
 
         let mut register = false;
+
+        let uri = get_register_uri(&opts.base_uri, &chain_id);
 
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
@@ -90,7 +89,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 private_key: private_key.clone(),
                 randomness:  opts.randomness.clone(),
                 fee:         opts.fee,
-                uri:         opts.uri.clone(),
+                uri,
             })
             .await?;
         } else {
@@ -100,9 +99,9 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 }
             }
 
-            if bincode::deserialize::<String>(&provider_info.uri)? != opts.uri {
+            if bincode::deserialize::<String>(&provider_info.uri)? != uri {
                 if let Some(receipt) = contract
-                    .set_provider_uri(bincode::serialize(&opts.uri)?.into())
+                    .set_provider_uri(bincode::serialize(&uri)?.into())
                     .send()
                     .await?
                     .log_msg("Pending transfer hash")

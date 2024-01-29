@@ -29,6 +29,10 @@ use {
 ///
 /// Every blockchain supported by this service has a distinct sequence of random numbers and chain_id.
 /// Callers must pass the appropriate chain_id to ensure they fetch the correct random number.
+///
+/// We are registering the provider on chain with the following url:
+/// `base_uri/v1/chains/{chain_id}/revelations/`
+/// See the method `get_register_uri` below. These MUST stay consistent.
 #[utoipa::path(
 get,
 path = "/v1/chains/{chain_id}/revelations/{sequence}",
@@ -153,4 +157,9 @@ impl Blob {
             Blob::Array { data } => data,
         }
     }
+}
+
+/// It expects base_uri to not end with /
+pub fn get_register_uri(base_uri: &str, chain_id: &str) -> String {
+    format!("{0}/v1/chains/{1}/revelations", base_uri, chain_id)
 }
