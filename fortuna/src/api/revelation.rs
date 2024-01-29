@@ -20,6 +20,7 @@ use {
         IntoParams,
         ToSchema,
     },
+    url::Url,
 };
 
 /// Reveal the random value for a given sequence number and blockchain.
@@ -159,7 +160,10 @@ impl Blob {
     }
 }
 
-/// It expects base_uri to not end with /
-pub fn get_register_uri(base_uri: &str, chain_id: &str) -> String {
-    format!("{0}/v1/chains/{1}/revelations", base_uri, chain_id)
+// The path and revelation API are highly coupled. Please be sure to keep them consistent.
+pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
+    let base_uri = Url::parse(base_uri)?;
+    let path =format!("/v1/chains/{0}", chain_id);
+    let uri = base_uri.join(&path)?;
+    Ok(uri.to_string())
 }

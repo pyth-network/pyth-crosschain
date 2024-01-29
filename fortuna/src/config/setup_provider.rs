@@ -29,7 +29,7 @@ pub struct SetupProviderOptions {
     #[arg(default_value = "100")]
     pub fee: u128,
 
-    /// The base URI for fortuna without ending slashes.
+    /// The base URI for fortuna.
     /// e.g., https://fortuna-staging.pyth.network
     #[arg(long = "uri")]
     pub base_uri: String,

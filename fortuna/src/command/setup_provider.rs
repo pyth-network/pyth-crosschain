@@ -45,7 +45,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
         let mut register = false;
 
-        let uri = get_register_uri(&opts.base_uri, &chain_id);
+        let uri = get_register_uri(&opts.base_uri, &chain_id)?;
 
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
