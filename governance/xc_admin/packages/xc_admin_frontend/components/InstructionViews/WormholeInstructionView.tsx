@@ -412,7 +412,12 @@ export const WormholeInstructionView = ({
                 <CopyPubkey pubkey={'0x' + governanceAction.callAddress} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
-              <div>Call Data: {governanceAction.calldata}</div>
+              <div>
+                Call Data:
+                <CopyPubkey
+                  pubkey={'0x' + governanceAction.calldata.toString('hex')}
+                />
+              </div>
             </div>
           }
         />
