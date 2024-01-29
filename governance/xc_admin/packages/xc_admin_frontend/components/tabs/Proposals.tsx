@@ -25,7 +25,7 @@ import WarningIcon from '../../images/icons/warning.inline.svg'
 import VotedIcon from '../../images/icons/voted.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
-import CopyPubkey from '../common/CopyPubkey'
+import CopyText from '../common/CopyText'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 import ProposalStatusFilter from '../ProposalStatusFilter'
@@ -224,7 +224,7 @@ const AccountList = ({
               {pubkey.toBase58() in multisigSignerKeyToNameMapping &&
                 `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`}
             </div>
-            <CopyPubkey pubkey={pubkey.toBase58()} />
+            <CopyText text={pubkey.toBase58()} />
           </div>
         </div>
       ))}
@@ -445,15 +445,15 @@ const Proposal = ({
         </div>
         <div className="flex justify-between">
           <div>Proposal</div>
-          <CopyPubkey pubkey={proposal.publicKey.toBase58()} />
+          <CopyText text={proposal.publicKey.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Creator</div>
-          <CopyPubkey pubkey={proposal.creator.toBase58()} />
+          <CopyText text={proposal.creator.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Multisig</div>
-          <CopyPubkey pubkey={proposal.ms.toBase58()} />
+          <CopyText text={proposal.ms.toBase58()} />
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
@@ -582,12 +582,10 @@ const Proposal = ({
                         <div className="flex justify-between border-t border-beige-300 py-3">
                           <div>{key}</div>
                           {instruction.args[key] instanceof PublicKey ? (
-                            <CopyPubkey
-                              pubkey={instruction.args[key].toBase58()}
-                            />
+                            <CopyText text={instruction.args[key].toBase58()} />
                           ) : typeof instruction.args[key] === 'string' &&
                             isPubkey(instruction.args[key]) ? (
-                            <CopyPubkey pubkey={instruction.args[key]} />
+                            <CopyText text={instruction.args[key]} />
                           ) : (
                             <div className="max-w-sm break-all">
                               {typeof instruction.args[key] === 'string'
@@ -653,8 +651,8 @@ const Proposal = ({
                                   <WritableTag />
                                 ) : null}
                               </div>
-                              <CopyPubkey
-                                pubkey={instruction.accounts.named[
+                              <CopyText
+                                text={instruction.accounts.named[
                                   key
                                 ].pubkey.toBase58()}
                               />
