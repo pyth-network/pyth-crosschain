@@ -428,3 +428,18 @@
   rpcUrl: https://rpc.ankr.com/filecoin
   networkId: 314
   type: EvmChain
+- id: lightlink_pegasus_testnet
+  mainnet: false
+  rpcUrl: https://replicator.pegasus.lightlink.io/rpc/v1
+  networkId: 1891
+  type: EvmChain
+- id: sei_evm_devnet
+  mainnet: false
+  rpcUrl: https://evm-devnet.seinetwork.io
+  networkId: 713715
+  type: EvmChain
+- id: fantom_sonic_testnet
+  mainnet: false
+  rpcUrl: https://rpc.sonic.fantom.network/
+  networkId: 64165
+  type: EvmChain

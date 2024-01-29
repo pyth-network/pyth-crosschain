@@ -372,7 +372,20 @@ export class EvmEntropyContract extends Storable {
     return new EvmExecute(
       this.chain.wormholeChainName,
       executor,
-      this.address,
+      this.address.replace("0x", ""),
+      0n,
+      payload
+    ).encode();
+  }
+
+  generateAcceptOwnershipPayload(executor: string): Buffer {
+    const contract = this.getContract();
+    const data = contract.methods.acceptOwnership().encodeABI();
+    const payload = Buffer.from(data.slice(2), "hex");
+    return new EvmExecute(
+      this.chain.wormholeChainName,
+      executor,
+      this.address.replace("0x", ""),
       0n,
       payload
     ).encode();
