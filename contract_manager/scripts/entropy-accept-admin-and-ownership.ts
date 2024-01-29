@@ -66,7 +66,7 @@ async function main() {
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       console.log("Creating payload for chain: ", contract.chain.getId());
-      const pendingOwner = (await contract.getPendingOwner()).replace("0x", "");
+      const pendingOwner = await contract.getPendingOwner();
       const adminPayload = contract.generateAcceptAdminPayload(pendingOwner);
       const ownerPayload =
         contract.generateAcceptOwnershipPayload(pendingOwner);
