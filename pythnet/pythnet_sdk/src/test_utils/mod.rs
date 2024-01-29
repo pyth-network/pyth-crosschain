@@ -37,8 +37,6 @@ use {
     wormhole_sdk::{
         vaa::{
             Body,
-            Header,
-        },
         Address,
         Chain,
         Vaa,
@@ -181,17 +179,8 @@ pub fn create_vaa_from_payload(
     emitter_chain: Chain,
     sequence: u64,
 ) -> Vaa<Box<RawMessage>> {
-    let guardians = dummy_guardians();
-
-    let body: Body<Box<RawMessage>> = Body {
-        emitter_chain,
-        emitter_address,
-        sequence,
-        payload: <Box<RawMessage>>::from(payload.to_vec()),
-        ..Default::default()
-    };
-
-    let digest = libsecp256k1Message::parse_slice(&body.digest().unwrap().secp256k_hash).unwrap();
+    let digest = libsecp256k1Message::parse_slice(&digest(payload).unwrap().secp256k_hash).unwrap();
+    let guardians = create_dummy_guardians();
 
     let signatures: Vec<(Signature, RecoveryId)> = guardians
         .iter()
@@ -211,30 +200,14 @@ pub fn create_vaa_from_payload(
         })
         .collect();
 
-    let mut wormhole_signatures_subset: Vec<wormhole_sdk::vaa::Signature> = wormhole_signatures
-        .choose_multiple(&mut thread_rng(), DEFAULT_NUM_SIGNATURES)
-        .cloned()
-        .collect();
-
-    wormhole_signatures_subset.sort_by(|a, b| a.index.cmp(&b.index));
-
-    let header = Header {
-        version: 1,
-        signatures: wormhole_signatures_subset,
+    let vaa: Vaa<Box<RawMessage>> = Vaa {
+        emitter_chain: emitter_chain,
+        emitter_address: emitter_address,
+        sequence,
+        payload: <Box<RawMessage>>::from(payload.to_vec()),
+        signatures: wormhole_signatures,
         ..Default::default()
     };
 
-
-    (header, body).into()
-}
-
-pub fn trim_vaa_signatures(vaa: Vaa<&RawMessage>, n: u8) -> Vaa<&RawMessage> {
-    let mut vaa_copy = vaa.clone();
-    vaa_copy.signatures = vaa
-        .signatures
-        .choose_multiple(&mut thread_rng(), n.into())
-        .cloned()
-        .collect();
-    vaa_copy.signatures.sort_by(|a, b| a.index.cmp(&b.index));
-    vaa_copy
+    vaa
 }
