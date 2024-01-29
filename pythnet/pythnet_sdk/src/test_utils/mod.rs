@@ -23,8 +23,15 @@ use {
         },
     },
     byteorder::BigEndian,
+    libsecp256k1::{
+        Message as libsecp256k1Message,
+        RecoveryId,
+        SecretKey,
+        Signature,
+    },
     serde_wormhole::RawMessage,
     wormhole_sdk::{
+        vaa::digest,
         Address,
         Chain,
         Vaa,
@@ -67,6 +74,17 @@ pub const DEFAULT_VALID_TIME_PERIOD: u64 = 180;
 
 const DEFAULT_SEQUENCE: u64 = 2;
 
+const NUM_GUARDIANS: u8 = 19;
+
+pub fn create_dummy_guardians() -> Vec<SecretKey> {
+    let mut result: Vec<SecretKey> = vec![];
+    for i in 0..NUM_GUARDIANS {
+        let mut secret_key_bytes = [0u8; 32];
+        secret_key_bytes[0] = i + 1;
+        result.push(SecretKey::parse(&secret_key_bytes).unwrap());
+    }
+    result
+}
 
 pub fn create_dummy_price_feed_message(value: i64) -> Message {
     let mut dummy_id = [0; 32];
@@ -155,12 +173,35 @@ pub fn create_vaa_from_payload(
     emitter_chain: Chain,
     sequence: u64,
 ) -> Vaa<Box<RawMessage>> {
+    let digest = libsecp256k1Message::parse_slice(&digest(payload).unwrap().secp256k_hash).unwrap();
+    let guardians = create_dummy_guardians();
+
+    let signatures: Vec<(Signature, RecoveryId)> = guardians
+        .iter()
+        .map(|x| libsecp256k1::sign(&digest, &x))
+        .collect();
+    let wormhole_signatures: Vec<wormhole_sdk::vaa::Signature> = signatures
+        .iter()
+        .enumerate()
+        .map(|(i, (x, y))| {
+            let mut signature = [0u8; 65];
+            signature[..64].copy_from_slice(&x.serialize());
+            signature[64] = y.serialize();
+            wormhole_sdk::vaa::Signature {
+                index: i as u8,
+                signature,
+            }
+        })
+        .collect();
+
     let vaa: Vaa<Box<RawMessage>> = Vaa {
         emitter_chain: emitter_chain,
         emitter_address: emitter_address,
         sequence,
         payload: <Box<RawMessage>>::from(payload.to_vec()),
+        signatures: wormhole_signatures,
         ..Default::default()
     };
+
     vaa
 }
