@@ -404,12 +404,12 @@ export const WormholeInstructionView = ({
                 <CopyText text={'0x' + governanceAction.executorAddress} />
               </div>
               <div>
-                Call Address:
+                Call Address:{' '}
                 <CopyText text={'0x' + governanceAction.callAddress} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
               <div>
-                Call Data:
+                Call Data:{' '}
                 <CopyText
                   text={'0x' + governanceAction.calldata.toString('hex')}
                 />
