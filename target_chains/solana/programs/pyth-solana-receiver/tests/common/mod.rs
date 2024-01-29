@@ -122,8 +122,7 @@ pub fn build_guardian_set_account() -> Account {
 /**
  * Setup to test the Pyth Receiver. The return values are a tuple composed of :
  * - The program simulator, which is used to send transactions
- * - The pubkey of an encoded VAA account, which is pre-populated and can be used to test post_updates
- * - A vector of MerklePriceUpdate, corresponding to that VAA
+ * - The pubkeys of the encoded VAA accounts corresponding to the VAAs passed as argument, these accounts are prepopulated and can be used to test post_updates
  */
 pub async fn setup_pyth_receiver(vaas: Vec<Vec<u8>>) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
