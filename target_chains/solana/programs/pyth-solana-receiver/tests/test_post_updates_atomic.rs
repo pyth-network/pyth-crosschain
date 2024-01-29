@@ -11,9 +11,14 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
+    program_simulator::into_transation_error,
     pyth_solana_receiver::{
+        error::ReceiverError,
         instruction::PostUpdatesAtomic,
-        sdk::deserialize_accumulator_update_data,
+        sdk::{
+            deserialize_accumulator_update_data,
+            get_guardian_set_address,
+        },
         state::price_update::{
             PriceUpdateV1,
             VerificationLevel,
@@ -30,11 +35,13 @@ use {
 >>>>>>> c6431163 (Go)
         },
     },
+    serde_wormhole::RawMessage,
     solana_sdk::{
         signature::Keypair,
         signer::Signer,
     },
     wormhole_core_bridge_solana::ID as BRIDGE_ID,
+    wormhole_sdk::Vaa,
 };
 
 mod common;
@@ -129,5 +136,182 @@ async fn test_post_updates_atomic() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
+    );
+}
+
+#[tokio::test]
+async fn test_post_updates_atomic_wrong_vaa() {
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
+
+    let ProgramTestFixtures {
+        mut program_simulator,
+        encoded_vaa_addresses: _,
+    } = setup_pyth_receiver(vec![]).await;
+
+    let poster = program_simulator.get_funded_keypair().await.unwrap();
+    let price_update_keypair = Keypair::new();
+
+    let vaa_wrong_num_signatures = trim_vaa_signatures(vaa.clone(), 4);
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    vaa_wrong_num_signatures.clone(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InsufficientGuardianSignatures)
+    );
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.version = 0;
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidVaaVersion)
+    );
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.guardian_set_index = 1;
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::GuardianSetMismatch)
+    );
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.signatures[0].index = 20;
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidGuardianIndex)
+    );
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.signatures[0].signature[64] = 5;
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidSignature)
+    );
+
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.signatures[0].signature = vaa_copy.signatures[1].signature;
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidGuardianKeyRecovery)
+    );
+
+    let mut wrong_instruction = PostUpdatesAtomic::populate(
+        poster.pubkey(),
+        price_update_keypair.pubkey(),
+        BRIDGE_ID,
+        DEFAULT_GUARDIAN_SET_INDEX,
+        vaa.clone(),
+        merkle_price_updates[0].clone(),
+    );
+
+    let wrong_guardian_set = get_guardian_set_address(BRIDGE_ID, 1);
+    wrong_instruction.accounts[1].pubkey = wrong_guardian_set;
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                wrong_instruction,
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::WrongGuardianSetOwner)
     );
 }

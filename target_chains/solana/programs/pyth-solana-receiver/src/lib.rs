@@ -258,7 +258,7 @@ pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
 pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
-    #[account(owner = config.wormhole)]
+    #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
     pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
@@ -281,7 +281,7 @@ pub struct PostUpdatesAtomic<'info> {
     /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
     /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
-        owner = config.wormhole)]
+        owner = config.wormhole @ ReceiverError::WrongGuardianSetOwner)]
     pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,

@@ -43,4 +43,6 @@ pub enum ReceiverError {
     InvalidSignature,
     #[msg("The recovered guardian public key doesn't match the guardian set")]
     InvalidGuardianKeyRecovery,
+    #[msg("The guardian set account is owned by the wrong program")]
+    WrongGuardianSetOwner,
 }

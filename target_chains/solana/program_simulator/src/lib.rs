@@ -2,8 +2,12 @@ use {
     borsh::BorshDeserialize,
     solana_program::{
         hash::Hash,
-        instruction::Instruction,
+        instruction::{
+            Instruction,
+            InstructionError,
+        },
         native_token::LAMPORTS_PER_SOL,
+        program_error::ProgramError,
         pubkey::Pubkey,
         system_instruction,
     },
@@ -14,11 +18,15 @@ use {
         ProgramTestBanksClientExt,
     },
     solana_sdk::{
+        compute_budget,
         signature::{
             Keypair,
             Signer,
         },
-        transaction::Transaction,
+        transaction::{
+            Transaction,
+            TransactionError,
+        },
     },
 };
 
@@ -49,9 +57,13 @@ impl ProgramSimulator {
         signers: &Vec<&Keypair>,
         payer: Option<&Keypair>,
     ) -> Result<(), BanksClientError> {
+        let compute_units_ixs =
+            compute_budget::ComputeBudgetInstruction::set_compute_unit_limit(2000000);
         let actual_payer = payer.unwrap_or(&self.genesis_keypair);
-        let mut transaction =
-            Transaction::new_with_payer(&[instruction], Some(&actual_payer.pubkey()));
+        let mut transaction = Transaction::new_with_payer(
+            &[instruction, compute_units_ixs],
+            Some(&actual_payer.pubkey()),
+        );
 
         let blockhash = self
             .banks_client
@@ -93,4 +105,11 @@ impl ProgramSimulator {
 
         Ok(T::deserialize(&mut &account.data[8..])?)
     }
+}
+
+pub fn into_transation_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
+    TransactionError::InstructionError(
+        0,
+        InstructionError::try_from(u64::from(ProgramError::from(error.into()))).unwrap(),
+    )
 }
