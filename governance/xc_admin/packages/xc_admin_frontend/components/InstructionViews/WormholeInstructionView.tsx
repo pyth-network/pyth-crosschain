@@ -16,7 +16,7 @@ import {
   getProgramName,
 } from 'xc_admin_common'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
-import CopyPubkey from '../common/CopyPubkey'
+import CopyText from '../common/CopyText'
 import { ParsedAccountPubkeyRow, SignerTag, WritableTag } from './AccountUtils'
 import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
@@ -39,7 +39,7 @@ const GovernanceInstructionView = ({
       {content}
       <div>
         Raw payload hex:{' '}
-        <CopyPubkey pubkey={instruction.encode().toString('hex')} />
+        <CopyText text={instruction.encode().toString('hex')} />
       </div>
     </div>
   )
@@ -121,16 +121,12 @@ export const WormholeInstructionView = ({
                               <div>{key}</div>
                               {parsedInstruction.args[key] instanceof
                               PublicKey ? (
-                                <CopyPubkey
-                                  pubkey={parsedInstruction.args[
-                                    key
-                                  ].toBase58()}
+                                <CopyText
+                                  text={parsedInstruction.args[key].toBase58()}
                                 />
                               ) : typeof instruction.args[key] === 'string' &&
                                 isPubkey(instruction.args[key]) ? (
-                                <CopyPubkey
-                                  pubkey={parsedInstruction.args[key]}
-                                />
+                                <CopyText text={parsedInstruction.args[key]} />
                               ) : (
                                 <div className="max-w-sm break-all">
                                   {typeof parsedInstruction.args[key] ===
@@ -204,8 +200,8 @@ export const WormholeInstructionView = ({
                                     <WritableTag />
                                   ) : null}
                                 </div>
-                                <CopyPubkey
-                                  pubkey={parsedInstruction.accounts.named[
+                                <CopyText
+                                  text={parsedInstruction.accounts.named[
                                     key
                                   ].pubkey.toBase58()}
                                 />
@@ -258,8 +254,8 @@ export const WormholeInstructionView = ({
                                     <WritableTag />
                                   ) : null}
                                 </div>
-                                <CopyPubkey
-                                  pubkey={accountMeta.pubkey.toBase58()}
+                                <CopyText
+                                  text={accountMeta.pubkey.toBase58()}
                                 />
                               </div>
                             </div>
@@ -282,7 +278,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               Address:
-              <CopyPubkey pubkey={'0x' + governanceAction.address} />
+              <CopyText text={'0x' + governanceAction.address} />
             </div>
           }
         />
@@ -303,7 +299,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               Package hash:
-              <CopyPubkey pubkey={governanceAction.hash} />
+              <CopyText text={governanceAction.hash} />
             </div>
           }
         />
@@ -336,7 +332,7 @@ export const WormholeInstructionView = ({
                     <li>Emitter Chain: {dataSource.emitterChain}</li>
                     <li>
                       Emitter Address:{' '}
-                      <CopyPubkey pubkey={'0x' + dataSource.emitterAddress} />
+                      <CopyText text={'0x' + dataSource.emitterAddress} />
                     </li>
                   </ul>
                 </div>
@@ -353,7 +349,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               New Wormhole Address:
-              <CopyPubkey pubkey={'0x' + governanceAction.address} />
+              <CopyText text={'0x' + governanceAction.address} />
             </div>
           }
         />
@@ -391,7 +387,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               Claim Vaa hex:{' '}
-              <CopyPubkey pubkey={governanceAction.claimVaa.toString('hex')} />
+              <CopyText text={governanceAction.claimVaa.toString('hex')} />
             </div>
           }
         />
@@ -405,17 +401,17 @@ export const WormholeInstructionView = ({
             <div>
               <div>
                 Executor Address:{' '}
-                <CopyPubkey pubkey={'0x' + governanceAction.executorAddress} />
+                <CopyText text={'0x' + governanceAction.executorAddress} />
               </div>
               <div>
                 Call Address:
-                <CopyPubkey pubkey={'0x' + governanceAction.callAddress} />
+                <CopyText text={'0x' + governanceAction.callAddress} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
               <div>
                 Call Data:
-                <CopyPubkey
-                  pubkey={'0x' + governanceAction.calldata.toString('hex')}
+                <CopyText
+                  text={'0x' + governanceAction.calldata.toString('hex')}
                 />
               </div>
             </div>
