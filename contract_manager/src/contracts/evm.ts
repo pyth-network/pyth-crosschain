@@ -366,7 +366,7 @@ export class EvmEntropyContract extends Storable {
 
   // Generate a payload for the given executor address and calldata.
   // `executor` and `calldata` should be hex strings.
-  generatePayload(executor: string, calldata: string) {
+  generateExecutorPayload(executor: string, calldata: string) {
     return new EvmExecute(
       this.chain.wormholeChainName,
       executor.replace("0x", ""),
@@ -380,14 +380,14 @@ export class EvmEntropyContract extends Storable {
   generateAcceptAdminPayload(newAdmin: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptAdmin().encodeABI();
-    return this.generatePayload(newAdmin, data);
+    return this.generateExecutorPayload(newAdmin, data);
   }
 
   // Generates a payload for newOwner to call acceptOwnership on the entropy contracts
   generateAcceptOwnershipPayload(newOwner: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptOwnership().encodeABI();
-    return this.generatePayload(newOwner, data);
+    return this.generateExecutorPayload(newOwner, data);
   }
 
   getOwner(): string {
