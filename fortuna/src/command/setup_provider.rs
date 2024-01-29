@@ -1,16 +1,20 @@
 use {
     crate::{
-        api::get_register_uri, chain::ethereum::SignablePythContract, command::{
+        api::get_register_uri,
+        chain::ethereum::SignablePythContract,
+        command::{
             register_provider,
             register_provider::CommitmentMetadata,
-        }, config::{
+        },
+        config::{
             Config,
             RegisterProviderOptions,
             SetupProviderOptions,
-        }, state::{
+        },
+        state::{
             HashChainState,
             PebbleHashChain,
-        }
+        },
     },
     anyhow::Result,
     ethers::signers::{
@@ -84,11 +88,11 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
         if register {
             register_provider(&RegisterProviderOptions {
-                config:      opts.config.clone(),
-                chain_id:    chain_id.clone(),
+                config: opts.config.clone(),
+                chain_id: chain_id.clone(),
                 private_key: private_key.clone(),
-                randomness:  opts.randomness.clone(),
-                fee:         opts.fee,
+                randomness: opts.randomness.clone(),
+                fee: opts.fee,
                 uri,
             })
             .await?;
