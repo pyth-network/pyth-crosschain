@@ -1,5 +1,12 @@
 use {
+<<<<<<< HEAD
     crate::common::DEFAULT_GUARDIAN_SET_INDEX,
+=======
+    crate::common::{
+        trim_vaa_signatures,
+        DEFAULT_GUARDIAN_SET_INDEX,
+    },
+>>>>>>> c6431163 (Go)
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
@@ -17,7 +24,10 @@ use {
         test_utils::{
             create_accumulator_message,
             create_dummy_price_feed_message,
+<<<<<<< HEAD
             trim_vaa_signatures,
+=======
+>>>>>>> c6431163 (Go)
         },
     },
     solana_sdk::{
@@ -36,11 +46,16 @@ async fn test_post_updates_atomic() {
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
+<<<<<<< HEAD
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
         5,
     ))
     .unwrap();
+=======
+
+    let vaa = trim_vaa_signatures(vaa, 5);
+>>>>>>> c6431163 (Go)
 
     let ProgramTestFixtures {
         mut program_simulator,

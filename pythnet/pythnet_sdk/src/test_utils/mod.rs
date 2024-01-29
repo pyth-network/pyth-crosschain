@@ -37,6 +37,7 @@ use {
     wormhole_sdk::{
         vaa::{
             Body,
+        },
         Address,
         Chain,
         Vaa,
@@ -179,8 +180,17 @@ pub fn create_vaa_from_payload(
     emitter_chain: Chain,
     sequence: u64,
 ) -> Vaa<Box<RawMessage>> {
-    let digest = libsecp256k1Message::parse_slice(&digest(payload).unwrap().secp256k_hash).unwrap();
     let guardians = create_dummy_guardians();
+
+    let body: Body<Box<RawMessage>> = Body {
+        emitter_chain,
+        emitter_address,
+        sequence,
+        payload: <Box<RawMessage>>::from(payload.to_vec()),
+        ..Default::default()
+    };
+
+    let digest = libsecp256k1Message::parse_slice(&body.digest().unwrap().secp256k_hash).unwrap();
 
     let signatures: Vec<(Signature, RecoveryId)> = guardians[0..NUM_SIGNATURES]
         .iter()
@@ -200,15 +210,13 @@ pub fn create_vaa_from_payload(
         })
         .collect();
 
-    let vaa: Vaa<Box<RawMessage>> = Vaa {
+
+    let header = Header {
         version: 1,
-        emitter_chain,
-        emitter_address,
-        sequence,
-        payload: <Box<RawMessage>>::from(payload.to_vec()),
         signatures: wormhole_signatures,
         ..Default::default()
     };
 
-    vaa
+
+    (header, body).into()
 }
