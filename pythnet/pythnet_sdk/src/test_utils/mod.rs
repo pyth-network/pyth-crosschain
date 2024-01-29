@@ -75,6 +75,7 @@ pub const DEFAULT_VALID_TIME_PERIOD: u64 = 180;
 const DEFAULT_SEQUENCE: u64 = 2;
 
 const NUM_GUARDIANS: u8 = 19;
+const NUM_SIGNATURES: usize = 13;
 
 pub fn create_dummy_guardians() -> Vec<SecretKey> {
     let mut result: Vec<SecretKey> = vec![];
@@ -176,7 +177,7 @@ pub fn create_vaa_from_payload(
     let digest = libsecp256k1Message::parse_slice(&digest(payload).unwrap().secp256k_hash).unwrap();
     let guardians = create_dummy_guardians();
 
-    let signatures: Vec<(Signature, RecoveryId)> = guardians
+    let signatures: Vec<(Signature, RecoveryId)> = guardians[0..NUM_SIGNATURES]
         .iter()
         .map(|x| libsecp256k1::sign(&digest, &x))
         .collect();
