@@ -1,0 +1,33 @@
+name: Test Solana Contract
+
+on:
+  pull_request:
+    paths:
+      - target_chains/cosmwasm/**
+      - pythnet/pythnet_sdk/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/cosmwasm/**
+      - pythnet/pythnet_sdk/**
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/solana
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.16.20/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Build
+        run: cargo-build-sbf
+      - name: Run tests
+        run: cargo-test-sbf
