@@ -16,11 +16,11 @@ use {
     pythnet_sdk::wire::array,
     serde_with::serde_as,
     tokio::try_join,
+    url::Url,
     utoipa::{
         IntoParams,
         ToSchema,
     },
-    url::Url,
 };
 
 /// Reveal the random value for a given sequence number and blockchain.
@@ -163,7 +163,7 @@ impl Blob {
 // The path and revelation API are highly coupled. Please be sure to keep them consistent.
 pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
     let base_uri = Url::parse(base_uri)?;
-    let path =format!("/v1/chains/{0}", chain_id);
+    let path = format!("/v1/chains/{0}", chain_id);
     let uri = base_uri.join(&path)?;
     Ok(uri.to_string())
 }
