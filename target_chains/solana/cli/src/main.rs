@@ -280,6 +280,7 @@ pub fn process_post_price_update_atomic(
 }
 
 fn trim_signatures(header: &mut Header, n_signatures: usize) {
+    println!("There are {} signatures", header.signatures.len());
     header.signatures = header.signatures[..(n_signatures)].to_vec();
 }
 
