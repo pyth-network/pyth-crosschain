@@ -8,7 +8,7 @@ import { toPrivateKey } from "../src";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")
   .usage(
-    "Usage: $0 --code <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]"
+    "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]"
   )
   .options({
     "std-output": {

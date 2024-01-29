@@ -44,18 +44,18 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-async function run_if_not_cached(
-  cache_key: string,
+async function runIfNotCached(
+  cacheKey: string,
   fn: () => Promise<string>
 ): Promise<string> {
   const cache = existsSync(CACHE_FILE)
     ? JSON.parse(readFileSync(CACHE_FILE, "utf8"))
     : {};
-  if (cache[cache_key]) {
-    return cache[cache_key];
+  if (cache[cacheKey]) {
+    return cache[cacheKey];
   }
   const result = await fn();
-  cache[cache_key] = result;
+  cache[cacheKey] = result;
   writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
   return result;
 }
@@ -102,7 +102,7 @@ async function main() {
   for (const chain of selectedChains) {
     const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
     console.log("Deploying contract to", chain.getId());
-    const address = await run_if_not_cached(`deploy-${chain.getId()}`, () => {
+    const address = await runIfNotCached(`deploy-${chain.getId()}`, () => {
       return chain.deploy(
         toPrivateKey(argv["private-key"]),
         artifact["abi"],
