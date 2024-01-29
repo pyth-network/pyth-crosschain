@@ -3,11 +3,54 @@ import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
-import { DataSource } from "xc_admin_common";
+import { DataSource, EvmExecute } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
 
 // Just to make sure tx gas limit is enough
 const GAS_ESTIMATE_MULTIPLIER = 2;
+const EXTENDED_ENTROPY_ABI = [
+  {
+    inputs: [],
+    name: "acceptOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "acceptAdmin",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "pendingOwner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  ...EntropyAbi,
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
@@ -321,6 +364,42 @@ export class EvmEntropyContract extends Storable {
     return new EvmEntropyContract(chain, parsed.address);
   }
 
+  // Generate a payload for the given executor address and calldata.
+  // `executor` and `calldata` should be hex strings.
+  generateExecutorPayload(executor: string, calldata: string) {
+    return new EvmExecute(
+      this.chain.wormholeChainName,
+      executor.replace("0x", ""),
+      this.address.replace("0x", ""),
+      0n,
+      Buffer.from(calldata.replace("0x", ""), "hex")
+    ).encode();
+  }
+
+  // Generates a payload for the newAdmin to call acceptAdmin on the entropy contracts
+  generateAcceptAdminPayload(newAdmin: string): Buffer {
+    const contract = this.getContract();
+    const data = contract.methods.acceptAdmin().encodeABI();
+    return this.generateExecutorPayload(newAdmin, data);
+  }
+
+  // Generates a payload for newOwner to call acceptOwnership on the entropy contracts
+  generateAcceptOwnershipPayload(newOwner: string): Buffer {
+    const contract = this.getContract();
+    const data = contract.methods.acceptOwnership().encodeABI();
+    return this.generateExecutorPayload(newOwner, data);
+  }
+
+  getOwner(): string {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
+  }
+
+  getPendingOwner(): string {
+    const contract = this.getContract();
+    return contract.methods.pendingOwner().call();
+  }
+
   toJson() {
     return {
       chain: this.chain.getId(),
@@ -331,7 +410,7 @@ export class EvmEntropyContract extends Storable {
 
   getContract() {
     const web3 = new Web3(this.chain.getRpcUrl());
-    return new web3.eth.Contract(EntropyAbi as any, this.address); // eslint-disable-line  @typescript-eslint/no-explicit-any
+    return new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
   }
 
   async getDefaultProvider(): Promise<string> {

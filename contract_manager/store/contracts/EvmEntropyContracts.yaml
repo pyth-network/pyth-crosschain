@@ -1,3 +1,24 @@
+- chain: lightlink_pegasus_testnet
+  address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
+  type: EvmEntropyContract
+- chain: chiliz_spicy
+  address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
+  type: EvmEntropyContract
+- chain: conflux_espace_testnet
+  address: "0xdF21D137Aadc95588205586636710ca2890538d5"
+  type: EvmEntropyContract
+- chain: mode_testnet
+  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
+  type: EvmEntropyContract
+- chain: arbitrum_sepolia
+  address: "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440"
+  type: EvmEntropyContract
 - chain: base_goerli
   address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
-  type: EvmPriceFeedContract
+  type: EvmEntropyContract
+- chain: fantom_sonic_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmEntropyContract
+- chain: blast_s2_testnet
+  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
+  type: EvmEntropyContract
