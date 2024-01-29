@@ -32,13 +32,13 @@ async fn test_post_updates() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
-    let accumulator_update_data = deserialize_accumulator_update_data(message).unwrap();
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses,
-    } = setup_pyth_receiver(vec![accumulator_update_data.0]).await;
+    } = setup_pyth_receiver(vec![vaa]).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -50,7 +50,7 @@ async fn test_post_updates() {
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
-                accumulator_update_data.1[0].clone(),
+                merkle_price_updates[0].clone(),
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -81,7 +81,7 @@ async fn test_post_updates() {
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
-                accumulator_update_data.1[1].clone(),
+                merkle_price_updates[1].clone(),
             ),
             &vec![&poster, &price_update_keypair],
             None,

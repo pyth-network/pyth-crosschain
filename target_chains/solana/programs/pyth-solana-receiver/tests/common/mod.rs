@@ -1,10 +1,12 @@
 use {
     anchor_lang::AnchorSerialize,
+    libsecp256k1::PublicKey,
     program_simulator::ProgramSimulator,
     pyth_solana_receiver::{
         instruction::Initialize,
         sdk::{
             get_config_address,
+            get_guardian_set_address,
             get_treasury_address,
         },
         state::config::{
@@ -13,8 +15,13 @@ use {
         },
         ID,
     },
-    pythnet_sdk::test_utils::DEFAULT_DATA_SOURCE,
+    pythnet_sdk::test_utils::{
+        create_dummy_guardians,
+        DEFAULT_DATA_SOURCE,
+    },
+    serde_wormhole::RawMessage,
     solana_program::{
+        keccak,
         pubkey::Pubkey,
         rent::Rent,
     },
@@ -27,12 +34,16 @@ use {
     wormhole_core_bridge_solana::{
         state::{
             EncodedVaa,
+            GuardianSet,
             Header,
             ProcessingStatus,
         },
         ID as BRIDGE_ID,
     },
+    wormhole_sdk::Vaa,
 };
+
+pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
 
 pub fn default_receiver_config() -> Config {
     Config {
@@ -76,6 +87,38 @@ pub fn build_encoded_vaa_account_from_vaa(vaa: Vec<u8>) -> Account {
     }
 }
 
+pub fn build_guardian_set_account() -> Account {
+    let guardian_set = GuardianSet {
+        index:           DEFAULT_GUARDIAN_SET_INDEX,
+        keys:            create_dummy_guardians()
+            .iter()
+            .map(|x| {
+                let mut result: [u8; 20] = [0u8; 20];
+                result.copy_from_slice(
+                    &keccak::hashv(&[&PublicKey::from_secret_key(x).serialize()[1..]]).0[12..],
+                );
+                result
+            })
+            .collect::<Vec<[u8; 20]>>(),
+        creation_time:   0.into(),
+        expiration_time: 0.into(),
+    };
+
+    let guardian_set_data = (
+        <GuardianSet as anchor_lang::Discriminator>::DISCRIMINATOR,
+        guardian_set,
+    )
+        .try_to_vec()
+        .unwrap();
+
+    Account {
+        lamports:   Rent::default().minimum_balance(guardian_set_data.len()),
+        data:       guardian_set_data,
+        owner:      BRIDGE_ID,
+        executable: false,
+        rent_epoch: 0,
+    }
+}
 /**
  * Setup to test the Pyth Receiver. The return values are a tuple composed of :
  * - The program simulator, which is used to send transactions
@@ -92,6 +135,10 @@ pub async fn setup_pyth_receiver(vaas: Vec<Vec<u8>>) -> ProgramTestFixtures {
         encoded_vaa_addresses.push(encoded_vaa_address);
         program_test.add_account(encoded_vaa_address, build_encoded_vaa_account_from_vaa(vaa));
     }
+    program_test.add_account(
+        get_guardian_set_address(BRIDGE_ID, DEFAULT_GUARDIAN_SET_INDEX),
+        build_guardian_set_account(),
+    );
 
     let mut program_simulator = ProgramSimulator::start_from_program_test(program_test).await;
 
@@ -123,4 +170,10 @@ pub async fn setup_pyth_receiver(vaas: Vec<Vec<u8>>) -> ProgramTestFixtures {
         program_simulator,
         encoded_vaa_addresses,
     }
+}
+
+pub fn trim_vaa_signatures(vaa: Vec<u8>, n: u8) -> Vec<u8> {
+    let mut parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa.as_slice()).unwrap();
+    parsed_vaa.signatures = parsed_vaa.signatures[0..n as usize].to_vec();
+    serde_wormhole::to_vec(&parsed_vaa).unwrap()
 }
