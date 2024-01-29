@@ -201,8 +201,9 @@ pub fn create_vaa_from_payload(
         .collect();
 
     let vaa: Vaa<Box<RawMessage>> = Vaa {
-        emitter_chain: emitter_chain,
-        emitter_address: emitter_address,
+        version: 1,
+        emitter_chain,
+        emitter_address,
         sequence,
         payload: <Box<RawMessage>>::from(payload.to_vec()),
         signatures: wormhole_signatures,
