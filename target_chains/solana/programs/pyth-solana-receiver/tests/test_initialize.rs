@@ -1,14 +1,21 @@
 use {
-    crate::common::dummy_price_messages,
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
     pyth_solana_receiver::{
         instruction::PostUpdates,
+        sdk::deserialize_accumulator_update_data,
         state::price_update::{
             PriceUpdateV1,
             VerificationLevel,
+        },
+    },
+    pythnet_sdk::{
+        messages::Message,
+        test_utils::{
+            create_accumulator_message,
+            create_dummy_price_feed_message,
         },
     },
     solana_sdk::{
@@ -22,13 +29,16 @@ mod common;
 
 #[tokio::test]
 async fn test_post_updates() {
-    let dummy_price_messages = dummy_price_messages();
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let accumulator_update_data = deserialize_accumulator_update_data(message).unwrap();
+
 
     let ProgramTestFixtures {
         mut program_simulator,
-        encoded_vaa_address,
-        merkle_price_updates,
-    } = setup_pyth_receiver(dummy_price_messages.clone()).await;
+        encoded_vaa_addresses,
+    } = setup_pyth_receiver(vec![accumulator_update_data.0]).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -38,9 +48,9 @@ async fn test_post_updates() {
         .process_ix(
             PostUpdates::populate(
                 poster.pubkey(),
-                encoded_vaa_address,
+                encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
-                merkle_price_updates[0].clone(),
+                accumulator_update_data.1[0].clone(),
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -59,16 +69,19 @@ async fn test_post_updates() {
         price_update_account.verification_level,
         VerificationLevel::Full
     );
-    assert_eq!(price_update_account.price_message, dummy_price_messages[0]);
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_1
+    );
 
     // post another update to the same account
     program_simulator
         .process_ix(
             PostUpdates::populate(
                 poster.pubkey(),
-                encoded_vaa_address,
+                encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
-                merkle_price_updates[1].clone(),
+                accumulator_update_data.1[1].clone(),
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -87,5 +100,8 @@ async fn test_post_updates() {
         price_update_account.verification_level,
         VerificationLevel::Full
     );
-    assert_eq!(price_update_account.price_message, dummy_price_messages[1]);
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_2
+    );
 }

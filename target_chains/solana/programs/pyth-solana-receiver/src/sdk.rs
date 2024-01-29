@@ -12,7 +12,11 @@ use {
         system_program,
         InstructionData,
     },
-    pythnet_sdk::wire::v1::MerklePriceUpdate,
+    pythnet_sdk::wire::v1::{
+        AccumulatorUpdateData,
+        MerklePriceUpdate,
+        Proof,
+    },
     solana_program::instruction::Instruction,
     wormhole_core_bridge_solana::state::GuardianSet,
 };
@@ -117,4 +121,15 @@ pub fn get_treasury_address() -> Pubkey {
 
 pub fn get_config_address() -> Pubkey {
     Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0
+}
+
+pub fn deserialize_accumulator_update_data(
+    accumulator_message: Vec<u8>,
+) -> Result<(Vec<u8>, Vec<MerklePriceUpdate>)> {
+    let accumulator_update_data =
+        AccumulatorUpdateData::try_from_slice(accumulator_message.as_slice()).unwrap();
+
+    match accumulator_update_data.proof {
+        Proof::WormholeMerkle { vaa, updates } => return Ok((vaa.as_ref().to_vec(), updates)),
+    }
 }

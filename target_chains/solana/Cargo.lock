@@ -3075,11 +3075,14 @@ dependencies = [
  "byteorder",
  "fast-math",
  "hex",
+ "libsecp256k1 0.7.1",
  "rustc_version",
  "serde",
+ "serde_wormhole",
  "sha3 0.10.6",
  "slow_primes",
  "thiserror",
+ "wormhole-sdk",
 ]
 
 [[package]]
