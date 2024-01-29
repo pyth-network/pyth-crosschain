@@ -2,6 +2,7 @@ import {
   AptosAuthorizeUpgradeContract,
   AuthorizeGovernanceDataSourceTransfer,
   CosmosUpgradeContract,
+  EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
   ExecutePostedVaa,
@@ -391,6 +392,21 @@ export const WormholeInstructionView = ({
             <div>
               Claim Vaa hex:{' '}
               <CopyPubkey pubkey={governanceAction.claimVaa.toString('hex')} />
+            </div>
+          }
+        />
+      )}
+
+      {governanceAction instanceof EvmExecute && (
+        <GovernanceInstructionView
+          instruction={governanceAction}
+          actionName={governanceAction.action}
+          content={
+            <div>
+              <div>Executor Address: {governanceAction.executorAddress}</div>
+              <div>Call Address: {governanceAction.callAddress}</div>
+              <div>Value: {governanceAction.value.toString()}</div>
+              <div>Call Data: {governanceAction.calldata}</div>
             </div>
           }
         />
