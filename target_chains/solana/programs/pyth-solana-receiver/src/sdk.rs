@@ -27,6 +27,7 @@ use {
 };
 
 pub const DEFAULT_TREASURY_ID: u8 = 0;
+pub const SECONDARY_TREASURY_ID: u8 = 1;
 
 impl accounts::Initialize {
     pub fn populate(payer: &Pubkey) -> Self {

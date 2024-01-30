@@ -16,6 +16,7 @@ use {
             deserialize_accumulator_update_data,
             get_guardian_set_address,
             DEFAULT_TREASURY_ID,
+            SECONDARY_TREASURY_ID,
         },
         state::price_update::{
             PriceUpdateV1,
@@ -119,6 +120,7 @@ async fn test_post_updates_atomic() {
         .unwrap();
 
     assert_treasury_balance(&mut program_simulator, 2, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(&mut program_simulator, 0, SECONDARY_TREASURY_ID).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -133,6 +135,41 @@ async fn test_post_updates_atomic() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
+    );
+
+    // use another treasury account
+    program_simulator
+        .process_ix(
+            PostUpdatesAtomic::populate(
+                poster.pubkey(),
+                price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
+                merkle_price_updates[0].clone(),
+                SECONDARY_TREASURY_ID,
+            ),
+            &vec![&poster, &price_update_keypair],
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_treasury_balance(&mut program_simulator, 2, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(&mut program_simulator, 1, SECONDARY_TREASURY_ID).await;
+
+    price_update_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .await
+        .unwrap();
+    assert_eq!(price_update_account.write_authority, poster.pubkey());
+    assert_eq!(
+        price_update_account.verification_level,
+        VerificationLevel::Partial(5)
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_1
     );
 }
 

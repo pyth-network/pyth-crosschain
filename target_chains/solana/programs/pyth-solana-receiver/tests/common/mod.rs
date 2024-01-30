@@ -9,6 +9,7 @@ use {
             get_guardian_set_address,
             get_treasury_address,
             DEFAULT_TREASURY_ID,
+            SECONDARY_TREASURY_ID,
         },
         state::config::{
             Config,
@@ -208,6 +209,13 @@ pub async fn setup_pyth_receiver(
         .await
         .unwrap();
 
+    program_simulator
+        .airdrop(
+            &get_treasury_address(SECONDARY_TREASURY_ID),
+            Rent::default().minimum_balance(0),
+        )
+        .await
+        .unwrap();
 
     ProgramTestFixtures {
         program_simulator,
