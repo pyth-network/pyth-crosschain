@@ -301,13 +301,13 @@ pub struct PostUpdatesAtomic<'info> {
 pub struct PostUpdatesAtomicParams {
     pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id : u8
+    pub treasury_id:         u8,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct PostUpdatesParams {
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id: u8
+    pub treasury_id:         u8,
 }
 
 

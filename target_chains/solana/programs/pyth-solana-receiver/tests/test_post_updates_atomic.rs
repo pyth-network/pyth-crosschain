@@ -15,6 +15,7 @@ use {
         sdk::{
             deserialize_accumulator_update_data,
             get_guardian_set_address,
+            DEFAULT_TREASURY_ID,
         },
         state::price_update::{
             PriceUpdateV1,
@@ -62,7 +63,7 @@ async fn test_post_updates_atomic() {
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
 
-    assert_treasury_balance(&mut program_simulator, 0).await;
+    assert_treasury_balance(&mut program_simulator, 0, DEFAULT_TREASURY_ID).await;
 
     // post one update atomically
     program_simulator
@@ -74,6 +75,7 @@ async fn test_post_updates_atomic() {
                 DEFAULT_GUARDIAN_SET_INDEX,
                 vaa.clone(),
                 merkle_price_updates[0].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -81,7 +83,7 @@ async fn test_post_updates_atomic() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1).await;
+    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -108,6 +110,7 @@ async fn test_post_updates_atomic() {
                 DEFAULT_GUARDIAN_SET_INDEX,
                 vaa.clone(),
                 merkle_price_updates[1].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -115,7 +118,7 @@ async fn test_post_updates_atomic() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 2).await;
+    assert_treasury_balance(&mut program_simulator, 2, DEFAULT_TREASURY_ID).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -162,6 +165,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa_buffer_copy,
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -187,6 +191,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa_wrong_num_signatures.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -211,6 +216,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -234,6 +240,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -257,6 +264,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -281,6 +289,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -304,6 +313,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -328,6 +338,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     serde_wormhole::to_vec(&vaa_copy).unwrap(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -345,6 +356,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
         DEFAULT_GUARDIAN_SET_INDEX,
         vaa.clone(),
         merkle_price_updates[0].clone(),
+        DEFAULT_TREASURY_ID,
     );
 
     let wrong_guardian_set = get_guardian_set_address(BRIDGE_ID, 1);
@@ -388,6 +400,7 @@ async fn test_post_updates_atomic_wrong_setup() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -415,6 +428,7 @@ async fn test_post_updates_atomic_wrong_setup() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,

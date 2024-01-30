@@ -16,7 +16,13 @@ use {
         Cli,
     },
     pyth_solana_receiver::{
-        sdk::{deserialize_accumulator_update_data, DEFAULT_TREASURY_ID}, state::config::DataSource, PostUpdatesAtomicParams, PostUpdatesParams
+        sdk::{
+            deserialize_accumulator_update_data,
+            DEFAULT_TREASURY_ID,
+        },
+        state::config::DataSource,
+        PostUpdatesAtomicParams,
+        PostUpdatesParams,
     },
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
@@ -254,7 +260,7 @@ pub fn process_post_price_update_atomic(
         price_update_keypair.pubkey(),
         *wormhole,
         header.guardian_set_index,
-        DEFAULT_TREASURY_ID
+        DEFAULT_TREASURY_ID,
     )
     .to_account_metas(None);
 
@@ -265,7 +271,7 @@ pub fn process_post_price_update_atomic(
             params: PostUpdatesAtomicParams {
                 merkle_price_update: merkle_price_update.clone(),
                 vaa:                 serde_wormhole::to_vec(&(header, body)).unwrap(),
-                treasury_id : DEFAULT_TREASURY_ID
+                treasury_id:         DEFAULT_TREASURY_ID,
             },
         }
         .data(),
@@ -467,10 +473,9 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         program_id: pyth_solana_receiver::id(),
         accounts:   post_update_accounts,
         data:       pyth_solana_receiver::instruction::PostUpdates {
-            params
-            : PostUpdatesParams {
+            params: PostUpdatesParams {
                 merkle_price_update: merkle_price_update.clone(),
-                treasury_id : DEFAULT_TREASURY_ID
+                treasury_id:         DEFAULT_TREASURY_ID,
             },
         }
         .data(),

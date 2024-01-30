@@ -16,7 +16,10 @@ use {
             SetDataSources,
             SetFee,
         },
-        sdk::deserialize_accumulator_update_data,
+        sdk::{
+            deserialize_accumulator_update_data,
+            DEFAULT_TREASURY_ID,
+        },
         state::{
             config::DataSource,
             price_update::{
@@ -82,6 +85,7 @@ async fn test_invalid_wormhole_message() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa,
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -126,6 +130,7 @@ async fn test_invalid_update_message() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa,
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -167,7 +172,7 @@ async fn test_post_price_update_from_vaa() {
     )
     .await;
 
-    assert_treasury_balance(&mut program_simulator, 0).await;
+    assert_treasury_balance(&mut program_simulator, 0, DEFAULT_TREASURY_ID).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -183,6 +188,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates2[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -204,6 +210,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[2].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -242,6 +249,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -279,6 +287,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -315,6 +324,7 @@ async fn test_post_price_update_from_vaa() {
                 DEFAULT_GUARDIAN_SET_INDEX,
                 vaa.clone(),
                 merkle_price_updates[0].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -322,7 +332,7 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1).await;
+    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -361,6 +371,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[1].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -371,7 +382,7 @@ async fn test_post_price_update_from_vaa() {
         into_transation_error(ReceiverError::InsufficientFunds)
     );
 
-    assert_treasury_balance(&mut program_simulator, 1).await;
+    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -411,6 +422,7 @@ async fn test_post_price_update_from_vaa() {
                 DEFAULT_GUARDIAN_SET_INDEX,
                 vaa.clone(),
                 merkle_price_updates[1].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -418,7 +430,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, LAMPORTS_PER_SOL + 1).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        LAMPORTS_PER_SOL + 1,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -448,6 +465,7 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_GUARDIAN_SET_INDEX,
                     vaa.clone(),
                     merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster_2, &price_update_keypair],
                 None,

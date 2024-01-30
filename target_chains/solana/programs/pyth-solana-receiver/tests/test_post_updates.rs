@@ -11,7 +11,10 @@ use {
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::PostUpdates,
-        sdk::deserialize_accumulator_update_data,
+        sdk::{
+            deserialize_accumulator_update_data,
+            DEFAULT_TREASURY_ID,
+        },
         state::price_update::{
             PriceUpdateV1,
             VerificationLevel,
@@ -52,7 +55,7 @@ async fn test_post_updates() {
     )
     .await;
 
-    assert_treasury_balance(&mut program_simulator, 0).await;
+    assert_treasury_balance(&mut program_simulator, 0, DEFAULT_TREASURY_ID).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -72,7 +75,7 @@ async fn test_post_updates() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1).await;
+    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -104,7 +107,7 @@ async fn test_post_updates() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 2).await;
+    assert_treasury_balance(&mut program_simulator, 2, DEFAULT_TREASURY_ID).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
