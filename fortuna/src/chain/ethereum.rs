@@ -91,7 +91,6 @@ impl SignablePythContract {
         };
 
         let wallet__ = private_key
-            .clone()
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
 

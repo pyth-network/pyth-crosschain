@@ -29,11 +29,10 @@ pub struct SetupProviderOptions {
     #[arg(default_value = "100")]
     pub fee: u128,
 
-    /// The URI where clients can retrieve random values from this provider,
-    /// i.e., wherever fortuna for this provider will be hosted.
+    /// The base URI for fortuna.
+    /// e.g., https://fortuna-staging.pyth.network
     #[arg(long = "uri")]
-    #[arg(default_value = "")]
-    pub uri: String,
+    pub base_uri: String,
 }
 
 impl SetupProviderOptions {

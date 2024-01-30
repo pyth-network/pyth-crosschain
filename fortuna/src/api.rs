@@ -6,6 +6,7 @@ use {
         },
         state::HashChainState,
     },
+    anyhow::Result,
     axum::{
         body::Body,
         http::StatusCode,
@@ -30,6 +31,7 @@ use {
         sync::Arc,
     },
     tokio::sync::RwLock,
+    url::Url,
 };
 pub use {
     chain_ids::*,
@@ -177,6 +179,16 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
             get(revelation),
         )
         .with_state(state)
+}
+
+/// We are registering the provider on chain with the following url:
+/// `{base_uri}/v1/chains/{chain_id}`
+/// The path and API are highly coupled. Please be sure to keep them consistent.
+pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
+    let base_uri = Url::parse(base_uri)?;
+    let path = format!("/v1/chains/{}", chain_id);
+    let uri = base_uri.join(&path)?;
+    Ok(uri.to_string())
 }
 
 #[cfg(test)]
