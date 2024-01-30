@@ -3,6 +3,7 @@ use {
         accounts,
         instruction,
         state::config::Config,
+        PostUpdatesAtomicParams,
         CONFIG_SEED,
         ID,
         TREASURY_SEED,
@@ -12,7 +13,11 @@ use {
         system_program,
         InstructionData,
     },
-    pythnet_sdk::wire::v1::MerklePriceUpdate,
+    pythnet_sdk::wire::v1::{
+        AccumulatorUpdateData,
+        MerklePriceUpdate,
+        Proof,
+    },
     solana_program::instruction::Instruction,
     wormhole_core_bridge_solana::state::GuardianSet,
 };
@@ -38,14 +43,7 @@ impl accounts::PostUpdatesAtomic {
         let config = get_config_address();
         let treasury = get_treasury_address();
 
-        let guardian_set = Pubkey::find_program_address(
-            &[
-                GuardianSet::SEED_PREFIX,
-                guardian_set_index.to_be_bytes().as_ref(),
-            ],
-            &wormhole_address,
-        )
-        .0;
+        let guardian_set = get_guardian_set_address(wormhole_address, guardian_set_index);
 
         accounts::PostUpdatesAtomic {
             payer,
@@ -111,10 +109,64 @@ impl instruction::PostUpdates {
     }
 }
 
+
+impl instruction::PostUpdatesAtomic {
+    pub fn populate(
+        payer: Pubkey,
+        price_update_account: Pubkey,
+        wormhole_address: Pubkey,
+        guardian_set_index: u32,
+        vaa: Vec<u8>,
+        merkle_price_update: MerklePriceUpdate,
+    ) -> Instruction {
+        let post_update_accounts = accounts::PostUpdatesAtomic::populate(
+            payer,
+            price_update_account,
+            wormhole_address,
+            guardian_set_index,
+        )
+        .to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   post_update_accounts,
+            data:       instruction::PostUpdatesAtomic {
+                params: PostUpdatesAtomicParams {
+                    vaa,
+                    merkle_price_update,
+                },
+            }
+            .data(),
+        }
+    }
+}
+
+
 pub fn get_treasury_address() -> Pubkey {
     Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &ID).0
 }
 
 pub fn get_config_address() -> Pubkey {
     Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0
+}
+
+pub fn get_guardian_set_address(wormhole_address: Pubkey, guardian_set_index: u32) -> Pubkey {
+    Pubkey::find_program_address(
+        &[
+            GuardianSet::SEED_PREFIX,
+            guardian_set_index.to_be_bytes().as_ref(),
+        ],
+        &wormhole_address,
+    )
+    .0
+}
+
+pub fn deserialize_accumulator_update_data(
+    accumulator_message: Vec<u8>,
+) -> Result<(Vec<u8>, Vec<MerklePriceUpdate>)> {
+    let accumulator_update_data =
+        AccumulatorUpdateData::try_from_slice(accumulator_message.as_slice()).unwrap();
+
+    match accumulator_update_data.proof {
+        Proof::WormholeMerkle { vaa, updates } => return Ok((vaa.as_ref().to_vec(), updates)),
+    }
 }

@@ -17,7 +17,7 @@ test-bpf = []
 
 [dependencies]
 anchor-lang = "0.28.0"
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", version = "2.0.0" }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 solana-program = "1.16.20"
 byteorder = "1.4.3"
 wormhole-core-bridge-solana = {workspace = true}
@@ -36,3 +36,4 @@ lazy_static = "1.4.0"
 program-simulator = { path = "../../program_simulator" }
 wormhole-sdk = { workspace = true }
 serde_wormhole = { workspace = true }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }

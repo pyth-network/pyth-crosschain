@@ -1,45 +1,64 @@
 use {
-    crate::common::dummy_price_messages,
+    crate::common::DEFAULT_GUARDIAN_SET_INDEX,
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
     pyth_solana_receiver::{
-        instruction::PostUpdates,
+        instruction::PostUpdatesAtomic,
+        sdk::deserialize_accumulator_update_data,
         state::price_update::{
             PriceUpdateV1,
             VerificationLevel,
+        },
+    },
+    pythnet_sdk::{
+        messages::Message,
+        test_utils::{
+            create_accumulator_message,
+            create_dummy_price_feed_message,
+            trim_vaa_signatures,
         },
     },
     solana_sdk::{
         signature::Keypair,
         signer::Signer,
     },
+    wormhole_core_bridge_solana::ID as BRIDGE_ID,
 };
 
 mod common;
 
 
 #[tokio::test]
-async fn test_post_updates() {
-    let dummy_price_messages = dummy_price_messages();
+async fn test_post_updates_atomic() {
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
+    let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
+        serde_wormhole::from_slice(&vaa).unwrap(),
+        5,
+    ))
+    .unwrap();
 
     let ProgramTestFixtures {
         mut program_simulator,
-        encoded_vaa_address,
-        merkle_price_updates,
-    } = setup_pyth_receiver(dummy_price_messages.clone()).await;
+        encoded_vaa_addresses: _,
+    } = setup_pyth_receiver(vec![]).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
 
-    // post one update
+    // post one update atomically
     program_simulator
         .process_ix(
-            PostUpdates::populate(
+            PostUpdatesAtomic::populate(
                 poster.pubkey(),
-                encoded_vaa_address,
                 price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
                 merkle_price_updates[0].clone(),
             ),
             &vec![&poster, &price_update_keypair],
@@ -57,17 +76,22 @@ async fn test_post_updates() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Full
+        VerificationLevel::Partial(5)
     );
-    assert_eq!(price_update_account.price_message, dummy_price_messages[0]);
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_1
+    );
 
     // post another update to the same account
     program_simulator
         .process_ix(
-            PostUpdates::populate(
+            PostUpdatesAtomic::populate(
                 poster.pubkey(),
-                encoded_vaa_address,
                 price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
                 merkle_price_updates[1].clone(),
             ),
             &vec![&poster, &price_update_keypair],
@@ -85,7 +109,10 @@ async fn test_post_updates() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Full
+        VerificationLevel::Partial(5)
     );
-    assert_eq!(price_update_account.price_message, dummy_price_messages[1]);
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_2
+    );
 }

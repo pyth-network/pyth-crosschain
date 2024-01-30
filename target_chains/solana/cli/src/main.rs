@@ -16,14 +16,11 @@ use {
         Cli,
     },
     pyth_solana_receiver::{
+        sdk::deserialize_accumulator_update_data,
         state::config::DataSource,
         PostUpdatesAtomicParams,
     },
-    pythnet_sdk::wire::v1::{
-        AccumulatorUpdateData,
-        MerklePriceUpdate,
-        Proof,
-    },
+    pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
     solana_client::{
         rpc_client::RpcClient,
@@ -96,7 +93,8 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(&payload)?;
+            let payload_bytes: Vec<u8> = base64::decode(payload)?;
+            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(payload_bytes)?;
 
             process_write_encoded_vaa_and_post_price_update(
                 &rpc_client,
@@ -114,7 +112,8 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(&payload)?;
+            let payload_bytes: Vec<u8> = base64::decode(payload)?;
+            let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(payload_bytes)?;
 
             process_post_price_update_atomic(
                 &rpc_client,
@@ -200,17 +199,6 @@ fn main() -> Result<()> {
         }
     }
     Ok(())
-}
-
-pub fn deserialize_accumulator_update_data(
-    payload: &str,
-) -> Result<(Vec<u8>, Vec<MerklePriceUpdate>)> {
-    let payload_bytes: Vec<u8> = base64::decode(payload)?;
-    let accumulator_update_data = AccumulatorUpdateData::try_from_slice(payload_bytes.as_slice())?;
-
-    match accumulator_update_data.proof {
-        Proof::WormholeMerkle { vaa, updates } => return Ok((vaa.as_ref().to_vec(), updates)),
-    }
 }
 
 pub fn process_upgrade_guardian_set(
