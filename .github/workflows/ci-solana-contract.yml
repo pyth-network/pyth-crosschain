@@ -3,13 +3,13 @@ name: Test Solana Contract
 on:
   pull_request:
     paths:
-      - target_chains/cosmwasm/**
+      - target_chains/solana/**
       - pythnet/pythnet_sdk/**
   push:
     branches:
       - main
     paths:
-      - target_chains/cosmwasm/**
+      - target_chains/solana/**
       - pythnet/pythnet_sdk/**
 
 env:
