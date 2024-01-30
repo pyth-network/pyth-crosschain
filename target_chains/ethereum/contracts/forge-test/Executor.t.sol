@@ -138,16 +138,18 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         uint32 c = callable.fooCount();
         uint oldSequence = executor.getLastExecutedSequence();
+        uint64 sequence = 1;
         assertEq(callable.lastCaller(), address(bytes20(0)));
         testExecute(
             address(callable),
             abi.encodeWithSelector(ICallable.foo.selector),
-            1,
+            sequence,
             0
         );
         uint newSequence = executor.getLastExecutedSequence();
 
         assertGt(newSequence, oldSequence);
+        assertEq(newSequence, sequence);
         assertEq(callable.fooCount(), c + 1);
         assertEq(callable.lastCaller(), address(executor));
         // Sanity check to make sure the check above is meaningful.
