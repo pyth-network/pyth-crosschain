@@ -142,6 +142,29 @@ async fn test_post_updates_atomic_wrong_vaa() {
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
 
+    let mut vaa_buffer_copy: Vec<u8> = vaa.clone();
+    // Mess up with the length of signatures
+    vaa_buffer_copy[5] = 255;
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    vaa_buffer_copy,
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::DeserializeVaaFailed)
+    );
+
     let vaa_wrong_num_signatures = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
         4,
@@ -166,6 +189,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .unwrap(),
         into_transation_error(ReceiverError::InsufficientGuardianSignatures)
     );
+
 
     let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
     vaa_copy.version = 0;
