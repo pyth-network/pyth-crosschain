@@ -93,10 +93,6 @@ async function main() {
     ];
 
   console.log("Using cache file", CACHE_FILE);
-  // console.log(
-  //   "Upgrading on chains",
-  //   selectedChains.map((c) => c.getId())
-  // );
 
   const payloads: Buffer[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
