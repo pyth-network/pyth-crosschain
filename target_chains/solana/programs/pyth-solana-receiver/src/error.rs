@@ -37,6 +37,8 @@ pub enum ReceiverError {
     InvalidVaaVersion,
     #[msg("Guardian set version in the VAA doesn't match the guardian set passed")]
     GuardianSetMismatch,
+    #[msg("Guardian signature indices must be increasing")]
+    InvalidGuardianOrder,
     #[msg("Guardian index exceeds the number of guardians in the set")]
     InvalidGuardianIndex,
     #[msg("A VAA signature is invalid")]

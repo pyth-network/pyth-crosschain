@@ -143,7 +143,7 @@ pub mod pyth_solana_receiver {
             // We do not allow for non-increasing guardian signature indices.
             let index = usize::from(sig.guardian_index());
             if let Some(last_index) = last_guardian_index {
-                require!(index > last_index, ReceiverError::InvalidGuardianIndex);
+                require!(index > last_index, ReceiverError::InvalidGuardianOrder);
             }
 
             // Does this guardian index exist in this guardian set?

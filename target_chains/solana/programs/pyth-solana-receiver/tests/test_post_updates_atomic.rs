@@ -211,6 +211,30 @@ async fn test_post_updates_atomic_wrong_vaa() {
     );
 
     let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
+    vaa_copy.signatures[0] = vaa_copy.signatures[1];
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    serde_wormhole::to_vec(&vaa_copy).unwrap(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidGuardianOrder)
+    );
+
+
+    let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
     vaa_copy.signatures[0].index = 20;
 
     assert_eq!(
