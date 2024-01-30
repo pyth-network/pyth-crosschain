@@ -5,16 +5,19 @@ pub enum ReceiverError {
     // Pyth payload errors
     #[msg("Received an invalid wormhole message")]
     InvalidWormholeMessage,
-    #[msg("Received an invalid price update")]
-    InvalidPriceUpdate,
     #[msg("An error occurred when deserializing the message")]
     DeserializeMessageFailed,
+    #[msg("Received an invalid price update")]
+    InvalidPriceUpdate,
     #[msg("This type of message is not supported currently")]
     UnsupportedMessageType,
     #[msg("The tuple emitter chain, emitter doesn't match one of the valid data sources.")]
     InvalidDataSource,
     #[msg("Funds are insufficient to pay the receiving fee")]
     InsufficientFunds,
+    // Price account permissions
+    #[msg("This signer can't write to price update account")]
+    WrongWriteAuthority,
     // Wormhole contract encoded vaa error (from post_updates)
     #[msg("The posted VAA account has the wrong owner.")]
     WrongVaaOwner,
@@ -48,7 +51,4 @@ pub enum ReceiverError {
     TargetGovernanceAuthorityMismatch,
     #[msg("The governance authority needs to request a transfer first")]
     NonexistentGovernanceAuthorityTransferRequest,
-    // Price account permissions
-    #[msg("This signer can't write to price update account")]
-    WrongWriteAuthority,
 }
