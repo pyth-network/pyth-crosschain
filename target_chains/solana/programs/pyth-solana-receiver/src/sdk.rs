@@ -88,6 +88,16 @@ impl accounts::AcceptGovernanceAuthorityTransfer {
     }
 }
 
+impl accounts::ReclaimRent {
+    pub fn populate(payer: Pubkey, price_update_account: Pubkey) -> Self {
+        let _config = get_config_address();
+        accounts::ReclaimRent {
+            payer,
+            price_update_account,
+        }
+    }
+}
+
 impl instruction::Initialize {
     pub fn populate(payer: &Pubkey, initial_config: Config) -> Instruction {
         Instruction {
@@ -225,6 +235,18 @@ impl instruction::AcceptGovernanceAuthorityTransfer {
             program_id: ID,
             accounts:   governance_accounts,
             data:       instruction::AcceptGovernanceAuthorityTransfer {}.data(),
+        }
+    }
+}
+
+impl instruction::ReclaimRent {
+    pub fn populate(payer: Pubkey, price_update_account: Pubkey) -> Instruction {
+        let governance_accounts =
+            accounts::ReclaimRent::populate(payer, price_update_account).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::ReclaimRent {}.data(),
         }
     }
 }
