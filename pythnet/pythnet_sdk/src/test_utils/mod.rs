@@ -29,6 +29,10 @@ use {
         SecretKey,
         Signature,
     },
+    rand::{
+        seq::SliceRandom,
+        thread_rng,
+    },
     serde_wormhole::RawMessage,
     wormhole_sdk::{
         vaa::{
@@ -190,7 +194,7 @@ pub fn create_vaa_from_payload(
 
     let digest = libsecp256k1Message::parse_slice(&body.digest().unwrap().secp256k_hash).unwrap();
 
-    let signatures: Vec<(Signature, RecoveryId)> = guardians[0..DEFAULT_NUM_SIGNATURES]
+    let signatures: Vec<(Signature, RecoveryId)> = guardians
         .iter()
         .map(|x| libsecp256k1::sign(&digest, &x))
         .collect();
@@ -208,10 +212,16 @@ pub fn create_vaa_from_payload(
         })
         .collect();
 
+    let mut wormhole_signatures_subset: Vec<wormhole_sdk::vaa::Signature> = wormhole_signatures
+        .choose_multiple(&mut thread_rng(), DEFAULT_NUM_SIGNATURES)
+        .cloned()
+        .collect();
+
+    wormhole_signatures_subset.sort_by(|a, b| a.index.cmp(&b.index));
 
     let header = Header {
         version: 1,
-        signatures: wormhole_signatures,
+        signatures: wormhole_signatures_subset,
         ..Default::default()
     };
 
