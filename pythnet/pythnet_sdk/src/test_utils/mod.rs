@@ -236,5 +236,6 @@ pub fn trim_vaa_signatures(vaa: Vec<u8>, n: u8) -> Vec<u8> {
         .choose_multiple(&mut thread_rng(), n.into())
         .cloned()
         .collect();
+    parsed_vaa.signatures.sort_by(|a, b| a.index.cmp(&b.index));
     serde_wormhole::to_vec(&parsed_vaa).unwrap()
 }
