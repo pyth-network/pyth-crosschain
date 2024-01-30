@@ -138,7 +138,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
             .process_ix(
                 PostUpdates::populate(
                     poster.pubkey(),
-                    Pubkey::new_unique(),
+                    Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
                     price_update_keypair.pubkey(),
                     merkle_price_updates[0].clone(),
                 ),
