@@ -19,6 +19,7 @@ use {
         dummy_guardians,
         DEFAULT_DATA_SOURCE,
     },
+    serde_wormhole::RawMessage,
     solana_program::{
         keccak,
         pubkey::Pubkey,
@@ -39,6 +40,7 @@ use {
         },
         ID as BRIDGE_ID,
     },
+    wormhole_sdk::Vaa,
 };
 
 pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
@@ -63,7 +65,7 @@ pub struct ProgramTestFixtures {
     pub encoded_vaa_addresses: Vec<Pubkey>,
 }
 
-pub fn build_encoded_vaa_account_from_vaa(vaa: Vec<u8>) -> Account {
+pub fn build_encoded_vaa_account_from_vaa(vaa: Vaa<&RawMessage>) -> Account {
     let encoded_vaa_data = (
         <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
         Header {
@@ -71,7 +73,7 @@ pub fn build_encoded_vaa_account_from_vaa(vaa: Vec<u8>) -> Account {
             write_authority: Pubkey::new_unique(),
             version:         1,
         },
-        vaa,
+        serde_wormhole::to_vec(&vaa).unwrap(),
     )
         .try_to_vec()
         .unwrap();
@@ -122,7 +124,7 @@ pub fn build_guardian_set_account() -> Account {
  * - The program simulator, which is used to send transactions
  * - The pubkeys of the encoded VAA accounts corresponding to the VAAs passed as argument, these accounts are prepopulated and can be used to test post_updates
  */
-pub async fn setup_pyth_receiver(vaas: Vec<Vec<u8>>) -> ProgramTestFixtures {
+pub async fn setup_pyth_receiver(vaas: Vec<Vaa<&RawMessage>>) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", ID, None);
 

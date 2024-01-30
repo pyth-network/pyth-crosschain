@@ -38,7 +38,7 @@ async fn test_post_updates() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses,
-    } = setup_pyth_receiver(vec![vaa]).await;
+    } = setup_pyth_receiver(vec![serde_wormhole::from_slice(&vaa).unwrap()]).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
