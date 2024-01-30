@@ -81,7 +81,7 @@ const DEFAULT_SEQUENCE: u64 = 2;
 const NUM_GUARDIANS: u8 = 19;
 const NUM_SIGNATURES: usize = 13;
 
-pub fn create_dummy_guardians() -> Vec<SecretKey> {
+pub fn dummy_guardians() -> Vec<SecretKey> {
     let mut result: Vec<SecretKey> = vec![];
     for i in 0..NUM_GUARDIANS {
         let mut secret_key_bytes = [0u8; 32];
@@ -178,7 +178,7 @@ pub fn create_vaa_from_payload(
     emitter_chain: Chain,
     sequence: u64,
 ) -> Vaa<Box<RawMessage>> {
-    let guardians = create_dummy_guardians();
+    let guardians = dummy_guardians();
 
     let body: Body<Box<RawMessage>> = Body {
         emitter_chain,

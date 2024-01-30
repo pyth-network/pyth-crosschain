@@ -16,7 +16,7 @@ use {
         ID,
     },
     pythnet_sdk::test_utils::{
-        create_dummy_guardians,
+        dummy_guardians,
         DEFAULT_DATA_SOURCE,
     },
     serde_wormhole::RawMessage,
@@ -90,7 +90,7 @@ pub fn build_encoded_vaa_account_from_vaa(vaa: Vec<u8>) -> Account {
 pub fn build_guardian_set_account() -> Account {
     let guardian_set = GuardianSet {
         index:           DEFAULT_GUARDIAN_SET_INDEX,
-        keys:            create_dummy_guardians()
+        keys:            dummy_guardians()
             .iter()
             .map(|x| {
                 let mut result: [u8; 20] = [0u8; 20];
