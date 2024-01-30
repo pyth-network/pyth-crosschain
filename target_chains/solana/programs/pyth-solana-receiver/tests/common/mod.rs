@@ -46,17 +46,17 @@ use {
 pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
 pub const WRONG_GUARDIAN_SET_INDEX: u32 = 1;
 
-pub fn default_receiver_config() -> Config {
+pub fn default_receiver_config(governance_authority: Pubkey) -> Config {
     Config {
-        governance_authority:          Pubkey::new_unique(),
-        target_governance_authority:   None,
-        wormhole:                      BRIDGE_ID,
-        valid_data_sources:            vec![DataSource {
+        governance_authority,
+        target_governance_authority: None,
+        wormhole: BRIDGE_ID,
+        valid_data_sources: vec![DataSource {
             chain:   DEFAULT_DATA_SOURCE.chain.into(),
             emitter: Pubkey::from(DEFAULT_DATA_SOURCE.address.0),
         }],
         single_update_fee_in_lamports: 1,
-        minimum_signatures:            5,
+        minimum_signatures: 5,
     }
 }
 
@@ -64,6 +64,7 @@ pub fn default_receiver_config() -> Config {
 pub struct ProgramTestFixtures {
     pub program_simulator:     ProgramSimulator,
     pub encoded_vaa_addresses: Vec<Pubkey>,
+    pub governance_authority:  Keypair,
 }
 
 pub fn build_encoded_vaa_account_from_vaa(
@@ -179,8 +180,9 @@ pub async fn setup_pyth_receiver(
 
     let mut program_simulator = ProgramSimulator::start_from_program_test(program_test).await;
 
-    let initial_config = default_receiver_config();
     let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
+    let initial_config = default_receiver_config(setup_keypair.pubkey());
+
 
     program_simulator
         .process_ix(
@@ -206,5 +208,21 @@ pub async fn setup_pyth_receiver(
     ProgramTestFixtures {
         program_simulator,
         encoded_vaa_addresses,
+        governance_authority: setup_keypair,
     }
+}
+
+pub async fn assert_treasury_balance(
+    program_simulator: &mut ProgramSimulator,
+    expected_balance: u64,
+) {
+    let treasury_balance = program_simulator
+        .get_balance(get_treasury_address())
+        .await
+        .unwrap();
+
+    assert_eq!(
+        treasury_balance,
+        expected_balance + Rent::default().minimum_balance(0)
+    );
 }

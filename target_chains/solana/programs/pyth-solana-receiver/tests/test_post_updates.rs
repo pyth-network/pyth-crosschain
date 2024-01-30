@@ -1,5 +1,8 @@
 use {
-    crate::common::WrongSetupOption,
+    crate::common::{
+        assert_treasury_balance,
+        WrongSetupOption,
+    },
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
@@ -35,18 +38,21 @@ mod common;
 async fn test_post_updates() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses,
+        governance_authority: _,
     } = setup_pyth_receiver(
         vec![serde_wormhole::from_slice(&vaa).unwrap()],
         WrongSetupOption::None,
     )
     .await;
+
+    assert_treasury_balance(&mut program_simulator, 0).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -66,6 +72,7 @@ async fn test_post_updates() {
         .await
         .unwrap();
 
+    assert_treasury_balance(&mut program_simulator, 1).await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -97,6 +104,7 @@ async fn test_post_updates() {
         .await
         .unwrap();
 
+    assert_treasury_balance(&mut program_simulator, 2).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -118,12 +126,13 @@ async fn test_post_updates() {
 async fn test_post_updates_wrong_encoded_vaa_owner() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
+        governance_authority: _,
     } = setup_pyth_receiver(
         vec![serde_wormhole::from_slice(&vaa).unwrap()],
         WrongSetupOption::None,
@@ -156,12 +165,13 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
 async fn test_post_updates_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses,
+        governance_authority: _,
     } = setup_pyth_receiver(
         vec![serde_wormhole::from_slice(&vaa).unwrap()],
         WrongSetupOption::UnverifiedEncodedVaa,

@@ -8,6 +8,7 @@ use {
         messages::{
             Message,
             PriceFeedMessage,
+            TwapMessage,
         },
         wire::{
             to_vec,
@@ -110,24 +111,61 @@ pub fn create_dummy_price_feed_message(value: i64) -> Message {
     Message::PriceFeedMessage(msg)
 }
 
+pub fn create_dummy_twap_message() -> Message {
+    let msg = TwapMessage {
+        feed_id:           [0; 32],
+        cumulative_price:  0,
+        cumulative_conf:   0,
+        num_down_slots:    0,
+        exponent:          0,
+        publish_time:      0,
+        prev_publish_time: 0,
+        publish_slot:      0,
+    };
+    Message::TwapMessage(msg)
+}
+
 pub fn create_accumulator_message(
     all_feeds: &[Message],
     updates: &[Message],
     corrupt_wormhole_message: bool,
+    corrupt_messages: bool,
 ) -> Vec<u8> {
-    let all_feeds_bytes: Vec<_> = all_feeds
+    let mut all_feeds_bytes: Vec<_> = all_feeds
         .iter()
         .map(|f| to_vec::<_, BigEndian>(f).unwrap())
         .collect();
+
+    let mut updates_bytes: Vec<_> = updates
+        .iter()
+        .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+        .collect();
+
+    if corrupt_messages {
+        all_feeds_bytes = all_feeds_bytes
+            .iter()
+            .map(|f| {
+                let mut f_copy = f.clone();
+                f_copy[0] = 255;
+                f_copy
+            })
+            .collect();
+        updates_bytes = updates_bytes
+            .iter()
+            .map(|f| {
+                let mut f_copy = f.clone();
+                f_copy[0] = 255;
+                f_copy
+            })
+            .collect();
+    }
     let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
     let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
     let mut price_updates: Vec<MerklePriceUpdate> = vec![];
-    for update in updates {
-        let proof = tree
-            .prove(&to_vec::<_, BigEndian>(update).unwrap())
-            .unwrap();
+    for update in updates_bytes {
+        let proof = tree.prove(&update).unwrap();
         price_updates.push(MerklePriceUpdate {
-            message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
+            message: PrefixedVec::from(update),
             proof,
         });
     }

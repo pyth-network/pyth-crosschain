@@ -2,7 +2,10 @@ use {
     crate::{
         accounts,
         instruction,
-        state::config::Config,
+        state::config::{
+            Config,
+            DataSource,
+        },
         PostUpdatesAtomicParams,
         CONFIG_SEED,
         ID,
@@ -134,6 +137,35 @@ impl instruction::PostUpdatesAtomic {
                     vaa,
                     merkle_price_update,
                 },
+            }
+            .data(),
+        }
+    }
+}
+
+
+impl instruction::SetDataSources {
+    pub fn populate(payer: Pubkey, data_sources: Vec<DataSource>) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::SetDataSources {
+                valid_data_sources: data_sources,
+            }
+            .data(),
+        }
+    }
+}
+
+impl instruction::SetFee {
+    pub fn populate(payer: Pubkey, fee: u64) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::SetFee {
+                single_update_fee_in_lamports: fee,
             }
             .data(),
         }

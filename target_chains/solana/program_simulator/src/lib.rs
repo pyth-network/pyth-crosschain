@@ -105,6 +105,11 @@ impl ProgramSimulator {
 
         Ok(T::deserialize(&mut &account.data[8..])?)
     }
+
+    pub async fn get_balance(&mut self, pubkey: Pubkey) -> Result<u64, BanksClientError> {
+        let lamports = self.banks_client.get_balance(pubkey).await.unwrap();
+        Ok(lamports)
+    }
 }
 
 pub fn into_transation_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
