@@ -8,6 +8,7 @@ import {
   EvmPriceFeedContract,
   getDefaultDeploymentConfig,
   PrivateKey,
+  toDeploymentType,
   toPrivateKey,
   WormholeEvmContract,
 } from "../src";
@@ -49,7 +50,7 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
     },
-    type: {
+    "deployment-type": {
       type: "string",
       demandOption: false,
       default: "stable",
@@ -246,7 +247,7 @@ async function main() {
   const argv = await parser.argv;
 
   const deploymentConfig: DeploymentConfig = {
-    type: "stable",
+    type: toDeploymentType(argv.deploymentType),
     validTimePeriodSeconds: argv.validTimePeriodSeconds,
     singleUpdateFeeInWei: argv.singleUpdateFeeInWei,
     gasMultiplier: argv.gasMultiplier,

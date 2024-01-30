@@ -596,7 +596,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       .call();
     const transactionObject =
       pythContract.methods.updatePriceFeeds(priceFeedUpdateData);
-    const gasEstiamte = await transactionObject.estimateGas({
+    const gasEstimate = await transactionObject.estimateGas({
       from: address,
       gas: 15000000,
       value: updateFee,
@@ -604,7 +604,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const result = await transactionObject.send({
       from: address,
       value: updateFee,
-      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
     return { id: result.transactionHash, info: result };
