@@ -5,9 +5,7 @@ use {
     pyth_solana_receiver::{
         instruction::Initialize,
         sdk::{
-            get_config_address,
-            get_guardian_set_address,
-            get_treasury_address,
+            get_config_address, get_guardian_set_address, get_treasury_address, DEFAULT_TREASURY_ID
         },
         state::config::{
             Config,
@@ -200,7 +198,7 @@ pub async fn setup_pyth_receiver(
     assert_eq!(config_account, initial_config);
 
     program_simulator
-        .airdrop(&get_treasury_address(), Rent::default().minimum_balance(0))
+        .airdrop(&get_treasury_address(DEFAULT_TREASURY_ID), Rent::default().minimum_balance(0))
         .await
         .unwrap();
 
