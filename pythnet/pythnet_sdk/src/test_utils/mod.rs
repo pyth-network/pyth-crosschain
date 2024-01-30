@@ -78,8 +78,8 @@ pub const DEFAULT_VALID_TIME_PERIOD: u64 = 180;
 
 const DEFAULT_SEQUENCE: u64 = 2;
 
-const NUM_GUARDIANS: u8 = 19;
-const NUM_SIGNATURES: usize = 13;
+const NUM_GUARDIANS: u8 = 19; // Matches wormhole mainnet
+const DEFAULT_NUM_SIGNATURES: usize = 13; // Matches wormhole mainnet
 
 pub fn dummy_guardians() -> Vec<SecretKey> {
     let mut result: Vec<SecretKey> = vec![];
@@ -190,7 +190,7 @@ pub fn create_vaa_from_payload(
 
     let digest = libsecp256k1Message::parse_slice(&body.digest().unwrap().secp256k_hash).unwrap();
 
-    let signatures: Vec<(Signature, RecoveryId)> = guardians[0..NUM_SIGNATURES]
+    let signatures: Vec<(Signature, RecoveryId)> = guardians[0..DEFAULT_NUM_SIGNATURES]
         .iter()
         .map(|x| libsecp256k1::sign(&digest, &x))
         .collect();
