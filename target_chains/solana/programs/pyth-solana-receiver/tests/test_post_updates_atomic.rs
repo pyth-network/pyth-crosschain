@@ -36,8 +36,11 @@ async fn test_post_updates_atomic() {
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
-
-    let vaa = trim_vaa_signatures(vaa, 5);
+    let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
+        serde_wormhole::from_slice(&vaa).unwrap(),
+        5,
+    ))
+    .unwrap();
 
     let ProgramTestFixtures {
         mut program_simulator,
