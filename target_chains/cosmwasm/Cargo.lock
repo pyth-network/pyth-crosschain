@@ -1649,6 +1649,7 @@ dependencies = [
  "fast-math",
  "hex",
  "libsecp256k1",
+ "rand",
  "rustc_version",
  "serde",
  "serde_wormhole",

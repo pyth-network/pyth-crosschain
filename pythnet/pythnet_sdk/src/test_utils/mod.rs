@@ -36,7 +36,6 @@ use {
     serde_wormhole::RawMessage,
     wormhole_sdk::{
         vaa::{
-            digest,
             Body,
             Header,
         },
