@@ -16,7 +16,6 @@ use {
     pythnet_sdk::wire::array,
     serde_with::serde_as,
     tokio::try_join,
-    url::Url,
     utoipa::{
         IntoParams,
         ToSchema,
@@ -30,10 +29,6 @@ use {
 ///
 /// Every blockchain supported by this service has a distinct sequence of random numbers and chain_id.
 /// Callers must pass the appropriate chain_id to ensure they fetch the correct random number.
-///
-/// We are registering the provider on chain with the following url:
-/// `base_uri/v1/chains/{chain_id}/revelations/`
-/// See the method `get_register_uri` below. These MUST stay consistent.
 #[utoipa::path(
 get,
 path = "/v1/chains/{chain_id}/revelations/{sequence}",
@@ -158,12 +153,4 @@ impl Blob {
             Blob::Array { data } => data,
         }
     }
-}
-
-// The path and revelation API are highly coupled. Please be sure to keep them consistent.
-pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
-    let base_uri = Url::parse(base_uri)?;
-    let path = format!("/v1/chains/{0}", chain_id);
-    let uri = base_uri.join(&path)?;
-    Ok(uri.to_string())
 }
