@@ -403,15 +403,17 @@ export class EvmChain extends Chain {
     privateKey: PrivateKey,
     abi: any, // eslint-disable-line  @typescript-eslint/no-explicit-any
     bytecode: string,
-    deployArgs: any[] // eslint-disable-line  @typescript-eslint/no-explicit-any
+    deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
+    gasMultiplier = 1,
+    gasPriceMultiplier = 1
   ): Promise<string> {
     const web3 = new Web3(this.getRpcUrl());
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
     const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
-    const gas = await deployTx.estimateGas();
-    const gasPrice = await this.getGasPrice();
+    const gas = (await deployTx.estimateGas()) * gasMultiplier;
+    const gasPrice = Number(await this.getGasPrice()) * gasPriceMultiplier;
     const deployerBalance = await web3.eth.getBalance(signer.address);
     const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
     if (gasDiff > 0n) {
@@ -427,7 +429,7 @@ export class EvmChain extends Chain {
     const deployedContract = await deployTx.send({
       from: signer.address,
       gas,
-      gasPrice,
+      gasPrice: gasPrice.toString(),
     });
     return deployedContract.options.address;
   }

@@ -21,44 +21,12 @@ if [[ -e contracts/pyth/PythUpgradable_merged.sol ]]; then
     rm contracts/pyth/PythUpgradable_merged.sol
 fi
 
-echo "Building the contract..."
+echo "Building the contracts..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
 rm -rf build && npx truffle compile --all
 
-echo "Adding network metadata to the contract"
-# Merge the network addresses into the artifacts, if some contracts are already deployed.
-npx apply-registry
+echo "Deploying the contracts..."
 
-# The channel to use for the price sources. Can be `stable` or `beta`.
-export CHANNEL=stable
+pushd ../../../contract_manager/
 
-while [[ $# -ne 0 ]]; do
-    NETWORK=$1
-    shift
-
-    echo "=========== Deploying to ${NETWORK} (if not deployed) ==========="
-
-    # Load the configuration environment variables for deploying your network. make sure to use right env file.
-    # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
-    if [[ $NETWORK != development ]]; then
-        node create-env.js $NETWORK
-    else
-        echo "Skipping env file creation for development network"
-    fi
-    set -o allexport && source .env set && set +o allexport
-
-    if [[ $NETWORK == zksync* ]]; then
-        echo "Skipping truffle migration on $NETWORK. If you wish to deploy a fresh contract read Deploying.md."
-    else
-        echo "Migrating..."
-        npx truffle migrate --network $MIGRATIONS_NETWORK --compile-none
-        echo "Deployment to $NETWORK finished successfully"
-    fi
-
-    if [[ $CHANNEL == stable ]]; then
-        echo "=========== Syncing guardian sets to ${NETWORK} ==========="
-        npm run receiver-submit-guardian-sets -- --network $NETWORK
-    fi
-done
-
-echo "=========== Finished ==========="
+npx ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"

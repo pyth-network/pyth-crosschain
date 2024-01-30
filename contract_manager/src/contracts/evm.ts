@@ -311,7 +311,7 @@ export class WormholeEvmContract extends WormholeContract {
     );
     const gasEstiamte = await transactionObject.estimateGas({
       from: address,
-      gas: 100000000,
+      gas: 15000000,
     });
     // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
     // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
@@ -404,7 +404,7 @@ export class EvmEntropyContract extends Storable {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: EvmPriceFeedContract.type,
+      type: EvmEntropyContract.type,
     };
   }
 
@@ -596,15 +596,15 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       .call();
     const transactionObject =
       pythContract.methods.updatePriceFeeds(priceFeedUpdateData);
-    const gasEstiamte = await transactionObject.estimateGas({
+    const gasEstimate = await transactionObject.estimateGas({
       from: address,
-      gas: 100000000,
+      gas: 15000000,
       value: updateFee,
     });
     const result = await transactionObject.send({
       from: address,
       value: updateFee,
-      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
     return { id: result.transactionHash, info: result };
@@ -622,7 +622,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     );
     const gasEstiamte = await transactionObject.estimateGas({
       from: address,
-      gas: 100000000,
+      gas: 15000000,
     });
     const result = await transactionObject.send({
       from: address,

@@ -333,6 +333,11 @@
   rpcUrl: https://zetachain-athens-evm.blockpi.network/v1/rpc/public
   networkId: 7001
   type: EvmChain
+- id: zetachain
+  mainnet: true
+  rpcUrl: https://zetachain-evm.blockpi.network/v1/rpc/public
+  networkId: 7000
+  type: EvmChain
 - id: astar_testnet
   mainnet: false
   rpcUrl: https://rpc.zkatana.gelato.digital
