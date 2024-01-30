@@ -95,6 +95,16 @@ contract ExecutorTest is Test, WormholeTestUtils {
         );
     }
 
+    function testExecutorOwnerChainId() public {
+        uint chainId = executor.getOwnerChainId();
+        assertEq(chainId, OWNER_CHAIN_ID);
+    }
+
+    function testExecutorOwnerEmitterAddress() public {
+        bytes32 ownerEmitterAddress = executor.getOwnerEmitterAddress();
+        assertEq(ownerEmitterAddress, OWNER_EMITTER);
+    }
+
     function testExecutorOwner() public {
         assertEq(address(executor), executor.owner());
     }
@@ -121,6 +131,56 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         vm.expectRevert(ExecutorErrors.InvalidMagicValue.selector);
         executor.execute(vaa);
+    }
+
+    function testLastExecutedSequenceUpdateOnSucceed() public {
+        callable.reset();
+
+        uint32 c = callable.fooCount();
+        uint oldSequence = executor.getLastExecutedSequence();
+        assertEq(callable.lastCaller(), address(bytes20(0)));
+        testExecute(
+            address(callable),
+            abi.encodeWithSelector(ICallable.foo.selector),
+            1,
+            0
+        );
+        uint newSequence = executor.getLastExecutedSequence();
+
+        assertGt(newSequence, oldSequence);
+        assertEq(callable.fooCount(), c + 1);
+        assertEq(callable.lastCaller(), address(executor));
+        // Sanity check to make sure the check above is meaningful.
+        assert(address(executor) != address(this));
+    }
+
+    function testLastExecutedSequenceNoChangeOnFail() public {
+        uint oldSequence = executor.getLastExecutedSequence();
+
+        bytes memory payload = abi.encodePacked(
+            uint32(0x5054474d),
+            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            Executor.ExecutorAction.Execute,
+            CHAIN_ID,
+            address(executor),
+            address(callable),
+            uint(0),
+            abi.encodeWithSelector(ICallable.reverts.selector)
+        );
+
+        bytes memory vaa = generateVaa(
+            uint32(block.timestamp),
+            OWNER_CHAIN_ID,
+            OWNER_EMITTER,
+            1,
+            payload,
+            NUM_SIGNERS
+        );
+
+        vm.expectRevert("call should revert");
+        executor.execute(vaa);
+        uint newSequence = executor.getLastExecutedSequence();
+        assertEq(newSequence, oldSequence);
     }
 
     function testCallSucceeds() public {

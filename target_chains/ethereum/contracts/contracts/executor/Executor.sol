@@ -65,7 +65,7 @@ contract Executor {
     // whose payload is a serialized GovernanceInstruction.
     function execute(
         bytes memory encodedVm
-    ) public returns (bytes memory response) {
+    ) public payable returns (bytes memory response) {
         IWormhole.VM memory vm = verifyGovernanceVM(encodedVm);
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(
@@ -178,5 +178,17 @@ contract Executor {
             index,
             encodedInstruction.length - index
         );
+    }
+
+    function getOwnerChainId() public view returns (uint64) {
+        return ownerEmitterChainId;
+    }
+
+    function getOwnerEmitterAddress() public view returns (bytes32) {
+        return ownerEmitterAddress;
+    }
+
+    function getLastExecutedSequence() public view returns (uint64) {
+        return lastExecutedSequence;
     }
 }

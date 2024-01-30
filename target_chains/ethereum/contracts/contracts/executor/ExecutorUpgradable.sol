@@ -94,6 +94,6 @@ contract ExecutorUpgradable is
     }
 
     function version() public pure returns (string memory) {
-        return "0.1.0";
+        return "0.1.1";
     }
 }
