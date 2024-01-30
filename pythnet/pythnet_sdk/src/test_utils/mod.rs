@@ -228,3 +228,13 @@ pub fn create_vaa_from_payload(
 
     (header, body).into()
 }
+
+pub fn trim_vaa_signatures(vaa: Vec<u8>, n: u8) -> Vec<u8> {
+    let mut parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa.as_slice()).unwrap();
+    parsed_vaa.signatures = parsed_vaa
+        .signatures
+        .choose_multiple(&mut thread_rng(), n.into())
+        .cloned()
+        .collect();
+    serde_wormhole::to_vec(&parsed_vaa).unwrap()
+}

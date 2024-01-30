@@ -1,8 +1,5 @@
 use {
-    crate::common::{
-        trim_vaa_signatures,
-        DEFAULT_GUARDIAN_SET_INDEX,
-    },
+    crate::common::DEFAULT_GUARDIAN_SET_INDEX,
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
@@ -20,6 +17,7 @@ use {
         test_utils::{
             create_accumulator_message,
             create_dummy_price_feed_message,
+            trim_vaa_signatures,
         },
     },
     solana_sdk::{

@@ -19,7 +19,6 @@ use {
         dummy_guardians,
         DEFAULT_DATA_SOURCE,
     },
-    serde_wormhole::RawMessage,
     solana_program::{
         keccak,
         pubkey::Pubkey,
@@ -40,7 +39,6 @@ use {
         },
         ID as BRIDGE_ID,
     },
-    wormhole_sdk::Vaa,
 };
 
 pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
@@ -169,10 +167,4 @@ pub async fn setup_pyth_receiver(vaas: Vec<Vec<u8>>) -> ProgramTestFixtures {
         program_simulator,
         encoded_vaa_addresses,
     }
-}
-
-pub fn trim_vaa_signatures(vaa: Vec<u8>, n: u8) -> Vec<u8> {
-    let mut parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa.as_slice()).unwrap();
-    parsed_vaa.signatures = parsed_vaa.signatures[0..n as usize].to_vec();
-    serde_wormhole::to_vec(&parsed_vaa).unwrap()
 }
