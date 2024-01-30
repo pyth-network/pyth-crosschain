@@ -21,8 +21,6 @@ pub enum ReceiverError {
     // Wormhole signatures verification errors (from post_updates_atomic)
     #[msg("An error occurred when deserializing the VAA.")]
     DeserializeVaaFailed,
-    #[msg("The Guardian Set account doesn't match the PDA derivation")]
-    InvalidGuardianSetPda,
     #[msg("The number of guardian signatures is below the minimum")]
     InsufficientGuardianSignatures,
     #[msg("Invalid VAA version")]
@@ -39,6 +37,10 @@ pub enum ReceiverError {
     InvalidGuardianKeyRecovery,
     #[msg("The guardian set account is owned by the wrong program")]
     WrongGuardianSetOwner,
+    #[msg("The Guardian Set account doesn't match the PDA derivation")]
+    InvalidGuardianSetPda,
+    #[msg("The Guardian Set is expired")]
+    GuardianSetExpired,
     // Governance errors
     #[msg("The signer is not authorized to perform this governance action")]
     GovernanceAuthorityMismatch,

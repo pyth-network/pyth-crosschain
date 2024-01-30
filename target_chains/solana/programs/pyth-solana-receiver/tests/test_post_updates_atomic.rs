@@ -1,5 +1,8 @@
 use {
-    crate::common::DEFAULT_GUARDIAN_SET_INDEX,
+    crate::common::{
+        WrongSetupOption,
+        DEFAULT_GUARDIAN_SET_INDEX,
+    },
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
@@ -52,7 +55,7 @@ async fn test_post_updates_atomic() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
-    } = setup_pyth_receiver(vec![]).await;
+    } = setup_pyth_receiver(vec![], WrongSetupOption::None).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -134,7 +137,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
-    } = setup_pyth_receiver(vec![]).await;
+    } = setup_pyth_receiver(vec![], WrongSetupOption::None).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -326,5 +329,66 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .unwrap_err()
             .unwrap(),
         into_transation_error(ReceiverError::WrongGuardianSetOwner)
+    );
+}
+
+
+#[tokio::test]
+async fn test_post_updates_atomic_wrong_setup() {
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
+    let price_update_keypair = Keypair::new();
+
+    let ProgramTestFixtures {
+        mut program_simulator,
+        encoded_vaa_addresses: _,
+    } = setup_pyth_receiver(vec![], WrongSetupOption::GuardianSetWrongIndex).await;
+    let poster: Keypair = program_simulator.get_funded_keypair().await.unwrap();
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    vaa.clone(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::InvalidGuardianSetPda)
+    );
+
+
+    let ProgramTestFixtures {
+        mut program_simulator,
+        encoded_vaa_addresses: _,
+    } = setup_pyth_receiver(vec![], WrongSetupOption::GuardianSetExpired).await;
+    let poster = program_simulator.get_funded_keypair().await.unwrap();
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdatesAtomic::populate(
+                    poster.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    vaa.clone(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(ReceiverError::GuardianSetExpired)
     );
 }

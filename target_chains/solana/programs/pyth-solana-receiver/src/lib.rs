@@ -324,6 +324,12 @@ fn deserialize_guardian_set_checked(
         ReceiverError::InvalidGuardianSetPda
     );
 
+    let timestamp = Clock::get().map(Into::into)?;
+    require!(
+        guardian_set.inner().is_active(&timestamp),
+        ReceiverError::GuardianSetExpired
+    );
+
     Ok(guardian_set)
 }
 

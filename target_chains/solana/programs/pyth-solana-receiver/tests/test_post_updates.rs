@@ -1,4 +1,5 @@
 use {
+    crate::common::WrongSetupOption,
     common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
@@ -41,7 +42,11 @@ async fn test_post_updates() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses,
-    } = setup_pyth_receiver(vec![serde_wormhole::from_slice(&vaa).unwrap()]).await;
+    } = setup_pyth_receiver(
+        vec![serde_wormhole::from_slice(&vaa).unwrap()],
+        WrongSetupOption::None,
+    )
+    .await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -110,7 +115,7 @@ async fn test_post_updates() {
 }
 
 #[tokio::test]
-async fn test_post_updates_wrong_vaa() {
+async fn test_post_updates_wrong_encoded_vaa_owner() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
@@ -119,7 +124,11 @@ async fn test_post_updates_wrong_vaa() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
-    } = setup_pyth_receiver(vec![serde_wormhole::from_slice(&vaa).unwrap()]).await;
+    } = setup_pyth_receiver(
+        vec![serde_wormhole::from_slice(&vaa).unwrap()],
+        WrongSetupOption::None,
+    )
+    .await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
@@ -140,5 +149,43 @@ async fn test_post_updates_wrong_vaa() {
             .unwrap_err()
             .unwrap(),
         into_transation_error(ReceiverError::WrongVaaOwner)
+    );
+}
+
+#[tokio::test]
+async fn test_post_updates_wrong_setup() {
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
+
+    let ProgramTestFixtures {
+        mut program_simulator,
+        encoded_vaa_addresses,
+    } = setup_pyth_receiver(
+        vec![serde_wormhole::from_slice(&vaa).unwrap()],
+        WrongSetupOption::UnverifiedEncodedVaa,
+    )
+    .await;
+
+    let poster = program_simulator.get_funded_keypair().await.unwrap();
+    let price_update_keypair = Keypair::new();
+
+    assert_eq!(
+        program_simulator
+            .process_ix(
+                PostUpdates::populate(
+                    poster.pubkey(),
+                    encoded_vaa_addresses[0],
+                    price_update_keypair.pubkey(),
+                    merkle_price_updates[0].clone(),
+                ),
+                &vec![&poster, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transation_error(wormhole_core_bridge_solana::error::CoreBridgeError::UnverifiedVaa)
     );
 }
