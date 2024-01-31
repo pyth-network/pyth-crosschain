@@ -143,7 +143,7 @@ pub mod pyth_solana_receiver {
             // We do not allow for non-increasing guardian signature indices.
             let index = usize::from(sig.guardian_index());
             if let Some(last_index) = last_guardian_index {
-                require!(index > last_index, ReceiverError::InvalidGuardianIndex);
+                require!(index > last_index, ReceiverError::InvalidGuardianOrder);
             }
 
             // Does this guardian index exist in this guardian set?
@@ -258,7 +258,7 @@ pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
 pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
-    #[account(owner = config.wormhole)]
+    #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
     pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
@@ -281,7 +281,7 @@ pub struct PostUpdatesAtomic<'info> {
     /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
     /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
-        owner = config.wormhole)]
+        owner = config.wormhole @ ReceiverError::WrongGuardianSetOwner)]
     pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
@@ -322,6 +322,12 @@ fn deserialize_guardian_set_checked(
     require!(
         expected_address == *account_info.key,
         ReceiverError::InvalidGuardianSetPda
+    );
+
+    let timestamp = Clock::get().map(Into::into)?;
+    require!(
+        guardian_set.inner().is_active(&timestamp),
+        ReceiverError::GuardianSetExpired
     );
 
     Ok(guardian_set)

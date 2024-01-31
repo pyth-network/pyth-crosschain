@@ -44,6 +44,7 @@ use {
 };
 
 pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
+pub const WRONG_GUARDIAN_SET_INDEX: u32 = 1;
 
 pub fn default_receiver_config() -> Config {
     Config {
@@ -65,11 +66,20 @@ pub struct ProgramTestFixtures {
     pub encoded_vaa_addresses: Vec<Pubkey>,
 }
 
-pub fn build_encoded_vaa_account_from_vaa(vaa: Vaa<&RawMessage>) -> Account {
+pub fn build_encoded_vaa_account_from_vaa(
+    vaa: Vaa<&RawMessage>,
+    wrong_setup_option: WrongSetupOption,
+) -> Account {
     let encoded_vaa_data = (
         <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
         Header {
-            status:          ProcessingStatus::Verified,
+            status:          {
+                if matches!(wrong_setup_option, WrongSetupOption::UnverifiedEncodedVaa) {
+                    ProcessingStatus::Writing
+                } else {
+                    ProcessingStatus::Verified
+                }
+            },
             write_authority: Pubkey::new_unique(),
             version:         1,
         },
@@ -87,9 +97,15 @@ pub fn build_encoded_vaa_account_from_vaa(vaa: Vaa<&RawMessage>) -> Account {
     }
 }
 
-pub fn build_guardian_set_account() -> Account {
+pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Account {
     let guardian_set = GuardianSet {
-        index:           DEFAULT_GUARDIAN_SET_INDEX,
+        index:           {
+            if matches!(wrong_setup_option, WrongSetupOption::GuardianSetWrongIndex) {
+                WRONG_GUARDIAN_SET_INDEX
+            } else {
+                DEFAULT_GUARDIAN_SET_INDEX
+            }
+        },
         keys:            dummy_guardians()
             .iter()
             .map(|x| {
@@ -101,7 +117,14 @@ pub fn build_guardian_set_account() -> Account {
             })
             .collect::<Vec<[u8; 20]>>(),
         creation_time:   0.into(),
-        expiration_time: 0.into(),
+        expiration_time: {
+            if matches!(wrong_setup_option, WrongSetupOption::GuardianSetExpired) {
+                1
+            } else {
+                0
+            }
+        }
+        .into(),
     };
 
     let guardian_set_data = (
@@ -119,12 +142,24 @@ pub fn build_guardian_set_account() -> Account {
         rent_epoch: 0,
     }
 }
+
+#[derive(Copy, Clone)]
+pub enum WrongSetupOption {
+    None,
+    GuardianSetExpired,
+    GuardianSetWrongIndex,
+    UnverifiedEncodedVaa,
+}
+
 /**
  * Setup to test the Pyth Receiver. The return values are a tuple composed of :
  * - The program simulator, which is used to send transactions
  * - The pubkeys of the encoded VAA accounts corresponding to the VAAs passed as argument, these accounts are prepopulated and can be used to test post_updates
  */
-pub async fn setup_pyth_receiver(vaas: Vec<Vaa<&RawMessage>>) -> ProgramTestFixtures {
+pub async fn setup_pyth_receiver(
+    vaas: Vec<Vaa<&RawMessage>>,
+    wrong_setup_option: WrongSetupOption,
+) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", ID, None);
 
@@ -132,11 +167,14 @@ pub async fn setup_pyth_receiver(vaas: Vec<Vaa<&RawMessage>>) -> ProgramTestFixt
     for vaa in vaas {
         let encoded_vaa_address = Pubkey::new_unique();
         encoded_vaa_addresses.push(encoded_vaa_address);
-        program_test.add_account(encoded_vaa_address, build_encoded_vaa_account_from_vaa(vaa));
+        program_test.add_account(
+            encoded_vaa_address,
+            build_encoded_vaa_account_from_vaa(vaa, wrong_setup_option),
+        );
     }
     program_test.add_account(
         get_guardian_set_address(BRIDGE_ID, DEFAULT_GUARDIAN_SET_INDEX),
-        build_guardian_set_account(),
+        build_guardian_set_account(wrong_setup_option),
     );
 
     let mut program_simulator = ProgramSimulator::start_from_program_test(program_test).await;
@@ -145,7 +183,7 @@ pub async fn setup_pyth_receiver(vaas: Vec<Vaa<&RawMessage>>) -> ProgramTestFixt
     let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             Initialize::populate(&setup_keypair.pubkey(), initial_config.clone()),
             &vec![&setup_keypair],
             None,
