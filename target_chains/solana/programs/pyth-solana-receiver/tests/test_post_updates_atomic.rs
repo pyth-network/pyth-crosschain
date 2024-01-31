@@ -1,5 +1,6 @@
 use {
     crate::common::{
+        assert_treasury_balance,
         WrongSetupOption,
         DEFAULT_GUARDIAN_SET_INDEX,
     },
@@ -44,7 +45,7 @@ mod common;
 async fn test_post_updates_atomic() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
@@ -55,10 +56,13 @@ async fn test_post_updates_atomic() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
+        governance_authority: _,
     } = setup_pyth_receiver(vec![], WrongSetupOption::None).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     let price_update_keypair = Keypair::new();
+
+    assert_treasury_balance(&mut program_simulator, 0).await;
 
     // post one update atomically
     program_simulator
@@ -77,6 +81,7 @@ async fn test_post_updates_atomic() {
         .await
         .unwrap();
 
+    assert_treasury_balance(&mut program_simulator, 1).await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -110,6 +115,7 @@ async fn test_post_updates_atomic() {
         .await
         .unwrap();
 
+    assert_treasury_balance(&mut program_simulator, 2).await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -131,12 +137,13 @@ async fn test_post_updates_atomic() {
 async fn test_post_updates_atomic_wrong_vaa() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
+        governance_authority: _,
     } = setup_pyth_receiver(vec![], WrongSetupOption::None).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
@@ -361,13 +368,14 @@ async fn test_post_updates_atomic_wrong_vaa() {
 async fn test_post_updates_atomic_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false);
+    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
     let price_update_keypair = Keypair::new();
 
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
+        governance_authority: _,
     } = setup_pyth_receiver(vec![], WrongSetupOption::GuardianSetWrongIndex).await;
     let poster: Keypair = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
@@ -394,6 +402,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     let ProgramTestFixtures {
         mut program_simulator,
         encoded_vaa_addresses: _,
+        governance_authority: _,
     } = setup_pyth_receiver(vec![], WrongSetupOption::GuardianSetExpired).await;
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(

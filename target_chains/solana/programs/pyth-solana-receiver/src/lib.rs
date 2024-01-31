@@ -68,8 +68,8 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    pub fn authorize_governance_authority_transfer(
-        ctx: Context<AuthorizeGovernanceAuthorityTransfer>,
+    pub fn accept_governance_authority_transfer(
+        ctx: Context<AcceptGovernanceAuthorityTransfer>,
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
         config.governance_authority = config.target_governance_authority.ok_or(error!(
@@ -244,13 +244,13 @@ pub struct Governance<'info> {
 }
 
 #[derive(Accounts)]
-pub struct AuthorizeGovernanceAuthorityTransfer<'info> {
+pub struct AcceptGovernanceAuthorityTransfer<'info> {
     #[account(constraint =
         payer.key() == config.target_governance_authority.ok_or(error!(ReceiverError::NonexistentGovernanceAuthorityTransferRequest))? @
         ReceiverError::TargetGovernanceAuthorityMismatch
     )]
     pub payer:  Signer<'info>,
-    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    #[account(mut, seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
 }
 
@@ -269,7 +269,7 @@ pub struct PostUpdates<'info> {
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key(), payer =payer, space = PriceUpdateV1::LEN)]
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
 }
@@ -290,7 +290,7 @@ pub struct PostUpdatesAtomic<'info> {
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key(), payer = payer, space = PriceUpdateV1::LEN)]
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
 }
