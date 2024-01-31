@@ -183,7 +183,7 @@ pub async fn setup_pyth_receiver(
     let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             Initialize::populate(&setup_keypair.pubkey(), initial_config.clone()),
             &vec![&setup_keypair],
             None,

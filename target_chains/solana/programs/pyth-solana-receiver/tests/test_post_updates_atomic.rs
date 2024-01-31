@@ -62,7 +62,7 @@ async fn test_post_updates_atomic() {
 
     // post one update atomically
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -95,7 +95,7 @@ async fn test_post_updates_atomic() {
 
     // post another update to the same account
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -147,7 +147,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     vaa_buffer_copy[5] = 255;
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -172,7 +172,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     .unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -196,7 +196,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -219,7 +219,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -242,7 +242,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -266,7 +266,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -289,7 +289,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -313,7 +313,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -344,7 +344,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     wrong_instruction.accounts[1].pubkey = wrong_guardian_set;
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 wrong_instruction,
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -372,7 +372,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     let poster: Keypair = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -398,7 +398,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
