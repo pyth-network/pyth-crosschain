@@ -4,7 +4,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::PostUpdates,
@@ -148,7 +148,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongVaaOwner)
+        into_transaction_error(ReceiverError::WrongVaaOwner)
     );
 }
 
@@ -186,6 +186,6 @@ async fn test_post_updates_wrong_setup() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(wormhole_core_bridge_solana::error::CoreBridgeError::UnverifiedVaa)
+        into_transaction_error(wormhole_core_bridge_solana::error::CoreBridgeError::UnverifiedVaa)
     );
 }
