@@ -63,7 +63,7 @@ async fn test_governance() {
     // this authority is not allowed to do anything
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 SetDataSources::populate(
                     new_governance_authority.pubkey(),
                     new_config.valid_data_sources.clone()
@@ -79,7 +79,7 @@ async fn test_governance() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 SetFee::populate(
                     new_governance_authority.pubkey(),
                     new_config.single_update_fee_in_lamports
@@ -95,7 +95,7 @@ async fn test_governance() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 SetWormholeAddress::populate(
                     new_governance_authority.pubkey(),
                     new_config.wormhole
@@ -111,7 +111,7 @@ async fn test_governance() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 SetMinimumSignatures::populate(
                     new_governance_authority.pubkey(),
                     new_config.minimum_signatures,
@@ -127,7 +127,7 @@ async fn test_governance() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 RequestGovernanceAuthorityTransfer::populate(
                     new_governance_authority.pubkey(),
                     new_config.governance_authority,
@@ -152,7 +152,7 @@ async fn test_governance() {
 
     // Now start changing for real
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 new_config.valid_data_sources.clone(),
@@ -187,7 +187,7 @@ async fn test_governance() {
     );
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(
                 governance_authority.pubkey(),
                 new_config.single_update_fee_in_lamports,
@@ -222,7 +222,7 @@ async fn test_governance() {
     );
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetWormholeAddress::populate(governance_authority.pubkey(), new_config.wormhole),
             &vec![&governance_authority],
             None,
@@ -254,7 +254,7 @@ async fn test_governance() {
     );
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetMinimumSignatures::populate(
                 governance_authority.pubkey(),
                 new_config.minimum_signatures,
@@ -291,7 +291,7 @@ async fn test_governance() {
     // Target is not defined yet
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 AcceptGovernanceAuthorityTransfer::populate(new_governance_authority.pubkey()),
                 &vec![&new_governance_authority],
                 None,
@@ -304,7 +304,7 @@ async fn test_governance() {
 
     // Request transfer
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             RequestGovernanceAuthorityTransfer::populate(
                 governance_authority.pubkey(),
                 new_governance_authority.pubkey(),
@@ -347,7 +347,7 @@ async fn test_governance() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 AcceptGovernanceAuthorityTransfer::populate(poster.pubkey()),
                 &vec![&poster],
                 None,
@@ -360,7 +360,7 @@ async fn test_governance() {
 
     // New authority can accept
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             AcceptGovernanceAuthorityTransfer::populate(new_governance_authority.pubkey()),
             &vec![&new_governance_authority],
             None,
@@ -376,7 +376,7 @@ async fn test_governance() {
 
     // Now the new authority can do stuff
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(new_governance_authority.pubkey(), 9),
             &vec![&new_governance_authority],
             None,
