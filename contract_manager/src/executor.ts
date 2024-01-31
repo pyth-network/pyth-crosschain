@@ -1,7 +1,8 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
-import { decodeGovernancePayload } from "xc_admin_common";
+import { EvmExecute, decodeGovernancePayload } from "xc_admin_common";
 import { DefaultStore } from "./store";
-import { PrivateKey } from "./base";
+import { PriceFeedContract, PrivateKey } from "./base";
+import { EvmEntropyContract } from "./contracts";
 
 /**
  * A general executor that tries to find any contract that can execute a given VAA and executes it
@@ -12,7 +13,14 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   const parsedVaa = parseVaa(vaa);
   const action = decodeGovernancePayload(parsedVaa.payload);
   if (!action) return; //TODO: handle other actions
-  for (const contract of Object.values(DefaultStore.contracts)) {
+
+  let contracts:
+    | Record<string, PriceFeedContract>
+    | Record<string, EvmEntropyContract>;
+  if (action instanceof EvmExecute) contracts = DefaultStore.entropy_contracts;
+  else contracts = DefaultStore.contracts;
+
+  for (const contract of Object.values(contracts)) {
     if (
       action.targetChainId === "unset" ||
       contract.getChain().wormholeChainName === action.targetChainId
@@ -31,8 +39,13 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
           );
           continue;
         }
-        await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
-        console.log(`Executed on contract ${contract.getId()}`);
+        const { id } = await contract.executeGovernanceInstruction(
+          senderPrivateKey,
+          vaa
+        );
+        console.log(
+          `Executed on contract ${contract.getId()} with txHash: ${id}`
+        );
       }
     }
   }
