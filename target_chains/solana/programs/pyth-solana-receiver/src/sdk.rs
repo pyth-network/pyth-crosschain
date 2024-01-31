@@ -81,6 +81,13 @@ impl accounts::Governance {
     }
 }
 
+impl accounts::AcceptGovernanceAuthorityTransfer {
+    pub fn populate(payer: Pubkey) -> Self {
+        let config = get_config_address();
+        accounts::AcceptGovernanceAuthorityTransfer { payer, config }
+    }
+}
+
 impl instruction::Initialize {
     pub fn populate(payer: &Pubkey, initial_config: Config) -> Instruction {
         Instruction {
@@ -168,6 +175,56 @@ impl instruction::SetFee {
                 single_update_fee_in_lamports: fee,
             }
             .data(),
+        }
+    }
+}
+
+
+impl instruction::SetWormholeAddress {
+    pub fn populate(payer: Pubkey, wormhole: Pubkey) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::SetWormholeAddress { wormhole }.data(),
+        }
+    }
+}
+
+
+impl instruction::SetMinimumSignatures {
+    pub fn populate(payer: Pubkey, minimum_signatures: u8) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::SetMinimumSignatures { minimum_signatures }.data(),
+        }
+    }
+}
+
+impl instruction::RequestGovernanceAuthorityTransfer {
+    pub fn populate(payer: Pubkey, target_governance_authority: Pubkey) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::RequestGovernanceAuthorityTransfer {
+                target_governance_authority,
+            }
+            .data(),
+        }
+    }
+}
+
+impl instruction::AcceptGovernanceAuthorityTransfer {
+    pub fn populate(payer: Pubkey) -> Instruction {
+        let governance_accounts =
+            accounts::AcceptGovernanceAuthorityTransfer::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::AcceptGovernanceAuthorityTransfer {}.data(),
         }
     }
 }
