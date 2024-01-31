@@ -8,7 +8,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
@@ -89,7 +89,7 @@ async fn test_invalid_wormhole_message() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidWormholeMessage)
+        into_transaction_error(ReceiverError::InvalidWormholeMessage)
     );
 }
 
@@ -133,7 +133,7 @@ async fn test_invalid_update_message() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::DeserializeMessageFailed)
+        into_transaction_error(ReceiverError::DeserializeMessageFailed)
     );
 }
 
@@ -190,7 +190,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidPriceUpdate)
+        into_transaction_error(ReceiverError::InvalidPriceUpdate)
     );
 
     // this update is a twap
@@ -211,7 +211,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::UnsupportedMessageType)
+        into_transaction_error(ReceiverError::UnsupportedMessageType)
     );
 
 
@@ -249,7 +249,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidDataSource)
+        into_transaction_error(ReceiverError::InvalidDataSource)
     );
 
     // change again, this time the emitter field
@@ -286,7 +286,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidDataSource)
+        into_transaction_error(ReceiverError::InvalidDataSource)
     );
 
     // change back
@@ -368,7 +368,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InsufficientFunds)
+        into_transaction_error(ReceiverError::InsufficientFunds)
     );
 
     assert_treasury_balance(&mut program_simulator, 1).await;
@@ -455,6 +455,6 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongWriteAuthority)
+        into_transaction_error(ReceiverError::WrongWriteAuthority)
     );
 }

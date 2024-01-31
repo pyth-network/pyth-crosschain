@@ -113,13 +113,6 @@ impl ProgramSimulator {
     }
 }
 
-pub fn into_transation_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
-    TransactionError::InstructionError(
-        0,
-        InstructionError::try_from(u64::from(ProgramError::from(error.into()))).unwrap(),
-    )
-}
-
 pub fn into_transaction_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
     TransactionError::InstructionError(
         0,

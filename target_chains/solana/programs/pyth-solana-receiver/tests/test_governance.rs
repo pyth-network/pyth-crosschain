@@ -4,7 +4,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
@@ -74,7 +74,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::GovernanceAuthorityMismatch)
     );
 
     assert_eq!(
@@ -90,7 +90,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::GovernanceAuthorityMismatch)
     );
 
     assert_eq!(
@@ -106,7 +106,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::GovernanceAuthorityMismatch)
     );
 
     assert_eq!(
@@ -122,7 +122,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::GovernanceAuthorityMismatch)
     );
 
     assert_eq!(
@@ -138,7 +138,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::GovernanceAuthorityMismatch)
     );
 
     assert_eq!(
@@ -299,7 +299,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::NonexistentGovernanceAuthorityTransferRequest)
+        into_transaction_error(ReceiverError::NonexistentGovernanceAuthorityTransferRequest)
     );
 
     // Request transfer
@@ -355,7 +355,7 @@ async fn test_governance() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::TargetGovernanceAuthorityMismatch)
+        into_transaction_error(ReceiverError::TargetGovernanceAuthorityMismatch)
     );
 
     // New authority can accept
