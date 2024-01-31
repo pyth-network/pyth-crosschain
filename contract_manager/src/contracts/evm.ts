@@ -183,7 +183,21 @@ const EXTENDED_PYTH_ABI = [
   },
   ...PythInterfaceAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-
+const EXECUTOR_ABI = [
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+    ],
+    name: "upgradeTo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const WORMHOLE_ABI = [
   {
     inputs: [],
@@ -366,11 +380,15 @@ export class EvmEntropyContract extends Storable {
 
   // Generate a payload for the given executor address and calldata.
   // `executor` and `calldata` should be hex strings.
-  generateExecutorPayload(executor: string, calldata: string) {
+  generateExecutorPayload(
+    executor: string,
+    callAddress: string,
+    calldata: string
+  ) {
     return new EvmExecute(
       this.chain.wormholeChainName,
       executor.replace("0x", ""),
-      this.address.replace("0x", ""),
+      callAddress.replace("0x", ""),
       0n,
       Buffer.from(calldata.replace("0x", ""), "hex")
     ).encode();
@@ -380,14 +398,26 @@ export class EvmEntropyContract extends Storable {
   generateAcceptAdminPayload(newAdmin: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptAdmin().encodeABI();
-    return this.generateExecutorPayload(newAdmin, data);
+    return this.generateExecutorPayload(newAdmin, this.address, data);
   }
 
   // Generates a payload for newOwner to call acceptOwnership on the entropy contracts
   generateAcceptOwnershipPayload(newOwner: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptOwnership().encodeABI();
-    return this.generateExecutorPayload(newOwner, data);
+    return this.generateExecutorPayload(newOwner, this.address, data);
+  }
+
+  // Generates a payload to upgrade the executor contract, the owner of entropy contracts
+  async generateUpgradeExecutorContractsPayload(
+    newImplementation: string
+  ): Promise<Buffer> {
+    // Executor contract is the owner of entropy contract
+    const executorAddr = await this.getOwner();
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const executor = new web3.eth.Contract(EXECUTOR_ABI, executorAddr);
+    const data = executor.methods.upgradeTo(newImplementation).encodeABI();
+    return this.generateExecutorPayload(executorAddr, executorAddr, data);
   }
 
   getOwner(): string {
