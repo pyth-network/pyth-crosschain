@@ -74,7 +74,7 @@ async fn test_invalid_wormhole_message() {
     // corrupted wormhole message
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -118,7 +118,7 @@ async fn test_invalid_update_message() {
     // corrupted wormhole message
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -175,7 +175,7 @@ async fn test_post_price_update_from_vaa() {
     // this update is not in the proof
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -196,7 +196,7 @@ async fn test_post_price_update_from_vaa() {
     // this update is a twap
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -217,7 +217,7 @@ async fn test_post_price_update_from_vaa() {
 
     // change the data source
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -234,7 +234,7 @@ async fn test_post_price_update_from_vaa() {
     // Now this should fail!
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -254,7 +254,7 @@ async fn test_post_price_update_from_vaa() {
 
     // change again, this time the emitter field
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -271,7 +271,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -291,7 +291,7 @@ async fn test_post_price_update_from_vaa() {
 
     // change back
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -307,7 +307,7 @@ async fn test_post_price_update_from_vaa() {
 
     // Now it works
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -342,7 +342,7 @@ async fn test_post_price_update_from_vaa() {
 
     // Now change the fee!
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(governance_authority.pubkey(), LAMPORTS_PER_SOL),
             &vec![&governance_authority],
             None,
@@ -353,7 +353,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -394,7 +394,7 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(governance_authority.pubkey(), LAMPORTS_PER_SOL),
             &vec![&governance_authority],
             None,
@@ -403,7 +403,7 @@ async fn test_post_price_update_from_vaa() {
         .unwrap();
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -440,7 +440,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster_2.pubkey(),
                     price_update_keypair.pubkey(),

@@ -51,7 +51,7 @@ impl ProgramSimulator {
 
     /// Process a transaction containing `instruction` signed by `signers`.
     /// `payer` is used to pay for and sign the transaction.
-    pub async fn process_ix(
+    pub async fn process_ix_with_default_compute_limit(
         &mut self,
         instruction: Instruction,
         signers: &Vec<&Keypair>,
@@ -83,7 +83,8 @@ impl ProgramSimulator {
         let instruction =
             system_instruction::transfer(&self.genesis_keypair.pubkey(), to, lamports);
 
-        self.process_ix(instruction, &vec![], None).await
+        self.process_ix_with_default_compute_limit(instruction, &vec![], None)
+            .await
     }
 
     pub async fn get_funded_keypair(&mut self) -> Result<Keypair, BanksClientError> {
@@ -113,6 +114,13 @@ impl ProgramSimulator {
 }
 
 pub fn into_transation_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
+    TransactionError::InstructionError(
+        0,
+        InstructionError::try_from(u64::from(ProgramError::from(error.into()))).unwrap(),
+    )
+}
+
+pub fn into_transaction_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
     TransactionError::InstructionError(
         0,
         InstructionError::try_from(u64::from(ProgramError::from(error.into()))).unwrap(),
