@@ -23,6 +23,7 @@
     "@pythnetwork/client": "^2.17.0",
     "@solana/web3.js": "^1.76.0",
     "@sqds/mesh": "^1.0.6",
+    "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
     "ts-node": "^10.9.1",
     "xc_admin_common": "*"
