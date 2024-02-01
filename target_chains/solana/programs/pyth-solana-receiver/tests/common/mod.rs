@@ -157,7 +157,7 @@ pub enum WrongSetupOption {
 /**
  * Setup to test the Pyth Receiver. The return values are a tuple composed of :
  * - The program simulator, which is used to send transactions
- * - The pubkeys of the encoded VAA accounts corresponding to the VAAs passed as argument, these accounts are prepopulated and can be used to test post_updates
+ * - The pubkeys of the encoded VAA accounts corresponding to the VAAs passed as argument, these accounts are prepopulated and can be used to test post_update
  */
 pub async fn setup_pyth_receiver(
     vaas: Vec<Vaa<&RawMessage>>,

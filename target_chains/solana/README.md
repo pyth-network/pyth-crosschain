@@ -16,10 +16,10 @@ Receiving a price update from Pythnet involves two steps:
 
 This contract offers two ways to post a price update from Pythnet onto Solana:
 
-- `post_updates` allows you to do it in 2 transactions and checks all the Wormhole guardian signatures (the quorum is currently 13 signatures). It relies on the Wormhole contract to verify the signatures.
-- `post_updates_atomic` allows you to do it in 1 transaction but only partially checks the Wormhole guardian signatures (5 signatures seems like the best it can currently do). Therefore it is less secure. It relies on a guardian set account from the Wormhole contract to check the signatures against the guardian keys.
+- `post_update` allows you to do it in 2 transactions and checks all the Wormhole guardian signatures (the quorum is currently 13 signatures). It relies on the Wormhole contract to verify the signatures.
+- `post_update_atomic` allows you to do it in 1 transaction but only partially checks the Wormhole guardian signatures (5 signatures seems like the best it can currently do). Therefore it is less secure. It relies on a guardian set account from the Wormhole contract to check the signatures against the guardian keys.
 
-`post_updates` is also a more efficient way to post updates if you're looking to post data for many different price feeds at a single point in time.
+`post_update` is also a more efficient way to post updates if you're looking to post data for many different price feeds at a single point in time.
 This is because it persists a verified encoded VAA, so guardian signatures will only get checked once. Then that single posted VAA can be used to prove the price update for all price feeds for that given point in time.
 
 # Devnet deployment

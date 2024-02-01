@@ -18,10 +18,10 @@ pub enum ReceiverError {
     // Price account permissions
     #[msg("This signer can't write to price update account")]
     WrongWriteAuthority,
-    // Wormhole contract encoded vaa error (from post_updates)
+    // Wormhole contract encoded vaa error (from post_update)
     #[msg("The posted VAA account has the wrong owner.")]
     WrongVaaOwner,
-    // Wormhole signatures verification errors (from post_updates_atomic)
+    // Wormhole signatures verification errors (from post_update_atomic)
     #[msg("An error occurred when deserializing the VAA.")]
     DeserializeVaaFailed,
     #[msg("The number of guardian signatures is below the minimum")]
