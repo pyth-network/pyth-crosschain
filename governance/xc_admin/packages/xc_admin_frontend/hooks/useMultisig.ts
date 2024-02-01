@@ -17,8 +17,7 @@ import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 export interface MultisigHookData {
   isLoading: boolean
   error: any // TODO: fix any
-  proposeSquads: SquadsMesh | undefined
-  voteSquads: SquadsMesh | undefined
+  squads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
@@ -161,8 +160,7 @@ export const useMultisig = (): MultisigHookData => {
   return {
     isLoading,
     error,
-    proposeSquads: squads,
-    voteSquads: squads,
+    squads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,

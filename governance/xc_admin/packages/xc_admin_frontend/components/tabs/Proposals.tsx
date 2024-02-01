@@ -280,7 +280,7 @@ const Proposal = ({
       : contextCluster
 
   const {
-    voteSquads,
+    squads,
     isLoading: isMultisigLoading,
     connection,
     refreshData,
@@ -366,16 +366,16 @@ const Proposal = ({
     return () => {
       isCancelled = true
     }
-  }, [cluster, proposal, voteSquads, connection])
+  }, [cluster, proposal, squads, connection])
 
   const handleClick = async (
     handler: (squad: SquadsMesh, proposalKey: PublicKey) => any,
     msg: string
   ) => {
-    if (proposal && voteSquads) {
+    if (proposal && squads) {
       try {
         setIsTransactionLoading(true)
-        await handler(voteSquads, proposal.publicKey)
+        await handler(squads, proposal.publicKey)
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
       } catch (e: any) {

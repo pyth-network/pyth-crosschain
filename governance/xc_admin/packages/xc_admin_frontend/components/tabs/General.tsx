@@ -44,7 +44,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
   const multisigCluster: Cluster | 'localnet' = getMultisigCluster(cluster) // Move to multisig context
   const wormholeAddress = WORMHOLE_ADDRESS[multisigCluster] // Move to multisig context
-  const { isLoading: isMultisigLoading, proposeSquads } = useMultisigContext()
+  const { isLoading: isMultisigLoading, squads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -282,15 +282,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   }
 
   const handleSendProposalButtonClick = async () => {
-    if (
-      pythProgramClient &&
-      dataChanges &&
-      !isMultisigLoading &&
-      proposeSquads
-    ) {
+    if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
       for (const symbol of Object.keys(dataChanges)) {
-        const multisigAuthority = proposeSquads.getAuthorityPDA(
+        const multisigAuthority = squads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           1
         )
@@ -789,11 +784,11 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
-              disabled={isSendProposalButtonLoading || !proposeSquads}
+              disabled={isSendProposalButtonLoading || !squads}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
-            {!proposeSquads && <div>Please connect your wallet</div>}
+            {!squads && <div>Please connect your wallet</div>}
           </>
         )}
       </>
@@ -802,10 +797,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && proposeSquads) {
+    if (connected && squads) {
       const provider = new AnchorProvider(
         connection,
-        proposeSquads.wallet,
+        squads.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
@@ -822,7 +817,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         )
       }
     }
-  }, [connection, connected, cluster, proposeSquads])
+  }, [connection, connected, cluster, squads])
 
   return (
     <div className="relative">
@@ -847,13 +842,13 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           <PermissionDepermissionKey
             isPermission={true}
             pythProgramClient={pythProgramClient}
-            squads={proposeSquads}
+            squads={squads}
             proposerServerUrl={proposerServerUrl}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
-            squads={proposeSquads}
+            squads={squads}
             proposerServerUrl={proposerServerUrl}
           />
         </div>
