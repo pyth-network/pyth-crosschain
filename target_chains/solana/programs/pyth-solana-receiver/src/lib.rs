@@ -191,7 +191,7 @@ pub mod pyth_solana_receiver {
     /// Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.
     /// This should be called after the client has already verified the Vaa via the Wormhole contract.
     /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
-    pub fn post_updates(ctx: Context<PostUpdates>, price_update: MerklePriceUpdate) -> Result<()> {
+    pub fn post_updates(ctx: Context<PostUpdates>, params: PostUpdatesParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
         let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?;
@@ -212,7 +212,7 @@ pub mod pyth_solana_receiver {
             price_update_account,
             &vaa_components,
             encoded_vaa.try_payload()?.as_ref(),
-            &price_update,
+            &params.merkle_price_update,
         )?;
 
         Ok(())
@@ -259,6 +259,7 @@ pub struct AcceptGovernanceAuthorityTransfer<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(params: PostUpdatesParams)]
 pub struct PostUpdates<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
@@ -267,7 +268,7 @@ pub struct PostUpdates<'info> {
     pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
-    #[account(seeds = [TREASURY_SEED.as_ref()], bump)]
+    #[account(seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
@@ -279,6 +280,7 @@ pub struct PostUpdates<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(params: PostUpdatesAtomicParams)]
 pub struct PostUpdatesAtomic<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
@@ -289,7 +291,7 @@ pub struct PostUpdatesAtomic<'info> {
     pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
-    #[account(mut, seeds = [TREASURY_SEED.as_ref()], bump)]
+    #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
@@ -311,6 +313,13 @@ pub struct ReclaimRent<'info> {
 pub struct PostUpdatesAtomicParams {
     pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
+    pub treasury_id:         u8,
+}
+
+#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct PostUpdatesParams {
+    pub merkle_price_update: MerklePriceUpdate,
+    pub treasury_id:         u8,
 }
 
 

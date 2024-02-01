@@ -7,6 +7,7 @@ use {
             DataSource,
         },
         PostUpdatesAtomicParams,
+        PostUpdatesParams,
         CONFIG_SEED,
         ID,
         TREASURY_SEED,
@@ -25,6 +26,9 @@ use {
     wormhole_core_bridge_solana::state::GuardianSet,
 };
 
+pub const DEFAULT_TREASURY_ID: u8 = 0;
+pub const SECONDARY_TREASURY_ID: u8 = 1;
+
 impl accounts::Initialize {
     pub fn populate(payer: &Pubkey) -> Self {
         let config = get_config_address();
@@ -42,9 +46,10 @@ impl accounts::PostUpdatesAtomic {
         price_update_account: Pubkey,
         wormhole_address: Pubkey,
         guardian_set_index: u32,
+        treasury_id: u8,
     ) -> Self {
         let config = get_config_address();
-        let treasury = get_treasury_address();
+        let treasury = get_treasury_address(treasury_id);
 
         let guardian_set = get_guardian_set_address(wormhole_address, guardian_set_index);
 
@@ -62,7 +67,7 @@ impl accounts::PostUpdatesAtomic {
 impl accounts::PostUpdates {
     pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
         let config = get_config_address();
-        let treasury = get_treasury_address();
+        let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
         accounts::PostUpdates {
             payer,
             encoded_vaa,
@@ -122,7 +127,10 @@ impl instruction::PostUpdates {
             program_id: ID,
             accounts:   post_update_accounts,
             data:       instruction::PostUpdates {
-                price_update: merkle_price_update,
+                params: PostUpdatesParams {
+                    merkle_price_update,
+                    treasury_id: DEFAULT_TREASURY_ID,
+                },
             }
             .data(),
         }
@@ -138,12 +146,14 @@ impl instruction::PostUpdatesAtomic {
         guardian_set_index: u32,
         vaa: Vec<u8>,
         merkle_price_update: MerklePriceUpdate,
+        treasury_id: u8,
     ) -> Instruction {
         let post_update_accounts = accounts::PostUpdatesAtomic::populate(
             payer,
             price_update_account,
             wormhole_address,
             guardian_set_index,
+            treasury_id,
         )
         .to_account_metas(None);
         Instruction {
@@ -153,6 +163,7 @@ impl instruction::PostUpdatesAtomic {
                 params: PostUpdatesAtomicParams {
                     vaa,
                     merkle_price_update,
+                    treasury_id,
                 },
             }
             .data(),
@@ -252,8 +263,10 @@ impl instruction::ReclaimRent {
 }
 
 
-pub fn get_treasury_address() -> Pubkey {
-    Pubkey::find_program_address(&[TREASURY_SEED.as_ref()], &ID).0
+// There is one treasury for each u8 value
+// This is to load balance the write load
+pub fn get_treasury_address(treasury_id: u8) -> Pubkey {
+    Pubkey::find_program_address(&[TREASURY_SEED.as_ref(), &[treasury_id]], &ID).0
 }
 
 pub fn get_config_address() -> Pubkey {
