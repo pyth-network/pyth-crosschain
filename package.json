@@ -4,7 +4,6 @@
     "governance/xc_admin/packages/*",
     "governance/multisig_wh_message_builder",
     "price_pusher",
-    "price_service/server",
     "price_service/sdk/js",
     "price_service/client/js",
     "pythnet/message_buffer",
@@ -19,7 +18,6 @@
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
     "target_chains/sui/cli",
-    "wormhole_attester/sdk/js",
     "contract_manager"
   ],
   "dependencies": {
