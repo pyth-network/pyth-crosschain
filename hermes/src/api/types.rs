@@ -207,7 +207,7 @@ pub struct BinaryPriceUpdate {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
-    pub id:        String,
+    pub id:        PriceIdentifier,
     pub price:     RpcPrice,
     pub ema_price: RpcPrice,
     pub metadata:  RpcPriceFeedMetadataV2,
@@ -218,7 +218,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        price_feed.id.to_string(),
+            id:        price_feed.id,
             price:     RpcPrice {
                 price:        price_feed.get_price_unchecked().price,
                 conf:         price_feed.get_price_unchecked().conf,
