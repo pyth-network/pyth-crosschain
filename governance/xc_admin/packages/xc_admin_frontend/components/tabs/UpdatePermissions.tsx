@@ -110,7 +110,7 @@ const UpdatePermissions = () => {
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
   const { cluster } = useContext(ClusterContext)
-  const { isLoading: isMultisigLoading, proposeSquads } = useMultisigContext()
+  const { isLoading: isMultisigLoading, squads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -239,12 +239,12 @@ const UpdatePermissions = () => {
   }
 
   const handleSendProposalButtonClick = () => {
-    if (pythProgramClient && finalPubkeyChanges && proposeSquads) {
+    if (pythProgramClient && finalPubkeyChanges && squads) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
         BPF_UPGRADABLE_LOADER
       )[0]
-      const multisigAuthority = proposeSquads.getAuthorityPDA(
+      const multisigAuthority = squads.getAuthorityPDA(
         UPGRADE_MULTISIG[getMultisigCluster(cluster)],
         1
       )
@@ -267,9 +267,9 @@ const UpdatePermissions = () => {
             setIsSendProposalButtonLoading(true)
             try {
               const vault = new MultisigVault(
-                proposeSquads.wallet,
+                squads.wallet,
                 getMultisigCluster(cluster),
-                proposeSquads,
+                squads,
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)]
               )
 
@@ -335,17 +335,17 @@ const UpdatePermissions = () => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && proposeSquads) {
+    if (connected && squads) {
       const provider = new AnchorProvider(
         connection,
-        proposeSquads.wallet,
+        squads.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
     }
-  }, [connection, connected, cluster, proposeSquads])
+  }, [connection, connected, cluster, squads])
 
   return (
     <div className="relative">
