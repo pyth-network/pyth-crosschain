@@ -19,11 +19,12 @@ use {
         PriceFeed,
         PriceIdentifier,
     },
+    serde::Deserialize,
 };
 
 const BENCHMARKS_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
 
-#[derive(serde::Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 enum BlobEncoding {
     #[serde(rename = "base64")]
     Base64,
@@ -31,7 +32,7 @@ enum BlobEncoding {
     Hex,
 }
 
-#[derive(serde::Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 struct BinaryBlob {
     pub encoding: BlobEncoding,
     pub data:     Vec<String>,

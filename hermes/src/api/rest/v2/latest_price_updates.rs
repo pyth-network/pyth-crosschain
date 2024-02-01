@@ -25,12 +25,13 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
 
 
-#[derive(Debug, serde::Deserialize, IntoParams)]
+#[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct LatestPriceUpdatesQueryParams {
     /// Get the most recent price update for this set of price feed ids.

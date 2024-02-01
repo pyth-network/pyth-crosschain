@@ -32,11 +32,12 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
 
-#[derive(Debug, serde::Deserialize, IntoParams)]
+#[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Path)]
 pub struct TimestampPriceUpdatesPathParams {
     /// The unix timestamp in seconds. This endpoint will return the first update whose
@@ -46,7 +47,7 @@ pub struct TimestampPriceUpdatesPathParams {
     publish_time: UnixTimestamp,
 }
 
-#[derive(Debug, serde::Deserialize, IntoParams)]
+#[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct TimestampPriceUpdatesQueryParams {
     /// Get the most recent price update for this set of price feed ids.
