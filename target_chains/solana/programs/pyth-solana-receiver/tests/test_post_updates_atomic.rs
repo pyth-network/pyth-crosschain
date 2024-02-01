@@ -8,7 +8,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::PostUpdatesAtomic,
@@ -66,7 +66,7 @@ async fn test_post_updates_atomic() {
 
     // post one update atomically
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -100,7 +100,7 @@ async fn test_post_updates_atomic() {
 
     // post another update to the same account
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -154,7 +154,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     vaa_buffer_copy[5] = 255;
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -169,7 +169,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::DeserializeVaaFailed)
+        into_transaction_error(ReceiverError::DeserializeVaaFailed)
     );
 
     let vaa_wrong_num_signatures = serde_wormhole::to_vec(&trim_vaa_signatures(
@@ -179,7 +179,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     .unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -194,7 +194,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InsufficientGuardianSignatures)
+        into_transaction_error(ReceiverError::InsufficientGuardianSignatures)
     );
 
 
@@ -203,7 +203,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -218,7 +218,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidVaaVersion)
+        into_transaction_error(ReceiverError::InvalidVaaVersion)
     );
 
     let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
@@ -226,7 +226,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -241,7 +241,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GuardianSetMismatch)
+        into_transaction_error(ReceiverError::GuardianSetMismatch)
     );
 
     let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
@@ -249,7 +249,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -264,7 +264,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidGuardianOrder)
+        into_transaction_error(ReceiverError::InvalidGuardianOrder)
     );
 
 
@@ -273,7 +273,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -288,7 +288,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidGuardianIndex)
+        into_transaction_error(ReceiverError::InvalidGuardianIndex)
     );
 
     let mut vaa_copy: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa).unwrap();
@@ -296,7 +296,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -311,7 +311,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidSignature)
+        into_transaction_error(ReceiverError::InvalidSignature)
     );
 
 
@@ -320,7 +320,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -335,7 +335,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidGuardianKeyRecovery)
+        into_transaction_error(ReceiverError::InvalidGuardianKeyRecovery)
     );
 
     let mut wrong_instruction = PostUpdatesAtomic::populate(
@@ -351,7 +351,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     wrong_instruction.accounts[1].pubkey = wrong_guardian_set;
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 wrong_instruction,
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -359,7 +359,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongGuardianSetOwner)
+        into_transaction_error(ReceiverError::WrongGuardianSetOwner)
     );
 }
 
@@ -380,7 +380,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     let poster: Keypair = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -395,7 +395,7 @@ async fn test_post_updates_atomic_wrong_setup() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidGuardianSetPda)
+        into_transaction_error(ReceiverError::InvalidGuardianSetPda)
     );
 
 
@@ -407,7 +407,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     let poster = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -422,6 +422,6 @@ async fn test_post_updates_atomic_wrong_setup() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::GuardianSetExpired)
+        into_transaction_error(ReceiverError::GuardianSetExpired)
     );
 }

@@ -7,7 +7,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
@@ -62,7 +62,7 @@ async fn test_post_updates() {
 
     // post one update
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdates::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
@@ -94,7 +94,7 @@ async fn test_post_updates() {
 
     // post another update to the same account
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdates::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
@@ -128,7 +128,7 @@ async fn test_post_updates() {
     let poster_2 = program_simulator.get_funded_keypair().await.unwrap();
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 ReclaimRent::populate(poster_2.pubkey(), price_update_keypair.pubkey()),
                 &vec![&poster_2],
                 None,
@@ -136,11 +136,11 @@ async fn test_post_updates() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongWriteAuthority)
+        into_transaction_error(ReceiverError::WrongWriteAuthority)
     );
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             ReclaimRent::populate(poster.pubkey(), price_update_keypair.pubkey()),
             &vec![&poster],
             None,
@@ -179,7 +179,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdates::populate(
                     poster.pubkey(),
                     Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
@@ -192,7 +192,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongVaaOwner)
+        into_transaction_error(ReceiverError::WrongVaaOwner)
     );
 }
 
@@ -218,7 +218,7 @@ async fn test_post_updates_wrong_setup() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdates::populate(
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
@@ -231,6 +231,6 @@ async fn test_post_updates_wrong_setup() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(wormhole_core_bridge_solana::error::CoreBridgeError::UnverifiedVaa)
+        into_transaction_error(wormhole_core_bridge_solana::error::CoreBridgeError::UnverifiedVaa)
     );
 }
