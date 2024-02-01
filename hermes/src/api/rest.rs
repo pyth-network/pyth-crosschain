@@ -31,7 +31,10 @@ pub use {
     live::*,
     price_feed_ids::*,
     ready::*,
-    v2::latest_price_updates::*,
+    v2::{
+        latest_price_updates::*,
+        timestamp_price_updates::*,
+    },
 };
 
 pub enum RestError {

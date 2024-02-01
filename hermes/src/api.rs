@@ -27,7 +27,7 @@ use {
 mod doc_examples;
 mod metrics_middleware;
 mod rest;
-mod types;
+pub mod types;
 mod ws;
 
 #[derive(Clone)]
@@ -154,6 +154,10 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
+        .route(
+            "/v2/updates/price/:publish_time",
+            get(rest::timestamp_price_updates),
+        )
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
         .route("/ws", get(ws::ws_route_handler))

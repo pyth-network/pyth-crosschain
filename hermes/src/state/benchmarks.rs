@@ -1,10 +1,13 @@
 //! This module communicates with Pyth Benchmarks, an API for historical price feeds and their updates.
 
 use {
-    crate::aggregate::{
-        PriceFeedUpdate,
-        PriceFeedsWithUpdateData,
-        UnixTimestamp,
+    crate::{
+        aggregate::{
+            PriceFeedUpdate,
+            PriceFeedsWithUpdateData,
+            UnixTimestamp,
+        },
+        api::types::PriceUpdate,
     },
     anyhow::Result,
     base64::{
@@ -12,6 +15,7 @@ use {
         Engine as _,
     },
     pyth_sdk::{
+        Price,
         PriceFeed,
         PriceIdentifier,
     },
@@ -33,12 +37,6 @@ struct BinaryBlob {
     pub data:     Vec<String>,
 }
 
-#[derive(serde::Deserialize, Debug, Clone)]
-struct BenchmarkUpdates {
-    pub parsed: Vec<PriceFeed>,
-    pub binary: BinaryBlob,
-}
-
 impl TryFrom<BinaryBlob> for Vec<Vec<u8>> {
     type Error = anyhow::Error;
 
@@ -56,22 +54,51 @@ impl TryFrom<BinaryBlob> for Vec<Vec<u8>> {
     }
 }
 
-impl TryFrom<BenchmarkUpdates> for PriceFeedsWithUpdateData {
+
+impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
     type Error = anyhow::Error;
-    fn try_from(benchmark_updates: BenchmarkUpdates) -> Result<Self> {
+    fn try_from(price_update: PriceUpdate) -> Result<Self> {
+        let price_feeds = price_update
+            .parsed
+            .unwrap_or_default()
+            .into_iter()
+            .map(|parsed_price_update| PriceFeedUpdate {
+                price_feed:        PriceFeed::new(
+                    PriceIdentifier::new(hex::decode(&parsed_price_update.id).map(|v| {
+                        let mut arr = [0u8; 32];
+                        arr.copy_from_slice(&v);
+                        arr
+                    }).expect("Failed to decode hex string or output size does not match [u8; 32]")),
+                    Price {
+                        price:        parsed_price_update.price.price,
+                        conf:         parsed_price_update.price.conf,
+                        expo:         parsed_price_update.price.expo,
+                        publish_time: parsed_price_update.price.publish_time,
+                    },
+                    Price {
+                        price:        parsed_price_update.ema_price.price,
+                        conf:         parsed_price_update.ema_price.conf,
+                        expo:         parsed_price_update.ema_price.expo,
+                        publish_time: parsed_price_update.ema_price.publish_time,
+                    },
+                ),
+                slot:              parsed_price_update.metadata.slot,
+                received_at:       parsed_price_update.metadata.proof_available_time,
+                update_data:       None, // This field is not available in ParsedPriceUpdate
+                prev_publish_time: parsed_price_update.metadata.prev_publish_time,
+            })
+            .collect::<Vec<_>>();
+
+        let update_data = price_update
+            .binary
+            .data
+            .iter()
+            .map(|hex_str| hex::decode(hex_str).unwrap_or_default())
+            .collect::<Vec<Vec<u8>>>();
+
         Ok(PriceFeedsWithUpdateData {
-            price_feeds: benchmark_updates
-                .parsed
-                .into_iter()
-                .map(|price_feed| PriceFeedUpdate {
-                    price_feed,
-                    slot: None,
-                    received_at: None,
-                    update_data: None,
-                    prev_publish_time: None, // TODO: Set this field when Benchmarks API supports it.
-                })
-                .collect::<Vec<_>>(),
-            update_data: benchmark_updates.binary.try_into()?,
+            price_feeds,
+            update_data,
         })
     }
 }
@@ -119,7 +146,7 @@ impl Benchmarks for crate::state::State {
             )));
         }
 
-        let benchmark_updates: BenchmarkUpdates = response.json().await?;
-        benchmark_updates.try_into()
+        let price_update: PriceUpdate = response.json().await?;
+        price_update.try_into()
     }
 }
