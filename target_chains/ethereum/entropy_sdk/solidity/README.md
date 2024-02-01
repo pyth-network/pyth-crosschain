@@ -9,8 +9,28 @@ Use this protocol at your own risk.
 
 ## Install
 
-```shell
+####Truffle/Hardhat
+
+If you are using Truffle or Hardhat, simply install the NPM package:
+
+```bash
 npm install @pythnetwork/entropy-sdk-solidity
+```
+
+####Foundry
+
+If you are using Foundry, you will need to create an NPM project if you don't already have one.
+From the root directory of your project, run:
+
+```bash
+npm init -y
+npm install @pythnetwork/entropy-sdk-solidity
+```
+
+Then add the following line to your `remappings.txt` file:
+
+```text
+@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
 ```
 
 ## Setup
