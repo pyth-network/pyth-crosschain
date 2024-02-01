@@ -7,8 +7,28 @@ It is **strongly recommended** to follow the [consumer best practices](https://d
 
 ## Installation
 
+####Truffle/Hardhat
+
+If you are using Truffle or Hardhat, simply install the NPM package:
+
 ```bash
 npm install @pythnetwork/pyth-sdk-solidity
+```
+
+####Foundry
+
+If you are using Foundry, you will need to create an NPM project if you don't already have one.
+From the root directory of your project, run:
+
+```bash
+npm init -y
+npm install @pythnetwork/pyth-sdk-solidity
+```
+
+Then add the following line to your `remappings.txt` file:
+
+```text
+@pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity
 ```
 
 ## Example Usage
