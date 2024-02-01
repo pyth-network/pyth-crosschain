@@ -438,6 +438,11 @@
   rpcUrl: https://replicator.pegasus.lightlink.io/rpc/v1
   networkId: 1891
   type: EvmChain
+- id: lightlink_phoenix
+  mainnet: true
+  rpcUrl: https://replicator.phoenix.lightlink.io/rpc/v1
+  networkId: 1890
+  type: EvmChain
 - id: sei_evm_devnet
   mainnet: false
   rpcUrl: https://evm-devnet.seinetwork.io
@@ -447,4 +452,9 @@
   mainnet: false
   rpcUrl: https://rpc.sonic.fantom.network/
   networkId: 64165
+  type: EvmChain
+- id: dela_deperp_testnet
+  mainnet: false
+  rpcUrl: https://sepolia-dela.deperp.com
+  networkId: 9393
   type: EvmChain
