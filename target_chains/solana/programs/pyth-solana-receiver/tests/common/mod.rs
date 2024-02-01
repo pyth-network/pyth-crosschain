@@ -187,7 +187,7 @@ pub async fn setup_pyth_receiver(
 
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             Initialize::populate(&setup_keypair.pubkey(), initial_config.clone()),
             &vec![&setup_keypair],
             None,

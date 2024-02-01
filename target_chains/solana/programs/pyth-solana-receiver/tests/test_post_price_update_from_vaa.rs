@@ -8,7 +8,7 @@ use {
         setup_pyth_receiver,
         ProgramTestFixtures,
     },
-    program_simulator::into_transation_error,
+    program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
@@ -77,7 +77,7 @@ async fn test_invalid_wormhole_message() {
     // corrupted wormhole message
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -88,12 +88,12 @@ async fn test_invalid_wormhole_message() {
                     DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster, &price_update_keypair],
-                None,
+                None
             )
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidWormholeMessage)
+        into_transaction_error(ReceiverError::InvalidWormholeMessage)
     );
 }
 
@@ -122,7 +122,7 @@ async fn test_invalid_update_message() {
     // corrupted wormhole message
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -138,7 +138,7 @@ async fn test_invalid_update_message() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::DeserializeMessageFailed)
+        into_transaction_error(ReceiverError::DeserializeMessageFailed)
     );
 }
 
@@ -180,7 +180,7 @@ async fn test_post_price_update_from_vaa() {
     // this update is not in the proof
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -196,13 +196,13 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidPriceUpdate)
+        into_transaction_error(ReceiverError::InvalidPriceUpdate)
     );
 
     // this update is a twap
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -218,13 +218,13 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::UnsupportedMessageType)
+        into_transaction_error(ReceiverError::UnsupportedMessageType)
     );
 
 
     // change the data source
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -241,7 +241,7 @@ async fn test_post_price_update_from_vaa() {
     // Now this should fail!
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -257,12 +257,12 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidDataSource)
+        into_transaction_error(ReceiverError::InvalidDataSource)
     );
 
     // change again, this time the emitter field
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -279,7 +279,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -295,12 +295,12 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InvalidDataSource)
+        into_transaction_error(ReceiverError::InvalidDataSource)
     );
 
     // change back
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetDataSources::populate(
                 governance_authority.pubkey(),
                 vec![DataSource {
@@ -316,7 +316,7 @@ async fn test_post_price_update_from_vaa() {
 
     // Now it works
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -352,7 +352,7 @@ async fn test_post_price_update_from_vaa() {
 
     // Now change the fee!
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(governance_authority.pubkey(), LAMPORTS_PER_SOL),
             &vec![&governance_authority],
             None,
@@ -363,7 +363,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
@@ -379,7 +379,7 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::InsufficientFunds)
+        into_transaction_error(ReceiverError::InsufficientFunds)
     );
 
     assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
@@ -405,7 +405,7 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             SetFee::populate(governance_authority.pubkey(), LAMPORTS_PER_SOL),
             &vec![&governance_authority],
             None,
@@ -414,7 +414,7 @@ async fn test_post_price_update_from_vaa() {
         .unwrap();
 
     program_simulator
-        .process_ix(
+        .process_ix_with_default_compute_limit(
             PostUpdatesAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
@@ -457,7 +457,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_eq!(
         program_simulator
-            .process_ix(
+            .process_ix_with_default_compute_limit(
                 PostUpdatesAtomic::populate(
                     poster_2.pubkey(),
                     price_update_keypair.pubkey(),
@@ -473,6 +473,6 @@ async fn test_post_price_update_from_vaa() {
             .await
             .unwrap_err()
             .unwrap(),
-        into_transation_error(ReceiverError::WrongWriteAuthority)
+        into_transaction_error(ReceiverError::WrongWriteAuthority)
     );
 }
