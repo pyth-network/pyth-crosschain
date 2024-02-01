@@ -10,7 +10,10 @@ use {
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
-        instruction::PostUpdates,
+        instruction::{
+            PostUpdates,
+            ReclaimRent,
+        },
         sdk::{
             deserialize_accumulator_update_data,
             DEFAULT_TREASURY_ID,
@@ -122,6 +125,38 @@ async fn test_post_updates() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
+    );
+
+    // This poster doesn't have the write authority
+    let poster_2 = program_simulator.get_funded_keypair().await.unwrap();
+    assert_eq!(
+        program_simulator
+            .process_ix_with_default_compute_limit(
+                ReclaimRent::populate(poster_2.pubkey(), price_update_keypair.pubkey()),
+                &vec![&poster_2],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transaction_error(ReceiverError::WrongWriteAuthority)
+    );
+
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            ReclaimRent::populate(poster.pubkey(), price_update_keypair.pubkey()),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        program_simulator
+            .get_balance(price_update_keypair.pubkey())
+            .await
+            .unwrap(),
+        0
     );
 }
 

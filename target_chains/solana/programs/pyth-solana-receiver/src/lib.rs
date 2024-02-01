@@ -217,6 +217,10 @@ pub mod pyth_solana_receiver {
 
         Ok(())
     }
+
+    pub fn reclaim_rent(_ctx: Context<ReclaimRent>) -> Result<()> {
+        Ok(())
+    }
 }
 
 pub const CONFIG_SEED: &str = "config";
@@ -295,6 +299,14 @@ pub struct PostUpdatesAtomic<'info> {
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ReclaimRent<'info> {
+    #[account(mut)]
+    pub payer:                Signer<'info>,
+    #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
+    pub price_update_account: Account<'info, PriceUpdateV1>,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
