@@ -126,12 +126,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             metadata: {
               ...product.metadata,
             },
-            priceAccounts: product.priceAccounts.map((p) => ({
-              address: p.address.toBase58(),
-              publishers: p.publishers.map((p) => p.toBase58()),
-              expo: p.expo,
-              minPub: p.minPub,
-            })),
+            priceAccounts: product.priceAccounts.map((p) => {
+              return {
+                address: p.address.toBase58(),
+                publishers: p.publishers
+                  .map((p) => p.toBase58())
+                  .slice(0, getMaximumNumberOfPublishers(cluster)),
+                expo: p.expo,
+                minPub: p.minPub,
+              }
+            }),
           }
           // these fields are immutable and should not be updated
           delete symbolToData[product.metadata.symbol].metadata.symbol
