@@ -6,8 +6,8 @@ use {
             Config,
             DataSource,
         },
-        PostUpdatesAtomicParams,
-        PostUpdatesParams,
+        PostUpdateAtomicParams,
+        PostUpdateParams,
         CONFIG_SEED,
         ID,
         TREASURY_SEED,
@@ -40,7 +40,7 @@ impl accounts::Initialize {
     }
 }
 
-impl accounts::PostUpdatesAtomic {
+impl accounts::PostUpdateAtomic {
     pub fn populate(
         payer: Pubkey,
         price_update_account: Pubkey,
@@ -53,7 +53,7 @@ impl accounts::PostUpdatesAtomic {
 
         let guardian_set = get_guardian_set_address(wormhole_address, guardian_set_index);
 
-        accounts::PostUpdatesAtomic {
+        accounts::PostUpdateAtomic {
             payer,
             guardian_set,
             config,
@@ -64,11 +64,11 @@ impl accounts::PostUpdatesAtomic {
     }
 }
 
-impl accounts::PostUpdates {
+impl accounts::PostUpdate {
     pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
         let config = get_config_address();
         let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
-        accounts::PostUpdates {
+        accounts::PostUpdate {
             payer,
             encoded_vaa,
             config,
@@ -113,7 +113,7 @@ impl instruction::Initialize {
     }
 }
 
-impl instruction::PostUpdates {
+impl instruction::PostUpdate {
     pub fn populate(
         payer: Pubkey,
         encoded_vaa: Pubkey,
@@ -121,13 +121,13 @@ impl instruction::PostUpdates {
         merkle_price_update: MerklePriceUpdate,
     ) -> Instruction {
         let post_update_accounts =
-            accounts::PostUpdates::populate(payer, encoded_vaa, price_update_account)
+            accounts::PostUpdate::populate(payer, encoded_vaa, price_update_account)
                 .to_account_metas(None);
         Instruction {
             program_id: ID,
             accounts:   post_update_accounts,
-            data:       instruction::PostUpdates {
-                params: PostUpdatesParams {
+            data:       instruction::PostUpdate {
+                params: PostUpdateParams {
                     merkle_price_update,
                     treasury_id: DEFAULT_TREASURY_ID,
                 },
@@ -138,7 +138,7 @@ impl instruction::PostUpdates {
 }
 
 
-impl instruction::PostUpdatesAtomic {
+impl instruction::PostUpdateAtomic {
     pub fn populate(
         payer: Pubkey,
         price_update_account: Pubkey,
@@ -148,7 +148,7 @@ impl instruction::PostUpdatesAtomic {
         merkle_price_update: MerklePriceUpdate,
         treasury_id: u8,
     ) -> Instruction {
-        let post_update_accounts = accounts::PostUpdatesAtomic::populate(
+        let post_update_accounts = accounts::PostUpdateAtomic::populate(
             payer,
             price_update_account,
             wormhole_address,
@@ -159,8 +159,8 @@ impl instruction::PostUpdatesAtomic {
         Instruction {
             program_id: ID,
             accounts:   post_update_accounts,
-            data:       instruction::PostUpdatesAtomic {
-                params: PostUpdatesAtomicParams {
+            data:       instruction::PostUpdateAtomic {
+                params: PostUpdateAtomicParams {
                     vaa,
                     merkle_price_update,
                     treasury_id,

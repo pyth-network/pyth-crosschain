@@ -11,7 +11,7 @@ use {
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
-        instruction::PostUpdatesAtomic,
+        instruction::PostUpdateAtomic,
         sdk::{
             deserialize_accumulator_update_data,
             get_guardian_set_address,
@@ -44,7 +44,7 @@ mod common;
 
 
 #[tokio::test]
-async fn test_post_updates_atomic() {
+async fn test_post_update_atomic() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -69,7 +69,7 @@ async fn test_post_updates_atomic() {
     // post one update atomically
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdatesAtomic::populate(
+            PostUpdateAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -104,7 +104,7 @@ async fn test_post_updates_atomic() {
     // post another update to the same account
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdatesAtomic::populate(
+            PostUpdateAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -140,7 +140,7 @@ async fn test_post_updates_atomic() {
     // use another treasury account
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdatesAtomic::populate(
+            PostUpdateAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -174,7 +174,7 @@ async fn test_post_updates_atomic() {
 }
 
 #[tokio::test]
-async fn test_post_updates_atomic_wrong_vaa() {
+async fn test_post_update_atomic_wrong_vaa() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -195,7 +195,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -221,7 +221,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -246,7 +246,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -270,7 +270,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -294,7 +294,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -319,7 +319,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -343,7 +343,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -368,7 +368,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -386,7 +386,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
         into_transaction_error(ReceiverError::InvalidGuardianKeyRecovery)
     );
 
-    let mut wrong_instruction = PostUpdatesAtomic::populate(
+    let mut wrong_instruction = PostUpdateAtomic::populate(
         poster.pubkey(),
         price_update_keypair.pubkey(),
         BRIDGE_ID,
@@ -414,7 +414,7 @@ async fn test_post_updates_atomic_wrong_vaa() {
 
 
 #[tokio::test]
-async fn test_post_updates_atomic_wrong_setup() {
+async fn test_post_update_atomic_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -430,7 +430,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -458,7 +458,7 @@ async fn test_post_updates_atomic_wrong_setup() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,

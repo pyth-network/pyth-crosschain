@@ -11,7 +11,7 @@ use {
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
-            PostUpdates,
+            PostUpdate,
             ReclaimRent,
         },
         sdk::{
@@ -41,7 +41,7 @@ mod common;
 
 
 #[tokio::test]
-async fn test_post_updates() {
+async fn test_post_update() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -66,7 +66,7 @@ async fn test_post_updates() {
     // post one update
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdates::populate(
+            PostUpdate::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
@@ -98,7 +98,7 @@ async fn test_post_updates() {
     // post another update to the same account
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdates::populate(
+            PostUpdate::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
@@ -161,7 +161,7 @@ async fn test_post_updates() {
 }
 
 #[tokio::test]
-async fn test_post_updates_wrong_encoded_vaa_owner() {
+async fn test_post_update_wrong_encoded_vaa_owner() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -183,7 +183,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdates::populate(
+                PostUpdate::populate(
                     poster.pubkey(),
                     Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
                     price_update_keypair.pubkey(),
@@ -200,7 +200,7 @@ async fn test_post_updates_wrong_encoded_vaa_owner() {
 }
 
 #[tokio::test]
-async fn test_post_updates_wrong_setup() {
+async fn test_post_update_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
     let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
@@ -222,7 +222,7 @@ async fn test_post_updates_wrong_setup() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdates::populate(
+                PostUpdate::populate(
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
                     price_update_keypair.pubkey(),

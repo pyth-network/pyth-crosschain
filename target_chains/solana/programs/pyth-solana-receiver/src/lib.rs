@@ -108,11 +108,11 @@ pub mod pyth_solana_receiver {
 
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
-    /// Compared to post_updates, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.
+    /// Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.
     /// Typically, you can fit 5 guardian signatures in a transaction that uses this.
-    pub fn post_updates_atomic(
-        ctx: Context<PostUpdatesAtomic>,
-        params: PostUpdatesAtomicParams,
+    pub fn post_update_atomic(
+        ctx: Context<PostUpdateAtomic>,
+        params: PostUpdateAtomicParams,
     ) -> Result<()> {
         let config = &ctx.accounts.config;
         let guardian_set =
@@ -191,7 +191,7 @@ pub mod pyth_solana_receiver {
     /// Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.
     /// This should be called after the client has already verified the Vaa via the Wormhole contract.
     /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
-    pub fn post_updates(ctx: Context<PostUpdates>, params: PostUpdatesParams) -> Result<()> {
+    pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
         let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?;
@@ -259,8 +259,8 @@ pub struct AcceptGovernanceAuthorityTransfer<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(params: PostUpdatesParams)]
-pub struct PostUpdates<'info> {
+#[instruction(params: PostUpdateParams)]
+pub struct PostUpdate<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
@@ -280,8 +280,8 @@ pub struct PostUpdates<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(params: PostUpdatesAtomicParams)]
-pub struct PostUpdatesAtomic<'info> {
+#[instruction(params: PostUpdateAtomicParams)]
+pub struct PostUpdateAtomic<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
@@ -310,14 +310,14 @@ pub struct ReclaimRent<'info> {
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct PostUpdatesAtomicParams {
+pub struct PostUpdateAtomicParams {
     pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
     pub treasury_id:         u8,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct PostUpdatesParams {
+pub struct PostUpdateParams {
     pub merkle_price_update: MerklePriceUpdate,
     pub treasury_id:         u8,
 }

@@ -12,7 +12,7 @@ use {
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
-            PostUpdatesAtomic,
+            PostUpdateAtomic,
             SetDataSources,
             SetFee,
         },
@@ -78,7 +78,7 @@ async fn test_invalid_wormhole_message() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -123,7 +123,7 @@ async fn test_invalid_update_message() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -181,7 +181,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -203,7 +203,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -242,7 +242,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -280,7 +280,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -317,7 +317,7 @@ async fn test_post_price_update_from_vaa() {
     // Now it works
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdatesAtomic::populate(
+            PostUpdateAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -364,7 +364,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -415,7 +415,7 @@ async fn test_post_price_update_from_vaa() {
 
     program_simulator
         .process_ix_with_default_compute_limit(
-            PostUpdatesAtomic::populate(
+            PostUpdateAtomic::populate(
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -458,7 +458,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
-                PostUpdatesAtomic::populate(
+                PostUpdateAtomic::populate(
                     poster_2.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,

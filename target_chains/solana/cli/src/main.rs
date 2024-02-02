@@ -21,8 +21,8 @@ use {
             DEFAULT_TREASURY_ID,
         },
         state::config::DataSource,
-        PostUpdatesAtomicParams,
-        PostUpdatesParams,
+        PostUpdateAtomicParams,
+        PostUpdateParams,
     },
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
@@ -255,7 +255,7 @@ pub fn process_post_price_update_atomic(
         ComputeBudgetInstruction::set_compute_unit_limit(400_000);
 
 
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdatesAtomic::populate(
+    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdateAtomic::populate(
         payer.pubkey(),
         price_update_keypair.pubkey(),
         *wormhole,
@@ -267,8 +267,8 @@ pub fn process_post_price_update_atomic(
     let post_update_instruction = Instruction {
         program_id: pyth_solana_receiver::id(),
         accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdatesAtomic {
-            params: PostUpdatesAtomicParams {
+        data:       pyth_solana_receiver::instruction::PostUpdateAtomic {
+            params: PostUpdateAtomicParams {
                 merkle_price_update: merkle_price_update.clone(),
                 vaa:                 serde_wormhole::to_vec(&(header, body)).unwrap(),
                 treasury_id:         DEFAULT_TREASURY_ID,
@@ -463,7 +463,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
 
     let price_update_keypair = Keypair::new();
 
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdates::populate(
+    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
         payer.pubkey(),
         encoded_vaa_keypair.pubkey(),
         price_update_keypair.pubkey(),
@@ -472,8 +472,8 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let post_update_instructions = Instruction {
         program_id: pyth_solana_receiver::id(),
         accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdates {
-            params: PostUpdatesParams {
+        data:       pyth_solana_receiver::instruction::PostUpdate {
+            params: PostUpdateParams {
                 merkle_price_update: merkle_price_update.clone(),
                 treasury_id:         DEFAULT_TREASURY_ID,
             },
