@@ -3,6 +3,7 @@
 use {
     crate::{
         aggregate::{
+            PriceFeedUpdate,
             PriceFeedsWithUpdateData,
             UnixTimestamp,
         },
@@ -13,7 +14,11 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
-    pyth_sdk::PriceIdentifier,
+    pyth_sdk::{
+        Price,
+        PriceFeed,
+        PriceIdentifier,
+    },
     serde::Deserialize,
 };
 
@@ -33,20 +38,50 @@ struct BinaryBlob {
     pub data:     Vec<String>,
 }
 
-impl TryFrom<BinaryBlob> for Vec<Vec<u8>> {
+impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
     type Error = anyhow::Error;
+    fn try_from(price_update: PriceUpdate) -> Result<Self> {
+        let price_feeds = match price_update.parsed {
+            Some(parsed_updates) => parsed_updates
+                .into_iter()
+                .map(|parsed_price_update| {
+                    Ok(PriceFeedUpdate {
+                        price_feed:        PriceFeed::new(
+                            parsed_price_update.id,
+                            Price {
+                                price:        parsed_price_update.price.price,
+                                conf:         parsed_price_update.price.conf,
+                                expo:         parsed_price_update.price.expo,
+                                publish_time: parsed_price_update.price.publish_time,
+                            },
+                            Price {
+                                price:        parsed_price_update.ema_price.price,
+                                conf:         parsed_price_update.ema_price.conf,
+                                expo:         parsed_price_update.ema_price.expo,
+                                publish_time: parsed_price_update.ema_price.publish_time,
+                            },
+                        ),
+                        slot:              parsed_price_update.metadata.slot,
+                        received_at:       parsed_price_update.metadata.proof_available_time,
+                        update_data:       None, // This field is not available in ParsedPriceUpdate
+                        prev_publish_time: parsed_price_update.metadata.prev_publish_time,
+                    })
+                })
+                .collect::<Result<Vec<_>>>(),
+            None => Err(anyhow::anyhow!("No parsed price updates available")),
+        }?;
 
-    fn try_from(binary_blob: BinaryBlob) -> Result<Self> {
-        binary_blob
+        let update_data = price_update
+            .binary
             .data
             .iter()
-            .map(|datum| {
-                Ok(match binary_blob.encoding {
-                    BlobEncoding::Base64 => base64_standard_engine.decode(datum)?,
-                    BlobEncoding::Hex => hex::decode(datum)?,
-                })
-            })
-            .collect::<Result<_>>()
+            .map(|hex_str| hex::decode(hex_str).unwrap_or_default())
+            .collect::<Vec<Vec<u8>>>();
+
+        Ok(PriceFeedsWithUpdateData {
+            price_feeds,
+            update_data,
+        })
     }
 }
 
