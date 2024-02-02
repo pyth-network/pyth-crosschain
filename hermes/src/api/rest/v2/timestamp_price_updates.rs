@@ -119,10 +119,7 @@ pub async fn timestamp_price_updates(
     let price_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = price_update_data
         .into_iter()
-        .map(|data| match query_params.encoding {
-            EncodingType::Base64 => base64_standard_engine.encode(data),
-            EncodingType::Hex => hex::encode(data),
-        })
+        .map(|data| query_params.encoding.encode_str(&data))
         .collect();
     let binary_price_update = BinaryPriceUpdate {
         encoding: query_params.encoding,

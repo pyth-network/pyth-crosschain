@@ -199,6 +199,15 @@ pub enum EncodingType {
     Base64,
 }
 
+impl EncodingType {
+    pub fn encode_str(&self, data: &[u8]) -> String {
+        match self {
+            EncodingType::Base64 => base64_standard_engine.encode(data),
+            EncodingType::Hex => hex::encode(data),
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct BinaryPriceUpdate {
     pub encoding: EncodingType,
