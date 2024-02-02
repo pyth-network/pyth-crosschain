@@ -27,10 +27,6 @@ use {
         },
         Json,
     },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
