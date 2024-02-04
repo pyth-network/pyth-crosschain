@@ -26,11 +26,17 @@ fn main() {
 
     // Run each command to prepare the OUT_DIR with the protobuf definitions. We need to make sure
     // to change the working directory to OUT_DIR, otherwise git will complain.
-    let _ = Command::new("sh")
+    let output = Command::new("sh")
         .args(["-c", protobuf_setup])
         .current_dir(&out_dir)
         .output()
-        .expect("failed to setup protobuf definitions");
+        .expect("failed to run protobuf setup commands");
+    if !output.status.success() {
+        panic!(
+            "failed to setup protobuf definitions: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 
     // We build the resulting protobuf definitions using Rust's prost_build crate, which generates
     // Rust code from the protobuf definitions.
