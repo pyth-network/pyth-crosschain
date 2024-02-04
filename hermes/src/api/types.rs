@@ -316,3 +316,19 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
         })
     }
 }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+pub struct PriceFeedV2 {
+    pub id:         PriceIdentifier,
+    pub attributes: std::collections::HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum AssetType {
+    Crypto,
+    FX,
+    Equity,
+    Metals,
+    Rates,
+}

@@ -11,6 +11,7 @@ use {
     },
     prometheus_client::registry::Registry,
     reqwest::Url,
+    solana_sdk::pubkey::Pubkey,
     std::{
         collections::{
             BTreeMap,
@@ -26,6 +27,7 @@ use {
 
 pub mod benchmarks;
 pub mod cache;
+pub mod price_feed;
 
 pub struct State {
     /// Storage is a short-lived cache of the state of all the updates that have been passed to the
@@ -50,6 +52,12 @@ pub struct State {
 
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
+
+    /// RPC HTTP endpoint
+    pub rpc_http_endpoint: String,
+
+    /// Mapping address
+    pub mapping_address: Option<Pubkey>,
 }
 
 impl State {
@@ -57,6 +65,8 @@ impl State {
         update_tx: Sender<AggregationEvent>,
         cache_size: u64,
         benchmarks_endpoint: Option<Url>,
+        rpc_http_endpoint: String,
+        mapping_address: Option<Pubkey>,
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
@@ -67,6 +77,8 @@ impl State {
             aggregate_state: RwLock::new(AggregateState::new(&mut metrics_registry)),
             benchmarks_endpoint,
             metrics_registry: RwLock::new(metrics_registry),
+            rpc_http_endpoint,
+            mapping_address,
         })
     }
 }
@@ -81,7 +93,7 @@ pub mod test {
 
     pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
-        let state = State::new(update_tx, cache_size, None);
+        let state = State::new(update_tx, cache_size, None, "".to_string(), None);
 
         // Add an initial guardian set with public key 0
         update_guardian_set(

@@ -47,7 +47,13 @@ async fn init() -> Result<()> {
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let store = State::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
+            let store = State::new(
+                update_tx.clone(),
+                1000,
+                opts.benchmarks.endpoint.clone(),
+                opts.pythnet.http_addr.clone(),
+                opts.pyth_addresses.mapping.clone(),
+            );
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {

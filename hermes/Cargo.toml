@@ -30,6 +30,7 @@ nonzero_ext        = { version = "0.3.0" }
 prometheus-client  = { version = "0.21.2" }
 prost              = { version = "0.12.1" }
 pyth-sdk           = { version = "0.8.0" }
+pyth-sdk-solana    = { version = "0.9.0" }
 pythnet-sdk        = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
 rand               = { version = "0.8.5" }
 reqwest            = { version = "0.11.14", features = ["blocking", "json"] }
@@ -50,9 +51,9 @@ utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }
 wormhole-sdk       = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
 # We are bound to this Solana version in order to match pyth-oracle.
-solana-client          = { version = "=1.13.3" }
-solana-sdk             = { version = "=1.13.3" }
-solana-account-decoder = { version = "=1.13.3" }
+solana-client          = { version = "=1.16.19" }
+solana-sdk             = { version = "=1.16.19" }
+solana-account-decoder = { version = "=1.16.19" }
 
 
 [build-dependencies]
