@@ -30,9 +30,10 @@ pub struct PriceFeedsQueryParams {
     asset_type: Option<AssetType>,
 }
 
-/// Get the set of price feed IDs.
+/// Get the set of price feeds.
 ///
-/// This endpoint fetches all of the price feed IDs for which price updates can be retrieved.
+/// This endpoint fetches all price feeds from the Pyth network. It can be filtered by asset type
+/// and query string.
 #[utoipa::path(
     get,
     path = "/v2/price_feeds",

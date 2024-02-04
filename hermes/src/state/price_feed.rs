@@ -55,7 +55,6 @@ impl PriceFeedProvider for crate::state::State {
             }
 
 
-            // Assuming prod_acct is a HashMap<String, String> with product attributes
             let attributes = prod_acct
                 .iter()
                 .filter(|(key, _)| !key.is_empty())
