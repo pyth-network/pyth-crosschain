@@ -1,8 +1,53 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
-import { EvmExecute, decodeGovernancePayload } from "xc_admin_common";
+import {
+  DataSource,
+  EvmExecute,
+  decodeGovernancePayload,
+} from "xc_admin_common";
 import { DefaultStore } from "./store";
-import { PriceFeedContract, PrivateKey } from "./base";
-import { EvmEntropyContract } from "./contracts";
+import { PrivateKey, TxResult } from "./base";
+import { EvmExecutorContract } from "./contracts";
+import { EvmChain } from "./chains";
+
+// TODO: A better place for this would be `base.ts`. That will require
+// significant refactor. Todo in separate PR.
+interface GovernanceContract {
+  getId(): string;
+  getGovernanceDataSource(): Promise<DataSource>;
+  getLastExecutedGovernanceSequence(): Promise<number>;
+  executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ): Promise<TxResult>;
+}
+
+async function execute(
+  contract: GovernanceContract,
+  vaa: Buffer,
+  senderPrivateKey: PrivateKey
+) {
+  const parsedVaa = parseVaa(vaa);
+  const governanceSource = await contract.getGovernanceDataSource();
+  if (
+    governanceSource.emitterAddress ===
+      parsedVaa.emitterAddress.toString("hex") &&
+    governanceSource.emitterChain === parsedVaa.emitterChain
+  ) {
+    const lastExecutedSequence =
+      await contract.getLastExecutedGovernanceSequence();
+    if (lastExecutedSequence >= parsedVaa.sequence) {
+      console.log(
+        `Skipping on contract ${contract.getId()} as it was already executed`
+      );
+      return;
+    }
+    const { id } = await contract.executeGovernanceInstruction(
+      senderPrivateKey,
+      vaa
+    );
+    console.log(`Executed on contract ${contract.getId()} with txHash: ${id}`);
+  }
+}
 
 /**
  * A general executor that tries to find any contract that can execute a given VAA and executes it
@@ -14,39 +59,33 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   const action = decodeGovernancePayload(parsedVaa.payload);
   if (!action) return; //TODO: handle other actions
 
-  let contracts:
-    | Record<string, PriceFeedContract>
-    | Record<string, EvmEntropyContract>;
-  if (action instanceof EvmExecute) contracts = DefaultStore.entropy_contracts;
-  else contracts = DefaultStore.contracts;
+  if (action instanceof EvmExecute) {
+    // get chain from
+    action.targetChainId;
 
-  for (const contract of Object.values(contracts)) {
-    if (
-      action.targetChainId === "unset" ||
-      contract.getChain().wormholeChainName === action.targetChainId
-    ) {
-      const governanceSource = await contract.getGovernanceDataSource();
+    // executor
+    action.executorAddress;
+
+    for (const chain of Object.values(DefaultStore.chains)) {
       if (
-        governanceSource.emitterAddress ===
-          parsedVaa.emitterAddress.toString("hex") &&
-        governanceSource.emitterChain === parsedVaa.emitterChain
+        chain instanceof EvmChain &&
+        chain.wormholeChainName === action.targetChainId
       ) {
-        const lastExecutedSequence =
-          await contract.getLastExecutedGovernanceSequence();
-        if (lastExecutedSequence >= parsedVaa.sequence) {
-          console.log(
-            `Skipping on contract ${contract.getId()} as it was already executed`
-          );
-          continue;
-        }
-        const { id } = await contract.executeGovernanceInstruction(
-          senderPrivateKey,
-          vaa
+        const executorContract = new EvmExecutorContract(
+          chain,
+          action.executorAddress
         );
-        console.log(
-          `Executed on contract ${contract.getId()} with txHash: ${id}`
-        );
+
+        await execute(executorContract, vaa, senderPrivateKey);
       }
+    }
+  } else {
+    for (const contract of Object.values(DefaultStore.contracts)) {
+      if (
+        action.targetChainId === "unset" ||
+        contract.getChain().wormholeChainName === action.targetChainId
+      )
+        await execute(contract, vaa, senderPrivateKey);
     }
   }
 }

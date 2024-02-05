@@ -503,12 +503,6 @@ export class EvmEntropyContract extends Storable {
     return new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
   }
 
-  async getExecutorContract() {
-    const web3 = new Web3(this.chain.getRpcUrl());
-    const executorAddr = await this.getOwner();
-    return new web3.eth.Contract(EXECUTOR_ABI, executorAddr);
-  }
-
   getChain(): EvmChain {
     return this.chain;
   }
@@ -522,9 +516,26 @@ export class EvmEntropyContract extends Storable {
     const contract = this.getContract();
     return await contract.methods.getProviderInfo(address).call();
   }
+}
+
+export class EvmExecutorContract {
+  constructor(public chain: EvmChain, public address: string) {}
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getContract() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return new web3.eth.Contract(EXECUTOR_ABI, this.address);
+  }
+
+  async getLastExecutedGovernanceSequence() {
+    return await this.getContract().methods.getLastExecutedSequence().call();
+  }
 
   async getGovernanceDataSource(): Promise<DataSource> {
-    const executorContract = await this.getExecutorContract();
+    const executorContract = this.getContract();
     const ownerEmitterAddress = await executorContract.methods
       .getOwnerEmitterAddress()
       .call();
@@ -537,32 +548,23 @@ export class EvmEntropyContract extends Storable {
     };
   }
 
-  async getLastExecutedGovernanceSequence() {
-    return await (await this.getExecutorContract()).methods
-      .getLastExecutedSequence()
-      .call();
-  }
-
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
     vaa: Buffer
   ) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
-    const executorContract = new web3.eth.Contract(
-      EXECUTOR_ABI,
-      await this.getOwner()
-    );
+    const executorContract = new web3.eth.Contract(EXECUTOR_ABI, this.address);
     const transactionObject = executorContract.methods.execute(
       "0x" + vaa.toString("hex")
     );
-    const gasEstiamte = await transactionObject.estimateGas({
+    const gasEstimate = await transactionObject.estimateGas({
       from: address,
       gas: 100000000,
     });
     const result = await transactionObject.send({
       from: address,
-      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
     return { id: result.transactionHash, info: result };
