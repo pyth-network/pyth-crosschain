@@ -28,6 +28,7 @@ use {
         Deserialize,
         Serialize,
     },
+    std::collections::BTreeMap,
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
@@ -317,10 +318,11 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceFeedV2 {
     pub id:         PriceIdentifier,
-    pub attributes: std::collections::HashMap<String, String>,
+    // BTreeMap is used to automatically sort the keys
+    pub attributes: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
