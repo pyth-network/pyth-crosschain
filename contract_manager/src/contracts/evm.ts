@@ -183,21 +183,6 @@ const EXTENDED_PYTH_ABI = [
   },
   ...PythInterfaceAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-const EXECUTOR_ABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-    ],
-    name: "upgradeTo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const WORMHOLE_ABI = [
   {
     inputs: [],
