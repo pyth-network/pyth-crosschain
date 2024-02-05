@@ -413,6 +413,7 @@ fn post_price_update_from_vaa<'info>(
 
     match message {
         Message::PriceFeedMessage(price_feed_message) => {
+            msg!("price feed message: {:?}", price_feed_message.price);
             price_update_account.write_authority = payer.key();
             price_update_account.verification_level = vaa_components.verification_level;
             price_update_account.price_message = price_feed_message;
