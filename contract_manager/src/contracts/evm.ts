@@ -503,10 +503,6 @@ export class EvmEntropyContract extends Storable {
     return new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
   }
 
-  getChain(): EvmChain {
-    return this.chain;
-  }
-
   async getDefaultProvider(): Promise<string> {
     const contract = this.getContract();
     return await contract.methods.getDefaultProvider().call();

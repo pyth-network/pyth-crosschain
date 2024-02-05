@@ -60,12 +60,6 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   if (!action) return; //TODO: handle other actions
 
   if (action instanceof EvmExecute) {
-    // get chain from
-    action.targetChainId;
-
-    // executor
-    action.executorAddress;
-
     for (const chain of Object.values(DefaultStore.chains)) {
       if (
         chain instanceof EvmChain &&
