@@ -11,3 +11,6 @@ url = "https://api.apr.dev"
 [provider]
 cluster = "https://api.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
+
+[scripts]
+export = "anchor build && ./scripts/patch_idl.sh"

@@ -169,7 +169,9 @@ pub mod pyth_solana_receiver {
         );
 
         let vaa_components = VaaComponents {
-            verification_level: VerificationLevel::Partial(vaa.signature_count()),
+            verification_level: VerificationLevel::Partial {
+                num_signatures: vaa.signature_count(),
+            },
             emitter_address:    vaa.body().emitter_address(),
             emitter_chain:      vaa.body().emitter_chain(),
         };
