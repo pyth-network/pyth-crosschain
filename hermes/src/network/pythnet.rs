@@ -136,11 +136,10 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
             encoding: Some(UiAccountEncoding::Base64Zstd),
             ..Default::default()
         },
-        filters:        Some(vec![RpcFilterType::Memcmp(Memcmp {
-            offset:   0,
-            bytes:    MemcmpEncodedBytes::Bytes(b"PAS1".to_vec()),
-            encoding: None,
-        })]),
+        filters:        Some(vec![RpcFilterType::Memcmp(Memcmp::new(
+            0,                                           // offset
+            MemcmpEncodedBytes::Bytes(b"PAS1".to_vec()), // bytes
+        ))]),
         with_context:   Some(true),
     };
 
