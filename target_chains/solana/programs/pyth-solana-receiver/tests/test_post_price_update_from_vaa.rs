@@ -342,7 +342,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(13)
+        VerificationLevel::Partial { num_signatures: 13 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -391,7 +391,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(13)
+        VerificationLevel::Partial { num_signatures: 13 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -444,7 +444,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(13)
+        VerificationLevel::Partial { num_signatures: 13 },
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),

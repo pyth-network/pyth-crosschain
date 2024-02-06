@@ -14,7 +14,7 @@ use {
  * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked */
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
 pub enum VerificationLevel {
-    Partial(u8),
+    Partial { num_signatures: u8 },
     Full,
 }
 #[account]

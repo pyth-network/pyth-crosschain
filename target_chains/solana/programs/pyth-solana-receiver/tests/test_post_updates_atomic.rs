@@ -94,7 +94,7 @@ async fn test_post_update_atomic() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(5)
+        VerificationLevel::Partial { num_signatures: 5 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -130,7 +130,7 @@ async fn test_post_update_atomic() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(5)
+        VerificationLevel::Partial { num_signatures: 5 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -165,7 +165,7 @@ async fn test_post_update_atomic() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial(5)
+        VerificationLevel::Partial { num_signatures: 5 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
