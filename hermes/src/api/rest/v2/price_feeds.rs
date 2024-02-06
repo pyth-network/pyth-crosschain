@@ -11,20 +11,21 @@ use {
         extract::State,
         Json,
     },
+    serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
 
 
-#[derive(Debug, serde::Deserialize, IntoParams)]
+#[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct PriceFeedsQueryParams {
-    /// Optional query parameter to filter price feeds based on a query string. Case insensitive.
+    /// Optional query parameter. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive.
     #[serde(default)]
     #[param(example = "bitcoin")]
     query: Option<String>,
 
-    /// Optional query parameter to filter price feeds based on asset type. Case insensitive.
+    /// Optional query parameter. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive.
     #[serde(default)]
     #[param(example = "crypto")]
     asset_type: Option<AssetType>,
