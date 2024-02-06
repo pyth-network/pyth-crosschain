@@ -21,7 +21,7 @@ interface GovernanceContract {
   ): Promise<TxResult>;
 }
 
-async function execute(
+async function executeForGovernanceContract(
   contract: GovernanceContract,
   vaa: Buffer,
   senderPrivateKey: PrivateKey
@@ -70,7 +70,11 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
           action.executorAddress
         );
 
-        await execute(executorContract, vaa, senderPrivateKey);
+        await executeForGovernanceContract(
+          executorContract,
+          vaa,
+          senderPrivateKey
+        );
       }
     }
   } else {
@@ -79,7 +83,7 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
         action.targetChainId === "unset" ||
         contract.getChain().wormholeChainName === action.targetChainId
       )
-        await execute(contract, vaa, senderPrivateKey);
+        await executeForGovernanceContract(contract, vaa, senderPrivateKey);
     }
   }
 }
