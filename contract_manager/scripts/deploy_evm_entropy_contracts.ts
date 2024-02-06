@@ -73,10 +73,11 @@ const parser = yargs(hideBin(process.argv))
       default: true,
       desc: "Save the contract to the store",
     },
+    // TODO: maintain a wormhole store
     "wormhole-addr": {
       type: "string",
-      demandOption: false,
-      desc: "Wormhole address. If not provided, the script will deploy one",
+      demandOption: true,
+      desc: "Wormhole address",
     },
   });
 
@@ -131,65 +132,6 @@ function getWeb3Contract(
   );
   const web3 = new Web3();
   return new web3.eth.Contract(artifact["abi"], address);
-}
-
-async function deployWormholeReceiverContracts(
-  chain: EvmChain,
-  config: DeploymentConfig
-): Promise<string> {
-  const receiverSetupAddr = await deployIfNotCached(
-    chain,
-    config,
-    "ReceiverSetup",
-    []
-  );
-
-  const receiverImplAddr = await deployIfNotCached(
-    chain,
-    config,
-    "ReceiverImplementation",
-    []
-  );
-
-  // Craft the init data for the proxy contract
-  const setupContract = getWeb3Contract(
-    config,
-    "ReceiverSetup",
-    receiverSetupAddr
-  );
-
-  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
-
-  const initData = setupContract.methods
-    .setup(
-      receiverImplAddr,
-      wormholeConfig.initialGuardianSet.map((addr: string) => "0x" + addr),
-      chain.getWormholeChainId(),
-      wormholeConfig.governanceChainId,
-      "0x" + wormholeConfig.governanceContract
-    )
-    .encodeABI();
-
-  const wormholeReceiverAddr = await deployIfNotCached(
-    chain,
-    config,
-    "WormholeReceiver",
-    [receiverSetupAddr, initData]
-  );
-
-  const wormholeEvmContract = new WormholeEvmContract(
-    chain,
-    wormholeReceiverAddr
-  );
-
-  if (config.type === "stable") {
-    console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
-    // TODO: Add a way to pass gas configs to this
-    await wormholeEvmContract.syncMainnetGuardianSets(config.privateKey);
-    console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
-  }
-
-  return wormholeReceiverAddr;
 }
 
 async function deployExecutorContracts(
@@ -291,15 +233,10 @@ async function main() {
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
-  // TODO: implement a wormhole store
-  const wormholeAddr =
-    argv.wormholeAddr ??
-    (await deployWormholeReceiverContracts(chain, deploymentConfig));
-
   const executorAddr = await deployExecutorContracts(
     chain,
     deploymentConfig,
-    wormholeAddr
+    argv.wormholeAddr
   );
   const entropyAddr = await deployEntropyContracts(
     chain,
