@@ -25,6 +25,10 @@ use {
 
 #[tracing::instrument(skip(opts, state))]
 pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
+    tracing::info!(
+        "Revalidating price feeds cache every {} seconds.",
+        opts.price_feeds_cache_update_interval
+    );
     let update_interval = opts.price_feeds_cache_update_interval;
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(update_interval));
 
