@@ -56,7 +56,7 @@ pub struct RunOptions {
     pub pyth_addresses: pyth_addresses::Options,
 
     /// Update interval for price_feeds_cache in seconds. Default is 600 seconds.
-    #[arg(long = "price-feeds-cache-update-interval", default_value_t = 60)]
+    #[arg(long = "price-feeds-cache-update-interval", default_value_t = 600)]
     pub price_feeds_cache_update_interval: u64,
 }
 
