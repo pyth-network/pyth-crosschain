@@ -10,7 +10,6 @@ import {
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
-  WormholeEvmContract,
 } from "../src";
 import { join } from "path";
 import Web3 from "web3";
