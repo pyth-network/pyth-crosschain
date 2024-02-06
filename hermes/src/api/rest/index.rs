@@ -18,6 +18,6 @@ pub async fn index() -> impl IntoResponse {
         "/api/get_vaa_ccip?data=<0x<price_feed_id_32_bytes>+<publish_time_unix_timestamp_be_8_bytes>>",
         "/v2/updates/price/latest?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)",
         "/v2/updates/price/<timestamp>?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)",
-        "/v2/price_feeds?(query=bitcoin)(&asset_type=crypto)",
+        "/v2/price_feeds?(query=btc)(&asset_type=crypto|equity|fx|metal|rates)",
     ])
 }
