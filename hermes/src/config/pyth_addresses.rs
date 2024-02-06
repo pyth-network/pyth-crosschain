@@ -7,7 +7,7 @@ use {
 #[command(next_help_heading = "Pyth Addresses Options")]
 #[group(id = "Pyth Addresses")]
 pub struct Options {
-    /// Address of a PythNet compatible websocket RPC endpoint.
+    /// Pyth mapping address.
     #[arg(long = "mapping-address")]
     #[arg(env = "MAPPING_ADDRESS")]
     pub mapping: Option<Pubkey>,
