@@ -183,21 +183,6 @@ const EXTENDED_PYTH_ABI = [
   },
   ...PythInterfaceAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-const EXECUTOR_ABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-    ],
-    name: "upgradeTo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const WORMHOLE_ABI = [
   {
     inputs: [],
@@ -277,6 +262,66 @@ const WORMHOLE_ABI = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+const EXECUTOR_ABI = [
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "encodedVm",
+        type: "bytes",
+      },
+    ],
+    name: "execute",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "response",
+        type: "bytes",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getOwnerChainId",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "",
+        type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getOwnerEmitterAddress",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getLastExecutedSequence",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "",
+        type: "uint64",
       },
     ],
     stateMutability: "view",
@@ -451,6 +496,59 @@ export class EvmEntropyContract extends Storable {
   async getProviderInfo(address: string): Promise<EntropyProviderInfo> {
     const contract = this.getContract();
     return await contract.methods.getProviderInfo(address).call();
+  }
+}
+
+export class EvmExecutorContract {
+  constructor(public chain: EvmChain, public address: string) {}
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getContract() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return new web3.eth.Contract(EXECUTOR_ABI, this.address);
+  }
+
+  async getLastExecutedGovernanceSequence() {
+    return await this.getContract().methods.getLastExecutedSequence().call();
+  }
+
+  async getGovernanceDataSource(): Promise<DataSource> {
+    const executorContract = this.getContract();
+    const ownerEmitterAddress = await executorContract.methods
+      .getOwnerEmitterAddress()
+      .call();
+    const ownerEmitterChainid = await executorContract.methods
+      .getOwnerChainId()
+      .call();
+    return {
+      emitterChain: Number(ownerEmitterChainid),
+      emitterAddress: ownerEmitterAddress.replace("0x", ""),
+    };
+  }
+
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const executorContract = new web3.eth.Contract(EXECUTOR_ABI, this.address);
+    const transactionObject = executorContract.methods.execute(
+      "0x" + vaa.toString("hex")
+    );
+    const gasEstimate = await transactionObject.estimateGas({
+      from: address,
+      gas: 100000000,
+    });
+    const result = await transactionObject.send({
+      from: address,
+      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
+      gasPrice: await this.chain.getGasPrice(),
+    });
+    return { id: result.transactionHash, info: result };
   }
 }
 
