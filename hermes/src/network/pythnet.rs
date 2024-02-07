@@ -328,7 +328,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     };
 
 
-    let task_price_feeds_metadata = {
+    let task_price_feeds_metadata_updater = {
         let price_feeds_state = state.clone();
         let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
         tokio::spawn(async move {
@@ -349,7 +349,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     let _ = tokio::join!(
         task_listener,
         task_guardian_watcher,
-        task_price_feeds_metadata
+        task_price_feeds_metadata_updater
     );
     Ok(())
 }
