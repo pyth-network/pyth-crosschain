@@ -417,7 +417,6 @@ where
     }
 }
 
-
 pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
 where
     S: AggregateCache,
