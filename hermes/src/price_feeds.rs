@@ -22,7 +22,7 @@ where
     S: AggregateCache,
     S: PriceFeedProvider,
 {
-    match PriceFeedProvider::get_price_feeds_v2(state, query, asset_type).await {
+    match PriceFeedProvider::get_price_feeds_metadata(state, query, asset_type).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => Err(e),
     }
@@ -31,7 +31,7 @@ where
 
 #[async_trait::async_trait]
 pub trait PriceFeedProvider {
-    async fn get_price_feeds_v2(
+    async fn get_price_feeds_metadata(
         &self,
         query: Option<String>,
         asset_type: Option<AssetType>,
@@ -40,7 +40,7 @@ pub trait PriceFeedProvider {
 
 #[async_trait::async_trait]
 impl PriceFeedProvider for crate::state::State {
-    async fn get_price_feeds_v2(
+    async fn get_price_feeds_metadata(
         &self,
         query: Option<String>,
         asset_type: Option<AssetType>,

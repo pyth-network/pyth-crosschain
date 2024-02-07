@@ -356,12 +356,12 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
 
 pub async fn fetch_and_store_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
-    let price_feeds_metadata = get_price_feeds_v2(&state).await?;
+    let price_feeds_metadata = get_price_feeds_metadata(&state).await?;
     store_price_feeds_metadata(&state, &price_feeds_metadata).await?;
     Ok(price_feeds_metadata)
 }
 
-async fn get_price_feeds_v2(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+async fn get_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
     let mut price_feeds_metadata = Vec::<PriceFeedMetadata>::new();
     let client = RpcClient::new(state.rpc_http_endpoint.clone());
     let mapping_address = state
