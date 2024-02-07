@@ -20,9 +20,9 @@ pub async fn get_price_feeds_metadata<S>(
 ) -> Result<Vec<PriceFeedMetadata>>
 where
     S: AggregateCache,
-    S: PriceFeedProvider,
+    S: PriceFeedMetadataProvider,
 {
-    match PriceFeedProvider::get_price_feeds_metadata(state, query, asset_type).await {
+    match PriceFeedMetadataProvider::get_price_feeds_metadata(state, query, asset_type).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => Err(e),
     }
@@ -30,7 +30,7 @@ where
 
 
 #[async_trait::async_trait]
-pub trait PriceFeedProvider {
+pub trait PriceFeedMetadataProvider {
     async fn get_price_feeds_metadata(
         &self,
         query: Option<String>,
@@ -39,7 +39,7 @@ pub trait PriceFeedProvider {
 }
 
 #[async_trait::async_trait]
-impl PriceFeedProvider for crate::state::State {
+impl PriceFeedMetadataProvider for crate::state::State {
     async fn get_price_feeds_metadata(
         &self,
         query: Option<String>,
