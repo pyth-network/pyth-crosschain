@@ -7,7 +7,7 @@ use {
                 PriceFeedMetadata,
             },
         },
-        price_feeds::get_price_feeds_metadata,
+        price_feeds_metadata::get_price_feeds_metadata,
     },
     anyhow::Result,
     axum::{
