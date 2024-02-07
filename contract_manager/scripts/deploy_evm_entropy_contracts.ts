@@ -58,7 +58,7 @@ const parser = yargs(hideBin(process.argv))
     "gas-multiplier": {
       type: "number",
       demandOption: false,
-      // Pyth Proxy (ERC1967) gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
+      // Proxy (ERC1967) contract gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
       default: 2,
       desc: "Gas multiplier to use for the deployment. This is useful when gas estimates are not accurate",
     },
