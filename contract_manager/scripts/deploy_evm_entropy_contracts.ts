@@ -18,13 +18,18 @@ type DeploymentConfig = {
   gasPriceMultiplier: number;
   privateKey: PrivateKey;
   jsonOutputDir: string;
+  wormholeAddr: string;
   saveContract: boolean;
 };
 
 const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
+const ENTROPY_DEFAULT_PROVIDER = {
+  mainnet: "0x4b3D8aA4F753b278323EE88996dffDCd8fBFdBFC",
+  testnet: "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344",
+};
 
 const parser = yargs(hideBin(process.argv))
-  .scriptName("deploy_evm_pricefeed_contracts.ts")
+  .scriptName("deploy_evm_entropy_contracts.ts")
   .usage(
     "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
   )
@@ -79,8 +84,7 @@ const parser = yargs(hideBin(process.argv))
 
 async function deployExecutorContracts(
   chain: EvmChain,
-  config: DeploymentConfig,
-  wormholeAddr: string
+  config: DeploymentConfig
 ): Promise<string> {
   const executorImplAddr = await deployIfNotCached(
     CACHE_FILE,
@@ -101,7 +105,7 @@ async function deployExecutorContracts(
 
   const executorInitData = executorImplContract.methods
     .initialize(
-      wormholeAddr,
+      config.wormholeAddr,
       0, // lastExecutedSequence,
       chain.getWormholeChainId(),
       governanceDataSource.emitterChain,
@@ -140,8 +144,8 @@ async function deployEntropyContracts(
       executorAddr, // admin
       1, // pythFeeInWei
       chain.isMainnet()
-        ? "0x4b3D8aA4F753b278323EE88996dffDCd8fBFdBFC"
-        : "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344", // defaultProvider
+        ? ENTROPY_DEFAULT_PROVIDER.mainnet
+        : ENTROPY_DEFAULT_PROVIDER.testnet,
       true // prefillRequestStorage
     )
     .encodeABI();
@@ -169,6 +173,7 @@ async function main() {
     privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
     saveContract: argv.saveContract,
+    wormholeAddr: argv.wormholeAddr,
   };
 
   console.log(
@@ -185,11 +190,7 @@ async function main() {
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
-  const executorAddr = await deployExecutorContracts(
-    chain,
-    deploymentConfig,
-    argv.wormholeAddr
-  );
+  const executorAddr = await deployExecutorContracts(chain, deploymentConfig);
   const entropyAddr = await deployEntropyContracts(
     chain,
     deploymentConfig,
