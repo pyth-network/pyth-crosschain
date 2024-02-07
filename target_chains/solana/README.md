@@ -24,7 +24,7 @@ This is because it persists a verified encoded VAA, so guardian signatures will 
 
 # Devnet deployment
 
-The program is currently deployed on Devnet with addresses:
+The program is currently deployed on Devnet and Eclipse Testnet with addresses:
 
 - `HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ` for the Wormhole receiver
 - `rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ` for the Pyth receiver
