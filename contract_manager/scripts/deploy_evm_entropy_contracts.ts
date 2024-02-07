@@ -2,7 +2,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { EvmChain } from "../src/chains";
 import { DefaultStore } from "../src/store";
-import { existsSync, readFileSync, writeFileSync } from "fs";
 import {
   DeploymentType,
   EvmEntropyContract,
@@ -11,9 +10,7 @@ import {
   toDeploymentType,
   toPrivateKey,
 } from "../src";
-import { join } from "path";
-import Web3 from "web3";
-import { Contract } from "web3-eth-contract";
+import { deployIfNotCached, getWeb3Contract } from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -80,65 +77,13 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-async function deployIfNotCached(
-  chain: EvmChain,
-  config: DeploymentConfig,
-  artifactName: string,
-  deployArgs: any[] // eslint-disable-line  @typescript-eslint/no-explicit-any
-): Promise<string> {
-  const cache = existsSync(CACHE_FILE)
-    ? JSON.parse(readFileSync(CACHE_FILE, "utf8"))
-    : {};
-
-  const cacheKey = `${chain.getId()}-${artifactName}`;
-  if (cache[cacheKey]) {
-    const address = cache[cacheKey];
-    console.log(
-      `Using cached deployment of ${artifactName} on ${chain.getId()} at ${address}`
-    );
-    return address;
-  }
-
-  const artifact = JSON.parse(
-    readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
-  );
-
-  console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
-
-  const addr = await chain.deploy(
-    config.privateKey,
-    artifact["abi"],
-    artifact["bytecode"],
-    deployArgs,
-    config.gasMultiplier,
-    config.gasPriceMultiplier
-  );
-
-  console.log(`✅ Deployed ${artifactName} on ${chain.getId()} at ${addr}`);
-
-  cache[cacheKey] = addr;
-  writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  return addr;
-}
-
-function getWeb3Contract(
-  config: DeploymentConfig,
-  artifactName: string,
-  address: string
-): Contract {
-  const artifact = JSON.parse(
-    readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
-  );
-  const web3 = new Web3();
-  return new web3.eth.Contract(artifact["abi"], address);
-}
-
 async function deployExecutorContracts(
   chain: EvmChain,
   config: DeploymentConfig,
   wormholeAddr: string
 ): Promise<string> {
   const executorImplAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "ExecutorUpgradable",
@@ -149,7 +94,7 @@ async function deployExecutorContracts(
   const { governanceDataSource } = getDefaultDeploymentConfig(config.type);
 
   const executorImplContract = getWeb3Contract(
-    config,
+    config.jsonOutputDir,
     "ExecutorUpgradable",
     executorImplAddr
   );
@@ -160,11 +105,11 @@ async function deployExecutorContracts(
       0, // lastExecutedSequence,
       chain.getWormholeChainId(),
       governanceDataSource.emitterChain,
-      governanceDataSource.emitterAddress
+      `0x${governanceDataSource.emitterAddress}`
     )
     .encodeABI();
 
-  return await deployIfNotCached(chain, config, "ERC1967Proxy", [
+  return await deployIfNotCached(CACHE_FILE, chain, config, "ERC1967Proxy", [
     executorImplAddr,
     executorInitData,
   ]);
@@ -176,6 +121,7 @@ async function deployEntropyContracts(
   executorAddr: string
 ): Promise<string> {
   const entropyImplAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "EntropyUpgradable",
@@ -183,7 +129,7 @@ async function deployEntropyContracts(
   );
 
   const entropyImplContract = getWeb3Contract(
-    config,
+    config.jsonOutputDir,
     "EntropyUpgradable",
     entropyImplAddr
   );
@@ -200,10 +146,17 @@ async function deployEntropyContracts(
     )
     .encodeABI();
 
-  return await deployIfNotCached(chain, config, "ERC1967Proxy", [
-    entropyImplAddr,
-    entropyInitData,
-  ]);
+  return await deployIfNotCached(
+    CACHE_FILE,
+    chain,
+    config,
+    "ERC1967Proxy",
+    [entropyImplAddr, entropyInitData],
+    // NOTE: we are deploying a ERC1967Proxy when deploying executor
+    // we need to provide a different cache key. As the `artifactname`
+    // is same in both case which means the cache key will be same
+    `${chain.getId()}-ERC1967Proxy-ENTROPY`
+  );
 }
 
 async function main() {

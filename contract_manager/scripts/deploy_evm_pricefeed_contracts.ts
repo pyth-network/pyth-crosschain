@@ -2,7 +2,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { EvmChain } from "../src/chains";
 import { DefaultStore } from "../src/store";
-import { existsSync, readFileSync, writeFileSync } from "fs";
 import {
   DeploymentType,
   EvmPriceFeedContract,
@@ -12,9 +11,7 @@ import {
   toPrivateKey,
   WormholeEvmContract,
 } from "../src";
-import { join } from "path";
-import Web3 from "web3";
-import { Contract } from "web3-eth-contract";
+import { deployIfNotCached, getWeb3Contract } from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -89,64 +86,12 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-async function deployIfNotCached(
-  chain: EvmChain,
-  config: DeploymentConfig,
-  artifactName: string,
-  deployArgs: any[] // eslint-disable-line  @typescript-eslint/no-explicit-any
-): Promise<string> {
-  const cache = existsSync(CACHE_FILE)
-    ? JSON.parse(readFileSync(CACHE_FILE, "utf8"))
-    : {};
-
-  const cacheKey = `${chain.getId()}-${artifactName}`;
-  if (cache[cacheKey]) {
-    const address = cache[cacheKey];
-    console.log(
-      `Using cached deployment of ${artifactName} on ${chain.getId()} at ${address}`
-    );
-    return address;
-  }
-
-  const artifact = JSON.parse(
-    readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
-  );
-
-  console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
-
-  const addr = await chain.deploy(
-    config.privateKey,
-    artifact["abi"],
-    artifact["bytecode"],
-    deployArgs,
-    config.gasMultiplier,
-    config.gasPriceMultiplier
-  );
-
-  console.log(`✅ Deployed ${artifactName} on ${chain.getId()} at ${addr}`);
-
-  cache[cacheKey] = addr;
-  writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  return addr;
-}
-
-function getWeb3Contract(
-  config: DeploymentConfig,
-  artifactName: string,
-  address: string
-): Contract {
-  const artifact = JSON.parse(
-    readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
-  );
-  const web3 = new Web3();
-  return new web3.eth.Contract(artifact["abi"], address);
-}
-
 async function deployWormholeReceiverContracts(
   chain: EvmChain,
   config: DeploymentConfig
 ): Promise<string> {
   const receiverSetupAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "ReceiverSetup",
@@ -154,6 +99,7 @@ async function deployWormholeReceiverContracts(
   );
 
   const receiverImplAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "ReceiverImplementation",
@@ -162,7 +108,7 @@ async function deployWormholeReceiverContracts(
 
   // Craft the init data for the proxy contract
   const setupContract = getWeb3Contract(
-    config,
+    config.jsonOutputDir,
     "ReceiverSetup",
     receiverSetupAddr
   );
@@ -180,6 +126,7 @@ async function deployWormholeReceiverContracts(
     .encodeABI();
 
   const wormholeReceiverAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "WormholeReceiver",
@@ -207,6 +154,7 @@ async function deployPriceFeedContracts(
   wormholeAddr: string
 ): Promise<string> {
   const pythImplAddr = await deployIfNotCached(
+    CACHE_FILE,
     chain,
     config,
     "PythUpgradable",
@@ -219,7 +167,7 @@ async function deployPriceFeedContracts(
   );
 
   const pythImplContract = getWeb3Contract(
-    config,
+    config.jsonOutputDir,
     "PythUpgradable",
     pythImplAddr
   );
@@ -237,7 +185,7 @@ async function deployPriceFeedContracts(
     )
     .encodeABI();
 
-  return await deployIfNotCached(chain, config, "ERC1967Proxy", [
+  return await deployIfNotCached(CACHE_FILE, chain, config, "ERC1967Proxy", [
     pythImplAddr,
     pythInitData,
   ]);
