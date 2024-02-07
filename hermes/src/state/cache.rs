@@ -155,7 +155,6 @@ async fn retrieve_message_state(
     }
 }
 
-
 impl Cache {
     pub fn new(cache_size: u64) -> Self {
         Self {
