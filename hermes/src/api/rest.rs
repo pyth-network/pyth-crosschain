@@ -33,7 +33,7 @@ pub use {
     ready::*,
     v2::{
         latest_price_updates::*,
-        price_feeds::*,
+        price_feeds_metadata::*,
         timestamp_price_updates::*,
     },
 };

@@ -22,7 +22,7 @@ use {
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
-pub struct PriceFeedsQueryParams {
+pub struct PriceFeedsMetadataQueryParams {
     /// Optional query parameter. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive.
     #[serde(default)]
     #[param(example = "bitcoin")]
@@ -45,21 +45,22 @@ pub struct PriceFeedsQueryParams {
         (status = 200, description = "Price feeds metadata retrieved successfully", body = Vec<RpcPriceIdentifier>)
     ),
     params(
-        PriceFeedsQueryParams
+        PriceFeedsMetadataQueryParams
     )
 )]
-pub async fn price_feeds(
+pub async fn price_feeds_metadata(
     State(state): State<crate::api::ApiState>,
-    QsQuery(params): QsQuery<PriceFeedsQueryParams>,
+    QsQuery(params): QsQuery<PriceFeedsMetadataQueryParams>,
 ) -> Result<Json<Vec<PriceFeedMetadata>>, RestError> {
-    let price_feeds = get_price_feeds_metadata(&*state.state, params.query, params.asset_type)
-        .await
-        .map_err(|e| {
-            tracing::warn!("RPC connection error: {}", e);
-            RestError::RpcConnectionError {
-                message: format!("RPC connection error: {}", e),
-            }
-        })?;
+    let price_feeds_metadata =
+        get_price_feeds_metadata(&*state.state, params.query, params.asset_type)
+            .await
+            .map_err(|e| {
+                tracing::warn!("RPC connection error: {}", e);
+                RestError::RpcConnectionError {
+                    message: format!("RPC connection error: {}", e),
+                }
+            })?;
 
-    Ok(Json(price_feeds))
+    Ok(Json(price_feeds_metadata))
 }

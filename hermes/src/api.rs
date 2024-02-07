@@ -164,7 +164,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             "/v2/updates/price/:publish_time",
             get(rest::timestamp_price_updates),
         )
-        .route("/v2/price_feeds", get(rest::price_feeds))
+        .route("/v2/price_feeds", get(rest::price_feeds_metadata))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
         .route("/ws", get(ws::ws_route_handler))
