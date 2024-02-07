@@ -1,10 +1,13 @@
 use {
-    crate::api::{
-        rest::RestError,
-        types::{
-            AssetType,
-            PriceFeedV2,
+    crate::{
+        api::{
+            rest::RestError,
+            types::{
+                AssetType,
+                PriceFeedMetadata,
+            },
         },
+        price_feeds::get_price_feeds_metadata,
     },
     anyhow::Result,
     axum::{
@@ -48,16 +51,15 @@ pub struct PriceFeedsQueryParams {
 pub async fn price_feeds(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<PriceFeedsQueryParams>,
-) -> Result<Json<Vec<PriceFeedV2>>, RestError> {
-    let price_feeds =
-        crate::aggregate::get_price_feeds_v2(&*state.state, params.query, params.asset_type)
-            .await
-            .map_err(|e| {
-                tracing::warn!("RPC connection error: {}", e);
-                RestError::RpcConnectionError {
-                    message: format!("RPC connection error: {}", e),
-                }
-            })?;
+) -> Result<Json<Vec<PriceFeedMetadata>>, RestError> {
+    let price_feeds = get_price_feeds_metadata(&*state.state, params.query, params.asset_type)
+        .await
+        .map_err(|e| {
+            tracing::warn!("RPC connection error: {}", e);
+            RestError::RpcConnectionError {
+                message: format!("RPC connection error: {}", e),
+            }
+        })?;
 
     Ok(Json(price_feeds))
 }

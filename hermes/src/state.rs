@@ -7,8 +7,10 @@ use {
             AggregateState,
             AggregationEvent,
         },
+        api::types::PriceFeedMetadata,
         network::wormhole::GuardianSet,
     },
+    anyhow::Result,
     prometheus_client::registry::Registry,
     reqwest::Url,
     solana_sdk::pubkey::Pubkey,
@@ -27,7 +29,6 @@ use {
 
 pub mod benchmarks;
 pub mod cache;
-pub mod price_feed;
 
 pub struct State {
     /// Storage is a short-lived cache of the state of all the updates that have been passed to the
@@ -58,6 +59,9 @@ pub struct State {
 
     /// Mapping address
     pub mapping_address: Option<Pubkey>,
+
+    /// Price feeds metadata
+    pub price_feeds_metadata: RwLock<Vec<PriceFeedMetadata>>,
 }
 
 impl State {
@@ -79,8 +83,23 @@ impl State {
             metrics_registry: RwLock::new(metrics_registry),
             rpc_http_endpoint,
             mapping_address,
+            price_feeds_metadata: RwLock::new(Default::default()),
         })
     }
+}
+
+pub async fn retrieve_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+    let price_feeds_metadata = state.price_feeds_metadata.read().await;
+    Ok(price_feeds_metadata.clone())
+}
+
+pub async fn store_price_feeds_metadata(
+    state: &State,
+    price_feeds_metadata: &[PriceFeedMetadata],
+) -> Result<()> {
+    let mut price_feeds_metadata_write_guard = state.price_feeds_metadata.write().await;
+    *price_feeds_metadata_write_guard = price_feeds_metadata.to_vec();
+    Ok(())
 }
 
 #[cfg(test)]

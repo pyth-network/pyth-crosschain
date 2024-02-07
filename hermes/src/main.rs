@@ -71,7 +71,6 @@ async fn init() -> Result<()> {
                 Box::pin(spawn(network::pythnet::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(metrics_server::run(opts.clone(), store.clone()))),
                 Box::pin(spawn(api::spawn(opts.clone(), store.clone(), update_rx))),
-                Box::pin(spawn(price_feeds::run(opts.clone(), store.clone()))),
             ])
             .await;
 

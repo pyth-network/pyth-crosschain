@@ -1,6 +1,6 @@
 //! This module connects to the Pythnet RPC server and listens for accumulator
 //! updates. It then sends the updates to the store module for processing and
-//! storage.
+//! storage. It also periodically fetches and stores the latest price feeds metadata.
 
 use {
     crate::{
@@ -8,6 +8,7 @@ use {
             AccumulatorMessages,
             Update,
         },
+        api::types::PriceFeedMetadata,
         config::RunOptions,
         network::wormhole::{
             update_guardian_set,
@@ -15,7 +16,10 @@ use {
             GuardianSet,
             GuardianSetData,
         },
-        state::State,
+        state::{
+            store_price_feeds_metadata,
+            State,
+        },
     },
     anyhow::{
         anyhow,
@@ -23,6 +27,11 @@ use {
     },
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
+    pyth_sdk::PriceIdentifier,
+    pyth_sdk_solana::state::{
+        load_mapping_account,
+        load_product_account,
+    },
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::{
@@ -41,11 +50,13 @@ use {
     },
     solana_sdk::{
         account::Account,
+        bs58,
         commitment_config::CommitmentConfig,
         pubkey::Pubkey,
         system_program,
     },
     std::{
+        collections::BTreeMap,
         sync::{
             atomic::Ordering,
             Arc,
@@ -283,7 +294,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         })
     };
 
-    let task_guadian_watcher = {
+    let task_guardian_watcher = {
         let store = state.clone();
         let pythnet_http_endpoint = opts.pythnet.http_addr.clone();
         tokio::spawn(async move {
@@ -316,6 +327,81 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         })
     };
 
-    let _ = tokio::join!(task_listener, task_guadian_watcher);
+
+    let task_price_feeds_metadata = {
+        let price_feeds_state = state.clone();
+        let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
+                price_feeds_update_interval,
+            ));
+            loop {
+                interval.tick().await;
+                if let Err(e) =
+                    fetch_and_store_price_feeds_metadata(price_feeds_state.as_ref()).await
+                {
+                    tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
+                }
+            }
+        })
+    };
+
+    let _ = tokio::join!(
+        task_listener,
+        task_guardian_watcher,
+        task_price_feeds_metadata
+    );
     Ok(())
+}
+
+
+pub async fn fetch_and_store_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+    let price_feeds_metadata = get_price_feeds_v2(&state).await?;
+    store_price_feeds_metadata(&state, &price_feeds_metadata).await?;
+    Ok(price_feeds_metadata)
+}
+
+async fn get_price_feeds_v2(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+    let mut price_feeds_metadata = Vec::<PriceFeedMetadata>::new();
+    let client = RpcClient::new(state.rpc_http_endpoint.clone());
+    let mapping_address = state
+        .mapping_address
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("Mapping address is not set"))?;
+    let mapping_data = client.get_account_data(mapping_address).await?;
+    let map_acct = load_mapping_account(&mapping_data)?;
+    for prod_pkey in &map_acct.products {
+        let prod_data = client.get_account_data(prod_pkey).await?;
+
+        if *prod_pkey == Pubkey::default() {
+            continue;
+        }
+        let prod_acct = load_product_account(&prod_data)?;
+
+        let attributes = prod_acct
+            .iter()
+            .filter(|(key, _)| !key.is_empty())
+            // Convert (&str, &str) to (String, String)
+            .map(|(key, val)| (key.to_string(), val.to_string()))
+            .collect::<BTreeMap<String, String>>();
+
+        if prod_acct.px_acc != Pubkey::default() {
+            let px_pkey = prod_acct.px_acc;
+
+            // Convert px_pkey from base58 to hex
+            let px_pkey_bytes = bs58::decode(&px_pkey.to_string()).into_vec()?;
+            let px_pkey_array: [u8; 32] = px_pkey_bytes
+                .try_into()
+                .expect("Invalid length for PriceIdentifier");
+
+            // Create PriceFeedMetadata
+            let price_feed_metadata = PriceFeedMetadata {
+                id: PriceIdentifier::new(px_pkey_array),
+                attributes,
+            };
+
+            price_feeds_metadata.push(price_feed_metadata);
+        }
+    }
+    Ok(price_feeds_metadata)
 }

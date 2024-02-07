@@ -1,92 +1,83 @@
-//! Price Feeds
 use {
     crate::{
-        api::types::PriceFeedV2,
-        config::RunOptions,
-        state::State as AppState,
+        api::types::{
+            AssetType,
+            PriceFeedMetadata,
+        },
+        network::pythnet::fetch_and_store_price_feeds_metadata,
+        state::{
+            cache::AggregateCache,
+            retrieve_price_feeds_metadata,
+        },
     },
     anyhow::Result,
-    pyth_sdk::PriceIdentifier,
-    pyth_sdk_solana::state::{
-        load_mapping_account,
-        load_product_account,
-    },
-    solana_client::rpc_client::RpcClient,
-    solana_sdk::{
-        bs58,
-        pubkey::Pubkey,
-    },
-    std::{
-        collections::BTreeMap,
-        sync::Arc,
-    },
 };
 
-
-#[tracing::instrument(skip(opts, state))]
-pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
-    tracing::info!(
-        "Revalidating price feeds cache every {} seconds.",
-        opts.price_feeds_cache_update_interval
-    );
-    let update_interval = opts.price_feeds_cache_update_interval;
-    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(update_interval));
-
-    loop {
-        interval.tick().await;
-        if let Err(e) = fetch_and_store_price_feeds(state.as_ref()).await {
-            tracing::error!("Error in fetching and storing price feeds: {}", e);
-        }
+pub async fn get_price_feeds_metadata<S>(
+    state: &S,
+    query: Option<String>,
+    asset_type: Option<AssetType>,
+) -> Result<Vec<PriceFeedMetadata>>
+where
+    S: AggregateCache,
+    S: PriceFeedProvider,
+{
+    match PriceFeedProvider::get_price_feeds_v2(state, query, asset_type).await {
+        Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
+        Err(e) => Err(e),
     }
 }
 
-pub async fn fetch_and_store_price_feeds(state: &AppState) -> Result<Vec<PriceFeedV2>> {
-    let price_feeds = get_price_feeds_v2(&state).await?;
-    state.cache.store_price_feeds(&price_feeds).await?;
-    Ok(price_feeds)
+
+#[async_trait::async_trait]
+pub trait PriceFeedProvider {
+    async fn get_price_feeds_v2(
+        &self,
+        query: Option<String>,
+        asset_type: Option<AssetType>,
+    ) -> Result<Vec<PriceFeedMetadata>>;
 }
 
-async fn get_price_feeds_v2(state: &AppState) -> Result<Vec<PriceFeedV2>> {
-    let mut price_feeds = Vec::<PriceFeedV2>::new();
-    let client = RpcClient::new(&state.rpc_http_endpoint);
-    let mapping_address = state
-        .mapping_address
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("Mapping address is not set"))?;
-    let mapping_data = client.get_account_data(mapping_address)?;
-    let map_acct = load_mapping_account(&mapping_data)?;
-    for prod_pkey in &map_acct.products {
-        let prod_data = client.get_account_data(prod_pkey)?;
+#[async_trait::async_trait]
+impl PriceFeedProvider for crate::state::State {
+    async fn get_price_feeds_v2(
+        &self,
+        query: Option<String>,
+        asset_type: Option<AssetType>,
+    ) -> Result<Vec<PriceFeedMetadata>> {
+        let mut price_feeds_metadata = {
+            let feeds = retrieve_price_feeds_metadata(&self).await?;
+            if feeds.is_empty() {
+                // If the result is an empty Vec, fetch and store new price feeds
+                fetch_and_store_price_feeds_metadata(&self).await?
+            } else {
+                feeds
+            }
+        };
 
-        if *prod_pkey == Pubkey::default() {
-            continue;
+
+        // Filter by query if provided
+        if let Some(query_str) = &query {
+            price_feeds_metadata.retain(|feed| {
+                feed.attributes.get("symbol").map_or(false, |symbol| {
+                    symbol.to_lowercase().contains(&query_str.to_lowercase())
+                })
+            });
         }
-        let prod_acct = load_product_account(&prod_data)?;
 
-        let attributes = prod_acct
-            .iter()
-            .filter(|(key, _)| !key.is_empty())
-            // Convert (&str, &str) to (String, String)
-            .map(|(key, val)| (key.to_string(), val.to_string()))
-            .collect::<BTreeMap<String, String>>();
-
-        if prod_acct.px_acc != Pubkey::default() {
-            let px_pkey = prod_acct.px_acc;
-
-            // Convert px_pkey from base58 to hex
-            let px_pkey_bytes = bs58::decode(&px_pkey.to_string()).into_vec()?;
-            let px_pkey_array: [u8; 32] = px_pkey_bytes
-                .try_into()
-                .expect("Invalid length for PriceIdentifier");
-
-            // Create PriceFeedV2
-            let price_feed_v2 = PriceFeedV2 {
-                id: PriceIdentifier::new(px_pkey_array),
-                attributes,
-            };
-
-            price_feeds.push(price_feed_v2);
+        // Filter by asset_type if provided
+        if let Some(asset_type) = &asset_type {
+            price_feeds_metadata.retain(|feed| {
+                feed.attributes.get("asset_type").map_or(false, |type_str| {
+                    type_str.to_lowercase()
+                        == serde_json::to_string(&asset_type)
+                            .unwrap()
+                            .trim_matches('"')
+                            .to_string()
+                })
+            });
         }
+
+        Ok(price_feeds_metadata)
     }
-    Ok(price_feeds)
 }

@@ -319,7 +319,7 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct PriceFeedV2 {
+pub struct PriceFeedMetadata {
     pub id:         PriceIdentifier,
     // BTreeMap is used to automatically sort the keys
     pub attributes: BTreeMap<String, String>,

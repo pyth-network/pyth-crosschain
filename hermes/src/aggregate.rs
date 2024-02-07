@@ -19,10 +19,6 @@ use {
         WormholeMerkleState,
     },
     crate::{
-        api::types::{
-            AssetType,
-            PriceFeedV2,
-        },
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
@@ -31,7 +27,6 @@ use {
                 MessageState,
                 MessageStateFilter,
             },
-            price_feed::PriceFeedProvider,
             State,
         },
     },
@@ -422,20 +417,6 @@ where
     }
 }
 
-pub async fn get_price_feeds_v2<S>(
-    state: &S,
-    query: Option<String>,
-    asset_type: Option<AssetType>,
-) -> Result<Vec<PriceFeedV2>>
-where
-    S: AggregateCache,
-    S: PriceFeedProvider,
-{
-    match PriceFeedProvider::get_price_feeds_v2(state, query, asset_type).await {
-        Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
-        Err(e) => Err(e),
-    }
-}
 
 pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
 where

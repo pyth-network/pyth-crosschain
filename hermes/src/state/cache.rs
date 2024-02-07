@@ -1,15 +1,12 @@
 use {
-    crate::{
-        aggregate::{
-            wormhole_merkle::WormholeMerkleState,
-            AccumulatorMessages,
-            ProofSet,
-            RawMessage,
-            RequestTime,
-            Slot,
-            UnixTimestamp,
-        },
-        api::types::PriceFeedV2,
+    crate::aggregate::{
+        wormhole_merkle::WormholeMerkleState,
+        AccumulatorMessages,
+        ProofSet,
+        RawMessage,
+        RequestTime,
+        Slot,
+        UnixTimestamp,
     },
     anyhow::{
         anyhow,
@@ -111,8 +108,7 @@ pub struct Cache {
     wormhole_merkle_state_cache: Arc<RwLock<BTreeMap<Slot, WormholeMerkleState>>>,
 
     message_cache: Arc<RwLock<HashMap<MessageStateKey, BTreeMap<MessageStateTime, MessageState>>>>,
-    price_feeds_cache: Arc<RwLock<Vec<PriceFeedV2>>>,
-    cache_size:        u64,
+    cache_size:    u64,
 }
 
 async fn retrieve_message_state(
@@ -166,20 +162,8 @@ impl Cache {
             message_cache: Arc::new(RwLock::new(HashMap::new())),
             accumulator_messages_cache: Arc::new(RwLock::new(BTreeMap::new())),
             wormhole_merkle_state_cache: Arc::new(RwLock::new(BTreeMap::new())),
-            price_feeds_cache: Arc::new(RwLock::new(Vec::new())),
             cache_size,
         }
-    }
-
-    pub async fn retrieve_price_feeds(&self) -> Result<Vec<PriceFeedV2>> {
-        let price_feeds = self.price_feeds_cache.read().await;
-        Ok(price_feeds.clone())
-    }
-
-    pub async fn store_price_feeds(&self, price_feeds: &[PriceFeedV2]) -> Result<()> {
-        let mut price_feeds_cache = self.price_feeds_cache.write().await;
-        *price_feeds_cache = price_feeds.to_vec();
-        Ok(())
     }
 }
 
