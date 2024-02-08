@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "test": "jest src/ --passWithNoTests",
     "simple-searcher": "npm run build && node lib/examples/SimpleSearcher.js",
     "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/types.d.ts",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -44,7 +45,8 @@
     "openapi-typescript": "^6.5.5",
     "prettier": "^2.6.2",
     "typescript": "^5.1",
-    "yargs": "^17.4.1"
+    "yargs": "^17.4.1",
+    "jest": "^27.5.1"
   },
   "license": "Apache-2.0"
 }
