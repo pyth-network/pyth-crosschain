@@ -42,6 +42,7 @@ async function run() {
   } else {
     throw new Error(`Invalid private key: ${argv.privateKey}`);
   }
+  const DAY_IN_SECONDS = 60 * 60 * 24;
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const opportunities = await client.getOpportunities(argv.chainId);
@@ -50,9 +51,9 @@ async function run() {
       const bid = BigInt(argv.bid);
       const bidInfo = {
         amount: bid,
-        valid_until: BigInt(Math.round(Date.now() / 1000 + 60 * 60 * 24)),
+        validUntil: BigInt(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
       };
-      const opportunityBid = await client.signOpporunityBid(
+      const opportunityBid = await client.signOpportunityBid(
         opportunity,
         bidInfo,
         argv.privateKey
@@ -60,11 +61,11 @@ async function run() {
       try {
         await client.submitOpportunityBid(opportunityBid);
         console.log(
-          `Successful bid ${bid} on opportunity ${opportunity.opportunity_id}`
+          `Successful bid ${bid} on opportunity ${opportunity.opportunityId}`
         );
       } catch (error) {
         console.error(
-          `Failed to bid on opportunity ${opportunity.opportunity_id}: ${error}`
+          `Failed to bid on opportunity ${opportunity.opportunityId}: ${error}`
         );
       }
     }

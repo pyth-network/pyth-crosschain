@@ -30,26 +30,26 @@ export type BidInfo = {
   /**
    * Unix timestamp for when the bid is no longer valid in seconds
    */
-  valid_until: bigint;
+  validUntil: bigint;
 };
 
 /**
  * All the parameters necessary to represent a liquidation opportunity
  */
-export type OpportunityParams = {
+export type Opportunity = {
   /**
    * The chain id where the liquidation will be executed.
    */
-  chain_id: string;
+  chainId: string;
 
   /**
    * Unique identifier for the opportunity
    */
-  opportunity_id: string;
+  opportunityId: string;
   /**
    * Permission key required for succesful execution of the liquidation.
    */
-  permission_key: Hex;
+  permissionKey: Hex;
   /**
    * Contract address to call for execution of the liquidation.
    */
@@ -66,11 +66,11 @@ export type OpportunityParams = {
   /**
    * Tokens required to repay the debt
    */
-  repay_tokens: TokenQty[];
+  repayTokens: TokenQty[];
   /**
    * Tokens to receive after the liquidation
    */
-  receipt_tokens: TokenQty[];
+  receiptTokens: TokenQty[];
 };
 
 /**
@@ -80,11 +80,11 @@ export type OpportunityBid = {
   /**
    * Opportunity unique identifier in uuid format
    */
-  opportunity_id: string;
+  opportunityId: string;
   /**
    * The permission key required for succesful execution of the liquidation.
    */
-  permission_key: Hex;
+  permissionKey: Hex;
   /**
    * Liquidator address
    */
@@ -127,12 +127,12 @@ export class Client {
 
   /**
    * Fetches liquidation opportunities
-   * @param chain_id Chain id to fetch opportunities for. e.g: sepolia
+   * @param chainId Chain id to fetch opportunities for. e.g: sepolia
    */
-  async getOpportunities(chain_id?: string): Promise<OpportunityParams[]> {
+  async getOpportunities(chainId?: string): Promise<Opportunity[]> {
     const client = createClient<paths>(this.clientOptions);
     const opportunities = await client.GET("/v1/liquidation/opportunities", {
-      params: { query: { chain_id } },
+      params: { query: { chain_id: chainId } },
     });
     if (opportunities.data === undefined) {
       throw new Error("No opportunities found");
@@ -145,14 +145,14 @@ export class Client {
         return [];
       }
       return {
-        chain_id: opportunity.chain_id,
-        opportunity_id: opportunity.opportunity_id,
-        permission_key: checkHex(opportunity.permission_key),
+        chainId: opportunity.chain_id,
+        opportunityId: opportunity.opportunity_id,
+        permissionKey: checkHex(opportunity.permission_key),
         contract: checkAddress(opportunity.contract),
         calldata: checkHex(opportunity.calldata),
         value: BigInt(opportunity.value),
-        repay_tokens: opportunity.repay_tokens.map(checkTokenQty),
-        receipt_tokens: opportunity.receipt_tokens.map(checkTokenQty),
+        repayTokens: opportunity.repay_tokens.map(checkTokenQty),
+        receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
       };
     });
   }
@@ -161,23 +161,21 @@ export class Client {
    * Submits a liquidation opportunity to be exposed to searchers
    * @param opportunity Opportunity to submit
    */
-  async submitOpportunity(
-    opportunity: Omit<OpportunityParams, "opportunity_id">
-  ) {
+  async submitOpportunity(opportunity: Omit<Opportunity, "opportunityId">) {
     const client = createClient<paths>(this.clientOptions);
     const response = await client.POST("/v1/liquidation/opportunities", {
       body: {
-        chain_id: opportunity.chain_id,
+        chain_id: opportunity.chainId,
         version: "v1",
-        permission_key: opportunity.permission_key,
+        permission_key: opportunity.permissionKey,
         contract: opportunity.contract,
         calldata: opportunity.calldata,
         value: opportunity.value.toString(),
-        repay_tokens: opportunity.repay_tokens.map((token) => ({
+        repay_tokens: opportunity.repayTokens.map((token) => ({
           contract: token.contract,
           amount: token.amount.toString(),
         })),
-        receipt_tokens: opportunity.receipt_tokens.map((token) => ({
+        receipt_tokens: opportunity.receiptTokens.map((token) => ({
           contract: token.contract,
           amount: token.amount.toString(),
         })),
@@ -191,12 +189,12 @@ export class Client {
   /**
    * Creates a signed bid for a liquidation opportunity
    * @param opportunity Opportunity to bid on
-   * @param bid_info Bid amount and valid until timestamp
+   * @param bidInfo Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with
    */
-  async signOpporunityBid(
-    opportunity: OpportunityParams,
-    bid_info: BidInfo,
+  async signOpportunityBid(
+    opportunity: Opportunity,
+    bidInfo: BidInfo,
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const account = privateKeyToAccount(privateKey);
@@ -207,7 +205,7 @@ export class Client {
     const payload = encodeAbiParameters(
       [
         {
-          name: "repay_tokens",
+          name: "repayTokens",
           type: "tuple[]",
           components: [
             {
@@ -219,7 +217,7 @@ export class Client {
           ],
         },
         {
-          name: "receipt_tokens",
+          name: "receiptTokens",
           type: "tuple[]",
           components: [
             {
@@ -236,26 +234,26 @@ export class Client {
         { name: "bid", type: "uint256" },
       ],
       [
-        opportunity.repay_tokens.map(convertTokenQty),
-        opportunity.receipt_tokens.map(convertTokenQty),
+        opportunity.repayTokens.map(convertTokenQty),
+        opportunity.receiptTokens.map(convertTokenQty),
         opportunity.contract,
         opportunity.calldata,
         opportunity.value,
-        bid_info.amount,
+        bidInfo.amount,
       ]
     );
 
-    const raw_msg = keccak256(
-      encodePacked(["bytes", "uint256"], [payload, bid_info.valid_until])
+    const msgHash = keccak256(
+      encodePacked(["bytes", "uint256"], [payload, bidInfo.validUntil])
     );
 
-    const hash = signatureToHex(await sign({ hash: raw_msg, privateKey }));
+    const hash = signatureToHex(await sign({ hash: msgHash, privateKey }));
     return {
-      permission_key: opportunity.permission_key,
-      bid: bid_info,
+      permissionKey: opportunity.permissionKey,
+      bid: bidInfo,
       liquidator: account.address,
       signature: hash,
-      opportunity_id: opportunity.opportunity_id,
+      opportunityId: opportunity.opportunityId,
     };
   }
 
@@ -271,11 +269,11 @@ export class Client {
         body: {
           amount: bid.bid.amount.toString(),
           liquidator: bid.liquidator,
-          permission_key: bid.permission_key,
+          permission_key: bid.permissionKey,
           signature: bid.signature,
-          valid_until: bid.bid.valid_until.toString(),
+          valid_until: bid.bid.validUntil.toString(),
         },
-        params: { path: { opportunity_id: bid.opportunity_id } },
+        params: { path: { opportunity_id: bid.opportunityId } },
       }
     );
     if (response.error) {

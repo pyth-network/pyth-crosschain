@@ -16,6 +16,14 @@ $ npm install --save @pythnetwork/express-relay-evm-js
 $ yarn add @pythnetwork/express-relay-evm-js
 ```
 
+## Development
+
+To generate the latest type declarations from the server openapi schema, run:
+
+```bash
+npm run generate-api-types
+```
+
 ## Quickstart
 
 ```typescript
@@ -38,7 +46,7 @@ const opportunities = await client.getOpportunities();
 for (const opportunity of opportunities) {
   const bidInfo = calculateOpportunityBid(order);
   if (bidInfo === null) continue;
-  const opportunityBid = await client.signOpporunityBid(
+  const opportunityBid = await client.signOpportunityBid(
     opportunity,
     bidInfo,
     privateKey // searcher private key with appropriate permissions and assets
