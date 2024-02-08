@@ -18,6 +18,7 @@ use {
     pyth_solana_receiver::{
         sdk::{
             deserialize_accumulator_update_data,
+            get_treasury_address,
             DEFAULT_TREASURY_ID,
         },
         state::config::DataSource,
@@ -195,9 +196,16 @@ fn main() -> Result<()> {
                 .data(),
             };
 
+            // We need to send some rent to the treasury account, otherwise it won't be able to accept incoming transfers
+            let pay_treasury_rent = system_instruction::transfer(
+                &payer.pubkey(),
+                &get_treasury_address(DEFAULT_TREASURY_ID),
+                Rent::default().minimum_balance(0),
+            );
+
             process_transaction(
                 &rpc_client,
-                vec![initialize_pyth_receiver_instruction],
+                vec![initialize_pyth_receiver_instruction, pay_treasury_rent],
                 &vec![&payer],
             )?;
         }
