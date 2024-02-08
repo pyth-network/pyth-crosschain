@@ -1,0 +1,50 @@
+{
+  "name": "@pythnetwork/express-relay-evm-js",
+  "version": "0.1.0",
+  "description": "Utilities for interacting with the express relay protocol",
+  "homepage": "https://pyth.network",
+  "author": {
+    "name": "Pyth Data Association"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "simple-searcher": "npm run build && node lib/examples/SimpleSearcher.js",
+    "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/types.d.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle",
+    "relay"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "express_relay/sdk/js"
+  },
+  "dependencies": {
+    "openapi-client-axios": "^7.5.4",
+    "openapi-fetch": "^0.8.2",
+    "viem": "^2.7.6"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.56.0",
+    "openapi-typescript": "^6.5.5",
+    "prettier": "^2.6.2",
+    "typescript": "5.1",
+    "yargs": "^17.4.1"
+  },
+  "license": "Apache-2.0"
+}
