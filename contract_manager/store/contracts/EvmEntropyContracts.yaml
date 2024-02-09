@@ -28,3 +28,12 @@
 - chain: lightlink_phoenix
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
+- chain: chiliz
+  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmEntropyContract
+- chain: arbitrum
+  address: "0x7a7F2493c578796ABfBA15Ce2e914A7A819979B7"
+  type: EvmEntropyContract
+- chain: optimism
+  address: "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67"
+  type: EvmEntropyContract
