@@ -253,9 +253,6 @@
 - chain: zetachain
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: hedera_testnet
-  address: "0x7a7F2493c578796ABfBA15Ce2e914A7A819979B7"
-  type: EvmPriceFeedContract
 - chain: sei_evm_devnet
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
   type: EvmPriceFeedContract
@@ -269,5 +266,20 @@
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
 - chain: lightlink_phoenix
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmPriceFeedContract
+- chain: idex_xchain_testnet
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmPriceFeedContract
+- chain: injective_inevm_testnet
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmPriceFeedContract
+- chain: injective_inevm
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmPriceFeedContract
+- chain: hedera_testnet
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmPriceFeedContract
+- chain: hedera
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract

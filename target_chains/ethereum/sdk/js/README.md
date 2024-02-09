@@ -48,8 +48,11 @@ const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 const updateFee = await pythContract.methods
   .getUpdateFee(priceUpdateData)
   .call();
+
 // Calling someContract method
 // `someContract` below is a web3.js contract; if you wish to use ethers, you need to change it accordingly.
+// Note: In Hedera you need to pass updateFee * 10^10 as value to the send method as there is an
+// inconsistency in the way the value is handled in Hedera RPC and the way it is handled on-chain.
 await someContract.methods
   .doSomething(someArg, otherArg, priceUpdateData)
   .send({ value: updateFee });

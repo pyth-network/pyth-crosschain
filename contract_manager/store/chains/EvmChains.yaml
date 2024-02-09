@@ -458,3 +458,18 @@
   rpcUrl: https://sepolia-dela.deperp.com
   networkId: 9393
   type: EvmChain
+- id: idex_xchain_testnet
+  mainnet: false
+  rpcUrl: https://xchain-testnet-rpc.idex.io
+  networkId: 671276500
+  type: EvmChain
+- id: injective_inevm_testnet
+  mainnet: false
+  rpcUrl: https://inevm-testnet.rpc.caldera.xyz/http
+  networkId: 2424
+  type: EvmChain
+- id: injective_inevm
+  mainnet: true
+  rpcUrl: https://inevm.calderachain.xyz/http
+  networkId: 2525
+  type: EvmChain

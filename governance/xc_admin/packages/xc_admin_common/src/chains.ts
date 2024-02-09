@@ -61,6 +61,7 @@ export const RECEIVER_CHAINS = {
   hedera: 60042,
   filecoin: 60043,
   lightlink_phoenix: 60044,
+  injective_inevm: 60045,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -123,6 +124,8 @@ export const RECEIVER_CHAINS = {
   sei_evm_devnet: 50051,
   fantom_sonic_testnet: 50052,
   dela_deperp_testnet: 50053,
+  injective_inevm_testnet: 50054,
+  idex_xchain_testnet: 50055,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
