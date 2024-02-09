@@ -80,7 +80,7 @@ async function main() {
     coinFlipContractAddress
   );
 
-  console.log(`Running coin flip prototcol.`);
+  console.log(`Running coin flip protocol.`);
 
   console.log("1. Generating user's random number...");
   const randomNumber = web3.utils.randomHex(32);
