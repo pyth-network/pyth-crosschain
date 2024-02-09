@@ -25,3 +25,6 @@
 - chain: sei_evm_devnet
   address: "0x6E3A2a644eeDCf6007d3c7d85F0094Cc1B25B2AE"
   type: EvmEntropyContract
+- chain: lightlink_phoenix
+  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
+  type: EvmEntropyContract

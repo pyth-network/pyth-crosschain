@@ -24,7 +24,7 @@ type DeploymentConfig = {
 
 const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
 const ENTROPY_DEFAULT_PROVIDER = {
-  mainnet: "0x4b3D8aA4F753b278323EE88996dffDCd8fBFdBFC",
+  mainnet: "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
   testnet: "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344",
 };
 
