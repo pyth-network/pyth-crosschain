@@ -8,9 +8,12 @@ use {
         state::PebbleHashChain,
     },
     anyhow::Result,
-    ethers::signers::{
-        LocalWallet,
-        Signer,
+    ethers::{
+        signers::{
+            LocalWallet,
+            Signer,
+        },
+        types::U256,
     },
     std::sync::Arc,
 };
@@ -52,19 +55,18 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
         seed:         random,
         chain_length: commitment_length,
     };
-
-    if let Some(r) = contract
-        .register(
-            fee_in_wei,
-            commitment,
-            bincode::serialize(&commitment_metadata)?.into(),
-            commitment_length,
-            bincode::serialize(&opts.uri)?.into(),
-        )
-        .send()
-        .await?
-        .await?
-    {
+    let call = contract.register(
+        fee_in_wei,
+        commitment,
+        bincode::serialize(&commitment_metadata)?.into(),
+        commitment_length,
+        bincode::serialize(&opts.uri)?.into(),
+    );
+    let mut gas_estimate = call.estimate_gas().await?;
+    let gas_multiplier = U256::from(2); //TODO: smarter gas estimation
+    gas_estimate = gas_estimate * gas_multiplier;
+    let call_with_gas = call.gas(gas_estimate);
+    if let Some(r) = call_with_gas.send().await?.await? {
         tracing::info!("Registered provider: {:?}", r);
     }
 
