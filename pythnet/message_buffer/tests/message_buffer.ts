@@ -535,7 +535,7 @@ describe("message_buffer", () => {
     const messageBufferAccountDataLenBefore =
       messageBufferAccountDataBefore.length;
 
-    // check that header is stil the same as before
+    // check that header is still the same as before
     const messageBufferHeaderBefore = deserializeMessageBufferHeader(
       messageBufferProgram,
       messageBufferAccountDataBefore
