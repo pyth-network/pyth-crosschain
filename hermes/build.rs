@@ -14,12 +14,15 @@ fn main() {
     // directory as a mini-repo with wormhole and googleapis as remotes, so we can copy out the
     // TREEISH paths we want.
     let protobuf_setup = r#"
+        set -euo pipefail
         git init .
         git clean -df
-        git remote add wormhole https://github.com/wormhole-foundation/wormhole.git
-        git remote add googleapis https://github.com/googleapis/googleapis.git
+        git remote add wormhole https://github.com/wormhole-foundation/wormhole.git || true
+        git remote add googleapis https://github.com/googleapis/googleapis.git || true
         git fetch --depth=1 wormhole main
         git fetch --depth=1 googleapis master
+        git reset
+        rm -rf proto/
         git read-tree --prefix=proto/ -u wormhole/main:proto
         git read-tree --prefix=proto/google/api/ -u googleapis/master:google/api
     "#;
