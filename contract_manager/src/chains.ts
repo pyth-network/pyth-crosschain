@@ -20,12 +20,8 @@ import {
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Network } from "@injectivelabs/networks";
-import {
-  Connection,
-  Ed25519Keypair,
-  JsonRpcProvider,
-  RawSigner,
-} from "@mysten/sui.js";
+import { SuiClient } from "@mysten/sui.js/client";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -290,17 +286,15 @@ export class SuiChain extends Chain {
     ).encode();
   }
 
-  getProvider(): JsonRpcProvider {
-    return new JsonRpcProvider(new Connection({ fullnode: this.rpcUrl }));
+  getProvider(): SuiClient {
+    return new SuiClient({ url: this.rpcUrl });
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const provider = this.getProvider();
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(privateKey, "hex")
     );
-    const wallet = new RawSigner(keypair, provider);
-    return await wallet.getAddress();
+    return keypair.toSuiAddress();
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {

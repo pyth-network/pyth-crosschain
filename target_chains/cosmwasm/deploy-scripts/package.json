@@ -12,9 +12,10 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "rimraf": "^5.0.0",
     "@pythnetwork/cosmwasm-deploy-tools": "*",
     "contract_manager": "*",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.3",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
