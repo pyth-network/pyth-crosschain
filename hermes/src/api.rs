@@ -122,6 +122,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             rest::latest_vaas,
             rest::price_feed_ids,
             rest::latest_price_updates,
+            rest::timestamp_price_updates,
         ),
         components(
             schemas(
