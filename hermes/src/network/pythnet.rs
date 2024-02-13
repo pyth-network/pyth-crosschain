@@ -267,6 +267,9 @@ async fn fetch_existing_guardian_sets(
 pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     tracing::info!(endpoint = opts.pythnet.ws_addr, "Started Pythnet Listener.");
 
+    // Create RpcClient instance here
+    let rpc_client = RpcClient::new(opts.pythnet.http_addr.clone());
+
     fetch_existing_guardian_sets(
         state.clone(),
         opts.pythnet.http_addr.clone(),
@@ -332,13 +335,14 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         let price_feeds_state = state.clone();
         let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
-                price_feeds_update_interval,
-            ));
-            loop {
-                interval.tick().await;
+            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
+                tokio::time::sleep(Duration::from_secs(price_feeds_update_interval)).await;
+                if crate::SHOULD_EXIT.load(Ordering::Acquire) {
+                    break;
+                }
                 if let Err(e) =
-                    fetch_and_store_price_feeds_metadata(price_feeds_state.as_ref()).await
+                    fetch_and_store_price_feeds_metadata(price_feeds_state.as_ref(), &rpc_client)
+                        .await
                 {
                     tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
                 }
@@ -355,23 +359,25 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 }
 
 
-pub async fn fetch_and_store_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
-    let price_feeds_metadata = get_price_feeds_metadata(&state).await?;
+pub async fn fetch_and_store_price_feeds_metadata(
+    state: &State,
+    rpc_client: &RpcClient,
+) -> Result<Vec<PriceFeedMetadata>> {
+    let price_feeds_metadata = get_price_feeds_metadata(&state, &rpc_client).await?;
     store_price_feeds_metadata(&state, &price_feeds_metadata).await?;
     Ok(price_feeds_metadata)
 }
 
-async fn get_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+async fn get_price_feeds_metadata(
+    state: &State,
+    rpc_client: &RpcClient,
+) -> Result<Vec<PriceFeedMetadata>> {
     let mut price_feeds_metadata = Vec::<PriceFeedMetadata>::new();
-    let client = RpcClient::new(state.rpc_http_endpoint.clone());
-    let mapping_address = state
-        .mapping_address
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("Mapping address is not set"))?;
-    let mapping_data = client.get_account_data(mapping_address).await?;
+    let mapping_address = &state.mapping_address;
+    let mapping_data = rpc_client.get_account_data(mapping_address).await?;
     let map_acct = load_mapping_account(&mapping_data)?;
     for prod_pkey in &map_acct.products {
-        let prod_data = client.get_account_data(prod_pkey).await?;
+        let prod_data = rpc_client.get_account_data(prod_pkey).await?;
 
         if *prod_pkey == Pubkey::default() {
             continue;

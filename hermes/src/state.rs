@@ -58,7 +58,7 @@ pub struct State {
     pub rpc_http_endpoint: String,
 
     /// Mapping address
-    pub mapping_address: Option<Pubkey>,
+    pub mapping_address: Pubkey,
 
     /// Price feeds metadata
     pub price_feeds_metadata: RwLock<Vec<PriceFeedMetadata>>,
@@ -70,7 +70,7 @@ impl State {
         cache_size: u64,
         benchmarks_endpoint: Option<Url>,
         rpc_http_endpoint: String,
-        mapping_address: Option<Pubkey>,
+        mapping_address: Pubkey,
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
@@ -112,7 +112,13 @@ pub mod test {
 
     pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
-        let state = State::new(update_tx, cache_size, None, "".to_string(), None);
+        let state = State::new(
+            update_tx,
+            cache_size,
+            None,
+            "".to_string(),
+            Pubkey::default(),
+        );
 
         // Add an initial guardian set with public key 0
         update_guardian_set(

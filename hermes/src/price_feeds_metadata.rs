@@ -11,6 +11,7 @@ use {
         },
     },
     anyhow::Result,
+    solana_client::nonblocking::rpc_client::RpcClient,
 };
 
 pub async fn get_price_feeds_metadata<S>(
@@ -49,7 +50,8 @@ impl PriceFeedMetadataProvider for crate::state::State {
             let feeds = retrieve_price_feeds_metadata(&self).await?;
             if feeds.is_empty() {
                 // If the result is an empty Vec, fetch and store new price feeds
-                fetch_and_store_price_feeds_metadata(&self).await?
+                let rpc_client = RpcClient::new(self.rpc_http_endpoint.clone());
+                fetch_and_store_price_feeds_metadata(&self, &rpc_client).await?
             } else {
                 feeds
             }

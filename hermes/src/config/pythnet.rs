@@ -3,6 +3,8 @@ use {
     solana_sdk::pubkey::Pubkey,
 };
 
+const DEFAULT_PYTHNET_MAPPING_ADDR: &str = "AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J";
+
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Pythnet Options")]
 #[group(id = "Pythnet")]
@@ -19,6 +21,7 @@ pub struct Options {
 
     /// Pyth mapping account address.
     #[arg(long = "mapping-address")]
+    #[arg(default_value = DEFAULT_PYTHNET_MAPPING_ADDR)]
     #[arg(env = "MAPPING_ADDRESS")]
-    pub mapping_addr: Option<Pubkey>,
+    pub mapping_addr: Pubkey,
 }
