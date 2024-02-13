@@ -14,7 +14,7 @@ fn main() {
     // directory as a mini-repo with wormhole and googleapis as remotes, so we can copy out the
     // TREEISH paths we want.
     let protobuf_setup = r#"
-        set -euo pipefail
+        set -e
         git init .
         git clean -df
         git remote add wormhole https://github.com/wormhole-foundation/wormhole.git || true
