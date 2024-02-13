@@ -9,7 +9,6 @@ use clap::{
 
 mod benchmarks;
 mod metrics;
-mod pyth_addresses;
 mod pythnet;
 mod rpc;
 mod wormhole;
@@ -50,10 +49,6 @@ pub struct RunOptions {
     /// Metrics Options
     #[command(flatten)]
     pub metrics: metrics::Options,
-
-    /// Mapping Address Options
-    #[command(flatten)]
-    pub pyth_addresses: pyth_addresses::Options,
 
     /// Update interval for price_feeds_cache in seconds. Default is 600 seconds.
     #[arg(long = "price-feeds-cache-update-interval", default_value_t = 600)]

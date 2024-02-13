@@ -24,12 +24,10 @@ use {
 #[into_params(parameter_in=Query)]
 pub struct PriceFeedsMetadataQueryParams {
     /// Optional query parameter. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive.
-    #[serde(default)]
     #[param(example = "bitcoin")]
     query: Option<String>,
 
     /// Optional query parameter. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive.
-    #[serde(default)]
     #[param(example = "crypto")]
     asset_type: Option<AssetType>,
 }

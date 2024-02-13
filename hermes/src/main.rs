@@ -53,7 +53,7 @@ async fn init() -> Result<()> {
                 1000,
                 opts.benchmarks.endpoint.clone(),
                 opts.pythnet.http_addr.clone(),
-                opts.pyth_addresses.mapping.clone(),
+                opts.pythnet.mapping_addr.clone(),
             );
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.

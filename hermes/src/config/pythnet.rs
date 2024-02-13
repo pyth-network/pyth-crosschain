@@ -1,4 +1,7 @@
-use clap::Args;
+use {
+    clap::Args,
+    solana_sdk::pubkey::Pubkey,
+};
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Pythnet Options")]
@@ -13,4 +16,9 @@ pub struct Options {
     #[arg(long = "pythnet-http-addr")]
     #[arg(env = "PYTHNET_HTTP_ADDR")]
     pub http_addr: String,
+
+    /// Pyth mapping account address.
+    #[arg(long = "mapping-address")]
+    #[arg(env = "MAPPING_ADDRESS")]
+    pub mapping_addr: Option<Pubkey>,
 }
