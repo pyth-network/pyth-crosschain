@@ -17,4 +17,4 @@ codegen-units = 1
 wormhole-core-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", branch = "wen/solana-rewrite"}
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
-anchor-lang = ">= 0.28.0"
+anchor-lang = ">= 0.27.0"
