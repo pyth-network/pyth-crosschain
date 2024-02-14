@@ -61,11 +61,7 @@ impl PriceFeedMetadataProvider for crate::state::State {
         if let Some(asset_type) = &asset_type {
             price_feeds_metadata.retain(|feed| {
                 feed.attributes.get("asset_type").map_or(false, |type_str| {
-                    type_str.to_lowercase()
-                        == serde_json::to_string(&asset_type)
-                            .unwrap()
-                            .trim_matches('"')
-                            .to_string()
+                    type_str.to_lowercase() == asset_type.to_string().to_lowercase()
                 })
             });
         }

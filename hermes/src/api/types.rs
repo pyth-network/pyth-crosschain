@@ -28,7 +28,14 @@ use {
         Deserialize,
         Serialize,
     },
-    std::collections::BTreeMap,
+    std::{
+        collections::BTreeMap,
+        fmt::{
+            Display,
+            Formatter,
+            Result as FmtResult,
+        },
+    },
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
@@ -334,4 +341,21 @@ pub enum AssetType {
     Equity,
     Metals,
     Rates,
+}
+
+impl Display for AssetType {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(
+            f,
+            "{}",
+            match self {
+                // Match each variant to its string representation
+                AssetType::Crypto => "Crypto",
+                AssetType::FX => "FX",
+                AssetType::Equity => "Equity",
+                AssetType::Metals => "Metals",
+                AssetType::Rates => "Rates",
+            }
+        )
+    }
 }

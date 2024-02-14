@@ -411,6 +411,7 @@ async fn get_price_feeds_metadata(
                         }
                     };
 
+                    // Ref A
                     let attributes = prod_acct
                         .iter()
                         .filter(|(key, _)| !key.is_empty())
