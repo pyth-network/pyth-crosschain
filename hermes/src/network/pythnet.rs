@@ -336,15 +336,21 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                tokio::time::sleep(Duration::from_secs(price_feeds_update_interval)).await;
-                if crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                    break;
-                }
                 if let Err(e) =
                     fetch_and_store_price_feeds_metadata(price_feeds_state.as_ref(), &rpc_client)
                         .await
                 {
                     tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
+                }
+                // This loop with a sleep interval of 1 second allows the task to check for an exit signal at a
+                // fine-grained interval. Instead of sleeping directly for the entire `price_feeds_update_interval`,
+                // which could delay the response to an exit signal, this approach ensures the task can exit promptly
+                // if `crate::SHOULD_EXIT` is set, enhancing the responsiveness of the service to shutdown requests.
+                for _ in 0..price_feeds_update_interval {
+                    if crate::SHOULD_EXIT.load(Ordering::Acquire) {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
         })
@@ -375,38 +381,62 @@ async fn get_price_feeds_metadata(
     let mut price_feeds_metadata = Vec::<PriceFeedMetadata>::new();
     let mapping_address = &state.mapping_address;
     let mapping_data = rpc_client.get_account_data(mapping_address).await?;
-    let map_acct = load_mapping_account(&mapping_data)?;
-    for prod_pkey in &map_acct.products {
-        let prod_data = rpc_client.get_account_data(prod_pkey).await?;
+    let mapping_acct = load_mapping_account(&mapping_data)?;
 
-        if *prod_pkey == Pubkey::default() {
-            continue;
-        }
-        let prod_acct = load_product_account(&prod_data)?;
-
-        let attributes = prod_acct
+    // Split product keys into chunks of 200 to avoid too many open files error (error trying to connect: tcp open error: Too many open files (os error 24))
+    for product_keys_chunk in mapping_acct
+        .products
+        .iter()
+        .filter(|&prod_pkey| *prod_pkey != Pubkey::default())
+        .collect::<Vec<_>>()
+        .chunks(200)
+    {
+        // Prepare a list of futures for fetching product account data for each chunk
+        let fetch_product_data_futures = product_keys_chunk
             .iter()
-            .filter(|(key, _)| !key.is_empty())
-            // Convert (&str, &str) to (String, String)
-            .map(|(key, val)| (key.to_string(), val.to_string()))
-            .collect::<BTreeMap<String, String>>();
+            .map(|prod_pkey| rpc_client.get_account_data(prod_pkey))
+            .collect::<Vec<_>>();
 
-        if prod_acct.px_acc != Pubkey::default() {
-            let px_pkey = prod_acct.px_acc;
+        // Await all futures concurrently within the chunk
+        let products_data_results = futures::future::join_all(fetch_product_data_futures).await;
 
-            // Convert px_pkey from base58 to hex
-            let px_pkey_bytes = bs58::decode(&px_pkey.to_string()).into_vec()?;
-            let px_pkey_array: [u8; 32] = px_pkey_bytes
-                .try_into()
-                .expect("Invalid length for PriceIdentifier");
+        for prod_data_result in products_data_results {
+            match prod_data_result {
+                Ok(prod_data) => {
+                    let prod_acct = match load_product_account(&prod_data) {
+                        Ok(prod_acct) => prod_acct,
+                        Err(e) => {
+                            println!("Error loading product account: {}", e);
+                            continue;
+                        }
+                    };
 
-            // Create PriceFeedMetadata
-            let price_feed_metadata = PriceFeedMetadata {
-                id: PriceIdentifier::new(px_pkey_array),
-                attributes,
-            };
+                    let attributes = prod_acct
+                        .iter()
+                        .filter(|(key, _)| !key.is_empty())
+                        .map(|(key, val)| (key.to_string(), val.to_string()))
+                        .collect::<BTreeMap<String, String>>();
 
-            price_feeds_metadata.push(price_feed_metadata);
+                    if prod_acct.px_acc != Pubkey::default() {
+                        let px_pkey = prod_acct.px_acc;
+                        let px_pkey_bytes = bs58::decode(&px_pkey.to_string()).into_vec()?;
+                        let px_pkey_array: [u8; 32] = px_pkey_bytes
+                            .try_into()
+                            .expect("Invalid length for PriceIdentifier");
+
+                        let price_feed_metadata = PriceFeedMetadata {
+                            id: PriceIdentifier::new(px_pkey_array),
+                            attributes,
+                        };
+
+                        price_feeds_metadata.push(price_feed_metadata);
+                    }
+                }
+                Err(e) => {
+                    println!("Error loading product account: {}", e);
+                    continue;
+                }
+            }
         }
     }
     Ok(price_feeds_metadata)

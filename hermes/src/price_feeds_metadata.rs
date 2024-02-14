@@ -4,15 +4,14 @@ use {
             AssetType,
             PriceFeedMetadata,
         },
-        network::pythnet::fetch_and_store_price_feeds_metadata,
         state::{
             cache::AggregateCache,
             retrieve_price_feeds_metadata,
         },
     },
     anyhow::Result,
-    solana_client::nonblocking::rpc_client::RpcClient,
 };
+
 
 pub async fn get_price_feeds_metadata<S>(
     state: &S,
@@ -46,16 +45,7 @@ impl PriceFeedMetadataProvider for crate::state::State {
         query: Option<String>,
         asset_type: Option<AssetType>,
     ) -> Result<Vec<PriceFeedMetadata>> {
-        let mut price_feeds_metadata = {
-            let feeds = retrieve_price_feeds_metadata(&self).await?;
-            if feeds.is_empty() {
-                // If the result is an empty Vec, fetch and store new price feeds
-                let rpc_client = RpcClient::new(self.rpc_http_endpoint.clone());
-                fetch_and_store_price_feeds_metadata(&self, &rpc_client).await?
-            } else {
-                feeds
-            }
-        };
+        let mut price_feeds_metadata = retrieve_price_feeds_metadata(&self).await?;
 
 
         // Filter by query if provided
