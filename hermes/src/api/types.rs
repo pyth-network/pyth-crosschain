@@ -196,9 +196,9 @@ impl RpcPriceIdentifier {
     }
 }
 
-impl Into<PriceIdentifier> for RpcPriceIdentifier {
-    fn into(self) -> PriceIdentifier {
-        PriceIdentifier::new(self.0)
+impl From<RpcPriceIdentifier> for PriceIdentifier {
+    fn from(id: RpcPriceIdentifier) -> Self {
+        PriceIdentifier::new(id.0)
     }
 }
 
