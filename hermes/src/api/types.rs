@@ -190,13 +190,21 @@ impl RpcPriceIdentifier {
     pub fn new(bytes: [u8; 32]) -> RpcPriceIdentifier {
         RpcPriceIdentifier(bytes)
     }
+}
 
-    pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
+impl From<RpcPriceIdentifier> for PriceIdentifier {
+    fn from(id: RpcPriceIdentifier) -> Self {
+        PriceIdentifier::new(id.0)
+    }
+}
+
+impl From<PriceIdentifier> for RpcPriceIdentifier {
+    fn from(id: PriceIdentifier) -> Self {
         RpcPriceIdentifier(id.to_bytes())
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize, ToSchema)]
 pub enum EncodingType {
     #[default]
     #[serde(rename = "hex")]
@@ -222,7 +230,7 @@ pub struct BinaryPriceUpdate {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
-    pub id:        PriceIdentifier,
+    pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
     pub ema_price: RpcPrice,
     pub metadata:  RpcPriceFeedMetadataV2,
@@ -233,7 +241,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        price_feed.id,
+            id:        RpcPriceIdentifier::from(price_feed.id),
             price:     RpcPrice {
                 price:        price_feed.get_price_unchecked().price,
                 conf:         price_feed.get_price_unchecked().conf,
@@ -271,7 +279,7 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
                 .map(|parsed_price_update| {
                     Ok(PriceFeedUpdate {
                         price_feed:        PriceFeed::new(
-                            parsed_price_update.id,
+                            parsed_price_update.id.into(),
                             Price {
                                 price:        parsed_price_update.price.price,
                                 conf:         parsed_price_update.price.conf,
