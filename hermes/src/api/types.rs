@@ -190,15 +190,17 @@ impl RpcPriceIdentifier {
     pub fn new(bytes: [u8; 32]) -> RpcPriceIdentifier {
         RpcPriceIdentifier(bytes)
     }
-
-    pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
-        RpcPriceIdentifier(id.to_bytes())
-    }
 }
 
 impl From<RpcPriceIdentifier> for PriceIdentifier {
     fn from(id: RpcPriceIdentifier) -> Self {
         PriceIdentifier::new(id.0)
+    }
+}
+
+impl From<PriceIdentifier> for RpcPriceIdentifier {
+    fn from(id: PriceIdentifier) -> Self {
+        RpcPriceIdentifier(id.to_bytes())
     }
 }
 
@@ -239,7 +241,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        RpcPriceIdentifier::from(&price_feed.id),
+            id:        RpcPriceIdentifier::from(price_feed.id),
             price:     RpcPrice {
                 price:        price_feed.get_price_unchecked().price,
                 conf:         price_feed.get_price_unchecked().conf,

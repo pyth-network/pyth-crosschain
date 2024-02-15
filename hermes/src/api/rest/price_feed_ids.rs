@@ -26,7 +26,7 @@ pub async fn price_feed_ids(
 ) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError> {
     let price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state)
         .await
-        .iter()
+        .into_iter()
         .map(RpcPriceIdentifier::from)
         .collect();
 
