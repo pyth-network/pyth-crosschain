@@ -196,7 +196,13 @@ impl RpcPriceIdentifier {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
+impl Into<PriceIdentifier> for RpcPriceIdentifier {
+    fn into(self) -> PriceIdentifier {
+        PriceIdentifier::new(self.0)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize, ToSchema)]
 pub enum EncodingType {
     #[default]
     #[serde(rename = "hex")]
@@ -222,7 +228,7 @@ pub struct BinaryPriceUpdate {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
-    pub id:        PriceIdentifier,
+    pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
     pub ema_price: RpcPrice,
     pub metadata:  RpcPriceFeedMetadataV2,
@@ -233,7 +239,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        price_feed.id,
+            id:        RpcPriceIdentifier::from(&price_feed.id),
             price:     RpcPrice {
                 price:        price_feed.get_price_unchecked().price,
                 conf:         price_feed.get_price_unchecked().conf,
@@ -271,7 +277,7 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
                 .map(|parsed_price_update| {
                     Ok(PriceFeedUpdate {
                         price_feed:        PriceFeed::new(
-                            parsed_price_update.id,
+                            parsed_price_update.id.into(),
                             Price {
                                 price:        parsed_price_update.price.price,
                                 conf:         parsed_price_update.price.conf,

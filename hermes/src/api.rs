@@ -134,6 +134,11 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
                 types::RpcPriceFeed,
                 types::RpcPriceFeedMetadata,
                 types::RpcPriceIdentifier,
+                types::EncodingType,
+                types::PriceUpdate,
+                types::BinaryPriceUpdate,
+                types::ParsedPriceUpdate,
+                types::RpcPriceFeedMetadataV2,
             )
         ),
         tags(
