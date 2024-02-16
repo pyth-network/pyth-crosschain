@@ -53,7 +53,7 @@ impl From<PriceIdInput> for PriceIdentifier {
 
 type Base64String = String;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
     #[schema(value_type = Option<u64>, example=85480034)]
     pub slot:                       Option<Slot>,
@@ -65,7 +65,7 @@ pub struct RpcPriceFeedMetadata {
     pub prev_publish_time:          Option<UnixTimestamp>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadataV2 {
     #[schema(value_type = Option<u64>, example=85480034)]
     pub slot:                 Option<Slot>,
@@ -75,7 +75,7 @@ pub struct RpcPriceFeedMetadataV2 {
     pub prev_publish_time:    Option<UnixTimestamp>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
@@ -143,8 +143,8 @@ impl RpcPriceFeed {
     Eq,
     BorshSerialize,
     BorshDeserialize,
-    serde::Serialize,
-    serde::Deserialize,
+    Serialize,
+    Deserialize,
     ToSchema,
 )]
 pub struct RpcPrice {
@@ -179,8 +179,8 @@ pub struct RpcPrice {
     Hash,
     BorshSerialize,
     BorshDeserialize,
-    serde::Serialize,
-    serde::Deserialize,
+    Serialize,
+    Deserialize,
     ToSchema,
 )]
 #[repr(C)]
@@ -205,7 +205,7 @@ impl From<PriceIdentifier> for RpcPriceIdentifier {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize, ToSchema)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, ToSchema)]
 pub enum EncodingType {
     #[default]
     #[serde(rename = "hex")]
@@ -223,13 +223,13 @@ impl EncodingType {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct BinaryPriceUpdate {
     pub encoding: EncodingType,
     pub data:     Vec<String>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
@@ -264,7 +264,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceUpdate {
     pub binary: BinaryPriceUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
