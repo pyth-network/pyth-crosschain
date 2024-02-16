@@ -66,7 +66,7 @@ fn default_true() -> bool {
     get,
     path = "/v2/updates/price/latest",
     responses(
-        (status = 200, description = "Price updates retrieved successfully", body = Vec<PriceUpdate>),
+        (status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
         (status = 404, description = "Price ids not found", body = String)
     ),
     params(
@@ -76,7 +76,7 @@ fn default_true() -> bool {
 pub async fn latest_price_updates(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<LatestPriceUpdatesQueryParams>,
-) -> Result<Json<Vec<PriceUpdate>>, RestError> {
+) -> Result<Json<PriceUpdate>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
 
     verify_price_ids_exist(&state, &price_ids).await?;
@@ -126,5 +126,5 @@ pub async fn latest_price_updates(
     };
 
 
-    Ok(Json(vec![compressed_price_update]))
+    Ok(Json(compressed_price_update))
 }

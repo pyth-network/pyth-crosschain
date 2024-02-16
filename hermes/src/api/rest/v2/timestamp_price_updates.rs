@@ -79,7 +79,7 @@ fn default_true() -> bool {
     get,
     path = "/v2/updates/price/{publish_time}",
     responses(
-        (status = 200, description = "Price updates retrieved successfully", body = Vec<PriceUpdate>),
+        (status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
         (status = 404, description = "Price ids not found", body = String)
     ),
     params(
@@ -91,7 +91,7 @@ pub async fn timestamp_price_updates(
     State(state): State<crate::api::ApiState>,
     Path(path_params): Path<TimestampPriceUpdatesPathParams>,
     QsQuery(query_params): QsQuery<TimestampPriceUpdatesQueryParams>,
-) -> Result<Json<Vec<PriceUpdate>>, RestError> {
+) -> Result<Json<PriceUpdate>, RestError> {
     let price_ids: Vec<PriceIdentifier> =
         query_params.ids.into_iter().map(|id| id.into()).collect();
 
@@ -139,5 +139,5 @@ pub async fn timestamp_price_updates(
     };
 
 
-    Ok(Json(vec![compressed_price_update]))
+    Ok(Json(compressed_price_update))
 }
