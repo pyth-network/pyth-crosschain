@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "programs/*",
-    "cli/"
+    "cli/",
+    "program_simulator/",
+    "pyth_receiver_sdk/"
 ]
 
 [profile.release]

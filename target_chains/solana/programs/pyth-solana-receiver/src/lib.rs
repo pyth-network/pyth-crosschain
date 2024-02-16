@@ -1,6 +1,10 @@
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
+    pyth_receiver_sdk::{
+        PriceUpdateV1,
+        VerificationLevel,
+    },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -20,15 +24,9 @@ use {
         secp256k1_recover::secp256k1_recover,
         system_instruction,
     },
-    state::{
-        config::{
-            Config,
-            DataSource,
-        },
-        price_update::{
-            PriceUpdateV1,
-            VerificationLevel,
-        },
+    state::config::{
+        Config,
+        DataSource,
     },
     wormhole_core_bridge_solana::{
         sdk::{

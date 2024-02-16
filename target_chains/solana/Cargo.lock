@@ -2991,6 +2991,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-receiver-sdk"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "pythnet-sdk",
+ "solana-program",
+]
+
+[[package]]
 name = "pyth-sdk"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3031,6 +3040,7 @@ dependencies = [
  "lazy_static",
  "libsecp256k1 0.7.1",
  "program-simulator",
+ "pyth-receiver-sdk",
  "pyth-sdk",
  "pyth-sdk-solana",
  "pythnet-sdk",
