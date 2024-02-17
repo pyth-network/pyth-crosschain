@@ -383,13 +383,13 @@ async fn get_price_feeds_metadata(
     let mapping_data = rpc_client.get_account_data(mapping_address).await?;
     let mapping_acct = load_mapping_account(&mapping_data)?;
 
-    // Split product keys into chunks of 200 to avoid too many open files error (error trying to connect: tcp open error: Too many open files (os error 24))
+    // Split product keys into chunks of 150 to avoid too many open files error (error trying to connect: tcp open error: Too many open files (os error 24))
     for product_keys_chunk in mapping_acct
         .products
         .iter()
         .filter(|&prod_pkey| *prod_pkey != Pubkey::default())
         .collect::<Vec<_>>()
-        .chunks(200)
+        .chunks(150)
     {
         // Prepare a list of futures for fetching product account data for each chunk
         let fetch_product_data_futures = product_keys_chunk
