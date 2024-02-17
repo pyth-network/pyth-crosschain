@@ -369,12 +369,12 @@ pub async fn fetch_and_store_price_feeds_metadata(
     state: &State,
     rpc_client: &RpcClient,
 ) -> Result<Vec<PriceFeedMetadata>> {
-    let price_feeds_metadata = get_price_feeds_metadata(&state, &rpc_client).await?;
+    let price_feeds_metadata = fetch_price_feeds_metadata(&state, &rpc_client).await?;
     store_price_feeds_metadata(&state, &price_feeds_metadata).await?;
     Ok(price_feeds_metadata)
 }
 
-async fn get_price_feeds_metadata(
+async fn fetch_price_feeds_metadata(
     state: &State,
     rpc_client: &RpcClient,
 ) -> Result<Vec<PriceFeedMetadata>> {
