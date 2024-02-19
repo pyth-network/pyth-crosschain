@@ -3075,6 +3075,7 @@ dependencies = [
  "anchor-lang",
  "pythnet-sdk",
  "solana-program",
+ "thiserror",
 ]
 
 [[package]]
