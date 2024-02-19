@@ -20,12 +20,12 @@ use {
             deserialize_accumulator_update_data,
             DEFAULT_TREASURY_ID,
         },
-        state::{
-            config::DataSource,
-            price_update::{
-                PriceUpdateV1,
-                VerificationLevel,
-            },
+    },
+    pyth_solana_receiver_state::{
+        config::DataSource,
+        price_update::{
+            PriceUpdateV1,
+            VerificationLevel,
         },
     },
     pythnet_sdk::{

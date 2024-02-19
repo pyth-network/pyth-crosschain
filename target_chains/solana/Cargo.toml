@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "programs/*",
-    "cli/"
+    "cli/",
+    "program_simulator/",
+    "pyth_solana_receiver_state/"
 ]
 
 [profile.release]

@@ -21,7 +21,8 @@ pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 solana-program = "1.16.20"
 byteorder = "1.4.3"
 wormhole-core-bridge-solana = {workspace = true}
-wormhole-raw-vaas = {version = "0.0.1-alpha.1", features = ["ruint", "on-chain"], default-features = false }
+wormhole-raw-vaas = {version = "0.1.3", features = ["ruint", "on-chain"], default-features = false }
+pyth-solana-receiver-state = { path = "../../pyth_solana_receiver_state"}
 
 [dev-dependencies]
 pyth-sdk = "0.8.0"

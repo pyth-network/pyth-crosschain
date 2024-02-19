@@ -1,0 +1,14 @@
+[package]
+name = "pyth-solana-receiver-state"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+name = "pyth_solana_receiver_state"
+
+
+[dependencies]
+anchor-lang = ">=0.28.0"
+pythnet-sdk = { path = "../../../pythnet/pythnet_sdk"}
+solana-program = "*"

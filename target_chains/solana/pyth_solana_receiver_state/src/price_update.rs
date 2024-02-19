@@ -32,7 +32,7 @@ impl PriceUpdateV1 {
 #[cfg(test)]
 pub mod tests {
     use {
-        crate::state::price_update::PriceUpdateV1,
+        crate::price_update::PriceUpdateV1,
         anchor_lang::Discriminator,
         solana_program::borsh0_10,
     };

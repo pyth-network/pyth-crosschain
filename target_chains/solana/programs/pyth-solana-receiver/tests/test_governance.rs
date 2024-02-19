@@ -16,10 +16,10 @@ use {
             SetWormholeAddress,
         },
         sdk::get_config_address,
-        state::config::{
-            Config,
-            DataSource,
-        },
+    },
+    pyth_solana_receiver_state::config::{
+        Config,
+        DataSource,
     },
     pythnet_sdk::test_utils::SECONDARY_DATA_SOURCE,
     solana_program::{

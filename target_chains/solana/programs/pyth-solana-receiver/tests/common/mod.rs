@@ -11,11 +11,11 @@ use {
             DEFAULT_TREASURY_ID,
             SECONDARY_TREASURY_ID,
         },
-        state::config::{
-            Config,
-            DataSource,
-        },
         ID,
+    },
+    pyth_solana_receiver_state::config::{
+        Config,
+        DataSource,
     },
     pythnet_sdk::test_utils::{
         dummy_guardians,
