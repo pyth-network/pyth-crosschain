@@ -1,5 +1,7 @@
-import type { paths } from "./types";
-import createClient, { ClientOptions } from "openapi-fetch";
+import type { paths, components } from "./types";
+import createClient, {
+  ClientOptions as FetchClientOptions,
+} from "openapi-fetch";
 import {
   Address,
   encodeAbiParameters,
@@ -10,7 +12,7 @@ import {
   keccak256,
 } from "viem";
 import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
-
+import WebSocket from "isomorphic-ws";
 /**
  * ERC20 token with contract address and amount
  */
@@ -118,11 +120,122 @@ function checkTokenQty(token: { contract: string; amount: string }): TokenQty {
   };
 }
 
-export class Client {
-  private clientOptions?: ClientOptions;
+type ClientOptions = FetchClientOptions & { baseUrl: string };
 
-  constructor(clientOptions?: ClientOptions) {
+export class Client {
+  public clientOptions: ClientOptions;
+  public websocket?: WebSocket;
+  public idCounter = 0;
+  public callbackRouter: Record<
+    string,
+    (response: components["schemas"]["ServerResultMessage"]) => void
+  > = {};
+  private websocketOpportunityCallback?: (
+    opportunity: Opportunity
+  ) => Promise<void>;
+
+  constructor(clientOptions: ClientOptions) {
     this.clientOptions = clientOptions;
+  }
+
+  private connectWebsocket() {
+    this.websocket = new WebSocket(
+      this.clientOptions.baseUrl.replace("http", "ws") + "/v1/ws"
+    );
+    this.websocket.on("message", async (data) => {
+      const message:
+        | components["schemas"]["ServerResultResponse"]
+        | components["schemas"]["ServerUpdateResponse"] = JSON.parse(
+        data.toString()
+      );
+      if ("id" in message && message.id) {
+        const callback = this.callbackRouter[message.id];
+        if (callback !== undefined) {
+          callback(message);
+          delete this.callbackRouter[message.id];
+        }
+      } else if ("type" in message && message.type === "new_opportunity") {
+        if (this.websocketOpportunityCallback !== undefined) {
+          await this.websocketOpportunityCallback(
+            this.convertOpportunity(message.opportunity)
+          );
+        }
+      }
+    });
+  }
+
+  private convertOpportunity(
+    opportunity: components["schemas"]["OpportunityParamsWithMetadata"]
+  ) {
+    return {
+      chainId: opportunity.chain_id,
+      opportunityId: opportunity.opportunity_id,
+      permissionKey: checkHex(opportunity.permission_key),
+      contract: checkAddress(opportunity.contract),
+      calldata: checkHex(opportunity.calldata),
+      value: BigInt(opportunity.value),
+      repayTokens: opportunity.repay_tokens.map(checkTokenQty),
+      receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
+    };
+  }
+
+  public setOpportunityHandler(
+    callback: (opportunity: Opportunity) => Promise<void>
+  ) {
+    this.websocketOpportunityCallback = callback;
+  }
+
+  async subscribeChains(chains: string[]) {
+    if (this.websocketOpportunityCallback === undefined) {
+      throw new Error("Opportunity handler not set");
+    }
+    return this.sendWebsocketMessage({
+      method: "subscribe",
+      params: {
+        chain_ids: chains,
+      },
+    });
+  }
+
+  async unsubscribeChains(chains: string[]) {
+    return this.sendWebsocketMessage({
+      method: "unsubscribe",
+      params: {
+        chain_ids: chains,
+      },
+    });
+  }
+
+  async sendWebsocketMessage(
+    msg: components["schemas"]["ClientMessage"]
+  ): Promise<void> {
+    const msg_with_id: components["schemas"]["ClientRequest"] = {
+      ...msg,
+      id: (this.idCounter++).toString(),
+    };
+    return new Promise((resolve, reject) => {
+      this.callbackRouter[msg_with_id.id] = (response) => {
+        if (response.status === "success") {
+          resolve();
+        } else {
+          reject(response.result);
+        }
+      };
+      if (this.websocket === undefined) {
+        this.connectWebsocket();
+      }
+      if (this.websocket !== undefined) {
+        if (this.websocket.readyState === WebSocket.CONNECTING) {
+          this.websocket.on("open", () => {
+            this.websocket?.send(JSON.stringify(msg_with_id));
+          });
+        } else if (this.websocket.readyState === WebSocket.OPEN) {
+          this.websocket.send(JSON.stringify(msg_with_id));
+        } else {
+          reject("Websocket connection closing or already closed");
+        }
+      }
+    });
   }
 
   /**
@@ -144,16 +257,7 @@ export class Client {
         );
         return [];
       }
-      return {
-        chainId: opportunity.chain_id,
-        opportunityId: opportunity.opportunity_id,
-        permissionKey: checkHex(opportunity.permission_key),
-        contract: checkAddress(opportunity.contract),
-        calldata: checkHex(opportunity.calldata),
-        value: BigInt(opportunity.value),
-        repayTokens: opportunity.repay_tokens.map(checkTokenQty),
-        receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
-      };
+      return this.convertOpportunity(opportunity);
     });
   }
 

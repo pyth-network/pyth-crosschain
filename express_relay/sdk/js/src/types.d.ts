@@ -72,6 +72,24 @@ export interface components {
     BidResult: {
       status: string;
     };
+    ClientMessage:
+      | {
+          /** @enum {string} */
+          method: "subscribe";
+          params: {
+            chain_ids: components["schemas"]["ChainId"][];
+          };
+        }
+      | {
+          /** @enum {string} */
+          method: "unsubscribe";
+          params: {
+            chain_ids: components["schemas"]["ChainId"][];
+          };
+        };
+    ClientRequest: components["schemas"]["ClientMessage"] & {
+      id: string;
+    };
     ErrorBodyResponse: {
       error: string;
     };
@@ -139,12 +157,36 @@ export interface components {
       value: string;
     };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithId: components["schemas"]["OpportunityParams"] & {
+    OpportunityParamsWithMetadata: components["schemas"]["OpportunityParams"] & {
+      creation_time: components["schemas"]["UnixTimestamp"];
       /**
        * @description The opportunity unique id
        * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
+    };
+    ServerResultMessage:
+      | {
+          /** @enum {string} */
+          status: "success";
+        }
+      | {
+          result: string;
+          /** @enum {string} */
+          status: "error";
+        };
+    /**
+     * @description This enum is used to send the result for a specific client request with the same id
+     * id is only None when the client message is invalid
+     */
+    ServerResultResponse: components["schemas"]["ServerResultMessage"] & {
+      id?: string | null;
+    };
+    /** @description This enum is used to send an update to the client for any subscriptions made */
+    ServerUpdateResponse: {
+      opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
+      /** @enum {string} */
+      type: "new_opportunity";
     };
     TokenQty: {
       /**
@@ -176,9 +218,10 @@ export interface components {
       };
     };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithId: {
+    OpportunityParamsWithMetadata: {
       content: {
         "application/json": components["schemas"]["OpportunityParams"] & {
+          creation_time: components["schemas"]["UnixTimestamp"];
           /**
            * @description The opportunity unique id
            * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
