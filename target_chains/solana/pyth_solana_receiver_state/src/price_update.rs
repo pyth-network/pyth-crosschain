@@ -7,10 +7,7 @@ use {
         borsh::BorshSchema,
         *,
     },
-    pythnet_sdk::messages::{
-        FeedId,
-        PriceFeedMessage,
-    },
+    pythnet_sdk::messages::PriceFeedMessage,
     solana_program::pubkey::Pubkey,
 };
 
@@ -60,9 +57,12 @@ pub struct Price {
 }
 
 impl PriceUpdateV1 {
-    pub fn get_price_unchecked(self, feed_id: FeedId) -> std::result::Result<Price, GetPriceError> {
+    pub fn get_price_unchecked(
+        self,
+        feed_id: &Pubkey,
+    ) -> std::result::Result<Price, GetPriceError> {
         check!(
-            self.price_message.feed_id == feed_id,
+            self.price_message.feed_id == feed_id.to_bytes(),
             GetPriceError::WrongFeedId
         );
         Ok(Price {
@@ -77,7 +77,7 @@ impl PriceUpdateV1 {
         self,
         clock: &Clock,
         maximum_age: u64,
-        feed_id: FeedId,
+        feed_id: &Pubkey,
         verification_level: VerificationLevel,
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
@@ -99,7 +99,7 @@ impl PriceUpdateV1 {
         self,
         clock: &Clock,
         maximum_age: u64,
-        feed_id: FeedId,
+        feed_id: &Pubkey,
     ) -> std::result::Result<Price, GetPriceError> {
         self.get_price_no_older_than_with_custom_verification_level(
             clock,
