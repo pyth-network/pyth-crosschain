@@ -1,12 +1,12 @@
-use thiserror::Error;
+use anchor_lang::error_code;
 
-#[derive(Error, Debug)]
+#[error_code]
 pub enum GetPriceError {
-    #[error("Price Too Old")]
+    #[msg("Price Too Old")]
     PriceTooOld,
-    #[error("Wrong Feed Id")]
+    #[msg("Wrong Feed Id")]
     WrongFeedId,
-    #[error("Wrong Verification Level")]
+    #[msg("Wrong Verification Level")]
     WrongVerificationLevel,
 }
 
