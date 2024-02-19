@@ -50,7 +50,7 @@ client.setOpportunityHandler(async (opportunity: Opportunity) => {
   );
   await client.submitOpportunityBid(opportunityBid);
 });
-client.subscribeChains([chain_id]); // chain id you want to subscribe to
+await client.subscribeChains([chain_id]); // chain id you want to subscribe to
 ```
 
 ### Example

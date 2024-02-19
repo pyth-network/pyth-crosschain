@@ -160,6 +160,9 @@ export class Client {
             this.convertOpportunity(message.opportunity)
           );
         }
+      } else if ("error" in message) {
+        // Can not route error messages to the callback router as they don't have an id
+        console.error(message.error);
       }
     });
   }
@@ -185,6 +188,13 @@ export class Client {
     this.websocketOpportunityCallback = callback;
   }
 
+  /**
+   * Subscribes to the specified chains
+   *
+   * The opportunity handler will be called for opportunities on the specified chains
+   * If the opportunity handler is not set, an error will be thrown
+   * @param chains
+   */
   async subscribeChains(chains: string[]) {
     if (this.websocketOpportunityCallback === undefined) {
       throw new Error("Opportunity handler not set");
@@ -197,6 +207,12 @@ export class Client {
     });
   }
 
+  /**
+   * Unsubscribes from the specified chains
+   *
+   * The opportunity handler will no longer be called for opportunities on the specified chains
+   * @param chains
+   */
   async unsubscribeChains(chains: string[]) {
     return this.sendWebsocketMessage({
       method: "unsubscribe",
