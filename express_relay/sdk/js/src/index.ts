@@ -232,6 +232,7 @@ export class Client {
         { name: "calldata", type: "bytes" },
         { name: "value", type: "uint256" },
         { name: "bid", type: "uint256" },
+        { name: "validUntil", type: "uint256" },
       ],
       [
         opportunity.repayTokens.map(convertTokenQty),
@@ -240,12 +241,11 @@ export class Client {
         opportunity.calldata,
         opportunity.value,
         bidInfo.amount,
+        bidInfo.validUntil,
       ]
     );
 
-    const msgHash = keccak256(
-      encodePacked(["bytes", "uint256"], [payload, bidInfo.validUntil])
-    );
+    const msgHash = keccak256(payload);
 
     const hash = signatureToHex(await sign({ hash: msgHash, privateKey }));
     return {
