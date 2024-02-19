@@ -9,7 +9,6 @@ name = "pyth_solana_receiver_state"
 
 
 [dependencies]
-thiserror = "1.0.40"
 anchor-lang = ">=0.28.0"
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk"}
 solana-program = "*"

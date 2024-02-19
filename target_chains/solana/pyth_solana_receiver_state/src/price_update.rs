@@ -58,7 +58,7 @@ pub struct Price {
 
 impl PriceUpdateV1 {
     pub fn get_price_unchecked(
-        self,
+        &self,
         feed_id: &Pubkey,
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
@@ -74,7 +74,7 @@ impl PriceUpdateV1 {
     }
 
     pub fn get_price_no_older_than_with_custom_verification_level(
-        self,
+        &self,
         clock: &Clock,
         maximum_age: u64,
         feed_id: &Pubkey,
@@ -96,7 +96,7 @@ impl PriceUpdateV1 {
     }
 
     pub fn get_price_no_older_than(
-        self,
+        &self,
         clock: &Clock,
         maximum_age: u64,
         feed_id: &Pubkey,
