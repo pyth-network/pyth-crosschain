@@ -4,13 +4,24 @@ use {
             AssetType,
             PriceFeedMetadata,
         },
-        state::{
-            retrieve_price_feeds_metadata,
-            State,
-        },
+        state::State,
     },
     anyhow::Result,
 };
+
+pub async fn retrieve_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
+    let price_feeds_metadata = state.price_feeds_metadata.read().await;
+    Ok(price_feeds_metadata.clone())
+}
+
+pub async fn store_price_feeds_metadata(
+    state: &State,
+    price_feeds_metadata: &[PriceFeedMetadata],
+) -> Result<()> {
+    let mut price_feeds_metadata_write_guard = state.price_feeds_metadata.write().await;
+    *price_feeds_metadata_write_guard = price_feeds_metadata.to_vec();
+    Ok(())
+}
 
 
 pub async fn get_price_feeds_metadata(

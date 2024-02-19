@@ -16,10 +16,8 @@ use {
             GuardianSet,
             GuardianSetData,
         },
-        state::{
-            store_price_feeds_metadata,
-            State,
-        },
+        price_feeds_metadata::store_price_feeds_metadata,
+        state::State,
     },
     anyhow::{
         anyhow,
