@@ -133,6 +133,17 @@ npm run start -- sui \
   [--polling-frequency 5] \
   [--num-gas-objects 30]
 
+# For Near
+npm run start -- near \
+  --node-url https://rpc.testnet.near.org \
+  --network testnet \
+  --account-id payer.testnet \ 
+  --pyth-contract-address pyth-oracle.testnet \
+  --price-service-endpoint "https://hermes-beta.pyth.network" \
+  --price-config-file ./price-config.beta.sample.yaml \
+  [--pushing-frequency 10] \
+  [--polling-frequency 5]
+
 
 # Or, run the price pusher docker image instead of building from the source
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
