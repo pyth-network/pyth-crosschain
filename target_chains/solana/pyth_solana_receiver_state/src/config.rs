@@ -28,7 +28,7 @@ impl Config {
 pub mod tests {
     use {
         super::DataSource,
-        crate::state::config::Config,
+        crate::config::Config,
         anchor_lang::{
             AnchorSerialize,
             Discriminator,

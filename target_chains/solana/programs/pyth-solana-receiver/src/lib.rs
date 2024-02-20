@@ -1,6 +1,16 @@
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
+    pyth_solana_receiver_state::{
+        config::{
+            Config,
+            DataSource,
+        },
+        price_update::{
+            PriceUpdateV1,
+            VerificationLevel,
+        },
+    },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -20,16 +30,6 @@ use {
         secp256k1_recover::secp256k1_recover,
         system_instruction,
     },
-    state::{
-        config::{
-            Config,
-            DataSource,
-        },
-        price_update::{
-            PriceUpdateV1,
-            VerificationLevel,
-        },
-    },
     wormhole_core_bridge_solana::{
         sdk::{
             legacy::AccountVariant,
@@ -45,9 +45,8 @@ use {
 
 pub mod error;
 pub mod sdk;
-pub mod state;
 
-declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
+declare_id!(pyth_solana_receiver_state::ID);
 
 #[program]
 pub mod pyth_solana_receiver {

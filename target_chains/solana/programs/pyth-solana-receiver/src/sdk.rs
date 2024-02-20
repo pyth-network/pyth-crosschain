@@ -2,10 +2,6 @@ use {
     crate::{
         accounts,
         instruction,
-        state::config::{
-            Config,
-            DataSource,
-        },
         PostUpdateAtomicParams,
         PostUpdateParams,
         CONFIG_SEED,
@@ -16,6 +12,10 @@ use {
         prelude::*,
         system_program,
         InstructionData,
+    },
+    pyth_solana_receiver_state::config::{
+        Config,
+        DataSource,
     },
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,

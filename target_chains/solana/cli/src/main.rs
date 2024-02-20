@@ -21,10 +21,10 @@ use {
             get_treasury_address,
             DEFAULT_TREASURY_ID,
         },
-        state::config::DataSource,
         PostUpdateAtomicParams,
         PostUpdateParams,
     },
+    pyth_solana_receiver_state::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
     solana_client::{
@@ -184,7 +184,7 @@ fn main() -> Result<()> {
                 program_id: pyth_solana_receiver::ID,
                 accounts:   initialize_pyth_receiver_accounts,
                 data:       pyth_solana_receiver::instruction::Initialize {
-                    initial_config: pyth_solana_receiver::state::config::Config {
+                    initial_config: pyth_solana_receiver_state::config::Config {
                         governance_authority: payer.pubkey(),
                         target_governance_authority: None,
                         wormhole,

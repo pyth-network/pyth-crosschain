@@ -18,10 +18,10 @@ use {
             DEFAULT_TREASURY_ID,
             SECONDARY_TREASURY_ID,
         },
-        state::price_update::{
-            PriceUpdateV1,
-            VerificationLevel,
-        },
+    },
+    pyth_solana_receiver_state::price_update::{
+        PriceUpdateV1,
+        VerificationLevel,
     },
     pythnet_sdk::{
         messages::Message,

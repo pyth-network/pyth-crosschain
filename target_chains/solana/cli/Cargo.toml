@@ -19,3 +19,4 @@ serde_wormhole = { workspace = true }
 hex = "0.4.3"
 borsh = "0.9.3" # Old version of borsh needed for wormhole-solana
 wormhole-core-bridge-solana = {workspace = true}
+pyth-solana-receiver-state = {path = "../pyth_solana_receiver_state"}

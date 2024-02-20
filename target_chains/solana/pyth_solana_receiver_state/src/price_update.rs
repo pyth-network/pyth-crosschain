@@ -11,7 +11,9 @@ use {
 /**
  * This enum represents how many guardian signatures were checked for a Pythnet price update
  * If full, guardian quorum has been attained
- * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked */
+ * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked
+ */
+
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
 pub enum VerificationLevel {
     Partial { num_signatures: u8 },
@@ -32,7 +34,7 @@ impl PriceUpdateV1 {
 #[cfg(test)]
 pub mod tests {
     use {
-        crate::state::price_update::PriceUpdateV1,
+        crate::price_update::PriceUpdateV1,
         anchor_lang::Discriminator,
         solana_program::borsh0_10,
     };
