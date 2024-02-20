@@ -16,7 +16,10 @@ use {
             GuardianSet,
             GuardianSetData,
         },
-        price_feeds_metadata::store_price_feeds_metadata,
+        price_feeds_metadata::{
+            store_price_feeds_metadata,
+            DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
+        },
         state::State,
     },
     anyhow::{
@@ -331,7 +334,6 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
     let task_price_feeds_metadata_updater = {
         let price_feeds_state = state.clone();
-        let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
                 if let Err(e) = fetch_and_store_price_feeds_metadata(
@@ -347,7 +349,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
                 // fine-grained interval. Instead of sleeping directly for the entire `price_feeds_update_interval`,
                 // which could delay the response to an exit signal, this approach ensures the task can exit promptly
                 // if `crate::SHOULD_EXIT` is set, enhancing the responsiveness of the service to shutdown requests.
-                for _ in 0..price_feeds_update_interval {
+                for _ in 0..DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL {
                     if crate::SHOULD_EXIT.load(Ordering::Acquire) {
                         break;
                     }
