@@ -46,7 +46,7 @@ use {
 pub mod error;
 pub mod sdk;
 
-declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
+declare_id!(pyth_solana_receiver_state::ID);
 
 #[program]
 pub mod pyth_solana_receiver {
