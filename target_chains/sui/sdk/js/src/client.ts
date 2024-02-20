@@ -5,7 +5,11 @@ import {
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
-import { HexString } from "@pythnetwork/price-service-client";
+import {
+  HexString,
+  isAccumulatorUpdateData,
+  parseAccumulatorUpdateData,
+} from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
@@ -115,13 +119,13 @@ export class SuiPythClient {
     const packageId = await this.getPythPackageId();
 
     let priceUpdatesHotPotato;
-    if (updates.every((update) => this.isAccumulatorMsg(update))) {
+    if (updates.every((update) => isAccumulatorUpdateData(update))) {
       if (updates.length > 1) {
         throw new Error(
           "SDK does not support sending multiple accumulator messages in a single transaction"
         );
       }
-      const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+      const vaa = parseAccumulatorUpdateData(updates[0]).vaa;
       const verifiedVaas = await this.verifyVaas([vaa], tx);
       [priceUpdatesHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
@@ -138,7 +142,7 @@ export class SuiPythClient {
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
-    } else if (updates.every((vaa) => !this.isAccumulatorMsg(vaa))) {
+    } else if (updates.every((vaa) => !isAccumulatorUpdateData(vaa))) {
       const verifiedVaas = await this.verifyVaas(updates, tx);
       [priceUpdatesHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::create_price_infos_hot_potato`,
@@ -192,13 +196,13 @@ export class SuiPythClient {
   async createPriceFeed(tx: TransactionBlock, updates: Buffer[]) {
     const wormholePackageId = await this.getWormholePackageId();
     const packageId = await this.getPythPackageId();
-    if (updates.every((update) => this.isAccumulatorMsg(update))) {
+    if (updates.every((update) => isAccumulatorUpdateData(update))) {
       if (updates.length > 1) {
         throw new Error(
           "SDK does not support sending multiple accumulator messages in a single transaction"
         );
       }
-      const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+      const vaa = parseAccumulatorUpdateData(updates[0]).vaa;
       const verifiedVaas = await this.verifyVaas([vaa], tx);
       tx.moveCall({
         target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
@@ -215,7 +219,7 @@ export class SuiPythClient {
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
-    } else if (updates.every((vaa) => !this.isAccumulatorMsg(vaa))) {
+    } else if (updates.every((vaa) => !isAccumulatorUpdateData(vaa))) {
       const verifiedVaas = await this.verifyVaas(updates, tx);
       tx.moveCall({
         target: `${packageId}::pyth::create_price_feeds`,
@@ -310,35 +314,5 @@ export class SuiPythClient {
       this.priceTableInfo = { id: result.data.objectId, fieldType: type };
     }
     return this.priceTableInfo;
-  }
-
-  /**
-   * Checks if a message is an accumulator message or not
-   * @param msg - update message from price service
-   */
-  isAccumulatorMsg(msg: Buffer) {
-    const ACCUMULATOR_MAGIC = "504e4155";
-    return msg.toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC;
-  }
-
-  /**
-   * Obtains the vaa bytes embedded in an accumulator message.
-   * @param accumulatorMessage - the accumulator price update message
-   * @returns vaa bytes as a uint8 array
-   */
-  extractVaaBytesFromAccumulatorMessage(accumulatorMessage: Buffer): Buffer {
-    if (!this.isAccumulatorMsg(accumulatorMessage)) {
-      throw new Error("Not an accumulator message");
-    }
-    // the first 6 bytes in the accumulator message encode the header, major, and minor bytes
-    // we ignore them, since we are only interested in the VAA bytes
-    const trailingPayloadSize = accumulatorMessage.readUint8(6);
-    const vaaSizeOffset =
-      7 + // header bytes (header(4) + major(1) + minor(1) + trailing payload size(1))
-      trailingPayloadSize + // trailing payload (variable number of bytes)
-      1; // proof_type (1 byte)
-    const vaaSize = accumulatorMessage.readUint16BE(vaaSizeOffset);
-    const vaaOffset = vaaSizeOffset + 2;
-    return accumulatorMessage.subarray(vaaOffset, vaaOffset + vaaSize);
   }
 }
