@@ -139,9 +139,12 @@ export class Client {
   }
 
   private connectWebsocket() {
-    this.websocket = new WebSocket(
-      this.clientOptions.baseUrl.replace("http", "ws") + "/v1/ws"
-    );
+    const websocketEndpoint = new URL(this.clientOptions.baseUrl);
+    websocketEndpoint.protocol =
+      websocketEndpoint.protocol === "https:" ? "wss:" : "ws:";
+    websocketEndpoint.pathname = "/v1/ws";
+
+    this.websocket = new WebSocket(websocketEndpoint.toString());
     this.websocket.on("message", async (data) => {
       const message:
         | components["schemas"]["ServerResultResponse"]
@@ -156,9 +159,12 @@ export class Client {
         }
       } else if ("type" in message && message.type === "new_opportunity") {
         if (this.websocketOpportunityCallback !== undefined) {
-          await this.websocketOpportunityCallback(
-            this.convertOpportunity(message.opportunity)
+          const convertedOpportunity = this.convertOpportunity(
+            message.opportunity
           );
+          if (convertedOpportunity !== undefined) {
+            await this.websocketOpportunityCallback(convertedOpportunity);
+          }
         }
       } else if ("error" in message) {
         // Can not route error messages to the callback router as they don't have an id
@@ -167,9 +173,20 @@ export class Client {
     });
   }
 
+  /**
+   * Converts an opportunity from the server to the client format
+   * Returns undefined if the opportunity version is not supported
+   * @param opportunity
+   */
   private convertOpportunity(
     opportunity: components["schemas"]["OpportunityParamsWithMetadata"]
-  ) {
+  ): Opportunity | undefined {
+    if (opportunity.version != "v1") {
+      console.warn(
+        `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
+      );
+      return undefined;
+    }
     return {
       chainId: opportunity.chain_id,
       opportunityId: opportunity.opportunity_id,
@@ -267,13 +284,11 @@ export class Client {
       throw new Error("No opportunities found");
     }
     return opportunities.data.flatMap((opportunity) => {
-      if (opportunity.version != "v1") {
-        console.warn(
-          `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
-        );
+      const convertedOpportunity = this.convertOpportunity(opportunity);
+      if (convertedOpportunity === undefined) {
         return [];
       }
-      return this.convertOpportunity(opportunity);
+      return convertedOpportunity;
     });
   }
 
