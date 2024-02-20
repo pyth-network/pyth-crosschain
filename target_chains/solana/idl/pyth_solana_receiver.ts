@@ -1,0 +1,875 @@
+export type PythSolanaReceiver = {
+  version: "0.1.0";
+  name: "pyth_solana_receiver";
+  instructions: [
+    {
+      name: "initialize";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "initialConfig";
+          type: {
+            defined: "Config";
+          };
+        }
+      ];
+    },
+    {
+      name: "requestGovernanceAuthorityTransfer";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "targetGovernanceAuthority";
+          type: "publicKey";
+        }
+      ];
+    },
+    {
+      name: "acceptGovernanceAuthorityTransfer";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "setDataSources";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "validDataSources";
+          type: {
+            vec: {
+              defined: "DataSource";
+            };
+          };
+        }
+      ];
+    },
+    {
+      name: "setFee";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "singleUpdateFeeInLamports";
+          type: "u64";
+        }
+      ];
+    },
+    {
+      name: "setWormholeAddress";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "wormhole";
+          type: "publicKey";
+        }
+      ];
+    },
+    {
+      name: "setMinimumSignatures";
+      accounts: [
+        {
+          name: "payer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "config";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "minimumSignatures";
+          type: "u8";
+        }
+      ];
+    },
+    {
+      name: "postUpdateAtomic";
+      docs: [
+        "Post a price update using a VAA and a MerklePriceUpdate.",
+        "This function allows you to post a price update in a single transaction.",
+        "Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.",
+        "Typically, you can fit 5 guardian signatures in a transaction that uses this."
+      ];
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "guardianSet";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "Instead we do the same steps in deserialize_guardian_set_checked."
+          ];
+        },
+        {
+          name: "config";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "priceUpdateAccount";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized"
+          ];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "PostUpdateAtomicParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "postUpdate";
+      docs: [
+        "Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.",
+        "This should be called after the client has already verified the Vaa via the Wormhole contract.",
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this."
+      ];
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "encodedVaa";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "config";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "priceUpdateAccount";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized"
+          ];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "PostUpdateParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "reclaimRent";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "priceUpdateAccount";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    }
+  ];
+  types: [
+    {
+      name: "PostUpdateAtomicParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "vaa";
+            type: "bytes";
+          },
+          {
+            name: "merklePriceUpdate";
+            type: {
+              defined: "MerklePriceUpdate";
+            };
+          },
+          {
+            name: "treasuryId";
+            type: "u8";
+          }
+        ];
+      };
+    },
+    {
+      name: "PostUpdateParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "merklePriceUpdate";
+            type: {
+              defined: "MerklePriceUpdate";
+            };
+          },
+          {
+            name: "treasuryId";
+            type: "u8";
+          }
+        ];
+      };
+    }
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "InvalidWormholeMessage";
+      msg: "Received an invalid wormhole message";
+    },
+    {
+      code: 6001;
+      name: "DeserializeMessageFailed";
+      msg: "An error occurred when deserializing the message";
+    },
+    {
+      code: 6002;
+      name: "InvalidPriceUpdate";
+      msg: "Received an invalid price update";
+    },
+    {
+      code: 6003;
+      name: "UnsupportedMessageType";
+      msg: "This type of message is not supported currently";
+    },
+    {
+      code: 6004;
+      name: "InvalidDataSource";
+      msg: "The tuple emitter chain, emitter doesn't match one of the valid data sources.";
+    },
+    {
+      code: 6005;
+      name: "InsufficientFunds";
+      msg: "Funds are insufficient to pay the receiving fee";
+    },
+    {
+      code: 6006;
+      name: "WrongWriteAuthority";
+      msg: "This signer can't write to price update account";
+    },
+    {
+      code: 6007;
+      name: "WrongVaaOwner";
+      msg: "The posted VAA account has the wrong owner.";
+    },
+    {
+      code: 6008;
+      name: "DeserializeVaaFailed";
+      msg: "An error occurred when deserializing the VAA.";
+    },
+    {
+      code: 6009;
+      name: "InsufficientGuardianSignatures";
+      msg: "The number of guardian signatures is below the minimum";
+    },
+    {
+      code: 6010;
+      name: "InvalidVaaVersion";
+      msg: "Invalid VAA version";
+    },
+    {
+      code: 6011;
+      name: "GuardianSetMismatch";
+      msg: "Guardian set version in the VAA doesn't match the guardian set passed";
+    },
+    {
+      code: 6012;
+      name: "InvalidGuardianOrder";
+      msg: "Guardian signature indices must be increasing";
+    },
+    {
+      code: 6013;
+      name: "InvalidGuardianIndex";
+      msg: "Guardian index exceeds the number of guardians in the set";
+    },
+    {
+      code: 6014;
+      name: "InvalidSignature";
+      msg: "A VAA signature is invalid";
+    },
+    {
+      code: 6015;
+      name: "InvalidGuardianKeyRecovery";
+      msg: "The recovered guardian public key doesn't match the guardian set";
+    },
+    {
+      code: 6016;
+      name: "WrongGuardianSetOwner";
+      msg: "The guardian set account is owned by the wrong program";
+    },
+    {
+      code: 6017;
+      name: "InvalidGuardianSetPda";
+      msg: "The Guardian Set account doesn't match the PDA derivation";
+    },
+    {
+      code: 6018;
+      name: "GuardianSetExpired";
+      msg: "The Guardian Set is expired";
+    },
+    {
+      code: 6019;
+      name: "GovernanceAuthorityMismatch";
+      msg: "The signer is not authorized to perform this governance action";
+    },
+    {
+      code: 6020;
+      name: "TargetGovernanceAuthorityMismatch";
+      msg: "The signer is not authorized to accept the governance authority";
+    },
+    {
+      code: 6021;
+      name: "NonexistentGovernanceAuthorityTransferRequest";
+      msg: "The governance authority needs to request a transfer first";
+    }
+  ];
+};
+
+export const IDL: PythSolanaReceiver = {
+  version: "0.1.0",
+  name: "pyth_solana_receiver",
+  instructions: [
+    {
+      name: "initialize",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "initialConfig",
+          type: {
+            defined: "Config",
+          },
+        },
+      ],
+    },
+    {
+      name: "requestGovernanceAuthorityTransfer",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "targetGovernanceAuthority",
+          type: "publicKey",
+        },
+      ],
+    },
+    {
+      name: "acceptGovernanceAuthorityTransfer",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "setDataSources",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "validDataSources",
+          type: {
+            vec: {
+              defined: "DataSource",
+            },
+          },
+        },
+      ],
+    },
+    {
+      name: "setFee",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "singleUpdateFeeInLamports",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "setWormholeAddress",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "wormhole",
+          type: "publicKey",
+        },
+      ],
+    },
+    {
+      name: "setMinimumSignatures",
+      accounts: [
+        {
+          name: "payer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "config",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "minimumSignatures",
+          type: "u8",
+        },
+      ],
+    },
+    {
+      name: "postUpdateAtomic",
+      docs: [
+        "Post a price update using a VAA and a MerklePriceUpdate.",
+        "This function allows you to post a price update in a single transaction.",
+        "Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.",
+        "Typically, you can fit 5 guardian signatures in a transaction that uses this.",
+      ],
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "guardianSet",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "Instead we do the same steps in deserialize_guardian_set_checked.",
+          ],
+        },
+        {
+          name: "config",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "priceUpdateAccount",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized",
+          ],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "PostUpdateAtomicParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "postUpdate",
+      docs: [
+        "Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.",
+        "This should be called after the client has already verified the Vaa via the Wormhole contract.",
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this.",
+      ],
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "encodedVaa",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "config",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "priceUpdateAccount",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized",
+          ],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "PostUpdateParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "reclaimRent",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "priceUpdateAccount",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+  ],
+  types: [
+    {
+      name: "PostUpdateAtomicParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "vaa",
+            type: "bytes",
+          },
+          {
+            name: "merklePriceUpdate",
+            type: {
+              defined: "MerklePriceUpdate",
+            },
+          },
+          {
+            name: "treasuryId",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
+      name: "PostUpdateParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "merklePriceUpdate",
+            type: {
+              defined: "MerklePriceUpdate",
+            },
+          },
+          {
+            name: "treasuryId",
+            type: "u8",
+          },
+        ],
+      },
+    },
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: "InvalidWormholeMessage",
+      msg: "Received an invalid wormhole message",
+    },
+    {
+      code: 6001,
+      name: "DeserializeMessageFailed",
+      msg: "An error occurred when deserializing the message",
+    },
+    {
+      code: 6002,
+      name: "InvalidPriceUpdate",
+      msg: "Received an invalid price update",
+    },
+    {
+      code: 6003,
+      name: "UnsupportedMessageType",
+      msg: "This type of message is not supported currently",
+    },
+    {
+      code: 6004,
+      name: "InvalidDataSource",
+      msg: "The tuple emitter chain, emitter doesn't match one of the valid data sources.",
+    },
+    {
+      code: 6005,
+      name: "InsufficientFunds",
+      msg: "Funds are insufficient to pay the receiving fee",
+    },
+    {
+      code: 6006,
+      name: "WrongWriteAuthority",
+      msg: "This signer can't write to price update account",
+    },
+    {
+      code: 6007,
+      name: "WrongVaaOwner",
+      msg: "The posted VAA account has the wrong owner.",
+    },
+    {
+      code: 6008,
+      name: "DeserializeVaaFailed",
+      msg: "An error occurred when deserializing the VAA.",
+    },
+    {
+      code: 6009,
+      name: "InsufficientGuardianSignatures",
+      msg: "The number of guardian signatures is below the minimum",
+    },
+    {
+      code: 6010,
+      name: "InvalidVaaVersion",
+      msg: "Invalid VAA version",
+    },
+    {
+      code: 6011,
+      name: "GuardianSetMismatch",
+      msg: "Guardian set version in the VAA doesn't match the guardian set passed",
+    },
+    {
+      code: 6012,
+      name: "InvalidGuardianOrder",
+      msg: "Guardian signature indices must be increasing",
+    },
+    {
+      code: 6013,
+      name: "InvalidGuardianIndex",
+      msg: "Guardian index exceeds the number of guardians in the set",
+    },
+    {
+      code: 6014,
+      name: "InvalidSignature",
+      msg: "A VAA signature is invalid",
+    },
+    {
+      code: 6015,
+      name: "InvalidGuardianKeyRecovery",
+      msg: "The recovered guardian public key doesn't match the guardian set",
+    },
+    {
+      code: 6016,
+      name: "WrongGuardianSetOwner",
+      msg: "The guardian set account is owned by the wrong program",
+    },
+    {
+      code: 6017,
+      name: "InvalidGuardianSetPda",
+      msg: "The Guardian Set account doesn't match the PDA derivation",
+    },
+    {
+      code: 6018,
+      name: "GuardianSetExpired",
+      msg: "The Guardian Set is expired",
+    },
+    {
+      code: 6019,
+      name: "GovernanceAuthorityMismatch",
+      msg: "The signer is not authorized to perform this governance action",
+    },
+    {
+      code: 6020,
+      name: "TargetGovernanceAuthorityMismatch",
+      msg: "The signer is not authorized to accept the governance authority",
+    },
+    {
+      code: 6021,
+      name: "NonexistentGovernanceAuthorityTransferRequest",
+      msg: "The governance authority needs to request a transfer first",
+    },
+  ],
+};
