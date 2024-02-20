@@ -4,9 +4,6 @@ The Pyth Entropy Solidity SDK allows you to generate secure random numbers on th
 interacting with the Pyth Entropy protocol.
 This SDK can be used for any application that requires random numbers, such as NFT mints, gaming, and more.
 
-**WARNING**: The Entropy protocol is currently in testnet. It is **NOT INTENDED** for use in production applications.
-Use this protocol at your own risk.
-
 ## Install
 
 ####Truffle/Hardhat
