@@ -334,9 +334,12 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         let price_feeds_update_interval = opts.price_feeds_cache_update_interval;
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                if let Err(e) =
-                    fetch_and_store_price_feeds_metadata(price_feeds_state.as_ref(), &rpc_client)
-                        .await
+                if let Err(e) = fetch_and_store_price_feeds_metadata(
+                    price_feeds_state.as_ref(),
+                    &opts.pythnet.mapping_addr,
+                    &rpc_client,
+                )
+                .await
                 {
                     tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
                 }
@@ -365,19 +368,19 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
 pub async fn fetch_and_store_price_feeds_metadata(
     state: &State,
+    mapping_address: &Pubkey,
     rpc_client: &RpcClient,
 ) -> Result<Vec<PriceFeedMetadata>> {
-    let price_feeds_metadata = fetch_price_feeds_metadata(&state, &rpc_client).await?;
+    let price_feeds_metadata = fetch_price_feeds_metadata(&mapping_address, &rpc_client).await?;
     store_price_feeds_metadata(&state, &price_feeds_metadata).await?;
     Ok(price_feeds_metadata)
 }
 
 async fn fetch_price_feeds_metadata(
-    state: &State,
+    mapping_address: &Pubkey,
     rpc_client: &RpcClient,
 ) -> Result<Vec<PriceFeedMetadata>> {
     let mut price_feeds_metadata = Vec::<PriceFeedMetadata>::new();
-    let mapping_address = &state.mapping_address;
     let mapping_data = rpc_client.get_account_data(mapping_address).await?;
     let mapping_acct = load_mapping_account(&mapping_data)?;
 
@@ -409,7 +412,6 @@ async fn fetch_price_feeds_metadata(
                         }
                     };
 
-                    // Ref A
                     let attributes = prod_acct
                         .iter()
                         .filter(|(key, _)| !key.is_empty())
@@ -438,5 +440,6 @@ async fn fetch_price_feeds_metadata(
             }
         }
     }
+    println!("price_feeds_metadata: {:?}", price_feeds_metadata.len());
     Ok(price_feeds_metadata)
 }

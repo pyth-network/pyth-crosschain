@@ -49,6 +49,5 @@ pub async fn get_price_feeds_metadata(
         });
     }
 
-    println!("price_feeds_metadata: {:?}", price_feeds_metadata.len());
     Ok(price_feeds_metadata)
 }
