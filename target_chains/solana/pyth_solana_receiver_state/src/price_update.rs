@@ -7,7 +7,10 @@ use {
         borsh::BorshSchema,
         *,
     },
-    pythnet_sdk::messages::PriceFeedMessage,
+    pythnet_sdk::messages::{
+        FeedId,
+        PriceFeedMessage,
+    },
     solana_program::pubkey::Pubkey,
 };
 
@@ -108,6 +111,15 @@ impl PriceUpdateV1 {
             VerificationLevel::Full,
         )
     }
+}
+
+pub fn get_feed_id_from_str(input: &str) -> std::result::Result<FeedId, GetPriceError> {
+    if input.len() != 66 {
+        return Err(GetPriceError::InvalidStringLength);
+    }
+    let mut feed_id: FeedId = [0; 32];
+    feed_id.copy_from_slice(&hex::decode(&input[2..]).unwrap());
+    Ok(feed_id)
 }
 
 #[cfg(test)]

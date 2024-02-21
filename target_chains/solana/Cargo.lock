@@ -3073,6 +3073,7 @@ name = "pyth-solana-receiver-state"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "hex",
  "pythnet-sdk",
  "solana-program",
 ]
