@@ -35,10 +35,15 @@ const ENTROPY_DEFAULT_PROVIDER = {
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_entropy_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --wormhole-addr <wormhole-addr>"
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
+    chain: {
+      type: "string",
+      demandOption: true,
+      desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
+    },
     // TODO: maintain a wormhole store
     "wormhole-addr": {
       type: "string",

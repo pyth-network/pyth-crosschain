@@ -70,7 +70,7 @@ export const COMMON_DEPLOY_OPTIONS = {
     desc: "Private key to sign the trnasactions with",
   },
   chain: {
-    type: "string",
+    type: "array",
     demandOption: true,
     desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
   },
