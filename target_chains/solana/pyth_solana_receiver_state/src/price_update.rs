@@ -86,10 +86,10 @@ impl PriceUpdateV1 {
         );
         let price = self.get_price_unchecked(feed_id)?;
         check!(
-            price.publish_time
-                >= clock
-                    .unix_timestamp
-                    .saturating_add(maximum_age.try_into().unwrap()),
+            price
+                .publish_time
+                .saturating_add(maximum_age.try_into().unwrap())
+                >= clock.unix_timestamp,
             GetPriceError::PriceTooOld
         );
         Ok(price)
