@@ -5,6 +5,7 @@ import { DefaultStore } from "../src/store";
 import {
   DeploymentType,
   EvmEntropyContract,
+  EvmPriceFeedContract,
   getDefaultDeploymentConfig,
   PrivateKey,
   toDeploymentType,
@@ -45,12 +46,6 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
-    },
-    // TODO: maintain a wormhole store
-    "wormhole-addr": {
-      type: "string",
-      demandOption: true,
-      desc: "Wormhole address",
     },
   });
 
@@ -166,22 +161,21 @@ async function topupProviderIfNecessary(
   }
 }
 
+async function findWormholeAddress(
+  chain: EvmChain
+): Promise<string | undefined> {
+  for (const contract of Object.values(DefaultStore.contracts)) {
+    if (
+      contract instanceof EvmPriceFeedContract &&
+      contract.getChain().getId() === chain.getId()
+    ) {
+      return (await contract.getWormholeContract()).address;
+    }
+  }
+}
+
 async function main() {
   const argv = await parser.argv;
-
-  const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
-    gasMultiplier: argv.gasMultiplier,
-    gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
-    jsonOutputDir: argv.stdOutputDir,
-    saveContract: argv.saveContract,
-    wormholeAddr: argv.wormholeAddr,
-  };
-
-  console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
-  );
 
   const chainName = argv.chain;
   const chain = DefaultStore.chains[chainName];
@@ -191,6 +185,21 @@ async function main() {
     throw new Error(`Chain ${chainName} is not an EVM chain`);
   }
 
+  const wormholeAddr = await findWormholeAddress(chain);
+  if (!wormholeAddr) {
+    // TODO: deploy wormhole if necessary and maintain a wormhole store
+    throw new Error(`Wormhole contract not found for chain ${chain.getId()}`);
+  }
+
+  const deploymentConfig: DeploymentConfig = {
+    type: toDeploymentType(argv.deploymentType),
+    gasMultiplier: argv.gasMultiplier,
+    gasPriceMultiplier: argv.gasPriceMultiplier,
+    privateKey: toPrivateKey(argv.privateKey),
+    jsonOutputDir: argv.stdOutputDir,
+    saveContract: argv.saveContract,
+    wormholeAddr,
+  };
   const wormholeContract = new WormholeEvmContract(
     chain,
     deploymentConfig.wormholeAddr
@@ -202,6 +211,10 @@ async function main() {
     );
   }
   await topupProviderIfNecessary(chain, deploymentConfig);
+
+  console.log(
+    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
+  );
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
