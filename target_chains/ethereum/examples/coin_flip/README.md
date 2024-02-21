@@ -48,7 +48,7 @@ Running coin flip prototcol.
    tx        : 0x3a59bb8c1aaa8c6ff97147bb3197e9b89c0d87174b0b6c32374fc62de6d8db94
    sequence  : 50
 3. Retrieving provider's random number...
-   fetch url : https://fortuna-staging.pyth.network/v1/chains/optimism-goerli/revelations/50
+   fetch url : https://fortuna-staging.dourolabs.app/v1/chains/optimism-goerli/revelations/50
    number    : 0x760e53a19a4677ef671fde63db59462dfb3e09e94418e9962e2fa764026b8400
 4. Revealing the result of the coin flip...
    tx        : 0x0549b93b12684187f73ddcaf8351ca4049867882c1b138989e15363a4d103220
