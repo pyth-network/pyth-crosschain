@@ -517,7 +517,13 @@ export class EvmEntropyContract extends Storable {
 
   async getProviderInfo(address: string): Promise<EntropyProviderInfo> {
     const contract = this.getContract();
-    return await contract.methods.getProviderInfo(address).call();
+    const info: EntropyProviderInfo = await contract.methods
+      .getProviderInfo(address)
+      .call();
+    return {
+      ...info,
+      uri: Web3.utils.toAscii(info.uri),
+    };
   }
 }
 
