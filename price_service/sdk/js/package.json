@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-service-sdk",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Pyth price service SDK",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",

@@ -10,4 +10,7 @@ export {
   PriceFeed,
   Price,
   UnixTimestamp,
+  isAccumulatorUpdateData,
+  parseAccumulatorUpdateData,
+  AccumulatorUpdateData,
 } from "@pythnetwork/price-service-sdk";
