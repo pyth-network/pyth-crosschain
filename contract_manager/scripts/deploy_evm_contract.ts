@@ -4,7 +4,8 @@ import { EvmChain } from "../src/chains";
 import { DefaultStore } from "../src/store";
 import { readFileSync } from "fs";
 import { toPrivateKey } from "../src";
-import { COMMON_DEPLOY_OPTIONS } from "./deploy_utils";
+
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")

@@ -3,7 +3,8 @@ import { hideBin } from "yargs/helpers";
 import { CosmWasmChain } from "../src/chains";
 import { CosmWasmPriceFeedContract } from "../src/contracts/cosmwasm";
 import { DefaultStore } from "../src/store";
-import { COMMON_DEPLOY_OPTIONS } from "./deploy_utils";
+
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_cosmwasm.ts")

@@ -11,8 +11,11 @@ import {
   toPrivateKey,
   WormholeEvmContract,
 } from "../src";
-import { deployIfNotCached, getWeb3Contract } from "./common";
-import { COMMON_DEPLOY_OPTIONS } from "./deploy_utils";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getWeb3Contract,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;

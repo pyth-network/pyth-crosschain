@@ -6,7 +6,8 @@ import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "xc_admin_common";
 import { executeVaa } from "../src/executor";
 import { toPrivateKey } from "../src";
-import { COMMON_DEPLOY_OPTIONS } from "./deploy_utils";
+
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

@@ -1,11 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  AptosPriceFeedContract,
-  CosmWasmPriceFeedContract,
-  DefaultStore,
-  EvmPriceFeedContract,
-} from "../src";
+import { DefaultStore, EvmPriceFeedContract } from "../src";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
@@ -23,7 +18,6 @@ async function main() {
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (contract instanceof EvmPriceFeedContract) {
-      let wormholeContract = await contract.getWormholeContract();
       try {
         const version = await contract.getVersion();
         entries.push({

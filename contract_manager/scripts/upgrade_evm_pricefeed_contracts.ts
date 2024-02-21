@@ -2,11 +2,12 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore, loadHotWallet, toPrivateKey } from "../src";
 import { readFileSync } from "fs";
+
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
-} from "./deploy_utils";
+} from "./common";
 
 const CACHE_FILE = ".cache-upgrade-evm";
 const runIfNotCached = makeCacheFunction(CACHE_FILE);
