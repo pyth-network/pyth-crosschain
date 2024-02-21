@@ -142,7 +142,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async postPriceUpdate(vaa: string): Promise<PublicKey> {
-    let transactionsToSend = await this.buildPriceUpdate(vaa);
+    let transactionsToSend = await this.buildPostPriceUpdate(vaa);
     await this.provider.sendAll(transactionsToSend.transactions, {
       skipPreflight: true,
     });
