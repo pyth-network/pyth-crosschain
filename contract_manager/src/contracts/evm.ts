@@ -528,6 +528,15 @@ export class EvmExecutorContract {
     return `${this.chain.getId()}_${this.address}`;
   }
 
+  async getWormholeContract(): Promise<WormholeEvmContract> {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    //Unfortunately, there is no public method to get the wormhole address
+    //Found 251 by using `forge build --extra-output storageLayout` and finding the slot for the wormhole variable.
+    let address = await web3.eth.getStorageAt(this.address, 251);
+    address = "0x" + address.slice(26);
+    return new WormholeEvmContract(this.chain, address);
+  }
+
   getContract() {
     const web3 = new Web3(this.chain.getRpcUrl());
     return new web3.eth.Contract(EXECUTOR_ABI, this.address);
