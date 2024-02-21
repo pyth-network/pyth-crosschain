@@ -17,9 +17,13 @@ use {
         },
     },
     anyhow::Result,
-    ethers::signers::{
-        LocalWallet,
-        Signer,
+    ethers::{
+        abi::Bytes as AbiBytes,
+        signers::{
+            LocalWallet,
+            Signer,
+        },
+        types::Bytes,
     },
     std::sync::Arc,
 };
@@ -40,7 +44,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         // Initialize a Provider to interface with the EVM contract.
         let contract =
             Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
-        
+
         tracing::info!("{}: fetching provider info", chain_id);
         let provider_info = contract.get_provider_info(provider_address).call().await?;
         tracing::info!("{0}: provider info: {1:?}", chain_id, provider_info);
@@ -48,6 +52,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         let mut register = false;
 
         let uri = get_register_uri(&opts.base_uri, &chain_id)?;
+        let uri_as_bytes: Bytes = AbiBytes::from(uri.as_str()).into();
 
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
@@ -82,7 +87,10 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             if chain_state.reveal(provider_info.original_commitment_sequence_number)?
                 != provider_info.original_commitment
             {
-                tracing::info!("{}: the root of the generated hash chain does not match the commitment",  &chain_id);
+                tracing::info!(
+                    "{}: the root of the generated hash chain does not match the commitment",
+                    &chain_id
+                );
                 register = true;
             }
         }
@@ -101,16 +109,16 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             tracing::info!("{}: registered", &chain_id);
         } else {
             if provider_info.fee_in_wei != opts.fee {
-                tracing::info!("{}: updating provider fee",chain_id);
+                tracing::info!("{}: updating provider fee", chain_id);
                 if let Some(r) = contract.set_provider_fee(opts.fee).send().await?.await? {
-                    tracing::info!("{0}: updated provider fee: {1:?}",chain_id , r);
+                    tracing::info!("{0}: updated provider fee: {1:?}", chain_id, r);
                 }
             }
 
-            if bincode::deserialize::<String>(&provider_info.uri)? != uri {
-                tracing::info!("{}: updating provider uri",chain_id);
+            if &provider_info.uri != &uri_as_bytes {
+                tracing::info!("{}: updating provider uri", chain_id);
                 if let Some(receipt) = contract
-                    .set_provider_uri(bincode::serialize(&uri)?.into())
+                    .set_provider_uri(uri_as_bytes)
                     .send()
                     .await?
                     .log_msg("Pending transfer hash")

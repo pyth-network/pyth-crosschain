@@ -9,6 +9,7 @@ use {
     },
     anyhow::Result,
     ethers::{
+        abi::Bytes,
         signers::{
             LocalWallet,
             Signer,
@@ -60,7 +61,9 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
         commitment,
         bincode::serialize(&commitment_metadata)?.into(),
         commitment_length,
-        bincode::serialize(&opts.uri)?.into(),
+        // Use Bytes to serialize the uri. Most users will be using JS/TS to deserialize this uri.
+        // Bincode is a different encoding mechanisms, and I didn't find any JS/TS library to parse bincode.
+        Bytes::from(opts.uri.as_str()).into(),
     );
     let mut gas_estimate = call.estimate_gas().await?;
     let gas_multiplier = U256::from(2); //TODO: smarter gas estimation
