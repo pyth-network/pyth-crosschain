@@ -30,7 +30,7 @@ pub struct SetupProviderOptions {
     pub fee: u128,
 
     /// The base URI for fortuna.
-    /// e.g., https://fortuna-staging.pyth.network
+    /// e.g., https://fortuna-staging.dourolabs.app
     #[arg(long = "uri")]
     pub base_uri: String,
 }

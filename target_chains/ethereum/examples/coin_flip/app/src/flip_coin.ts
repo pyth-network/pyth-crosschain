@@ -14,7 +14,7 @@ const argv = yargs(hideBin(process.argv))
   .option("fortuna-url", {
     description: "URL of the fortuna server for your chosen provider",
     type: "string",
-    default: "https://fortuna-staging.pyth.network",
+    default: "https://fortuna-staging.dourolabs.app",
   })
   .option("chain-name", {
     description:
