@@ -13,9 +13,6 @@
 - chain: arbitrum_sepolia
   address: "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440"
   type: EvmEntropyContract
-- chain: base_goerli
-  address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
-  type: EvmEntropyContract
 - chain: fantom_sonic_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmEntropyContract
