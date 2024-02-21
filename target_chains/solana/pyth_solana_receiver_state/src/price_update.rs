@@ -62,10 +62,10 @@ pub struct Price {
 impl PriceUpdateV1 {
     pub fn get_price_unchecked(
         &self,
-        feed_id: &Pubkey,
+        feed_id: &FeedId,
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
-            self.price_message.feed_id == feed_id.to_bytes(),
+            self.price_message.feed_id == *feed_id,
             GetPriceError::WrongFeedId
         );
         Ok(Price {
@@ -80,7 +80,7 @@ impl PriceUpdateV1 {
         &self,
         clock: &Clock,
         maximum_age: u64,
-        feed_id: &Pubkey,
+        feed_id: &FeedId,
         verification_level: VerificationLevel,
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
@@ -102,7 +102,7 @@ impl PriceUpdateV1 {
         &self,
         clock: &Clock,
         maximum_age: u64,
-        feed_id: &Pubkey,
+        feed_id: &FeedId,
     ) -> std::result::Result<Price, GetPriceError> {
         self.get_price_no_older_than_with_custom_verification_level(
             clock,
@@ -113,7 +113,11 @@ impl PriceUpdateV1 {
     }
 }
 
-pub fn get_feed_id_from_str(input: &str) -> std::result::Result<FeedId, GetPriceError> {
+/**
+ * This function takes a hex string and returns a FeedId
+ * The hex string should be 66 characters long, and should start with "0x"
+ */
+pub fn get_feed_id_from_hex(input: &str) -> std::result::Result<FeedId, GetPriceError> {
     if input.len() != 66 {
         return Err(GetPriceError::InvalidStringLength);
     }
