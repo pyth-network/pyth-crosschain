@@ -9,6 +9,7 @@ import {
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
+  WormholeEvmContract,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
@@ -156,6 +157,17 @@ async function main() {
     throw new Error(`Chain ${chainName} not found`);
   } else if (!(chain instanceof EvmChain)) {
     throw new Error(`Chain ${chainName} is not an EVM chain`);
+  }
+
+  const wormholeContract = new WormholeEvmContract(
+    chain,
+    deploymentConfig.wormholeAddr
+  );
+  const wormholeChainId = await wormholeContract.getChainId();
+  if (chain.getWormholeChainId() != wormholeChainId) {
+    throw new Error(
+      `Wormhole chain id mismatch. Expected ${chain.getWormholeChainId()} but got ${wormholeChainId}`
+    );
   }
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
