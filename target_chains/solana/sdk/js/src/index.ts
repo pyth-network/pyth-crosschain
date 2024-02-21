@@ -43,7 +43,7 @@ export class PythSolanaReceiverConnection {
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
       commitment: "processed",
-    }); // To do make this configurable
+    }); // TO DO make this configurable
     this.receiver = new Program<PythSolanaReceiver>(
       Idl as PythSolanaReceiver,
       DEFAULT_RECEIVER_PROGRAM_ID,
@@ -56,7 +56,7 @@ export class PythSolanaReceiverConnection {
     );
   }
 
-  async buildPriceUpdate(vaa: string): Promise<{
+  async buildPostPriceUpdate(vaa: string): Promise<{
     transactions: { tx: Transaction; signers: Signer[] }[];
     priceUpdateAddress: PublicKey;
   }> {
