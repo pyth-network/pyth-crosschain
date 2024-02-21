@@ -2,6 +2,8 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
   Connection,
+  Signer,
+  Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 import { PythSolanaReceiver } from "./idl/pyth_solana_receiver";
@@ -39,7 +41,9 @@ export class PythSolanaReceiverConnection {
   }) {
     this.connection = connection;
     this.wallet = wallet;
-    this.provider = new AnchorProvider(this.connection, this.wallet, {});
+    this.provider = new AnchorProvider(this.connection, this.wallet, {
+      commitment: "processed",
+    }); // To do make this configurable
     this.receiver = new Program<PythSolanaReceiver>(
       Idl as PythSolanaReceiver,
       DEFAULT_RECEIVER_PROGRAM_ID,
@@ -52,7 +56,10 @@ export class PythSolanaReceiverConnection {
     );
   }
 
-  async postPriceUpdate(vaa: string): Promise<PublicKey> {
+  async buildPriceUpdate(vaa: string): Promise<{
+    transactions: { tx: Transaction; signers: Signer[] }[];
+    priceUpdateAddress: PublicKey;
+  }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
       Buffer.from(vaa, "base64")
     );
@@ -125,13 +132,20 @@ export class PythSolanaReceiverConnection {
       .preInstructions(secondTransactionInstructions)
       .transaction();
 
-    await this.provider.sendAll(
-      [
+    return {
+      transactions: [
         { tx: firstTransaction, signers: [encodedVaaKeypair] },
         { tx: secondTransaction, signers: [priceUpdateKeypair] },
       ],
-      { skipPreflight: true }
-    );
-    return priceUpdateKeypair.publicKey;
+      priceUpdateAddress: priceUpdateKeypair.publicKey,
+    };
+  }
+
+  async postPriceUpdate(vaa: string): Promise<PublicKey> {
+    let transactionsToSend = await this.buildPriceUpdate(vaa);
+    await this.provider.sendAll(transactionsToSend.transactions, {
+      skipPreflight: true,
+    });
+    return transactionsToSend.priceUpdateAddress;
   }
 }
