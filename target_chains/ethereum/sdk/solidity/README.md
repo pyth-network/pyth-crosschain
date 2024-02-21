@@ -7,7 +7,7 @@ It is **strongly recommended** to follow the [consumer best practices](https://d
 
 ## Installation
 
-####Truffle/Hardhat
+###Truffle/Hardhat
 
 If you are using Truffle or Hardhat, simply install the NPM package:
 
@@ -15,7 +15,7 @@ If you are using Truffle or Hardhat, simply install the NPM package:
 npm install @pythnetwork/pyth-sdk-solidity
 ```
 
-####Foundry
+###Foundry
 
 If you are using Foundry, you will need to create an NPM project if you don't already have one.
 From the root directory of your project, run:
