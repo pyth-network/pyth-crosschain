@@ -6,6 +6,7 @@ import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "xc_admin_common";
 import { executeVaa } from "../src/executor";
 import { toPrivateKey } from "../src";
+import { COMMON_DEPLOY_OPTIONS } from "./deploy_utils";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -20,11 +21,7 @@ const parser = yargs(hideBin(process.argv))
       choices: ["mainnet", "devnet"],
       desc: "Which vault to use for fetching VAAs",
     },
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to sign the transactions executing the governance VAAs. Hex format, without 0x prefix.",
-    },
+    "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     offset: {
       type: "number",
       demandOption: true,

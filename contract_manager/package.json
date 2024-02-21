@@ -27,6 +27,7 @@
     "@pythnetwork/entropy-sdk-solidity": "*",
     "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-sui-js": "*",
+    "@types/yargs": "^17.0.32",
     "aptos": "^1.5.0",
     "bs58": "^5.0.0",
     "ts-node": "^10.9.1",
