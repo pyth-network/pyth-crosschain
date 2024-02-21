@@ -126,6 +126,7 @@ export const RECEIVER_CHAINS = {
   dela_deperp_testnet: 50053,
   injective_inevm_testnet: 50054,
   idex_xchain_testnet: 50055,
+  berachain_testnet: 50056,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

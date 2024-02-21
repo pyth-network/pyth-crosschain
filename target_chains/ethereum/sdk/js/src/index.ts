@@ -59,6 +59,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   bnb_testnet: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   base_goerli: "0xEbe57e8045F2F230872523bbff7374986E45C486",
   base_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  berachain_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",
   blast_s2_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   boba_goerli: "0x8D254a21b3C86D32F7179855531CE99164721933",
   bttc_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
