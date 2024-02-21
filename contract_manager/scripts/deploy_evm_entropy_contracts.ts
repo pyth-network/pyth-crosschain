@@ -16,6 +16,7 @@ import {
   deployIfNotCached,
   getWeb3Contract,
 } from "./common";
+import Web3 from "web3";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -134,6 +135,37 @@ async function deployEntropyContracts(
   );
 }
 
+async function topupProviderIfNecessary(
+  chain: EvmChain,
+  deploymentConfig: DeploymentConfig
+) {
+  const provider = chain.isMainnet()
+    ? ENTROPY_DEFAULT_PROVIDER.mainnet
+    : ENTROPY_DEFAULT_PROVIDER.testnet;
+  const web3 = new Web3(chain.getRpcUrl());
+  const balance = Number(
+    web3.utils.fromWei(await web3.eth.getBalance(provider), "ether")
+  );
+  const MIN_BALANCE = 0.01;
+  console.log(`Provider balance: ${balance} ETH`);
+  if (balance < MIN_BALANCE) {
+    console.log(
+      `Balance is less than ${MIN_BALANCE}. Topping up the provider address...`
+    );
+    const signer = web3.eth.accounts.privateKeyToAccount(
+      deploymentConfig.privateKey
+    );
+    web3.eth.accounts.wallet.add(signer);
+    const tx = await web3.eth.sendTransaction({
+      from: signer.address,
+      to: provider,
+      gas: 30000,
+      value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+    });
+    console.log("Topped up the provider address. Tx: ", tx.transactionHash);
+  }
+}
+
 async function main() {
   const argv = await parser.argv;
 
@@ -169,6 +201,7 @@ async function main() {
       `Wormhole chain id mismatch. Expected ${chain.getWormholeChainId()} but got ${wormholeChainId}`
     );
   }
+  await topupProviderIfNecessary(chain, deploymentConfig);
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
