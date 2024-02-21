@@ -473,3 +473,8 @@
   rpcUrl: https://inevm.calderachain.xyz/http
   networkId: 2525
   type: EvmChain
+- id: berachain_testnet
+  mainnet: false
+  rpcUrl: https://rpc.ankr.com/berachain_testnet
+  networkId: 80085
+  type: EvmChain

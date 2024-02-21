@@ -37,3 +37,9 @@
 - chain: optimism
   address: "0xdF21D137Aadc95588205586636710ca2890538d5"
   type: EvmEntropyContract
+- chain: base_sepolia
+  address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
+  type: EvmEntropyContract
+- chain: berachain_testnet
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmEntropyContract
