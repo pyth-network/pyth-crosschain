@@ -49,6 +49,19 @@ const EXTENDED_ENTROPY_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "version",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
   ...EntropyAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const EXTENDED_PYTH_ABI = [
@@ -427,6 +440,11 @@ export class EvmEntropyContract extends Storable {
 
   getType(): string {
     return EvmEntropyContract.type;
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.version().call();
   }
 
   static fromJson(
