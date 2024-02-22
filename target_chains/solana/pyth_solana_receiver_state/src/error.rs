@@ -1,6 +1,7 @@
 use anchor_lang::error_code;
 
 #[error_code]
+#[derive(PartialEq)]
 pub enum GetPriceError {
     #[msg("This price feed update's age exceeds the requested maximum age")]
     PriceTooOld = 10000, // Big number to avoid conflicts with the SDK user's program error codes

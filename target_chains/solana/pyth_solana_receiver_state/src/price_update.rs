@@ -67,6 +67,7 @@ impl PriceUpdateV1 {
 
 /// A Pyth price.
 /// The actual price is `(price ± conf)* 10^exponent`. `publish_time` may be used to check the recency of the price.
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Price {
     pub price:        i64,
     pub conf:         u64,
@@ -107,11 +108,17 @@ impl PriceUpdateV1 {
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex, VerificationLevel};
+    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV1};
     /// use anchor_lang::prelude::*;
     ///
-    /// const MAXIMUM_AGE = 30;
+    /// const MAXIMUM_AGE : u64 = 30;
     /// const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"; // SOL/USD
+    ///
+    /// #[derive(Accounts)]
+    /// #[instruction(amount_in_usd : u64)]
+    /// pub struct ReadPriceAccount<'info> {
+    ///     pub price_update: Account<'info, PriceUpdateV1>,
+    /// }
     ///
     /// pub fn read_price_account(ctx : Context<ReadPriceAccount>) -> Result<()> {
     ///     let price_update = &mut ctx.accounts.price_update;
@@ -145,11 +152,17 @@ impl PriceUpdateV1 {
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex};
+    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex, PriceUpdateV1};
     /// use anchor_lang::prelude::*;
     ///
-    /// const MAXIMUM_AGE = 30;
+    /// const MAXIMUM_AGE : u64 = 30;
     /// const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"; // SOL/USD
+    ///
+    /// #[derive(Accounts)]
+    /// #[instruction(amount_in_usd : u64)]
+    /// pub struct ReadPriceAccount<'info> {
+    ///     pub price_update: Account<'info, PriceUpdateV1>,
+    /// }
     ///
     /// pub fn read_price_account(ctx : Context<ReadPriceAccount>) -> Result<()> {
     ///     let price_update = &mut ctx.accounts.price_update;
@@ -196,12 +209,21 @@ pub fn get_feed_id_from_hex(input: &str) -> std::result::Result<FeedId, GetPrice
 #[cfg(test)]
 pub mod tests {
     use {
-        crate::price_update::{
-            PriceUpdateV1,
-            VerificationLevel,
+        crate::{
+            error::GetPriceError,
+            price_update::{
+                Price,
+                PriceUpdateV1,
+                VerificationLevel,
+            },
         },
         anchor_lang::Discriminator,
-        solana_program::borsh0_10,
+        pythnet_sdk::messages::PriceFeedMessage,
+        solana_program::{
+            borsh0_10,
+            clock::Clock,
+            pubkey::Pubkey,
+        },
     };
 
     #[test]
@@ -223,5 +245,187 @@ pub mod tests {
         assert!(!VerificationLevel::Partial { num_signatures: 8 }.gte(VerificationLevel::Full));
         assert!(!VerificationLevel::Partial { num_signatures: 8 }
             .gte(VerificationLevel::Partial { num_signatures: 9 }));
+    }
+
+    #[test]
+    fn get_price() {
+        let expected_price = Price {
+            price:        1,
+            conf:         2,
+            exponent:     3,
+            publish_time: 900,
+        };
+
+        let feed_id = [0; 32];
+        let mismatched_feed_id = [1; 32];
+        let mock_clock = Clock {
+            unix_timestamp: 1000,
+            ..Default::default()
+        };
+
+        let price_update_unverified = PriceUpdateV1 {
+            write_authority:    Pubkey::new_unique(),
+            verification_level: VerificationLevel::Partial { num_signatures: 0 },
+            price_message:      PriceFeedMessage {
+                feed_id,
+                ema_conf: 0,
+                ema_price: 0,
+                price: 1,
+                conf: 2,
+                exponent: 3,
+                prev_publish_time: 899,
+                publish_time: 900,
+            },
+        };
+
+        let price_update_partially_verified = PriceUpdateV1 {
+            write_authority:    Pubkey::new_unique(),
+            verification_level: VerificationLevel::Partial { num_signatures: 5 },
+            price_message:      PriceFeedMessage {
+                feed_id,
+                ema_conf: 0,
+                ema_price: 0,
+                price: 1,
+                conf: 2,
+                exponent: 3,
+                prev_publish_time: 899,
+                publish_time: 900,
+            },
+        };
+
+        let price_update_fully_verified = PriceUpdateV1 {
+            write_authority:    Pubkey::new_unique(),
+            verification_level: VerificationLevel::Full,
+            price_message:      PriceFeedMessage {
+                feed_id,
+                ema_conf: 0,
+                ema_price: 0,
+                price: 1,
+                conf: 2,
+                exponent: 3,
+                prev_publish_time: 899,
+                publish_time: 900,
+            },
+        };
+
+
+        assert_eq!(
+            price_update_unverified.get_price_unchecked(&feed_id),
+            Ok(expected_price)
+        );
+        assert_eq!(
+            price_update_partially_verified.get_price_unchecked(&feed_id),
+            Ok(expected_price)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_unchecked(&feed_id),
+            Ok(expected_price)
+        );
+
+        assert_eq!(
+            price_update_unverified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                100,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_partially_verified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                100,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Ok(expected_price)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                100,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Ok(expected_price)
+        );
+
+        assert_eq!(
+            price_update_unverified.get_price_no_older_than(&mock_clock, 100, &feed_id,),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_partially_verified.get_price_no_older_than(&mock_clock, 100, &feed_id,),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than(&mock_clock, 100, &feed_id,),
+            Ok(expected_price)
+        );
+
+        // Reduce maximum_age
+        assert_eq!(
+            price_update_unverified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                10,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_partially_verified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                10,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Err(GetPriceError::PriceTooOld)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                10,
+                &feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Err(GetPriceError::PriceTooOld)
+        );
+
+        assert_eq!(
+            price_update_unverified.get_price_no_older_than(&mock_clock, 10, &feed_id,),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_partially_verified.get_price_no_older_than(&mock_clock, 10, &feed_id,),
+            Err(GetPriceError::InsufficientVerificationLevel)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than(&mock_clock, 10, &feed_id,),
+            Err(GetPriceError::PriceTooOld)
+        );
+
+        // Mismatched feed id
+        assert_eq!(
+            price_update_fully_verified.get_price_unchecked(&mismatched_feed_id),
+            Err(GetPriceError::MismatchedFeedId)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than_with_custom_verification_level(
+                &mock_clock,
+                100,
+                &mismatched_feed_id,
+                VerificationLevel::Partial { num_signatures: 5 }
+            ),
+            Err(GetPriceError::MismatchedFeedId)
+        );
+        assert_eq!(
+            price_update_fully_verified.get_price_no_older_than(
+                &mock_clock,
+                100,
+                &mismatched_feed_id,
+            ),
+            Err(GetPriceError::MismatchedFeedId)
+        );
     }
 }
