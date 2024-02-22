@@ -17,9 +17,13 @@ use {
         },
     },
     anyhow::Result,
-    ethers::signers::{
-        LocalWallet,
-        Signer,
+    ethers::{
+        abi::Bytes as AbiBytes,
+        signers::{
+            LocalWallet,
+            Signer,
+        },
+        types::Bytes,
     },
     std::sync::Arc,
 };
@@ -40,22 +44,25 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         // Initialize a Provider to interface with the EVM contract.
         let contract =
             Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
+
+        tracing::info!("{}: fetching provider info", chain_id);
         let provider_info = contract.get_provider_info(provider_address).call().await?;
-        tracing::info!("Provider info: {:?}", provider_info);
+        tracing::info!("{0}: provider info: {1:?}", chain_id, provider_info);
 
         let mut register = false;
 
         let uri = get_register_uri(&opts.base_uri, &chain_id)?;
+        let uri_as_bytes: Bytes = AbiBytes::from(uri.as_str()).into();
 
         // This condition satisfies for both when there is no registration and when there are no
         // more random numbers left to request
         if provider_info.end_sequence_number <= provider_info.sequence_number {
             tracing::info!(
-                "endSequenceNumber <= sequenceNumber. endSequenceNumber={0}, sequenceNumber={1}",
+                "{0}: endSequenceNumber <= sequenceNumber. endSequenceNumber={1}, sequenceNumber={2}",
+                chain_id,
                 provider_info.end_sequence_number,
                 provider_info.sequence_number
             );
-            tracing::info!("Registering to {}", &chain_id);
             register = true;
         } else {
             let metadata =
@@ -80,13 +87,16 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             if chain_state.reveal(provider_info.original_commitment_sequence_number)?
                 != provider_info.original_commitment
             {
-                tracing::info!("The root of the generated hash chain for chain id {} does not match the commitment",  &chain_id);
-                tracing::info!("Registering to {}", &chain_id);
+                tracing::info!(
+                    "{}: the root of the generated hash chain does not match the commitment",
+                    &chain_id
+                );
                 register = true;
             }
         }
 
         if register {
+            tracing::info!("{}: registering", &chain_id);
             register_provider(&RegisterProviderOptions {
                 config: opts.config.clone(),
                 chain_id: chain_id.clone(),
@@ -96,22 +106,25 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 uri,
             })
             .await?;
+            tracing::info!("{}: registered", &chain_id);
         } else {
             if provider_info.fee_in_wei != opts.fee {
+                tracing::info!("{}: updating provider fee", chain_id);
                 if let Some(r) = contract.set_provider_fee(opts.fee).send().await?.await? {
-                    tracing::info!("Updated provider fee: {:?}", r);
+                    tracing::info!("{0}: updated provider fee: {1:?}", chain_id, r);
                 }
             }
 
-            if bincode::deserialize::<String>(&provider_info.uri)? != uri {
+            if &provider_info.uri != &uri_as_bytes {
+                tracing::info!("{}: updating provider uri", chain_id);
                 if let Some(receipt) = contract
-                    .set_provider_uri(bincode::serialize(&uri)?.into())
+                    .set_provider_uri(uri_as_bytes)
                     .send()
                     .await?
                     .log_msg("Pending transfer hash")
                     .await?
                 {
-                    tracing::info!("Updated provider uri: {:?}", receipt);
+                    tracing::info!("{0}: updated provider uri: {1:?}", chain_id, receipt);
                 }
             }
         }
