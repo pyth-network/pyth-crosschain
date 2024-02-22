@@ -11,6 +11,8 @@ pub enum GetPriceError {
     InsufficientVerificationLevel,
     #[msg("Feed id must be 32 Bytes, that's 64 hex characters or 66 with a 0x prefix")]
     FeedIdMustBe32Bytes,
+    #[msg("Feed id contains non-hex characters")]
+    FeedIdNonHexCharacter,
 }
 
 #[macro_export]

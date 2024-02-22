@@ -199,8 +199,12 @@ impl PriceUpdateV1 {
 pub fn get_feed_id_from_hex(input: &str) -> std::result::Result<FeedId, GetPriceError> {
     let mut feed_id: FeedId = [0; 32];
     match input.len() {
-        66 => feed_id.copy_from_slice(&hex::decode(&input[2..]).unwrap()),
-        64 => feed_id.copy_from_slice(&hex::decode(input).unwrap()),
+        66 => feed_id.copy_from_slice(
+            &hex::decode(&input[2..]).map_err(|_| GetPriceError::FeedIdNonHexCharacter)?,
+        ),
+        64 => feed_id.copy_from_slice(
+            &hex::decode(input).map_err(|_| GetPriceError::FeedIdNonHexCharacter)?,
+        ),
         _ => return Err(GetPriceError::FeedIdMustBe32Bytes),
     }
     Ok(feed_id)
@@ -245,6 +249,32 @@ pub mod tests {
         assert!(!VerificationLevel::Partial { num_signatures: 8 }.gte(VerificationLevel::Full));
         assert!(!VerificationLevel::Partial { num_signatures: 8 }
             .gte(VerificationLevel::Partial { num_signatures: 9 }));
+    }
+
+    #[test]
+    fn get_feed_id_from_hex() {
+        let feed_id = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+        let expected_feed_id = [
+            239, 13, 139, 111, 218, 44, 235, 164, 29, 161, 93, 64, 149, 209, 218, 57, 42, 13, 47,
+            142, 208, 198, 199, 188, 15, 76, 250, 200, 194, 128, 181, 109,
+        ];
+        assert_eq!(super::get_feed_id_from_hex(feed_id), Ok(expected_feed_id));
+        assert_eq!(
+            super::get_feed_id_from_hex(&feed_id[2..]),
+            Ok(expected_feed_id)
+        );
+
+        assert_eq!(
+            super::get_feed_id_from_hex(&feed_id[..64]),
+            Err(GetPriceError::FeedIdNonHexCharacter)
+        );
+
+        assert_eq!(
+            super::get_feed_id_from_hex(
+                "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b5"
+            ),
+            Err(GetPriceError::FeedIdMustBe32Bytes)
+        );
     }
 
     #[test]
