@@ -72,19 +72,30 @@ export class NearPricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
-    const priceFeedUpdateData = await this.getPriceFeedsUpdateData(
-      priceIds
-    );
+    let priceFeedUpdateData;
+    try {
+      priceFeedUpdateData = await this.getPriceFeedsUpdateData(
+        priceIds
+      );
+    } catch (e: any) {
+      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+      return;
+    }
 
     console.log("Pushing ", priceIds);
 
     for (const data of priceFeedUpdateData) {
+      let updateFee;
       try {
-        const updateFee = await this.account.getUpdateFeeEstimate(data);
+        updateFee = await this.account.getUpdateFeeEstimate(data);
         console.log(`Update fee: ${updateFee}`);
-  
+      } catch (e: any) {
+        console.error(new Date(), "getUpdateFeeEstimate failed:", e);
+        continue;
+      }
+
+      try {
         const outcome = await this.account.updatePriceFeeds(data, updateFee);
-  
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
         const is_success = Object.values(outcome['receipts_outcome']).reduce((is_success, receipt) => {
           if (Object.prototype.hasOwnProperty.call(receipt["outcome"]["status"], "Failure")) {
@@ -94,12 +105,12 @@ export class NearPricePusher implements IPricePusher {
           return is_success;
         }, true);
         if (is_success) {
-          console.log(new Date(), "Successful. Tx hash: ", outcome["transaction"]["hash"]);
+          console.log(new Date(), "updatePriceFeeds successful. Tx hash: ", outcome["transaction"]["hash"]);
         } else {
-          console.error(new Date(), JSON.stringify(failureMessages, undefined, 2));
+          console.error(new Date(), "updatePriceFeeds failed:", JSON.stringify(failureMessages, undefined, 2));
         }
       } catch (e: any) {
-        console.error(new Date(), e);
+        console.error(new Date(), "updatePriceFeeds failed:", e);
       }
     }
   }
