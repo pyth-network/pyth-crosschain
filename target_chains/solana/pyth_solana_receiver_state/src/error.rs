@@ -8,7 +8,7 @@ pub enum GetPriceError {
     MismatchedFeedId,
     #[msg("This price feed update has a lower verification level than the one requested")]
     InsufficientVerificationLevel,
-    #[msg("Feed id must be 32 Bytes, that's 64 hex characters or 66 with 0x prefix")]
+    #[msg("Feed id must be 32 Bytes, that's 64 hex characters or 66 with a 0x prefix")]
     FeedIdMustBe32Bytes,
 }
 
