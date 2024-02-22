@@ -66,7 +66,7 @@ impl PriceUpdateV1 {
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
             self.price_message.feed_id == *feed_id,
-            GetPriceError::WrongFeedId
+            GetPriceError::MismatchedFeedId
         );
         Ok(Price {
             price:        self.price_message.price,
@@ -85,7 +85,7 @@ impl PriceUpdateV1 {
     ) -> std::result::Result<Price, GetPriceError> {
         check!(
             self.verification_level.gte(verification_level),
-            GetPriceError::WrongVerificationLevel
+            GetPriceError::InsufficientVerificationLevel
         );
         let price = self.get_price_unchecked(feed_id)?;
         check!(
@@ -119,7 +119,7 @@ impl PriceUpdateV1 {
  */
 pub fn get_feed_id_from_hex(input: &str) -> std::result::Result<FeedId, GetPriceError> {
     if input.len() != 66 {
-        return Err(GetPriceError::InvalidStringLength);
+        return Err(GetPriceError::FeedIdMustBe32Bytes);
     }
     let mut feed_id: FeedId = [0; 32];
     feed_id.copy_from_slice(&hex::decode(&input[2..]).unwrap());
