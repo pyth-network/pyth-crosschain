@@ -1,5 +1,7 @@
-import type { paths } from "./types";
-import createClient, { ClientOptions } from "openapi-fetch";
+import type { paths, components } from "./types";
+import createClient, {
+  ClientOptions as FetchClientOptions,
+} from "openapi-fetch";
 import {
   Address,
   encodeAbiParameters,
@@ -10,7 +12,7 @@ import {
   keccak256,
 } from "viem";
 import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
-
+import WebSocket from "isomorphic-ws";
 /**
  * ERC20 token with contract address and amount
  */
@@ -118,11 +120,172 @@ function checkTokenQty(token: { contract: string; amount: string }): TokenQty {
   };
 }
 
-export class Client {
-  private clientOptions?: ClientOptions;
+type ClientOptions = FetchClientOptions & { baseUrl: string };
 
-  constructor(clientOptions?: ClientOptions) {
+export interface WsOptions {
+  /**
+   * Max time to wait for a response from the server in milliseconds
+   */
+  response_timeout: number;
+}
+
+const DEFAULT_WS_OPTIONS: WsOptions = {
+  response_timeout: 5000,
+};
+
+export class Client {
+  public clientOptions: ClientOptions;
+  public wsOptions: WsOptions;
+  public websocket?: WebSocket;
+  public idCounter = 0;
+  public callbackRouter: Record<
+    string,
+    (response: components["schemas"]["ServerResultMessage"]) => void
+  > = {};
+  private websocketOpportunityCallback?: (
+    opportunity: Opportunity
+  ) => Promise<void>;
+
+  constructor(clientOptions: ClientOptions, wsOptions?: WsOptions) {
     this.clientOptions = clientOptions;
+    this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
+  }
+
+  private connectWebsocket() {
+    const websocketEndpoint = new URL(this.clientOptions.baseUrl);
+    websocketEndpoint.protocol =
+      websocketEndpoint.protocol === "https:" ? "wss:" : "ws:";
+    websocketEndpoint.pathname = "/v1/ws";
+
+    this.websocket = new WebSocket(websocketEndpoint.toString());
+    this.websocket.on("message", async (data) => {
+      const message:
+        | components["schemas"]["ServerResultResponse"]
+        | components["schemas"]["ServerUpdateResponse"] = JSON.parse(
+        data.toString()
+      );
+      if ("id" in message && message.id) {
+        const callback = this.callbackRouter[message.id];
+        if (callback !== undefined) {
+          callback(message);
+          delete this.callbackRouter[message.id];
+        }
+      } else if ("type" in message && message.type === "new_opportunity") {
+        if (this.websocketOpportunityCallback !== undefined) {
+          const convertedOpportunity = this.convertOpportunity(
+            message.opportunity
+          );
+          if (convertedOpportunity !== undefined) {
+            await this.websocketOpportunityCallback(convertedOpportunity);
+          }
+        }
+      } else if ("error" in message) {
+        // Can not route error messages to the callback router as they don't have an id
+        console.error(message.error);
+      }
+    });
+  }
+
+  /**
+   * Converts an opportunity from the server to the client format
+   * Returns undefined if the opportunity version is not supported
+   * @param opportunity
+   */
+  private convertOpportunity(
+    opportunity: components["schemas"]["OpportunityParamsWithMetadata"]
+  ): Opportunity | undefined {
+    if (opportunity.version != "v1") {
+      console.warn(
+        `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
+      );
+      return undefined;
+    }
+    return {
+      chainId: opportunity.chain_id,
+      opportunityId: opportunity.opportunity_id,
+      permissionKey: checkHex(opportunity.permission_key),
+      contract: checkAddress(opportunity.contract),
+      calldata: checkHex(opportunity.calldata),
+      value: BigInt(opportunity.value),
+      repayTokens: opportunity.repay_tokens.map(checkTokenQty),
+      receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
+    };
+  }
+
+  public setOpportunityHandler(
+    callback: (opportunity: Opportunity) => Promise<void>
+  ) {
+    this.websocketOpportunityCallback = callback;
+  }
+
+  /**
+   * Subscribes to the specified chains
+   *
+   * The opportunity handler will be called for opportunities on the specified chains
+   * If the opportunity handler is not set, an error will be thrown
+   * @param chains
+   */
+  async subscribeChains(chains: string[]) {
+    if (this.websocketOpportunityCallback === undefined) {
+      throw new Error("Opportunity handler not set");
+    }
+    return this.sendWebsocketMessage({
+      method: "subscribe",
+      params: {
+        chain_ids: chains,
+      },
+    });
+  }
+
+  /**
+   * Unsubscribes from the specified chains
+   *
+   * The opportunity handler will no longer be called for opportunities on the specified chains
+   * @param chains
+   */
+  async unsubscribeChains(chains: string[]) {
+    return this.sendWebsocketMessage({
+      method: "unsubscribe",
+      params: {
+        chain_ids: chains,
+      },
+    });
+  }
+
+  async sendWebsocketMessage(
+    msg: components["schemas"]["ClientMessage"]
+  ): Promise<void> {
+    const msg_with_id: components["schemas"]["ClientRequest"] = {
+      ...msg,
+      id: (this.idCounter++).toString(),
+    };
+    return new Promise((resolve, reject) => {
+      this.callbackRouter[msg_with_id.id] = (response) => {
+        if (response.status === "success") {
+          resolve();
+        } else {
+          reject(response.result);
+        }
+      };
+      if (this.websocket === undefined) {
+        this.connectWebsocket();
+      }
+      if (this.websocket !== undefined) {
+        if (this.websocket.readyState === WebSocket.CONNECTING) {
+          this.websocket.on("open", () => {
+            this.websocket?.send(JSON.stringify(msg_with_id));
+          });
+        } else if (this.websocket.readyState === WebSocket.OPEN) {
+          this.websocket.send(JSON.stringify(msg_with_id));
+        } else {
+          reject("Websocket connection closing or already closed");
+        }
+      }
+      setTimeout(() => {
+        delete this.callbackRouter[msg_with_id.id];
+        reject("Websocket response timeout");
+      }, this.wsOptions.response_timeout);
+    });
   }
 
   /**
@@ -138,22 +301,11 @@ export class Client {
       throw new Error("No opportunities found");
     }
     return opportunities.data.flatMap((opportunity) => {
-      if (opportunity.version != "v1") {
-        console.warn(
-          `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
-        );
+      const convertedOpportunity = this.convertOpportunity(opportunity);
+      if (convertedOpportunity === undefined) {
         return [];
       }
-      return {
-        chainId: opportunity.chain_id,
-        opportunityId: opportunity.opportunity_id,
-        permissionKey: checkHex(opportunity.permission_key),
-        contract: checkAddress(opportunity.contract),
-        calldata: checkHex(opportunity.calldata),
-        value: BigInt(opportunity.value),
-        repayTokens: opportunity.repay_tokens.map(checkTokenQty),
-        receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
-      };
+      return convertedOpportunity;
     });
   }
 
