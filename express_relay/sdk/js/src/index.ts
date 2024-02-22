@@ -122,8 +122,20 @@ function checkTokenQty(token: { contract: string; amount: string }): TokenQty {
 
 type ClientOptions = FetchClientOptions & { baseUrl: string };
 
+export interface WsOptions {
+  /**
+   * Max time to wait for a response from the server in milliseconds
+   */
+  response_timeout: number;
+}
+
+const DEFAULT_WS_OPTIONS: WsOptions = {
+  response_timeout: 5000,
+};
+
 export class Client {
   public clientOptions: ClientOptions;
+  public wsOptions: WsOptions;
   public websocket?: WebSocket;
   public idCounter = 0;
   public callbackRouter: Record<
@@ -134,8 +146,9 @@ export class Client {
     opportunity: Opportunity
   ) => Promise<void>;
 
-  constructor(clientOptions: ClientOptions) {
+  constructor(clientOptions: ClientOptions, wsOptions?: WsOptions) {
     this.clientOptions = clientOptions;
+    this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
   }
 
   private connectWebsocket() {
@@ -268,6 +281,10 @@ export class Client {
           reject("Websocket connection closing or already closed");
         }
       }
+      setTimeout(() => {
+        delete this.callbackRouter[msg_with_id.id];
+        reject("Websocket response timeout");
+      }, this.wsOptions.response_timeout);
     });
   }
 
