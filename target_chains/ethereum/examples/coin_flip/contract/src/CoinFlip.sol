@@ -85,11 +85,11 @@ contract CoinFlip {
     // from them in a provider-dependent manner.
     //
     // For the moment, the provider 0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344 hosts a webservice at
-    // https://fortuna-staging.pyth.network/ that allows anyone to retrieve their random values.
+    // https://fortuna-staging.dourolabs.app/ that allows anyone to retrieve their random values.
     // Fetch the following url:
-    // https://fortuna-staging.pyth.network/v1/chains/<chain id>/revelations/<sequence number>
+    // https://fortuna-staging.dourolabs.app/v1/chains/<chain id>/revelations/<sequence number>
     //
-    // The list of supported chain ids is available here https://fortuna-staging.pyth.network/v1/chains
+    // The list of supported chain ids is available here https://fortuna-staging.dourolabs.app/v1/chains
     //
     // **Warning** users of this protocol can stall the protocol by choosing not to reveal their generated random number.
     // Developers using Pyth Entropy should ensure that users are always incentivized (or at least, not disincentivized)

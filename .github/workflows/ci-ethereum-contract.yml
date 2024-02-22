@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@v1.1.1
         with:
           version: nightly
 

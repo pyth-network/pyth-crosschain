@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://pyth.network",
   "author": {
@@ -36,20 +36,22 @@
     "directory": "express_relay/sdk/js"
   },
   "dependencies": {
+    "isomorphic-ws": "^5.0.0",
     "openapi-client-axios": "^7.5.4",
     "openapi-fetch": "^0.8.2",
-    "viem": "^2.7.6"
+    "viem": "^2.7.6",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "eslint": "^8.56.0",
+    "jest": "^27.5.1",
     "openapi-typescript": "^6.5.5",
     "prettier": "^2.6.2",
     "typescript": "^5.1",
-    "yargs": "^17.4.1",
-    "jest": "^27.5.1"
+    "yargs": "^17.4.1"
   },
   "license": "Apache-2.0"
 }

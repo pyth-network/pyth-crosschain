@@ -4,9 +4,6 @@ The Pyth Entropy Solidity SDK allows you to generate secure random numbers on th
 interacting with the Pyth Entropy protocol.
 This SDK can be used for any application that requires random numbers, such as NFT mints, gaming, and more.
 
-**WARNING**: The Entropy protocol is currently in testnet. It is **NOT INTENDED** for use in production applications.
-Use this protocol at your own risk.
-
 ## Install
 
 ####Truffle/Hardhat
@@ -75,11 +72,11 @@ If you are invoking this off-chain, the method also emits a `PythRandomEvents.Re
 ### 3. Fetch the provider's number
 
 Fetch the provider's random number from them.
-For the provider `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` you can query the webservice at https://fortuna-staging.pyth.network :
+For the provider `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` you can query the webservice at https://fortuna-staging.dourolabs.app :
 
 ```typescript
 await axios.get(
-  `https://fortuna-staging.pyth.network/v1/chains/${chainName}/revelations/${sequenceNumber}`
+  `https://fortuna-staging.dourolabs.app/v1/chains/${chainName}/revelations/${sequenceNumber}`
 );
 ```
 

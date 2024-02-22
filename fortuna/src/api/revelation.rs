@@ -74,10 +74,10 @@ pub async fn revelation(
         Some(r)
             if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
         {
-            let value = &state
-                .state
-                .reveal(sequence)
-                .map_err(|_| RestError::Unknown)?;
+            let value = &state.state.reveal(sequence).map_err(|e| {
+                tracing::error!("Reveal failed {}", e);
+                RestError::Unknown
+            })?;
             let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
 
             Ok(Json(GetRandomValueResponse {

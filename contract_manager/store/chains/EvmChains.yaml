@@ -23,11 +23,6 @@
   rpcUrl: https://api.avax-test.network/ext/bc/C/rpc
   networkId: 43113
   type: EvmChain
-- id: base_goerli
-  mainnet: false
-  rpcUrl: https://goerli.base.org
-  networkId: 84531
-  type: EvmChain
 - id: avalanche
   mainnet: true
   rpcUrl: https://api.avax.network/ext/bc/C/rpc
@@ -472,4 +467,9 @@
   mainnet: true
   rpcUrl: https://inevm.calderachain.xyz/http
   networkId: 2525
+  type: EvmChain
+- id: berachain_testnet
+  mainnet: false
+  rpcUrl: https://rpc.ankr.com/berachain_testnet
+  networkId: 80085
   type: EvmChain

@@ -1,3 +1,4 @@
+import { isAccumulatorUpdateData } from "./AccumulatorUpdateData";
 import {
   Convert,
   Price as JsonPrice,
@@ -8,6 +9,12 @@ import {
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
 export type HexString = string;
+
+export {
+  isAccumulatorUpdateData,
+  parseAccumulatorUpdateData,
+  AccumulatorUpdateData,
+} from "./AccumulatorUpdateData";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
