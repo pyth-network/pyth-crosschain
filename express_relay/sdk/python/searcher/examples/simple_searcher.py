@@ -1,37 +1,18 @@
 import argparse
 import asyncio
 import logging
-import urllib.parse
-from typing import TypedDict
 
-import httpx
-from eth_account import Account
-
-from searcher.searcher_utils import BidInfo, construct_signature_liquidator
+from searcher.searcher_utils import BidInfo, SearcherClient
 from utils.types_liquidation_adapter import LiquidationOpportunity, OpportunityBid
 
 logger = logging.getLogger(__name__)
 
 VALID_UNTIL = 1_000_000_000_000
 
-class SimpleSearcher:
-    def __init__(self, private_key: str, chain_id: str, default_bid: int, liquidation_server_url: str):
-        self.private_key = private_key
-        self.chain_id = chain_id
+class SimpleSearcher(SearcherClient):
+    def __init__(self, private_key: str, chain_id: str, liquidation_server_url: str, default_bid: int):
+        super().__init__(private_key, chain_id, liquidation_server_url)
         self.default_bid = default_bid
-        self.liquidation_server_url = liquidation_server_url
-        self.liquidation_opportunities = []
-
-    async def get_liquidation_opportunities(self):
-        async with httpx.AsyncClient() as client:
-            self.liquidation_opportunities = (
-                await client.get(
-                    urllib.parse.urljoin(
-                        self.liquidation_server_url, "/v1/liquidation/opportunities"
-                    ),
-                    params={"chain_id": self.chain_id},
-                )
-            ).json()
 
     def assess_liquidation_opportunity(
         self,
@@ -69,24 +50,9 @@ class SimpleSearcher:
         Returns:
             An OpportunityBid object which can be sent to the liquidation server
         """
-        repay_tokens = [
-            (opp["contract"], int(opp["amount"])) for opp in opp["repay_tokens"]
-        ]
-        receipt_tokens = [
-            (opp["contract"], int(opp["amount"])) for opp in opp["receipt_tokens"]
-        ]
-
-        liquidator = Account.from_key(self.private_key).address
-        liq_calldata = bytes.fromhex(opp["calldata"].replace("0x", ""))
-
-        signature_liquidator = construct_signature_liquidator(
-            repay_tokens,
-            receipt_tokens,
-            opp["contract"],
-            liq_calldata,
-            int(opp["value"]),
+        signature_liquidator = self.construct_signature_liquidator(
+            opp,
             bid_info,
-            self.private_key,
         )
 
         opportunity_bid = {
@@ -94,24 +60,11 @@ class SimpleSearcher:
             "permission_key": opp["permission_key"],
             "amount": str(bid_info["bid"]),
             "valid_until": str(bid_info["valid_until"]),
-            "liquidator": liquidator,
+            "liquidator": self.liquidator,
             "signature": bytes(signature_liquidator.signature).hex(),
         }
 
         return opportunity_bid
-
-    async def submit_bid(self, opportunity_bid: OpportunityBid):
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                urllib.parse.urljoin(
-                    self.liquidation_server_url,
-                    f"/v1/liquidation/opportunities/{opportunity_bid['opportunity_id']}/bids",
-                ),
-                json=opportunity_bid,
-                timeout=20,
-            )
-        return resp
-
 
 
 async def main():
@@ -141,6 +94,13 @@ async def main():
         required=True,
         help="Liquidation server endpoint to use for fetching opportunities and submitting bids",
     )
+    parser.add_argument(
+        "--use-ws",
+        action="store_true",
+        dest="use_ws",
+        default=False,
+        help="Use websocket to fetch liquidation opportunities",
+    )
     args = parser.parse_args()
 
     logger.setLevel(logging.INFO if args.verbose == 0 else logging.DEBUG)
@@ -153,34 +113,44 @@ async def main():
     logger.addHandler(log_handler)
 
     sk_liquidator = args.private_key
-    liquidator = Account.from_key(sk_liquidator).address
-    logger.info("Liquidator address: %s", liquidator)
 
-    simple_searcher = SimpleSearcher(sk_liquidator, args.chain_id, args.bid, args.liquidation_server_url)
+    simple_searcher = SimpleSearcher(sk_liquidator, args.chain_id, args.liquidation_server_url, args.bid)
+    logger.info("Liquidator address: %s", simple_searcher.liquidator)
+
+    if args.use_ws:
+        # populate liquidation opportunities with initial call to http endpoint
+        await simple_searcher.get_liquidation_opportunities()
+        logging.debug("Using websocket to fetch liquidation opportunities")
+        ws_call = simple_searcher.ws_liquidation_opportunities()
+        asyncio.create_task(ws_call)
+    else:
+        logging.debug("Using http to fetch liquidation opportunities")
 
     while True:
-        try:
-            await simple_searcher.get_liquidation_opportunities()
-        except Exception as e:
-            logger.error(e)
-            await asyncio.sleep(5)
-            continue
+        if not args.use_ws:
+            try:
+                await simple_searcher.get_liquidation_opportunities()
+            except Exception as e:
+                logger.error(e)
+                await asyncio.sleep(5)
+                continue
 
         logger.debug("Found %d liquidation opportunities", len(simple_searcher.liquidation_opportunities))
 
-        for liquidation_opp in simple_searcher.liquidation_opportunities:
-            opp_id = liquidation_opp["opportunity_id"]
-            if liquidation_opp["version"] != "v1":
+        for permission_key in simple_searcher.liquidation_opportunities.keys():
+            liquidation_opportunity = simple_searcher.liquidation_opportunities[permission_key]
+            opp_id = liquidation_opportunity["opportunity_id"]
+            if liquidation_opportunity["version"] != "v1":
                 logger.warning(
                     "Opportunity %s has unsupported version %s",
                     opp_id,
-                    liquidation_opp["version"],
+                    liquidation_opportunity["version"],
                 )
                 continue
-            bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opp)
+            bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opportunity)
 
             if bid_info is not None:
-                tx = simple_searcher.create_liquidation_transaction(liquidation_opp, bid_info)
+                tx = simple_searcher.create_liquidation_transaction(liquidation_opportunity, bid_info)
 
                 resp = await simple_searcher.submit_bid(tx)
                 logger.info(
