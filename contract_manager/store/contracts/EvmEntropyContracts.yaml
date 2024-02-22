@@ -43,3 +43,9 @@
 - chain: optimism_sepolia
   address: "0x4821932D0CDd71225A6d914706A621e0389D7061"
   type: EvmEntropyContract
+- chain: mode
+  address: "0x8D254a21b3C86D32F7179855531CE99164721933"
+  type: EvmEntropyContract
+- chain: coredao_testnet
+  address: "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67"
+  type: EvmEntropyContract
