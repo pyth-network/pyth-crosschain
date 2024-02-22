@@ -26,6 +26,16 @@ class LiquidationOpportunity(TypedDict):
     # Opportunity format version, used to determine how to interpret the opportunity data
     version: str
 
+class OpportunityBid(TypedDict):
+    opportunity_id: str
+    permission_key: str
+    # The bid amount
+    amount: str
+    # The last block number at which the transaction will be valid
+    valid_until: str
+    liquidator: str
+    signature: str
+
 
 class LiquidationAdapterCalldata(TypedDict):
     repay_tokens: list[(str, int)]

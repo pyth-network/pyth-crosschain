@@ -10,7 +10,6 @@ class BidInfo(TypedDict):
     bid: int
     valid_until: int
 
-
 def construct_signature_liquidator(
     repay_tokens: list[(str, int)],
     receipt_tokens: list[(str, int)],
