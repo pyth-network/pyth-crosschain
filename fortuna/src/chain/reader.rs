@@ -16,7 +16,7 @@ pub trait EntropyReader: Send + Sync {
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 
-    async fn get_block_number(&self, request_block_status: BlockNumber) -> Result<u64>;
+    async fn get_block_number(&self, confirmed_block_status: BlockNumber) -> Result<u64>;
 }
 
 /// An in-flight request stored in the contract.

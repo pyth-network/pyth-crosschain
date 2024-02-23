@@ -93,7 +93,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             contract,
             provider_address: opts.provider,
             reveal_delay_blocks: chain_config.reveal_delay_blocks,
-            request_block_status: chain_config.request_block_status,
+            confirmed_block_status: chain_config.confirmed_block_status,
         };
 
         chains.insert(chain_id.clone(), state);
