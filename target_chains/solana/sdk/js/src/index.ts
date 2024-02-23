@@ -106,8 +106,8 @@ export class PythSolanaReceiverConnection {
     this.connection = connection;
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
-      commitment: "processed",
-    }); // TO DO make this configurable
+      commitment: connection.commitment,
+    });
     this.receiver = new Program<PythSolanaReceiver>(
       Idl as PythSolanaReceiver,
       DEFAULT_RECEIVER_PROGRAM_ID,
