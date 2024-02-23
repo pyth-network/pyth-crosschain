@@ -5,6 +5,8 @@ import { DefaultStore } from "../src/store";
 import { readFileSync } from "fs";
 import { toPrivateKey } from "../src";
 
+import { COMMON_DEPLOY_OPTIONS } from "./common";
+
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")
   .usage(
@@ -16,16 +18,8 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "Path to the standard JSON output of the contract (build artifact)",
     },
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to use for the deployment",
-    },
-    chain: {
-      type: "string",
-      demandOption: true,
-      desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
-    },
+    "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+    chain: COMMON_DEPLOY_OPTIONS["chain"],
     "deploy-args": {
       type: "array",
       desc: "Arguments to pass to the contract constructor. Each argument must begin with 0x if it's a hex string",

@@ -67,6 +67,7 @@ async function main() {
     lastExecuted = argv.offset - 1;
   }
   console.log("Starting from sequence number", lastExecuted);
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
       await matchedVault.getEmitter(),
