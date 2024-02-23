@@ -210,12 +210,14 @@ impl EntropyReader for PythContract {
         }
     }
 
-    async fn get_block_number(&self, confirmed_block_status: BlockNumber) -> Result<u64> {
+    async fn get_block_number(&self, confirmed_block_number: BlockNumber) -> Result<u64> {
         let block = self
             .client()
-            .get_block(confirmed_block_status)
+            .get_block(confirmed_block_number)
             .await?
             .ok_or_else(|| Error::msg("pending block confirmation"))?;
+
+        println!("{:?}", block);
 
         Ok(block
             .number

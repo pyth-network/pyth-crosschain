@@ -132,7 +132,7 @@ pub struct EthereumConfig {
     pub contract_addr: Address,
 
     /// How many blocks to wait before revealing the random number.
-    #[serde(default=0)]
+    #[serde(default)]
     pub reveal_delay_blocks: u64,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
@@ -142,5 +142,6 @@ pub struct EthereumConfig {
     /// The BlockNumber of the block that is considered confirmed.
     /// For eg., Finalized, Safe
     #[serde(default)]
-    pub confirmed_block_status: BlockNumber,
+    #[serde(rename = "confirmed_block_status")]
+    pub confirmed_block_number: BlockNumber,
 }
