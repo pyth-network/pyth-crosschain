@@ -217,7 +217,10 @@ mod test {
             TestResponse,
             TestServer,
         },
-        ethers::prelude::Address,
+        ethers::{
+            prelude::Address,
+            types::BlockNumber,
+        },
         lazy_static::lazy_static,
         std::sync::Arc,
     };

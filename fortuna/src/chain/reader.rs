@@ -41,7 +41,10 @@ pub mod mock {
         },
         anyhow::Result,
         axum::async_trait,
-        ethers::types::Address,
+        ethers::types::{
+            Address,
+            BlockNumber,
+        },
         std::sync::RwLock,
     };
 
@@ -114,7 +117,7 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self) -> Result<u64> {
+        async fn get_block_number(&self, confirmed_block_number: BlockNumber) -> Result<u64> {
             Ok(*self.block_number.read().unwrap())
         }
     }
