@@ -62,7 +62,7 @@ pub async fn revelation(
 
     let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
 
-    let current_block_number_fut = state.contract.get_block_number(state.recent_block_status);
+    let current_block_number_fut = state.contract.get_block_number(state.request_block_status);
 
     let (maybe_request, current_block_number) =
         try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {

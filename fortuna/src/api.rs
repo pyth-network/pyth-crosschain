@@ -81,7 +81,9 @@ pub struct BlockchainState {
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
     pub reveal_delay_blocks: u64,
-    pub recent_block_status: BlockNumber,
+    /// The BlockNumber of the block that includes the random number request. 
+    /// For eg., Finalized, Safe
+    pub request_block_status: BlockNumber,
 }
 
 pub struct Metrics {
@@ -243,7 +245,7 @@ mod test {
             contract:            eth_read.clone(),
             provider_address:    PROVIDER,
             reveal_delay_blocks: 1,
-            recent_block_status: BlockStatus::Latest,
+            request_block_status: BlockStatus::Latest,
         };
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
@@ -253,7 +255,7 @@ mod test {
             contract:            avax_read.clone(),
             provider_address:    PROVIDER,
             reveal_delay_blocks: 2,
-            recent_block_status: BlockStatus::Latest,
+            request_block_status: BlockStatus::Latest,
         };
 
         let api_state = ApiState::new(&[

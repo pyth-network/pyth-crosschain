@@ -138,7 +138,8 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub legacy_tx: bool,
 
-    /// Use the legacy transaction format (for networks without EIP 1559)
+    /// The BlockNumber of the block that includes the random number request. 
+    /// For eg., Finalized, Safe
     #[serde(default)]
-    pub block_status: BlockNumber,
+    pub request_block_status: BlockNumber,
 }
