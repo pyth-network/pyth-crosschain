@@ -30,9 +30,8 @@ class SearcherClient:
         else:
             raise ValueError("Invalid liquidation server URL")
         self.ws_msg_counter = 0
-        self.liquidation_opportunities = {}
 
-    async def get_liquidation_opportunities(self):
+    async def get_liquidation_opportunities(self) -> list[LiquidationOpportunity]:
         async with httpx.AsyncClient() as client:
             opportunities = (
                 await client.get(
@@ -43,12 +42,16 @@ class SearcherClient:
                 )
             ).json()
 
-        for opportunity in opportunities:
-            self.liquidation_opportunities[opportunity['permission_key']] = opportunity
+        return opportunities
 
-    async def ws_liquidation_opportunities(self):
+    async def ws_liquidation_opportunities(self, opportunity_handler):
+        """
+        Connects to the liquidation server's websocket and handles new liquidation opportunities.
+
+        Args:
+            opportunity_handler (async func): An async function that defines how to handle new liquidation opportunities. Should take in one external argument of type LiquidationOpportunity.
+        """
         async with websockets.connect(self.ws_endpoint) as ws:
-            # subscribe to this chain_id opportunities ws
             json_subscribe = {
                 "method": "subscribe",
                 "params": {
@@ -70,7 +73,7 @@ class SearcherClient:
                         continue
 
                     opportunity = msg["opportunity"]
-                    self.liquidation_opportunities[opportunity['permission_key']] = opportunity
+                    await opportunity_handler(opportunity)
 
                 except Exception as e:
                     raise Exception(f"Error in websocket message: {e}")

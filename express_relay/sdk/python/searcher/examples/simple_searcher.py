@@ -66,6 +66,19 @@ class SimpleSearcher(SearcherClient):
 
         return opportunity_bid
 
+    async def ws_opportunity_handler(
+        self, opp: LiquidationOpportunity
+    ):
+        bid_info = self.assess_liquidation_opportunity(opp)
+        opp_bid = self.create_liquidation_transaction(opp, bid_info)
+        resp = await self.submit_bid(opp_bid)
+        logger.info(
+            "Submitted bid amount %s for opportunity %s, server response: %s",
+            bid_info["bid"],
+            opp_bid["opportunity_id"],
+            resp.text,
+        )
+
 
 async def main():
     parser = argparse.ArgumentParser()
@@ -118,49 +131,44 @@ async def main():
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
     if args.use_ws:
-        # populate liquidation opportunities with initial call to http endpoint
-        await simple_searcher.get_liquidation_opportunities()
         logging.debug("Using websocket to fetch liquidation opportunities")
-        ws_call = simple_searcher.ws_liquidation_opportunities()
-        asyncio.create_task(ws_call)
+        await simple_searcher.ws_liquidation_opportunities(simple_searcher.ws_opportunity_handler)
     else:
         logging.debug("Using http to fetch liquidation opportunities")
 
-    while True:
-        if not args.use_ws:
+        while True:
             try:
-                await simple_searcher.get_liquidation_opportunities()
+                liquidation_opportunities = await simple_searcher.get_liquidation_opportunities()
             except Exception as e:
                 logger.error(e)
                 await asyncio.sleep(5)
                 continue
 
-        logger.debug("Found %d liquidation opportunities", len(simple_searcher.liquidation_opportunities))
+            logger.debug("Found %d liquidation opportunities", len(liquidation_opportunities))
 
-        for permission_key in simple_searcher.liquidation_opportunities.keys():
-            liquidation_opportunity = simple_searcher.liquidation_opportunities[permission_key]
-            opp_id = liquidation_opportunity["opportunity_id"]
-            if liquidation_opportunity["version"] != "v1":
-                logger.warning(
-                    "Opportunity %s has unsupported version %s",
-                    opp_id,
-                    liquidation_opportunity["version"],
-                )
-                continue
-            bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opportunity)
+            for liquidation_opportunity in liquidation_opportunities:
+                opp_id = liquidation_opportunity["opportunity_id"]
+                if liquidation_opportunity["version"] != "v1":
+                    logger.warning(
+                        "Opportunity %s has unsupported version %s",
+                        opp_id,
+                        liquidation_opportunity["version"],
+                    )
+                    continue
+                bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opportunity)
 
-            if bid_info is not None:
-                tx = simple_searcher.create_liquidation_transaction(liquidation_opportunity, bid_info)
+                if bid_info is not None:
+                    tx = simple_searcher.create_liquidation_transaction(liquidation_opportunity, bid_info)
 
-                resp = await simple_searcher.submit_bid(tx)
-                logger.info(
-                    "Submitted bid amount %s for opportunity %s, server response: %s",
-                    bid_info["bid"],
-                    opp_id,
-                    resp.text,
-                )
+                    resp = await simple_searcher.submit_bid(tx)
+                    logger.info(
+                        "Submitted bid amount %s for opportunity %s, server response: %s",
+                        bid_info["bid"],
+                        opp_id,
+                        resp.text,
+                    )
 
-        await asyncio.sleep(1)
+            await asyncio.sleep(1)
 
 
 if __name__ == "__main__":
