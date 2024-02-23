@@ -245,7 +245,7 @@ mod test {
             contract:            eth_read.clone(),
             provider_address:    PROVIDER,
             reveal_delay_blocks: 1,
-            confirmed_block_status: BlockStatus::Latest,
+            confirmed_block_status: BlockNumber::Latest,
         };
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
@@ -255,7 +255,7 @@ mod test {
             contract:            avax_read.clone(),
             provider_address:    PROVIDER,
             reveal_delay_blocks: 2,
-            confirmed_block_status: BlockStatus::Latest,
+            confirmed_block_status: BlockNumber::Latest,
         };
 
         let api_state = ApiState::new(&[
