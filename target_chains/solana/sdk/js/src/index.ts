@@ -3,8 +3,9 @@ import {
   ComputeBudgetProgram,
   Connection,
   Signer,
-  Transaction,
   TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { PythSolanaReceiver } from "./idl/pyth_solana_receiver";
 import Idl from "./idl/pyth_solana_receiver.json";
@@ -24,6 +25,69 @@ import { parseAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { DEFAULT_TREASURY_ID, VAA_SPLIT_INDEX, VAA_START } from "./constants";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { getGuardianSetIndex } from "./vaa";
+
+export class TransactionBuilder {
+  private transactionInstructions: {
+    instructions: TransactionInstruction[];
+    signers: Signer[];
+  }[] = [];
+  private pythSolanaReceiverConnection: PythSolanaReceiverConnection;
+  private encodedVaaAddress: PublicKey | undefined;
+  private priceUpdateAddress: PublicKey | undefined;
+
+  constructor(pythSolanaReceiverConnection: PythSolanaReceiverConnection) {
+    this.pythSolanaReceiverConnection = pythSolanaReceiverConnection;
+  }
+
+  async addPostPriceUpdate(vaa: string) {
+    const { transactions, priceUpdateAddress, encodedVaaAddress } =
+      await this.pythSolanaReceiverConnection.buildPostPriceUpdateInstructions(
+        vaa
+      );
+    this.encodedVaaAddress = encodedVaaAddress;
+    this.priceUpdateAddress = priceUpdateAddress;
+    this.transactionInstructions.push(...transactions);
+  }
+
+  async addArbitraryInstruction(
+    instruction: (
+      priceUpdateAddress: PublicKey
+    ) => Promise<TransactionInstruction>,
+    signers: Signer[]
+  ) {
+    if (this.priceUpdateAddress === undefined) {
+      throw new Error(
+        "You need to call addPostPriceUpdate before calling addArbitraryInstruction"
+      );
+    }
+    this.transactionInstructions[
+      this.transactionInstructions.length - 1
+    ].instructions.push(await instruction(this.priceUpdateAddress));
+    this.transactionInstructions[
+      this.transactionInstructions.length - 1
+    ].signers.push(...signers);
+  }
+
+  async getTransactions(): Promise<
+    { tx: VersionedTransaction; signers: Signer[] }[]
+  > {
+    const blockhash = (
+      await this.pythSolanaReceiverConnection.connection.getLatestBlockhash()
+    ).blockhash;
+    return this.transactionInstructions.map(({ instructions, signers }) => {
+      return {
+        tx: new VersionedTransaction(
+          new TransactionMessage({
+            recentBlockhash: blockhash,
+            instructions: instructions,
+            payerKey: this.pythSolanaReceiverConnection.wallet.publicKey,
+          }).compileToV0Message()
+        ),
+        signers: signers,
+      };
+    });
+  }
+}
 
 export class PythSolanaReceiverConnection {
   readonly connection: Connection;
@@ -56,9 +120,17 @@ export class PythSolanaReceiverConnection {
     );
   }
 
-  async buildPostPriceUpdate(vaa: string): Promise<{
-    transactions: { tx: Transaction; signers: Signer[] }[];
+  public getBuilder(): TransactionBuilder {
+    return new TransactionBuilder(this);
+  }
+
+  async buildPostPriceUpdateInstructions(vaa: string): Promise<{
+    transactions: {
+      instructions: TransactionInstruction[];
+      signers: Signer[];
+    }[];
     priceUpdateAddress: PublicKey;
+    encodedVaaAddress: PublicKey;
   }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
       Buffer.from(vaa, "base64")
@@ -80,20 +152,17 @@ export class PythSolanaReceiverConnection {
           encodedVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
+      await this.wormhole.methods
+        .writeEncodedVaa({
+          index: 0,
+          data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
+        })
+        .accounts({
+          draftVaa: encodedVaaKeypair.publicKey,
+        })
+        .signers([encodedVaaKeypair])
+        .instruction(),
     ];
-
-    // First transaction
-    const firstTransaction = await this.wormhole.methods
-      .writeEncodedVaa({
-        index: 0,
-        data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
-      })
-      .accounts({
-        draftVaa: encodedVaaKeypair.publicKey,
-      })
-      .preInstructions(firstTransactionInstructions)
-      .signers([encodedVaaKeypair])
-      .transaction();
 
     const priceUpdateKeypair = new Keypair();
     const secondTransactionInstructions: TransactionInstruction[] = [
@@ -114,38 +183,34 @@ export class PythSolanaReceiverConnection {
           draftVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
+      await this.receiver.methods
+        .postUpdate({
+          merklePriceUpdate: accumulatorUpdateData.updates[0],
+          treasuryId: DEFAULT_TREASURY_ID,
+        })
+        .accounts({
+          encodedVaa: encodedVaaKeypair.publicKey,
+          priceUpdateAccount: priceUpdateKeypair.publicKey,
+          treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+          config: getConfigPda(),
+        })
+        .signers([priceUpdateKeypair])
+        .instruction(),
     ];
-
-    // Second transaction
-    const secondTransaction = await this.receiver.methods
-      .postUpdate({
-        merklePriceUpdate: accumulatorUpdateData.updates[0],
-        treasuryId: DEFAULT_TREASURY_ID,
-      })
-      .accounts({
-        encodedVaa: encodedVaaKeypair.publicKey,
-        priceUpdateAccount: priceUpdateKeypair.publicKey,
-        treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
-        config: getConfigPda(),
-      })
-      .signers([priceUpdateKeypair])
-      .preInstructions(secondTransactionInstructions)
-      .transaction();
 
     return {
       transactions: [
-        { tx: firstTransaction, signers: [encodedVaaKeypair] },
-        { tx: secondTransaction, signers: [priceUpdateKeypair] },
+        {
+          instructions: firstTransactionInstructions,
+          signers: [encodedVaaKeypair],
+        },
+        {
+          instructions: secondTransactionInstructions,
+          signers: [priceUpdateKeypair],
+        },
       ],
       priceUpdateAddress: priceUpdateKeypair.publicKey,
+      encodedVaaAddress: encodedVaaKeypair.publicKey,
     };
-  }
-
-  async postPriceUpdate(vaa: string): Promise<PublicKey> {
-    let transactionsToSend = await this.buildPostPriceUpdate(vaa);
-    await this.provider.sendAll(transactionsToSend.transactions, {
-      skipPreflight: true,
-    });
-    return transactionsToSend.priceUpdateAddress;
   }
 }
