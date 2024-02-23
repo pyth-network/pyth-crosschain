@@ -1,8 +1,5 @@
 use {
-    crate::{
-        api::ChainId,
-        chain::reader::BlockNumber,
-    },
+    crate::api::ChainId,
     anyhow::{
         anyhow,
         Result,
@@ -15,7 +12,10 @@ use {
         Args,
         Parser,
     },
-    ethers::types::Address,
+    ethers::types::{
+        Address,
+        BlockNumber,
+    },
     std::{
         collections::HashMap,
         fs,
@@ -132,9 +132,13 @@ pub struct EthereumConfig {
     pub contract_addr: Address,
 
     /// How many blocks to wait before revealing the random number.
-    pub reveal_delay_blocks: BlockNumber,
+    pub reveal_delay_blocks: u64,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]
     pub legacy_tx: bool,
+
+    /// Use the legacy transaction format (for networks without EIP 1559)
+    #[serde(default)]
+    pub block_status: BlockNumber,
 }

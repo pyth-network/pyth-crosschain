@@ -1,10 +1,11 @@
 use {
     anyhow::Result,
     axum::async_trait,
-    ethers::types::Address,
+    ethers::types::{
+        Address,
+        BlockNumber,
+    },
 };
-
-pub type BlockNumber = u64;
 
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
@@ -15,7 +16,7 @@ pub trait EntropyReader: Send + Sync {
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 
-    async fn get_block_number(&self) -> Result<BlockNumber>;
+    async fn get_block_number(&self, recent_block_status: BlockNumber) -> Result<u64>;
 }
 
 /// An in-flight request stored in the contract.
@@ -26,7 +27,7 @@ pub struct Request {
     pub provider:        Address,
     pub sequence_number: u64,
     // The block number where this request was created
-    pub block_number:    BlockNumber,
+    pub block_number:    u64,
     pub use_blockhash:   bool,
 }
 
@@ -35,7 +36,6 @@ pub struct Request {
 pub mod mock {
     use {
         crate::chain::reader::{
-            BlockNumber,
             EntropyReader,
             Request,
         },
@@ -49,15 +49,15 @@ pub mod mock {
     /// This class is internally locked to allow tests to modify the in-flight requests while
     /// the API is also holding a pointer to the same data structure.
     pub struct MockEntropyReader {
-        block_number: RwLock<BlockNumber>,
+        block_number: RwLock<u64>,
         /// The set of requests that are currently in-flight.
         requests:     RwLock<Vec<Request>>,
     }
 
     impl MockEntropyReader {
         pub fn with_requests(
-            block_number: BlockNumber,
-            requests: &[(Address, u64, BlockNumber, bool)],
+            block_number: u64,
+            requests: &[(Address, u64, u64, bool)],
         ) -> MockEntropyReader {
             MockEntropyReader {
                 block_number: RwLock::new(block_number),
@@ -80,7 +80,7 @@ pub mod mock {
             &self,
             provider: Address,
             sequence: u64,
-            block_number: BlockNumber,
+            block_number: u64,
             use_blockhash: bool,
         ) -> &Self {
             self.requests.write().unwrap().push(Request {
@@ -92,7 +92,7 @@ pub mod mock {
             self
         }
 
-        pub fn set_block_number(&self, block_number: BlockNumber) -> &Self {
+        pub fn set_block_number(&self, block_number: u64) -> &Self {
             *(self.block_number.write().unwrap()) = block_number;
             self
         }
@@ -114,7 +114,7 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self) -> Result<BlockNumber> {
+        async fn get_block_number(&self) -> Result<u64> {
             Ok(*self.block_number.read().unwrap())
         }
     }

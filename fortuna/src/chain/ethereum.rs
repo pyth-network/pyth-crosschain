@@ -1,16 +1,14 @@
 use {
     crate::{
-        chain::{
-            reader,
-            reader::{
-                BlockNumber,
-                EntropyReader,
-            },
+        chain::reader::{
+            self,
+            EntropyReader,
         },
         config::EthereumConfig,
     },
     anyhow::{
         anyhow,
+        Error,
         Result,
     },
     axum::async_trait,
@@ -39,7 +37,10 @@ use {
             LocalWallet,
             Signer,
         },
-        types::transaction::eip2718::TypedTransaction,
+        types::{
+            transaction::eip2718::TypedTransaction,
+            BlockNumber,
+        },
     },
     sha3::{
         Digest,
@@ -209,7 +210,16 @@ impl EntropyReader for PythContract {
         }
     }
 
-    async fn get_block_number(&self) -> Result<BlockNumber> {
-        Ok(self.client().get_block_number().await?.as_u64())
+    async fn get_block_number(&self, recent_block_status: BlockNumber) -> Result<u64> {
+        let block = self
+            .client()
+            .get_block(recent_block_status)
+            .await?
+            .ok_or_else(|| Error::msg("pending block confirmation"))?;
+
+        Ok(block
+            .number
+            .ok_or_else(|| Error::msg("pending  confirmation"))?
+            .as_u64())
     }
 }
