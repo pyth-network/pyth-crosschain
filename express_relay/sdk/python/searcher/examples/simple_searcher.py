@@ -2,8 +2,10 @@ import argparse
 import asyncio
 import logging
 
-from searcher.searcher_utils import BidInfo, SearcherClient
-from utils.types_liquidation_adapter import LiquidationOpportunity, OpportunityBid
+from searcher_utils import BidInfo, SearcherClient
+
+from openapi_client.models.opportunity_bid import OpportunityBid
+from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -16,66 +18,51 @@ class SimpleSearcher(SearcherClient):
 
     def assess_liquidation_opportunity(
         self,
-        opp: LiquidationOpportunity,
+        opp: OpportunityParamsWithMetadata,
     ) -> BidInfo | None:
         """
-        Assesses whether a liquidation opportunity is worth liquidating; if so, returns the bid and valid_until timestamp. Otherwise returns None.
+        Assesses whether a liquidation opportunity is worth liquidating; if so, returns a BidInfo object. Otherwise returns None.
         This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the liquidation.
         There are many ways to evaluate this, but the most common way is to check that the value of the amount the searcher will receive from the liquidation exceeds the value of the amount repaid.
         Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
-        If the opporutnity is deemed worthwhile, this function can return a bid amount representing the amount of native token to bid on this opportunity, and a timestamp representing the time at which the transaction will expire.
-        Otherwise, this function can return None.
-        In this simple searcher, the function always (naively) returns the default bid and a valid_until timestamp.
+        In this simple searcher, the function always (naively) returns a BidInfo object with the default bid and a valid_until timestamp.
         Args:
             default_bid: The default amount of bid for liquidation opportunities.
-            opp: A LiquidationOpportunity object, representing a single liquidation opportunity.
+            opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
         Returns:
-            If the opportunity is deemed worthwhile, this function can return a BidInfo object, representing the user's bid and the timestamp at which the user's bid should expire. If the LiquidationOpportunity is not deemed worthwhile, this function can return None.
-        """
-        user_liquidation_params = {
-            "bid": self.default_bid,
-            "valid_until": VALID_UNTIL,
-        }
-        return user_liquidation_params
-
-    def create_liquidation_transaction(
-        self, opp: LiquidationOpportunity, bid_info: BidInfo
-    ) -> OpportunityBid:
-        """
-        Creates a bid for a liquidation opportunity.
-        Args:
-            opp: A LiquidationOpportunity object, representing a single liquidation opportunity.
-            sk_liquidator: A 0x-prefixed hex string representing the liquidator's private key.
-            bid_info: necessary information for the liquidation bid
-        Returns:
-            An OpportunityBid object which can be sent to the liquidation server
+            If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
         signature_liquidator = self.construct_signature_liquidator(
             opp,
-            bid_info,
+            self.default_bid,
+            VALID_UNTIL,
         )
 
         opportunity_bid = {
-            "opportunity_id": opp["opportunity_id"],
-            "permission_key": opp["permission_key"],
-            "amount": str(bid_info["bid"]),
-            "valid_until": str(bid_info["valid_until"]),
+            "permission_key": opp.permission_key,
+            "amount": str(self.default_bid),
+            "valid_until": str(VALID_UNTIL),
             "liquidator": self.liquidator,
             "signature": bytes(signature_liquidator.signature).hex(),
         }
+        opportunity_bid = OpportunityBid.from_dict(opportunity_bid)
 
-        return opportunity_bid
+        bid_info = BidInfo(
+            opportunity_id=opp.opportunity_id,
+            opportunity_bid=opportunity_bid,
+        )
+
+        return bid_info
 
     async def ws_opportunity_handler(
-        self, opp: LiquidationOpportunity
+        self, opp: OpportunityParamsWithMetadata
     ):
         bid_info = self.assess_liquidation_opportunity(opp)
-        opp_bid = self.create_liquidation_transaction(opp, bid_info)
-        resp = await self.submit_bid(opp_bid)
+        resp = await self.submit_bid(bid_info)
         logger.info(
             "Submitted bid amount %s for opportunity %s, server response: %s",
-            bid_info["bid"],
-            opp_bid["opportunity_id"],
+            bid_info.opportunity_bid.amount,
+            bid_info.opportunity_id,
             resp.text,
         )
 
@@ -147,24 +134,22 @@ async def main():
             logger.debug("Found %d liquidation opportunities", len(liquidation_opportunities))
 
             for liquidation_opportunity in liquidation_opportunities:
-                opp_id = liquidation_opportunity["opportunity_id"]
-                if liquidation_opportunity["version"] != "v1":
+                opp_id = liquidation_opportunity.opportunity_id
+                if liquidation_opportunity.version != "v1":
                     logger.warning(
                         "Opportunity %s has unsupported version %s",
                         opp_id,
-                        liquidation_opportunity["version"],
+                        liquidation_opportunity.version,
                     )
                     continue
                 bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opportunity)
 
                 if bid_info is not None:
-                    tx = simple_searcher.create_liquidation_transaction(liquidation_opportunity, bid_info)
-
-                    resp = await simple_searcher.submit_bid(tx)
+                    resp = await simple_searcher.submit_bid(bid_info)
                     logger.info(
                         "Submitted bid amount %s for opportunity %s, server response: %s",
-                        bid_info["bid"],
-                        opp_id,
+                        bid_info.opportunity_bid.amount,
+                        bid_info.opportunity_id,
                         resp.text,
                     )
 
