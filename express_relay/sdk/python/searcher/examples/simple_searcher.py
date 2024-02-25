@@ -4,8 +4,8 @@ import logging
 
 from searcher_utils import BidInfo, SearcherClient
 
-from openapi_client.models.opportunity_bid import OpportunityBid
-from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
+from schema.openapi_client.models.opportunity_bid import OpportunityBid
+from schema.openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 
 logger = logging.getLogger(__name__)
 

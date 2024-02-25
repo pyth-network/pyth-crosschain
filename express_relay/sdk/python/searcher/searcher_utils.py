@@ -10,8 +10,8 @@ import urllib.parse
 import websockets
 import json
 
-from openapi_client.models.opportunity_bid import OpportunityBid
-from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
+from schema.openapi_client.models.opportunity_bid import OpportunityBid
+from schema.openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 
 class BidInfo:
     def __init__(self, opportunity_id: str, opportunity_bid: OpportunityBid):

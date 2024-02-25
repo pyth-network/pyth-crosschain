@@ -77,14 +77,14 @@ export interface components {
           /** @enum {string} */
           method: "subscribe";
           params: {
-            chain_ids: components["schemas"]["ChainId"][];
+            chain_ids: string[];
           };
         }
       | {
           /** @enum {string} */
           method: "unsubscribe";
           params: {
-            chain_ids: components["schemas"]["ChainId"][];
+            chain_ids: string[];
           };
         };
     ClientRequest: components["schemas"]["ClientMessage"] & {
@@ -157,8 +157,16 @@ export interface components {
       value: string;
     };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithMetadata: components["schemas"]["OpportunityParams"] & {
-      creation_time: components["schemas"]["UnixTimestamp"];
+    OpportunityParamsWithMetadata: (components["schemas"]["OpportunityParamsV1"] & {
+      /** @enum {string} */
+      version: "v1";
+    }) & {
+      /**
+       * Format: int64
+       * @description Creation time of the opportunity
+       * @example 1700000000
+       */
+      creation_time: number;
       /**
        * @description The opportunity unique id
        * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
@@ -220,8 +228,16 @@ export interface components {
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
     OpportunityParamsWithMetadata: {
       content: {
-        "application/json": components["schemas"]["OpportunityParams"] & {
-          creation_time: components["schemas"]["UnixTimestamp"];
+        "application/json": (components["schemas"]["OpportunityParamsV1"] & {
+          /** @enum {string} */
+          version: "v1";
+        }) & {
+          /**
+           * Format: int64
+           * @description Creation time of the opportunity
+           * @example 1700000000
+           */
+          creation_time: number;
           /**
            * @description The opportunity unique id
            * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
@@ -286,7 +302,7 @@ export interface operations {
       /** @description Array of liquidation opportunities ready for bidding */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithId"][];
+          "application/json": components["schemas"]["OpportunityParamsWithMetadata"][];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];
@@ -315,7 +331,7 @@ export interface operations {
       /** @description The created opportunity */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithId"];
+          "application/json": components["schemas"]["OpportunityParamsWithMetadata"];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];

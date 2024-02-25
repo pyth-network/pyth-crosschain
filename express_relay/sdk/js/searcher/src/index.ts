@@ -158,7 +158,7 @@ export class Client {
     websocketEndpoint.pathname = "/v1/ws";
 
     this.websocket = new WebSocket(websocketEndpoint.toString());
-    this.websocket.on("message", async (data) => {
+    this.websocket.on("message", async (data: string) => {
       const message:
         | components["schemas"]["ServerResultResponse"]
         | components["schemas"]["ServerUpdateResponse"] = JSON.parse(
