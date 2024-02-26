@@ -257,9 +257,7 @@ export class MultisigVault {
     ixToSend.push(await this.activateProposalIx(proposalAddress));
     ixToSend.push(await this.approveProposalIx(proposalAddress));
 
-    const txToSend = await TransactionBuilder.batchIntoLegacyTransactions(
-      ixToSend
-    );
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend);
     await this.sendAllTransactions(txToSend);
     return proposalAddress;
   }
