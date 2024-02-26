@@ -61,7 +61,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   );
 
   const transaction = new Transaction();
-  for (let ix of ixsToSend) {
+  for (const ix of ixsToSend) {
     transaction.add(ix);
   }
 

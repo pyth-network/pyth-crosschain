@@ -147,7 +147,7 @@ export class TransactionBuilder {
       PublicKey.unique(),
       new Connection("http://placeholder.placeholder")
     ); // We only need wallet and connection for `VersionedTransaction` so we can put placeholders here
-    for (let instruction of instructions) {
+    for (const instruction of instructions) {
       transactionBuilder.addInstruction(instruction, []);
     }
     return transactionBuilder.getLegacyTransactions().map(({ tx }) => {
