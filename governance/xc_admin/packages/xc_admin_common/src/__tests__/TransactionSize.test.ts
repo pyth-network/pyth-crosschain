@@ -18,8 +18,10 @@ import {
   getSizeOfExecutorInstructions,
   MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-import { getSizeOfTransaction } from "@pythnetwork/solana-utils";
-import { TransactionBuilder } from "@pythnetwork/solana-utils/src";
+import {
+  getSizeOfTransaction,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
 
 it("Unit test for getSizeOfTransaction", async () => {
   jest.setTimeout(60000);
