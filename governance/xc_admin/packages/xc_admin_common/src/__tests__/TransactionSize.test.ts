@@ -18,18 +18,8 @@ import {
   getSizeOfExecutorInstructions,
   MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-import {
-  getSizeOfTransaction,
-  getSizeOfCompressedU16,
-} from "@pythnetwork/solana-utils";
+import { getSizeOfTransaction } from "@pythnetwork/solana-utils";
 import { TransactionBuilder } from "@pythnetwork/solana-utils/src";
-
-it("Unit test compressed u16 size", async () => {
-  expect(getSizeOfCompressedU16(127)).toBe(1);
-  expect(getSizeOfCompressedU16(128)).toBe(2);
-  expect(getSizeOfCompressedU16(16383)).toBe(2);
-  expect(getSizeOfCompressedU16(16384)).toBe(3);
-});
 
 it("Unit test for getSizeOfTransaction", async () => {
   jest.setTimeout(60000);
@@ -118,7 +108,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   }
 
   const txToSend: Transaction[] =
-    await TransactionBuilder.batchIntoLegacyTransactions(ixsToSend);
+    TransactionBuilder.batchIntoLegacyTransactions(ixsToSend);
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
   ).toBe(ixsToSend.length);
