@@ -25,6 +25,7 @@ import SquadsMesh, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
@@ -256,7 +257,9 @@ export class MultisigVault {
     ixToSend.push(await this.activateProposalIx(proposalAddress));
     ixToSend.push(await this.approveProposalIx(proposalAddress));
 
-    const txToSend = batchIntoTransactions(ixToSend);
+    const txToSend = await TransactionBuilder.batchIntoLegacyTransactions(
+      ixToSend
+    );
     await this.sendAllTransactions(txToSend);
     return proposalAddress;
   }
@@ -360,7 +363,7 @@ export class MultisigVault {
       }
     }
 
-    const txToSend = batchIntoTransactions(ixToSend);
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend);
 
     await this.sendAllTransactions(txToSend);
     return newProposals;
@@ -445,32 +448,6 @@ export function batchIntoExecutorPayload(
   return batches;
 }
 
-/**
- * Batch instructions into transactions
- */
-export function batchIntoTransactions(
-  instructions: TransactionInstruction[]
-): Transaction[] {
-  let i = 0;
-  const txToSend: Transaction[] = [];
-  while (i < instructions.length) {
-    let j = i + 2;
-    while (
-      j < instructions.length &&
-      getSizeOfTransaction(instructions.slice(i, j)) <= PACKET_DATA_SIZE
-    ) {
-      j += 1;
-    }
-    const tx = new Transaction();
-    for (let k = i; k < j - 1; k += 1) {
-      tx.add(instructions[k]);
-    }
-    i = j - 1;
-    txToSend.push(tx);
-  }
-  return txToSend;
-}
-
 /** Get the size of instructions when serialized as in a remote executor payload */
 export function getSizeOfExecutorInstructions(
   instructions: TransactionInstruction[]
@@ -480,54 +457,6 @@ export function getSizeOfExecutorInstructions(
       return 32 + 4 + ix.keys.length * 34 + 4 + ix.data.length;
     })
     .reduce((a, b) => a + b);
-}
-/**
- * Get the size of a transaction that would contain the provided array of instructions
- */
-export function getSizeOfTransaction(
-  instructions: TransactionInstruction[]
-): number {
-  const signers = new Set<string>();
-  const accounts = new Set<string>();
-
-  instructions.map((ix) => {
-    accounts.add(ix.programId.toBase58()),
-      ix.keys.map((key) => {
-        if (key.isSigner) {
-          signers.add(key.pubkey.toBase58());
-        }
-        accounts.add(key.pubkey.toBase58());
-      });
-  });
-
-  const instruction_sizes: number = instructions
-    .map(
-      (ix) =>
-        1 +
-        getSizeOfCompressedU16(ix.keys.length) +
-        ix.keys.length +
-        getSizeOfCompressedU16(ix.data.length) +
-        ix.data.length
-    )
-    .reduce((a, b) => a + b, 0);
-
-  return (
-    1 +
-    signers.size * 64 +
-    3 +
-    getSizeOfCompressedU16(accounts.size) +
-    32 * accounts.size +
-    32 +
-    getSizeOfCompressedU16(instructions.length) +
-    instruction_sizes
-  );
-}
-
-/**
- * Get the size of n in bytes when serialized as a CompressedU16
- */
-export function getSizeOfCompressedU16(n: number) {
-  return 1 + Number(n >= 128) + Number(n >= 16384);
 }
 
 /**

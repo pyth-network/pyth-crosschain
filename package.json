@@ -19,6 +19,7 @@
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
     "target_chains/sui/cli",
+    "target_chains/solana/sdk/js/solana_utils",
     "contract_manager"
   ],
   "dependencies": {
