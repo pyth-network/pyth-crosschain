@@ -31,3 +31,5 @@ jobs:
         run: cargo-build-sbf
       - name: Run tests
         run: cargo-test-sbf
+      - name: Run sdk tests
+        run: cargo test --p pyth-solana-sdk
