@@ -74,9 +74,11 @@ const usePyth = (): PythHookData => {
     connectionRef.current = connection
     ;(async () => {
       try {
-        const allPythAccounts = await connection.getProgramAccounts(
-          getPythProgramKeyForCluster(cluster)
-        )
+        const allPythAccounts = [
+          ...(await connection.getProgramAccounts(
+            getPythProgramKeyForCluster(cluster)
+          )),
+        ]
         if (cancelled) return
         const priceRawConfigs: { [key: string]: PriceRawConfig } = {}
 
