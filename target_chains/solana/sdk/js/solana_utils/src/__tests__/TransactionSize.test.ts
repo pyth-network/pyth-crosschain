@@ -9,7 +9,6 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { getSizeOfCompressedU16, getSizeOfTransaction } from "..";
-import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 it("Unit test compressed u16 size", async () => {
   expect(getSizeOfCompressedU16(127)).toBe(1);
@@ -50,7 +49,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   ixsToSend.push(
     new TransactionInstruction({
       keys: [{ pubkey: PublicKey.unique(), isSigner: true, isWritable: true }],
-      programId: TOKEN_PROGRAM_ID,
+      programId: PublicKey.unique(),
       data: Buffer.from([1, 2, 3]),
     })
   );
