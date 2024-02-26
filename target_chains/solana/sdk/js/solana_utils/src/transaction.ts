@@ -60,6 +60,10 @@ export function getSizeOfCompressedU16(n: number) {
   return 1 + Number(n >= 128) + Number(n >= 16384);
 }
 
+/**
+ * This class is helpful for batching instructions into transactions in an efficient way.
+ * As you add instructions, it adds them to the current transactions until it's full, then it starts a new transaction.
+ */
 export class TransactionBuilder {
   readonly transactionInstructions: {
     instructions: TransactionInstruction[];
@@ -73,6 +77,10 @@ export class TransactionBuilder {
     this.connection = connection;
   }
 
+  /**
+   * Add an instruction to the builder, the signers argument can be used to specify ephemeral signers that need to sign the transaction
+   * where this instruction appears
+   */
   addInstruction(instruction: TransactionInstruction, signers: Signer[]) {
     if (this.transactionInstructions.length === 0) {
       this.transactionInstructions.push({
@@ -99,6 +107,9 @@ export class TransactionBuilder {
       });
   }
 
+  /**
+   * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
   async getVersionedTransactions(): Promise<
     { tx: VersionedTransaction; signers: Signer[] }[]
   > {
@@ -117,6 +128,9 @@ export class TransactionBuilder {
     });
   }
 
+  /**
+   * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
   getLegacyTransactions(): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(({ instructions, signers }) => {
       return {
