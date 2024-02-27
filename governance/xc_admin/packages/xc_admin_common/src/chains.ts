@@ -134,7 +134,7 @@ export const RECEIVER_CHAINS = {
 // value and that is an expected behavior.
 export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
 export declare type ChainName = keyof typeof CHAINS;
-export declare type ChainId = (typeof CHAINS)[ChainName];
+export declare type ChainId = typeof CHAINS[ChainName];
 
 export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
