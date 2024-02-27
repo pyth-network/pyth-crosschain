@@ -1,10 +1,5 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import {
-  Connection,
-  Signer,
-  TransactionInstruction,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { Connection, Signer, VersionedTransaction } from "@solana/web3.js";
 import { PythSolanaReceiver } from "./idl/pyth_solana_receiver";
 import Idl from "./idl/pyth_solana_receiver.json";
 import {
@@ -19,7 +14,10 @@ import {
   getTreasuryPda,
 } from "./address";
 import { PublicKey, Keypair } from "@solana/web3.js";
-import { parseAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
+import {
+  parseAccumulatorUpdateData,
+  parsePriceFeedMessage,
+} from "@pythnetwork/price-service-sdk";
 import {
   DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
   DEFAULT_TREASURY_ID,
@@ -67,7 +65,7 @@ export class PythSolanaReceiverConnection {
   async withPriceUpdate(
     vaa: string,
     getInstructions: (
-      priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
+      priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
@@ -90,7 +88,7 @@ export class PythSolanaReceiverConnection {
   async withPartiallyVerifiedPriceUpdate(
     vaa: string,
     getInstructions: (
-      priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
+      priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
@@ -141,7 +139,12 @@ export class PythSolanaReceiverConnection {
           signers: [priceUpdateKeypair],
         },
       ],
-      priceFeedIdToPriceAccount: { 0: priceUpdateKeypair.publicKey },
+      priceFeedIdToPriceAccount: {
+        ["0x" +
+        parsePriceFeedMessage(
+          accumulatorUpdateData.updates[0].message
+        ).feedId.toString("hex")]: priceUpdateKeypair.publicKey,
+      },
     };
   }
 
@@ -236,7 +239,12 @@ export class PythSolanaReceiverConnection {
 
     return {
       instructions,
-      priceFeedIdToPriceAccount: { 0: priceUpdateKeypair.publicKey },
+      priceFeedIdToPriceAccount: {
+        ["0x" +
+        parsePriceFeedMessage(
+          accumulatorUpdateData.updates[0].message
+        ).feedId.toString("hex")]: priceUpdateKeypair.publicKey,
+      },
       encodedVaaAddress: encodedVaaKeypair.publicKey,
     };
   }
