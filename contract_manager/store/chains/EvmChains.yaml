@@ -473,3 +473,8 @@
   rpcUrl: https://rpc.ankr.com/berachain_testnet
   networkId: 80085
   type: EvmChain
+- id: blast
+  mainnet: true
+  rpcUrl: https://falling-small-wildflower.blast-mainnet.quiknode.pro/12f8bf7671bdfa28937eef1f36912cdea6735015/
+  networkId: 81457
+  type: EvmChain

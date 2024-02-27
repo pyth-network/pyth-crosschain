@@ -62,6 +62,7 @@ export const RECEIVER_CHAINS = {
   filecoin: 60043,
   lightlink_phoenix: 60044,
   injective_inevm: 60045,
+  blast: 60046,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -133,7 +134,7 @@ export const RECEIVER_CHAINS = {
 // value and that is an expected behavior.
 export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
 export declare type ChainName = keyof typeof CHAINS;
-export declare type ChainId = typeof CHAINS[ChainName];
+export declare type ChainId = (typeof CHAINS)[ChainName];
 
 export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
