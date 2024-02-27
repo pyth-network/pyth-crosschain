@@ -11,8 +11,12 @@ export function trimSignatures(vaa: Buffer, n: number): Buffer {
       "Resulting VAA can't have more signatures than the original VAA"
     );
   }
-  return Buffer.concat([
+
+  const trimmedVaa = Buffer.concat([
     vaa.subarray(0, 5 + n * VAA_SIGNATURE_SIZE),
     vaa.subarray(5 + currentNumSignatures * VAA_SIGNATURE_SIZE),
   ]);
+
+  trimmedVaa[5] = n;
+  return trimmedVaa;
 }
