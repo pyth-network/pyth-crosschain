@@ -3,7 +3,6 @@ use {
     axum::async_trait,
     ethers::types::{
         Address,
-        BlockId,
         BlockNumber as EthersBlockNumber,
     },
 };
@@ -24,12 +23,12 @@ pub enum BlockStatus {
     Safe,
 }
 
-impl Into<BlockId> for BlockStatus {
-    fn into(self) -> BlockId {
+impl Into<EthersBlockNumber> for BlockStatus {
+    fn into(self) -> EthersBlockNumber {
         match self {
-            BlockStatus::Latest => BlockId::Number(EthersBlockNumber::Latest),
-            BlockStatus::Finalized => BlockId::Number(EthersBlockNumber::Finalized),
-            BlockStatus::Safe => BlockId::Number(EthersBlockNumber::Safe),
+            BlockStatus::Latest => EthersBlockNumber::Latest,
+            BlockStatus::Finalized => EthersBlockNumber::Finalized,
+            BlockStatus::Safe => EthersBlockNumber::Safe,
         }
     }
 }

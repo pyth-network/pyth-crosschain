@@ -41,7 +41,7 @@ use {
         },
         types::{
             transaction::eip2718::TypedTransaction,
-            BlockId,
+            BlockNumber as EthersBlockNumber,
         },
     },
     sha3::{
@@ -213,10 +213,10 @@ impl EntropyReader for PythContract {
     }
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
-        let block_id: BlockId = confirmed_block_status.into();
+        let block_number: EthersBlockNumber = confirmed_block_status.into();
         let block = self
             .client()
-            .get_block(block_id)
+            .get_block(block_number)
             .await?
             .ok_or_else(|| Error::msg("pending block confirmation"))?;
 
