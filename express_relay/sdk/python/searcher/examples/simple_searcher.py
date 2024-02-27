@@ -1,19 +1,22 @@
 import argparse
 import asyncio
 import logging
+from eth_account.account import Account
 
 from searcher_utils import BidInfo, SearcherClient
 
-from schema.openapi_client.models.opportunity_bid import OpportunityBid
-from schema.openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
+from openapi_client.models.opportunity_bid import OpportunityBid
+from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 
 logger = logging.getLogger(__name__)
 
 VALID_UNTIL = 1_000_000_000_000
 
 class SimpleSearcher(SearcherClient):
-    def __init__(self, private_key: str, chain_id: str, liquidation_server_url: str, default_bid: int):
-        super().__init__(private_key, chain_id, liquidation_server_url)
+    def __init__(self, liquidation_server_url: str, private_key: str, default_bid: int):
+        super().__init__(liquidation_server_url)
+        self.private_key = private_key
+        self.liquidator = Account.from_key(private_key).address
         self.default_bid = default_bid
 
     def assess_liquidation_opportunity(
@@ -27,29 +30,15 @@ class SimpleSearcher(SearcherClient):
         Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
         In this simple searcher, the function always (naively) returns a BidInfo object with the default bid and a valid_until timestamp.
         Args:
-            default_bid: The default amount of bid for liquidation opportunities.
             opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
         Returns:
             If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        signature_liquidator = self.construct_signature_liquidator(
+        bid_info = self.sign_bid(
             opp,
             self.default_bid,
             VALID_UNTIL,
-        )
-
-        opportunity_bid = {
-            "permission_key": opp.permission_key,
-            "amount": str(self.default_bid),
-            "valid_until": str(VALID_UNTIL),
-            "liquidator": self.liquidator,
-            "signature": bytes(signature_liquidator.signature).hex(),
-        }
-        opportunity_bid = OpportunityBid.from_dict(opportunity_bid)
-
-        bid_info = BidInfo(
-            opportunity_id=opp.opportunity_id,
-            opportunity_bid=opportunity_bid,
+            self.private_key
         )
 
         return bid_info
@@ -58,13 +47,12 @@ class SimpleSearcher(SearcherClient):
         self, opp: OpportunityParamsWithMetadata
     ):
         bid_info = self.assess_liquidation_opportunity(opp)
-        resp = await self.submit_bid(bid_info)
-        logger.info(
-            "Submitted bid amount %s for opportunity %s, server response: %s",
-            bid_info.opportunity_bid.amount,
-            bid_info.opportunity_id,
-            resp.text,
-        )
+        if bid_info:
+            try:
+                await self.submit_bid(bid_info)
+                logger.info(f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}")
+            except Exception as e:
+                logger.error(f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}: {e}")
 
 
 async def main():
@@ -77,10 +65,11 @@ async def main():
         help="Private key of the searcher for signing calldata",
     )
     parser.add_argument(
-        "--chain-id",
+        "--chain-ids",
         type=str,
         required=True,
-        help="Chain ID of the network to monitor for liquidation opportunities",
+        nargs="+",
+        help="Chain ID(s) of the network(s) to monitor for liquidation opportunities",
     )
     parser.add_argument(
         "--bid",
@@ -93,13 +82,6 @@ async def main():
         type=str,
         required=True,
         help="Liquidation server endpoint to use for fetching opportunities and submitting bids",
-    )
-    parser.add_argument(
-        "--use-ws",
-        action="store_true",
-        dest="use_ws",
-        default=False,
-        help="Use websocket to fetch liquidation opportunities",
     )
     args = parser.parse_args()
 
@@ -114,47 +96,10 @@ async def main():
 
     sk_liquidator = args.private_key
 
-    simple_searcher = SimpleSearcher(sk_liquidator, args.chain_id, args.liquidation_server_url, args.bid)
+    simple_searcher = SimpleSearcher(args.liquidation_server_url, sk_liquidator, args.bid)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
-    if args.use_ws:
-        logging.debug("Using websocket to fetch liquidation opportunities")
-        await simple_searcher.ws_liquidation_opportunities(simple_searcher.ws_opportunity_handler)
-    else:
-        logging.debug("Using http to fetch liquidation opportunities")
-
-        while True:
-            try:
-                liquidation_opportunities = await simple_searcher.get_liquidation_opportunities()
-            except Exception as e:
-                logger.error(e)
-                await asyncio.sleep(5)
-                continue
-
-            logger.debug("Found %d liquidation opportunities", len(liquidation_opportunities))
-
-            for liquidation_opportunity in liquidation_opportunities:
-                opp_id = liquidation_opportunity.opportunity_id
-                if liquidation_opportunity.version != "v1":
-                    logger.warning(
-                        "Opportunity %s has unsupported version %s",
-                        opp_id,
-                        liquidation_opportunity.version,
-                    )
-                    continue
-                bid_info = simple_searcher.assess_liquidation_opportunity(liquidation_opportunity)
-
-                if bid_info is not None:
-                    resp = await simple_searcher.submit_bid(bid_info)
-                    logger.info(
-                        "Submitted bid amount %s for opportunity %s, server response: %s",
-                        bid_info.opportunity_bid.amount,
-                        bid_info.opportunity_id,
-                        resp.text,
-                    )
-
-            await asyncio.sleep(1)
-
+    await simple_searcher.ws_liquidation_opportunities(args.chain_ids, simple_searcher.ws_opportunity_handler)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,8 +1,10 @@
-# Pyth Express Relay Searcher Python SDK
+# Pyth Express Relay Python SDK
 
-Utility library for searchers to interact with the Pyth Express Relay API.
+Utility library for searchers and protocols to interact with the Pyth Express Relay API.
 
-The SDK includes a basic Searcher client for connecting to the Express Relay server as well as an example SimpleSearcher class that provides a simple workflow for assessing and bidding on liquidation opportunities.
+The SDK includes searcher-side utilities and protocol-side utilities. The searcher-side utilities include a basic Searcher client for connecting to the Express Relay server as well as an example SimpleSearcher class that provides a simple workflow for assessing and bidding on liquidation opportunities.
+
+# Searcher
 
 ## Installation
 
@@ -19,7 +21,7 @@ $ brew install openapi-generator
 To generate the types from the Express Relay server, run
 
 ```
-$ openapi-generator generate -i https://per-staging.dourolabs.app/docs/openapi.json -g python -o schema
+$ openapi-generator generate -i https://per-staging.dourolabs.app/docs/openapi.json -g python --additional-properties=generateSourceCodeOnly=true --global-property models,modelTests=false,modelDocs=false
 ```
 
 ## Quickstart

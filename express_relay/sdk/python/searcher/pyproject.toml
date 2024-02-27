@@ -8,6 +8,15 @@ build-backend = "setuptools.build_meta"
 [tool.poetry]
 name = "express-relay-searcher-utils"
 version = 0.0.1
+dependencies = [
+    "web3",
+    "eth_abi",
+    "eth_account",
+    "httpx",
+    "websockets",
+    "asyncio",
+    "argparse"
+]
 description = "Utilities for searchers to interact with the express relay protocol."
 license = "Proprietary"
 readme = "README.md"
