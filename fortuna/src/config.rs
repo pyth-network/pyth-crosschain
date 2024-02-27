@@ -1,5 +1,11 @@
 use {
-    crate::{api::ChainId, chain::reader::BlockStatus},
+    crate::{
+        api::ChainId,
+        chain::reader::{
+            BlockNumber,
+            BlockStatus,
+        },
+    },
     anyhow::{
         anyhow,
         Result,
@@ -12,8 +18,7 @@ use {
         Args,
         Parser,
     },
-    ethers::types::
-        Address,
+    ethers::types::Address,
     std::{
         collections::HashMap,
         fs,
@@ -129,8 +134,11 @@ pub struct EthereumConfig {
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
 
-    /// How many blocks to wait before revealing the random number.
-    pub reveal_delay_blocks: u64,
+    /// reveal_delay_blocks - The difference between the block number with the
+    /// confirmed_block_status(see below) and the block number of a request to
+    /// Entropy should be greater than `reveal_delay_blocks` for Fortuna to reveal
+    /// its commitment.
+    pub reveal_delay_blocks: BlockNumber,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]

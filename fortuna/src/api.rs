@@ -1,8 +1,9 @@
 use {
     crate::{
         chain::reader::{
-            EntropyReader,
+            BlockNumber,
             BlockStatus,
+            EntropyReader,
         },
         state::HashChainState,
     },
@@ -80,7 +81,7 @@ pub struct BlockchainState {
     pub provider_address:       Address,
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
-    pub reveal_delay_blocks:    u64,
+    pub reveal_delay_blocks:    BlockNumber,
     /// The BlockStatus of the block that includes the random number request.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,
@@ -217,8 +218,7 @@ mod test {
             TestResponse,
             TestServer,
         },
-        ethers::
-            prelude::Address,
+        ethers::prelude::Address,
         lazy_static::lazy_static,
         std::sync::Arc,
     };

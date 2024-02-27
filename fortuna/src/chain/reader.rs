@@ -3,12 +3,15 @@ use {
     axum::async_trait,
     ethers::types::{
         Address,
-        BlockNumber,
+        BlockNumber as EthersBlockNumber,
+        BlockId,
     },
 };
 
+pub type BlockNumber = u64;
+
 /// A block status.
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum BlockStatus {
     /// Latest block
     #[default]
@@ -19,12 +22,12 @@ pub enum BlockStatus {
     Safe,
 }
 
-impl Into<BlockNumber> for BlockStatus {
-    fn into(self) ->BlockNumber {
+impl Into<BlockId> for BlockStatus {
+    fn into(self) -> BlockId {
         match self {
-            BlockStatus::Latest => BlockNumber::Latest,
-            BlockStatus::Finalized => BlockNumber::Finalized,
-            BlockStatus::Safe => BlockNumber::Safe,
+            BlockStatus::Latest => BlockId::Number(EthersBlockNumber::Latest),
+            BlockStatus::Finalized => BlockId::Number(EthersBlockNumber::Finalized),
+            BlockStatus::Safe => BlockId::Number(EthersBlockNumber::Safe),
         }
     }
 }
@@ -38,7 +41,7 @@ pub trait EntropyReader: Send + Sync {
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 
-    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<u64>;
+    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
 }
 
 /// An in-flight request stored in the contract.
@@ -49,7 +52,7 @@ pub struct Request {
     pub provider:        Address,
     pub sequence_number: u64,
     // The block number where this request was created
-    pub block_number:    u64,
+    pub block_number:    BlockNumber,
     pub use_blockhash:   bool,
 }
 
@@ -65,7 +68,7 @@ pub mod mock {
         axum::async_trait,
         ethers::types::{
             Address,
-            BlockNumber,
+            EthersBlockNumber,
         },
         std::sync::RwLock,
     };
@@ -74,15 +77,15 @@ pub mod mock {
     /// This class is internally locked to allow tests to modify the in-flight requests while
     /// the API is also holding a pointer to the same data structure.
     pub struct MockEntropyReader {
-        block_number: RwLock<u64>,
+        block_number: RwLock<BlockNumber>,
         /// The set of requests that are currently in-flight.
         requests:     RwLock<Vec<Request>>,
     }
 
     impl MockEntropyReader {
         pub fn with_requests(
-            block_number: u64,
-            requests: &[(Address, u64, u64, bool)],
+            block_number: BlockNumber,
+            requests: &[(Address, u64, BlockNumber, bool)],
         ) -> MockEntropyReader {
             MockEntropyReader {
                 block_number: RwLock::new(block_number),
@@ -105,7 +108,7 @@ pub mod mock {
             &self,
             provider: Address,
             sequence: u64,
-            block_number: u64,
+            block_number: BlockNumber,
             use_blockhash: bool,
         ) -> &Self {
             self.requests.write().unwrap().push(Request {
@@ -117,7 +120,7 @@ pub mod mock {
             self
         }
 
-        pub fn set_block_number(&self, block_number: u64) -> &Self {
+        pub fn set_block_number(&self, block_number: BlockNumber) -> &Self {
             *(self.block_number.write().unwrap()) = block_number;
             self
         }
@@ -139,7 +142,10 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<u64> {
+        async fn get_block_number(
+            &self,
+            confirmed_block_status: BlockStatus,
+        ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
         }
     }
