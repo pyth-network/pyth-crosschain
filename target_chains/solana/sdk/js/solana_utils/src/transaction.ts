@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -9,9 +10,14 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 
+export const DEFAULT_COMPUTE_BUDGET_UNITS = 200000;
+export const PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET =
+  PACKET_DATA_SIZE - 52;
+
 export type InstructionWithEphemeralSigners = {
   instruction: TransactionInstruction;
   signers: Signer[];
+  computeUnits?: number;
 };
 
 /**
@@ -73,6 +79,7 @@ export class TransactionBuilder {
   readonly transactionInstructions: {
     instructions: TransactionInstruction[];
     signers: Signer[];
+    computeUnits: number;
   }[] = [];
   readonly payer: PublicKey;
   readonly connection: Connection;
@@ -87,18 +94,19 @@ export class TransactionBuilder {
    * where this instruction appears
    */
   addInstruction(args: InstructionWithEphemeralSigners) {
-    const { instruction, signers } = args;
+    const { instruction, signers, computeUnits } = args;
     if (this.transactionInstructions.length === 0) {
       this.transactionInstructions.push({
         instructions: [instruction],
         signers: signers,
+        computeUnits: computeUnits ?? 0,
       });
     } else if (
       getSizeOfTransaction([
         ...this.transactionInstructions[this.transactionInstructions.length - 1]
           .instructions,
         instruction,
-      ]) <= PACKET_DATA_SIZE
+      ]) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
     ) {
       this.transactionInstructions[
         this.transactionInstructions.length - 1
@@ -106,16 +114,20 @@ export class TransactionBuilder {
       this.transactionInstructions[
         this.transactionInstructions.length - 1
       ].signers.push(...signers);
+      this.transactionInstructions[
+        this.transactionInstructions.length - 1
+      ].computeUnits += computeUnits ?? 0;
     } else
       this.transactionInstructions.push({
         instructions: [instruction],
         signers: signers,
+        computeUnits: computeUnits ?? 0,
       });
   }
 
   addInstructions(instructions: InstructionWithEphemeralSigners[]) {
-    for (const { instruction, signers } of instructions) {
-      this.addInstruction({ instruction, signers });
+    for (const { instruction, signers, computeUnits } of instructions) {
+      this.addInstruction({ instruction, signers, computeUnits });
     }
   }
 
@@ -126,18 +138,38 @@ export class TransactionBuilder {
     { tx: VersionedTransaction; signers: Signer[] }[]
   > {
     const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
-    return this.transactionInstructions.map(({ instructions, signers }) => {
-      return {
-        tx: new VersionedTransaction(
-          new TransactionMessage({
-            recentBlockhash: blockhash,
-            instructions: instructions,
-            payerKey: this.payer,
-          }).compileToV0Message()
-        ),
-        signers: signers,
-      };
-    });
+    return this.transactionInstructions.map(
+      ({ instructions, signers, computeUnits }) => {
+        if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
+          return {
+            tx: new VersionedTransaction(
+              new TransactionMessage({
+                recentBlockhash: blockhash,
+                instructions: [
+                  ...instructions,
+                  ComputeBudgetProgram.setComputeUnitLimit({
+                    units: computeUnits,
+                  }),
+                ],
+                payerKey: this.payer,
+              }).compileToV0Message()
+            ),
+            signers: signers,
+          };
+        } else {
+          return {
+            tx: new VersionedTransaction(
+              new TransactionMessage({
+                recentBlockhash: blockhash,
+                instructions: instructions,
+                payerKey: this.payer,
+              }).compileToV0Message()
+            ),
+            signers: signers,
+          };
+        }
+      }
+    );
   }
 
   /**

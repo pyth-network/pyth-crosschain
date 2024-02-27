@@ -21,8 +21,11 @@ import {
 import {
   DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
   DEFAULT_TREASURY_ID,
+  POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
+  POST_UPDATE_COMPUTE_BUDGET,
   VAA_SPLIT_INDEX,
   VAA_START,
+  VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./constants";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { getGuardianSetIndex, trimSignatures } from "./vaa";
@@ -63,7 +66,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async withPriceUpdate(
-    vaa: string,
+    priceUpdateData: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>
@@ -73,20 +76,22 @@ export class PythSolanaReceiverConnection {
       this.connection
     );
     const { instructions, priceFeedIdToPriceAccount, encodedVaaAddress } =
-      await this.buildPostPriceUpdateInstructions(vaa);
+      await this.buildPostPriceUpdateInstructions(priceUpdateData);
     builder.addInstructions(instructions);
     builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
     builder.addInstruction(await this.buildCloseEncodedVaa(encodedVaaAddress));
-    builder.addInstruction(
-      await this.buildClosePriceUpdate(
-        Object.values(priceFeedIdToPriceAccount)[0]
+    await Promise.all(
+      Object.values(priceFeedIdToPriceAccount).map(async (priceUpdateAccount) =>
+        builder.addInstruction(
+          await this.buildClosePriceUpdate(priceUpdateAccount)
+        )
       )
     );
     return builder.getVersionedTransactions();
   }
 
   async withPartiallyVerifiedPriceUpdate(
-    vaa: string,
+    priceUpdateData: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>
@@ -96,65 +101,73 @@ export class PythSolanaReceiverConnection {
       this.connection
     );
     const { instructions, priceFeedIdToPriceAccount } =
-      await this.buildPostPriceUpdateAtomicInstructions(vaa);
+      await this.buildPostPriceUpdateAtomicInstructions(priceUpdateData);
     builder.addInstructions(instructions);
     builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
-    builder.addInstruction(
-      await this.buildClosePriceUpdate(
-        Object.values(priceFeedIdToPriceAccount)[0]
+    await Promise.all(
+      Object.values(priceFeedIdToPriceAccount).map(async (priceUpdateAccount) =>
+        builder.addInstruction(
+          await this.buildClosePriceUpdate(priceUpdateAccount)
+        )
       )
     );
     return builder.getVersionedTransactions();
   }
 
-  async buildPostPriceUpdateAtomicInstructions(vaa: string): Promise<{
+  async buildPostPriceUpdateAtomicInstructions(
+    priceUpdateData: string
+  ): Promise<{
     instructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceAccount: Record<string, PublicKey>;
   }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
-      Buffer.from(vaa, "base64")
+      Buffer.from(priceUpdateData, "base64")
     );
     const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
     const trimmedVaa = trimSignatures(
       accumulatorUpdateData.vaa,
       DEFAULT_REDUCED_GUARDIAN_SET_SIZE
     );
-    const priceUpdateKeypair = new Keypair();
+
+    const priceFeedIdToPriceAccount: Record<string, PublicKey> = {};
+    const instructions: InstructionWithEphemeralSigners[] = [];
+    for (const update of accumulatorUpdateData.updates) {
+      const priceUpdateKeypair = new Keypair();
+      instructions.push({
+        instruction: await this.receiver.methods
+          .postUpdateAtomic({
+            vaa: trimmedVaa,
+            merklePriceUpdate: accumulatorUpdateData.updates[0],
+            treasuryId: DEFAULT_TREASURY_ID,
+          })
+          .accounts({
+            priceUpdateAccount: priceUpdateKeypair.publicKey,
+            treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+            config: getConfigPda(),
+            guardianSet: getGuardianSetPda(guardianSetIndex),
+          })
+          .instruction(),
+        signers: [priceUpdateKeypair],
+        computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
+      });
+      priceFeedIdToPriceAccount[
+        "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+      ] = priceUpdateKeypair.publicKey;
+    }
+
     return {
-      instructions: [
-        {
-          instruction: await this.receiver.methods
-            .postUpdateAtomic({
-              vaa: trimmedVaa,
-              merklePriceUpdate: accumulatorUpdateData.updates[0],
-              treasuryId: DEFAULT_TREASURY_ID,
-            })
-            .accounts({
-              priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
-              config: getConfigPda(),
-              guardianSet: getGuardianSetPda(guardianSetIndex),
-            })
-            .instruction(),
-          signers: [priceUpdateKeypair],
-        },
-      ],
-      priceFeedIdToPriceAccount: {
-        ["0x" +
-        parsePriceFeedMessage(
-          accumulatorUpdateData.updates[0].message
-        ).feedId.toString("hex")]: priceUpdateKeypair.publicKey,
-      },
+      instructions,
+      priceFeedIdToPriceAccount,
     };
   }
 
-  async buildPostPriceUpdateInstructions(vaa: string): Promise<{
+  async buildPostPriceUpdateInstructions(priceUpdateData: string): Promise<{
     instructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceAccount: Record<string, PublicKey>;
     encodedVaaAddress: PublicKey;
   }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
-      Buffer.from(vaa, "base64")
+      Buffer.from(priceUpdateData, "base64")
     );
 
     const encodedVaaKeypair = new Keypair();
@@ -195,8 +208,6 @@ export class PythSolanaReceiverConnection {
       signers: [],
     });
 
-    const priceUpdateKeypair = new Keypair();
-
     instructions.push({
       instruction: await this.wormhole.methods
         .writeEncodedVaa({
@@ -219,32 +230,37 @@ export class PythSolanaReceiverConnection {
         })
         .instruction(),
       signers: [],
+      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
     });
 
-    instructions.push({
-      instruction: await this.receiver.methods
-        .postUpdate({
-          merklePriceUpdate: accumulatorUpdateData.updates[0],
-          treasuryId: DEFAULT_TREASURY_ID,
-        })
-        .accounts({
-          encodedVaa: encodedVaaKeypair.publicKey,
-          priceUpdateAccount: priceUpdateKeypair.publicKey,
-          treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
-          config: getConfigPda(),
-        })
-        .instruction(),
-      signers: [priceUpdateKeypair],
-    });
+    const priceFeedIdToPriceAccount: Record<string, PublicKey> = {};
+    for (const update of accumulatorUpdateData.updates) {
+      const priceUpdateKeypair = new Keypair();
+      instructions.push({
+        instruction: await this.receiver.methods
+          .postUpdate({
+            merklePriceUpdate: update,
+            treasuryId: DEFAULT_TREASURY_ID,
+          })
+          .accounts({
+            encodedVaa: encodedVaaKeypair.publicKey,
+            priceUpdateAccount: priceUpdateKeypair.publicKey,
+            treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+            config: getConfigPda(),
+          })
+          .instruction(),
+        signers: [priceUpdateKeypair],
+        computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+      });
+
+      priceFeedIdToPriceAccount[
+        "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+      ] = priceUpdateKeypair.publicKey;
+    }
 
     return {
       instructions,
-      priceFeedIdToPriceAccount: {
-        ["0x" +
-        parsePriceFeedMessage(
-          accumulatorUpdateData.updates[0].message
-        ).feedId.toString("hex")]: priceUpdateKeypair.publicKey,
-      },
+      priceFeedIdToPriceAccount,
       encodedVaaAddress: encodedVaaKeypair.publicKey,
     };
   }
