@@ -145,7 +145,7 @@ pub struct EthereumConfig {
     pub legacy_tx: bool,
 
     /// The BlockStatus of the block that is considered confirmed.
-    /// For eg., Finalized, Safe, Latest
+    /// For example, Finalized, Safe, Latest
     #[serde(default)]
     pub confirmed_block_status: BlockStatus,
 }

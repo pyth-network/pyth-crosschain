@@ -82,7 +82,7 @@ pub struct BlockchainState {
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
     pub reveal_delay_blocks:    BlockNumber,
-    /// The BlockStatus of the block that includes the random number request.
+    /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,
 }
@@ -207,7 +207,10 @@ mod test {
                 BlockchainState,
                 GetRandomValueResponse,
             },
-            chain::reader::mock::MockEntropyReader,
+            chain::reader::{
+                mock::MockEntropyReader,
+                BlockStatus,
+            },
             state::{
                 HashChainState,
                 PebbleHashChain,

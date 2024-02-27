@@ -9,7 +9,6 @@ use {
 
 pub type BlockNumber = u64;
 
-/// A block status.
 #[derive(
     Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -64,13 +63,12 @@ pub mod mock {
         crate::chain::reader::{
             EntropyReader,
             Request,
+            BlockNumber,
+            BlockStatus,
         },
         anyhow::Result,
         axum::async_trait,
-        ethers::types::{
-            Address,
-            EthersBlockNumber,
-        },
+        ethers::types::Address,
         std::sync::RwLock,
     };
 
