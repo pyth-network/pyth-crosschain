@@ -7,6 +7,28 @@ use {
     },
 };
 
+/// A block status.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub enum BlockStatus {
+    /// Latest block
+    #[default]
+    Latest,
+    /// Finalized block accepted as canonical
+    Finalized,
+    /// Safe head block
+    Safe,
+}
+
+impl Into<BlockNumber> for BlockStatus {
+    fn into(self) ->BlockNumber {
+        match self {
+            BlockStatus::Latest => BlockNumber::Latest,
+            BlockStatus::Finalized => BlockNumber::Finalized,
+            BlockStatus::Safe => BlockNumber::Safe,
+        }
+    }
+}
+
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
 pub trait EntropyReader: Send + Sync {
@@ -16,7 +38,7 @@ pub trait EntropyReader: Send + Sync {
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 
-    async fn get_block_number(&self, confirmed_block_number: BlockNumber) -> Result<u64>;
+    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<u64>;
 }
 
 /// An in-flight request stored in the contract.
@@ -117,7 +139,7 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self, confirmed_block_number: BlockNumber) -> Result<u64> {
+        async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<u64> {
             Ok(*self.block_number.read().unwrap())
         }
     }

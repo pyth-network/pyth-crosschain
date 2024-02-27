@@ -3,6 +3,7 @@ use {
         chain::reader::{
             self,
             EntropyReader,
+            BlockStatus,
         },
         config::EthereumConfig,
     },
@@ -37,10 +38,7 @@ use {
             LocalWallet,
             Signer,
         },
-        types::{
-            transaction::eip2718::TypedTransaction,
-            BlockNumber,
-        },
+        types::transaction::eip2718::TypedTransaction,
     },
     sha3::{
         Digest,
@@ -210,10 +208,10 @@ impl EntropyReader for PythContract {
         }
     }
 
-    async fn get_block_number(&self, confirmed_block_number: BlockNumber) -> Result<u64> {
+    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<u64> {
         let block = self
             .client()
-            .get_block(confirmed_block_number)
+            .get_block(confirmed_block_status.into())
             .await?
             .ok_or_else(|| Error::msg("pending block confirmation"))?;
 

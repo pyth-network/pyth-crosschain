@@ -1,5 +1,5 @@
 use {
-    crate::api::ChainId,
+    crate::{api::ChainId, chain::reader::BlockStatus},
     anyhow::{
         anyhow,
         Result,
@@ -12,10 +12,8 @@ use {
         Args,
         Parser,
     },
-    ethers::types::{
+    ethers::types::
         Address,
-        BlockNumber,
-    },
     std::{
         collections::HashMap,
         fs,
@@ -132,16 +130,14 @@ pub struct EthereumConfig {
     pub contract_addr: Address,
 
     /// How many blocks to wait before revealing the random number.
-    #[serde(default)]
     pub reveal_delay_blocks: u64,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]
     pub legacy_tx: bool,
 
-    /// The BlockNumber of the block that is considered confirmed.
-    /// For eg., Finalized, Safe
+    /// The BlockStatus of the block that is considered confirmed.
+    /// For eg., Finalized, Safe, Latest
     #[serde(default)]
-    #[serde(rename = "confirmed_block_status")]
-    pub confirmed_block_number: BlockNumber,
+    pub confirmed_block_status: BlockStatus,
 }

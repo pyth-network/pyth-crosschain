@@ -1,6 +1,9 @@
 use {
     crate::{
-        chain::reader::EntropyReader,
+        chain::reader::{
+            EntropyReader,
+            BlockStatus,
+        },
         state::HashChainState,
     },
     anyhow::Result,
@@ -14,10 +17,7 @@ use {
         routing::get,
         Router,
     },
-    ethers::{
-        core::types::Address,
-        types::BlockNumber,
-    },
+    ethers::core::types::Address,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -81,9 +81,9 @@ pub struct BlockchainState {
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
     pub reveal_delay_blocks:    u64,
-    /// The BlockNumber of the block that includes the random number request.
+    /// The BlockStatus of the block that includes the random number request.
     /// For eg., Finalized, Safe
-    pub confirmed_block_number: BlockNumber,
+    pub confirmed_block_status: BlockStatus,
 }
 
 pub struct Metrics {
@@ -217,10 +217,8 @@ mod test {
             TestResponse,
             TestServer,
         },
-        ethers::{
+        ethers::
             prelude::Address,
-            types::BlockNumber,
-        },
         lazy_static::lazy_static,
         std::sync::Arc,
     };
@@ -248,7 +246,7 @@ mod test {
             contract:               eth_read.clone(),
             provider_address:       PROVIDER,
             reveal_delay_blocks:    1,
-            confirmed_block_number: BlockNumber::Latest,
+            confirmed_block_status: BlockStatus::Latest,
         };
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
@@ -258,7 +256,7 @@ mod test {
             contract:               avax_read.clone(),
             provider_address:       PROVIDER,
             reveal_delay_blocks:    2,
-            confirmed_block_number: BlockNumber::Latest,
+            confirmed_block_status: BlockStatus::Latest,
         };
 
         let api_state = ApiState::new(&[
