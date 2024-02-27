@@ -49,3 +49,6 @@
 - chain: coredao_testnet
   address: "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67"
   type: EvmEntropyContract
+- chain: blast
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
