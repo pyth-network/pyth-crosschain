@@ -3,15 +3,17 @@ use {
     axum::async_trait,
     ethers::types::{
         Address,
-        BlockNumber as EthersBlockNumber,
         BlockId,
+        BlockNumber as EthersBlockNumber,
     },
 };
 
 pub type BlockNumber = u64;
 
 /// A block status.
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub enum BlockStatus {
     /// Latest block
     #[default]

@@ -39,7 +39,10 @@ use {
             LocalWallet,
             Signer,
         },
-        types::{transaction::eip2718::TypedTransaction, BlockId},
+        types::{
+            transaction::eip2718::TypedTransaction,
+            BlockId,
+        },
     },
     sha3::{
         Digest,
