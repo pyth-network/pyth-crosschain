@@ -61,10 +61,10 @@ pub struct Request {
 pub mod mock {
     use {
         crate::chain::reader::{
-            EntropyReader,
-            Request,
             BlockNumber,
             BlockStatus,
+            EntropyReader,
+            Request,
         },
         anyhow::Result,
         axum::async_trait,
