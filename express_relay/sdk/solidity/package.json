@@ -12,7 +12,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "node scripts/generateAbi.js",
+    "generate-abi": "npm exec --package=abi_generator -- generate-abis IPERMulticall IPERFeeReceiver",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
@@ -29,6 +29,6 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "solc": "^0.8.15"
+    "abi_generator": "*"
   }
 }
