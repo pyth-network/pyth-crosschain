@@ -44,6 +44,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@pythnetwork/price-service-sdk": "*",
+    "@pythnetwork/solana-utils": "*",
     "@solana/web3.js": "^1.90.0"
   }
 }

@@ -1,10 +1,8 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
-  ComputeBudgetProgram,
   Connection,
   Signer,
   TransactionInstruction,
-  TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { PythSolanaReceiver } from "./idl/pyth_solana_receiver";
@@ -22,72 +20,15 @@ import {
 } from "./address";
 import { PublicKey, Keypair } from "@solana/web3.js";
 import { parseAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { DEFAULT_TREASURY_ID, VAA_SPLIT_INDEX, VAA_START } from "./constants";
+import {
+  DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
+  DEFAULT_TREASURY_ID,
+  VAA_SPLIT_INDEX,
+  VAA_START,
+} from "./constants";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import { getGuardianSetIndex } from "./vaa";
-
-export class TransactionBuilder {
-  private transactionInstructions: {
-    instructions: TransactionInstruction[];
-    signers: Signer[];
-  }[] = [];
-  private pythSolanaReceiverConnection: PythSolanaReceiverConnection;
-  private encodedVaaAddress: PublicKey | undefined;
-  private priceUpdateAddress: PublicKey | undefined;
-
-  constructor(pythSolanaReceiverConnection: PythSolanaReceiverConnection) {
-    this.pythSolanaReceiverConnection = pythSolanaReceiverConnection;
-  }
-
-  async addPostPriceUpdate(vaa: string) {
-    const { transactions, priceUpdateAddress, encodedVaaAddress } =
-      await this.pythSolanaReceiverConnection.buildPostPriceUpdateInstructions(
-        vaa
-      );
-    this.encodedVaaAddress = encodedVaaAddress;
-    this.priceUpdateAddress = priceUpdateAddress;
-    this.transactionInstructions.push(...transactions);
-  }
-
-  async addArbitraryInstruction(
-    instruction: (
-      priceUpdateAddress: PublicKey
-    ) => Promise<TransactionInstruction>,
-    signers: Signer[]
-  ) {
-    if (this.priceUpdateAddress === undefined) {
-      throw new Error(
-        "You need to call addPostPriceUpdate before calling addArbitraryInstruction"
-      );
-    }
-    this.transactionInstructions[
-      this.transactionInstructions.length - 1
-    ].instructions.push(await instruction(this.priceUpdateAddress));
-    this.transactionInstructions[
-      this.transactionInstructions.length - 1
-    ].signers.push(...signers);
-  }
-
-  async getTransactions(): Promise<
-    { tx: VersionedTransaction; signers: Signer[] }[]
-  > {
-    const blockhash = (
-      await this.pythSolanaReceiverConnection.connection.getLatestBlockhash()
-    ).blockhash;
-    return this.transactionInstructions.map(({ instructions, signers }) => {
-      return {
-        tx: new VersionedTransaction(
-          new TransactionMessage({
-            recentBlockhash: blockhash,
-            instructions: instructions,
-            payerKey: this.pythSolanaReceiverConnection.wallet.publicKey,
-          }).compileToV0Message()
-        ),
-        signers: signers,
-      };
-    });
-  }
-}
+import { getGuardianSetIndex, trimSignatures } from "./vaa";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
 
 export class PythSolanaReceiverConnection {
   readonly connection: Connection;
@@ -120,16 +61,90 @@ export class PythSolanaReceiverConnection {
     );
   }
 
-  public getBuilder(): TransactionBuilder {
-    return new TransactionBuilder(this);
+  async withPriceUpdate(
+    vaa: string,
+    getInstructions: (
+      priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
+    ) => Promise<{ instruction: TransactionInstruction; signers: Signer[] }[]>
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    const builder = new TransactionBuilder(
+      this.wallet.publicKey,
+      this.connection
+    );
+    const { instructions, priceFeedIdToPriceAccount, encodedVaaAddress } =
+      await this.buildPostPriceUpdateInstructions(vaa);
+    builder.addInstructions(instructions);
+    builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
+    builder.addInstruction(await this.buildCloseEncodedVaa(encodedVaaAddress));
+    builder.addInstruction(
+      await this.buildClosePriceUpdate(
+        Object.values(priceFeedIdToPriceAccount)[0]
+      )
+    );
+    return builder.getVersionedTransactions();
+  }
+
+  async withPartiallyVerifiedPriceUpdate(
+    vaa: string,
+    getInstructions: (
+      priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
+    ) => Promise<{ instruction: TransactionInstruction; signers: Signer[] }[]>
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    const builder = new TransactionBuilder(
+      this.wallet.publicKey,
+      this.connection
+    );
+    const { instructions, priceFeedIdToPriceAccount } =
+      await this.buildPostPriceUpdateAtomicInstructions(vaa);
+    builder.addInstructions(instructions);
+    builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
+    builder.addInstruction(
+      await this.buildClosePriceUpdate(
+        Object.values(priceFeedIdToPriceAccount)[0]
+      )
+    );
+    return builder.getVersionedTransactions();
+  }
+
+  async buildPostPriceUpdateAtomicInstructions(vaa: string): Promise<{
+    instructions: [{ instruction: TransactionInstruction; signers: Signer[] }];
+    priceFeedIdToPriceAccount: Record<string, PublicKey>;
+  }> {
+    const accumulatorUpdateData = parseAccumulatorUpdateData(
+      Buffer.from(vaa, "base64")
+    );
+    const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
+    const trimmedVaa = trimSignatures(
+      accumulatorUpdateData.vaa,
+      DEFAULT_REDUCED_GUARDIAN_SET_SIZE
+    );
+    const priceUpdateKeypair = new Keypair();
+    return {
+      instructions: [
+        {
+          instruction: await this.receiver.methods
+            .postUpdateAtomic({
+              vaa: trimmedVaa,
+              merklePriceUpdate: accumulatorUpdateData.updates[0],
+              treasuryId: DEFAULT_TREASURY_ID,
+            })
+            .accounts({
+              priceUpdateAccount: priceUpdateKeypair.publicKey,
+              treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+              config: getConfigPda(),
+              guardianSet: getGuardianSetPda(guardianSetIndex),
+            })
+            .instruction(),
+          signers: [priceUpdateKeypair],
+        },
+      ],
+      priceFeedIdToPriceAccount: { 0: priceUpdateKeypair.publicKey },
+    };
   }
 
   async buildPostPriceUpdateInstructions(vaa: string): Promise<{
-    transactions: {
-      instructions: TransactionInstruction[];
-      signers: Signer[];
-    }[];
-    priceUpdateAddress: PublicKey;
+    instructions: { instruction: TransactionInstruction; signers: Signer[] }[];
+    priceFeedIdToPriceAccount: Record<string, PublicKey>;
     encodedVaaAddress: PublicKey;
   }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -141,18 +156,31 @@ export class PythSolanaReceiverConnection {
 
     const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
 
-    const firstTransactionInstructions: TransactionInstruction[] = [
-      await this.wormhole.account.encodedVaa.createInstruction(
+    const instructions: {
+      instruction: TransactionInstruction;
+      signers: Signer[];
+    }[] = [];
+
+    instructions.push({
+      instruction: await this.wormhole.account.encodedVaa.createInstruction(
         encodedVaaKeypair,
         encodedVaaSize
       ),
-      await this.wormhole.methods
+      signers: [encodedVaaKeypair],
+    });
+
+    instructions.push({
+      instruction: await this.wormhole.methods
         .initEncodedVaa()
         .accounts({
           encodedVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
-      await this.wormhole.methods
+      signers: [],
+    });
+
+    instructions.push({
+      instruction: await this.wormhole.methods
         .writeEncodedVaa({
           index: 0,
           data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
@@ -160,14 +188,14 @@ export class PythSolanaReceiverConnection {
         .accounts({
           draftVaa: encodedVaaKeypair.publicKey,
         })
-        .signers([encodedVaaKeypair])
         .instruction(),
-    ];
+      signers: [],
+    });
 
     const priceUpdateKeypair = new Keypair();
-    const secondTransactionInstructions: TransactionInstruction[] = [
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 600000 }),
-      await this.wormhole.methods
+
+    instructions.push({
+      instruction: await this.wormhole.methods
         .writeEncodedVaa({
           index: VAA_SPLIT_INDEX,
           data: accumulatorUpdateData.vaa.subarray(VAA_SPLIT_INDEX),
@@ -176,14 +204,22 @@ export class PythSolanaReceiverConnection {
           draftVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
-      await this.wormhole.methods
+      signers: [],
+    });
+
+    instructions.push({
+      instruction: await this.wormhole.methods
         .verifyEncodedVaaV1()
         .accounts({
           guardianSet: getGuardianSetPda(guardianSetIndex),
           draftVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
-      await this.receiver.methods
+      signers: [],
+    });
+
+    instructions.push({
+      instruction: await this.receiver.methods
         .postUpdate({
           merklePriceUpdate: accumulatorUpdateData.updates[0],
           treasuryId: DEFAULT_TREASURY_ID,
@@ -194,23 +230,34 @@ export class PythSolanaReceiverConnection {
           treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
           config: getConfigPda(),
         })
-        .signers([priceUpdateKeypair])
         .instruction(),
-    ];
+      signers: [priceUpdateKeypair],
+    });
 
     return {
-      transactions: [
-        {
-          instructions: firstTransactionInstructions,
-          signers: [encodedVaaKeypair],
-        },
-        {
-          instructions: secondTransactionInstructions,
-          signers: [priceUpdateKeypair],
-        },
-      ],
-      priceUpdateAddress: priceUpdateKeypair.publicKey,
+      instructions,
+      priceFeedIdToPriceAccount: { 0: priceUpdateKeypair.publicKey },
       encodedVaaAddress: encodedVaaKeypair.publicKey,
     };
+  }
+
+  async buildCloseEncodedVaa(
+    encodedVaa: PublicKey
+  ): Promise<{ instruction: TransactionInstruction; signers: Signer[] }> {
+    const instruction = await this.wormhole.methods
+      .closeEncodedVaa()
+      .accounts({ encodedVaa })
+      .instruction();
+    return { instruction, signers: [] };
+  }
+
+  async buildClosePriceUpdate(
+    priceUpdateAccount: PublicKey
+  ): Promise<{ instruction: TransactionInstruction; signers: Signer[] }> {
+    const instruction = await this.receiver.methods
+      .reclaimRent()
+      .accounts({ priceUpdateAccount })
+      .instruction();
+    return { instruction, signers: [] };
   }
 }

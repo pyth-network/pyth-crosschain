@@ -81,7 +81,11 @@ export class TransactionBuilder {
    * Add an instruction to the builder, the signers argument can be used to specify ephemeral signers that need to sign the transaction
    * where this instruction appears
    */
-  addInstruction(instruction: TransactionInstruction, signers: Signer[]) {
+  addInstruction(args: {
+    instruction: TransactionInstruction;
+    signers: Signer[];
+  }) {
+    const { instruction, signers } = args;
     if (this.transactionInstructions.length === 0) {
       this.transactionInstructions.push({
         instructions: [instruction],
@@ -105,6 +109,14 @@ export class TransactionBuilder {
         instructions: [instruction],
         signers: signers,
       });
+  }
+
+  addInstructions(
+    instructions: { instruction: TransactionInstruction; signers: Signer[] }[]
+  ) {
+    for (const { instruction, signers } of instructions) {
+      this.addInstruction({ instruction, signers });
+    }
   }
 
   /**
@@ -148,7 +160,7 @@ export class TransactionBuilder {
       new Connection("http://placeholder.placeholder")
     ); // We only need wallet and connection for `VersionedTransaction` so we can put placeholders here
     for (const instruction of instructions) {
-      transactionBuilder.addInstruction(instruction, []);
+      transactionBuilder.addInstruction({ instruction, signers: [] });
     }
     return transactionBuilder.getLegacyTransactions().map(({ tx }) => {
       return tx;
