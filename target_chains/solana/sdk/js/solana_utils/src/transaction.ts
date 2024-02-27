@@ -9,6 +9,11 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 
+export type InstructionWithEphemeralSigners = {
+  instruction: TransactionInstruction;
+  signers: Signer[];
+};
+
 /**
  * Get the size of a transaction that would contain the provided array of instructions
  */
@@ -81,10 +86,7 @@ export class TransactionBuilder {
    * Add an instruction to the builder, the signers argument can be used to specify ephemeral signers that need to sign the transaction
    * where this instruction appears
    */
-  addInstruction(args: {
-    instruction: TransactionInstruction;
-    signers: Signer[];
-  }) {
+  addInstruction(args: InstructionWithEphemeralSigners) {
     const { instruction, signers } = args;
     if (this.transactionInstructions.length === 0) {
       this.transactionInstructions.push({
@@ -111,9 +113,7 @@ export class TransactionBuilder {
       });
   }
 
-  addInstructions(
-    instructions: { instruction: TransactionInstruction; signers: Signer[] }[]
-  ) {
+  addInstructions(instructions: InstructionWithEphemeralSigners[]) {
     for (const { instruction, signers } of instructions) {
       this.addInstruction({ instruction, signers });
     }

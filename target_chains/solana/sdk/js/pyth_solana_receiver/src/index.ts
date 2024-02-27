@@ -28,12 +28,15 @@ import {
 } from "./constants";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { getGuardianSetIndex, trimSignatures } from "./vaa";
-import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import {
+  TransactionBuilder,
+  InstructionWithEphemeralSigners,
+} from "@pythnetwork/solana-utils";
 
 export class PythSolanaReceiverConnection {
   readonly connection: Connection;
   readonly wallet: Wallet;
-  private readonly provider: AnchorProvider;
+  readonly provider: AnchorProvider;
   readonly receiver: Program<PythSolanaReceiver>;
   readonly wormhole: Program<WormholeCoreBridgeSolana>;
 
@@ -65,7 +68,7 @@ export class PythSolanaReceiverConnection {
     vaa: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
-    ) => Promise<{ instruction: TransactionInstruction; signers: Signer[] }[]>
+    ) => Promise<InstructionWithEphemeralSigners[]>
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
       this.wallet.publicKey,
@@ -88,7 +91,7 @@ export class PythSolanaReceiverConnection {
     vaa: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<number, PublicKey>
-    ) => Promise<{ instruction: TransactionInstruction; signers: Signer[] }[]>
+    ) => Promise<InstructionWithEphemeralSigners[]>
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
       this.wallet.publicKey,
@@ -107,7 +110,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async buildPostPriceUpdateAtomicInstructions(vaa: string): Promise<{
-    instructions: [{ instruction: TransactionInstruction; signers: Signer[] }];
+    instructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceAccount: Record<string, PublicKey>;
   }> {
     const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -143,7 +146,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async buildPostPriceUpdateInstructions(vaa: string): Promise<{
-    instructions: { instruction: TransactionInstruction; signers: Signer[] }[];
+    instructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceAccount: Record<string, PublicKey>;
     encodedVaaAddress: PublicKey;
   }> {
@@ -156,10 +159,7 @@ export class PythSolanaReceiverConnection {
 
     const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
 
-    const instructions: {
-      instruction: TransactionInstruction;
-      signers: Signer[];
-    }[] = [];
+    const instructions: InstructionWithEphemeralSigners[] = [];
 
     instructions.push({
       instruction: await this.wormhole.account.encodedVaa.createInstruction(
@@ -243,7 +243,7 @@ export class PythSolanaReceiverConnection {
 
   async buildCloseEncodedVaa(
     encodedVaa: PublicKey
-  ): Promise<{ instruction: TransactionInstruction; signers: Signer[] }> {
+  ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.wormhole.methods
       .closeEncodedVaa()
       .accounts({ encodedVaa })
@@ -253,7 +253,7 @@ export class PythSolanaReceiverConnection {
 
   async buildClosePriceUpdate(
     priceUpdateAccount: PublicKey
-  ): Promise<{ instruction: TransactionInstruction; signers: Signer[] }> {
+  ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.receiver.methods
       .reclaimRent()
       .accounts({ priceUpdateAccount })

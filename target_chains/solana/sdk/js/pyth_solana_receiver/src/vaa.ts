@@ -12,7 +12,7 @@ export function trimSignatures(vaa: Buffer, n: number): Buffer {
     );
   }
 
-  const trimmedVaa = Buffer.concat([
+  let trimmedVaa = Buffer.concat([
     vaa.subarray(0, 5 + n * VAA_SIGNATURE_SIZE),
     vaa.subarray(5 + currentNumSignatures * VAA_SIGNATURE_SIZE),
   ]);
