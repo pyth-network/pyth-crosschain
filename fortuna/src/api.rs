@@ -2,6 +2,7 @@ use {
     crate::{
         chain::reader::{
             BlockNumber,
+            BlockStatus,
             EntropyReader,
         },
         state::HashChainState,
@@ -73,14 +74,17 @@ impl ApiState {
 #[derive(Clone)]
 pub struct BlockchainState {
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state:               Arc<HashChainState>,
+    pub state:                  Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
-    pub contract:            Arc<dyn EntropyReader>,
+    pub contract:               Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
-    pub provider_address:    Address,
+    pub provider_address:       Address,
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
-    pub reveal_delay_blocks: BlockNumber,
+    pub reveal_delay_blocks:    BlockNumber,
+    /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
+    /// For eg., Finalized, Safe
+    pub confirmed_block_status: BlockStatus,
 }
 
 pub struct Metrics {
@@ -203,7 +207,10 @@ mod test {
                 BlockchainState,
                 GetRandomValueResponse,
             },
-            chain::reader::mock::MockEntropyReader,
+            chain::reader::{
+                mock::MockEntropyReader,
+                BlockStatus,
+            },
             state::{
                 HashChainState,
                 PebbleHashChain,
@@ -238,19 +245,21 @@ mod test {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
-            state:               ETH_CHAIN.clone(),
-            contract:            eth_read.clone(),
-            provider_address:    PROVIDER,
-            reveal_delay_blocks: 1,
+            state:                  ETH_CHAIN.clone(),
+            contract:               eth_read.clone(),
+            provider_address:       PROVIDER,
+            reveal_delay_blocks:    1,
+            confirmed_block_status: BlockStatus::Latest,
         };
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let avax_state = BlockchainState {
-            state:               AVAX_CHAIN.clone(),
-            contract:            avax_read.clone(),
-            provider_address:    PROVIDER,
-            reveal_delay_blocks: 2,
+            state:                  AVAX_CHAIN.clone(),
+            contract:               avax_read.clone(),
+            provider_address:       PROVIDER,
+            reveal_delay_blocks:    2,
+            confirmed_block_status: BlockStatus::Latest,
         };
 
         let api_state = ApiState::new(&[
