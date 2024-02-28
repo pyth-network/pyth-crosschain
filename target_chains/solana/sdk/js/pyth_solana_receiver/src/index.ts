@@ -1,6 +1,9 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { Connection, Signer, VersionedTransaction } from "@solana/web3.js";
-import { PythSolanaReceiver, IDL as Idl } from "./idl/pyth_solana_receiver";
+import {
+  PythSolanaReceiver as PythSolanaReceiverProgram,
+  IDL as Idl,
+} from "./idl/pyth_solana_receiver";
 import {
   WormholeCoreBridgeSolana,
   IDL as WormholeCoreBridgeSolanaIdl,
@@ -34,11 +37,11 @@ import {
 } from "@pythnetwork/solana-utils";
 import { priorityFeeConfig as PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
-export class PythSolanaReceiverConnection {
+export class PythSolanaReceiver {
   readonly connection: Connection;
   readonly wallet: Wallet;
   readonly provider: AnchorProvider;
-  readonly receiver: Program<PythSolanaReceiver>;
+  readonly receiver: Program<PythSolanaReceiverProgram>;
   readonly wormhole: Program<WormholeCoreBridgeSolana>;
 
   constructor({
@@ -57,8 +60,8 @@ export class PythSolanaReceiverConnection {
     this.provider = new AnchorProvider(this.connection, this.wallet, {
       commitment: connection.commitment,
     });
-    this.receiver = new Program<PythSolanaReceiver>(
-      Idl as PythSolanaReceiver,
+    this.receiver = new Program<PythSolanaReceiverProgram>(
+      Idl as PythSolanaReceiverProgram,
       receiverProgramId,
       this.provider
     );
@@ -70,7 +73,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async withPriceUpdate(
-    priceUpdateData: string,
+    priceUpdateDataArray: string[],
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>,
@@ -80,15 +83,29 @@ export class PythSolanaReceiverConnection {
       this.wallet.publicKey,
       this.connection
     );
-    const { instructions, priceFeedIdToPriceAccount, encodedVaaAddress } =
-      await this.buildPostPriceUpdateInstructions(priceUpdateData);
+
+    const {
+      instructions,
+      priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
+      encodedVaaAddresses,
+      priceUpdateAddresses,
+    } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
     builder.addInstructions(instructions);
-    builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
-    builder.addInstruction(await this.buildCloseEncodedVaa(encodedVaaAddress));
+    builder.addInstructions(
+      await getInstructions(priceFeedIdToPriceUpdateAccount)
+    );
+
     await Promise.all(
-      Object.values(priceFeedIdToPriceAccount).map(async (priceUpdateAccount) =>
+      encodedVaaAddresses.map(async (encodedVaaAddress) =>
         builder.addInstruction(
-          await this.buildClosePriceUpdate(priceUpdateAccount)
+          await this.buildCloseEncodedVaaInstruction(encodedVaaAddress)
+        )
+      )
+    );
+    await Promise.all(
+      priceUpdateAddresses.map(async (priceUpdateAccount) =>
+        builder.addInstruction(
+          await this.buildClosePriceUpdateInstruction(priceUpdateAccount)
         )
       )
     );
@@ -96,7 +113,7 @@ export class PythSolanaReceiverConnection {
   }
 
   async withPartiallyVerifiedPriceUpdate(
-    priceUpdateData: string,
+    priceUpdateDataArray: string[],
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
     ) => Promise<InstructionWithEphemeralSigners[]>,
@@ -106,14 +123,19 @@ export class PythSolanaReceiverConnection {
       this.wallet.publicKey,
       this.connection
     );
-    const { instructions, priceFeedIdToPriceAccount } =
-      await this.buildPostPriceUpdateAtomicInstructions(priceUpdateData);
+    const {
+      instructions,
+      priceFeedIdToPriceUpdateAccount,
+      priceUpdateAddresses,
+    } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
     builder.addInstructions(instructions);
-    builder.addInstructions(await getInstructions(priceFeedIdToPriceAccount));
+    builder.addInstructions(
+      await getInstructions(priceFeedIdToPriceUpdateAccount)
+    );
     await Promise.all(
-      Object.values(priceFeedIdToPriceAccount).map(async (priceUpdateAccount) =>
+      priceUpdateAddresses.map(async (priceUpdateAccount) =>
         builder.addInstruction(
-          await this.buildClosePriceUpdate(priceUpdateAccount)
+          await this.buildClosePriceUpdateInstruction(priceUpdateAccount)
         )
       )
     );
@@ -121,157 +143,172 @@ export class PythSolanaReceiverConnection {
   }
 
   async buildPostPriceUpdateAtomicInstructions(
-    priceUpdateData: string
+    priceUpdateDataArray: string[]
   ): Promise<{
     instructions: InstructionWithEphemeralSigners[];
-    priceFeedIdToPriceAccount: Record<string, PublicKey>;
+    priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+    priceUpdateAddresses: PublicKey[];
   }> {
-    const accumulatorUpdateData = parseAccumulatorUpdateData(
-      Buffer.from(priceUpdateData, "base64")
-    );
-    const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
-    const trimmedVaa = trimSignatures(
-      accumulatorUpdateData.vaa,
-      DEFAULT_REDUCED_GUARDIAN_SET_SIZE
-    );
-
-    const priceFeedIdToPriceAccount: Record<string, PublicKey> = {};
     const instructions: InstructionWithEphemeralSigners[] = [];
-    for (const update of accumulatorUpdateData.updates) {
-      const priceUpdateKeypair = new Keypair();
-      instructions.push({
-        instruction: await this.receiver.methods
-          .postUpdateAtomic({
-            vaa: trimmedVaa,
-            merklePriceUpdate: update,
-            treasuryId: DEFAULT_TREASURY_ID,
-          })
-          .accounts({
-            priceUpdateAccount: priceUpdateKeypair.publicKey,
-            treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
-            config: getConfigPda(),
-            guardianSet: getGuardianSetPda(guardianSetIndex),
-          })
-          .instruction(),
-        signers: [priceUpdateKeypair],
-        computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
-      });
-      priceFeedIdToPriceAccount[
-        "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
-      ] = priceUpdateKeypair.publicKey;
-    }
+    const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
+    const priceUpdateAddresses: PublicKey[] = [];
 
+    for (const priceUpdateData of priceUpdateDataArray) {
+      const accumulatorUpdateData = parseAccumulatorUpdateData(
+        Buffer.from(priceUpdateData, "base64")
+      );
+      const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
+      const trimmedVaa = trimSignatures(
+        accumulatorUpdateData.vaa,
+        DEFAULT_REDUCED_GUARDIAN_SET_SIZE
+      );
+
+      for (const update of accumulatorUpdateData.updates) {
+        const priceUpdateKeypair = new Keypair();
+        instructions.push({
+          instruction: await this.receiver.methods
+            .postUpdateAtomic({
+              vaa: trimmedVaa,
+              merklePriceUpdate: update,
+              treasuryId: DEFAULT_TREASURY_ID,
+            })
+            .accounts({
+              priceUpdateAccount: priceUpdateKeypair.publicKey,
+              treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+              config: getConfigPda(),
+              guardianSet: getGuardianSetPda(guardianSetIndex),
+            })
+            .instruction(),
+          signers: [priceUpdateKeypair],
+          computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
+        });
+        priceFeedIdToPriceUpdateAccount[
+          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+        ] = priceUpdateKeypair.publicKey;
+        priceUpdateAddresses.push(priceUpdateKeypair.publicKey);
+      }
+    }
     return {
       instructions,
-      priceFeedIdToPriceAccount,
+      priceFeedIdToPriceUpdateAccount,
+      priceUpdateAddresses,
     };
   }
 
-  async buildPostPriceUpdateInstructions(priceUpdateData: string): Promise<{
+  async buildPostPriceUpdateInstructions(
+    priceUpdateDataArray: string[]
+  ): Promise<{
     instructions: InstructionWithEphemeralSigners[];
-    priceFeedIdToPriceAccount: Record<string, PublicKey>;
-    encodedVaaAddress: PublicKey;
+    priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+    encodedVaaAddresses: PublicKey[];
+    priceUpdateAddresses: PublicKey[];
   }> {
-    const accumulatorUpdateData = parseAccumulatorUpdateData(
-      Buffer.from(priceUpdateData, "base64")
-    );
-
-    const encodedVaaKeypair = new Keypair();
-    const encodedVaaSize = accumulatorUpdateData.vaa.length + VAA_START;
-
-    const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
-
     const instructions: InstructionWithEphemeralSigners[] = [];
+    const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
+    const priceUpdateAddresses: PublicKey[] = [];
+    const encodedVaaAddresses: PublicKey[] = [];
 
-    instructions.push({
-      instruction: await this.wormhole.account.encodedVaa.createInstruction(
-        encodedVaaKeypair,
-        encodedVaaSize
-      ),
-      signers: [encodedVaaKeypair],
-    });
+    for (const priceUpdateData of priceUpdateDataArray) {
+      const accumulatorUpdateData = parseAccumulatorUpdateData(
+        Buffer.from(priceUpdateData, "base64")
+      );
 
-    instructions.push({
-      instruction: await this.wormhole.methods
-        .initEncodedVaa()
-        .accounts({
-          encodedVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-    });
+      const encodedVaaKeypair = new Keypair();
+      const encodedVaaSize = accumulatorUpdateData.vaa.length + VAA_START;
 
-    instructions.push({
-      instruction: await this.wormhole.methods
-        .writeEncodedVaa({
-          index: 0,
-          data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-    });
+      const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
 
-    instructions.push({
-      instruction: await this.wormhole.methods
-        .writeEncodedVaa({
-          index: VAA_SPLIT_INDEX,
-          data: accumulatorUpdateData.vaa.subarray(VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-    });
-
-    instructions.push({
-      instruction: await this.wormhole.methods
-        .verifyEncodedVaaV1()
-        .accounts({
-          guardianSet: getGuardianSetPda(guardianSetIndex),
-          draftVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    const priceFeedIdToPriceAccount: Record<string, PublicKey> = {};
-    for (const update of accumulatorUpdateData.updates) {
-      const priceUpdateKeypair = new Keypair();
       instructions.push({
-        instruction: await this.receiver.methods
-          .postUpdate({
-            merklePriceUpdate: update,
-            treasuryId: DEFAULT_TREASURY_ID,
-          })
+        instruction: await this.wormhole.account.encodedVaa.createInstruction(
+          encodedVaaKeypair,
+          encodedVaaSize
+        ),
+        signers: [encodedVaaKeypair],
+      });
+
+      instructions.push({
+        instruction: await this.wormhole.methods
+          .initEncodedVaa()
           .accounts({
             encodedVaa: encodedVaaKeypair.publicKey,
-            priceUpdateAccount: priceUpdateKeypair.publicKey,
-            treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
-            config: getConfigPda(),
           })
           .instruction(),
-        signers: [priceUpdateKeypair],
-        computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+        signers: [],
       });
 
-      priceFeedIdToPriceAccount[
-        "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
-      ] = priceUpdateKeypair.publicKey;
+      instructions.push({
+        instruction: await this.wormhole.methods
+          .writeEncodedVaa({
+            index: 0,
+            data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
+          })
+          .accounts({
+            draftVaa: encodedVaaKeypair.publicKey,
+          })
+          .instruction(),
+        signers: [],
+      });
+
+      instructions.push({
+        instruction: await this.wormhole.methods
+          .writeEncodedVaa({
+            index: VAA_SPLIT_INDEX,
+            data: accumulatorUpdateData.vaa.subarray(VAA_SPLIT_INDEX),
+          })
+          .accounts({
+            draftVaa: encodedVaaKeypair.publicKey,
+          })
+          .instruction(),
+        signers: [],
+      });
+
+      instructions.push({
+        instruction: await this.wormhole.methods
+          .verifyEncodedVaaV1()
+          .accounts({
+            guardianSet: getGuardianSetPda(guardianSetIndex),
+            draftVaa: encodedVaaKeypair.publicKey,
+          })
+          .instruction(),
+        signers: [],
+        computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+      });
+
+      for (const update of accumulatorUpdateData.updates) {
+        const priceUpdateKeypair = new Keypair();
+        instructions.push({
+          instruction: await this.receiver.methods
+            .postUpdate({
+              merklePriceUpdate: update,
+              treasuryId: DEFAULT_TREASURY_ID,
+            })
+            .accounts({
+              encodedVaa: encodedVaaKeypair.publicKey,
+              priceUpdateAccount: priceUpdateKeypair.publicKey,
+              treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
+              config: getConfigPda(),
+            })
+            .instruction(),
+          signers: [priceUpdateKeypair],
+          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+        });
+
+        priceFeedIdToPriceUpdateAccount[
+          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+        ] = priceUpdateKeypair.publicKey;
+        priceUpdateAddresses.push(priceUpdateKeypair.publicKey);
+      }
     }
 
     return {
       instructions,
-      priceFeedIdToPriceAccount,
-      encodedVaaAddress: encodedVaaKeypair.publicKey,
+      priceFeedIdToPriceUpdateAccount,
+      encodedVaaAddresses,
+      priceUpdateAddresses,
     };
   }
 
-  async buildCloseEncodedVaa(
+  async buildCloseEncodedVaaInstruction(
     encodedVaa: PublicKey
   ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.wormhole.methods
@@ -281,7 +318,7 @@ export class PythSolanaReceiverConnection {
     return { instruction, signers: [] };
   }
 
-  async buildClosePriceUpdate(
+  async buildClosePriceUpdateInstruction(
     priceUpdateAccount: PublicKey
   ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.receiver.methods
