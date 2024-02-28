@@ -33,6 +33,7 @@ pub use {
     ready::*,
     v2::{
         latest_price_updates::*,
+        price_feeds_metadata::*,
         timestamp_price_updates::*,
     },
 };
@@ -43,6 +44,7 @@ pub enum RestError {
     CcipUpdateDataNotFound,
     InvalidCCIPInput,
     PriceIdsNotFound { missing_ids: Vec<PriceIdentifier> },
+    RpcConnectionError { message: String },
 }
 
 impl IntoResponse for RestError {
@@ -79,6 +81,9 @@ impl IntoResponse for RestError {
                     format!("Price ids not found: {}", missing_ids),
                 )
                     .into_response()
+            }
+            RestError::RpcConnectionError { message } => {
+                (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
         }
     }

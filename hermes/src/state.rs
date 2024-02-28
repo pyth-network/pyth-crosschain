@@ -7,6 +7,7 @@ use {
             AggregateState,
             AggregationEvent,
         },
+        api::types::PriceFeedMetadata,
         network::wormhole::GuardianSet,
     },
     prometheus_client::registry::Registry,
@@ -50,6 +51,9 @@ pub struct State {
 
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
+
+    /// Price feeds metadata
+    pub price_feeds_metadata: RwLock<Vec<PriceFeedMetadata>>,
 }
 
 impl State {
@@ -67,6 +71,7 @@ impl State {
             aggregate_state: RwLock::new(AggregateState::new(&mut metrics_registry)),
             benchmarks_endpoint,
             metrics_registry: RwLock::new(metrics_registry),
+            price_feeds_metadata: RwLock::new(Default::default()),
         })
     }
 }
