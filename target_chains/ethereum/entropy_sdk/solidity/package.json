@@ -12,7 +12,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "npm exec --package=abi_generator -- generate-abis IEntropy EntropyErrors EntropyEvents EntropyStructs",
+    "generate-abi": "npx generate-abis IEntropy EntropyErrors EntropyEvents EntropyStructs",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
