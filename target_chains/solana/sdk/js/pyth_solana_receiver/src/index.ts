@@ -32,6 +32,7 @@ import {
   TransactionBuilder,
   InstructionWithEphemeralSigners,
 } from "@pythnetwork/solana-utils";
+import { priorityFeeConfig as PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
 export class PythSolanaReceiverConnection {
   readonly connection: Connection;
@@ -68,7 +69,8 @@ export class PythSolanaReceiverConnection {
     priceUpdateData: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
-    ) => Promise<InstructionWithEphemeralSigners[]>
+    ) => Promise<InstructionWithEphemeralSigners[]>,
+    priorityFeeConfig?: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
       this.wallet.publicKey,
@@ -86,14 +88,15 @@ export class PythSolanaReceiverConnection {
         )
       )
     );
-    return builder.getVersionedTransactions();
+    return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
   async withPartiallyVerifiedPriceUpdate(
     priceUpdateData: string,
     getInstructions: (
       priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
-    ) => Promise<InstructionWithEphemeralSigners[]>
+    ) => Promise<InstructionWithEphemeralSigners[]>,
+    priorityFeeConfig?: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const builder = new TransactionBuilder(
       this.wallet.publicKey,
@@ -110,7 +113,7 @@ export class PythSolanaReceiverConnection {
         )
       )
     );
-    return builder.getVersionedTransactions();
+    return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
   async buildPostPriceUpdateAtomicInstructions(

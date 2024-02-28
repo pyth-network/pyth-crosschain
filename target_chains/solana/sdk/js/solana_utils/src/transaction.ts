@@ -20,6 +20,10 @@ export type InstructionWithEphemeralSigners = {
   computeUnits?: number;
 };
 
+export type priorityFeeConfig = {
+  computeUnitPriceMicroLamports?: number;
+};
+
 /**
  * Get the size of a transaction that would contain the provided array of instructions
  */
@@ -134,40 +138,39 @@ export class TransactionBuilder {
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  async getVersionedTransactions(): Promise<
-    { tx: VersionedTransaction; signers: Signer[] }[]
-  > {
+  async getVersionedTransactions(
+    args: priorityFeeConfig
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }) => {
+        const instructionsWithComputeBudget: TransactionInstruction[] = [
+          ...instructions,
+        ];
         if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
-          return {
-            tx: new VersionedTransaction(
-              new TransactionMessage({
-                recentBlockhash: blockhash,
-                instructions: [
-                  ...instructions,
-                  ComputeBudgetProgram.setComputeUnitLimit({
-                    units: computeUnits,
-                  }),
-                ],
-                payerKey: this.payer,
-              }).compileToV0Message()
-            ),
-            signers: signers,
-          };
-        } else {
-          return {
-            tx: new VersionedTransaction(
-              new TransactionMessage({
-                recentBlockhash: blockhash,
-                instructions: instructions,
-                payerKey: this.payer,
-              }).compileToV0Message()
-            ),
-            signers: signers,
-          };
+          instructionsWithComputeBudget.push(
+            ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
+          );
         }
+        if (args.computeUnitPriceMicroLamports) {
+          instructionsWithComputeBudget.push(
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: args.computeUnitPriceMicroLamports,
+            })
+          );
+        }
+
+        return {
+          tx: new VersionedTransaction(
+            new TransactionMessage({
+              recentBlockhash: blockhash,
+              instructions: instructionsWithComputeBudget,
+              payerKey: this.payer,
+            }).compileToV0Message()
+          ),
+          signers: signers,
+        };
       }
     );
   }
@@ -175,10 +178,21 @@ export class TransactionBuilder {
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  getLegacyTransactions(): { tx: Transaction; signers: Signer[] }[] {
+  getLegacyTransactions(
+    args: priorityFeeConfig
+  ): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(({ instructions, signers }) => {
+      const instructionsWithComputeBudget = args.computeUnitPriceMicroLamports
+        ? [
+            ...instructions,
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: args.computeUnitPriceMicroLamports,
+            }),
+          ]
+        : instructions;
+
       return {
-        tx: new Transaction().add(...instructions),
+        tx: new Transaction().add(...instructionsWithComputeBudget),
         signers: signers,
       };
     });
@@ -194,7 +208,7 @@ export class TransactionBuilder {
     for (const instruction of instructions) {
       transactionBuilder.addInstruction({ instruction, signers: [] });
     }
-    return transactionBuilder.getLegacyTransactions().map(({ tx }) => {
+    return transactionBuilder.getLegacyTransactions({}).map(({ tx }) => {
       return tx;
     });
   }
