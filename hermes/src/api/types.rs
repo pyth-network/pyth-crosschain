@@ -333,7 +333,7 @@ pub struct PriceFeedMetadata {
     pub attributes: BTreeMap<String, String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum AssetType {
     Crypto,
@@ -345,17 +345,6 @@ pub enum AssetType {
 
 impl Display for AssetType {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(
-            f,
-            "{}",
-            match self {
-                // Match each variant to its string representation
-                AssetType::Crypto => "Crypto",
-                AssetType::FX => "FX",
-                AssetType::Equity => "Equity",
-                AssetType::Metals => "Metals",
-                AssetType::Rates => "Rates",
-            }
-        )
+        write!(f, "{:?}", self)
     }
 }

@@ -123,6 +123,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             rest::price_feed_ids,
             rest::latest_price_updates,
             rest::timestamp_price_updates,
+            rest::price_feeds_metadata,
         ),
         components(
             schemas(
@@ -139,6 +140,8 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
                 types::BinaryPriceUpdate,
                 types::ParsedPriceUpdate,
                 types::RpcPriceFeedMetadataV2,
+                types::PriceFeedMetadata,
+                types::AssetType
             )
         ),
         tags(
