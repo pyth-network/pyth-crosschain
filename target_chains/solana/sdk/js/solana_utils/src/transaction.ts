@@ -220,9 +220,7 @@ export class TransactionBuilder {
     priorityFeeConfig: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const transactionBuilder = new TransactionBuilder(payer, connection);
-    for (const instruction of instructions) {
-      transactionBuilder.addInstructions(instructions);
-    }
+    transactionBuilder.addInstructions(instructions);
     return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
   }
 }
