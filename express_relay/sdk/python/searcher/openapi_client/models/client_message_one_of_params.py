@@ -83,5 +83,3 @@ class ClientMessageOneOfParams(BaseModel):
             "chain_ids": obj.get("chain_ids")
         })
         return _obj
-
-

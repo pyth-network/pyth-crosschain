@@ -85,5 +85,3 @@ class TokenQty(BaseModel):
             "contract": obj.get("contract")
         })
         return _obj
-
-

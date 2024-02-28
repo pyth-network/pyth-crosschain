@@ -91,5 +91,3 @@ class Bid(BaseModel):
             "permission_key": obj.get("permission_key")
         })
         return _obj
-
-

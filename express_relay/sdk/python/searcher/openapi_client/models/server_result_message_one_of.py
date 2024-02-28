@@ -90,5 +90,3 @@ class ServerResultMessageOneOf(BaseModel):
             "status": obj.get("status")
         })
         return _obj
-
-
