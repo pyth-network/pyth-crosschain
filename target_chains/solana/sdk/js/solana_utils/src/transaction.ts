@@ -20,7 +20,7 @@ export type InstructionWithEphemeralSigners = {
   computeUnits?: number;
 };
 
-export type priorityFeeConfig = {
+export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
 };
 
@@ -139,7 +139,7 @@ export class TransactionBuilder {
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
   async getVersionedTransactions(
-    args: priorityFeeConfig
+    args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
@@ -179,7 +179,7 @@ export class TransactionBuilder {
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
   getLegacyTransactions(
-    args: priorityFeeConfig
+    args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(({ instructions, signers }) => {
       const instructionsWithComputeBudget = args.computeUnitPriceMicroLamports
@@ -211,5 +211,18 @@ export class TransactionBuilder {
     return transactionBuilder.getLegacyTransactions({}).map(({ tx }) => {
       return tx;
     });
+  }
+
+  static async batchIntoVersionedTransactions(
+    payer: PublicKey,
+    connection: Connection,
+    instructions: InstructionWithEphemeralSigners[],
+    priorityFeeConfig: PriorityFeeConfig
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    const transactionBuilder = new TransactionBuilder(payer, connection);
+    for (const instruction of instructions) {
+      transactionBuilder.addInstructions(instructions);
+    }
+    return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
   }
 }
