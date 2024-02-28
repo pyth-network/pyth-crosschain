@@ -144,7 +144,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
       setExistingSymbols(new Set(Object.keys(symbolToData)))
       setData(sortDataMemo(symbolToData))
     }
-  }, [rawConfig, dataIsLoading, sortDataMemo])
+  }, [rawConfig, dataIsLoading, sortDataMemo, cluster])
 
   const sortObjectByKeys = (obj: any) => {
     const sortedObj: any = {}
