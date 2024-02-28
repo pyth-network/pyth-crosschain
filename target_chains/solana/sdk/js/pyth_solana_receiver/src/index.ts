@@ -1,7 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { Connection, Signer, VersionedTransaction } from "@solana/web3.js";
-import { PythSolanaReceiver } from "./idl/pyth_solana_receiver";
-import Idl from "./idl/pyth_solana_receiver.json";
+import { PythSolanaReceiver, IDL as Idl } from "./idl/pyth_solana_receiver";
 import {
   WormholeCoreBridgeSolana,
   IDL as WormholeCoreBridgeSolanaIdl,
@@ -137,7 +136,7 @@ export class PythSolanaReceiverConnection {
         instruction: await this.receiver.methods
           .postUpdateAtomic({
             vaa: trimmedVaa,
-            merklePriceUpdate: accumulatorUpdateData.updates[0],
+            merklePriceUpdate: update,
             treasuryId: DEFAULT_TREASURY_ID,
           })
           .accounts({

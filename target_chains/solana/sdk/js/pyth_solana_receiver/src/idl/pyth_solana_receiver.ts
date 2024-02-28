@@ -282,7 +282,7 @@ export type PythSolanaReceiver = {
   ];
   accounts: [
     {
-      name: "config";
+      name: "Config";
       type: {
         kind: "struct";
         fields: [
@@ -345,6 +345,68 @@ export type PythSolanaReceiver = {
     }
   ];
   types: [
+    {
+      name: "PriceFeedMessage";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "feedId";
+            type: {
+              array: ["u8", 32];
+            };
+          },
+          {
+            name: "price";
+            type: "i64";
+          },
+          {
+            name: "conf";
+            type: "u64";
+          },
+          {
+            name: "exponent";
+            type: "i32";
+          },
+          {
+            name: "publishTime";
+            type: "i64";
+          },
+          {
+            name: "prevPublishTime";
+            type: "i64";
+          },
+          {
+            name: "emaPrice";
+            type: "i64";
+          },
+          {
+            name: "emaConf";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "MerklePriceUpdate";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "message";
+            type: "bytes";
+          },
+          {
+            name: "proof";
+            type: {
+              vec: {
+                array: ["u8", 20];
+              };
+            };
+          }
+        ];
+      };
+    },
     {
       name: "DataSource";
       type: {
@@ -823,7 +885,7 @@ export const IDL: PythSolanaReceiver = {
   ],
   accounts: [
     {
-      name: "config",
+      name: "Config",
       type: {
         kind: "struct",
         fields: [
@@ -886,6 +948,68 @@ export const IDL: PythSolanaReceiver = {
     },
   ],
   types: [
+    {
+      name: "PriceFeedMessage",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "feedId",
+            type: {
+              array: ["u8", 32],
+            },
+          },
+          {
+            name: "price",
+            type: "i64",
+          },
+          {
+            name: "conf",
+            type: "u64",
+          },
+          {
+            name: "exponent",
+            type: "i32",
+          },
+          {
+            name: "publishTime",
+            type: "i64",
+          },
+          {
+            name: "prevPublishTime",
+            type: "i64",
+          },
+          {
+            name: "emaPrice",
+            type: "i64",
+          },
+          {
+            name: "emaConf",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "MerklePriceUpdate",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "message",
+            type: "bytes",
+          },
+          {
+            name: "proof",
+            type: {
+              vec: {
+                array: ["u8", 20],
+              },
+            },
+          },
+        ],
+      },
+    },
     {
       name: "DataSource",
       type: {

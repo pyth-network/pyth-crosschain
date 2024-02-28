@@ -8,7 +8,7 @@ const PRICE_FEED_MESSAGE_VARIANT = 0;
 
 export type AccumulatorUpdateData = {
   vaa: Buffer;
-  updates: { message: Buffer; proof: Buffer[] }[];
+  updates: { message: Buffer; proof: number[][] }[];
 };
 
 export type PriceFeedMessage = {
@@ -98,7 +98,9 @@ export function parseAccumulatorUpdateData(
     cursor += 1;
     const proof = [];
     for (let j = 0; j < numProofs; j++) {
-      proof.push(data.subarray(cursor, cursor + KECCAK160_HASH_SIZE));
+      proof.push(
+        Array.from(data.subarray(cursor, cursor + KECCAK160_HASH_SIZE))
+      );
       cursor += KECCAK160_HASH_SIZE;
     }
 
