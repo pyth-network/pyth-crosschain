@@ -23,7 +23,7 @@ export function trimSignatures(
     );
   }
 
-  let trimmedVaa = Buffer.concat([
+  const trimmedVaa = Buffer.concat([
     vaa.subarray(0, 6 + n * VAA_SIGNATURE_SIZE),
     vaa.subarray(6 + currentNumSignatures * VAA_SIGNATURE_SIZE),
   ]);
