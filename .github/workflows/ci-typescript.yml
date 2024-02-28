@@ -36,6 +36,8 @@ jobs:
         run: npx lerna run test
       - name: Lint
         run: npx lerna run lint
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Generate ABIs
         run: npx lerna run generate-abi
       - name: Check ABIs
