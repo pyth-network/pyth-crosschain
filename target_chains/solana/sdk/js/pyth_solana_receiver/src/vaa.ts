@@ -6,12 +6,16 @@ import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 export const VAA_START = 46;
 export const VAA_SIGNATURE_SIZE = 66;
 export const VAA_SPLIT_INDEX = 792;
+export const DEFAULT_REDUCED_GUARDIAN_SET_SIZE = 5;
 
 export function getGuardianSetIndex(vaa: Buffer) {
   return vaa.readUInt32BE(1);
 }
 
-export function trimSignatures(vaa: Buffer, n: number): Buffer {
+export function trimSignatures(
+  vaa: Buffer,
+  n = DEFAULT_REDUCED_GUARDIAN_SET_SIZE
+): Buffer {
   const currentNumSignatures = vaa[5];
   if (n > currentNumSignatures) {
     throw new Error(

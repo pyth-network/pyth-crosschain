@@ -21,12 +21,10 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
-  DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
-  DEFAULT_TREASURY_ID,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-} from "./constants";
+} from "./compute_budget";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import {
   buildEncodedVaaCreateInstruction,
@@ -39,6 +37,8 @@ import {
   InstructionWithEphemeralSigners,
 } from "@pythnetwork/solana-utils";
 import { priorityFeeConfig as PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
+
+export const DEFAULT_TREASURY_ID = 0;
 
 export class PythSolanaReceiver {
   readonly connection: Connection;
@@ -140,10 +140,7 @@ export class PythSolanaReceiver {
         Buffer.from(priceUpdateData, "base64")
       );
       const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
-      const trimmedVaa = trimSignatures(
-        accumulatorUpdateData.vaa,
-        DEFAULT_REDUCED_GUARDIAN_SET_SIZE
-      );
+      const trimmedVaa = trimSignatures(accumulatorUpdateData.vaa);
 
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
