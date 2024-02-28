@@ -17,7 +17,6 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",

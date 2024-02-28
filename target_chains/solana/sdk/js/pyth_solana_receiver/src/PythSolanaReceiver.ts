@@ -82,22 +82,21 @@ export class PythSolanaReceiver {
     ) => Promise<InstructionWithEphemeralSigners[]>,
     priorityFeeConfig?: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const builder = new TransactionBuilder(
-      this.wallet.publicKey,
-      this.connection
-    );
-
     const {
-      postInstructions: instructions,
+      postInstructions,
       priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
       cleanupInstructions,
     } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
-    builder.addInstructions(instructions);
-    builder.addInstructions(
-      await getInstructions(priceFeedIdToPriceUpdateAccount)
+    return TransactionBuilder.batchIntoVersionedTransactions(
+      this.wallet.publicKey,
+      this.connection,
+      [
+        ...postInstructions,
+        ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
+        ...cleanupInstructions,
+      ],
+      priorityFeeConfig ?? {}
     );
-    builder.addInstructions(cleanupInstructions);
-    return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
   async withPartiallyVerifiedPriceUpdate(
@@ -107,21 +106,21 @@ export class PythSolanaReceiver {
     ) => Promise<InstructionWithEphemeralSigners[]>,
     priorityFeeConfig?: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const builder = new TransactionBuilder(
-      this.wallet.publicKey,
-      this.connection
-    );
     const {
-      postInstructions: instructions,
+      postInstructions,
       priceFeedIdToPriceUpdateAccount,
       cleanupInstructions,
     } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
-    builder.addInstructions(instructions);
-    builder.addInstructions(
-      await getInstructions(priceFeedIdToPriceUpdateAccount)
+    return TransactionBuilder.batchIntoVersionedTransactions(
+      this.wallet.publicKey,
+      this.connection,
+      [
+        ...postInstructions,
+        ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
+        ...cleanupInstructions,
+      ],
+      priorityFeeConfig ?? {}
     );
-    builder.addInstructions(cleanupInstructions);
-    return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
   async buildPostPriceUpdateAtomicInstructions(
