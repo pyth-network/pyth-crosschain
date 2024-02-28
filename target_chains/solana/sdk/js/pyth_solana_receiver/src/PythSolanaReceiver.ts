@@ -25,12 +25,15 @@ import {
   DEFAULT_TREASURY_ID,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
-  VAA_SPLIT_INDEX,
-  VAA_START,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./constants";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import { getGuardianSetIndex, trimSignatures } from "./vaa";
+import {
+  buildEncodedVaaCreateInstruction,
+  buildWriteEncodedVaaWithSplit,
+  getGuardianSetIndex,
+  trimSignatures,
+} from "./vaa";
 import {
   TransactionBuilder,
   InstructionWithEphemeralSigners,
@@ -179,6 +182,64 @@ export class PythSolanaReceiver {
     };
   }
 
+  async buildPostEncodedVaaInstructions(vaa: Buffer): Promise<{
+    postInstructions: InstructionWithEphemeralSigners[];
+    encodedVaaAddress: PublicKey;
+    cleanupInstructions: InstructionWithEphemeralSigners[];
+  }> {
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
+    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
+    const encodedVaaKeypair = new Keypair();
+    const guardianSetIndex = getGuardianSetIndex(vaa);
+
+    postInstructions.push(
+      await buildEncodedVaaCreateInstruction(
+        this.wormhole,
+        vaa,
+        encodedVaaKeypair
+      )
+    );
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .initEncodedVaa()
+        .accounts({
+          encodedVaa: encodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+    });
+
+    postInstructions.push(
+      ...(await buildWriteEncodedVaaWithSplit(
+        this.wormhole,
+        vaa,
+        encodedVaaKeypair.publicKey
+      ))
+    );
+
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .verifyEncodedVaaV1()
+        .accounts({
+          guardianSet: getGuardianSetPda(guardianSetIndex),
+          draftVaa: encodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    cleanupInstructions.push(
+      await this.buildCloseEncodedVaaInstruction(encodedVaaKeypair.publicKey)
+    );
+
+    return {
+      postInstructions,
+      encodedVaaAddress: encodedVaaKeypair.publicKey,
+      cleanupInstructions,
+    };
+  }
+
   async buildPostPriceUpdateInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
@@ -195,70 +256,13 @@ export class PythSolanaReceiver {
         Buffer.from(priceUpdateData, "base64")
       );
 
-      const encodedVaaKeypair = new Keypair();
-      const encodedVaaSize = accumulatorUpdateData.vaa.length + VAA_START;
-
-      const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
-
-      postInstructions.push({
-        instruction: await this.wormhole.account.encodedVaa.createInstruction(
-          encodedVaaKeypair,
-          encodedVaaSize
-        ),
-        signers: [encodedVaaKeypair],
-      });
-
-      postInstructions.push({
-        instruction: await this.wormhole.methods
-          .initEncodedVaa()
-          .accounts({
-            encodedVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-      });
-
-      postInstructions.push({
-        instruction: await this.wormhole.methods
-          .writeEncodedVaa({
-            index: 0,
-            data: accumulatorUpdateData.vaa.subarray(0, VAA_SPLIT_INDEX),
-          })
-          .accounts({
-            draftVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-      });
-
-      postInstructions.push({
-        instruction: await this.wormhole.methods
-          .writeEncodedVaa({
-            index: VAA_SPLIT_INDEX,
-            data: accumulatorUpdateData.vaa.subarray(VAA_SPLIT_INDEX),
-          })
-          .accounts({
-            draftVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-      });
-
-      postInstructions.push({
-        instruction: await this.wormhole.methods
-          .verifyEncodedVaaV1()
-          .accounts({
-            guardianSet: getGuardianSetPda(guardianSetIndex),
-            draftVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-        computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-      });
-
-      cleanupInstructions.push(
-        await this.buildCloseEncodedVaaInstruction(encodedVaaKeypair.publicKey)
-      );
+      const {
+        postInstructions: postEncodedVaaInstructions,
+        encodedVaaAddress: encodedVaa,
+        cleanupInstructions: postEncodedVaaCleanupInstructions,
+      } = await this.buildPostEncodedVaaInstructions(accumulatorUpdateData.vaa);
+      postInstructions.push(...postEncodedVaaInstructions);
+      cleanupInstructions.push(...postEncodedVaaCleanupInstructions);
 
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
@@ -269,7 +273,7 @@ export class PythSolanaReceiver {
               treasuryId: DEFAULT_TREASURY_ID,
             })
             .accounts({
-              encodedVaa: encodedVaaKeypair.publicKey,
+              encodedVaa,
               priceUpdateAccount: priceUpdateKeypair.publicKey,
               treasury: getTreasuryPda(DEFAULT_TREASURY_ID),
               config: getConfigPda(),
