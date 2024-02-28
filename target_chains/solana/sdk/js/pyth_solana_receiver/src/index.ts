@@ -44,9 +44,13 @@ export class PythSolanaReceiverConnection {
   constructor({
     connection,
     wallet,
+    wormholeProgramId = DEFAULT_WORMHOLE_PROGRAM_ID,
+    receiverProgramId = DEFAULT_RECEIVER_PROGRAM_ID,
   }: {
     connection: Connection;
     wallet: Wallet;
+    wormholeProgramId?: PublicKey;
+    receiverProgramId?: PublicKey;
   }) {
     this.connection = connection;
     this.wallet = wallet;
@@ -55,12 +59,12 @@ export class PythSolanaReceiverConnection {
     });
     this.receiver = new Program<PythSolanaReceiver>(
       Idl as PythSolanaReceiver,
-      DEFAULT_RECEIVER_PROGRAM_ID,
+      receiverProgramId,
       this.provider
     );
     this.wormhole = new Program<WormholeCoreBridgeSolana>(
       WormholeCoreBridgeSolanaIdl as WormholeCoreBridgeSolana,
-      DEFAULT_WORMHOLE_PROGRAM_ID,
+      wormholeProgramId,
       this.provider
     );
   }
