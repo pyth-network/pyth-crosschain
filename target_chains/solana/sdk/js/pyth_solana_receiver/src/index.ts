@@ -85,30 +85,15 @@ export class PythSolanaReceiver {
     );
 
     const {
-      instructions,
+      postInstructions: instructions,
       priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
-      encodedVaaAddresses,
-      priceUpdateAddresses,
+      cleanupInstructions,
     } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
     builder.addInstructions(instructions);
     builder.addInstructions(
       await getInstructions(priceFeedIdToPriceUpdateAccount)
     );
-
-    await Promise.all(
-      encodedVaaAddresses.map(async (encodedVaaAddress) =>
-        builder.addInstruction(
-          await this.buildCloseEncodedVaaInstruction(encodedVaaAddress)
-        )
-      )
-    );
-    await Promise.all(
-      priceUpdateAddresses.map(async (priceUpdateAccount) =>
-        builder.addInstruction(
-          await this.buildClosePriceUpdateInstruction(priceUpdateAccount)
-        )
-      )
-    );
+    builder.addInstructions(cleanupInstructions);
     return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
@@ -124,34 +109,28 @@ export class PythSolanaReceiver {
       this.connection
     );
     const {
-      instructions,
+      postInstructions: instructions,
       priceFeedIdToPriceUpdateAccount,
-      priceUpdateAddresses,
+      cleanupInstructions,
     } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
     builder.addInstructions(instructions);
     builder.addInstructions(
       await getInstructions(priceFeedIdToPriceUpdateAccount)
     );
-    await Promise.all(
-      priceUpdateAddresses.map(async (priceUpdateAccount) =>
-        builder.addInstruction(
-          await this.buildClosePriceUpdateInstruction(priceUpdateAccount)
-        )
-      )
-    );
+    builder.addInstructions(cleanupInstructions);
     return builder.getVersionedTransactions(priorityFeeConfig ?? {});
   }
 
   async buildPostPriceUpdateAtomicInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
-    instructions: InstructionWithEphemeralSigners[];
+    postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
-    priceUpdateAddresses: PublicKey[];
+    cleanupInstructions: InstructionWithEphemeralSigners[];
   }> {
-    const instructions: InstructionWithEphemeralSigners[] = [];
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
-    const priceUpdateAddresses: PublicKey[] = [];
+    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -165,7 +144,7 @@ export class PythSolanaReceiver {
 
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
-        instructions.push({
+        postInstructions.push({
           instruction: await this.receiver.methods
             .postUpdateAtomic({
               vaa: trimmedVaa,
@@ -185,28 +164,31 @@ export class PythSolanaReceiver {
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
         ] = priceUpdateKeypair.publicKey;
-        priceUpdateAddresses.push(priceUpdateKeypair.publicKey);
+
+        cleanupInstructions.push(
+          await this.buildClosePriceUpdateInstruction(
+            priceUpdateKeypair.publicKey
+          )
+        );
       }
     }
     return {
-      instructions,
+      postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      priceUpdateAddresses,
+      cleanupInstructions,
     };
   }
 
   async buildPostPriceUpdateInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
-    instructions: InstructionWithEphemeralSigners[];
+    postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
-    encodedVaaAddresses: PublicKey[];
-    priceUpdateAddresses: PublicKey[];
+    cleanupInstructions: InstructionWithEphemeralSigners[];
   }> {
-    const instructions: InstructionWithEphemeralSigners[] = [];
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
-    const priceUpdateAddresses: PublicKey[] = [];
-    const encodedVaaAddresses: PublicKey[] = [];
+    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -218,7 +200,7 @@ export class PythSolanaReceiver {
 
       const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
 
-      instructions.push({
+      postInstructions.push({
         instruction: await this.wormhole.account.encodedVaa.createInstruction(
           encodedVaaKeypair,
           encodedVaaSize
@@ -226,7 +208,7 @@ export class PythSolanaReceiver {
         signers: [encodedVaaKeypair],
       });
 
-      instructions.push({
+      postInstructions.push({
         instruction: await this.wormhole.methods
           .initEncodedVaa()
           .accounts({
@@ -236,7 +218,7 @@ export class PythSolanaReceiver {
         signers: [],
       });
 
-      instructions.push({
+      postInstructions.push({
         instruction: await this.wormhole.methods
           .writeEncodedVaa({
             index: 0,
@@ -249,7 +231,7 @@ export class PythSolanaReceiver {
         signers: [],
       });
 
-      instructions.push({
+      postInstructions.push({
         instruction: await this.wormhole.methods
           .writeEncodedVaa({
             index: VAA_SPLIT_INDEX,
@@ -262,7 +244,7 @@ export class PythSolanaReceiver {
         signers: [],
       });
 
-      instructions.push({
+      postInstructions.push({
         instruction: await this.wormhole.methods
           .verifyEncodedVaaV1()
           .accounts({
@@ -274,9 +256,13 @@ export class PythSolanaReceiver {
         computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
       });
 
+      cleanupInstructions.push(
+        await this.buildCloseEncodedVaaInstruction(encodedVaaKeypair.publicKey)
+      );
+
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
-        instructions.push({
+        postInstructions.push({
           instruction: await this.receiver.methods
             .postUpdate({
               merklePriceUpdate: update,
@@ -296,15 +282,18 @@ export class PythSolanaReceiver {
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
         ] = priceUpdateKeypair.publicKey;
-        priceUpdateAddresses.push(priceUpdateKeypair.publicKey);
+        cleanupInstructions.push(
+          await this.buildClosePriceUpdateInstruction(
+            priceUpdateKeypair.publicKey
+          )
+        );
       }
     }
 
     return {
-      instructions,
+      postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      encodedVaaAddresses,
-      priceUpdateAddresses,
+      cleanupInstructions,
     };
   }
 
