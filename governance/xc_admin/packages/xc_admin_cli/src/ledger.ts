@@ -4,7 +4,7 @@ import Transport, {
   TransportStatusError,
 } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export class LedgerNodeWallet implements Wallet {
   private _derivationPath: Buffer;
@@ -35,21 +35,30 @@ export class LedgerNodeWallet implements Wallet {
     return new LedgerNodeWallet(derivationPath, transport, publicKey);
   }
 
-  async signTransaction(transaction: Transaction): Promise<Transaction> {
+  async signTransaction<T extends Transaction | VersionedTransaction>(
+    tx: T
+  ): Promise<T> {
     console.log("Please approve the transaction on your ledger device...");
     const transport = this._transport;
     const publicKey = this.publicKey;
 
-    const signature = await signTransaction(
-      transport,
-      transaction,
-      this._derivationPath
-    );
-    transaction.addSignature(publicKey, signature);
-    return transaction;
+    if (tx instanceof Transaction) {
+      const signature = await signTransaction(
+        transport,
+        tx,
+        this._derivationPath
+      );
+      tx.addSignature(publicKey, signature);
+    } else {
+      // Handle VersionedTransaction if necessary
+      throw new Error("VersionedTransaction is not supported yet.");
+    }
+    return tx;
   }
 
-  async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+  async signAllTransactions<T extends Transaction | VersionedTransaction>(
+    txs: T[]
+  ): Promise<T[]> {
     return await Promise.all(txs.map((tx) => this.signTransaction(tx)));
   }
 }
