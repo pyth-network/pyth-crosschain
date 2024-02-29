@@ -101,14 +101,21 @@ pub mod pyth_solana_receiver {
 
     pub fn set_minimum_signatures(ctx: Context<Governance>, minimum_signatures: u8) -> Result<()> {
         let config = &mut ctx.accounts.config;
+        require!(minimum_signatures > 0, ReceiverError::ZeroMinimumSignatures);
         config.minimum_signatures = minimum_signatures;
         Ok(())
     }
 
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
-    /// Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.
-    /// Typically, you can fit 5 guardian signatures in a transaction that uses this.
+    /// Compared to post_update, it only checks whatever signatures are present in the passed VAA and doesn't fail if the number of signatures is lower than the Wormhole quorum of two thirds of the guardians.
+    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the`PriceUpdateV1` account.
+    ///
+    /// We recommend using post_update_atomic with 5 signatures. This is close to the maximum signatures you can verify in one transaction without exceeding the transaction size limit.
+    ///
+    /// # Warning
+    ///
+    /// Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update.
     pub fn post_update_atomic(
         ctx: Context<PostUpdateAtomic>,
         params: PostUpdateAtomicParams,
@@ -195,7 +202,7 @@ pub mod pyth_solana_receiver {
     pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
-        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?;
+        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified, this check is critical otherwise the program could be tricked into accepting unverified VAAs
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
             &mut ctx.accounts.price_update_account;
@@ -269,9 +276,8 @@ pub struct PostUpdate<'info> {
     pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
-    #[account(seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
-    #[account(mut)]
+    #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
