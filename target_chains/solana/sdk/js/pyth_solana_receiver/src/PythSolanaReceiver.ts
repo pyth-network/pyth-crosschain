@@ -101,9 +101,7 @@ export class PythSolanaReceiver {
       priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
       cleanupInstructions,
     } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
-    return TransactionBuilder.batchIntoVersionedTransactions(
-      this.wallet.publicKey,
-      this.connection,
+    return this.batchIntoVersionedTransactions(
       [
         ...postInstructions,
         ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
@@ -136,9 +134,7 @@ export class PythSolanaReceiver {
       priceFeedIdToPriceUpdateAccount,
       cleanupInstructions,
     } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
-    return TransactionBuilder.batchIntoVersionedTransactions(
-      this.wallet.publicKey,
-      this.connection,
+    return this.batchIntoVersionedTransactions(
       [
         ...postInstructions,
         ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
@@ -385,5 +381,20 @@ export class PythSolanaReceiver {
       .accounts({ priceUpdateAccount })
       .instruction();
     return { instruction, signers: [] };
+  }
+
+  /**
+   * Returns a set of versioned transactions that contain the provided instructions in the same order and with efficient batching
+   */
+  async batchIntoVersionedTransactions(
+    instructions: InstructionWithEphemeralSigners[],
+    priorityFeeConfig: PriorityFeeConfig
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    return TransactionBuilder.batchIntoVersionedTransactions(
+      this.wallet.publicKey,
+      this.connection,
+      instructions,
+      priorityFeeConfig
+    );
   }
 }

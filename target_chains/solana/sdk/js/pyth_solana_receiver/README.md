@@ -33,7 +33,7 @@ const consumerInstruction = {instruction: await myFirstApp.methods.consume().acc
 consumed
 
 const transactions = await TransactionBuilder.batchIntoVersionedTransactions(wallet.publicKey, connection, [...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
-await pythSolanaReceiver.provider.sendAll(transactions, { skipPreflight: true });
+await pythSolanaReceiver.provider.sendAll(transactions);
 ```
 
 Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intructions you want to execute. For example:
@@ -57,5 +57,5 @@ const getInstructions = async (priceFeedIdToPriceUpdateAccount : Record<string, 
 
 const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
 const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {computeUnitPriceMicroLamports : 1})
-await pythSolanaReceiver.provider.sendAll(transactions, { skipPreflight: true });
+await pythSolanaReceiver.provider.sendAll(transactions);
 ```
