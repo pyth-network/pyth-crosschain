@@ -1,4 +1,9 @@
-use clap::Args;
+use {
+    clap::Args,
+    solana_sdk::pubkey::Pubkey,
+};
+
+const DEFAULT_PYTHNET_MAPPING_ADDR: &str = "AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J";
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Pythnet Options")]
@@ -13,4 +18,10 @@ pub struct Options {
     #[arg(long = "pythnet-http-addr")]
     #[arg(env = "PYTHNET_HTTP_ADDR")]
     pub http_addr: String,
+
+    /// Pyth mapping account address.
+    #[arg(long = "mapping-address")]
+    #[arg(default_value = DEFAULT_PYTHNET_MAPPING_ADDR)]
+    #[arg(env = "MAPPING_ADDRESS")]
+    pub mapping_addr: Pubkey,
 }

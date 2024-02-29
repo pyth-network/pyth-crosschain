@@ -62,6 +62,7 @@ export const RECEIVER_CHAINS = {
   filecoin: 60043,
   lightlink_phoenix: 60044,
   injective_inevm: 60045,
+  blast: 60046,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

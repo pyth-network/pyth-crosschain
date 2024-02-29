@@ -28,6 +28,14 @@ use {
         Deserialize,
         Serialize,
     },
+    std::{
+        collections::BTreeMap,
+        fmt::{
+            Display,
+            Formatter,
+            Result as FmtResult,
+        },
+    },
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
@@ -52,7 +60,7 @@ impl From<PriceIdInput> for PriceIdentifier {
 
 type Base64String = String;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
     #[schema(value_type = Option<u64>, example=85480034)]
     pub slot:                       Option<Slot>,
@@ -64,7 +72,7 @@ pub struct RpcPriceFeedMetadata {
     pub prev_publish_time:          Option<UnixTimestamp>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadataV2 {
     #[schema(value_type = Option<u64>, example=85480034)]
     pub slot:                 Option<Slot>,
@@ -74,7 +82,7 @@ pub struct RpcPriceFeedMetadataV2 {
     pub prev_publish_time:    Option<UnixTimestamp>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
@@ -142,8 +150,8 @@ impl RpcPriceFeed {
     Eq,
     BorshSerialize,
     BorshDeserialize,
-    serde::Serialize,
-    serde::Deserialize,
+    Serialize,
+    Deserialize,
     ToSchema,
 )]
 pub struct RpcPrice {
@@ -178,8 +186,8 @@ pub struct RpcPrice {
     Hash,
     BorshSerialize,
     BorshDeserialize,
-    serde::Serialize,
-    serde::Deserialize,
+    Serialize,
+    Deserialize,
     ToSchema,
 )]
 #[repr(C)]
@@ -204,7 +212,7 @@ impl From<PriceIdentifier> for RpcPriceIdentifier {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize, ToSchema)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, ToSchema)]
 pub enum EncodingType {
     #[default]
     #[serde(rename = "hex")]
@@ -222,13 +230,13 @@ impl EncodingType {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct BinaryPriceUpdate {
     pub encoding: EncodingType,
     pub data:     Vec<String>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
@@ -263,7 +271,7 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceUpdate {
     pub binary: BinaryPriceUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -314,5 +322,29 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
             price_feeds,
             update_data,
         })
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct PriceFeedMetadata {
+    pub id:         PriceIdentifier,
+    // BTreeMap is used to automatically sort the keys to ensure consistent ordering of attributes in the JSON response.
+    // This enhances user experience by providing a predictable structure, avoiding confusion from varying orders in different responses.
+    pub attributes: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum AssetType {
+    Crypto,
+    FX,
+    Equity,
+    Metals,
+    Rates,
+}
+
+impl Display for AssetType {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{:?}", self)
     }
 }

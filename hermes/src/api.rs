@@ -123,6 +123,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             rest::price_feed_ids,
             rest::latest_price_updates,
             rest::timestamp_price_updates,
+            rest::price_feeds_metadata,
         ),
         components(
             schemas(
@@ -139,6 +140,8 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
                 types::BinaryPriceUpdate,
                 types::ParsedPriceUpdate,
                 types::RpcPriceFeedMetadataV2,
+                types::PriceFeedMetadata,
+                types::AssetType
             )
         ),
         tags(
@@ -164,6 +167,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             "/v2/updates/price/:publish_time",
             get(rest::timestamp_price_updates),
         )
+        .route("/v2/price_feeds", get(rest::price_feeds_metadata))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
         .route("/ws", get(ws::ws_route_handler))

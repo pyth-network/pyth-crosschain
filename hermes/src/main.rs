@@ -21,6 +21,7 @@ mod api;
 mod config;
 mod metrics_server;
 mod network;
+mod price_feeds_metadata;
 mod serde;
 mod state;
 
