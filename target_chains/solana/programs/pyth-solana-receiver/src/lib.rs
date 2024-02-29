@@ -131,6 +131,11 @@ pub mod pyth_solana_receiver {
         );
 
         let guardian_keys = &guardian_set.keys;
+        require_gte!(
+            vaa.signature_count(),
+            config.minimum_signatures,
+            ReceiverError::InsufficientGuardianSignatures
+        );
 
         // Generate the same message hash (using keccak) that the Guardians used to generate their
         // signatures. This message hash will be hashed again to produce the digest for
@@ -160,12 +165,6 @@ pub mod pyth_solana_receiver {
         let payer = &ctx.accounts.payer;
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
-
-        require_gte!(
-            vaa.signature_count(),
-            config.minimum_signatures,
-            ReceiverError::InsufficientGuardianSignatures
-        );
 
         let vaa_components = VaaComponents {
             verification_level: VerificationLevel::Partial {
@@ -329,8 +328,7 @@ fn deserialize_guardian_set_checked(
     wormhole: &Pubkey,
 ) -> Result<AccountVariant<GuardianSet>> {
     let mut guardian_set_data: &[u8] = &account_info.try_borrow_data()?;
-    let guardian_set =
-        AccountVariant::<GuardianSet>::try_deserialize_unchecked(&mut guardian_set_data)?;
+    let guardian_set = AccountVariant::<GuardianSet>::try_deserialize(&mut guardian_set_data)?;
 
     let expected_address = Pubkey::find_program_address(
         &[
@@ -371,19 +369,22 @@ fn post_price_update_from_vaa<'info>(
     vaa_payload: &[u8],
     price_update: &MerklePriceUpdate,
 ) -> Result<()> {
+    let amount_to_pay = if treasury.lamports() == 0 {
+        Rent::get()?
+            .minimum_balance(0)
+            .max(config.single_update_fee_in_lamports)
+    } else {
+        config.single_update_fee_in_lamports
+    }; // First person to use the treasury account has to pay rent
     if payer.lamports()
         < Rent::get()?
-            .minimum_balance(0)
-            .saturating_add(config.single_update_fee_in_lamports)
+            .minimum_balance(payer.data_len())
+            .saturating_add(amount_to_pay)
     {
         return err!(ReceiverError::InsufficientFunds);
     };
 
-    let transfer_instruction = system_instruction::transfer(
-        payer.key,
-        treasury.key,
-        config.single_update_fee_in_lamports,
-    );
+    let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
     anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[payer.to_account_info(), treasury.to_account_info()],
