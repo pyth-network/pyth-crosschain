@@ -137,7 +137,7 @@ npm run start -- sui \
 npm run start -- near \
   --node-url https://rpc.testnet.near.org \
   --network testnet \
-  --account-id payer.testnet \ 
+  --account-id payer.testnet \
   --pyth-contract-address pyth-oracle.testnet \
   --price-service-endpoint "https://hermes-beta.pyth.network" \
   --price-config-file ./price-config.beta.sample.yaml \

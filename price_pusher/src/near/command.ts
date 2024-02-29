@@ -6,13 +6,13 @@ import { Controller } from "../controller";
 import { Options } from "yargs";
 import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 
-
 export default {
   command: "near",
   describe: "run price pusher for near",
   builder: {
     "node-url": {
-      description: "NEAR RPC API url. used to make JSON RPC calls to interact with NEAR.",
+      description:
+        "NEAR RPC API url. used to make JSON RPC calls to interact with NEAR.",
       type: "string",
       required: true,
     } as Options,
@@ -81,16 +81,11 @@ export default {
       pythContractAddress
     );
 
-    const nearListener = new NearPriceListener(
-      nearAccount,
-      priceItems,
-      { pollingFrequency }
-    );
+    const nearListener = new NearPriceListener(nearAccount, priceItems, {
+      pollingFrequency,
+    });
 
-    const nearPusher = new NearPricePusher(
-      nearAccount,
-      priceServiceConnection,
-    );
+    const nearPusher = new NearPricePusher(nearAccount, priceServiceConnection);
 
     const controller = new Controller(
       priceConfigs,

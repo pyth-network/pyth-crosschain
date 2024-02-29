@@ -15,11 +15,14 @@ import {
 import { DurationInSeconds } from "../utils";
 
 import { Account, Connection, KeyPair } from "near-api-js";
-import { ExecutionStatus, ExecutionStatusBasic, FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
+import {
+  ExecutionStatus,
+  ExecutionStatusBasic,
+  FinalExecutionOutcome,
+} from "near-api-js/lib/providers/provider";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
 
 export class NearPriceListener extends ChainPriceListener {
-
   constructor(
     private account: NearAccount,
     priceItems: PriceItem[],
@@ -58,13 +61,15 @@ export class NearPriceListener extends ChainPriceListener {
 }
 
 export class NearPricePusher implements IPricePusher {
-
   constructor(
     private account: NearAccount,
-    private connection: PriceServiceConnection,
-  ) { }
+    private connection: PriceServiceConnection
+  ) {}
 
-  async updatePriceFeed(priceIds: string[], pubTimesToPush: number[]): Promise<void> {
+  async updatePriceFeed(
+    priceIds: string[],
+    pubTimesToPush: number[]
+  ): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -74,9 +79,7 @@ export class NearPricePusher implements IPricePusher {
 
     let priceFeedUpdateData;
     try {
-      priceFeedUpdateData = await this.getPriceFeedsUpdateData(
-        priceIds
-      );
+      priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
     } catch (e: any) {
       console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
       return;
@@ -97,17 +100,33 @@ export class NearPricePusher implements IPricePusher {
       try {
         const outcome = await this.account.updatePriceFeeds(data, updateFee);
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
-        const is_success = Object.values(outcome['receipts_outcome']).reduce((is_success, receipt) => {
-          if (Object.prototype.hasOwnProperty.call(receipt["outcome"]["status"], "Failure")) {
-            failureMessages.push(receipt["outcome"]["status"])
-            return false;
-          }
-          return is_success;
-        }, true);
+        const is_success = Object.values(outcome["receipts_outcome"]).reduce(
+          (is_success, receipt) => {
+            if (
+              Object.prototype.hasOwnProperty.call(
+                receipt["outcome"]["status"],
+                "Failure"
+              )
+            ) {
+              failureMessages.push(receipt["outcome"]["status"]);
+              return false;
+            }
+            return is_success;
+          },
+          true
+        );
         if (is_success) {
-          console.log(new Date(), "updatePriceFeeds successful. Tx hash: ", outcome["transaction"]["hash"]);
+          console.log(
+            new Date(),
+            "updatePriceFeeds successful. Tx hash: ",
+            outcome["transaction"]["hash"]
+          );
         } else {
-          console.error(new Date(), "updatePriceFeeds failed:", JSON.stringify(failureMessages, undefined, 2));
+          console.error(
+            new Date(),
+            "updatePriceFeeds failed:",
+            JSON.stringify(failureMessages, undefined, 2)
+          );
         }
       } catch (e: any) {
         console.error(new Date(), "updatePriceFeeds failed:", e);
@@ -119,9 +138,7 @@ export class NearPricePusher implements IPricePusher {
     priceIds: HexString[]
   ): Promise<string[]> {
     const latestVaas = await this.connection.getLatestVaas(priceIds);
-    return latestVaas.map(
-      (vaa) => Buffer.from(vaa, "base64").toString("hex")
-    );
+    return latestVaas.map((vaa) => Buffer.from(vaa, "base64").toString("hex"));
   }
 }
 
@@ -135,7 +152,12 @@ export class NearAccount {
     privateKeyPath: string,
     private pythAccountId: string
   ) {
-    const connection = this.getConnection(network, accountId, nodeUrl, privateKeyPath);
+    const connection = this.getConnection(
+      network,
+      accountId,
+      nodeUrl,
+      privateKeyPath
+    );
     this.account = new Account(connection, accountId);
   }
 
@@ -144,8 +166,8 @@ export class NearAccount {
       contractId: this.pythAccountId,
       methodName: "get_price_unsafe",
       args: {
-        price_identifier: priceId
-      }
+        price_identifier: priceId,
+      },
     });
   }
 
@@ -154,29 +176,45 @@ export class NearAccount {
       contractId: this.pythAccountId,
       methodName: "get_update_fee_estimate",
       args: {
-        data
-      }
+        data,
+      },
     });
   }
 
-  async updatePriceFeeds(data: string, updateFee: any): Promise<FinalExecutionOutcome> {
+  async updatePriceFeeds(
+    data: string,
+    updateFee: any
+  ): Promise<FinalExecutionOutcome> {
     return await this.account.functionCall({
       contractId: this.pythAccountId,
       methodName: "update_price_feeds",
       args: {
-        data
+        data,
       },
       gas: "300000000000000" as any,
-      attachedDeposit: updateFee
+      attachedDeposit: updateFee,
     });
   }
 
-  private getConnection(network: string, accountId: string, nodeUrl: string, privateKeyPath: string): Connection {
-    const content = fs.readFileSync(privateKeyPath || path.join(os.homedir(), ".near-credentials", network, accountId + ".json"));
+  private getConnection(
+    network: string,
+    accountId: string,
+    nodeUrl: string,
+    privateKeyPath: string
+  ): Connection {
+    const content = fs.readFileSync(
+      privateKeyPath ||
+        path.join(
+          os.homedir(),
+          ".near-credentials",
+          network,
+          accountId + ".json"
+        )
+    );
     const accountInfo = JSON.parse(content.toString());
     let privateKey = accountInfo.private_key;
     if (!privateKey && accountInfo.secret_key) {
-        privateKey = accountInfo.secret_key;
+      privateKey = accountInfo.secret_key;
     }
     if (accountInfo.account_id && privateKey) {
       const keyPair = KeyPair.fromString(privateKey);
@@ -184,12 +222,12 @@ export class NearAccount {
       keyStore.setKey(network, accountInfo.account_id, keyPair);
       return Connection.fromConfig({
         networkId: network,
-        provider: { type: 'JsonRpcProvider', args: { url: nodeUrl } },
-        signer: { type: 'InMemorySigner', keyStore },
-        jsvmAccountId: `jsvm.${network}`
-      })
+        provider: { type: "JsonRpcProvider", args: { url: nodeUrl } },
+        signer: { type: "InMemorySigner", keyStore },
+        jsvmAccountId: `jsvm.${network}`,
+      });
     } else {
-      throw new Error('Invalid key file!');
+      throw new Error("Invalid key file!");
     }
   }
 }
