@@ -7,9 +7,9 @@ edition = "2021"
 anyhow = "1.0.65"
 base64 = "0.13.0"
 shellexpand = "2.1.2"
-solana-sdk = "1.16.20"
-solana-client = "1.16.20"
-anchor-client = "0.28.0"
+solana-sdk = { workspace = true }
+solana-client = { workspace = true }
+anchor-client = { workspace = true }
 clap = {version ="3.2.22", features = ["derive"]}
 pyth-solana-receiver = {path = "../programs/pyth-solana-receiver" }
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"} # Used for initializing the wormhole receiver
