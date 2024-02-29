@@ -32,6 +32,8 @@ import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 import PermissionDepermissionKey from '../PermissionDepermissionKey'
+import { PriceRawConfig } from '../../hooks/usePyth'
+import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const [data, setData] = useState<any>({})
@@ -126,7 +128,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             metadata: {
               ...product.metadata,
             },
-            priceAccounts: product.priceAccounts.map((p) => {
+            priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
               return {
                 address: p.address.toBase58(),
                 publishers: p.publishers
@@ -134,6 +136,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                   .slice(0, getMaximumNumberOfPublishers(cluster)),
                 expo: p.expo,
                 minPub: p.minPub,
+                maxLatency: p.maxLatency,
               }
             }),
           }
@@ -367,7 +370,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           }
 
           // create add publisher instruction if there are any publishers
-
           for (let publisherKey of newChanges.priceAccounts[0].publishers) {
             instructions.push(
               await pythProgramClient.methods
@@ -481,6 +483,26 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             instructions.push(
               await pythProgramClient.methods
                 .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                .accounts({
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  fundingAccount,
+                })
+                .instruction()
+            )
+          }
+
+          // check if maxLatency has changed
+          if (
+            prev.priceAccounts[0].maxLatency !==
+            newChanges.priceAccounts[0].maxLatency
+          ) {
+            // create update product account instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .setMaxLatency(
+                  newChanges.priceAccounts[0].maxLatency,
+                  [0, 0, 0]
+                )
                 .accounts({
                   priceAccount: new PublicKey(prev.priceAccounts[0].address),
                   fundingAccount,
@@ -804,7 +826,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     if (connected && squads) {
       const provider = new AnchorProvider(
         connection,
-        squads.wallet,
+        squads.wallet as Wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(

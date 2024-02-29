@@ -43,6 +43,7 @@ export type PriceRawConfig = {
   address: PublicKey
   expo: number
   minPub: number
+  maxLatency: number
   publishers: PublicKey[]
 }
 
@@ -97,6 +98,7 @@ const usePyth = (): PythHookData => {
                 }),
                 expo: parsed.exponent,
                 minPub: parsed.minPublishers,
+                maxLatency: parsed.maxLatency,
               }
               allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1]
               allPythAccounts.pop()
