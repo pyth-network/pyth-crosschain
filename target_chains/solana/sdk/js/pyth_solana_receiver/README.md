@@ -29,10 +29,10 @@ const {postInstructions, cleanupInstructions, priceFeedIdToPriceUpdateAccount} =
 
 
 const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
-const consumerInstruction = {instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: []}
+const consumerInstruction : InstructionWithEphemeralSigners = {instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: []}
 consumed
 
-const transactions = await TransactionBuilder.batchIntoVersionedTransactions(wallet.publicKey, connection, [...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
+const transactions = pythSolanaReceiver.batchIntoVersionedTransactions([...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
 
@@ -56,6 +56,6 @@ const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , Publ
 const getInstructions = async (priceFeedIdToPriceUpdateAccount : Record<string, PublicKey>) => { return [{instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: []}] };
 
 const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {computeUnitPriceMicroLamports : 1})
+const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {})
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
