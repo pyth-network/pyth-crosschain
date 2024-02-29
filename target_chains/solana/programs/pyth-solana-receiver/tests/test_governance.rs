@@ -384,7 +384,10 @@ async fn test_governance() {
         .await
         .unwrap();
 
-
+    current_config = program_simulator
+        .get_anchor_account_data::<Config>(get_config_address())
+        .await
+        .unwrap();
     assert_eq!(
         current_config.governance_authority,
         initial_config.governance_authority
@@ -408,14 +411,20 @@ async fn test_governance() {
     // Redo the request
     program_simulator
         .process_ix_with_default_compute_limit(
-            CancelGovernanceAuthorityTransfer::populate(governance_authority.pubkey()),
+            RequestGovernanceAuthorityTransfer::populate(
+                governance_authority.pubkey(),
+                new_governance_authority.pubkey(),
+            ),
             &vec![&governance_authority],
             None,
         )
         .await
         .unwrap();
 
-
+    current_config = program_simulator
+        .get_anchor_account_data::<Config>(get_config_address())
+        .await
+        .unwrap();
     assert_eq!(
         current_config.governance_authority,
         initial_config.governance_authority
