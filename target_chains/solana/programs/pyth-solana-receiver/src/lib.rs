@@ -38,6 +38,7 @@ use {
         state::GuardianSet,
     },
     wormhole_raw_vaas::{
+        utils::quorum,
         GuardianSetSig,
         Vaa,
     },
@@ -50,10 +51,8 @@ declare_id!(pyth_solana_receiver_state::ID);
 
 #[program]
 pub mod pyth_solana_receiver {
-    use {
-        super::*,
-        wormhole_raw_vaas::utils::quorum,
-    };
+    use super::*;
+
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
         require!(
@@ -152,11 +151,19 @@ pub mod pyth_solana_receiver {
         );
 
         let guardian_keys = &guardian_set.keys;
+        let quorum = quorum(guardian_keys.len());
         require_gte!(
             vaa.signature_count(),
             config.minimum_signatures,
             ReceiverError::InsufficientGuardianSignatures
         );
+        let verification_level = if usize::from(vaa.signature_count()) >= quorum {
+            VerificationLevel::Full
+        } else {
+            VerificationLevel::Partial {
+                num_signatures: vaa.signature_count(),
+            }
+        };
 
         // Generate the same message hash (using keccak) that the Guardians used to generate their
         // signatures. This message hash will be hashed again to produce the digest for
@@ -186,22 +193,6 @@ pub mod pyth_solana_receiver {
         let payer = &ctx.accounts.payer;
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
-
-        require_gte!(
-            vaa.signature_count(),
-            config.minimum_signatures,
-            ReceiverError::InsufficientGuardianSignatures
-        );
-
-        let quorum = quorum(guardian_keys.len());
-        let verification_level = if usize::from(vaa.signature_count()) >= quorum {
-            VerificationLevel::Full
-        } else {
-            VerificationLevel::Partial {
-                num_signatures: vaa.signature_count(),
-            }
-        };
-
 
         let vaa_components = VaaComponents {
             verification_level,
