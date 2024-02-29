@@ -13,6 +13,8 @@ import {
 import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 
+export class ClientError extends Error {}
+
 /**
  * ERC20 token with contract address and amount
  */
@@ -143,14 +145,14 @@ export function checkHex(hex: string): Hex {
   if (isHex(hex)) {
     return hex;
   }
-  throw new Error(`Invalid hex: ${hex}`);
+  throw new ClientError(`Invalid hex: ${hex}`);
 }
 
 export function checkAddress(address: string): Address {
   if (isAddress(address)) {
     return address;
   }
-  throw new Error(`Invalid address: ${address}`);
+  throw new ClientError(`Invalid address: ${address}`);
 }
 
 function checkTokenQty(token: { contract: string; amount: string }): TokenQty {
@@ -281,7 +283,7 @@ export class Client {
    */
   async subscribeChains(chains: string[]): Promise<void> {
     if (this.websocketOpportunityCallback === undefined) {
-      throw new Error("Opportunity handler not set");
+      throw new ClientError("Opportunity handler not set");
     }
     await this.sendWebsocketMessage({
       method: "subscribe",
@@ -300,7 +302,7 @@ export class Client {
       },
     });
     if (result === null) {
-      throw new Error("Empty response in websocket for bid submission");
+      throw new ClientError("Empty response in websocket for bid submission");
     }
     return result.id;
   }
@@ -313,7 +315,7 @@ export class Client {
       },
     });
     if (result === null) {
-      throw new Error("Empty response in websocket for bid submission");
+      throw new ClientError("Empty response in websocket for bid submission");
     }
     return result.id;
   }
@@ -379,7 +381,7 @@ export class Client {
       params: { query: { chain_id: chainId } },
     });
     if (opportunities.data === undefined) {
-      throw new Error("No opportunities found");
+      throw new ClientError("No opportunities found");
     }
     return opportunities.data.flatMap((opportunity) => {
       const convertedOpportunity = this.convertOpportunity(opportunity);
@@ -415,7 +417,7 @@ export class Client {
       },
     });
     if (response.error) {
-      throw new Error(response.error.error);
+      throw new ClientError(response.error.error);
     }
   }
 
@@ -527,9 +529,9 @@ export class Client {
       }
     );
     if (response.error) {
-      throw new Error(response.error.error);
+      throw new ClientError(response.error.error);
     } else if (response.data === undefined) {
-      throw new Error("No data returned");
+      throw new ClientError("No data returned");
     } else {
       return response.data.id;
     }
@@ -546,9 +548,9 @@ export class Client {
       body: this.toServerBid(bid),
     });
     if (response.error) {
-      throw new Error(response.error.error);
+      throw new ClientError(response.error.error);
     } else if (response.data === undefined) {
-      throw new Error("No data returned");
+      throw new ClientError("No data returned");
     } else {
       return response.data.id;
     }
