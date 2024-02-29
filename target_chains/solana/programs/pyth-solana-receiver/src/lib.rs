@@ -108,10 +108,10 @@ pub mod pyth_solana_receiver {
 
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
-    /// Compared to post_update, it only checks whatever signatures are present in the passed VAA and doesn't fail if the number of signatures is lower than the Wormhole quorum of two thirds of the guardians.
-    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the`PriceUpdateV1` account.
+    /// Compared to `post_update`, it only checks whatever signatures are present in the provided VAA and doesn't fail if the number of signatures is lower than the Wormhole quorum of two thirds of the guardians.
+    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the `PriceUpdateV1` account.
     ///
-    /// We recommend using post_update_atomic with 5 signatures. This is close to the maximum signatures you can verify in one transaction without exceeding the transaction size limit.
+    /// We recommend using `post_update_atomic` with 5 signatures. This is close to the maximum signatures you can verify in one transaction without exceeding the transaction size limit.
     ///
     /// # Warning
     ///
