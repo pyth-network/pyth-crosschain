@@ -53,6 +53,10 @@ pub mod pyth_solana_receiver {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
+        require!(
+            initial_config.minimum_signatures > 0,
+            ReceiverError::ZeroMinimumSignatures
+        );
         let config = &mut ctx.accounts.config;
         **config = initial_config;
         Ok(())
