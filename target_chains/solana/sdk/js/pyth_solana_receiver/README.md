@@ -36,7 +36,7 @@ const transactions = pythSolanaReceiver.batchIntoVersionedTransactions([...postI
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
 
-Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intructions you want to execute. For example:
+Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intructions that you want to execute. For example:
 
 ```ts
 import { Connection, PublicKey } from '@solana/web3.js';
