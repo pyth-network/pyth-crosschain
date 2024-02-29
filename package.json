@@ -2,6 +2,7 @@
   "name": "root",
   "workspaces": [
     "express_relay/sdk/js",
+    "express_relay/sdk/solidity",
     "governance/xc_admin/packages/*",
     "governance/multisig_wh_message_builder",
     "price_pusher",
@@ -12,6 +13,7 @@
     "target_chains/cosmwasm/tools",
     "target_chains/cosmwasm/deploy-scripts",
     "target_chains/ethereum/contracts",
+    "target_chains/ethereum/abi_generator",
     "target_chains/ethereum/entropy_sdk/solidity",
     "target_chains/ethereum/sdk/js",
     "target_chains/ethereum/sdk/solidity",
