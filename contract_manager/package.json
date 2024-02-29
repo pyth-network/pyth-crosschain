@@ -21,7 +21,7 @@
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.28.1-beta.1",
+    "@coral-xyz/anchor": "^0.29.0",
     "@certusone/wormhole-sdk": "^0.9.8",
     "@injectivelabs/networks": "1.0.68",
     "@mysten/sui.js": "^0.37.1",
