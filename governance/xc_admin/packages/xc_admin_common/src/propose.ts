@@ -106,7 +106,11 @@ export class MultisigVault {
       opts = AnchorProvider.defaultOptions();
     }
 
-    return new AnchorProvider(this.squad.connection, this.squad.wallet, opts);
+    return new AnchorProvider(
+      this.squad.connection,
+      this.squad.wallet as Wallet,
+      opts
+    );
   }
 
   // Convenience wrappers around squads methods
@@ -515,7 +519,7 @@ async function getPostMessageInstruction(
   const emitter = squad.getAuthorityPDA(vault, 1);
   const provider = new AnchorProvider(
     squad.connection,
-    squad.wallet,
+    squad.wallet as Wallet,
     AnchorProvider.defaultOptions()
   );
   const wormholeProgram = createWormholeProgramInterface(
