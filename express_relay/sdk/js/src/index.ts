@@ -224,6 +224,7 @@ export class Client {
           await this.websocketBidStatusCallback(message);
         }
       } else if ("id" in message && message.id) {
+        // Response to a request sent earlier via the websocket with the same id
         const callback = this.callbackRouter[message.id];
         if (callback !== undefined) {
           callback(message);
