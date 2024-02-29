@@ -28,7 +28,7 @@ import {
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import {
   buildEncodedVaaCreateInstruction,
-  buildWriteEncodedVaaWithSplit,
+  buildWriteEncodedVaaWithSplitInstructions,
   getGuardianSetIndex,
   trimSignatures,
 } from "./vaa";
@@ -206,7 +206,7 @@ export class PythSolanaReceiver {
     });
 
     postInstructions.push(
-      ...(await buildWriteEncodedVaaWithSplit(
+      ...(await buildWriteEncodedVaaWithSplitInstructions(
         this.wormhole,
         vaa,
         encodedVaaKeypair.publicKey

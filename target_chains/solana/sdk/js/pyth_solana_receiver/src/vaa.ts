@@ -3,15 +3,34 @@ import { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
 import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 
-export const VAA_START = 46;
-export const VAA_SIGNATURE_SIZE = 66;
-export const VAA_SPLIT_INDEX = 792;
-export const DEFAULT_REDUCED_GUARDIAN_SET_SIZE = 5;
-
+/**
+ * Get the index of the guardian set that signed a VAA
+ */
 export function getGuardianSetIndex(vaa: Buffer) {
   return vaa.readUInt32BE(1);
 }
 
+/**
+ * The default number of signatures to keep in a VAA when using `trimSignatures`.
+ * This number was chosen as the maximum number of signatures so that the VAA's contents can be posted in a single Solana transaction.
+ */
+export const DEFAULT_REDUCED_GUARDIAN_SET_SIZE = 5;
+
+/**
+ * The size of a guardian signature in a VAA.
+ *
+ * It is 66 bytes long, the first byte is the guardian index and the next 65 bytes are the signature (including a recovery id).
+ */
+export const VAA_SIGNATURE_SIZE = 66;
+
+/**
+ * Trim the number of signatures of a VAA.
+ *
+ * @returns the same VAA as the input, but with `n` signatures instead of the original number of signatures.
+ *
+ * A Wormhole VAA typically has a number of signatures equal to two thirds of the number of guardians. However,
+ * this function is useful to make VAAs smaller to post their contents in a single Solana transaction.
+ */
 export function trimSignatures(
   vaa: Buffer,
   n = DEFAULT_REDUCED_GUARDIAN_SET_SIZE
@@ -32,11 +51,21 @@ export function trimSignatures(
   return trimmedVaa;
 }
 
+/**
+ * The start of the VAA bytes in an encoded VAA account. Before this offset, the account contains a header.
+ */
+export const VAA_START = 46;
+
+/**
+ * Build an instruction to create an encoded VAA account.
+ *
+ * This is the first step to post a VAA to the Wormhole program.
+ */
 export async function buildEncodedVaaCreateInstruction(
   wormhole: Program<WormholeCoreBridgeSolana>,
   vaa: Buffer,
   encodedVaaKeypair: Keypair
-) {
+): Promise<InstructionWithEphemeralSigners> {
   const encodedVaaSize = vaa.length + VAA_START;
   return {
     instruction: await wormhole.account.encodedVaa.createInstruction(
@@ -47,7 +76,24 @@ export async function buildEncodedVaaCreateInstruction(
   };
 }
 
-export async function buildWriteEncodedVaaWithSplit(
+/**
+ * When we are writing to an encoded VAA account, we do it in two instructions.
+ *
+ * We first write the first `VAA_SPLIT_INDEX` bytes and then the rest.
+ *
+ * This number was chosen as the biggest number such that we can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
+ */
+export const VAA_SPLIT_INDEX = 792;
+
+/**
+ * Build a set of instructions to write a VAA to an encoded VAA account
+ * This functions returns 2 instructions and splits the VAA in an opinionated way, so that the whole process of posting a VAA can be efficiently packed in the 2 transactions:
+ *
+ * TX 1 : `createInstruction` + `initEncodedVaa` + `writeEncodedVaa_1`
+ *
+ * TX 2 : `writeEncodedVaa_2` + `verifyEncodedVaaV1`
+ */
+export async function buildWriteEncodedVaaWithSplitInstructions(
   wormhole: Program<WormholeCoreBridgeSolana>,
   vaa: Buffer,
   draftVaa: PublicKey
