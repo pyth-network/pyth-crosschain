@@ -96,13 +96,13 @@ export function getSizeOfTransaction(
     32 * accounts.size + // array of account addresses
     32 + // recent blockhash
     getSizeOfCompressedU16(instructions.length) +
-    instruction_sizes +
-    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) // We don't support Account Lookup Tables
+    instruction_sizes + // array of instructions
+    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) // we don't support Account Lookup Tables
   );
 }
 
 /**
- * Get the size of n in bytes when serialized as a CompressedU16
+ * Get the size of n in bytes when serialized as a CompressedU16. Compact arrays use a CompactU16 to store the length of the array.
  */
 export function getSizeOfCompressedU16(n: number) {
   return 1 + Number(n >= 128) + Number(n >= 16384);
@@ -121,15 +121,14 @@ export class TransactionBuilder {
   readonly payer: PublicKey;
   readonly connection: Connection;
 
-  /** Make a new `TransactionBuilder`. It requires a `payer` to populate the `payerKey` field and a connection to populate  */
+  /** Make a new `TransactionBuilder`. It requires a `payer` to populate the `payerKey` field and a connection to populate `recentBlockhash` in the versioned transactions. */
   constructor(payer: PublicKey, connection: Connection) {
     this.payer = payer;
     this.connection = connection;
   }
 
   /**
-   * Add an instruction to the builder, the signers argument can be used to specify ephemeral signers that need to sign the transaction
-   * where this instruction appears
+   * Add an `InstructionWithEphemeralSigners` to the builder.
    */
   addInstruction(args: InstructionWithEphemeralSigners) {
     const { instruction, signers, computeUnits } = args;
@@ -163,6 +162,9 @@ export class TransactionBuilder {
       });
   }
 
+  /**
+   * Add multiple `InstructionWithEphemeralSigners` to the builder.
+   */
   addInstructions(instructions: InstructionWithEphemeralSigners[]) {
     for (const { instruction, signers, computeUnits } of instructions) {
       this.addInstruction({ instruction, signers, computeUnits });
