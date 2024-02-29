@@ -4,7 +4,7 @@ import {
   pythOracleProgram,
 } from '@pythnetwork/client'
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
-import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey } from '@solana/web3.js'
 import {
@@ -268,7 +268,7 @@ const UpdatePermissions = () => {
             setIsSendProposalButtonLoading(true)
             try {
               const vault = new MultisigVault(
-                squads.wallet,
+                squads.wallet as Wallet,
                 getMultisigCluster(cluster),
                 squads,
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)]
