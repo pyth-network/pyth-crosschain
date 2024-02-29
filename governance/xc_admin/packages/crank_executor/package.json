@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.9",
-    "@coral-xyz/anchor": "^0.26.0",
+    "@coral-xyz/anchor": "^0.28.1-beta.1",
     "@pythnetwork/client": "^2.9.0",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
