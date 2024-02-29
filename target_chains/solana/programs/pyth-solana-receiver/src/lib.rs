@@ -50,7 +50,10 @@ declare_id!(pyth_solana_receiver_state::ID);
 
 #[program]
 pub mod pyth_solana_receiver {
-    use super::*;
+    use {
+        super::*,
+        wormhole_raw_vaas::utils::quorum,
+    };
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
         require!(
@@ -71,6 +74,12 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    pub fn cancel_governance_authority_transfer(ctx: Context<Governance>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.target_governance_authority = None;
+        Ok(())
+    }
+
     pub fn accept_governance_authority_transfer(
         ctx: Context<AcceptGovernanceAuthorityTransfer>,
     ) -> Result<()> {
@@ -81,6 +90,7 @@ pub mod pyth_solana_receiver {
         config.target_governance_authority = None;
         Ok(())
     }
+
 
     pub fn set_data_sources(
         ctx: Context<Governance>,
@@ -177,12 +187,26 @@ pub mod pyth_solana_receiver {
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
 
-        let vaa_components = VaaComponents {
-            verification_level: VerificationLevel::Partial {
+        require_gte!(
+            vaa.signature_count(),
+            config.minimum_signatures,
+            ReceiverError::InsufficientGuardianSignatures
+        );
+
+        let quorum = quorum(guardian_keys.len());
+        let verification_level = if usize::from(vaa.signature_count()) >= quorum {
+            VerificationLevel::Full
+        } else {
+            VerificationLevel::Partial {
                 num_signatures: vaa.signature_count(),
-            },
-            emitter_address:    vaa.body().emitter_address(),
-            emitter_chain:      vaa.body().emitter_chain(),
+            }
+        };
+
+
+        let vaa_components = VaaComponents {
+            verification_level,
+            emitter_address: vaa.body().emitter_address(),
+            emitter_chain: vaa.body().emitter_chain(),
         };
 
         post_price_update_from_vaa(

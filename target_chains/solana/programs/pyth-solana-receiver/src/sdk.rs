@@ -238,6 +238,17 @@ impl instruction::RequestGovernanceAuthorityTransfer {
     }
 }
 
+impl instruction::CancelGovernanceAuthorityTransfer {
+    pub fn populate(payer: Pubkey) -> Instruction {
+        let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);
+        Instruction {
+            program_id: ID,
+            accounts:   governance_accounts,
+            data:       instruction::CancelGovernanceAuthorityTransfer.data(),
+        }
+    }
+}
+
 impl instruction::AcceptGovernanceAuthorityTransfer {
     pub fn populate(payer: Pubkey) -> Instruction {
         let governance_accounts =
