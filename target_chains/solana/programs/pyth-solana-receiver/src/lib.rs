@@ -202,7 +202,7 @@ pub mod pyth_solana_receiver {
     pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
-        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified, this check is critical otherwise the program could be tricked into accepting unverified VAAs
+        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified. This check is critical otherwise the program could be tricked into accepting unverified VAAs.
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
             &mut ctx.accounts.price_update_account;
