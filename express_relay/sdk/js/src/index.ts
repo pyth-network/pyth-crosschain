@@ -5,7 +5,6 @@ import createClient, {
 import {
   Address,
   encodeAbiParameters,
-  encodePacked,
   Hex,
   isAddress,
   isHex,
@@ -13,6 +12,7 @@ import {
 } from "viem";
 import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
+
 /**
  * ERC20 token with contract address and amount
  */
@@ -20,6 +20,9 @@ export type TokenQty = {
   contract: Address;
   amount: bigint;
 };
+
+export type BidId = string;
+export type ChainId = string;
 
 /**
  * Bid information
@@ -42,7 +45,7 @@ export type Opportunity = {
   /**
    * The chain id where the liquidation will be executed.
    */
-  chainId: string;
+  chainId: ChainId;
 
   /**
    * Unique identifier for the opportunity
@@ -99,6 +102,43 @@ export type OpportunityBid = {
   bid: BidInfo;
 };
 
+/**
+ * Represents a raw bid on acquiring a permission key
+ */
+export type Bid = {
+  /**
+   * The permission key to bid on
+   * @example 0xc0ffeebabe
+   *
+   */
+  permissionKey: Hex;
+  /**
+   * @description Amount of bid in wei.
+   * @example 10
+   */
+  amount: bigint;
+  /**
+   * @description Calldata for the contract call.
+   * @example 0xdeadbeef
+   */
+  calldata: Hex;
+  /**
+   * @description The chain id to bid on.
+   * @example sepolia
+   */
+  chainId: ChainId;
+  /**
+   * @description The contract address to call.
+   * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+   */
+  contract: Address;
+};
+
+export type BidStatusUpdate = {
+  id: BidId;
+  status: components["schemas"]["BidStatus"];
+};
+
 export function checkHex(hex: string): Hex {
   if (isHex(hex)) {
     return hex;
@@ -146,6 +186,10 @@ export class Client {
     opportunity: Opportunity
   ) => Promise<void>;
 
+  private websocketBidStatusCallback?: (
+    statusUpdate: BidStatusUpdate
+  ) => Promise<void>;
+
   constructor(clientOptions: ClientOptions, wsOptions?: WsOptions) {
     this.clientOptions = clientOptions;
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
@@ -164,13 +208,7 @@ export class Client {
         | components["schemas"]["ServerUpdateResponse"] = JSON.parse(
         data.toString()
       );
-      if ("id" in message && message.id) {
-        const callback = this.callbackRouter[message.id];
-        if (callback !== undefined) {
-          callback(message);
-          delete this.callbackRouter[message.id];
-        }
-      } else if ("type" in message && message.type === "new_opportunity") {
+      if ("type" in message && message.type === "new_opportunity") {
         if (this.websocketOpportunityCallback !== undefined) {
           const convertedOpportunity = this.convertOpportunity(
             message.opportunity
@@ -178,6 +216,16 @@ export class Client {
           if (convertedOpportunity !== undefined) {
             await this.websocketOpportunityCallback(convertedOpportunity);
           }
+        }
+      } else if ("type" in message && message.type === "bid_status_update") {
+        if (this.websocketBidStatusCallback !== undefined) {
+          await this.websocketBidStatusCallback(message);
+        }
+      } else if ("id" in message && message.id) {
+        const callback = this.callbackRouter[message.id];
+        if (callback !== undefined) {
+          callback(message);
+          delete this.callbackRouter[message.id];
         }
       } else if ("error" in message) {
         // Can not route error messages to the callback router as they don't have an id
@@ -218,6 +266,12 @@ export class Client {
     this.websocketOpportunityCallback = callback;
   }
 
+  public setBidStatusHandler(
+    callback: (statusUpdate: BidStatusUpdate) => Promise<void>
+  ) {
+    this.websocketBidStatusCallback = callback;
+  }
+
   /**
    * Subscribes to the specified chains
    *
@@ -225,16 +279,43 @@ export class Client {
    * If the opportunity handler is not set, an error will be thrown
    * @param chains
    */
-  async subscribeChains(chains: string[]) {
+  async subscribeChains(chains: string[]): Promise<void> {
     if (this.websocketOpportunityCallback === undefined) {
       throw new Error("Opportunity handler not set");
     }
-    return this.sendWebsocketMessage({
+    await this.sendWebsocketMessage({
       method: "subscribe",
       params: {
         chain_ids: chains,
       },
     });
+  }
+
+  async submitOpportunityBidViaWebsocket(bid: OpportunityBid): Promise<BidId> {
+    const result = await this.sendWebsocketMessage({
+      method: "post_liquidation_bid",
+      params: {
+        opportunity_bid: this.toServerOpportunityBid(bid),
+        opportunity_id: bid.opportunityId,
+      },
+    });
+    if (result === null) {
+      throw new Error("Empty response in websocket for bid submission");
+    }
+    return result.id;
+  }
+
+  async submitBidViaWebsocket(bid: Bid): Promise<BidId> {
+    const result = await this.sendWebsocketMessage({
+      method: "post_bid",
+      params: {
+        bid: this.toServerBid(bid),
+      },
+    });
+    if (result === null) {
+      throw new Error("Empty response in websocket for bid submission");
+    }
+    return result.id;
   }
 
   /**
@@ -243,8 +324,8 @@ export class Client {
    * The opportunity handler will no longer be called for opportunities on the specified chains
    * @param chains
    */
-  async unsubscribeChains(chains: string[]) {
-    return this.sendWebsocketMessage({
+  async unsubscribeChains(chains: string[]): Promise<void> {
+    await this.sendWebsocketMessage({
       method: "unsubscribe",
       params: {
         chain_ids: chains,
@@ -254,7 +335,7 @@ export class Client {
 
   async sendWebsocketMessage(
     msg: components["schemas"]["ClientMessage"]
-  ): Promise<void> {
+  ): Promise<components["schemas"]["APIResposne"] | null> {
     const msg_with_id: components["schemas"]["ClientRequest"] = {
       ...msg,
       id: (this.idCounter++).toString(),
@@ -262,7 +343,7 @@ export class Client {
     return new Promise((resolve, reject) => {
       this.callbackRouter[msg_with_id.id] = (response) => {
         if (response.status === "success") {
-          resolve();
+          resolve(response.result);
         } else {
           reject(response.result);
         }
@@ -409,27 +490,67 @@ export class Client {
     };
   }
 
+  private toServerOpportunityBid(
+    bid: OpportunityBid
+  ): components["schemas"]["OpportunityBid"] {
+    return {
+      amount: bid.bid.amount.toString(),
+      liquidator: bid.liquidator,
+      permission_key: bid.permissionKey,
+      signature: bid.signature,
+      valid_until: bid.bid.validUntil.toString(),
+    };
+  }
+
+  private toServerBid(bid: Bid): components["schemas"]["Bid"] {
+    return {
+      amount: bid.amount.toString(),
+      calldata: bid.calldata,
+      chain_id: bid.chainId,
+      contract: bid.contract,
+      permission_key: bid.permissionKey,
+    };
+  }
+
   /**
    * Submits a bid for a liquidation opportunity
    * @param bid
+   * @returns The id of the submitted bid, you can use this id to track the status of the bid
    */
-  async submitOpportunityBid(bid: OpportunityBid) {
+  async submitOpportunityBid(bid: OpportunityBid): Promise<BidId> {
     const client = createClient<paths>(this.clientOptions);
     const response = await client.POST(
       "/v1/liquidation/opportunities/{opportunity_id}/bids",
       {
-        body: {
-          amount: bid.bid.amount.toString(),
-          liquidator: bid.liquidator,
-          permission_key: bid.permissionKey,
-          signature: bid.signature,
-          valid_until: bid.bid.validUntil.toString(),
-        },
+        body: this.toServerOpportunityBid(bid),
         params: { path: { opportunity_id: bid.opportunityId } },
       }
     );
     if (response.error) {
       throw new Error(response.error.error);
+    } else if (response.data === undefined) {
+      throw new Error("No data returned");
+    } else {
+      return response.data.id;
+    }
+  }
+
+  /**
+   * Submits a raw bid for a permission key
+   * @param bid
+   * @returns The id of the submitted bid, you can use this id to track the status of the bid
+   */
+  async submitBid(bid: Bid): Promise<BidId> {
+    const client = createClient<paths>(this.clientOptions);
+    const response = await client.POST("/v1/bids", {
+      body: this.toServerBid(bid),
+    });
+    if (response.error) {
+      throw new Error(response.error.error);
+    } else if (response.data === undefined) {
+      throw new Error("No data returned");
+    } else {
+      return response.data.id;
     }
   }
 }

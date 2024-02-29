@@ -14,6 +14,13 @@ export interface paths {
      */
     post: operations["bid"];
   };
+  "/v1/bids/{bid_id}": {
+    /**
+     * Query the status of a specific bid.
+     * @description Query the status of a specific bid.
+     */
+    get: operations["bid_status"];
+  };
   "/v1/liquidation/opportunities": {
     /**
      * Fetch all liquidation opportunities ready to be exectued.
@@ -34,7 +41,7 @@ export interface paths {
      * Bid on liquidation opportunity
      * @description Bid on liquidation opportunity
      */
-    post: operations["post_bid"];
+    post: operations["liquidation_bid"];
   };
 }
 
@@ -42,6 +49,7 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    APIResposne: components["schemas"]["BidResult"];
     Bid: {
       /**
        * @description Amount of bid in wei.
@@ -70,21 +78,59 @@ export interface components {
       permission_key: string;
     };
     BidResult: {
+      /**
+       * @description The unique id created to identify the bid. This id can be used to query the status of the bid.
+       * @example beedbeed-58cc-4372-a567-0e02b2c3d479
+       */
+      id: string;
       status: string;
     };
+    BidStatus:
+      | {
+          /** @enum {string} */
+          status: "pending";
+        }
+      | {
+          /**
+           * @description The bid won the auction and was submitted to the chain in a transaction with the given hash
+           * @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3
+           */
+          result: string;
+          /** @enum {string} */
+          status: "submitted";
+        }
+      | {
+          /** @enum {string} */
+          status: "lost";
+        };
     ClientMessage:
       | {
           /** @enum {string} */
           method: "subscribe";
           params: {
-            chain_ids: components["schemas"]["ChainId"][];
+            chain_ids: string[];
           };
         }
       | {
           /** @enum {string} */
           method: "unsubscribe";
           params: {
-            chain_ids: components["schemas"]["ChainId"][];
+            chain_ids: string[];
+          };
+        }
+      | {
+          /** @enum {string} */
+          method: "post_bid";
+          params: {
+            bid: components["schemas"]["Bid"];
+          };
+        }
+      | {
+          /** @enum {string} */
+          method: "post_liquidation_bid";
+          params: {
+            opportunity_bid: components["schemas"]["OpportunityBid"];
+            opportunity_id: string;
           };
         };
     ClientRequest: components["schemas"]["ClientMessage"] & {
@@ -157,16 +203,25 @@ export interface components {
       value: string;
     };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithMetadata: components["schemas"]["OpportunityParams"] & {
-      creation_time: components["schemas"]["UnixTimestamp"];
+    OpportunityParamsWithMetadata: (components["schemas"]["OpportunityParamsV1"] & {
+      /** @enum {string} */
+      version: "v1";
+    }) & {
+      /**
+       * Format: int64
+       * @description Creation time of the opportunity
+       * @example 1700000000
+       */
+      creation_time: number;
       /**
        * @description The opportunity unique id
-       * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
     };
     ServerResultMessage:
       | {
+          result: components["schemas"]["APIResposne"] | null;
           /** @enum {string} */
           status: "success";
         }
@@ -183,11 +238,18 @@ export interface components {
       id?: string | null;
     };
     /** @description This enum is used to send an update to the client for any subscriptions made */
-    ServerUpdateResponse: {
-      opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
-      /** @enum {string} */
-      type: "new_opportunity";
-    };
+    ServerUpdateResponse:
+      | {
+          opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
+          /** @enum {string} */
+          type: "new_opportunity";
+        }
+      | {
+          id: components["schemas"]["BidId"];
+          status: components["schemas"]["BidStatus"];
+          /** @enum {string} */
+          type: "bid_status_update";
+        };
     TokenQty: {
       /**
        * @description Token amount
@@ -205,6 +267,11 @@ export interface components {
     BidResult: {
       content: {
         "application/json": {
+          /**
+           * @description The unique id created to identify the bid. This id can be used to query the status of the bid.
+           * @example beedbeed-58cc-4372-a567-0e02b2c3d479
+           */
+          id: string;
           status: string;
         };
       };
@@ -220,11 +287,19 @@ export interface components {
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
     OpportunityParamsWithMetadata: {
       content: {
-        "application/json": components["schemas"]["OpportunityParams"] & {
-          creation_time: components["schemas"]["UnixTimestamp"];
+        "application/json": (components["schemas"]["OpportunityParamsV1"] & {
+          /** @enum {string} */
+          version: "v1";
+        }) & {
+          /**
+           * Format: int64
+           * @description Creation time of the opportunity
+           * @example 1700000000
+           */
+          creation_time: number;
           /**
            * @description The opportunity unique id
-           * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
+           * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
            */
           opportunity_id: string;
         };
@@ -256,7 +331,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Bid was placed succesfully */
+      /** @description Bid was placed successfully */
       200: {
         content: {
           "application/json": components["schemas"]["BidResult"];
@@ -264,6 +339,33 @@ export interface operations {
       };
       400: components["responses"]["ErrorBodyResponse"];
       /** @description Chain id was not found */
+      404: {
+        content: {
+          "application/json": components["schemas"]["ErrorBodyResponse"];
+        };
+      };
+    };
+  };
+  /**
+   * Query the status of a specific bid.
+   * @description Query the status of a specific bid.
+   */
+  bid_status: {
+    parameters: {
+      path: {
+        /** @description Bid id to query for */
+        bid_id: string;
+      };
+    };
+    responses: {
+      /** @description Latest status of the bid */
+      200: {
+        content: {
+          "application/json": components["schemas"]["BidStatus"];
+        };
+      };
+      400: components["responses"]["ErrorBodyResponse"];
+      /** @description Bid was not found */
       404: {
         content: {
           "application/json": components["schemas"]["ErrorBodyResponse"];
@@ -286,7 +388,7 @@ export interface operations {
       /** @description Array of liquidation opportunities ready for bidding */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithId"][];
+          "application/json": components["schemas"]["OpportunityParamsWithMetadata"][];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];
@@ -315,7 +417,7 @@ export interface operations {
       /** @description The created opportunity */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithId"];
+          "application/json": components["schemas"]["OpportunityParamsWithMetadata"];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];
@@ -331,7 +433,7 @@ export interface operations {
    * Bid on liquidation opportunity
    * @description Bid on liquidation opportunity
    */
-  post_bid: {
+  liquidation_bid: {
     parameters: {
       path: {
         /** @description Opportunity id to bid on */

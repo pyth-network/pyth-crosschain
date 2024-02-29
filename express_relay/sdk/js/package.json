@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://pyth.network",
   "author": {
