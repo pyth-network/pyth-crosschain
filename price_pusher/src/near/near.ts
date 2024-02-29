@@ -149,7 +149,7 @@ export class NearAccount {
     network: string,
     accountId: string,
     nodeUrl: string,
-    privateKeyPath: string,
+    privateKeyPath: string | undefined,
     private pythAccountId: string
   ) {
     const connection = this.getConnection(
@@ -200,7 +200,7 @@ export class NearAccount {
     network: string,
     accountId: string,
     nodeUrl: string,
-    privateKeyPath: string
+    privateKeyPath: string | undefined
   ): Connection {
     const content = fs.readFileSync(
       privateKeyPath ||
