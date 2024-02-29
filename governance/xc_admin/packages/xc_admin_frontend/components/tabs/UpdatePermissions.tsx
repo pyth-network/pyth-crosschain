@@ -35,6 +35,7 @@ import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
+import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
 interface UpdatePermissionsProps {
   account: PermissionAccount
@@ -338,7 +339,7 @@ const UpdatePermissions = () => {
     if (connected && squads) {
       const provider = new AnchorProvider(
         connection,
-        squads.wallet,
+        squads.wallet as Wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
