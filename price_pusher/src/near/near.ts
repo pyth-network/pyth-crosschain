@@ -132,9 +132,10 @@ export class NearAccount {
     network: string,
     accountId: string,
     nodeUrl: string,
+    privateKeyPath: string,
     private pythAccountId: string
   ) {
-    const connection = this.getConnection(network, accountId, nodeUrl);
+    const connection = this.getConnection(network, accountId, nodeUrl, privateKeyPath);
     this.account = new Account(connection, accountId);
   }
 
@@ -170,8 +171,8 @@ export class NearAccount {
     });
   }
 
-  private getConnection(network: string, accountId: string, nodeUrl: string): Connection {
-    const content = fs.readFileSync(path.join(os.homedir(), ".near-credentials", network, accountId + ".json"));
+  private getConnection(network: string, accountId: string, nodeUrl: string, privateKeyPath: string): Connection {
+    const content = fs.readFileSync(privateKeyPath || path.join(os.homedir(), ".near-credentials", network, accountId + ".json"));
     const accountInfo = JSON.parse(content.toString());
     let privateKey = accountInfo.private_key;
     if (!privateKey && accountInfo.secret_key) {

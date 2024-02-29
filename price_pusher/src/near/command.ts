@@ -26,6 +26,11 @@ export default {
       type: "string",
       required: true,
     } as Options,
+    "private-key-path": {
+      description: "path to payer private key file.",
+      type: "string",
+      required: false,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -38,6 +43,7 @@ export default {
       nodeUrl,
       network,
       accountId,
+      privateKeyPath,
       priceConfigFile,
       priceServiceEndpoint,
       pythContractAddress,
@@ -71,6 +77,7 @@ export default {
       network,
       accountId,
       nodeUrl,
+      privateKeyPath,
       pythContractAddress
     );
 

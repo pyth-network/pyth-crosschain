@@ -141,6 +141,7 @@ npm run start -- near \
   --pyth-contract-address pyth-oracle.testnet \
   --price-service-endpoint "https://hermes-beta.pyth.network" \
   --price-config-file ./price-config.beta.sample.yaml \
+  [--private-key-path ./payer.testnet.json] \
   [--pushing-frequency 10] \
   [--polling-frequency 5]
 
