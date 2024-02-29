@@ -4,7 +4,7 @@ This is a Javascript SDK to interact with the Pyth Solana Receiver contract on S
 
 ## Pull model
 
-The Pyth Solana Receiver allows users to consume Pyth price updates on a pull-basis. This means the user is responsible for pushing the price data on-chain whenever they want to interact with an app that requires a price update.
+The Pyth Solana Receiver allows users to consume Pyth price updates on a pull-basis. This means that the user is responsible for pushing the price data on-chain whenever they want to interact with an app that requires a price update.
 
 Price updates get posted into price update accounts, owned by the Receiver contract. Once an update has been posted to a price update account, it can be used by anyone by simply passing the price update account as one of the accounts in a Solana instruction.
 Price update accounts can be closed by whoever wrote them to recover the rent.
@@ -36,7 +36,7 @@ const transactions = await TransactionBuilder.batchIntoVersionedTransactions(wal
 await pythSolanaReceiver.provider.sendAll(transactions, { skipPreflight: true });
 ```
 
-Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intruction you want to execute. For example:
+Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intructions you want to execute. For example:
 
 ```ts
 import { Connection, PublicKey } from '@solana/web3.js';
