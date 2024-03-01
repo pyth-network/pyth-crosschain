@@ -402,6 +402,7 @@ async fn test_post_price_update_from_vaa() {
     )
     .await;
 
+    // Transaction failed, so the account should not have been updated
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
         .await
