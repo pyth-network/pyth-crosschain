@@ -6,6 +6,7 @@ USER root
 WORKDIR /home/node/
 USER 1000
 
+COPY --chown=1000:1000 target_chains/solana/sdk/js/solana_utils target_chains/solana/sdk/js/solana_utils
 COPY --chown=1000:1000 governance/xc_admin governance/xc_admin
 COPY --chown=1000:1000 pythnet/message_buffer pythnet/message_buffer
 
