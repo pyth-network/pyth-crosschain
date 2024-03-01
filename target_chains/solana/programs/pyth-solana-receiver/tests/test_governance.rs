@@ -253,6 +253,20 @@ async fn test_governance() {
         initial_config.minimum_signatures
     );
 
+    // Minimum signatures can't be 0
+    assert_eq!(
+        program_simulator
+            .process_ix_with_default_compute_limit(
+                SetMinimumSignatures::populate(governance_authority.pubkey(), 0,),
+                &vec![&governance_authority],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transaction_error(ReceiverError::ZeroMinimumSignatures)
+    );
+
     program_simulator
         .process_ix_with_default_compute_limit(
             SetMinimumSignatures::populate(
