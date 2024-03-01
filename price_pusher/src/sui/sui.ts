@@ -6,30 +6,22 @@ import {
 } from "../interface";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import {
-  JsonRpcProvider,
-  Connection,
-  Ed25519Keypair,
-  RawSigner,
-  TransactionBlock,
-  getCreatedObjects,
-  SuiObjectRef,
-  getTransactionEffects,
-  getExecutionStatusError,
-  PaginatedCoins,
-  SuiAddress,
-  ObjectId,
-} from "@mysten/sui.js";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui.js/client";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
 const MAX_NUM_OBJECTS_IN_ARGUMENT = 510;
 
+type ObjectId = string;
+type SuiAddress = string;
+
 export class SuiPriceListener extends ChainPriceListener {
   private pythClient: SuiPythClient;
-  private provider: JsonRpcProvider;
+  private provider: SuiClient;
 
   constructor(
     pythStateId: ObjectId,
@@ -41,7 +33,7 @@ export class SuiPriceListener extends ChainPriceListener {
     }
   ) {
     super("sui", config.pollingFrequency, priceItems);
-    this.provider = new JsonRpcProvider(new Connection({ fullnode: endpoint }));
+    this.provider = new SuiClient({ url: endpoint });
     this.pythClient = new SuiPythClient(
       this.provider,
       pythStateId,
@@ -64,26 +56,22 @@ export class SuiPriceListener extends ChainPriceListener {
         options: { showContent: true },
       });
 
-      if (
-        priceInfoObject.data === undefined ||
-        priceInfoObject.data.content === undefined
-      )
+      if (!priceInfoObject.data || !priceInfoObject.data.content)
         throw new Error("Price not found on chain for price id " + priceId);
 
       if (priceInfoObject.data.content.dataType !== "moveObject")
         throw new Error("fetched object datatype should be moveObject");
 
-      const { magnitude, negative } =
+      const priceInfo =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
-          .price.fields.price.fields;
+          .price.fields;
+      const { magnitude, negative } = priceInfo.price.fields;
 
-      const conf =
-        priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
-          .price.fields.conf;
+      const conf = priceInfo.conf;
 
-      const timestamp =
-        priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
-          .price.fields.timestamp;
+      const timestamp = priceInfo.timestamp;
 
       return {
         price: negative ? "-" + magnitude : magnitude,
@@ -114,7 +102,8 @@ export class SuiPriceListener extends ChainPriceListener {
  */
 export class SuiPricePusher implements IPricePusher {
   constructor(
-    private readonly signer: RawSigner,
+    private readonly signer: Ed25519Keypair,
+    private readonly provider: SuiClient,
     private priceServiceConnection: PriceServiceConnection,
     private pythPackageId: string,
     private pythStateId: string,
@@ -135,7 +124,7 @@ export class SuiPricePusher implements IPricePusher {
    * @returns package id
    */
   static async getPackageId(
-    provider: JsonRpcProvider,
+    provider: SuiClient,
     objectId: ObjectId
   ): Promise<ObjectId> {
     const state = await provider
@@ -154,6 +143,8 @@ export class SuiPricePusher implements IPricePusher {
       });
 
     if ("upgrade_cap" in state) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       return state.upgrade_cap.fields.package;
     }
 
@@ -179,10 +170,7 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
-    const provider = new JsonRpcProvider(
-      new Connection({ fullnode: endpoint })
-    );
-    const signer = new RawSigner(keypair, provider);
+    const provider = new SuiClient({ url: endpoint });
     const pythPackageId = await SuiPricePusher.getPackageId(
       provider,
       pythStateId
@@ -193,7 +181,8 @@ export class SuiPricePusher implements IPricePusher {
     );
 
     const gasPool = await SuiPricePusher.initializeGasPool(
-      signer,
+      keypair,
+      provider,
       numGasObjects
     );
 
@@ -204,7 +193,8 @@ export class SuiPricePusher implements IPricePusher {
     );
 
     return new SuiPricePusher(
-      signer,
+      keypair,
+      provider,
       priceServiceConnection,
       pythPackageId,
       pythStateId,
@@ -282,15 +272,16 @@ export class SuiPricePusher implements IPricePusher {
     try {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
-      const result = await this.signer.signAndExecuteTransactionBlock({
+      const result = await this.provider.signAndExecuteTransactionBlock({
+        signer: this.signer,
         transactionBlock: tx,
         options: {
           showEffects: true,
         },
       });
 
-      nextGasObject = getTransactionEffects(result)
-        ?.mutated?.map((obj) => obj.reference)
+      nextGasObject = result.effects?.mutated
+        ?.map((obj) => obj.reference)
         .find((ref) => ref.objectId === gasObject.objectId);
 
       console.log(
@@ -308,7 +299,7 @@ export class SuiPricePusher implements IPricePusher {
       } else {
         // Refresh the coin object here in case the error is caused by an object version mismatch.
         nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
-          this.signer.provider,
+          this.provider,
           gasObject
         );
       }
@@ -328,16 +319,18 @@ export class SuiPricePusher implements IPricePusher {
   // This function will smash all coins owned by the signer into one, and then
   // split them equally into numGasObjects.
   private static async initializeGasPool(
-    signer: RawSigner,
+    signer: Ed25519Keypair,
+    provider: SuiClient,
     numGasObjects: number
   ): Promise<SuiObjectRef[]> {
-    const signerAddress = await signer.getAddress();
+    const signerAddress = await signer.toSuiAddress();
 
     const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
       signer,
+      provider,
       signerAddress
     );
-    const coinResult = await signer.provider.getObject({
+    const coinResult = await provider.getObject({
       id: consolidatedCoin.objectId,
       options: { showContent: true },
     });
@@ -347,6 +340,8 @@ export class SuiPricePusher implements IPricePusher {
       coinResult.data.content &&
       coinResult.data.content.dataType == "moveObject"
     ) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       balance = coinResult.data.content.fields.balance;
     } else throw new Error("Bad coin object");
     const splitAmount =
@@ -354,6 +349,7 @@ export class SuiPricePusher implements IPricePusher {
 
     const gasPool = await SuiPricePusher.splitGasCoinEqually(
       signer,
+      provider,
       signerAddress,
       Number(splitAmount),
       numGasObjects,
@@ -367,16 +363,16 @@ export class SuiPricePusher implements IPricePusher {
   // of the object. Return the provided object reference if an error occurs or the object could not
   // be retrieved.
   private static async tryRefreshObjectReference(
-    provider: JsonRpcProvider,
+    provider: SuiClient,
     ref: SuiObjectRef
   ): Promise<SuiObjectRef> {
     try {
       const objectResponse = await provider.getObject({ id: ref.objectId });
       if (objectResponse.data !== undefined) {
         return {
-          digest: objectResponse.data.digest,
-          objectId: objectResponse.data.objectId,
-          version: objectResponse.data.version,
+          digest: objectResponse.data!.digest,
+          objectId: objectResponse.data!.objectId,
+          version: objectResponse.data!.version,
         };
       } else {
         return ref;
@@ -387,7 +383,7 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   private static async getAllGasCoins(
-    provider: JsonRpcProvider,
+    provider: SuiClient,
     owner: SuiAddress
   ): Promise<SuiObjectRef[]> {
     let hasNextPage = true;
@@ -420,7 +416,8 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   private static async splitGasCoinEqually(
-    signer: RawSigner,
+    signer: Ed25519Keypair,
+    provider: SuiClient,
     signerAddress: SuiAddress,
     splitAmount: number,
     numGasObjects: number,
@@ -438,17 +435,18 @@ export class SuiPricePusher implements IPricePusher {
       tx.pure(signerAddress)
     );
     tx.setGasPayment([gasCoin]);
-    const result = await signer.signAndExecuteTransactionBlock({
+    const result = await provider.signAndExecuteTransactionBlock({
+      signer,
       transactionBlock: tx,
       options: { showEffects: true },
     });
-    const error = getExecutionStatusError(result);
+    const error = result?.effects?.status.error;
     if (error) {
       throw new Error(
         `Failed to initialize gas pool: ${error}. Try re-running the script`
       );
     }
-    const newCoins = getCreatedObjects(result)!.map((obj) => obj.reference);
+    const newCoins = result.effects!.created!.map((obj) => obj.reference);
     if (newCoins.length !== numGasObjects) {
       throw new Error(
         `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${newCoins}`
@@ -458,13 +456,11 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   private static async mergeGasCoinsIntoOne(
-    signer: RawSigner,
+    signer: Ed25519Keypair,
+    provider: SuiClient,
     owner: SuiAddress
   ): Promise<SuiObjectRef> {
-    const gasCoins = await SuiPricePusher.getAllGasCoins(
-      signer.provider,
-      owner
-    );
+    const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin
     if (gasCoins.length === 1) {
       return gasCoins[0];
@@ -486,7 +482,8 @@ export class SuiPricePusher implements IPricePusher {
       mergeTx.setGasPayment(coins);
       let mergeResult;
       try {
-        mergeResult = await signer.signAndExecuteTransactionBlock({
+        mergeResult = await provider.signAndExecuteTransactionBlock({
+          signer,
           transactionBlock: mergeTx,
           options: { showEffects: true },
         });
@@ -507,15 +504,13 @@ export class SuiPricePusher implements IPricePusher {
         }
         throw e;
       }
-      const error = getExecutionStatusError(mergeResult);
+      const error = mergeResult?.effects?.status.error;
       if (error) {
         throw new Error(
           `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`
         );
       }
-      finalCoin = getTransactionEffects(mergeResult)!.mutated!.map(
-        (obj) => obj.reference
-      )[0];
+      finalCoin = mergeResult.effects!.mutated!.map((obj) => obj.reference)[0];
     }
 
     return finalCoin as SuiObjectRef;

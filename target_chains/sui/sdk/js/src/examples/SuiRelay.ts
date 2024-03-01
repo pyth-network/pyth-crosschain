@@ -1,12 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  Connection,
-  Ed25519Keypair,
-  JsonRpcProvider,
-  RawSigner,
-  TransactionBlock,
-} from "@mysten/sui.js";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+
 import { Buffer } from "buffer";
 import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
@@ -41,7 +38,7 @@ const argvPromise = yargs(hideBin(process.argv))
   }).argv;
 
 export function getProvider(url: string) {
-  return new JsonRpcProvider(new Connection({ fullnode: url }));
+  return new SuiClient({ url });
 }
 async function run() {
   if (process.env.SUI_KEY === undefined) {
@@ -53,29 +50,47 @@ async function run() {
   // Fetch the latest price feed update data from the Price Service
   const connection = new SuiPriceServiceConnection(argv["hermes"]);
   const feeds = argv["feed-id"] as string[];
-  const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(feeds);
 
   const provider = getProvider(argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
   const pythStateId = argv["pyth-state-id"];
 
   const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
+  const newFeeds = [];
+  const existingFeeds = [];
+  for (const feed of feeds) {
+    if ((await client.getPriceFeedObjectId(feed)) == undefined) {
+      newFeeds.push(feed);
+    } else {
+      existingFeeds.push(feed);
+    }
+  }
+  console.log({
+    newFeeds,
+    existingFeeds,
+  });
   const tx = new TransactionBlock();
-  await client.updatePriceFeeds(tx, priceFeedUpdateData, feeds);
+  if (existingFeeds.length > 0) {
+    const updateData = await connection.getPriceFeedsUpdateData(existingFeeds);
+    await client.updatePriceFeeds(tx, updateData, existingFeeds);
+  }
+  if (newFeeds.length > 0) {
+    const updateData = await connection.getPriceFeedsUpdateData(newFeeds);
+    await client.createPriceFeed(tx, updateData);
+  }
 
-  const wallet = new RawSigner(
-    Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),
-    provider
+  const wallet = Ed25519Keypair.fromSecretKey(
+    Buffer.from(process.env.SUI_KEY, "hex")
   );
 
-  const txBlock = {
+  const result = await provider.signAndExecuteTransactionBlock({
+    signer: wallet,
     transactionBlock: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
-  };
-  const result = await wallet.signAndExecuteTransactionBlock(txBlock);
+  });
   console.dir(result, { depth: null });
 }
 

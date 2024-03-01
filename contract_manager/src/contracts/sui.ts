@@ -1,14 +1,12 @@
-import {
-  Ed25519Keypair,
-  ObjectId,
-  RawSigner,
-  SUI_CLOCK_OBJECT_ID,
-  TransactionBlock,
-} from "@mysten/sui.js";
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+
+type ObjectId = string;
 
 export class SuiPriceFeedContract extends PriceFeedContract {
   static type = "SuiPriceFeedContract";
@@ -96,13 +94,6 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       timestamp: string;
     };
   }) {
-    const packageId = await this.getPythPackageId();
-    const expectedType = `${packageId}::price::Price`;
-    if (priceInfo.type !== expectedType) {
-      throw new Error(
-        `Price type mismatch, expected ${expectedType} but found ${priceInfo.type}`
-      );
-    }
     let expo = priceInfo.fields.expo.fields.magnitude;
     if (priceInfo.fields.expo.fields.negative) expo = "-" + expo;
     let price = priceInfo.fields.price.fields.magnitude;
@@ -135,10 +126,14 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     }
     return {
       emaPrice: await this.parsePrice(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields
           .ema_price
       ),
       price: await this.parsePrice(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields.price
       ),
     };
@@ -303,21 +298,25 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     keypair: Ed25519Keypair
   ) {
     const provider = this.getProvider();
-    const txBlock = {
+    tx.setSender(keypair.toSuiAddress());
+    const dryRun = await provider.dryRunTransactionBlock({
+      transactionBlock: await tx.build({ client: provider }),
+    });
+    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
+    return provider.signAndExecuteTransactionBlock({
+      signer: keypair,
       transactionBlock: tx,
       options: {
         showEffects: true,
         showEvents: true,
       },
-    };
-    const wallet = new RawSigner(keypair, provider);
-    const gasCost = await wallet.getGasCostEstimation(txBlock);
-    tx.setGasBudget(gasCost * BigInt(2));
-    return wallet.signAndExecuteTransactionBlock(txBlock);
+    });
   }
 
   async getValidTimePeriod() {
     const fields = await this.getStateFields();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return Number(fields.stale_price_threshold);
   }
 
@@ -338,6 +337,8 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Data Sources type mismatch");
     }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return result.data.content.fields.value.fields.keys.map(
       ({
         fields,
@@ -359,6 +360,8 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const fields = await this.getStateFields();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const governanceFields = fields.governance_data_source.fields;
     const chainId = governanceFields.emitter_chain;
     const emitterAddress =
@@ -371,11 +374,15 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return { amount: fields.base_update_fee };
   }
 
   async getLastExecutedGovernanceSequence() {
     const fields = await this.getStateFields();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return Number(fields.last_executed_governance_sequence);
   }
 
