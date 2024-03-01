@@ -333,10 +333,15 @@
   rpcUrl: https://zetachain-evm.blockpi.network/v1/rpc/public
   networkId: 7000
   type: EvmChain
-- id: astar_testnet
+- id: astar_zkevm_testnet
   mainnet: false
   rpcUrl: https://rpc.zkatana.gelato.digital
   networkId: 1261120
+  type: EvmChain
+- id: astar_zkevm
+  mainnet: true
+  rpcUrl: https://rpc.startale.com/astar-zkevm
+  networkId: 3776
   type: EvmChain
 - id: coredao_testnet
   mainnet: false
