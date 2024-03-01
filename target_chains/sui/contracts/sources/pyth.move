@@ -30,9 +30,6 @@ module pyth::pyth {
     const E_STALE_PRICE_UPDATE: u64 = 3;
     const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 4;
     const E_PRICE_UPDATE_NOT_FOUND_FOR_PRICE_INFO_OBJECT: u64 = 5;
-    const E_INVALID_ACCUMULATOR_MAGIC: u64 = 7;
-
-    const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
 
     #[test_only]
     friend pyth::pyth_tests;
@@ -160,6 +157,7 @@ module pyth::pyth {
         vector::destroy_empty(verified_vaas);
     }
 
+    #[allow(lint(share_owned))]
     // create_and_share_price_feeds_using_verified_price_infos is a private function used by
     // 1) create_price_feeds
     // 2) create_price_feeds_using_accumulator
@@ -456,12 +454,6 @@ module pyth::pyth_tests{
     fun ACCUMULATOR_TESTS_DATA_SOURCE(): vector<DataSource> {
         vector[data_source::new(1, external_address::new(bytes32::from_bytes(ACCUMULATOR_TESTS_EMITTER_ADDRESS)))]
     }
-
-    // /// A vector containing a single VAA with:
-    // /// - emitter chain ID 17
-    // /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
-    // /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
-    const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
 
     fun get_verified_test_vaas(worm_state: &WormState, clock: &Clock): vector<VAA> {
         let test_vaas_: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
@@ -809,7 +801,7 @@ module pyth::pyth_tests{
 
         let fee_coins = coin::split(&mut test_coins, DEFAULT_BASE_UPDATE_FEE, ctx(&mut scenario));
         vec = update_single_price_feed(
-            &mut pyth_state,
+            &pyth_state,
             vec,
             &mut price_info_object_1,
             fee_coins,
@@ -891,7 +883,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         auth_price_infos = update_single_price_feed(
-            &mut pyth_state,
+            &pyth_state,
             auth_price_infos,
             &mut price_info_object_1,
             coins,
@@ -1162,7 +1154,7 @@ module pyth::pyth_tests{
             let coin_split = coin::split(&mut coins, 1000, ctx(&mut scenario));
             let price_info_object = take_shared<PriceInfoObject>(&scenario);
             auth_price_infos = update_single_price_feed(
-                &mut pyth_state,
+                &pyth_state,
                 auth_price_infos,
                 &mut price_info_object,
                 coin_split,
@@ -1239,7 +1231,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         vec = update_single_price_feed(
-            &mut pyth_state,
+            &pyth_state,
             vec,
             &mut price_info_object_1,
             test_coins,
@@ -1453,7 +1445,8 @@ module pyth::pyth_tests{
 
         // append some extra garbage bytes at the end of the accumulator message, and make sure
         // that parse_and_verify_accumulator_message does not error out
-        vector::append(&mut TEST_ACCUMULATOR_3_MSGS, x"1234123412341234");
+        let test_accumulator_3_msgs_modified = TEST_ACCUMULATOR_3_MSGS;
+        vector::append(&mut test_accumulator_3_msgs_modified, x"1234123412341234");
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
 
