@@ -9,6 +9,7 @@ use {
         error::ReceiverError,
         instruction::{
             AcceptGovernanceAuthorityTransfer,
+            CancelGovernanceAuthorityTransfer,
             RequestGovernanceAuthorityTransfer,
             SetDataSources,
             SetFee,
@@ -371,6 +372,81 @@ async fn test_governance() {
             .unwrap(),
         into_transaction_error(ReceiverError::TargetGovernanceAuthorityMismatch)
     );
+
+
+    // Undo the request
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            CancelGovernanceAuthorityTransfer::populate(governance_authority.pubkey()),
+            &vec![&governance_authority],
+            None,
+        )
+        .await
+        .unwrap();
+
+    current_config = program_simulator
+        .get_anchor_account_data::<Config>(get_config_address())
+        .await
+        .unwrap();
+    assert_eq!(
+        current_config.governance_authority,
+        initial_config.governance_authority
+    );
+    assert_eq!(current_config.target_governance_authority, None);
+    assert_eq!(current_config.wormhole, new_config.wormhole);
+    assert_eq!(
+        current_config.valid_data_sources,
+        new_config.valid_data_sources
+    );
+    assert_eq!(
+        current_config.single_update_fee_in_lamports,
+        new_config.single_update_fee_in_lamports
+    );
+    assert_eq!(
+        current_config.minimum_signatures,
+        new_config.minimum_signatures
+    );
+
+
+    // Redo the request
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            RequestGovernanceAuthorityTransfer::populate(
+                governance_authority.pubkey(),
+                new_governance_authority.pubkey(),
+            ),
+            &vec![&governance_authority],
+            None,
+        )
+        .await
+        .unwrap();
+
+    current_config = program_simulator
+        .get_anchor_account_data::<Config>(get_config_address())
+        .await
+        .unwrap();
+    assert_eq!(
+        current_config.governance_authority,
+        initial_config.governance_authority
+    );
+    assert_eq!(
+        current_config.target_governance_authority,
+        Some(new_governance_authority.pubkey())
+    );
+    assert_eq!(current_config.wormhole, new_config.wormhole);
+    assert_eq!(
+        current_config.valid_data_sources,
+        new_config.valid_data_sources
+    );
+    assert_eq!(
+        current_config.single_update_fee_in_lamports,
+        new_config.single_update_fee_in_lamports
+    );
+    assert_eq!(
+        current_config.minimum_signatures,
+        new_config.minimum_signatures
+    );
+
 
     // New authority can accept
     program_simulator

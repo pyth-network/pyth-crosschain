@@ -34,6 +34,7 @@ use {
             create_accumulator_message,
             create_dummy_price_feed_message,
             create_dummy_twap_message,
+            trim_vaa_signatures,
             DEFAULT_DATA_SOURCE,
             SECONDARY_DATA_SOURCE,
         },
@@ -348,7 +349,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 }
+        VerificationLevel::Full
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -366,6 +367,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
+    // Change number of signatures too
+    let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
+        serde_wormhole::from_slice(&vaa).unwrap(),
+        12,
+    ))
+    .unwrap();
 
     assert_eq!(
         program_simulator
@@ -395,6 +402,7 @@ async fn test_post_price_update_from_vaa() {
     )
     .await;
 
+    // Transaction failed, so the account should not have been updated
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
         .await
@@ -402,7 +410,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 }
+        VerificationLevel::Full
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -455,7 +463,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 },
+        VerificationLevel::Partial { num_signatures: 12 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),

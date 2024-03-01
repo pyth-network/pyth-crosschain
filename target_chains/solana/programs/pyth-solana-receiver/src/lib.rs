@@ -38,6 +38,7 @@ use {
         state::GuardianSet,
     },
     wormhole_raw_vaas::{
+        utils::quorum,
         GuardianSetSig,
         Vaa,
     },
@@ -51,6 +52,7 @@ declare_id!(pyth_solana_receiver_state::ID);
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
+
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
         require!(
@@ -71,6 +73,12 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    pub fn cancel_governance_authority_transfer(ctx: Context<Governance>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.target_governance_authority = None;
+        Ok(())
+    }
+
     pub fn accept_governance_authority_transfer(
         ctx: Context<AcceptGovernanceAuthorityTransfer>,
     ) -> Result<()> {
@@ -81,6 +89,7 @@ pub mod pyth_solana_receiver {
         config.target_governance_authority = None;
         Ok(())
     }
+
 
     pub fn set_data_sources(
         ctx: Context<Governance>,
@@ -142,11 +151,19 @@ pub mod pyth_solana_receiver {
         );
 
         let guardian_keys = &guardian_set.keys;
+        let quorum = quorum(guardian_keys.len());
         require_gte!(
             vaa.signature_count(),
             config.minimum_signatures,
             ReceiverError::InsufficientGuardianSignatures
         );
+        let verification_level = if usize::from(vaa.signature_count()) >= quorum {
+            VerificationLevel::Full
+        } else {
+            VerificationLevel::Partial {
+                num_signatures: vaa.signature_count(),
+            }
+        };
 
         // Generate the same message hash (using keccak) that the Guardians used to generate their
         // signatures. This message hash will be hashed again to produce the digest for
@@ -178,11 +195,9 @@ pub mod pyth_solana_receiver {
         let price_update_account = &mut ctx.accounts.price_update_account;
 
         let vaa_components = VaaComponents {
-            verification_level: VerificationLevel::Partial {
-                num_signatures: vaa.signature_count(),
-            },
-            emitter_address:    vaa.body().emitter_address(),
-            emitter_chain:      vaa.body().emitter_chain(),
+            verification_level,
+            emitter_address: vaa.body().emitter_address(),
+            emitter_chain: vaa.body().emitter_chain(),
         };
 
         post_price_update_from_vaa(
