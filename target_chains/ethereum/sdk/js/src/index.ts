@@ -12,6 +12,7 @@ export {
 export const CONTRACT_ADDR: Record<string, string> = {
   // Mainnets
   arbitrum: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+  astar_zkevm: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   aurora: "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9",
   avalanche: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
   blast: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",

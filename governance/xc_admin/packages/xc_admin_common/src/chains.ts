@@ -51,7 +51,7 @@ export const RECEIVER_CHAINS = {
   manta: 60032,
   chiliz: 60033,
   zetachain: 60034,
-  astar: 60035,
+  astar_zkevm: 60035,
   coredao: 60036,
   tomochain: 60037,
   stacks: 60038,
@@ -107,7 +107,7 @@ export const RECEIVER_CHAINS = {
   optimism_sepolia: 50033,
   chiliz_spicy: 50034, // Chiliz testnet
   zetachain_testnet: 50035,
-  astar_testnet: 50036,
+  astar_zkevm_testnet: 50036,
   coredao_testnet: 50037,
   tomochain_testnet: 50038,
   stacks_testnet: 50039,
