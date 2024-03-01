@@ -43,6 +43,7 @@ use {
         pubkey::Pubkey,
     },
     solana_sdk::{
+        rent::Rent,
         signature::Keypair,
         signer::Signer,
     },
@@ -332,7 +333,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0),
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -382,7 +388,12 @@ async fn test_post_price_update_from_vaa() {
         into_transaction_error(ReceiverError::InsufficientFunds)
     );
 
-    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0),
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -432,7 +443,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        LAMPORTS_PER_SOL + 1,
+        Rent::default().minimum_balance(0) + LAMPORTS_PER_SOL,
         DEFAULT_TREASURY_ID,
     )
     .await;

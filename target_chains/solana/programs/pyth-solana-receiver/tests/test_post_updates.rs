@@ -32,6 +32,7 @@ use {
     },
     solana_program::pubkey::Pubkey,
     solana_sdk::{
+        rent::Rent,
         signature::Keypair,
         signer::Signer,
     },
@@ -78,7 +79,12 @@ async fn test_post_update() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0),
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -110,7 +116,12 @@ async fn test_post_update() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 2, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 1,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
