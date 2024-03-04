@@ -42,7 +42,7 @@ class SimpleSearcher():
 
         return bid_info
 
-    async def ws_opportunity_handler(
+    async def opportunity_callback(
         self, opp: OpportunityParamsWithMetadata
     ):
         bid_info = self.assess_liquidation_opportunity(opp)
@@ -100,10 +100,10 @@ async def main():
 
     await simple_searcher.client.start_ws()
 
-    ws_call = simple_searcher.client.ws_liquidation_opportunities(simple_searcher.ws_opportunity_handler)
+    ws_call = simple_searcher.client.ws_opportunities_handler(simple_searcher.opportunity_callback)
     asyncio.create_task(ws_call)
 
-    await simple_searcher.client.subscribe_chain_ids(args.chain_ids)
+    await simple_searcher.client.subscribe_chains(args.chain_ids)
 
     while True:
         await asyncio.sleep(5)

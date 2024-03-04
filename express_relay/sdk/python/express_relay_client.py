@@ -64,7 +64,7 @@ class ExpressRelayClient:
         """
         await self.ws.close()
 
-    async def get_liquidation_opportunities(self, chain_id: str, timeout: int = 10) -> list[OpportunityParamsWithMetadata]:
+    async def get_opportunities(self, chain_id: str, timeout: int = 10) -> list[OpportunityParamsWithMetadata]:
         """
         Connects to the liquidation server and fetches liquidation opportunities for a given chain ID.
 
@@ -91,46 +91,60 @@ class ExpressRelayClient:
 
         return opportunities
 
-    async def subscribe_chain_ids(self, chain_ids: list[str]):
+    async def send_ws_message(self, msg: dict):
         """
-        Subscribes to a list of chain IDs for new liquidation opportunities.
+        Sends a message to the server via websocket.
 
         Args:
-            chain_ids (list[str]): A list of chain IDs to subscribe to.
+            msg (dict): The message to send.
         """
         if not self.ws:
             raise ExpressRelayClientException("Websocket connection not yet open")
 
+        msg["id"] = str(self.ws_msg_counter)
+        self.ws_msg_counter += 1
+
+        await self.ws.send(json.dumps(msg))
+        resp = json.loads(await self.ws.recv())
+        if resp.get("status") == "error":
+            raise ExpressRelayClientException(f"Error in sending websocket message: {resp.get('result')}")
+
+    async def subscribe_chains(self, chain_ids: list[str]):
+        """
+        Subscribes websocket to a list of chain IDs for new liquidation opportunities.
+
+        Args:
+            chain_ids (list[str]): A list of chain IDs to subscribe to.
+        """
         json_subscribe = {
             "method": "subscribe",
             "params": {
                 "chain_ids": chain_ids,
             },
-            "id": str(self.ws_msg_counter),
         }
-        await self.ws.send(json.dumps(json_subscribe))
-        self.ws_msg_counter += 1
+        await self.send_ws_message(json_subscribe)
 
-    async def unsubscribe_chain_ids(self, chain_ids: str):
-        if not self.ws:
-            raise ExpressRelayClientException("Websocket connection not yet open")
+    async def unsubscribe_chains(self, chain_ids: str):
+        """
+        Unsubscribes websocket from a list of chain IDs for new liquidation opportunities.
 
-        json_subscribe = {
+        Args:
+            chain_ids (list[str]): A list of chain IDs to unsubscribe from.
+        """
+        json_unsubscribe = {
             "method": "unsubscribe",
             "params": {
                 "chain_ids": chain_ids,
             },
-            "id": str(self.ws_msg_counter),
         }
-        await self.ws.send(json.dumps(json_subscribe))
-        self.ws_msg_counter += 1
+        await self.send_ws_message(json_unsubscribe)
 
-    async def ws_liquidation_opportunities(self, opportunity_handler: Callable[[OpportunityParamsWithMetadata], None]):
+    async def ws_opportunities_handler(self, opportunity_callback: Callable[[OpportunityParamsWithMetadata], None]):
         """
-        Connects to the liquidation server's websocket and handles new liquidation opportunities.
+        Continuously handles new liquidation opportunities as they are received from the server via websocket.
 
         Args:
-            opportunity_handler (async func): An async function that defines how to handle new liquidation opportunities. Should take in one external argument of type OpportunityParamsWithMetadata and return nothing.
+            opportunity_callback (async func): An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
         """
         if not self.ws:
             raise ExpressRelayClientException("Websocket connection not yet open")
@@ -147,7 +161,7 @@ class ExpressRelayClient:
             opportunity = msg["opportunity"]
             opportunity = OpportunityParamsWithMetadata.from_dict(opportunity)
             try:
-                await opportunity_handler(opportunity)
+                await opportunity_callback(opportunity)
             except Exception as e:
                 raise ExpressRelayClientException(f"Error in opportunity handler: {e}")
 
