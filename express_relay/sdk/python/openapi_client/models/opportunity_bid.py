@@ -91,5 +91,3 @@ class OpportunityBid(BaseModel):
             "valid_until": obj.get("valid_until")
         })
         return _obj
-
-
