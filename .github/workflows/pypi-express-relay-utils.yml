@@ -1,0 +1,21 @@
+name: Upload express-relay-utils Python Package to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade poetry
+          poetry build
+      - name: Build and publish
+        run: |
+          poetry build
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}

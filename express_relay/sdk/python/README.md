@@ -8,7 +8,7 @@ The SDK includes searcher-side utilities and protocol-side utilities. The search
 
 ## Installation
 
-### pip
+### poetry
 
 ### openapi-generator
 
@@ -26,7 +26,7 @@ $ openapi-generator generate -i https://per-staging.dourolabs.app/docs/openapi.j
 
 ## Quickstart
 
-To run the simple searcher script, you can run
+To run the simple searcher script, navigate to `express_relay_utils/` and run
 
 ```
 $ python3 -m searcher.examples.simple_searcher --private-key <PRIVATE_KEY_HEX_STRING> --chain-id development --verbose --server-url https://per-staging.dourolabs.app/
