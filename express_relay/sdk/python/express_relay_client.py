@@ -58,6 +58,12 @@ class ExpressRelayClient:
         """
         self.ws = await websockets.connect(self.ws_endpoint, open_timeout=ws_timeout_config.open_timeout, ping_interval=ws_timeout_config.ping_interval, ping_timeout=ws_timeout_config.ping_timeout, close_timeout=ws_timeout_config.close_timeout)
 
+    async def close_ws(self):
+        """
+        Closes the websocket connection to the server.
+        """
+        await self.ws.close()
+
     async def get_liquidation_opportunities(self, chain_id: str, timeout: int = 10) -> list[OpportunityParamsWithMetadata]:
         """
         Connects to the liquidation server and fetches liquidation opportunities for a given chain ID.
