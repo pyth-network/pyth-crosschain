@@ -1,42 +1,42 @@
-import {
-  Keypair,
-  PublicKey,
-  TransactionInstruction,
-  SYSVAR_RENT_PUBKEY,
-  SYSVAR_CLOCK_PUBKEY,
-  AccountMeta,
-  StakeProgram,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-  Connection,
-} from "@solana/web3.js";
-import { program } from "commander";
-import {
-  getPythProgramKeyForCluster,
-  PythCluster,
-} from "@pythnetwork/client/lib/cluster";
-import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import fs from "fs";
-import SquadsMesh from "@sqds/mesh";
+import { Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import {
-  BPF_UPGRADABLE_LOADER,
-  getMultisigCluster,
-  getProposalInstructions,
-  MultisigParser,
-  PROGRAM_AUTHORITY_ESCROW,
-  MultisigVault,
-} from "xc_admin_common";
-import { pythOracleProgram } from "@pythnetwork/client";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import { LedgerNodeWallet } from "./ledger";
+import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { pythOracleProgram } from "@pythnetwork/client";
+import {
+  PythCluster,
+  getPythClusterApiUrl,
+  getPythProgramKeyForCluster,
+} from "@pythnetwork/client/lib/cluster";
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
   getMint,
 } from "@solana/spl-token";
-import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import {
+  AccountMeta,
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
+  StakeProgram,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import SquadsMesh from "@sqds/mesh";
+import { program } from "commander";
+import fs from "fs";
+import {
+  BPF_UPGRADABLE_LOADER,
+  MultisigParser,
+  MultisigVault,
+  PROGRAM_AUTHORITY_ESCROW,
+  getMultisigCluster,
+  getProposalInstructions,
+} from "xc_admin_common";
+import { LedgerNodeWallet } from "./ledger";
 
 export async function loadHotWalletOrLedger(
   wallet: string,

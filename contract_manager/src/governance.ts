@@ -17,7 +17,8 @@ import {
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import SquadsMesh from "@sqds/mesh";
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import { AnchorProvider } from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   executeProposal,
@@ -344,7 +345,7 @@ export class Vault extends Storable {
   ): Promise<WormholeMultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
-      squad.wallet,
+      squad.wallet as Wallet,
       this.cluster,
       squad,
       this.key
