@@ -105,9 +105,6 @@ class ExpressRelayClient:
         self.ws_msg_counter += 1
 
         await self.ws.send(json.dumps(msg))
-        resp = json.loads(await self.ws.recv())
-        if resp.get("status") == "error":
-            raise ExpressRelayClientException(f"Error in sending websocket message: {resp.get('result')}")
 
     async def subscribe_chains(self, chain_ids: list[str]):
         """
