@@ -1,13 +1,12 @@
 import web3
+from web3.auto import w3
 from eth_abi import encode
 from eth_account.account import Account
-from web3.auto import w3
 import httpx
 import urllib.parse
 import websockets
 import json
 from typing import Callable
-import asyncio
 
 from openapi_client.models.opportunity_bid import OpportunityBid
 from openapi_client.models.opportunity_params import OpportunityParams
@@ -23,10 +22,10 @@ class WebsocketTimeoutConfig:
     A class to hold the timeout configuration for the websocket connection.
 
     Args:
-        open_timeout (int): The timeout for opening the websocket connection.
-        ping_interval (int): The interval at which to send ping messages to the server.
-        ping_timeout (int): The timeout for the ping messages.
-        close_timeout (int): The timeout for closing the websocket connection.
+        open_timeout (int): The timeout for opening the websocket connection in seconds.
+        ping_interval (int): The interval at which to send ping messages to the server in seconds.
+        ping_timeout (int): The timeout for the ping messages in seconds.
+        close_timeout (int): The timeout for closing the websocket connection in seconds.
     """
     def __init__(self, open_timeout: int = 10, ping_interval: int = 20, ping_timeout: int = 20, close_timeout: int = 10):
         self.open_timeout = open_timeout
@@ -39,13 +38,16 @@ class ExpressRelayClientException(Exception):
 
 class ExpressRelayClient:
     def __init__(self, server_url: str):
-        self.server_url = server_url
-        if self.server_url.startswith("https"):
-            self.ws_endpoint = urllib.parse.urljoin(f"wss{self.server_url[5:]}", "v1/ws")
-        elif self.server_url.startswith("http"):
-            self.ws_endpoint = urllib.parse.urljoin(f"ws{self.server_url[4:]}", "v1/ws")
+        parsed_url = urllib.parse.urlparse(server_url)
+        if parsed_url.scheme == "https":
+            ws_scheme = "wss"
+        elif parsed_url.scheme == "http":
+            ws_scheme = "ws"
         else:
             raise ValueError("Invalid liquidation server URL")
+
+        self.server_url = server_url
+        self.ws_endpoint = parsed_url._replace(scheme=ws_scheme, path="/v1/ws").geturl()
         self.ws_msg_counter = 0
         self.ws = False
 
@@ -70,16 +72,14 @@ class ExpressRelayClient:
 
         Args:
             chain_id (str): The chain ID to fetch liquidation opportunities for.
-            timeout (int): The timeout for the HTTP request.
+            timeout (int): The timeout for the HTTP request in seconds.
         Returns:
             list[OpportunityParamsWithMetadata]: A list of liquidation opportunities.
         """
         async with httpx.AsyncClient() as client:
             resp = (
                 await client.get(
-                    urllib.parse.urljoin(
-                        self.server_url, "/v1/liquidation/opportunities"
-                    ),
+                    urllib.parse.urlparse(self.server_url)._replace(path="/v1/liquidation/opportunities").geturl(),
                     params={"chain_id": chain_id},
                     timeout=timeout,
                 )
@@ -168,13 +168,13 @@ class ExpressRelayClient:
 
         Args:
             opportunity (OpportunityParams): An object representing the opportunity to submit.
-            timeout (int): The timeout for the HTTP request.
+            timeout (int): The timeout for the HTTP request in seconds.
         Returns:
             httpx.Response: The server's response to the opportunity submission. Throws an exception if the response is not successful.
         """
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                urllib.parse.urljoin(self.server_url, "/v1/liquidation/opportunities"),
+                urllib.parse.urlparse(self.server_url)._replace(path="/v1/liquidation/opportunities").geturl(),
                 json=opportunity.to_dict(),
                 timeout=timeout,
             )
@@ -189,16 +189,13 @@ class ExpressRelayClient:
 
         Args:
             bid_info (BidInfo): An object representing the bid to submit.
-            timeout (int): The timeout for the HTTP request.
+            timeout (int): The timeout for the HTTP request in seconds.
         Returns:
             httpx.Response: The server's response to the bid submission. Throws an exception if the response is not successful.
         """
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                urllib.parse.urljoin(
-                    self.server_url,
-                    f"/v1/liquidation/opportunities/{bid_info.opportunity_id}/bids",
-                ),
+                urllib.parse.urlparse(self.server_url)._replace(path=f"/v1/liquidation/opportunities/{bid_info.opportunity_id}/bids").geturl(),
                 json=bid_info.opportunity_bid.to_dict(),
                 timeout=timeout,
             )

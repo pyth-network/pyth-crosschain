@@ -9,7 +9,8 @@ from openapi_client.models.opportunity_params_with_metadata import OpportunityPa
 
 logger = logging.getLogger(__name__)
 
-VALID_UNTIL = 1_000_000_000_000
+# Set validity (naively) to max uint256
+VALID_UNTIL = 2**256-1
 
 class SimpleSearcher():
     def __init__(self, server_url: str, private_key: str, default_bid: int):
@@ -24,6 +25,7 @@ class SimpleSearcher():
     ) -> BidInfo | None:
         """
         Assesses whether a liquidation opportunity is worth liquidating; if so, returns a BidInfo object. Otherwise returns None.
+
         This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the liquidation.
         There are many ways to evaluate this, but the most common way is to check that the value of the amount the searcher will receive from the liquidation exceeds the value of the amount repaid.
         Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
@@ -45,6 +47,12 @@ class SimpleSearcher():
     async def opportunity_callback(
         self, opp: OpportunityParamsWithMetadata
     ):
+        """
+        Callback function to run when a new liquidation opportunity is found.
+
+        Args:
+            opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
+        """
         bid_info = self.assess_liquidation_opportunity(opp)
         if bid_info:
             try:
@@ -106,7 +114,9 @@ async def main():
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
     while True:
-        await asyncio.sleep(5)
+        if simple_searcher.client.ws.closed:
+            logger.error("Websocket connection closed, exiting")
+            break
 
 if __name__ == "__main__":
     asyncio.run(main())

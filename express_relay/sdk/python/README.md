@@ -29,7 +29,7 @@ $ openapi-generator generate -i https://per-staging.dourolabs.app/docs/openapi.j
 To run the simple searcher script, you can run
 
 ```
-$ python3 -m examples.simple_searcher --private-key <PRIVATE_KEY_HEX_STRING> --chain-id development --verbose --liquidation-server-url https://per-staging.dourolabs.app/
+$ python3 -m searcher.examples.simple_searcher --private-key <PRIVATE_KEY_HEX_STRING> --chain-id development --verbose --server-url https://per-staging.dourolabs.app/
 ```
 
 This simple example runs a searcher that queries the Express Relay liquidation server for available liquidation opportunities and naively submits a bid on each available opportunity.
