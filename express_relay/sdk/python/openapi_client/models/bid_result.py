@@ -17,26 +17,17 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictStr, field_validator
+from pydantic import BaseModel, StrictStr
 from typing import Any, ClassVar, Dict, List
-from openapi_client.models.client_message_one_of_params import ClientMessageOneOfParams
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ClientMessageOneOf(BaseModel):
+class BidResult(BaseModel):
     """
-    ClientMessageOneOf
+    BidResult
     """ # noqa: E501
-    method: StrictStr
-    params: ClientMessageOneOfParams
-    __properties: ClassVar[List[str]] = ["method", "params"]
-
-    @field_validator('method')
-    def method_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(['subscribe']):
-            raise ValueError("must be one of enum values ('subscribe')")
-        return value
+    status: StrictStr
+    __properties: ClassVar[List[str]] = ["status"]
 
     model_config = {
         "populate_by_name": True,
@@ -56,7 +47,7 @@ class ClientMessageOneOf(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ClientMessageOneOf from a JSON string"""
+        """Create an instance of BidResult from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -77,14 +68,11 @@ class ClientMessageOneOf(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of params
-        if self.params:
-            _dict['params'] = self.params.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ClientMessageOneOf from a dict"""
+        """Create an instance of BidResult from a dict"""
         if obj is None:
             return None
 
@@ -92,7 +80,8 @@ class ClientMessageOneOf(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "method": obj.get("method"),
-            "params": ClientMessageOneOfParams.from_dict(obj["params"]) if obj.get("params") is not None else None
+            "status": obj.get("status")
         })
         return _obj
+
+

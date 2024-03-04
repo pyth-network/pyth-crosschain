@@ -17,18 +17,26 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from openapi_client.models.server_result_message import ServerResultMessage
+from pydantic import BaseModel, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List
+from openapi_client.models.client_message_one_of_params import ClientMessageOneOfParams
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ServerResultResponse(ServerResultMessage):
+class ClientMessageOneOf1(BaseModel):
     """
-    This enum is used to send the result for a specific client request with the same id id is only None when the client message is invalid
+    ClientMessageOneOf1
     """ # noqa: E501
-    id: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["status", "result", "id"]
+    method: StrictStr
+    params: ClientMessageOneOfParams
+    __properties: ClassVar[List[str]] = ["method", "params"]
+
+    @field_validator('method')
+    def method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['unsubscribe']):
+            raise ValueError("must be one of enum values ('unsubscribe')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -48,7 +56,7 @@ class ServerResultResponse(ServerResultMessage):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ServerResultResponse from a JSON string"""
+        """Create an instance of ClientMessageOneOf1 from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -69,16 +77,14 @@ class ServerResultResponse(ServerResultMessage):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # set to None if id (nullable) is None
-        # and model_fields_set contains the field
-        if self.id is None and "id" in self.model_fields_set:
-            _dict['id'] = None
-
+        # override the default output from pydantic by calling `to_dict()` of params
+        if self.params:
+            _dict['params'] = self.params.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ServerResultResponse from a dict"""
+        """Create an instance of ClientMessageOneOf1 from a dict"""
         if obj is None:
             return None
 
@@ -86,8 +92,9 @@ class ServerResultResponse(ServerResultMessage):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "status": obj.get("status"),
-            "result": obj.get("result"),
-            "id": obj.get("id")
+            "method": obj.get("method"),
+            "params": ClientMessageOneOfParams.from_dict(obj["params"]) if obj.get("params") is not None else None
         })
         return _obj
+
+

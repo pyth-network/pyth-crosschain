@@ -17,21 +17,24 @@ import json
 import pprint
 from pydantic import BaseModel, Field, StrictStr, ValidationError, field_validator
 from typing import Any, List, Optional
-from openapi_client.models.opportunity_params_one_of import OpportunityParamsOneOf
+from openapi_client.models.client_message_one_of import ClientMessageOneOf
+from openapi_client.models.client_message_one_of1 import ClientMessageOneOf1
 from pydantic import StrictStr, Field
 from typing import Union, List, Optional, Dict
 from typing_extensions import Literal, Self
 
-OPPORTUNITYPARAMS_ONE_OF_SCHEMAS = ["OpportunityParamsOneOf"]
+CLIENTMESSAGE_ONE_OF_SCHEMAS = ["ClientMessageOneOf", "ClientMessageOneOf1"]
 
-class OpportunityParams(BaseModel):
+class ClientMessage(BaseModel):
     """
-    OpportunityParams
+    ClientMessage
     """
-    # data type: OpportunityParamsOneOf
-    oneof_schema_1_validator: Optional[OpportunityParamsOneOf] = None
-    actual_instance: Optional[Union[OpportunityParamsOneOf]] = None
-    one_of_schemas: List[str] = Field(default=Literal["OpportunityParamsOneOf"])
+    # data type: ClientMessageOneOf
+    oneof_schema_1_validator: Optional[ClientMessageOneOf] = None
+    # data type: ClientMessageOneOf1
+    oneof_schema_2_validator: Optional[ClientMessageOneOf1] = None
+    actual_instance: Optional[Union[ClientMessageOneOf, ClientMessageOneOf1]] = None
+    one_of_schemas: List[str] = Field(default=Literal["ClientMessageOneOf", "ClientMessageOneOf1"])
 
     model_config = {
         "validate_assignment": True,
@@ -40,6 +43,7 @@ class OpportunityParams(BaseModel):
 
 
     discriminator_value_class_map: Dict[str, str] = {
+        'ClientRequest': 'ClientRequest'
     }
 
     def __init__(self, *args, **kwargs) -> None:
@@ -54,20 +58,25 @@ class OpportunityParams(BaseModel):
 
     @field_validator('actual_instance')
     def actual_instance_must_validate_oneof(cls, v):
-        instance = OpportunityParams.model_construct()
+        instance = ClientMessage.model_construct()
         error_messages = []
         match = 0
-        # validate data type: OpportunityParamsOneOf
-        if not isinstance(v, OpportunityParamsOneOf):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `OpportunityParamsOneOf`")
+        # validate data type: ClientMessageOneOf
+        if not isinstance(v, ClientMessageOneOf):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `ClientMessageOneOf`")
+        else:
+            match += 1
+        # validate data type: ClientMessageOneOf1
+        if not isinstance(v, ClientMessageOneOf1):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `ClientMessageOneOf1`")
         else:
             match += 1
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when setting `actual_instance` in OpportunityParams with oneOf schemas: OpportunityParamsOneOf. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when setting `actual_instance` in ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when setting `actual_instance` in OpportunityParams with oneOf schemas: OpportunityParamsOneOf. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
         else:
             return v
 
@@ -82,19 +91,25 @@ class OpportunityParams(BaseModel):
         error_messages = []
         match = 0
 
-        # deserialize data into OpportunityParamsOneOf
+        # deserialize data into ClientMessageOneOf
         try:
-            instance.actual_instance = OpportunityParamsOneOf.from_json(json_str)
+            instance.actual_instance = ClientMessageOneOf.from_json(json_str)
+            match += 1
+        except (ValidationError, ValueError) as e:
+            error_messages.append(str(e))
+        # deserialize data into ClientMessageOneOf1
+        try:
+            instance.actual_instance = ClientMessageOneOf1.from_json(json_str)
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
 
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when deserializing the JSON string into OpportunityParams with oneOf schemas: OpportunityParamsOneOf. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when deserializing the JSON string into ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into OpportunityParams with oneOf schemas: OpportunityParamsOneOf. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
         else:
             return instance
 
@@ -108,7 +123,7 @@ class OpportunityParams(BaseModel):
         else:
             return json.dumps(self.actual_instance)
 
-    def to_dict(self) -> Optional[Union[Dict[str, Any], OpportunityParamsOneOf]]:
+    def to_dict(self) -> Optional[Union[Dict[str, Any], ClientMessageOneOf, ClientMessageOneOf1]]:
         """Returns the dict representation of the actual instance"""
         if self.actual_instance is None:
             return None
@@ -122,3 +137,5 @@ class OpportunityParams(BaseModel):
     def to_str(self) -> str:
         """Returns the string representation of the actual instance"""
         return pprint.pformat(self.model_dump())
+
+

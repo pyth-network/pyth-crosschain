@@ -3,18 +3,17 @@ import asyncio
 import logging
 from eth_account.account import Account
 
-from searcher_utils import BidInfo, SearcherClient
+from express_relay_client import BidInfo, ExpressRelayClient, sign_bid
 
-from openapi_client.models.opportunity_bid import OpportunityBid
 from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 
 logger = logging.getLogger(__name__)
 
 VALID_UNTIL = 1_000_000_000_000
 
-class SimpleSearcher(SearcherClient):
-    def __init__(self, liquidation_server_url: str, private_key: str, default_bid: int):
-        super().__init__(liquidation_server_url)
+class SimpleSearcher():
+    def __init__(self, server_url: str, private_key: str, default_bid: int):
+        self.client = ExpressRelayClient(server_url)
         self.private_key = private_key
         self.liquidator = Account.from_key(private_key).address
         self.default_bid = default_bid
@@ -34,7 +33,7 @@ class SimpleSearcher(SearcherClient):
         Returns:
             If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        bid_info = self.sign_bid(
+        bid_info = sign_bid(
             opp,
             self.default_bid,
             VALID_UNTIL,
@@ -49,7 +48,7 @@ class SimpleSearcher(SearcherClient):
         bid_info = self.assess_liquidation_opportunity(opp)
         if bid_info:
             try:
-                await self.submit_bid(bid_info)
+                await self.client.submit_bid(bid_info)
                 logger.info(f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}")
             except Exception as e:
                 logger.error(f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}: {e}")
@@ -78,10 +77,10 @@ async def main():
         help="Default amount of bid for liquidation opportunities",
     )
     parser.add_argument(
-        "--liquidation-server-url",
+        "--server-url",
         type=str,
         required=True,
-        help="Liquidation server endpoint to use for fetching opportunities and submitting bids",
+        help="Server endpoint to use for fetching opportunities and submitting bids",
     )
     args = parser.parse_args()
 
@@ -96,10 +95,18 @@ async def main():
 
     sk_liquidator = args.private_key
 
-    simple_searcher = SimpleSearcher(args.liquidation_server_url, sk_liquidator, args.bid)
+    simple_searcher = SimpleSearcher(args.server_url, sk_liquidator, args.bid)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
-    await simple_searcher.ws_liquidation_opportunities(args.chain_ids, simple_searcher.ws_opportunity_handler)
+    await simple_searcher.client.start_ws()
+
+    ws_call = simple_searcher.client.ws_liquidation_opportunities(simple_searcher.ws_opportunity_handler)
+    asyncio.create_task(ws_call)
+
+    await simple_searcher.client.subscribe_chain_ids(args.chain_ids)
+
+    while True:
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -17,21 +17,32 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr
+from pydantic import BaseModel, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
+from openapi_client.models.token_qty import TokenQty
 from typing import Optional, Set
 from typing_extensions import Self
 
-class Bid(BaseModel):
+class OpportunityParamsOneOf(BaseModel):
     """
-    Bid
+    OpportunityParamsOneOf
     """ # noqa: E501
-    amount: StrictStr = Field(description="Amount of bid in wei.")
     calldata: StrictStr = Field(description="Calldata for the contract call.")
-    chain_id: StrictStr = Field(description="The chain id to bid on.")
-    contract: StrictStr = Field(description="The contract address to call.")
-    permission_key: StrictStr = Field(description="The permission key to bid on.")
-    __properties: ClassVar[List[str]] = ["amount", "calldata", "chain_id", "contract", "permission_key"]
+    chain_id: StrictStr = Field(description="The chain id where the liquidation will be executed.")
+    contract: StrictStr = Field(description="The contract address to call for execution of the liquidation.")
+    permission_key: StrictStr = Field(description="The permission key required for succesful execution of the liquidation.")
+    receipt_tokens: List[TokenQty]
+    repay_tokens: List[TokenQty]
+    value: StrictStr = Field(description="The value to send with the contract call.")
+    version: StrictStr
+    __properties: ClassVar[List[str]] = ["calldata", "chain_id", "contract", "permission_key", "receipt_tokens", "repay_tokens", "value", "version"]
+
+    @field_validator('version')
+    def version_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['v1']):
+            raise ValueError("must be one of enum values ('v1')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -51,7 +62,7 @@ class Bid(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Bid from a JSON string"""
+        """Create an instance of OpportunityParamsOneOf from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -72,11 +83,25 @@ class Bid(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in receipt_tokens (list)
+        _items = []
+        if self.receipt_tokens:
+            for _item in self.receipt_tokens:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['receipt_tokens'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in repay_tokens (list)
+        _items = []
+        if self.repay_tokens:
+            for _item in self.repay_tokens:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['repay_tokens'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Bid from a dict"""
+        """Create an instance of OpportunityParamsOneOf from a dict"""
         if obj is None:
             return None
 
@@ -84,10 +109,15 @@ class Bid(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "amount": obj.get("amount"),
             "calldata": obj.get("calldata"),
             "chain_id": obj.get("chain_id"),
             "contract": obj.get("contract"),
-            "permission_key": obj.get("permission_key")
+            "permission_key": obj.get("permission_key"),
+            "receipt_tokens": [TokenQty.from_dict(_item) for _item in obj["receipt_tokens"]] if obj.get("receipt_tokens") is not None else None,
+            "repay_tokens": [TokenQty.from_dict(_item) for _item in obj["repay_tokens"]] if obj.get("repay_tokens") is not None else None,
+            "value": obj.get("value"),
+            "version": obj.get("version")
         })
         return _obj
+
+

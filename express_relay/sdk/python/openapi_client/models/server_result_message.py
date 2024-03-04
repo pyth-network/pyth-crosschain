@@ -17,24 +17,24 @@ import json
 import pprint
 from pydantic import BaseModel, Field, StrictStr, ValidationError, field_validator
 from typing import Any, List, Optional
-from openapi_client.models.client_message_one_of import ClientMessageOneOf
-from openapi_client.models.client_message_one_of1 import ClientMessageOneOf1
+from openapi_client.models.server_result_message_one_of import ServerResultMessageOneOf
+from openapi_client.models.server_result_message_one_of1 import ServerResultMessageOneOf1
 from pydantic import StrictStr, Field
 from typing import Union, List, Optional, Dict
 from typing_extensions import Literal, Self
 
-CLIENTMESSAGE_ONE_OF_SCHEMAS = ["ClientMessageOneOf", "ClientMessageOneOf1"]
+SERVERRESULTMESSAGE_ONE_OF_SCHEMAS = ["ServerResultMessageOneOf", "ServerResultMessageOneOf1"]
 
-class ClientMessage(BaseModel):
+class ServerResultMessage(BaseModel):
     """
-    ClientMessage
+    ServerResultMessage
     """
-    # data type: ClientMessageOneOf
-    oneof_schema_1_validator: Optional[ClientMessageOneOf] = None
-    # data type: ClientMessageOneOf1
-    oneof_schema_2_validator: Optional[ClientMessageOneOf1] = None
-    actual_instance: Optional[Union[ClientMessageOneOf, ClientMessageOneOf1]] = None
-    one_of_schemas: List[str] = Field(default=Literal["ClientMessageOneOf", "ClientMessageOneOf1"])
+    # data type: ServerResultMessageOneOf
+    oneof_schema_1_validator: Optional[ServerResultMessageOneOf] = None
+    # data type: ServerResultMessageOneOf1
+    oneof_schema_2_validator: Optional[ServerResultMessageOneOf1] = None
+    actual_instance: Optional[Union[ServerResultMessageOneOf, ServerResultMessageOneOf1]] = None
+    one_of_schemas: List[str] = Field(default=Literal["ServerResultMessageOneOf", "ServerResultMessageOneOf1"])
 
     model_config = {
         "validate_assignment": True,
@@ -43,7 +43,7 @@ class ClientMessage(BaseModel):
 
 
     discriminator_value_class_map: Dict[str, str] = {
-        'ClientRequest': 'ClientRequest'
+        'ServerResultResponse': 'ServerResultResponse'
     }
 
     def __init__(self, *args, **kwargs) -> None:
@@ -58,25 +58,25 @@ class ClientMessage(BaseModel):
 
     @field_validator('actual_instance')
     def actual_instance_must_validate_oneof(cls, v):
-        instance = ClientMessage.model_construct()
+        instance = ServerResultMessage.model_construct()
         error_messages = []
         match = 0
-        # validate data type: ClientMessageOneOf
-        if not isinstance(v, ClientMessageOneOf):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ClientMessageOneOf`")
+        # validate data type: ServerResultMessageOneOf
+        if not isinstance(v, ServerResultMessageOneOf):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf`")
         else:
             match += 1
-        # validate data type: ClientMessageOneOf1
-        if not isinstance(v, ClientMessageOneOf1):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ClientMessageOneOf1`")
+        # validate data type: ServerResultMessageOneOf1
+        if not isinstance(v, ServerResultMessageOneOf1):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf1`")
         else:
             match += 1
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when setting `actual_instance` in ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when setting `actual_instance` in ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
         else:
             return v
 
@@ -91,25 +91,25 @@ class ClientMessage(BaseModel):
         error_messages = []
         match = 0
 
-        # deserialize data into ClientMessageOneOf
+        # deserialize data into ServerResultMessageOneOf
         try:
-            instance.actual_instance = ClientMessageOneOf.from_json(json_str)
+            instance.actual_instance = ServerResultMessageOneOf.from_json(json_str)
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
-        # deserialize data into ClientMessageOneOf1
+        # deserialize data into ServerResultMessageOneOf1
         try:
-            instance.actual_instance = ClientMessageOneOf1.from_json(json_str)
+            instance.actual_instance = ServerResultMessageOneOf1.from_json(json_str)
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
 
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when deserializing the JSON string into ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into ClientMessage with oneOf schemas: ClientMessageOneOf, ClientMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
         else:
             return instance
 
@@ -123,7 +123,7 @@ class ClientMessage(BaseModel):
         else:
             return json.dumps(self.actual_instance)
 
-    def to_dict(self) -> Optional[Union[Dict[str, Any], ClientMessageOneOf, ClientMessageOneOf1]]:
+    def to_dict(self) -> Optional[Union[Dict[str, Any], ServerResultMessageOneOf, ServerResultMessageOneOf1]]:
         """Returns the dict representation of the actual instance"""
         if self.actual_instance is None:
             return None
@@ -137,3 +137,5 @@ class ClientMessage(BaseModel):
     def to_str(self) -> str:
         """Returns the string representation of the actual instance"""
         return pprint.pformat(self.model_dump())
+
+

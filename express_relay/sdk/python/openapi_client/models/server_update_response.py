@@ -17,24 +17,21 @@ import json
 import pprint
 from pydantic import BaseModel, Field, StrictStr, ValidationError, field_validator
 from typing import Any, List, Optional
-from openapi_client.models.server_result_message_one_of import ServerResultMessageOneOf
-from openapi_client.models.server_result_message_one_of1 import ServerResultMessageOneOf1
+from openapi_client.models.server_update_response_one_of import ServerUpdateResponseOneOf
 from pydantic import StrictStr, Field
 from typing import Union, List, Optional, Dict
 from typing_extensions import Literal, Self
 
-SERVERRESULTMESSAGE_ONE_OF_SCHEMAS = ["ServerResultMessageOneOf", "ServerResultMessageOneOf1"]
+SERVERUPDATERESPONSE_ONE_OF_SCHEMAS = ["ServerUpdateResponseOneOf"]
 
-class ServerResultMessage(BaseModel):
+class ServerUpdateResponse(BaseModel):
     """
-    ServerResultMessage
+    This enum is used to send an update to the client for any subscriptions made
     """
-    # data type: ServerResultMessageOneOf
-    oneof_schema_1_validator: Optional[ServerResultMessageOneOf] = None
-    # data type: ServerResultMessageOneOf1
-    oneof_schema_2_validator: Optional[ServerResultMessageOneOf1] = None
-    actual_instance: Optional[Union[ServerResultMessageOneOf, ServerResultMessageOneOf1]] = None
-    one_of_schemas: List[str] = Field(default=Literal["ServerResultMessageOneOf", "ServerResultMessageOneOf1"])
+    # data type: ServerUpdateResponseOneOf
+    oneof_schema_1_validator: Optional[ServerUpdateResponseOneOf] = None
+    actual_instance: Optional[Union[ServerUpdateResponseOneOf]] = None
+    one_of_schemas: List[str] = Field(default=Literal["ServerUpdateResponseOneOf"])
 
     model_config = {
         "validate_assignment": True,
@@ -43,7 +40,6 @@ class ServerResultMessage(BaseModel):
 
 
     discriminator_value_class_map: Dict[str, str] = {
-        'ServerResultResponse': 'ServerResultResponse'
     }
 
     def __init__(self, *args, **kwargs) -> None:
@@ -58,25 +54,20 @@ class ServerResultMessage(BaseModel):
 
     @field_validator('actual_instance')
     def actual_instance_must_validate_oneof(cls, v):
-        instance = ServerResultMessage.model_construct()
+        instance = ServerUpdateResponse.model_construct()
         error_messages = []
         match = 0
-        # validate data type: ServerResultMessageOneOf
-        if not isinstance(v, ServerResultMessageOneOf):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf`")
-        else:
-            match += 1
-        # validate data type: ServerResultMessageOneOf1
-        if not isinstance(v, ServerResultMessageOneOf1):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf1`")
+        # validate data type: ServerUpdateResponseOneOf
+        if not isinstance(v, ServerUpdateResponseOneOf):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerUpdateResponseOneOf`")
         else:
             match += 1
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when setting `actual_instance` in ServerUpdateResponse with oneOf schemas: ServerUpdateResponseOneOf. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in ServerUpdateResponse with oneOf schemas: ServerUpdateResponseOneOf. Details: " + ", ".join(error_messages))
         else:
             return v
 
@@ -91,25 +82,19 @@ class ServerResultMessage(BaseModel):
         error_messages = []
         match = 0
 
-        # deserialize data into ServerResultMessageOneOf
+        # deserialize data into ServerUpdateResponseOneOf
         try:
-            instance.actual_instance = ServerResultMessageOneOf.from_json(json_str)
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into ServerResultMessageOneOf1
-        try:
-            instance.actual_instance = ServerResultMessageOneOf1.from_json(json_str)
+            instance.actual_instance = ServerUpdateResponseOneOf.from_json(json_str)
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
 
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when deserializing the JSON string into ServerUpdateResponse with oneOf schemas: ServerUpdateResponseOneOf. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into ServerUpdateResponse with oneOf schemas: ServerUpdateResponseOneOf. Details: " + ", ".join(error_messages))
         else:
             return instance
 
@@ -123,7 +108,7 @@ class ServerResultMessage(BaseModel):
         else:
             return json.dumps(self.actual_instance)
 
-    def to_dict(self) -> Optional[Union[Dict[str, Any], ServerResultMessageOneOf, ServerResultMessageOneOf1]]:
+    def to_dict(self) -> Optional[Union[Dict[str, Any], ServerUpdateResponseOneOf]]:
         """Returns the dict representation of the actual instance"""
         if self.actual_instance is None:
             return None
@@ -137,3 +122,5 @@ class ServerResultMessage(BaseModel):
     def to_str(self) -> str:
         """Returns the string representation of the actual instance"""
         return pprint.pformat(self.model_dump())
+
+

@@ -17,21 +17,18 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr
-from typing import Any, ClassVar, Dict, List
+from pydantic import StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from openapi_client.models.server_result_message import ServerResultMessage
 from typing import Optional, Set
 from typing_extensions import Self
 
-class OpportunityBid(BaseModel):
+class ServerResultResponse(ServerResultMessage):
     """
-    OpportunityBid
+    This enum is used to send the result for a specific client request with the same id id is only None when the client message is invalid
     """ # noqa: E501
-    amount: StrictStr = Field(description="The bid amount in wei.")
-    liquidator: StrictStr = Field(description="Liquidator address")
-    permission_key: StrictStr = Field(description="The opportunity permission key")
-    signature: StrictStr
-    valid_until: StrictStr = Field(description="How long the bid will be valid for.")
-    __properties: ClassVar[List[str]] = ["amount", "liquidator", "permission_key", "signature", "valid_until"]
+    id: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["status", "result", "id"]
 
     model_config = {
         "populate_by_name": True,
@@ -51,7 +48,7 @@ class OpportunityBid(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of OpportunityBid from a JSON string"""
+        """Create an instance of ServerResultResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -72,11 +69,16 @@ class OpportunityBid(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if id (nullable) is None
+        # and model_fields_set contains the field
+        if self.id is None and "id" in self.model_fields_set:
+            _dict['id'] = None
+
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of OpportunityBid from a dict"""
+        """Create an instance of ServerResultResponse from a dict"""
         if obj is None:
             return None
 
@@ -84,10 +86,10 @@ class OpportunityBid(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "amount": obj.get("amount"),
-            "liquidator": obj.get("liquidator"),
-            "permission_key": obj.get("permission_key"),
-            "signature": obj.get("signature"),
-            "valid_until": obj.get("valid_until")
+            "status": obj.get("status"),
+            "result": obj.get("result"),
+            "id": obj.get("id")
         })
         return _obj
+
+

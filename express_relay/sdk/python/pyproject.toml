@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.poetry]
-name = "express-relay-searcher-utils"
+name = "express-relay-utils"
 version = 0.0.1
 dependencies = [
     "web3",
@@ -17,6 +17,6 @@ dependencies = [
     "asyncio",
     "argparse"
 ]
-description = "Utilities for searchers to interact with the express relay protocol."
+description = "Utilities for searchers and protocols to interact with the express relay protocol."
 license = "Proprietary"
 readme = "README.md"

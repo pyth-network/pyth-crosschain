@@ -17,17 +17,26 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
+from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ClientMessageOneOfParams(BaseModel):
+class ServerUpdateResponseOneOf(BaseModel):
     """
-    ClientMessageOneOfParams
+    ServerUpdateResponseOneOf
     """ # noqa: E501
-    chain_ids: List[StrictStr]
-    __properties: ClassVar[List[str]] = ["chain_ids"]
+    opportunity: OpportunityParamsWithMetadata
+    type: StrictStr
+    __properties: ClassVar[List[str]] = ["opportunity", "type"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['new_opportunity']):
+            raise ValueError("must be one of enum values ('new_opportunity')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -47,7 +56,7 @@ class ClientMessageOneOfParams(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ClientMessageOneOfParams from a JSON string"""
+        """Create an instance of ServerUpdateResponseOneOf from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,11 +77,14 @@ class ClientMessageOneOfParams(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of opportunity
+        if self.opportunity:
+            _dict['opportunity'] = self.opportunity.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ClientMessageOneOfParams from a dict"""
+        """Create an instance of ServerUpdateResponseOneOf from a dict"""
         if obj is None:
             return None
 
@@ -80,6 +92,9 @@ class ClientMessageOneOfParams(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "chain_ids": obj.get("chain_ids")
+            "opportunity": OpportunityParamsWithMetadata.from_dict(obj["opportunity"]) if obj.get("opportunity") is not None else None,
+            "type": obj.get("type")
         })
         return _obj
+
+

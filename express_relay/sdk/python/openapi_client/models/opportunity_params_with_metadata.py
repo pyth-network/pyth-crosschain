@@ -17,15 +17,15 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr, field_validator
+from pydantic import BaseModel, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
 from openapi_client.models.token_qty import TokenQty
 from typing import Optional, Set
 from typing_extensions import Self
 
-class OpportunityParamsOneOf(BaseModel):
+class OpportunityParamsWithMetadata(BaseModel):
     """
-    OpportunityParamsOneOf
+    Similar to OpportunityParams, but with the opportunity id included.
     """ # noqa: E501
     calldata: StrictStr = Field(description="Calldata for the contract call.")
     chain_id: StrictStr = Field(description="The chain id where the liquidation will be executed.")
@@ -35,7 +35,9 @@ class OpportunityParamsOneOf(BaseModel):
     repay_tokens: List[TokenQty]
     value: StrictStr = Field(description="The value to send with the contract call.")
     version: StrictStr
-    __properties: ClassVar[List[str]] = ["calldata", "chain_id", "contract", "permission_key", "receipt_tokens", "repay_tokens", "value", "version"]
+    creation_time: StrictInt = Field(description="Creation time of the opportunity")
+    opportunity_id: StrictStr = Field(description="The opportunity unique id")
+    __properties: ClassVar[List[str]] = ["calldata", "chain_id", "contract", "permission_key", "receipt_tokens", "repay_tokens", "value", "version", "creation_time", "opportunity_id"]
 
     @field_validator('version')
     def version_validate_enum(cls, value):
@@ -62,7 +64,7 @@ class OpportunityParamsOneOf(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of OpportunityParamsOneOf from a JSON string"""
+        """Create an instance of OpportunityParamsWithMetadata from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -101,7 +103,7 @@ class OpportunityParamsOneOf(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of OpportunityParamsOneOf from a dict"""
+        """Create an instance of OpportunityParamsWithMetadata from a dict"""
         if obj is None:
             return None
 
@@ -116,6 +118,10 @@ class OpportunityParamsOneOf(BaseModel):
             "receipt_tokens": [TokenQty.from_dict(_item) for _item in obj["receipt_tokens"]] if obj.get("receipt_tokens") is not None else None,
             "repay_tokens": [TokenQty.from_dict(_item) for _item in obj["repay_tokens"]] if obj.get("repay_tokens") is not None else None,
             "value": obj.get("value"),
-            "version": obj.get("version")
+            "version": obj.get("version"),
+            "creation_time": obj.get("creation_time"),
+            "opportunity_id": obj.get("opportunity_id")
         })
         return _obj
+
+

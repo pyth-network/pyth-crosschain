@@ -17,25 +17,17 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictStr, field_validator
+from pydantic import BaseModel, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ServerResultMessageOneOf1(BaseModel):
+class Bid400Response(BaseModel):
     """
-    ServerResultMessageOneOf1
+    Bid400Response
     """ # noqa: E501
-    result: StrictStr
-    status: StrictStr
-    __properties: ClassVar[List[str]] = ["result", "status"]
-
-    @field_validator('status')
-    def status_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(['error']):
-            raise ValueError("must be one of enum values ('error')")
-        return value
+    error: StrictStr
+    __properties: ClassVar[List[str]] = ["error"]
 
     model_config = {
         "populate_by_name": True,
@@ -55,7 +47,7 @@ class ServerResultMessageOneOf1(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ServerResultMessageOneOf1 from a JSON string"""
+        """Create an instance of Bid400Response from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -80,7 +72,7 @@ class ServerResultMessageOneOf1(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ServerResultMessageOneOf1 from a dict"""
+        """Create an instance of Bid400Response from a dict"""
         if obj is None:
             return None
 
@@ -88,7 +80,8 @@ class ServerResultMessageOneOf1(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "result": obj.get("result"),
-            "status": obj.get("status")
+            "error": obj.get("error")
         })
         return _obj
+
+

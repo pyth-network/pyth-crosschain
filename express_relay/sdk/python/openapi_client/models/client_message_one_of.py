@@ -19,21 +19,23 @@ import json
 
 from pydantic import BaseModel, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
+from openapi_client.models.client_message_one_of_params import ClientMessageOneOfParams
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ServerResultMessageOneOf(BaseModel):
+class ClientMessageOneOf(BaseModel):
     """
-    ServerResultMessageOneOf
+    ClientMessageOneOf
     """ # noqa: E501
-    status: StrictStr
-    __properties: ClassVar[List[str]] = ["status"]
+    method: StrictStr
+    params: ClientMessageOneOfParams
+    __properties: ClassVar[List[str]] = ["method", "params"]
 
-    @field_validator('status')
-    def status_validate_enum(cls, value):
+    @field_validator('method')
+    def method_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['success']):
-            raise ValueError("must be one of enum values ('success')")
+        if value not in set(['subscribe']):
+            raise ValueError("must be one of enum values ('subscribe')")
         return value
 
     model_config = {
@@ -54,7 +56,7 @@ class ServerResultMessageOneOf(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ServerResultMessageOneOf from a JSON string"""
+        """Create an instance of ClientMessageOneOf from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -75,11 +77,14 @@ class ServerResultMessageOneOf(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of params
+        if self.params:
+            _dict['params'] = self.params.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ServerResultMessageOneOf from a dict"""
+        """Create an instance of ClientMessageOneOf from a dict"""
         if obj is None:
             return None
 
@@ -87,6 +92,9 @@ class ServerResultMessageOneOf(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "status": obj.get("status")
+            "method": obj.get("method"),
+            "params": ClientMessageOneOfParams.from_dict(obj["params"]) if obj.get("params") is not None else None
         })
         return _obj
+
+

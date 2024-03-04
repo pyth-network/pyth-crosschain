@@ -17,18 +17,17 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr
+from pydantic import BaseModel, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class TokenQty(BaseModel):
+class ErrorBodyResponse(BaseModel):
     """
-    TokenQty
+    ErrorBodyResponse
     """ # noqa: E501
-    amount: StrictStr = Field(description="Token amount")
-    contract: StrictStr = Field(description="Token contract address")
-    __properties: ClassVar[List[str]] = ["amount", "contract"]
+    error: StrictStr
+    __properties: ClassVar[List[str]] = ["error"]
 
     model_config = {
         "populate_by_name": True,
@@ -48,7 +47,7 @@ class TokenQty(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of TokenQty from a JSON string"""
+        """Create an instance of ErrorBodyResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,7 +72,7 @@ class TokenQty(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of TokenQty from a dict"""
+        """Create an instance of ErrorBodyResponse from a dict"""
         if obj is None:
             return None
 
@@ -81,7 +80,8 @@ class TokenQty(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "amount": obj.get("amount"),
-            "contract": obj.get("contract")
+            "error": obj.get("error")
         })
         return _obj
+
+
