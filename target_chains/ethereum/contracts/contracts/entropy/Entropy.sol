@@ -221,6 +221,25 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
+    function requestWithCallback(
+        address provider,
+        bytes32 randomNumber,
+        bool useBlockHash
+    ) public payable override returns (uint64 assignedSequenceNumber) {
+        bytes32 userCommitment = constructUserCommitment(randomNumber);
+
+        assignedSequenceNumber = request(
+            provider,
+            userCommitment,
+            useBlockHash
+        );
+        emit RequestedWithCallback(
+            assignedSequenceNumber,
+            provider,
+            randomNumber
+        );
+    }
+
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -299,6 +318,88 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
             providerInfo.currentCommitment = providerRevelation;
         }
+    }
+
+    function revealAndCall(
+        address provider,
+        uint64 sequenceNumber,
+        bytes32 userRandomness,
+        bytes32 providerRevelation
+    ) public returns (bytes32 randomNumber) {
+        EntropyStructs.Request storage req = findRequest(
+            provider,
+            sequenceNumber
+        );
+        // Check that there is an active request for the given provider / sequence number.
+        if (
+            req.sequenceNumber == 0 ||
+            req.provider != provider ||
+            req.sequenceNumber != sequenceNumber
+        ) revert EntropyErrors.NoSuchRequest();
+
+        bytes32 providerCommitment = constructProviderCommitment(
+            req.numHashes,
+            providerRevelation
+        );
+        bytes32 userCommitment = constructUserCommitment(userRandomness);
+        if (
+            keccak256(bytes.concat(userCommitment, providerCommitment)) !=
+            req.commitment
+        ) revert EntropyErrors.IncorrectRevelation();
+
+        bytes32 blockHash = bytes32(uint256(0));
+        if (req.useBlockhash) {
+            bytes32 _blockHash = blockhash(req.blockNumber);
+
+            // The `blockhash` function will return zero if the req.blockNumber is equal to the current
+            // block number, or if it is not within the 256 most recent blocks. This allows the user to
+            // select between two random numbers by executing the reveal function in the same block as the
+            // request, or after 256 blocks. This gives each user two chances to get a favorable result on
+            // each request.
+            // Revert this transaction for when the blockHash is 0;
+            if (_blockHash == bytes32(uint256(0)))
+                revert EntropyErrors.BlockhashUnavailable();
+
+            blockHash = _blockHash;
+        }
+
+        randomNumber = combineRandomValues(
+            userRandomness,
+            providerRevelation,
+            blockHash
+        );
+
+        address callAddress = req.requester;
+
+        clearRequest(provider, sequenceNumber);
+
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
+            providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
+            providerInfo.currentCommitment = providerRevelation;
+        }
+        (bool success, ) = callAddress.call(
+            abi.encodeWithSignature(
+                "entropyCallback(uint64,bytes32)",
+                sequenceNumber,
+                randomNumber
+            )
+        );
+
+        if (!success) {
+            revert EntropyErrors.CallbackFailed();
+        }
+
+        emit RevealedAndCalledBack(
+            req,
+            userRandomness,
+            providerRevelation,
+            blockHash,
+            randomNumber,
+            callAddress
+        );
     }
 
     function getProviderInfo(

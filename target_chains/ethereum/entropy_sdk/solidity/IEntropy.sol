@@ -22,6 +22,12 @@ interface IEntropy is EntropyEvents {
     // balance of fees in the contract).
     function withdraw(uint128 amount) external;
 
+    function requestWithCallback(
+        address provider,
+        bytes32 userCommitment,
+        bool useBlockHash
+    ) external payable returns (uint64 assignedSequenceNumber);
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
