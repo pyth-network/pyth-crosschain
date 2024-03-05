@@ -38,7 +38,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
-        id: fortuna
+        id: metadata_fortuna
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -48,5 +48,5 @@ jobs:
           context: .
           file: "./fortuna/Dockerfile"
           push: true
-          tags: ${{ steps.fortuna.outputs.tags }}
-          labels: ${{ steps.fortuna.outputs.labels }}
+          tags: ${{ steps.metadata_fortuna.outputs.tags }}
+          labels: ${{ steps.metadata_fortuna.outputs.labels }}
