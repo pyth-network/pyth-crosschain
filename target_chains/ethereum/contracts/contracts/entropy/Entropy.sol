@@ -6,6 +6,7 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./EntropyState.sol";
 
@@ -159,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{ value: amount }("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
@@ -221,6 +222,15 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
+    // As a protocol, request a random number from a provider. The protocol will also pass a secret random number
+    // in the arguments. This method will return a sequence number.
+    //
+    // When an address calls revealAndCall, see below, for the given provider and sequence number, a callback
+    // will be made to the protocol's entropyCallback method with the assigned sequence number and the random
+    // number as the arguments.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // Note that excess value is *not* refunded to the caller.
     function requestWithCallback(
         address provider,
         bytes32 randomNumber
@@ -251,28 +261,14 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userRandomness,
         bytes32 providerRevelation
     ) public override returns (bytes32 randomNumber) {
-        EntropyStructs.Request storage req = findRequest(
+        EntropyStructs.Request storage req = findActiveRequest(
             provider,
             sequenceNumber
         );
-        // Check that there is an active request for the given provider / sequence number.
-        if (
-            req.sequenceNumber == 0 ||
-            req.provider != provider ||
-            req.sequenceNumber != sequenceNumber
-        ) revert EntropyErrors.NoSuchRequest();
 
         if (req.requester != msg.sender) revert EntropyErrors.Unauthorized();
 
-        bytes32 providerCommitment = constructProviderCommitment(
-            req.numHashes,
-            providerRevelation
-        );
-        bytes32 userCommitment = constructUserCommitment(userRandomness);
-        if (
-            keccak256(bytes.concat(userCommitment, providerCommitment)) !=
-            req.commitment
-        ) revert EntropyErrors.IncorrectRevelation();
+        checkProviderAndUserRevelation(req, userRandomness, providerRevelation);
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
@@ -305,69 +301,95 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         clearRequest(provider, sequenceNumber);
-
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
-            provider
-        ];
-        if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
-            providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
-            providerInfo.currentCommitment = providerRevelation;
-        }
+        updateProviderCurrentCommitment(
+            provider,
+            sequenceNumber,
+            providerRevelation
+        );
     }
 
+    // Fulfill a request for a random number and call back the requester. This method validates the provided userRandomness
+    // and provider's revelation against the corresponding commitment in the in-flight request. If both values are validated,
+    // this function calls the requester's entropyCallback method with the sequence number and the random number as arguments.
+    //
+    // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
+    // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
+    // If you need to use the returned random number more than once, you are responsible for storing it.
+    //
+    // Anyone can call this method to fulfill a request, but the callback will only be made to the original requester.
     function revealAndCall(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomness,
+        bytes32 protocolRandomNumber,
         bytes32 providerRevelation
-    ) public {
-        EntropyStructs.Request storage req = findRequest(
+    ) public override {
+        EntropyStructs.Request storage req = findActiveRequest(
             provider,
             sequenceNumber
         );
-        // Check that there is an active request for the given provider / sequence number.
-        if (
-            req.sequenceNumber == 0 ||
-            req.provider != provider ||
-            req.sequenceNumber != sequenceNumber
-        ) revert EntropyErrors.NoSuchRequest();
 
+        checkProviderAndUserRevelation(
+            req,
+            protocolRandomNumber,
+            providerRevelation
+        );
+
+        // Get the requester address and clear request
+        address callAddress = req.requester;
+        clearRequest(provider, sequenceNumber);
+
+        updateProviderCurrentCommitment(
+            provider,
+            sequenceNumber,
+            providerRevelation
+        );
+
+        bytes32 randomNumber = combineRandomValues(
+            protocolRandomNumber,
+            providerRevelation,
+            bytes32(uint256(0))
+        );
+
+        // TODO: add some gas limit
+        IEntropyConsumer(callAddress).entropyCallback(
+            sequenceNumber,
+            randomNumber
+        );
+
+        emit RevealedAndCalledBack(
+            protocolRandomNumber,
+            providerRevelation,
+            randomNumber,
+            sequenceNumber,
+            provider,
+            callAddress
+        );
+    }
+
+    // Check the provider and user revelation matches their commitment.
+    // If they don't, revert.
+    function checkProviderAndUserRevelation(
+        EntropyStructs.Request storage req,
+        bytes32 userRevelation,
+        bytes32 providerRevelation
+    ) internal view {
         bytes32 providerCommitment = constructProviderCommitment(
             req.numHashes,
             providerRevelation
         );
-        bytes32 userCommitment = constructUserCommitment(userRandomness);
+        bytes32 userCommitment = constructUserCommitment(userRevelation);
         if (
             keccak256(bytes.concat(userCommitment, providerCommitment)) !=
             req.commitment
         ) revert EntropyErrors.IncorrectRevelation();
+    }
 
-        bytes32 blockHash = bytes32(uint256(0));
-        if (req.useBlockhash) {
-            bytes32 _blockHash = blockhash(req.blockNumber);
-
-            // The `blockhash` function will return zero if the req.blockNumber is equal to the current
-            // block number, or if it is not within the 256 most recent blocks. This allows the user to
-            // select between two random numbers by executing the reveal function in the same block as the
-            // request, or after 256 blocks. This gives each user two chances to get a favorable result on
-            // each request.
-            // Revert this transaction for when the blockHash is 0;
-            if (_blockHash == bytes32(uint256(0)))
-                revert EntropyErrors.BlockhashUnavailable();
-
-            blockHash = _blockHash;
-        }
-
-        bytes32 randomNumber = combineRandomValues(
-            userRandomness,
-            providerRevelation,
-            blockHash
-        );
-
-        address callAddress = req.requester;
-
-        clearRequest(provider, sequenceNumber);
-
+    // Update provider's current commitment and sequence number.
+    function updateProviderCurrentCommitment(
+        address provider,
+        uint64 sequenceNumber,
+        bytes32 providerRevelation
+    ) internal {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
@@ -375,26 +397,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
             providerInfo.currentCommitment = providerRevelation;
         }
-        (bool success, ) = callAddress.call(
-            abi.encodeWithSignature(
-                "entropyCallback(uint64,bytes32)",
-                sequenceNumber,
-                randomNumber
-            )
-        );
-
-        if (!success) {
-            revert EntropyErrors.CallbackFailed();
-        }
-
-        emit RevealedAndCalledBack(
-            req,
-            userRandomness,
-            providerRevelation,
-            blockHash,
-            randomNumber,
-            callAddress
-        );
     }
 
     function getProviderInfo(
@@ -502,6 +504,23 @@ abstract contract Entropy is IEntropy, EntropyState {
             currentHash = keccak256(bytes.concat(currentHash));
             numHashes -= 1;
         }
+    }
+
+    // Find an in-flight active request for given the provider and the sequence number.
+    // This method returns a reference to the request, and will revert if the request is
+    // not active.
+    function findActiveRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal view returns (EntropyStructs.Request storage req) {
+        req = findRequest(provider, sequenceNumber);
+
+        // Check there is an active request for the given provider and sequence number.
+        if (
+            !isActive(req) ||
+            req.provider != provider ||
+            req.sequenceNumber != sequenceNumber
+        ) revert EntropyErrors.NoSuchRequest();
     }
 
     // Find an in-flight request.

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./EntropyStructs.sol";
 
+// TODO: correct order of event props
 interface EntropyEvents {
     event Registered(EntropyStructs.ProviderInfo provider);
 
@@ -20,13 +21,12 @@ interface EntropyEvents {
         bytes32 blockHash,
         bytes32 randomNumber
     );
-
     event RevealedAndCalledBack(
-        EntropyStructs.Request request,
-        bytes32 userRevelation,
+        bytes32 protocolRandomNumber,
         bytes32 providerRevelation,
-        bytes32 blockHash,
         bytes32 randomNumber,
+        uint64 sequenceNumber,
+        address provider,
         address callAddress
     );
 
