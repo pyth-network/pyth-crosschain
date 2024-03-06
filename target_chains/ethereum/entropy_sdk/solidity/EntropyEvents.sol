@@ -8,8 +8,8 @@ interface EntropyEvents {
 
     event Requested(EntropyStructs.Request request);
     event RequestedWithCallback(
-        uint64 sequenceNumber,
         address provider,
+        uint64 sequenceNumber,
         bytes32 randomNumber
     );
 
