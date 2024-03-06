@@ -1,40 +1,31 @@
-import web3
-from web3.auto import w3
-from eth_abi import encode
-from eth_account.account import Account
-import httpx
-import urllib.parse
-import websockets
+import asyncio
 import json
+import urllib.parse
 from typing import Callable
 
+import httpx
+import web3
+import websockets
+from eth_abi import encode
+from eth_account.account import Account
+from openapi_client.models.client_message import ClientMessage
 from openapi_client.models.opportunity_bid import OpportunityBid
 from openapi_client.models.opportunity_params import OpportunityParams
-from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
+from openapi_client.models.opportunity_params_with_metadata import (
+    OpportunityParamsWithMetadata,
+)
+from web3.auto import w3
+
 
 class BidInfo:
     def __init__(self, opportunity_id: str, opportunity_bid: OpportunityBid):
         self.opportunity_id = opportunity_id
         self.opportunity_bid = opportunity_bid
 
-class WebsocketTimeoutConfig:
-    """
-    A class to hold the timeout configuration for the websocket connection.
-
-    Args:
-        open_timeout (int): The timeout for opening the websocket connection in seconds.
-        ping_interval (int): The interval at which to send ping messages to the server in seconds.
-        ping_timeout (int): The timeout for the ping messages in seconds.
-        close_timeout (int): The timeout for closing the websocket connection in seconds.
-    """
-    def __init__(self, open_timeout: int = 10, ping_interval: int = 20, ping_timeout: int = 20, close_timeout: int = 10):
-        self.open_timeout = open_timeout
-        self.ping_interval = ping_interval
-        self.ping_timeout = ping_timeout
-        self.close_timeout = close_timeout
 
 class ExpressRelayClientException(Exception):
     pass
+
 
 class ExpressRelayClient:
     def __init__(self, server_url: str):
@@ -51,14 +42,15 @@ class ExpressRelayClient:
         self.ws_msg_counter = 0
         self.ws = False
 
-    async def start_ws(self, ws_timeout_config: WebsocketTimeoutConfig = WebsocketTimeoutConfig()):
+    async def start_ws(self, **kwargs):
         """
-        Initializes the websocket connection to the server.
+        Initializes the websocket connection to the server, if not already connected.
 
         Args:
-            ws_timeout_config (WebsocketTimeoutConfig): The timeout configuration for the websocket connection.
+            kwargs: Keyword arguments to pass to the websocket connection.
         """
-        self.ws = await websockets.connect(self.ws_endpoint, open_timeout=ws_timeout_config.open_timeout, ping_interval=ws_timeout_config.ping_interval, ping_timeout=ws_timeout_config.ping_timeout, close_timeout=ws_timeout_config.close_timeout)
+        if not self.ws:
+            self.ws = await websockets.connect(self.ws_endpoint, **kwargs)
 
     async def close_ws(self):
         """
@@ -66,28 +58,37 @@ class ExpressRelayClient:
         """
         await self.ws.close()
 
-    async def get_opportunities(self, chain_id: str, timeout: int = 10) -> list[OpportunityParamsWithMetadata]:
+    async def get_opportunities(
+        self, chain_id: str | None = None, timeout: int = 10
+    ) -> list[OpportunityParamsWithMetadata]:
         """
-        Connects to the liquidation server and fetches liquidation opportunities for a given chain ID.
+        Connects to the liquidation server and fetches liquidation opportunities.
 
         Args:
-            chain_id (str): The chain ID to fetch liquidation opportunities for.
-            timeout (int): The timeout for the HTTP request in seconds.
+            chain_id: The chain ID to fetch liquidation opportunities for. If None, fetches opportunities across all chains.
+            timeout: The timeout for the HTTP request in seconds.
         Returns:
-            list[OpportunityParamsWithMetadata]: A list of liquidation opportunities.
+            A list of liquidation opportunities.
         """
+        params = {}
+        if chain_id:
+            params["chain_id"] = chain_id
+
         async with httpx.AsyncClient() as client:
-            resp = (
-                await client.get(
-                    urllib.parse.urlparse(self.server_url)._replace(path="/v1/liquidation/opportunities").geturl(),
-                    params={"chain_id": chain_id},
-                    timeout=timeout,
-                )
+            resp = await client.get(
+                urllib.parse.urlparse(self.server_url)
+                ._replace(path="/v1/liquidation/opportunities")
+                .geturl(),
+                params=params,
+                timeout=timeout,
             )
 
         resp.raise_for_status()
 
-        opportunities = [OpportunityParamsWithMetadata.from_dict(opportunity) for opportunity in resp.json()]
+        opportunities = [
+            OpportunityParamsWithMetadata.from_dict(opportunity)
+            for opportunity in resp.json()
+        ]
 
         return opportunities
 
@@ -96,11 +97,13 @@ class ExpressRelayClient:
         Sends a message to the server via websocket.
 
         Args:
-            msg (dict): The message to send.
+            msg: The message to send.
         """
         if not self.ws:
-            raise ExpressRelayClientException("Websocket connection not yet open")
+            await self.start_ws()
 
+        # validate the format of msg
+        msg = ClientMessage.from_dict(msg).to_dict()
         msg["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
 
@@ -111,7 +114,7 @@ class ExpressRelayClient:
         Subscribes websocket to a list of chain IDs for new liquidation opportunities.
 
         Args:
-            chain_ids (list[str]): A list of chain IDs to subscribe to.
+            chain_ids: A list of chain IDs to subscribe to.
         """
         json_subscribe = {
             "method": "subscribe",
@@ -121,12 +124,12 @@ class ExpressRelayClient:
         }
         await self.send_ws_message(json_subscribe)
 
-    async def unsubscribe_chains(self, chain_ids: str):
+    async def unsubscribe_chains(self, chain_ids: list[str]):
         """
         Unsubscribes websocket from a list of chain IDs for new liquidation opportunities.
 
         Args:
-            chain_ids (list[str]): A list of chain IDs to unsubscribe from.
+            chain_ids: A list of chain IDs to unsubscribe from.
         """
         json_unsubscribe = {
             "method": "unsubscribe",
@@ -136,73 +139,79 @@ class ExpressRelayClient:
         }
         await self.send_ws_message(json_unsubscribe)
 
-    async def ws_opportunities_handler(self, opportunity_callback: Callable[[OpportunityParamsWithMetadata], None]):
+    async def ws_opportunities_handler(
+        self, opportunity_callback: Callable[[OpportunityParamsWithMetadata], None]
+    ):
         """
         Continuously handles new liquidation opportunities as they are received from the server via websocket.
 
         Args:
-            opportunity_callback (async func): An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
+            opportunity_callback: An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
         """
         if not self.ws:
-            raise ExpressRelayClientException("Websocket connection not yet open")
+            await self.start_ws()
 
         while True:
             msg = json.loads(await self.ws.recv())
             status = msg.get("status")
             if status and status != "success":
-                raise ExpressRelayClientException(f"Error in websocket subscription: {msg.get('result')}")
+                raise ExpressRelayClientException(
+                    f"Error in websocket subscription: {msg.get('result')}"
+                )
 
             if msg.get("type") != "new_opportunity":
                 continue
 
             opportunity = msg["opportunity"]
             opportunity = OpportunityParamsWithMetadata.from_dict(opportunity)
-            try:
-                await opportunity_callback(opportunity)
-            except Exception as e:
-                raise ExpressRelayClientException(f"Error in opportunity handler: {e}")
+            asyncio.create_task(opportunity_callback(opportunity))
 
-    async def submit_opportunity(self, opportunity: OpportunityParams, timeout: int = 10) -> httpx.Response:
+    async def submit_opportunity(
+        self, opportunity: OpportunityParams, timeout: int = 10
+    ) -> str:
         """
         Submits an opportunity to the liquidation server.
 
         Args:
-            opportunity (OpportunityParams): An object representing the opportunity to submit.
-            timeout (int): The timeout for the HTTP request in seconds.
+            opportunity: An object representing the opportunity to submit.
+            timeout: The timeout for the HTTP request in seconds.
         Returns:
-            httpx.Response: The server's response to the opportunity submission. Throws an exception if the response is not successful.
+            The ID of the submitted opportunity.
         """
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                urllib.parse.urlparse(self.server_url)._replace(path="/v1/liquidation/opportunities").geturl(),
+                urllib.parse.urlparse(self.server_url)
+                ._replace(path="/v1/liquidation/opportunities")
+                .geturl(),
                 json=opportunity.to_dict(),
                 timeout=timeout,
             )
-
         resp.raise_for_status()
+        return resp.json()["opportunity_id"]
 
-        return resp
-
-    async def submit_bid(self, bid_info: BidInfo, timeout: int = 10) -> httpx.Response:
+    async def submit_bid(self, bid_info: BidInfo, timeout: int = 10) -> str:
         """
         Submits a bid to the liquidation server.
 
         Args:
-            bid_info (BidInfo): An object representing the bid to submit.
-            timeout (int): The timeout for the HTTP request in seconds.
+            bid_info: An object representing the bid to submit.
+            timeout: The timeout for the HTTP request in seconds.
         Returns:
-            httpx.Response: The server's response to the bid submission. Throws an exception if the response is not successful.
+            The ID of the submitted bid.
         """
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                urllib.parse.urlparse(self.server_url)._replace(path=f"/v1/liquidation/opportunities/{bid_info.opportunity_id}/bids").geturl(),
+                urllib.parse.urlparse(self.server_url)
+                ._replace(
+                    path=f"/v1/liquidation/opportunities/{bid_info.opportunity_id}/bids"
+                )
+                .geturl(),
                 json=bid_info.opportunity_bid.to_dict(),
                 timeout=timeout,
             )
-
         resp.raise_for_status()
+        return resp.json()["id"]
 
-        return resp
 
 def sign_bid(
     liquidation_opportunity: OpportunityParamsWithMetadata,
@@ -217,12 +226,18 @@ def sign_bid(
         liquidation_opportunity: An object representing the liquidation opportunity, of type OpportunityParamsWithMetadata.
         bid: An integer representing the amount of the bid.
         valid_until: An integer representing the block until which the bid is valid.
-        private_key: A string representing the liquidator's private key.
+        private_key: A 0x-prefixed hex string representing the liquidator's private key.
     Returns:
         A BidInfo object, representing the transaction to submit to the liquidation server. This object contains the liquidator's signature.
     """
-    repay_tokens = [(token.contract, int(token.amount)) for token in liquidation_opportunity.repay_tokens]
-    receipt_tokens = [(token.contract, int(token.amount)) for token in liquidation_opportunity.receipt_tokens]
+    repay_tokens = [
+        (token.contract, int(token.amount))
+        for token in liquidation_opportunity.repay_tokens
+    ]
+    receipt_tokens = [
+        (token.contract, int(token.amount))
+        for token in liquidation_opportunity.receipt_tokens
+    ]
     calldata = bytes.fromhex(liquidation_opportunity.calldata.replace("0x", ""))
 
     digest = encode(

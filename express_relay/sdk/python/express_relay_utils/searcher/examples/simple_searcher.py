@@ -1,18 +1,20 @@
 import argparse
 import asyncio
 import logging
+
 from eth_account.account import Account
-
 from express_relay_client import BidInfo, ExpressRelayClient, sign_bid
-
-from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
+from openapi_client.models.opportunity_params_with_metadata import (
+    OpportunityParamsWithMetadata,
+)
 
 logger = logging.getLogger(__name__)
 
 # Set validity (naively) to max uint256
-VALID_UNTIL = 2**256-1
+VALID_UNTIL_MAX = 2**256 - 1
 
-class SimpleSearcher():
+
+class SimpleSearcher:
     def __init__(self, server_url: str, private_key: str, default_bid: int):
         self.client = ExpressRelayClient(server_url)
         self.private_key = private_key
@@ -35,18 +37,11 @@ class SimpleSearcher():
         Returns:
             If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        bid_info = sign_bid(
-            opp,
-            self.default_bid,
-            VALID_UNTIL,
-            self.private_key
-        )
+        bid_info = sign_bid(opp, self.default_bid, VALID_UNTIL_MAX, self.private_key)
 
         return bid_info
 
-    async def opportunity_callback(
-        self, opp: OpportunityParamsWithMetadata
-    ):
+    async def opportunity_callback(self, opp: OpportunityParamsWithMetadata):
         """
         Callback function to run when a new liquidation opportunity is found.
 
@@ -57,9 +52,13 @@ class SimpleSearcher():
         if bid_info:
             try:
                 await self.client.submit_bid(bid_info)
-                logger.info(f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}")
+                logger.info(
+                    f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}"
+                )
             except Exception as e:
-                logger.error(f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}: {e}")
+                logger.error(
+                    f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}: {e}"
+                )
 
 
 async def main():
@@ -106,17 +105,19 @@ async def main():
     simple_searcher = SimpleSearcher(args.server_url, sk_liquidator, args.bid)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
-    await simple_searcher.client.start_ws()
-
-    ws_call = simple_searcher.client.ws_opportunities_handler(simple_searcher.opportunity_callback)
-    asyncio.create_task(ws_call)
-
     await simple_searcher.client.subscribe_chains(args.chain_ids)
+
+    ws_call = simple_searcher.client.ws_opportunities_handler(
+        simple_searcher.opportunity_callback
+    )
+    asyncio.create_task(ws_call)
 
     while True:
         if simple_searcher.client.ws.closed:
             logger.error("Websocket connection closed, exiting")
             break
+        await asyncio.sleep(10)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
