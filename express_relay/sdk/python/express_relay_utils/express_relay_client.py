@@ -40,23 +40,42 @@ class ExpressRelayClient:
         self.server_url = server_url
         self.ws_endpoint = parsed_url._replace(scheme=ws_scheme, path="/v1/ws").geturl()
         self.ws_msg_counter = 0
-        self.ws = False
+        self.ws = None
+        self.ws_lock = asyncio.Lock()
+        self.ws_task = None
+        self.ws_msg_futures = {}
 
-    async def start_ws(self, **kwargs):
+    async def start_ws(
+        self,
+        opportunity_callback: (
+            Callable[[OpportunityParamsWithMetadata], None] | None
+        ) = None,
+        **kwargs,
+    ) -> asyncio.Task:
         """
         Initializes the websocket connection to the server, if not already connected.
 
         Args:
             kwargs: Keyword arguments to pass to the websocket connection.
+        Returns:
+            The websocket task.
         """
-        if not self.ws:
-            self.ws = await websockets.connect(self.ws_endpoint, **kwargs)
+        async with self.ws_lock:
+            if self.ws is None:
+                self.ws = await websockets.connect(self.ws_endpoint, **kwargs)
+
+            if self.ws_task is None:
+                ws_call = self.ws_handler(opportunity_callback)
+                self.ws_task = asyncio.create_task(ws_call)
+
+        return self.ws_task
 
     async def close_ws(self):
         """
         Closes the websocket connection to the server.
         """
-        await self.ws.close()
+        async with self.ws_lock:
+            await self.ws.close()
 
     async def get_opportunities(
         self, chain_id: str | None = None, timeout: int = 10
@@ -99,15 +118,22 @@ class ExpressRelayClient:
         Args:
             msg: The message to send.
         """
-        if not self.ws:
-            await self.start_ws()
+        await self.start_ws()
 
         # validate the format of msg
         msg = ClientMessage.from_dict(msg).to_dict()
         msg["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
 
+        future = asyncio.get_event_loop().create_future()
+
         await self.ws.send(json.dumps(msg))
+        self.ws_msg_futures[msg["id"]] = future
+
+        # await the response msg for the subscription from the server
+        msg = await future
+
+        self.process_msg(msg)
 
     async def subscribe_chains(self, chain_ids: list[str]):
         """
@@ -139,32 +165,47 @@ class ExpressRelayClient:
         }
         await self.send_ws_message(json_unsubscribe)
 
-    async def ws_opportunities_handler(
-        self, opportunity_callback: Callable[[OpportunityParamsWithMetadata], None]
+    def process_msg(self, msg: dict):
+        """
+        Processes a message received from the server via websocket.
+
+        Args:
+            msg: The message to process.
+        """
+        if msg.get("status") and msg.get("status") != "success":
+            raise ExpressRelayClientException(
+                f"Error in websocket subscription: {msg.get('result')}"
+            )
+
+    async def ws_handler(
+        self,
+        opportunity_callback: (
+            Callable[[OpportunityParamsWithMetadata], None] | None
+        ) = None,
     ):
         """
-        Continuously handles new liquidation opportunities as they are received from the server via websocket.
+        Continuously handles new ws messages as they are received from the server via websocket.
 
         Args:
             opportunity_callback: An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
         """
         if not self.ws:
-            await self.start_ws()
+            raise ExpressRelayClientException("Websocket not connected")
 
-        while True:
-            msg = json.loads(await self.ws.recv())
-            status = msg.get("status")
-            if status and status != "success":
-                raise ExpressRelayClientException(
-                    f"Error in websocket subscription: {msg.get('result')}"
-                )
+        async for msg in self.ws:
+            msg = json.loads(msg)
+            if msg.get("id"):
+                future = self.ws_msg_futures.pop(msg["id"])
+                future.set_result(msg)
+            else:
+                self.process_msg(msg)
 
-            if msg.get("type") != "new_opportunity":
-                continue
+            if msg.get("type") == "new_opportunity":
+                opportunity = msg["opportunity"]
+                opportunity = OpportunityParamsWithMetadata.from_dict(opportunity)
 
-            opportunity = msg["opportunity"]
-            opportunity = OpportunityParamsWithMetadata.from_dict(opportunity)
-            asyncio.create_task(opportunity_callback(opportunity))
+                if opportunity_callback is not None:
+                    asyncio.create_task(opportunity_callback(opportunity))
 
     async def submit_opportunity(
         self, opportunity: OpportunityParams, timeout: int = 10

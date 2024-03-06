@@ -105,18 +105,11 @@ async def main():
     simple_searcher = SimpleSearcher(args.server_url, sk_liquidator, args.bid)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
+    task = await simple_searcher.client.start_ws(simple_searcher.opportunity_callback)
+
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
-    ws_call = simple_searcher.client.ws_opportunities_handler(
-        simple_searcher.opportunity_callback
-    )
-    asyncio.create_task(ws_call)
-
-    while True:
-        if simple_searcher.client.ws.closed:
-            logger.error("Websocket connection closed, exiting")
-            break
-        await asyncio.sleep(10)
+    await task
 
 
 if __name__ == "__main__":

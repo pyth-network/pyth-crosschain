@@ -24,6 +24,13 @@ jobs:
           profile: minimal
           toolchain: nightly-2023-07-23
           components: rustfmt, clippy
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "poetry"
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
         with:
