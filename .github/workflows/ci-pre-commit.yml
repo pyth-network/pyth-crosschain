@@ -28,14 +28,10 @@ jobs:
           components: rustfmt, clippy
       - uses: actions/checkout@v4
       - name: Install poetry
-        run: |
-          curl -O -sSL https://install.python-poetry.org/install-poetry.py
-          python${{ matrix.python-version }} install-poetry.py -y --version 1.1.12
-          echo "PATH=${HOME}/.poetry/bin:${PATH}" >> $GITHUB_ENV
-          rm install-poetry.py
+        run: pipx install poetry
       - uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
           cache: "poetry"
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
