@@ -7,13 +7,18 @@ import { isHex } from "viem";
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
 class SimpleSearcher {
+  private client: Client;
   constructor(
-    public client: Client,
+    public endpoint: string,
     public chainId: string,
     public privateKey: string
   ) {
-    this.client.setBidStatusHandler(this.bidStatusHandler.bind(this));
-    this.client.setOpportunityHandler(this.opportunityHandler.bind(this));
+    this.client = new Client(
+      { baseUrl: endpoint },
+      undefined,
+      this.opportunityHandler.bind(this),
+      this.bidStatusHandler.bind(this)
+    );
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -89,14 +94,17 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parseSync();
 async function run() {
-  const client = new Client({ baseUrl: argv.endpoint });
   if (isHex(argv.privateKey)) {
     const account = privateKeyToAccount(argv.privateKey);
     console.log(`Using account: ${account.address}`);
   } else {
     throw new Error(`Invalid private key: ${argv.privateKey}`);
   }
-  const searcher = new SimpleSearcher(client, argv.chainId, argv.privateKey);
+  const searcher = new SimpleSearcher(
+    argv.endpoint,
+    argv.chainId,
+    argv.privateKey
+  );
   await searcher.start();
 }
 

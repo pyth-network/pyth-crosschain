@@ -33,14 +33,12 @@ import {
   BidInfo,
 } from "@pythnetwork/express-relay-evm-js";
 
-const client = new Client({ baseUrl: "https://per-staging.dourolabs.app/" });
-
 function calculateOpportunityBid(opportunity: Opportunity): BidInfo | null {
   // searcher implementation here
   // if the opportunity is not suitable for the searcher, return null
 }
 
-client.setOpportunityHandler(async (opportunity: Opportunity) => {
+async function opportunityCallback(opportunity: Opportunity) {
   const bidInfo = calculateOpportunityBid(opportunity);
   if (bidInfo === null) return;
   const opportunityBid = await client.signOpportunityBid(
@@ -49,7 +47,14 @@ client.setOpportunityHandler(async (opportunity: Opportunity) => {
     privateKey // searcher private key with appropriate permissions and assets
   );
   await client.submitOpportunityBid(opportunityBid);
-});
+}
+
+const client = new Client(
+  { baseUrl: "https://per-staging.dourolabs.app/" },
+  undefined,
+  opportunityCallback
+);
+
 await client.subscribeChains([chain_id]); // chain id you want to subscribe to
 ```
 

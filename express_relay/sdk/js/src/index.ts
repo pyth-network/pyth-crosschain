@@ -192,9 +192,16 @@ export class Client {
     statusUpdate: BidStatusUpdate
   ) => Promise<void>;
 
-  constructor(clientOptions: ClientOptions, wsOptions?: WsOptions) {
+  constructor(
+    clientOptions: ClientOptions,
+    wsOptions?: WsOptions,
+    opportunityCallback?: (opportunity: Opportunity) => Promise<void>,
+    bidStatusCallback?: (statusUpdate: BidStatusUpdate) => Promise<void>
+  ) {
     this.clientOptions = clientOptions;
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
+    this.websocketOpportunityCallback = opportunityCallback;
+    this.websocketBidStatusCallback = bidStatusCallback;
   }
 
   private connectWebsocket() {
@@ -263,18 +270,6 @@ export class Client {
     };
   }
 
-  public setOpportunityHandler(
-    callback: (opportunity: Opportunity) => Promise<void>
-  ) {
-    this.websocketOpportunityCallback = callback;
-  }
-
-  public setBidStatusHandler(
-    callback: (statusUpdate: BidStatusUpdate) => Promise<void>
-  ) {
-    this.websocketBidStatusCallback = callback;
-  }
-
   /**
    * Subscribes to the specified chains
    *
@@ -286,7 +281,7 @@ export class Client {
     if (this.websocketOpportunityCallback === undefined) {
       throw new ClientError("Opportunity handler not set");
     }
-    await this.sendWebsocketMessage({
+    await this.requestViaWebsocket({
       method: "subscribe",
       params: {
         chain_ids: chains,
@@ -295,7 +290,7 @@ export class Client {
   }
 
   async submitOpportunityBidViaWebsocket(bid: OpportunityBid): Promise<BidId> {
-    const result = await this.sendWebsocketMessage({
+    const result = await this.requestViaWebsocket({
       method: "post_liquidation_bid",
       params: {
         opportunity_bid: this.toServerOpportunityBid(bid),
@@ -309,7 +304,7 @@ export class Client {
   }
 
   async submitBidViaWebsocket(bid: Bid): Promise<BidId> {
-    const result = await this.sendWebsocketMessage({
+    const result = await this.requestViaWebsocket({
       method: "post_bid",
       params: {
         bid: this.toServerBid(bid),
@@ -328,7 +323,7 @@ export class Client {
    * @param chains
    */
   async unsubscribeChains(chains: string[]): Promise<void> {
-    await this.sendWebsocketMessage({
+    await this.requestViaWebsocket({
       method: "unsubscribe",
       params: {
         chain_ids: chains,
@@ -336,7 +331,7 @@ export class Client {
     });
   }
 
-  async sendWebsocketMessage(
+  async requestViaWebsocket(
     msg: components["schemas"]["ClientMessage"]
   ): Promise<components["schemas"]["APIResposne"] | null> {
     const msg_with_id: components["schemas"]["ClientRequest"] = {
