@@ -8,14 +8,14 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.11' ]
     steps:
       - uses: actions/checkout@v3
         with:
           # Need to grab the history of the PR
           fetch-depth: 0
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.11"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -28,10 +28,14 @@ jobs:
           components: rustfmt, clippy
       - uses: actions/checkout@v4
       - name: Install poetry
-        run: python3 -m pip install poetry
+        run: |
+          curl -O -sSL https://install.python-poetry.org/install-poetry.py
+          python install-poetry.py -y --version 1.1.12
+          echo "PATH=${HOME}/.poetry/bin:${PATH}" >> $GITHUB_ENV
+          rm install-poetry.py
       - uses: actions/setup-python@v2
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: "poetry"
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
