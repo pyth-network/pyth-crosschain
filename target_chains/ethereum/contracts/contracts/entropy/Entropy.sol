@@ -160,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{ value: amount }("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
@@ -222,7 +222,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
-    // As a protocol, request a random number from a provider. The protocol will also pass a secret random number
+    // As a protocol, request a random number from a provider. The protocol will also pass the user random number
     // in the arguments. This method will return a sequence number.
     //
     // When an address calls revealAndCall, see below, for the given provider and sequence number, a callback
@@ -334,7 +334,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerRevelation
         );
 
-        // Get the requester address and clear request
         address callAddress = req.requester;
         clearRequest(provider, sequenceNumber);
 
