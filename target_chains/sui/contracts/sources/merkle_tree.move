@@ -4,8 +4,11 @@ module pyth::merkle_tree {
     use std::vector::{Self};
     use sui::hash::{keccak256};
     use wormhole::bytes20::{Self, Bytes20, data};
-    use wormhole::cursor::{Self, Cursor};
+    use wormhole::cursor::Cursor;
     use pyth::deserialize::{Self};
+
+    #[test_only]
+    use wormhole::cursor::{Self};
 
     const MERKLE_LEAF_PREFIX: u8 = 0;
     const MERKLE_NODE_PREFIX: u8 = 1;

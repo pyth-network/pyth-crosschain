@@ -30,11 +30,6 @@ module pyth::state {
 
     /// Build digest does not agree with current implementation.
     const E_INVALID_BUILD_DIGEST: u64 = 0;
-    /// Specified version does not match this build's version.
-    const E_VERSION_MISMATCH: u64 = 1;
-
-    /// Sui's chain ID is hard-coded to one value.
-    const CHAIN_ID: u16 = 21;
 
     /// Capability reflecting that the current build version is used to invoke
     /// state methods.

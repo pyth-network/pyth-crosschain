@@ -7,11 +7,6 @@ module pyth::setup {
     use pyth::state::{Self};
     use pyth::data_source::{DataSource};
 
-    /// `UpgradeCap` is not as expected when initializing `State`.
-    const E_INVALID_UPGRADE_CAP: u64 = 0;
-    /// Build version for setup must only be `1`.
-    const E_INVALID_BUILD_VERSION: u64 = 1;
-
     friend pyth::pyth;
     #[test_only]
     friend pyth::pyth_tests;
@@ -44,6 +39,7 @@ module pyth::setup {
         );
     }
 
+    #[allow(lint(share_owned))]
     /// Only the owner of the `DeployerCap` can call this method. This
     /// method destroys the capability and shares the `State` object.
     public(friend) fun init_and_share_state(

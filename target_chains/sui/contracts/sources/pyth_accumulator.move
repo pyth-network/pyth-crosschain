@@ -9,7 +9,7 @@ module pyth::accumulator {
     use pyth::price_feed::{Self};
     use pyth::merkle_tree::{Self};
 
-    const PRICE_FEED_MESSAGE_TYPE: u64 = 0;
+    const PRICE_FEED_MESSAGE_TYPE: u8 = 0;
     const E_INVALID_UPDATE_DATA: u64 = 245;
     const E_INVALID_PROOF: u64 = 345;
     const E_INVALID_WORMHOLE_MESSAGE: u64 = 454;
@@ -77,7 +77,7 @@ module pyth::accumulator {
     fun parse_price_feed_message(message_cur: &mut Cursor<u8>, clock: &Clock): PriceInfo {
         let message_type = deserialize::deserialize_u8(message_cur);
 
-        assert!(message_type == 0, 0); // PriceFeedMessage variant
+        assert!(message_type == PRICE_FEED_MESSAGE_TYPE, E_INVALID_UPDATE_DATA);
         let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(message_cur, 32));
         let price = deserialize::deserialize_i64(message_cur);
         let conf = deserialize::deserialize_u64(message_cur);
