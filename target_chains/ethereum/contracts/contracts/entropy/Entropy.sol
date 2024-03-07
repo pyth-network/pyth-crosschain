@@ -160,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{ value: amount }("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
@@ -346,6 +346,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 randomNumber = combineRandomValues(
             protocolRandomNumber,
             providerRevelation,
+            // The callback methods are not using blockhash. As this will be depreceating
+            // in near future. Passing in 0 for that.
             bytes32(uint256(0))
         );
 
