@@ -63,6 +63,7 @@ export const RECEIVER_CHAINS = {
   lightlink_phoenix: 60044,
   injective_inevm: 60045,
   blast: 60046,
+  merlin: 60047,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -80,7 +81,7 @@ export const RECEIVER_CHAINS = {
   canto_testnet: 50006,
   polygon_zkevm_testnet: 50007,
   aurora_testnet: 50008,
-  mantle_testnet: 50009,
+  mantle_sepolia: 50009,
   fantom_testnet: 50010,
   mumbai: 50011, // Polygon testnet
   neon_devnet: 50012,
@@ -128,6 +129,7 @@ export const RECEIVER_CHAINS = {
   injective_inevm_testnet: 50054,
   idex_xchain_testnet: 50055,
   berachain_testnet: 50056,
+  merlin_testnet: 50057,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
