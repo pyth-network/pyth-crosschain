@@ -112,11 +112,6 @@ repos:
         pass_filenames: false
         files: target_chains/solana
       # For express relay python files
-      # - id: isort
-      #   name: isort
-      #   entry: poetry -C express_relay/sdk/python/express_relay_utils run isort --profile=black express_relay/sdk/python/express_relay_utils --skip openapi_client
-      #   pass_filenames: false
-      #   language: system
       - id: black
         name: black
         entry: poetry -C express_relay/sdk/python/express_relay_utils run black express_relay/sdk/python/express_relay_utils --exclude openapi_client
