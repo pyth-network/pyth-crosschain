@@ -101,7 +101,7 @@ contract EntropyTest is Test, EntropyTestUtils {
     ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
         vm.startPrank(user);
-        sequenceNumber = random.request{ value: fee }(
+        sequenceNumber = random.request{value: fee}(
             provider,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
@@ -120,7 +120,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
         bool requestSucceeds = false;
         try
-            random.request{ value: fee }(
+            random.request{value: fee}(
                 provider,
                 random.constructUserCommitment(bytes32(uint256(randomNumber))),
                 useBlockhash
@@ -736,9 +736,10 @@ contract EntropyTest is Test, EntropyTestUtils {
         uint fee = random.getFee(provider1);
         vm.deal(user1, fee);
         vm.startPrank(user1);
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, bytes32(userRandom));
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            bytes32(userRandom)
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
@@ -776,9 +777,10 @@ contract EntropyTest is Test, EntropyTestUtils {
         EntropyConsumer consumer = new EntropyConsumer();
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, bytes32(protocolRandom));
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            bytes32(protocolRandom)
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
