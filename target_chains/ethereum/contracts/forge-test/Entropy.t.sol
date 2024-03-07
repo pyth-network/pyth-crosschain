@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
@@ -100,7 +101,7 @@ contract EntropyTest is Test, EntropyTestUtils {
     ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
         vm.startPrank(user);
-        sequenceNumber = random.request{value: fee}(
+        sequenceNumber = random.request{ value: fee }(
             provider,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
@@ -119,7 +120,7 @@ contract EntropyTest is Test, EntropyTestUtils {
         // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
         bool requestSucceeds = false;
         try
-            random.request{value: fee}(
+            random.request{ value: fee }(
                 provider,
                 random.constructUserCommitment(bytes32(uint256(randomNumber))),
                 useBlockhash
@@ -728,5 +729,97 @@ contract EntropyTest is Test, EntropyTestUtils {
         vm.prank(unregisteredProvider);
         vm.expectRevert();
         random.setProviderUri(newUri);
+    }
+
+    function testRequestWithCallback() public {
+        uint userRandom = 42;
+        uint fee = random.getFee(provider1);
+        vm.deal(user1, fee);
+        vm.startPrank(user1);
+        uint64 assignedSequenceNumber = random.requestWithCallback{
+            value: fee
+        }(provider1, bytes32(userRandom));
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).requester,
+            user1
+        );
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).provider,
+            provider1
+        );
+
+        // requestWithCallback is storing the requests same as
+        // request. If the requester calls the reveal method, it should
+        // succeed.
+        bytes32 randomNumber = random.reveal(
+            provider1,
+            assignedSequenceNumber,
+            bytes32(userRandom),
+            provider1Proofs[assignedSequenceNumber]
+        );
+        assertEq(
+            randomNumber,
+            random.combineRandomValues(
+                bytes32(userRandom),
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        vm.stopPrank();
+    }
+
+    function testRequestAndRevealWithCallback() public {
+        uint protocolRandom = 42;
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer();
+        vm.deal(address(consumer), fee);
+        vm.startPrank(address(consumer));
+        uint64 assignedSequenceNumber = random.requestWithCallback{
+            value: fee
+        }(provider1, bytes32(protocolRandom));
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).requester,
+            address(consumer)
+        );
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).provider,
+            provider1
+        );
+
+        random.revealAndCall(
+            provider1,
+            assignedSequenceNumber,
+            bytes32(protocolRandom),
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        assertEq(consumer.sequence(), assignedSequenceNumber);
+        assertEq(
+            consumer.randomness(),
+            random.combineRandomValues(
+                bytes32(protocolRandom),
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+    }
+}
+
+contract EntropyConsumer is IEntropyConsumer {
+    uint64 public sequence;
+    bytes32 public randomness;
+
+    constructor() {}
+
+    function entropyCallback(
+        uint64 _sequence,
+        bytes32 _randomness
+    ) external override {
+        sequence = _sequence;
+        randomness = _randomness;
     }
 }
