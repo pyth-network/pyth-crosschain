@@ -12,6 +12,10 @@ import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
+interface IBlast {
+    function configureClaimableGas() external;
+}
+
 abstract contract Pyth is
     PythGetters,
     PythSetters,
@@ -721,5 +725,10 @@ abstract contract Pyth is
 
     function version() public pure returns (string memory) {
         return "1.4.3";
+    }
+
+    function configureClaimableGas() external {
+        IBlast(0x4300000000000000000000000000000000000002)
+            .configureClaimableGas();
     }
 }
