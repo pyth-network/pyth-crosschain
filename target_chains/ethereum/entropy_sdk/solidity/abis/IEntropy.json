@@ -168,6 +168,31 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "randomNumber",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RequestedWithCallback",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -236,6 +261,49 @@
       }
     ],
     "name": "Revealed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "protocolRandomNumber",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "randomNumber",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "callAddress",
+        "type": "address"
+      }
+    ],
+    "name": "RevealedAndCalledBack",
     "type": "event"
   },
   {
@@ -533,6 +601,30 @@
         "type": "address"
       },
       {
+        "internalType": "bytes32",
+        "name": "userCommitment",
+        "type": "bytes32"
+      }
+    ],
+    "name": "requestWithCallback",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
         "internalType": "uint64",
         "name": "sequenceNumber",
         "type": "uint64"
@@ -556,6 +648,34 @@
         "type": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userRandomness",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      }
+    ],
+    "name": "revealAndCall",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

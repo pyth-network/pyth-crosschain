@@ -11,6 +11,11 @@
   },
   {
     "inputs": [],
+    "name": "CallbackFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "IncorrectRevelation",
     "type": "error"
   },
