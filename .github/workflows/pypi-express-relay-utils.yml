@@ -14,8 +14,8 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade poetry
-          poetry build
+          poetry -C express_relay/sdk/python/express_relay_utils build
       - name: Build and publish
         run: |
-          poetry build
-          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+          poetry -C express_relay/sdk/python/express_relay_utils build
+          poetry -C express_relay/sdk/python/express_relay_utils publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
