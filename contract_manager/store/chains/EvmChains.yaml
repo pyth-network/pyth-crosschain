@@ -53,10 +53,10 @@
   rpcUrl: https://testnet.aurora.dev
   networkId: 1313161555
   type: EvmChain
-- id: mantle_testnet
+- id: mantle_sepolia
   mainnet: false
-  rpcUrl: https://rpc.testnet.mantle.xyz/
-  networkId: 5001
+  rpcUrl: https://rpc.sepolia.mantle.xyz
+  networkId: 5003
   type: EvmChain
 - id: gnosis
   mainnet: true
@@ -482,4 +482,14 @@
   mainnet: true
   rpcUrl: https://falling-small-wildflower.blast-mainnet.quiknode.pro/$ENV_BLAST_MAINNET_API_KEY
   networkId: 81457
+  type: EvmChain
+- id: merlin_testnet
+  mainnet: false
+  rpcUrl: https://testnet-rpc.merlinchain.io/
+  networkId: 686868
+  type: EvmChain
+- id: merlin
+  mainnet: true
+  rpcUrl: https://rpc.merlinchain.io
+  networkId: 4200
   type: EvmChain
