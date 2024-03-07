@@ -10,16 +10,16 @@ from openapi_client.models.opportunity_params_with_metadata import (
 
 logger = logging.getLogger(__name__)
 
+NAIVE_BID = 10
 # Set validity (naively) to max uint256
 VALID_UNTIL_MAX = 2**256 - 1
 
 
 class SimpleSearcher:
-    def __init__(self, server_url: str, private_key: str, default_bid: int):
+    def __init__(self, server_url: str, private_key: str):
         self.client = ExpressRelayClient(server_url)
         self.private_key = private_key
         self.liquidator = Account.from_key(private_key).address
-        self.default_bid = default_bid
 
     def assess_liquidation_opportunity(
         self,
@@ -31,13 +31,13 @@ class SimpleSearcher:
         This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the liquidation.
         There are many ways to evaluate this, but the most common way is to check that the value of the amount the searcher will receive from the liquidation exceeds the value of the amount repaid.
         Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
-        In this simple searcher, the function always (naively) returns a BidInfo object with the default bid and a valid_until timestamp.
+        In this simple searcher, the function always (naively) returns a BidInfo object with a default bid and valid_until timestamp.
         Args:
             opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
         Returns:
             If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        bid_info = sign_bid(opp, self.default_bid, VALID_UNTIL_MAX, self.private_key)
+        bid_info = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
 
         return bid_info
 
@@ -53,11 +53,11 @@ class SimpleSearcher:
             try:
                 await self.client.submit_bid(bid_info)
                 logger.info(
-                    f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}"
+                    f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {str(bid_info.opportunity_id)}"
                 )
             except Exception as e:
                 logger.error(
-                    f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {bid_info.opportunity_id}: {e}"
+                    f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {str(bid_info.opportunity_id)}: {e}"
                 )
 
 
@@ -78,12 +78,6 @@ async def main():
         help="Chain ID(s) of the network(s) to monitor for liquidation opportunities",
     )
     parser.add_argument(
-        "--bid",
-        type=int,
-        default=10,
-        help="Default amount of bid for liquidation opportunities",
-    )
-    parser.add_argument(
         "--server-url",
         type=str,
         required=True,
@@ -102,7 +96,7 @@ async def main():
 
     sk_liquidator = args.private_key
 
-    simple_searcher = SimpleSearcher(args.server_url, sk_liquidator, args.bid)
+    simple_searcher = SimpleSearcher(args.server_url, sk_liquidator)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
     task = await simple_searcher.client.start_ws(simple_searcher.opportunity_callback)
