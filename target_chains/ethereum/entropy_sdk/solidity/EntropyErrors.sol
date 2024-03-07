@@ -34,7 +34,4 @@ library EntropyErrors {
     // The blockhash is 0.
     // Signature: 0x92555c0e
     error BlockhashUnavailable();
-    // The callback to requester failed.
-    // Signature: 0x221f6158
-    error CallbackFailed();
 }
