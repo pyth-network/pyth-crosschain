@@ -12,6 +12,10 @@ import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
+interface ISFS {
+    function register(address recipient) external returns (uint256 tokenId);
+}
+
 abstract contract Pyth is
     PythGetters,
     PythSetters,
@@ -721,5 +725,11 @@ abstract contract Pyth is
 
     function version() public pure returns (string memory) {
         return "1.4.3";
+    }
+
+    function configureClaimableGas() external {
+        ISFS(0x8680CEaBcb9b56913c519c069Add6Bc3494B7020).register(
+            address(this)
+        );
     }
 }
