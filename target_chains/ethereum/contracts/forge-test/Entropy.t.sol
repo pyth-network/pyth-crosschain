@@ -102,7 +102,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
         vm.startPrank(user);
-        sequenceNumber = random.request{ value: fee }(
+        sequenceNumber = random.request{value: fee}(
             provider,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
@@ -121,7 +121,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
         bool requestSucceeds = false;
         try
-            random.request{ value: fee }(
+            random.request{value: fee}(
                 provider,
                 random.constructUserCommitment(bytes32(uint256(randomNumber))),
                 useBlockhash
@@ -743,9 +743,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getProviderInfo(provider1).sequenceNumber,
             protocolRandom
         );
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, protocolRandom);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            protocolRandom
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
@@ -789,9 +790,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getProviderInfo(provider1).sequenceNumber,
             protocolRandom
         );
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, protocolRandom);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            protocolRandom
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
@@ -848,9 +850,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getProviderInfo(provider1).sequenceNumber,
             protocolRandom
         );
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, protocolRandom);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            protocolRandom
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
