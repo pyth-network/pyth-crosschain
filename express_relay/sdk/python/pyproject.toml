@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "express_relay_utils"
+name = "express-relay-utils"
 version = "0.0.1"
 description = "Utilities for searchers and protocols to interact with the express relay protocol."
 authors = ["dourolabs"]

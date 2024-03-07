@@ -8,7 +8,17 @@ The SDK includes searcher-side utilities and protocol-side utilities. The search
 
 ## Installation
 
+### pip
+
+```
+$ pip install express-relay-utils
+```
+
 ### poetry
+
+```
+$ poetry add express-relay-utils
+```
 
 ### openapi-generator
 
@@ -18,7 +28,7 @@ You can use the `openapi-generator` command line tool to auto generate the types
 $ brew install openapi-generator
 ```
 
-To generate the types from the Express Relay server, run
+To generate the types from the Express Relay server, navigate to `express_relay_utils/` and run
 
 ```
 $ openapi-generator generate -i https://per-staging.dourolabs.app/docs/openapi.json -g python --additional-properties=generateSourceCodeOnly=true --global-property models,modelTests=false,modelDocs=false
