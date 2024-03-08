@@ -51,7 +51,7 @@ interface IEntropy is EntropyEvents {
         bytes32 userRandomNumber
     ) external payable returns (uint64 assignedSequenceNumber);
 
-    // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
+    // Fulfill a request for a random number. This method validates the provided userRevelation and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
     //
@@ -61,7 +61,7 @@ interface IEntropy is EntropyEvents {
     function reveal(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomNumber,
+        bytes32 userRevelation,
         bytes32 providerRevelation
     ) external returns (bytes32 randomNumber);
 
