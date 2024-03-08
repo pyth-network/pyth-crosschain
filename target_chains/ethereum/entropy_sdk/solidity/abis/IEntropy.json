@@ -153,6 +153,11 @@
             "internalType": "bool",
             "name": "useBlockhash",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -168,13 +173,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "provider",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "requestor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "uint64",
         "name": "sequenceNumber",
         "type": "uint64"
@@ -184,6 +195,54 @@
         "internalType": "bytes32",
         "name": "userRandomNumber",
         "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "numHashes",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "blockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "requester",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "useBlockhash",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EntropyStructs.Request",
+        "name": "request",
+        "type": "tuple"
       }
     ],
     "name": "RequestedWithCallback",
@@ -228,6 +287,11 @@
             "internalType": "bool",
             "name": "useBlockhash",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -250,12 +314,6 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "blockHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
         "name": "randomNumber",
         "type": "bytes32"
       }
@@ -266,6 +324,54 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "numHashes",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "blockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "requester",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "useBlockhash",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EntropyStructs.Request",
+        "name": "request",
+        "type": "tuple"
+      },
       {
         "indexed": false,
         "internalType": "bytes32",
@@ -283,24 +389,6 @@
         "internalType": "bytes32",
         "name": "randomNumber",
         "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "callAddress",
-        "type": "address"
       }
     ],
     "name": "RevealedWithCallback",
@@ -520,6 +608,11 @@
           {
             "internalType": "bool",
             "name": "useBlockhash",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
             "type": "bool"
           }
         ],
