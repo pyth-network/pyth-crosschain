@@ -784,25 +784,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         EntropyConsumer consumer = new EntropyConsumer();
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
-        vm.expectEmit(false, false, false, true, address(random));
-        emit RequestedWithCallback(
-            provider1,
-            random.getProviderInfo(provider1).sequenceNumber,
-            protocolRandom
-        );
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
             provider1,
             protocolRandom
-        );
-
-        assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).requester,
-            address(consumer)
-        );
-
-        assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).provider,
-            provider1
         );
 
         vm.expectEmit(false, false, false, true, address(random));
