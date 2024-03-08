@@ -96,3 +96,5 @@ class ClientMessageOneOf2(BaseModel):
             "params": ClientMessageOneOf2Params.from_dict(obj["params"]) if obj.get("params") is not None else None
         })
         return _obj
+
+

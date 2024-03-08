@@ -90,3 +90,5 @@ class BidStatusOneOf2(BaseModel):
             "status": obj.get("status")
         })
         return _obj
+
+

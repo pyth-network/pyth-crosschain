@@ -87,3 +87,5 @@ class ClientMessageOneOf2Params(BaseModel):
             "bid": Bid.from_dict(obj["bid"]) if obj.get("bid") is not None else None
         })
         return _obj
+
+

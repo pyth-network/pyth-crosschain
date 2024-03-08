@@ -110,3 +110,5 @@ class OpportunityParamsV1(BaseModel):
             "value": obj.get("value")
         })
         return _obj
+
+
