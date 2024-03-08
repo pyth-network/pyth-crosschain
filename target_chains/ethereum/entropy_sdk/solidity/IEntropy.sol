@@ -41,9 +41,8 @@ interface IEntropy is EntropyEvents {
     // As a protocol, request a random number from a provider. The protocol will also pass a secret random number
     // in the arguments. This method will return a sequence number.
     //
-    // When an address calls revealAndCall, see below, for the given provider and sequence number, a callback
-    // will be made to the protocol's entropyCallback method with the assigned sequence number and the random
-    // number as the arguments.
+    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the generated random number.
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
