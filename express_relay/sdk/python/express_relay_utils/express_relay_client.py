@@ -13,6 +13,7 @@ from openapi_client.models.bid import Bid
 from openapi_client.models.bid_status_with_id import BidStatusWithId
 from openapi_client.models.client_message import ClientMessage
 from openapi_client.models.opportunity_bid import OpportunityBid
+from openapi_client.models.opportunity_params import OpportunityParams
 from openapi_client.models.opportunity_params_with_metadata import (
     OpportunityParamsWithMetadata,
 )
@@ -75,10 +76,9 @@ class ExpressRelayClient:
         self.ws_lock = asyncio.Lock()
         self.ws_loop = None
         self.ws_msg_futures = {}
-
+        self.ws_options = kwargs
         self.opportunity_callback = opportunity_callback
         self.bid_status_callback = bid_status_callback
-        self.ws_options = kwargs
 
     async def start_ws(self):
         """
@@ -197,39 +197,82 @@ class ExpressRelayClient:
         }
         await self.send_ws_message(json_unsubscribe)
 
-    async def submit_bid(self, bid_info: BidInfo) -> UUID:
+    async def submit_bid(
+        self, bid_info: BidInfo, subscribe: bool = True, **kwargs
+    ) -> UUID:
         """
         Submits a bid to the liquidation server.
 
         Args:
             bid_info: An object representing the bid to submit.
+            subscribe: A boolean indicating whether to subscribe to the bid status updates.
+            kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
-        json_submit_bid = {
-            "method": "post_bid",
-            "params": bid_info.to_dict(),
-        }
-        result = await self.send_ws_message(json_submit_bid)
-        return UUID(result.get("id"))
+        bid_info_dict = bid_info.to_dict()
+        if subscribe:
+            json_submit_bid = {
+                "method": "post_bid",
+                "params": bid_info_dict,
+            }
+            result = await self.send_ws_message(json_submit_bid)
+            bid_id = UUID(result.get("id"))
+        else:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    urllib.parse.urlparse(self.server_url)
+                    ._replace(path="/v1/bids")
+                    .geturl(),
+                    json=bid_info.bid.to_dict(),
+                    **kwargs,
+                )
+
+            resp.raise_for_status()
+            bid_id = UUID(resp.json().get("id"))
+
+        return bid_id
 
     async def submit_opportunity_bid(
-        self, opportunity_bid_info: OpportunityBidInfo
+        self, opportunity_bid_info: OpportunityBidInfo, subscribe: bool = True, **kwargs
     ) -> UUID:
         """
-        Submits a bid on an opportunity to the liquidation server.
+        Submits a bid on an opportunity to the liquidation server via websocket.
 
         Args:
             opportunity_bid_info: An object representing the bid to submit on an opportunity.
+            subscribe: A boolean indicating whether to subscribe to the bid status updates.
+            kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
-        json_submit_opportunity_bid = {
-            "method": "post_liquidation_bid",
-            "params": opportunity_bid_info.to_dict(),
-        }
-        result = await self.send_ws_message(json_submit_opportunity_bid)
-        return UUID(result.get("id"))
+        opportunity_bid_info_dict = opportunity_bid_info.to_dict()
+        if subscribe:
+            json_submit_opportunity_bid = {
+                "method": "post_liquidation_bid",
+                "params": opportunity_bid_info_dict(),
+            }
+            result = await self.send_ws_message(json_submit_opportunity_bid)
+            bid_id = UUID(result.get("id"))
+        else:
+            opportunity_id = opportunity_bid_info_dict["opportunity_id"]
+            opportunity_bid = opportunity_bid_info_dict["opportunity_bid"]
+
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    urllib.parse.urlparse(self.server_url)
+                    ._replace(
+                        path=f"/v1/liquidation/opportunities/{opportunity_id}/bids"
+                    )
+                    .geturl(),
+                    json=opportunity_bid,
+                    **kwargs,
+                )
+
+            resp.raise_for_status()
+            bid_id = UUID(resp.json().get("id"))
+
+        return bid_id
 
     def process_response_msg(self, msg: dict):
         """
@@ -281,6 +324,28 @@ class ExpressRelayClient:
             elif msg.get("id"):
                 future = self.ws_msg_futures.pop(msg["id"])
                 future.set_result(msg)
+
+    async def submit_opportunity(
+        self, opportunity: OpportunityParams, timeout: int = 10
+    ) -> UUID:
+        """
+        Submits an opportunity to the liquidation server.
+        Args:
+            opportunity: An object representing the opportunity to submit.
+            timeout: The timeout for the HTTP request in seconds.
+        Returns:
+            The ID of the submitted opportunity.
+        """
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                urllib.parse.urlparse(self.server_url)
+                ._replace(path="/v1/liquidation/opportunities")
+                .geturl(),
+                json=opportunity.to_dict(),
+                timeout=timeout,
+            )
+        resp.raise_for_status()
+        return UUID(resp.json()["opportunity_id"])
 
 
 def sign_bid(
