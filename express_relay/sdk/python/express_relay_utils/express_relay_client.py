@@ -250,7 +250,7 @@ class ExpressRelayClient:
         if subscribe:
             json_submit_opportunity_bid = {
                 "method": "post_liquidation_bid",
-                "params": opportunity_bid_info_dict(),
+                "params": opportunity_bid_info.to_dict(),
             }
             result = await self.send_ws_message(json_submit_opportunity_bid)
             bid_id = UUID(result.get("id"))
@@ -330,6 +330,7 @@ class ExpressRelayClient:
     ) -> UUID:
         """
         Submits an opportunity to the liquidation server.
+
         Args:
             opportunity: An object representing the opportunity to submit.
             timeout: The timeout for the HTTP request in seconds.
