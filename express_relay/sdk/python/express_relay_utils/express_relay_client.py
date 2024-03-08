@@ -148,7 +148,7 @@ class ExpressRelayClient:
             raise ExpressRelayClientException(
                 f"Error in websocket response with message id {msg.get('id')}: {msg.get('result')}"
             )
-        return msg.get("result")
+        return msg["result"]
 
     async def subscribe_chains(self, chain_ids: list[str]):
         """
@@ -290,8 +290,10 @@ class ExpressRelayClient:
 
                 elif msg.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        bid_status = BidStatusWithId.from_dict(msg.get("status"))
-                        asyncio.create_task(bid_status_callback(bid_status))
+                        bid_status_with_id = BidStatusWithId.from_dict(
+                            msg.get("status")
+                        )
+                        asyncio.create_task(bid_status_callback(bid_status_with_id))
 
             elif msg.get("id"):
                 future = self.ws_msg_futures.pop(msg["id"])

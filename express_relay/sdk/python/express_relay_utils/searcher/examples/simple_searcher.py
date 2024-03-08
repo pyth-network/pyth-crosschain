@@ -125,7 +125,8 @@ async def main():
 
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
-    await simple_searcher.client.get_ws_loop()
+    task = await simple_searcher.client.get_ws_loop()
+    await task
 
 
 if __name__ == "__main__":
