@@ -70,7 +70,7 @@ class SimpleSearcher:
         Callback function to run when a bid status is updated.
 
         Args:
-            status: A BidStatus object, representing the status of a bid.
+            status: A BidStatusWithId object, representing the status of a bid.
         """
         bid_id = status.id
         bid_status = status.bid_status.actual_instance

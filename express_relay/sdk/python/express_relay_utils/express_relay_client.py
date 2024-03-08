@@ -101,45 +101,13 @@ class ExpressRelayClient:
         async with self.ws_lock:
             await self.ws.close()
 
-    def get_ws_loop(self) -> asyncio.Task:
+    async def get_ws_loop(self) -> asyncio.Task:
         """
         Returns the websocket handler loop.
         """
+        await self.start_ws()
+
         return self.ws_loop
-
-    async def get_opportunities(
-        self, chain_id: str | None = None, timeout: int = 10
-    ) -> list[OpportunityParamsWithMetadata]:
-        """
-        Connects to the liquidation server and fetches liquidation opportunities.
-
-        Args:
-            chain_id: The chain ID to fetch liquidation opportunities for. If None, fetches opportunities across all chains.
-            timeout: The timeout for the HTTP request in seconds.
-        Returns:
-            A list of liquidation opportunities.
-        """
-        params = {}
-        if chain_id:
-            params["chain_id"] = chain_id
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                urllib.parse.urlparse(self.server_url)
-                ._replace(path="/v1/liquidation/opportunities")
-                .geturl(),
-                params=params,
-                timeout=timeout,
-            )
-
-        resp.raise_for_status()
-
-        opportunities = [
-            OpportunityParamsWithMetadata.from_dict(opportunity)
-            for opportunity in resp.json()
-        ]
-
-        return opportunities
 
     async def send_ws_message(self, msg: dict) -> dict:
         """
@@ -166,6 +134,21 @@ class ExpressRelayClient:
         msg = await future
 
         return self.process_response_msg(msg)
+
+    def process_response_msg(self, msg: dict) -> dict:
+        """
+        Processes a response message received from the server via websocket.
+
+        Args:
+            msg: The message to process.
+        Returns:
+            The result field of the message.
+        """
+        if msg.get("status") and msg.get("status") != "success":
+            raise ExpressRelayClientException(
+                f"Error in websocket response with message id {msg.get('id')}: {msg.get('result')}"
+            )
+        return msg.get("result")
 
     async def subscribe_chains(self, chain_ids: list[str]):
         """
@@ -198,20 +181,20 @@ class ExpressRelayClient:
         await self.send_ws_message(json_unsubscribe)
 
     async def submit_bid(
-        self, bid_info: BidInfo, subscribe: bool = True, **kwargs
+        self, bid_info: BidInfo, subscribe_to_updates: bool = True, **kwargs
     ) -> UUID:
         """
-        Submits a bid to the liquidation server.
+        Submits a bid to the auction server.
 
         Args:
             bid_info: An object representing the bid to submit.
-            subscribe: A boolean indicating whether to subscribe to the bid status updates.
+            subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
             kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
         bid_info_dict = bid_info.to_dict()
-        if subscribe:
+        if subscribe_to_updates:
             json_submit_bid = {
                 "method": "post_bid",
                 "params": bid_info_dict,
@@ -234,20 +217,23 @@ class ExpressRelayClient:
         return bid_id
 
     async def submit_opportunity_bid(
-        self, opportunity_bid_info: OpportunityBidInfo, subscribe: bool = True, **kwargs
+        self,
+        opportunity_bid_info: OpportunityBidInfo,
+        subscribe_to_updates: bool = True,
+        **kwargs,
     ) -> UUID:
         """
         Submits a bid on an opportunity to the liquidation server via websocket.
 
         Args:
             opportunity_bid_info: An object representing the bid to submit on an opportunity.
-            subscribe: A boolean indicating whether to subscribe to the bid status updates.
+            subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
             kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
         opportunity_bid_info_dict = opportunity_bid_info.to_dict()
-        if subscribe:
+        if subscribe_to_updates:
             json_submit_opportunity_bid = {
                 "method": "post_liquidation_bid",
                 "params": opportunity_bid_info.to_dict(),
@@ -274,19 +260,6 @@ class ExpressRelayClient:
 
         return bid_id
 
-    def process_response_msg(self, msg: dict):
-        """
-        Processes a response message received from the server via websocket.
-
-        Args:
-            msg: The message to process.
-        """
-        if msg.get("status") and msg.get("status") != "success":
-            raise ExpressRelayClientException(
-                f"Error in websocket response with message id {msg.get('id')}: {msg.get('result')}"
-            )
-        return msg.get("result")
-
     async def ws_handler(
         self,
         opportunity_callback: (
@@ -295,11 +268,11 @@ class ExpressRelayClient:
         bid_status_callback: Callable[[BidStatusWithId], None] | None = None,
     ):
         """
-        Continuously handles new ws messages as they are received from the server via websocket.
+        Continually handles new ws messages as they are received from the server via websocket.
 
         Args:
             opportunity_callback: An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
-            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatus.
+            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusWithId.
         """
         if not self.ws:
             raise ExpressRelayClientException("Websocket not connected")
@@ -309,11 +282,10 @@ class ExpressRelayClient:
 
             if msg.get("type"):
                 if msg.get("type") == "new_opportunity":
-                    opportunity = OpportunityParamsWithMetadata.from_dict(
-                        msg.get("opportunity")
-                    )
-
                     if opportunity_callback is not None:
+                        opportunity = OpportunityParamsWithMetadata.from_dict(
+                            msg.get("opportunity")
+                        )
                         asyncio.create_task(opportunity_callback(opportunity))
 
                 elif msg.get("type") == "bid_status_update":
@@ -325,15 +297,49 @@ class ExpressRelayClient:
                 future = self.ws_msg_futures.pop(msg["id"])
                 future.set_result(msg)
 
+    async def get_opportunities(
+        self, chain_id: str | None = None, timeout_secs: int = 10
+    ) -> list[OpportunityParamsWithMetadata]:
+        """
+        Connects to the liquidation server and fetches liquidation opportunities.
+
+        Args:
+            chain_id: The chain ID to fetch liquidation opportunities for. If None, fetches opportunities across all chains.
+            timeout_secs: The timeout for the HTTP request in seconds.
+        Returns:
+            A list of liquidation opportunities.
+        """
+        params = {}
+        if chain_id:
+            params["chain_id"] = chain_id
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                urllib.parse.urlparse(self.server_url)
+                ._replace(path="/v1/liquidation/opportunities")
+                .geturl(),
+                params=params,
+                timeout=timeout_secs,
+            )
+
+        resp.raise_for_status()
+
+        opportunities = [
+            OpportunityParamsWithMetadata.from_dict(opportunity)
+            for opportunity in resp.json()
+        ]
+
+        return opportunities
+
     async def submit_opportunity(
-        self, opportunity: OpportunityParams, timeout: int = 10
+        self, opportunity: OpportunityParams, timeout_secs: int = 10
     ) -> UUID:
         """
         Submits an opportunity to the liquidation server.
 
         Args:
             opportunity: An object representing the opportunity to submit.
-            timeout: The timeout for the HTTP request in seconds.
+            timeout_secs: The timeout for the HTTP request in seconds.
         Returns:
             The ID of the submitted opportunity.
         """
@@ -343,7 +349,7 @@ class ExpressRelayClient:
                 ._replace(path="/v1/liquidation/opportunities")
                 .geturl(),
                 json=opportunity.to_dict(),
-                timeout=timeout,
+                timeout=timeout_secs,
             )
         resp.raise_for_status()
         return UUID(resp.json()["opportunity_id"])
