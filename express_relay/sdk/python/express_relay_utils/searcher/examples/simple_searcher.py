@@ -65,15 +65,15 @@ class SimpleSearcher:
                     f"Error submitting bid amount {opportunity_bid_info.opportunity_bid.amount} for opportunity {str(opportunity_bid_info.opportunity_id)}: {e}"
                 )
 
-    async def bid_status_callback(self, status: BidStatusWithId):
+    async def bid_status_callback(self, bid_status_with_id: BidStatusWithId):
         """
         Callback function to run when a bid status is updated.
 
         Args:
-            status: A BidStatusWithId object, representing the status of a bid.
+            bid_status_with_id: A BidStatusWithId object, representing the status of a bid.
         """
-        bid_id = status.id
-        bid_status = status.bid_status.actual_instance
+        bid_id = bid_status_with_id.id
+        bid_status = bid_status_with_id.bid_status.actual_instance
 
         if bid_status.status == "submitted":
             logger.info(f"Bid {bid_id} has been submitted in hash {bid_status.result}")
