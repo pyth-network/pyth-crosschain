@@ -27,9 +27,9 @@ export type BidId = string;
 export type ChainId = string;
 
 /**
- * Bid information
+ * Bid parameters
  */
-export type BidInfo = {
+export type BidParams = {
   /**
    * Bid amount in wei
    */
@@ -101,7 +101,7 @@ export type OpportunityBid = {
    */
   signature: Hex;
 
-  bid: BidInfo;
+  bid: BidParams;
 };
 
 /**
@@ -393,12 +393,12 @@ export class Client {
   /**
    * Creates a signed bid for a liquidation opportunity
    * @param opportunity Opportunity to bid on
-   * @param bidInfo Bid amount and valid until timestamp
+   * @param bidParams Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with
    */
   async signOpportunityBid(
     opportunity: Opportunity,
-    bidInfo: BidInfo,
+    bidParams: BidParams,
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const account = privateKeyToAccount(privateKey);
@@ -444,8 +444,8 @@ export class Client {
         opportunity.contract,
         opportunity.calldata,
         opportunity.value,
-        bidInfo.amount,
-        bidInfo.validUntil,
+        bidParams.amount,
+        bidParams.validUntil,
       ]
     );
 
@@ -454,7 +454,7 @@ export class Client {
     const hash = signatureToHex(await sign({ hash: msgHash, privateKey }));
     return {
       permissionKey: opportunity.permissionKey,
-      bid: bidInfo,
+      bid: bidParams,
       liquidator: account.address,
       signature: hash,
       opportunityId: opportunity.opportunityId,

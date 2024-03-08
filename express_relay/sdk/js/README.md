@@ -30,10 +30,10 @@ npm run generate-api-types
 import {
   Client,
   OpportunityParams,
-  BidInfo,
+  BidParams,
 } from "@pythnetwork/express-relay-evm-js";
 
-function calculateOpportunityBid(opportunity: Opportunity): BidInfo | null {
+function calculateOpportunityBid(opportunity: Opportunity): BidParams | null {
   // searcher implementation here
   // if the opportunity is not suitable for the searcher, return null
 }
@@ -43,11 +43,11 @@ async function bidStatusCallback(bidStatus: BidStatusUpdate) {
 }
 
 async function opportunityCallback(opportunity: Opportunity) {
-  const bidInfo = calculateOpportunityBid(opportunity);
-  if (bidInfo === null) return;
+  const bidParams = calculateOpportunityBid(opportunity);
+  if (bidParams === null) return;
   const opportunityBid = await client.signOpportunityBid(
     opportunity,
-    bidInfo,
+    bidParams,
     privateKey // searcher private key with appropriate permissions and assets
   );
   await client.submitOpportunityBid(opportunityBid);
