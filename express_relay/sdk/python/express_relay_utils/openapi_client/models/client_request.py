@@ -90,5 +90,3 @@ class ClientRequest(ClientMessage):
             "id": obj.get("id")
         })
         return _obj
-
-

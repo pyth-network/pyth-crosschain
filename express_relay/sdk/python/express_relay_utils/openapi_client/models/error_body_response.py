@@ -83,5 +83,3 @@ class ErrorBodyResponse(BaseModel):
             "error": obj.get("error")
         })
         return _obj
-
-

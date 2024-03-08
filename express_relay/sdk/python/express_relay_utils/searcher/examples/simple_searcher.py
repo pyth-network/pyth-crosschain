@@ -3,12 +3,11 @@ import asyncio
 import logging
 
 from eth_account.account import Account
-from express_relay_client import OpportunityBidInfo, ExpressRelayClient, sign_bid
+from express_relay_client import ExpressRelayClient, OpportunityBidInfo, sign_bid
+from openapi_client.models.bid_status_with_id import BidStatusWithId
 from openapi_client.models.opportunity_params_with_metadata import (
     OpportunityParamsWithMetadata,
 )
-from openapi_client.models.bid import Bid
-from openapi_client.models.bid_status_with_id import BidStatusWithId
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,9 @@ VALID_UNTIL_MAX = 2**256 - 1
 
 class SimpleSearcher:
     def __init__(self, server_url: str, private_key: str):
-        self.client = ExpressRelayClient(server_url, self.opportunity_callback, self.bid_status_callback)
+        self.client = ExpressRelayClient(
+            server_url, self.opportunity_callback, self.bid_status_callback
+        )
         self.private_key = private_key
         self.liquidator = Account.from_key(private_key).address
 
@@ -39,7 +40,9 @@ class SimpleSearcher:
         Returns:
             If the opportunity is deemed worthwhile, this function can return an OpportunityBidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        opportunity_bid_info = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
+        opportunity_bid_info = sign_bid(
+            opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key
+        )
 
         return opportunity_bid_info
 
@@ -61,7 +64,7 @@ class SimpleSearcher:
                 logger.error(
                     f"Error submitting bid amount {opportunity_bid_info.opportunity_bid.amount} for opportunity {str(opportunity_bid_info.opportunity_id)}: {e}"
                 )
-    
+
     async def bid_status_callback(self, status: BidStatusWithId):
         """
         Callback function to run when a bid status is updated.

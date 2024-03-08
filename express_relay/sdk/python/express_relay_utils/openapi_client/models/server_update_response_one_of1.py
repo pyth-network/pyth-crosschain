@@ -96,5 +96,3 @@ class ServerUpdateResponseOneOf1(BaseModel):
             "type": obj.get("type")
         })
         return _obj
-
-

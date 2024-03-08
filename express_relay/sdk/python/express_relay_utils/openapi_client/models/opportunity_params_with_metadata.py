@@ -123,5 +123,3 @@ class OpportunityParamsWithMetadata(BaseModel):
             "opportunity_id": obj.get("opportunity_id")
         })
         return _obj
-
-

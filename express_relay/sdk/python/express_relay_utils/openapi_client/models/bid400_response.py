@@ -83,5 +83,3 @@ class Bid400Response(BaseModel):
             "error": obj.get("error")
         })
         return _obj
-
-
