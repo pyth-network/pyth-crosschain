@@ -252,6 +252,9 @@ abstract contract Entropy is IEntropy, EntropyState {
         EntropyStructs.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userRandomNumber),
+            // If useBlockHash is set to true, it allows a scenario in which the provider and miner can collude.
+            // If we remove the blockHash from this, the provider would have no choice but to provide its committed
+            // random number. Hence, useBlockHash is set to false.
             false,
             true
         );
