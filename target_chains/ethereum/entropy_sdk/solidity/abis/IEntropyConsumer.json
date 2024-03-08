@@ -8,13 +8,26 @@
       },
       {
         "internalType": "bytes32",
-        "name": "randomness",
+        "name": "randomNumber",
         "type": "bytes32"
       }
     ],
-    "name": "entropyCallback",
+    "name": "_entropyCallback",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "entropy",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

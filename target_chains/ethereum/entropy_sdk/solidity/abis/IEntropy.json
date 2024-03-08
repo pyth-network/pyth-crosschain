@@ -724,7 +724,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "userRandomNumber",
+        "name": "userRevelation",
         "type": "bytes32"
       },
       {
