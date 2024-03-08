@@ -10,7 +10,7 @@ interface EntropyEvents {
     event RequestedWithCallback(
         address provider,
         uint64 sequenceNumber,
-        bytes32 randomNumber
+        bytes32 userRandomNumber
     );
 
     event Revealed(
@@ -20,8 +20,8 @@ interface EntropyEvents {
         bytes32 blockHash,
         bytes32 randomNumber
     );
-    event RevealedAndCalledBack(
-        bytes32 protocolRandomNumber,
+    event RevealedWithCallback(
+        bytes32 userRandomNumber,
         bytes32 providerRevelation,
         bytes32 randomNumber,
         uint64 sequenceNumber,

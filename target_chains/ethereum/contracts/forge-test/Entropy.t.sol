@@ -806,7 +806,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         vm.expectEmit(false, false, false, true, address(random));
-        emit RevealedAndCalledBack(
+        emit RevealedWithCallback(
             protocolRandom,
             provider1Proofs[assignedSequenceNumber],
             random.combineRandomValues(
@@ -818,7 +818,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             address(consumer)
         );
-        random.revealAndCall(
+        random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
             protocolRandom,
@@ -866,7 +866,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         vm.expectRevert();
-        random.revealAndCall(
+        random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
             protocolRandom,

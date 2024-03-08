@@ -49,7 +49,7 @@ interface IEntropy is EntropyEvents {
     // Note that excess value is *not* refunded to the caller.
     function requestWithCallback(
         address provider,
-        bytes32 userCommitment
+        bytes32 userRandomNumber
     ) external payable returns (uint64 assignedSequenceNumber);
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
@@ -62,7 +62,7 @@ interface IEntropy is EntropyEvents {
     function reveal(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomness,
+        bytes32 userRandomNumber,
         bytes32 providerRevelation
     ) external returns (bytes32 randomNumber);
 
@@ -75,10 +75,10 @@ interface IEntropy is EntropyEvents {
     // If you need to use the returned random number more than once, you are responsible for storing it.
     //
     // Anyone can call this method to fulfill a request, but the callback will only be made to the original requester.
-    function revealAndCall(
+    function revealWithCallback(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomness,
+        bytes32 userRandomNumber,
         bytes32 providerRevelation
     ) external;
 

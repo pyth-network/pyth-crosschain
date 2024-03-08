@@ -233,15 +233,15 @@ abstract contract Entropy is IEntropy, EntropyState {
     // Note that excess value is *not* refunded to the caller.
     function requestWithCallback(
         address provider,
-        bytes32 randomNumber
+        bytes32 userRandomNumber
     ) public payable override returns (uint64 assignedSequenceNumber) {
-        bytes32 userCommitment = constructUserCommitment(randomNumber);
+        bytes32 userCommitment = constructUserCommitment(userRandomNumber);
 
         assignedSequenceNumber = request(provider, userCommitment, false);
         emit RequestedWithCallback(
             provider,
             assignedSequenceNumber,
-            randomNumber
+            userRandomNumber
         );
     }
 
@@ -317,10 +317,10 @@ abstract contract Entropy is IEntropy, EntropyState {
     // If you need to use the returned random number more than once, you are responsible for storing it.
     //
     // Anyone can call this method to fulfill a request, but the callback will only be made to the original requester.
-    function revealAndCall(
+    function revealWithCallback(
         address provider,
         uint64 sequenceNumber,
-        bytes32 protocolRandomNumber,
+        bytes32 userRandomNumber,
         bytes32 providerRevelation
     ) public override {
         EntropyStructs.Request storage req = findActiveRequest(
@@ -330,7 +330,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         checkProviderAndUserRevelation(
             req,
-            protocolRandomNumber,
+            userRandomNumber,
             providerRevelation
         );
 
@@ -344,7 +344,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         bytes32 randomNumber = combineRandomValues(
-            protocolRandomNumber,
+            userRandomNumber,
             providerRevelation,
             // The callback methods are not using blockhash. As this will be depreceating
             // in near future. Passing in 0 for that.
@@ -357,8 +357,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             randomNumber
         );
 
-        emit RevealedAndCalledBack(
-            protocolRandomNumber,
+        emit RevealedWithCallback(
+            userRandomNumber,
             providerRevelation,
             randomNumber,
             sequenceNumber,
