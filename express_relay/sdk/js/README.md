@@ -38,6 +38,10 @@ function calculateOpportunityBid(opportunity: Opportunity): BidInfo | null {
   // if the opportunity is not suitable for the searcher, return null
 }
 
+async function bidStatusCallback(bidStatus: BidStatusUpdate) {
+  console.log(`Bid status for bid ${bidStatus.id}: ${bidStatus.status.status}`);
+}
+
 async function opportunityCallback(opportunity: Opportunity) {
   const bidInfo = calculateOpportunityBid(opportunity);
   if (bidInfo === null) return;
@@ -51,7 +55,7 @@ async function opportunityCallback(opportunity: Opportunity) {
 
 const client = new Client(
   { baseUrl: "https://per-staging.dourolabs.app/" },
-  undefined,
+  bidStatusCallback,
   opportunityCallback
 );
 

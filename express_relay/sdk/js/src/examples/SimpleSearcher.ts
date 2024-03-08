@@ -41,9 +41,7 @@ class SimpleSearcher {
       checkHex(argv.privateKey)
     );
     try {
-      const bidId = await this.client.submitOpportunityBidViaWebsocket(
-        opportunityBid
-      );
+      const bidId = await this.client.submitOpportunityBid(opportunityBid);
       console.log(
         `Successful bid. Opportunity id ${opportunityBid.opportunityId} Bid id ${bidId}`
       );

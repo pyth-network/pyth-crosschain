@@ -289,33 +289,6 @@ export class Client {
     });
   }
 
-  async submitOpportunityBidViaWebsocket(bid: OpportunityBid): Promise<BidId> {
-    const result = await this.requestViaWebsocket({
-      method: "post_liquidation_bid",
-      params: {
-        opportunity_bid: this.toServerOpportunityBid(bid),
-        opportunity_id: bid.opportunityId,
-      },
-    });
-    if (result === null) {
-      throw new ClientError("Empty response in websocket for bid submission");
-    }
-    return result.id;
-  }
-
-  async submitBidViaWebsocket(bid: Bid): Promise<BidId> {
-    const result = await this.requestViaWebsocket({
-      method: "post_bid",
-      params: {
-        bid: this.toServerBid(bid),
-      },
-    });
-    if (result === null) {
-      throw new ClientError("Empty response in websocket for bid submission");
-    }
-    return result.id;
-  }
-
   /**
    * Unsubscribes from the specified chains
    *
@@ -513,42 +486,76 @@ export class Client {
   /**
    * Submits a bid for a liquidation opportunity
    * @param bid
+   * @param subscribeToUpdates If true, the client will subscribe to bid status updates via websocket and will call the bid status callback if set
    * @returns The id of the submitted bid, you can use this id to track the status of the bid
    */
-  async submitOpportunityBid(bid: OpportunityBid): Promise<BidId> {
-    const client = createClient<paths>(this.clientOptions);
-    const response = await client.POST(
-      "/v1/liquidation/opportunities/{opportunity_id}/bids",
-      {
-        body: this.toServerOpportunityBid(bid),
-        params: { path: { opportunity_id: bid.opportunityId } },
+  async submitOpportunityBid(
+    bid: OpportunityBid,
+    subscribeToUpdates = true
+  ): Promise<BidId> {
+    const serverBid = this.toServerOpportunityBid(bid);
+    if (subscribeToUpdates) {
+      const result = await this.requestViaWebsocket({
+        method: "post_liquidation_bid",
+        params: {
+          opportunity_bid: serverBid,
+          opportunity_id: bid.opportunityId,
+        },
+      });
+      if (result === null) {
+        throw new ClientError("Empty response in websocket for bid submission");
       }
-    );
-    if (response.error) {
-      throw new ClientError(response.error.error);
-    } else if (response.data === undefined) {
-      throw new ClientError("No data returned");
+      return result.id;
     } else {
-      return response.data.id;
+      const client = createClient<paths>(this.clientOptions);
+      const response = await client.POST(
+        "/v1/liquidation/opportunities/{opportunity_id}/bids",
+        {
+          body: serverBid,
+          params: { path: { opportunity_id: bid.opportunityId } },
+        }
+      );
+      if (response.error) {
+        throw new ClientError(response.error.error);
+      } else if (response.data === undefined) {
+        throw new ClientError("No data returned");
+      } else {
+        return response.data.id;
+      }
     }
   }
 
   /**
    * Submits a raw bid for a permission key
    * @param bid
+   * @param subscribeToUpdates If true, the client will subscribe to bid status updates via websocket and will call the bid status callback if set
    * @returns The id of the submitted bid, you can use this id to track the status of the bid
    */
-  async submitBid(bid: Bid): Promise<BidId> {
-    const client = createClient<paths>(this.clientOptions);
-    const response = await client.POST("/v1/bids", {
-      body: this.toServerBid(bid),
-    });
-    if (response.error) {
-      throw new ClientError(response.error.error);
-    } else if (response.data === undefined) {
-      throw new ClientError("No data returned");
+  async submitBid(bid: Bid, subscribeToUpdates = true): Promise<BidId> {
+    const serverBid = this.toServerBid(bid);
+    if (subscribeToUpdates) {
+      const result = await this.requestViaWebsocket({
+        method: "post_bid",
+        params: {
+          bid: serverBid,
+        },
+      });
+      if (result === null) {
+        throw new ClientError("Empty response in websocket for bid submission");
+      }
+      return result.id;
     } else {
-      return response.data.id;
+      const client = createClient<paths>(this.clientOptions);
+      const response = await client.POST("/v1/bids", {
+        body: serverBid,
+      });
+      if (response.error) {
+        throw new ClientError(response.error.error);
+      } else if (response.data === undefined) {
+        throw new ClientError("No data returned");
+      } else {
+        return response.data.id;
+      }
     }
   }
 }
