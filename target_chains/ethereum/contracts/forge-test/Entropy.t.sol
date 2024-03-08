@@ -795,7 +795,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestAndRevealWithCallback() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer();
+        EntropyConsumer consumer = new EntropyConsumer(address(random));
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
@@ -837,7 +837,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumerFails consumer = new EntropyConsumerFails();
+        EntropyConsumerFails consumer = new EntropyConsumerFails(
+            address(random)
+        );
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
@@ -859,12 +861,14 @@ contract EntropyConsumer is IEntropyConsumer {
     uint64 public sequence;
     bytes32 public randomness;
 
-    constructor() {}
+    constructor(address _entropy) {
+        entropy = _entropy;
+    }
 
     function entropyCallback(
         uint64 _sequence,
         bytes32 _randomness
-    ) external override {
+    ) internal override {
         sequence = _sequence;
         randomness = _randomness;
     }
@@ -874,12 +878,14 @@ contract EntropyConsumerFails is IEntropyConsumer {
     uint64 public sequence;
     bytes32 public randomness;
 
-    constructor() {}
+    constructor(address _entropy) {
+        entropy = _entropy;
+    }
 
     function entropyCallback(
         uint64 _sequence,
         bytes32 _randomness
-    ) external override {
+    ) internal override {
         revert("Callback failed");
     }
 }
