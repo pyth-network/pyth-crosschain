@@ -17,34 +17,27 @@ import json
 import pprint
 from pydantic import BaseModel, Field, StrictStr, ValidationError, field_validator
 from typing import Any, List, Optional
-from openapi_client.models.server_result_message_one_of import ServerResultMessageOneOf
-from openapi_client.models.server_result_message_one_of1 import ServerResultMessageOneOf1
+from openapi_client.models.bid_result import BidResult
 from pydantic import StrictStr, Field
 from typing import Union, List, Optional, Dict
 from typing_extensions import Literal, Self
 
-SERVERRESULTMESSAGE_ONE_OF_SCHEMAS = ["ServerResultMessageOneOf", "ServerResultMessageOneOf1"]
+APIRESPOSNE_ONE_OF_SCHEMAS = ["BidResult"]
 
-class ServerResultMessage(BaseModel):
+class APIResposne(BaseModel):
     """
-    ServerResultMessage
+    APIResposne
     """
-    # data type: ServerResultMessageOneOf
-    oneof_schema_1_validator: Optional[ServerResultMessageOneOf] = None
-    # data type: ServerResultMessageOneOf1
-    oneof_schema_2_validator: Optional[ServerResultMessageOneOf1] = None
-    actual_instance: Optional[Union[ServerResultMessageOneOf, ServerResultMessageOneOf1]] = None
-    one_of_schemas: List[str] = Field(default=Literal["ServerResultMessageOneOf", "ServerResultMessageOneOf1"])
+    # data type: BidResult
+    oneof_schema_1_validator: Optional[BidResult] = None
+    actual_instance: Optional[Union[BidResult]] = None
+    one_of_schemas: List[str] = Field(default=Literal["BidResult"])
 
     model_config = {
         "validate_assignment": True,
         "protected_namespaces": (),
     }
 
-
-    discriminator_value_class_map: Dict[str, str] = {
-        'ServerResultResponse': 'ServerResultResponse'
-    }
 
     def __init__(self, *args, **kwargs) -> None:
         if args:
@@ -58,25 +51,20 @@ class ServerResultMessage(BaseModel):
 
     @field_validator('actual_instance')
     def actual_instance_must_validate_oneof(cls, v):
-        instance = ServerResultMessage.model_construct()
+        instance = APIResposne.model_construct()
         error_messages = []
         match = 0
-        # validate data type: ServerResultMessageOneOf
-        if not isinstance(v, ServerResultMessageOneOf):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf`")
-        else:
-            match += 1
-        # validate data type: ServerResultMessageOneOf1
-        if not isinstance(v, ServerResultMessageOneOf1):
-            error_messages.append(f"Error! Input type `{type(v)}` is not `ServerResultMessageOneOf1`")
+        # validate data type: BidResult
+        if not isinstance(v, BidResult):
+            error_messages.append(f"Error! Input type `{type(v)}` is not `BidResult`")
         else:
             match += 1
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when setting `actual_instance` in APIResposne with oneOf schemas: BidResult. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when setting `actual_instance` in ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in APIResposne with oneOf schemas: BidResult. Details: " + ", ".join(error_messages))
         else:
             return v
 
@@ -91,25 +79,19 @@ class ServerResultMessage(BaseModel):
         error_messages = []
         match = 0
 
-        # deserialize data into ServerResultMessageOneOf
+        # deserialize data into BidResult
         try:
-            instance.actual_instance = ServerResultMessageOneOf.from_json(json_str)
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into ServerResultMessageOneOf1
-        try:
-            instance.actual_instance = ServerResultMessageOneOf1.from_json(json_str)
+            instance.actual_instance = BidResult.from_json(json_str)
             match += 1
         except (ValidationError, ValueError) as e:
             error_messages.append(str(e))
 
         if match > 1:
             # more than 1 match
-            raise ValueError("Multiple matches found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("Multiple matches found when deserializing the JSON string into APIResposne with oneOf schemas: BidResult. Details: " + ", ".join(error_messages))
         elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into ServerResultMessage with oneOf schemas: ServerResultMessageOneOf, ServerResultMessageOneOf1. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into APIResposne with oneOf schemas: BidResult. Details: " + ", ".join(error_messages))
         else:
             return instance
 
@@ -123,7 +105,7 @@ class ServerResultMessage(BaseModel):
         else:
             return json.dumps(self.actual_instance)
 
-    def to_dict(self) -> Optional[Union[Dict[str, Any], ServerResultMessageOneOf, ServerResultMessageOneOf1]]:
+    def to_dict(self) -> Optional[Union[Dict[str, Any], BidResult]]:
         """Returns the dict representation of the actual instance"""
         if self.actual_instance is None:
             return None

@@ -19,23 +19,21 @@ import json
 
 from pydantic import BaseModel, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
-from openapi_client.models.opportunity_params_with_metadata import OpportunityParamsWithMetadata
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ServerUpdateResponseOneOf(BaseModel):
+class BidStatusOneOf2(BaseModel):
     """
-    ServerUpdateResponseOneOf
+    BidStatusOneOf2
     """ # noqa: E501
-    opportunity: OpportunityParamsWithMetadata
-    type: StrictStr
-    __properties: ClassVar[List[str]] = ["opportunity", "type"]
+    status: StrictStr
+    __properties: ClassVar[List[str]] = ["status"]
 
-    @field_validator('type')
-    def type_validate_enum(cls, value):
+    @field_validator('status')
+    def status_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['new_opportunity']):
-            raise ValueError("must be one of enum values ('new_opportunity')")
+        if value not in set(['lost']):
+            raise ValueError("must be one of enum values ('lost')")
         return value
 
     model_config = {
@@ -56,7 +54,7 @@ class ServerUpdateResponseOneOf(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ServerUpdateResponseOneOf from a JSON string"""
+        """Create an instance of BidStatusOneOf2 from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -77,14 +75,11 @@ class ServerUpdateResponseOneOf(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of opportunity
-        if self.opportunity:
-            _dict['opportunity'] = self.opportunity.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ServerUpdateResponseOneOf from a dict"""
+        """Create an instance of BidStatusOneOf2 from a dict"""
         if obj is None:
             return None
 
@@ -92,8 +87,7 @@ class ServerUpdateResponseOneOf(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "opportunity": OpportunityParamsWithMetadata.from_dict(obj["opportunity"]) if obj.get("opportunity") is not None else None,
-            "type": obj.get("type")
+            "status": obj.get("status")
         })
         return _obj
 
