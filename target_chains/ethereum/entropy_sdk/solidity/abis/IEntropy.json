@@ -182,7 +182,7 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "randomNumber",
+        "name": "userRandomNumber",
         "type": "bytes32"
       }
     ],
@@ -269,7 +269,7 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "protocolRandomNumber",
+        "name": "userRandomNumber",
         "type": "bytes32"
       },
       {
@@ -303,7 +303,7 @@
         "type": "address"
       }
     ],
-    "name": "RevealedAndCalledBack",
+    "name": "RevealedWithCallback",
     "type": "event"
   },
   {
@@ -602,7 +602,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "userCommitment",
+        "name": "userRandomNumber",
         "type": "bytes32"
       }
     ],
@@ -631,7 +631,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "userRandomness",
+        "name": "userRandomNumber",
         "type": "bytes32"
       },
       {
@@ -665,7 +665,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "userRandomness",
+        "name": "userRandomNumber",
         "type": "bytes32"
       },
       {
@@ -674,7 +674,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "revealAndCall",
+    "name": "revealWithCallback",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

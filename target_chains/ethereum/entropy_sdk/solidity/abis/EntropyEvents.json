@@ -182,7 +182,7 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "randomNumber",
+        "name": "userRandomNumber",
         "type": "bytes32"
       }
     ],
@@ -269,7 +269,7 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "protocolRandomNumber",
+        "name": "userRandomNumber",
         "type": "bytes32"
       },
       {
@@ -303,7 +303,7 @@
         "type": "address"
       }
     ],
-    "name": "RevealedAndCalledBack",
+    "name": "RevealedWithCallback",
     "type": "event"
   }
 ]
