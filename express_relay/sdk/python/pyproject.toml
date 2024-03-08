@@ -15,6 +15,7 @@ httpx = "^0.23.3"
 websockets = "^11.0.3"
 asyncio = "^3.4.3"
 argparse = "^1.4.0"
+pydantic = "^2.6.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
