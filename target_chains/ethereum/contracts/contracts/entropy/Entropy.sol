@@ -222,8 +222,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
-    // As a protocol, request a random number from a provider. The protocol will also pass a secret random number
-    // in the arguments. This method will return a sequence number.
+    // Request a random number. The method expects the provider address and a secret random number
+    // in the arguments. It returns a sequence number.
     //
     // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
