@@ -164,6 +164,54 @@ abstract contract Entropy is IEntropy, EntropyState {
         require(sent, "withdrawal to msg.sender failed");
     }
 
+    // requestHelper allocates and returns a new request for the given provider.
+    // Note: This method will revert unless the caller provides a sufficient fee
+    // (at least getFee(provider)) as msg.value.
+    function requestHelper(
+        address provider,
+        bytes32 userCommitment,
+        bool useBlockhash,
+        bool isRequestWithCallback
+    ) internal returns (EntropyStructs.Request storage req) {
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (_state.providers[provider].sequenceNumber == 0)
+            revert EntropyErrors.NoSuchProvider();
+
+        // Assign a sequence number to the request
+        uint64 assignedSequenceNumber = providerInfo.sequenceNumber;
+        if (assignedSequenceNumber >= providerInfo.endSequenceNumber)
+            revert EntropyErrors.OutOfRandomness();
+        providerInfo.sequenceNumber += 1;
+
+        // Check that fees were paid and increment the pyth / provider balances.
+        uint128 requiredFee = getFee(provider);
+        if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
+        providerInfo.accruedFeesInWei += providerInfo.feeInWei;
+        _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
+            providerInfo.feeInWei);
+
+        // Store the user's commitment so that we can fulfill the request later.
+        // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
+        // filled with arbitrary data.
+        req = allocRequest(provider, assignedSequenceNumber);
+        req.provider = provider;
+        req.sequenceNumber = assignedSequenceNumber;
+        req.numHashes = SafeCast.toUint32(
+            assignedSequenceNumber -
+                providerInfo.currentCommitmentSequenceNumber
+        );
+        req.commitment = keccak256(
+            bytes.concat(userCommitment, providerInfo.currentCommitment)
+        );
+        req.requester = msg.sender;
+
+        req.blockNumber = SafeCast.toUint64(block.number);
+        req.useBlockhash = useBlockhash;
+        req.isRequestWithCallback = isRequestWithCallback;
+    }
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -179,46 +227,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userCommitment,
         bool useBlockHash
     ) public payable override returns (uint64 assignedSequenceNumber) {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
-            provider
-        ];
-        if (_state.providers[provider].sequenceNumber == 0)
-            revert EntropyErrors.NoSuchProvider();
-
-        // Assign a sequence number to the request
-        assignedSequenceNumber = providerInfo.sequenceNumber;
-        if (assignedSequenceNumber >= providerInfo.endSequenceNumber)
-            revert EntropyErrors.OutOfRandomness();
-        providerInfo.sequenceNumber += 1;
-
-        // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFee(provider);
-        if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
-        providerInfo.accruedFeesInWei += providerInfo.feeInWei;
-        _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
-            providerInfo.feeInWei);
-
-        // Store the user's commitment so that we can fulfill the request later.
-        // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
-        // filled with arbitrary data.
-        EntropyStructs.Request storage req = allocRequest(
+        EntropyStructs.Request storage req = requestHelper(
             provider,
-            assignedSequenceNumber
+            userCommitment,
+            useBlockHash,
+            false
         );
-        req.provider = provider;
-        req.sequenceNumber = assignedSequenceNumber;
-        req.numHashes = SafeCast.toUint32(
-            assignedSequenceNumber -
-                providerInfo.currentCommitmentSequenceNumber
-        );
-        req.commitment = keccak256(
-            bytes.concat(userCommitment, providerInfo.currentCommitment)
-        );
-        req.requester = msg.sender;
-
-        req.blockNumber = SafeCast.toUint64(block.number);
-        req.useBlockhash = useBlockHash;
-
+        assignedSequenceNumber = req.sequenceNumber;
         emit Requested(req);
     }
 
@@ -234,40 +249,40 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userRandomNumber
     ) public payable override returns (uint64 assignedSequenceNumber) {
-        bytes32 userCommitment = constructUserCommitment(userRandomNumber);
+        EntropyStructs.Request storage req = requestHelper(
+            provider,
+            constructUserCommitment(userRandomNumber),
+            false,
+            true
+        );
+        assignedSequenceNumber = req.sequenceNumber;
 
-        assignedSequenceNumber = request(provider, userCommitment, false);
         emit RequestedWithCallback(
             provider,
+            req.requester,
             assignedSequenceNumber,
-            userRandomNumber
+            userRandomNumber,
+            req
         );
     }
 
-    // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
-    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
-    // the corresponding random number.
-    //
-    // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
-    // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
-    // If you need to use the returned random number more than once, you are responsible for storing it.
-    //
-    // This function must be called by the same `msg.sender` that originally requested the random number. This check
-    // prevents denial-of-service attacks where another actor front-runs the requester's reveal transaction.
-    function reveal(
-        address provider,
-        uint64 sequenceNumber,
-        bytes32 userRandomness,
+    // This method validates the provided user's revelation and provider's revelation against the corresponding
+    // commitment in the in-flight request. If both values are validated, this method will update the provider
+    // current commitment and returns the generated random number.
+    function revealHelper(
+        EntropyStructs.Request storage req,
+        bytes32 userRevelation,
         bytes32 providerRevelation
-    ) public override returns (bytes32 randomNumber) {
-        EntropyStructs.Request storage req = findActiveRequest(
-            provider,
-            sequenceNumber
+    ) internal returns (bytes32 randomNumber) {
+        bytes32 providerCommitment = constructProviderCommitment(
+            req.numHashes,
+            providerRevelation
         );
-
-        if (req.requester != msg.sender) revert EntropyErrors.Unauthorized();
-
-        checkProviderAndUserRevelation(req, userRandomness, providerRevelation);
+        bytes32 userCommitment = constructUserCommitment(userRevelation);
+        if (
+            keccak256(bytes.concat(userCommitment, providerCommitment)) !=
+            req.commitment
+        ) revert EntropyErrors.IncorrectRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
@@ -286,25 +301,52 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
 
         randomNumber = combineRandomValues(
-            userRandomness,
+            userRevelation,
             providerRevelation,
             blockHash
         );
 
-        emit Revealed(
-            req,
-            userRandomness,
-            providerRevelation,
-            blockHash,
-            randomNumber
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            req.provider
+        ];
+        if (providerInfo.currentCommitmentSequenceNumber < req.sequenceNumber) {
+            providerInfo.currentCommitmentSequenceNumber = req.sequenceNumber;
+            providerInfo.currentCommitment = providerRevelation;
+        }
+    }
+
+    // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
+    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
+    // the corresponding random number.
+    //
+    // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
+    // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
+    // If you need to use the returned random number more than once, you are responsible for storing it.
+    //
+    // This function must be called by the same `msg.sender` that originally requested the random number. This check
+    // prevents denial-of-service attacks where another actor front-runs the requester's reveal transaction.
+    function reveal(
+        address provider,
+        uint64 sequenceNumber,
+        bytes32 userRevelation,
+        bytes32 providerRevelation
+    ) public override returns (bytes32 randomNumber) {
+        EntropyStructs.Request storage req = findActiveRequest(
+            provider,
+            sequenceNumber
         );
 
+        if (req.isRequestWithCallback) {
+            revert EntropyErrors.NoSuchRequest();
+        }
+
+        if (req.requester != msg.sender) {
+            revert EntropyErrors.Unauthorized();
+        }
+
+        randomNumber = revealHelper(req, userRevelation, providerRevelation);
+        emit Revealed(req, userRevelation, providerRevelation, randomNumber);
         clearRequest(provider, sequenceNumber);
-        updateProviderCurrentCommitment(
-            provider,
-            sequenceNumber,
-            providerRevelation
-        );
     }
 
     // Fulfill a request for a random number and call back the requester. This method validates the provided userRandomness
@@ -327,75 +369,31 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        checkProviderAndUserRevelation(
+        if (!req.isRequestWithCallback) {
+            revert EntropyErrors.NoSuchRequest();
+        }
+
+        bytes32 randomNumber = revealHelper(
             req,
             userRandomNumber,
             providerRevelation
         );
 
         address callAddress = req.requester;
-        clearRequest(provider, sequenceNumber);
 
-        updateProviderCurrentCommitment(
-            provider,
-            sequenceNumber,
-            providerRevelation
-        );
-
-        bytes32 randomNumber = combineRandomValues(
+        emit RevealedWithCallback(
+            req,
             userRandomNumber,
             providerRevelation,
-            // The callback methods are not using blockhash. As this will be depreceating
-            // in near future. Passing in 0 for that.
-            bytes32(uint256(0))
+            randomNumber
         );
+
+        clearRequest(provider, sequenceNumber);
 
         IEntropyConsumer(callAddress).entropyCallback(
             sequenceNumber,
             randomNumber
         );
-
-        emit RevealedWithCallback(
-            userRandomNumber,
-            providerRevelation,
-            randomNumber,
-            sequenceNumber,
-            provider,
-            callAddress
-        );
-    }
-
-    // Check the provider and user revelation matches their commitment.
-    // If they don't, revert.
-    function checkProviderAndUserRevelation(
-        EntropyStructs.Request storage req,
-        bytes32 userRevelation,
-        bytes32 providerRevelation
-    ) internal view {
-        bytes32 providerCommitment = constructProviderCommitment(
-            req.numHashes,
-            providerRevelation
-        );
-        bytes32 userCommitment = constructUserCommitment(userRevelation);
-        if (
-            keccak256(bytes.concat(userCommitment, providerCommitment)) !=
-            req.commitment
-        ) revert EntropyErrors.IncorrectRevelation();
-    }
-
-    // Update provider's current commitment and sequence number.
-    function updateProviderCurrentCommitment(
-        address provider,
-        uint64 sequenceNumber,
-        bytes32 providerRevelation
-    ) internal {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
-            provider
-        ];
-        if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
-            providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
-            providerInfo.currentCommitment = providerRevelation;
-        }
     }
 
     function getProviderInfo(

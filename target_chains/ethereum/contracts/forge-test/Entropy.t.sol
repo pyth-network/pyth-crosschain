@@ -732,20 +732,44 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         random.setProviderUri(newUri);
     }
 
-    function testRequestWithCallback() public {
-        bytes32 protocolRandom = bytes32(uint(42));
+    function testRequestWithCallbackAndReveal() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
+        EntropyStructs.ProviderInfo memory providerInfo = random
+            .getProviderInfo(provider1);
+
+        vm.roll(1234);
         vm.deal(user1, fee);
         vm.startPrank(user1);
         vm.expectEmit(false, false, false, true, address(random));
         emit RequestedWithCallback(
             provider1,
-            random.getProviderInfo(provider1).sequenceNumber,
-            protocolRandom
+            user1,
+            providerInfo.sequenceNumber,
+            userRandomNumber,
+            EntropyStructs.Request({
+                provider: provider1,
+                sequenceNumber: providerInfo.sequenceNumber,
+                numHashes: SafeCast.toUint32(
+                    providerInfo.sequenceNumber -
+                        providerInfo.currentCommitmentSequenceNumber
+                ),
+                commitment: keccak256(
+                    bytes.concat(
+                        random.constructUserCommitment(userRandomNumber),
+                        providerInfo.currentCommitment
+                    )
+                ),
+                blockNumber: 1234,
+                requester: user1,
+                useBlockhash: false,
+                isRequestWithCallback: true
+            })
         );
+        vm.roll(1234);
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
             provider1,
-            protocolRandom
+            userRandomNumber
         );
 
         assertEq(
@@ -758,54 +782,42 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1
         );
 
-        // requestWithCallback is storing the requests same as
-        // request. If the requester calls the reveal method, it should
-        // succeed.
-        bytes32 randomNumber = random.reveal(
+        vm.expectRevert();
+        random.reveal(
             provider1,
             assignedSequenceNumber,
-            protocolRandom,
+            userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
-        );
-        assertEq(
-            randomNumber,
-            random.combineRandomValues(
-                protocolRandom,
-                provider1Proofs[assignedSequenceNumber],
-                0
-            )
         );
         vm.stopPrank();
     }
 
     function testRequestAndRevealWithCallback() public {
-        bytes32 protocolRandom = bytes32(uint(42));
+        bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer();
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
             provider1,
-            protocolRandom
+            userRandomNumber
         );
 
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
-            protocolRandom,
+            random.getRequest(provider1, assignedSequenceNumber),
+            userRandomNumber,
             provider1Proofs[assignedSequenceNumber],
             random.combineRandomValues(
-                protocolRandom,
+                userRandomNumber,
                 provider1Proofs[assignedSequenceNumber],
                 0
-            ),
-            assignedSequenceNumber,
-            provider1,
-            address(consumer)
+            )
         );
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
-            protocolRandom,
+            userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
         );
 
@@ -813,7 +825,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(
             consumer.randomness(),
             random.combineRandomValues(
-                protocolRandom,
+                userRandomNumber,
                 provider1Proofs[assignedSequenceNumber],
                 // No blockhash is being used in callback method. As it
                 // is being depreceated. Passing 0 for it.
@@ -823,37 +835,21 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testRequestAndRevealWithCallbackFailing() public {
-        bytes32 protocolRandom = bytes32(uint(42));
+        bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumerFails consumer = new EntropyConsumerFails();
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
-        vm.expectEmit(false, false, false, true, address(random));
-        emit RequestedWithCallback(
-            provider1,
-            random.getProviderInfo(provider1).sequenceNumber,
-            protocolRandom
-        );
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
             provider1,
-            protocolRandom
-        );
-
-        assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).requester,
-            address(consumer)
-        );
-
-        assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).provider,
-            provider1
+            userRandomNumber
         );
 
         vm.expectRevert();
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
-            protocolRandom,
+            userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
         );
     }

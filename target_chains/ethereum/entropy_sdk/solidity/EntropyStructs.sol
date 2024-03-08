@@ -54,6 +54,8 @@ contract EntropyStructs {
         address requester;
         // If true, incorporate the blockhash of blockNumber into the generated random value.
         bool useBlockhash;
-        // There are 3 remaining bytes of free space in this slot.
+        // If true, the requester will be called back with the generated random value.
+        bool isRequestWithCallback;
+        // There are 2 remaining bytes of free space in this slot.
     }
 }
