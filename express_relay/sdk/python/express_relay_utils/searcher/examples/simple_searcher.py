@@ -3,10 +3,12 @@ import asyncio
 import logging
 
 from eth_account.account import Account
-from express_relay_client import BidInfo, ExpressRelayClient, sign_bid
+from express_relay_client import OpportunityBidInfo, ExpressRelayClient, sign_bid
 from openapi_client.models.opportunity_params_with_metadata import (
     OpportunityParamsWithMetadata,
 )
+from openapi_client.models.bid import Bid
+from openapi_client.models.bid_status_with_id import BidStatusWithId
 
 logger = logging.getLogger(__name__)
 
@@ -17,29 +19,29 @@ VALID_UNTIL_MAX = 2**256 - 1
 
 class SimpleSearcher:
     def __init__(self, server_url: str, private_key: str):
-        self.client = ExpressRelayClient(server_url)
+        self.client = ExpressRelayClient(server_url, self.opportunity_callback, self.bid_status_callback)
         self.private_key = private_key
         self.liquidator = Account.from_key(private_key).address
 
     def assess_liquidation_opportunity(
         self,
         opp: OpportunityParamsWithMetadata,
-    ) -> BidInfo | None:
+    ) -> OpportunityBidInfo | None:
         """
-        Assesses whether a liquidation opportunity is worth liquidating; if so, returns a BidInfo object. Otherwise returns None.
+        Assesses whether a liquidation opportunity is worth liquidating; if so, returns an OpportunityBidInfo object. Otherwise returns None.
 
         This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the liquidation.
         There are many ways to evaluate this, but the most common way is to check that the value of the amount the searcher will receive from the liquidation exceeds the value of the amount repaid.
         Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
-        In this simple searcher, the function always (naively) returns a BidInfo object with a default bid and valid_until timestamp.
+        In this simple searcher, the function always (naively) returns an OpportunityBidInfo object with a default bid and valid_until timestamp.
         Args:
             opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
         Returns:
-            If the opportunity is deemed worthwhile, this function can return a BidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
+            If the opportunity is deemed worthwhile, this function can return an OpportunityBidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        bid_info = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
+        opportunity_bid_info = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
 
-        return bid_info
+        return opportunity_bid_info
 
     async def opportunity_callback(self, opp: OpportunityParamsWithMetadata):
         """
@@ -48,17 +50,36 @@ class SimpleSearcher:
         Args:
             opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
         """
-        bid_info = self.assess_liquidation_opportunity(opp)
-        if bid_info:
+        opportunity_bid_info = self.assess_liquidation_opportunity(opp)
+        if opportunity_bid_info:
             try:
-                await self.client.submit_bid(bid_info)
+                await self.client.submit_opportunity_bid(opportunity_bid_info)
                 logger.info(
-                    f"Submitted bid amount {bid_info.opportunity_bid.amount} for opportunity {str(bid_info.opportunity_id)}"
+                    f"Submitted bid amount {opportunity_bid_info.opportunity_bid.amount} for opportunity {str(opportunity_bid_info.opportunity_id)}"
                 )
             except Exception as e:
                 logger.error(
-                    f"Error submitting bid amount {bid_info.opportunity_bid.amount} for opportunity {str(bid_info.opportunity_id)}: {e}"
+                    f"Error submitting bid amount {opportunity_bid_info.opportunity_bid.amount} for opportunity {str(opportunity_bid_info.opportunity_id)}: {e}"
                 )
+    
+    async def bid_status_callback(self, status: BidStatusWithId):
+        """
+        Callback function to run when a bid status is updated.
+
+        Args:
+            status: A BidStatus object, representing the status of a bid.
+        """
+        bid_id = status.id
+        bid_status = status.bid_status.actual_instance
+
+        if bid_status.status == "submitted":
+            logger.info(f"Bid {bid_id} has been submitted in hash {bid_status.result}")
+        elif bid_status.status == "lost":
+            logger.info(f"Bid {bid_id} was unsuccessful")
+        elif bid_status.status == "pending":
+            logger.info(f"Bid {bid_id} is pending")
+        else:
+            logger.error(f"Unrecognized status {bid_status.status} for bid {bid_id}")
 
 
 async def main():
@@ -99,11 +120,9 @@ async def main():
     simple_searcher = SimpleSearcher(args.server_url, sk_liquidator)
     logger.info("Liquidator address: %s", simple_searcher.liquidator)
 
-    task = await simple_searcher.client.start_ws(simple_searcher.opportunity_callback)
-
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
-    await task
+    await simple_searcher.client.get_ws_loop()
 
 
 if __name__ == "__main__":
