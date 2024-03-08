@@ -174,6 +174,7 @@ export interface components {
      * in the receipt_tokens field, and will send the tokens specified in the repay_tokens field.
      */
     OpportunityParamsV1: {
+      buy_tokens: components["schemas"]["TokenAmount"][];
       /**
        * @description Calldata for the contract call.
        * @example 0xdeadbeef
@@ -194,8 +195,7 @@ export interface components {
        * @example 0xdeadbeefcafe
        */
       permission_key: string;
-      receipt_tokens: components["schemas"]["TokenQty"][];
-      repay_tokens: components["schemas"]["TokenQty"][];
+      sell_tokens: components["schemas"]["TokenAmount"][];
       /**
        * @description The value to send with the contract call.
        * @example 1
@@ -245,12 +245,12 @@ export interface components {
           type: "new_opportunity";
         }
       | {
-          id: components["schemas"]["BidId"];
+          id: string;
           status: components["schemas"]["BidStatus"];
           /** @enum {string} */
           type: "bid_status_update";
         };
-    TokenQty: {
+    TokenAmount: {
       /**
        * @description Token amount
        * @example 1000
@@ -260,7 +260,7 @@ export interface components {
        * @description Token contract address
        * @example 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
        */
-      contract: string;
+      token: string;
     };
   };
   responses: {

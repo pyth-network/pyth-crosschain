@@ -18,8 +18,8 @@ export class ClientError extends Error {}
 /**
  * ERC20 token with contract address and amount
  */
-export type TokenQty = {
-  contract: Address;
+export type TokenAmount = {
+  token: Address;
   amount: bigint;
 };
 
@@ -73,11 +73,11 @@ export type Opportunity = {
   /**
    * Tokens required to repay the debt
    */
-  repayTokens: TokenQty[];
+  sellTokens: TokenAmount[];
   /**
    * Tokens to receive after the liquidation
    */
-  receiptTokens: TokenQty[];
+  buyTokens: TokenAmount[];
 };
 
 /**
@@ -155,9 +155,9 @@ export function checkAddress(address: string): Address {
   throw new ClientError(`Invalid address: ${address}`);
 }
 
-function checkTokenQty(token: { contract: string; amount: string }): TokenQty {
+function checkTokenQty(token: { token: string; amount: string }): TokenAmount {
   return {
-    contract: checkAddress(token.contract),
+    token: checkAddress(token.token),
     amount: BigInt(token.amount),
   };
 }
@@ -265,8 +265,8 @@ export class Client {
       contract: checkAddress(opportunity.contract),
       calldata: checkHex(opportunity.calldata),
       value: BigInt(opportunity.value),
-      repayTokens: opportunity.repay_tokens.map(checkTokenQty),
-      receiptTokens: opportunity.receipt_tokens.map(checkTokenQty),
+      sellTokens: opportunity.sell_tokens.map(checkTokenQty),
+      buyTokens: opportunity.buy_tokens.map(checkTokenQty),
     };
   }
 
@@ -375,13 +375,13 @@ export class Client {
         contract: opportunity.contract,
         calldata: opportunity.calldata,
         value: opportunity.value.toString(),
-        repay_tokens: opportunity.repayTokens.map((token) => ({
-          contract: token.contract,
-          amount: token.amount.toString(),
+        sell_tokens: opportunity.sellTokens.map(({ token, amount }) => ({
+          token,
+          amount: amount.toString(),
         })),
-        receipt_tokens: opportunity.receiptTokens.map((token) => ({
-          contract: token.contract,
-          amount: token.amount.toString(),
+        buy_tokens: opportunity.buyTokens.map(({ token, amount }) => ({
+          token,
+          amount: amount.toString(),
         })),
       },
     });
@@ -402,9 +402,9 @@ export class Client {
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const account = privateKeyToAccount(privateKey);
-    const convertTokenQty = (token: TokenQty): [Hex, bigint] => [
-      token.contract,
-      token.amount,
+    const convertTokenQty = ({ token, amount }: TokenAmount): [Hex, bigint] => [
+      token,
+      amount,
     ];
     const payload = encodeAbiParameters(
       [
@@ -439,8 +439,8 @@ export class Client {
         { name: "validUntil", type: "uint256" },
       ],
       [
-        opportunity.repayTokens.map(convertTokenQty),
-        opportunity.receiptTokens.map(convertTokenQty),
+        opportunity.sellTokens.map(convertTokenQty),
+        opportunity.buyTokens.map(convertTokenQty),
         opportunity.contract,
         opportunity.calldata,
         opportunity.value,
