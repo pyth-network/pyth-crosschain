@@ -781,7 +781,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1
         );
 
-        vm.expectRevert();
+        vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
         random.reveal(
             provider1,
             assignedSequenceNumber,
@@ -791,12 +791,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.stopPrank();
     }
 
-    function testRequestAndRevealWithCallback() public {
+    function testRequestWithCallbackAndRevealWithCallback() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random));
         vm.deal(address(consumer), fee);
-        vm.startPrank(address(consumer));
+        vm.prank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{
             value: fee
         }(provider1, userRandomNumber);
@@ -822,6 +822,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 0
             )
         );
+        vm.prank(user1);
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
@@ -842,7 +843,21 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
     }
 
-    function testRequestAndRevealWithCallbackFailing() public {
+    function testRequestAndRevealWithCallback() public {
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+        assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
+
+        vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
+        vm.prank(user2);
+        random.revealWithCallback(
+            provider1,
+            sequenceNumber,
+            bytes32(uint256(42)),
+            provider1Proofs[sequenceNumber]
+        );
+    }
+
+    function testRequestWithCallbackAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumerFails consumer = new EntropyConsumerFails(
@@ -867,9 +882,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 contract EntropyConsumer is IEntropyConsumer {
     uint64 public sequence;
     bytes32 public randomness;
+    address public entropy;
 
     constructor(address _entropy) {
         entropy = _entropy;
+    }
+
+    function getEntropy() internal view override returns (address) {
+        return entropy;
     }
 
     function entropyCallback(
@@ -884,9 +904,14 @@ contract EntropyConsumer is IEntropyConsumer {
 contract EntropyConsumerFails is IEntropyConsumer {
     uint64 public sequence;
     bytes32 public randomness;
+    address public entropy;
 
     constructor(address _entropy) {
         entropy = _entropy;
+    }
+
+    function getEntropy() internal view override returns (address) {
+        return entropy;
     }
 
     function entropyCallback(
