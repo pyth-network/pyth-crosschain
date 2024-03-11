@@ -115,7 +115,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     });
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
-  ).toBe(ixsToSend.length);
+  ).toBe(ixsToSend.length + txToSend.length);
   expect(
     txToSend.every(
       (tx) => getSizeOfTransaction(tx.instructions, false) <= PACKET_DATA_SIZE
