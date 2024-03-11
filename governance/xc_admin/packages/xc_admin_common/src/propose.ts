@@ -28,6 +28,7 @@ import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
 import { PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET } from "@pythnetwork/solana-utils";
+import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
@@ -281,8 +282,8 @@ export class MultisigVault {
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
-    targetCluster?: PythCluster,
-    computeUnitPriceMicroLamports?: number
+    targetCluster: PythCluster,
+    priorityFeeConfig: PriorityFeeConfig = {}
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
@@ -372,9 +373,10 @@ export class MultisigVault {
       }
     }
 
-    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend, {
-      computeUnitPriceMicroLamports,
-    });
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      ixToSend,
+      priorityFeeConfig ?? {}
+    );
 
     await this.sendAllTransactions(txToSend);
     return newProposals;

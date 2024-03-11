@@ -22,6 +22,8 @@ import {
 import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import { AccountType, parseProductData } from "@pythnetwork/client";
 import { AnchorProvider } from "@project-serum/anchor";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -64,7 +66,7 @@ export async function executeProposal(
   squad: SquadsMesh,
   cluster: PythCluster,
   commitment: Commitment = "confirmed",
-  computeUnitPriceMicroLamports?: number
+  priorityFeeConfig: PriorityFeeConfig
 ) {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const signatures: string[] = [];
@@ -133,13 +135,7 @@ export async function executeProposal(
       }
     }
 
-    if (computeUnitPriceMicroLamports !== undefined) {
-      const params = {
-        microLamports: computeUnitPriceMicroLamports,
-      };
-      const ix = ComputeBudgetProgram.setComputeUnitPrice(params);
-      transaction.add(ix);
-    }
+    TransactionBuilder.addPriorityFee(transaction, priorityFeeConfig);
 
     transaction.add(
       await squad.buildExecuteInstruction(

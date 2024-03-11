@@ -226,4 +226,17 @@ export class TransactionBuilder {
     transactionBuilder.addInstructions(instructions);
     return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
   }
+
+  static addPriorityFee(
+    transaction: Transaction,
+    priorityFeeConfig: PriorityFeeConfig
+  ) {
+    if (priorityFeeConfig.computeUnitPriceMicroLamports) {
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: priorityFeeConfig.computeUnitPriceMicroLamports,
+        })
+      );
+    }
+  }
 }
