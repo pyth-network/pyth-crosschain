@@ -4,6 +4,7 @@ import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
   AccountMeta,
   Commitment,
+  ComputeBudgetProgram,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -62,7 +63,8 @@ export async function executeProposal(
   proposal: TransactionAccount,
   squad: SquadsMesh,
   cluster: PythCluster,
-  commitment: Commitment = "confirmed"
+  commitment: Commitment = "confirmed",
+  computeUnitPriceMicroLamports?: number
 ) {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const signatures: string[] = [];
@@ -129,6 +131,14 @@ export async function executeProposal(
       } else {
         throw Error("Product account not found");
       }
+    }
+
+    if (computeUnitPriceMicroLamports !== undefined) {
+      const params = {
+        microLamports: computeUnitPriceMicroLamports,
+      };
+      const ix = ComputeBudgetProgram.setComputeUnitPrice(params);
+      transaction.add(ix);
     }
 
     transaction.add(
