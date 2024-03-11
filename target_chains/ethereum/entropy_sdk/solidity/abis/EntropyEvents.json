@@ -314,6 +314,12 @@
       {
         "indexed": false,
         "internalType": "bytes32",
+        "name": "blockHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
         "name": "randomNumber",
         "type": "bytes32"
       }
@@ -382,6 +388,12 @@
         "indexed": false,
         "internalType": "bytes32",
         "name": "providerRevelation",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blockHash",
         "type": "bytes32"
       },
       {
