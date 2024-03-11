@@ -340,7 +340,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         if (req.isRequestWithCallback) {
-            revert EntropyErrors.NoSuchRequest();
+            revert EntropyErrors.InvalidRevealCall();
         }
 
         if (req.requester != msg.sender) {
@@ -383,7 +383,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         if (!req.isRequestWithCallback) {
-            revert EntropyErrors.NoSuchRequest();
+            revert EntropyErrors.InvalidRevealCall();
         }
         bytes32 blockHash;
         bytes32 randomNumber;
