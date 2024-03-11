@@ -35,8 +35,8 @@ import {
 import {
   TransactionBuilder,
   InstructionWithEphemeralSigners,
+  PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
-import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
 export const DEFAULT_TREASURY_ID = 0;
 

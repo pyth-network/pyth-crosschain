@@ -4,7 +4,6 @@ import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
   AccountMeta,
   Commitment,
-  ComputeBudgetProgram,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -22,8 +21,10 @@ import {
 import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import { AccountType, parseProductData } from "@pythnetwork/client";
 import { AnchorProvider } from "@project-serum/anchor";
-import { TransactionBuilder } from "@pythnetwork/solana-utils";
-import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
+import {
+  TransactionBuilder,
+  PriorityFeeConfig,
+} from "@pythnetwork/solana-utils";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
