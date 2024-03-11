@@ -227,7 +227,9 @@ export class WormholeMultisigProposal {
     const signatures = await executeProposal(
       proposal,
       this.squad,
-      this.cluster
+      this.cluster,
+      this.squad.connection.commitment,
+      {}
     );
     const msgs: SubmittedWormholeMessage[] = [];
     for (const signature of signatures) {

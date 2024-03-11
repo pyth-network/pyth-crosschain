@@ -199,7 +199,8 @@ export class TransactionBuilder {
   }
 
   static batchIntoLegacyTransactions(
-    instructions: TransactionInstruction[]
+    instructions: TransactionInstruction[],
+    priorityFeeConfig: PriorityFeeConfig
   ): Transaction[] {
     const transactionBuilder = new TransactionBuilder(
       PublicKey.unique(),
@@ -208,9 +209,11 @@ export class TransactionBuilder {
     for (const instruction of instructions) {
       transactionBuilder.addInstruction({ instruction, signers: [] });
     }
-    return transactionBuilder.getLegacyTransactions({}).map(({ tx }) => {
-      return tx;
-    });
+    return transactionBuilder
+      .getLegacyTransactions(priorityFeeConfig)
+      .map(({ tx }) => {
+        return tx;
+      });
   }
 
   static async batchIntoVersionedTransactions(
@@ -222,5 +225,18 @@ export class TransactionBuilder {
     const transactionBuilder = new TransactionBuilder(payer, connection);
     transactionBuilder.addInstructions(instructions);
     return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
+  }
+
+  static addPriorityFee(
+    transaction: Transaction,
+    priorityFeeConfig: PriorityFeeConfig
+  ) {
+    if (priorityFeeConfig.computeUnitPriceMicroLamports) {
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: priorityFeeConfig.computeUnitPriceMicroLamports,
+        })
+      );
+    }
   }
 }

@@ -33,13 +33,9 @@ async function run() {
     console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
-      await executeProposal(
-        proposal,
-        squad,
-        CLUSTER,
-        COMMITMENT,
-        COMPUTE_UNIT_PRICE_MICROLAMPORTS
-      );
+      await executeProposal(proposal, squad, CLUSTER, COMMITMENT, {
+        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS,
+      });
     } else {
       console.log("Skipping: ", proposal.publicKey.toBase58());
     }

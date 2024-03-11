@@ -5,10 +5,8 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
   SystemProgram,
-  PACKET_DATA_SIZE,
   ConfirmOptions,
   sendAndConfirmRawTransaction,
-  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -27,8 +25,13 @@ import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import {
+  PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
+  PriorityFeeConfig,
+} from "@pythnetwork/solana-utils";
 
-export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
+export const MAX_EXECUTOR_PAYLOAD_SIZE =
+  PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
 export const MAX_NUMBER_OF_RETRIES = 10;
 
@@ -262,7 +265,10 @@ export class MultisigVault {
     ixToSend.push(await this.activateProposalIx(proposalAddress));
     ixToSend.push(await this.approveProposalIx(proposalAddress));
 
-    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend);
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      ixToSend,
+      {}
+    );
     await this.sendAllTransactions(txToSend);
     return proposalAddress;
   }
@@ -276,8 +282,8 @@ export class MultisigVault {
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
-    targetCluster?: PythCluster,
-    computeUnitPriceMicroLamports?: number
+    targetCluster: PythCluster,
+    priorityFeeConfig: PriorityFeeConfig = {}
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
@@ -367,16 +373,16 @@ export class MultisigVault {
       }
     }
 
-    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend);
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      ixToSend,
+      priorityFeeConfig
+    );
 
-    await this.sendAllTransactions(txToSend, computeUnitPriceMicroLamports);
+    await this.sendAllTransactions(txToSend);
     return newProposals;
   }
 
-  async sendAllTransactions(
-    transactions: Transaction[],
-    computeUnitPriceMicroLamports?: number
-  ) {
+  async sendAllTransactions(transactions: Transaction[]) {
     const provider = this.getAnchorProvider({
       preflightCommitment: "processed",
       commitment: "processed",
@@ -385,17 +391,6 @@ export class MultisigVault {
     let needToFetchBlockhash = true; // We don't fetch blockhash everytime to save time
     let blockhash: string = "";
     for (let [index, tx] of transactions.entries()) {
-      if (computeUnitPriceMicroLamports !== undefined) {
-        console.log(
-          `Setting compute unit price: ${computeUnitPriceMicroLamports} microLamports`
-        );
-        const params = {
-          microLamports: computeUnitPriceMicroLamports,
-        };
-        const ix = ComputeBudgetProgram.setComputeUnitPrice(params);
-        tx.add(ix);
-      }
-
       console.log("Trying to send transaction: " + index);
       let numberOfRetries = 0;
       let txHasLanded = false;
