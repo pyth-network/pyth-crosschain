@@ -103,7 +103,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
         vm.startPrank(user);
-        sequenceNumber = random.request{ value: fee }(
+        sequenceNumber = random.request{value: fee}(
             provider,
             random.constructUserCommitment(bytes32(randomNumber)),
             useBlockhash
@@ -122,7 +122,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
         bool requestSucceeds = false;
         try
-            random.request{ value: fee }(
+            random.request{value: fee}(
                 provider,
                 random.constructUserCommitment(bytes32(uint256(randomNumber))),
                 useBlockhash
@@ -768,9 +768,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             })
         );
         vm.roll(1234);
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, userRandomNumber);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
 
         assertEq(
             random.getRequest(provider1, assignedSequenceNumber).requester,
@@ -798,7 +799,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         EntropyConsumer consumer = new EntropyConsumer(address(random));
         vm.deal(user1, fee);
         vm.prank(user1);
-        uint64 assignedSequenceNumber = consumer.requestEntropy{ value: fee }(
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
         EntropyStructs.Request memory req = random.getRequest(
@@ -865,9 +866,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, userRandomNumber);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
 
         vm.expectRevert();
         random.revealWithCallback(

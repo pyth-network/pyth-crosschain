@@ -160,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{ value: amount }("");
+        (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
