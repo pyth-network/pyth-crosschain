@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
@@ -795,12 +796,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random));
-        vm.deal(address(consumer), fee);
-        vm.prank(address(consumer));
-        uint64 assignedSequenceNumber = random.requestWithCallback{
-            value: fee
-        }(provider1, userRandomNumber);
-
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{ value: fee }(
+            userRandomNumber
+        );
         EntropyStructs.Request memory req = random.getRequest(
             provider1,
             assignedSequenceNumber
@@ -886,6 +886,15 @@ contract EntropyConsumer is IEntropyConsumer {
 
     constructor(address _entropy) {
         entropy = _entropy;
+    }
+
+    function requestEntropy(
+        bytes32 randomNumber
+    ) public payable returns (uint64 sequenceNumber) {
+        address provider = IEntropy(entropy).getDefaultProvider();
+        sequenceNumber = IEntropy(entropy).requestWithCallback{
+            value: msg.value
+        }(provider, randomNumber);
     }
 
     function getEntropy() internal view override returns (address) {
