@@ -396,7 +396,7 @@ export class MultisigVault {
         tx.add(ix);
       }
 
-      console.log("Trying to send transaction : " + index);
+      console.log("Trying to send transaction: " + index);
       let numberOfRetries = 0;
       let txHasLanded = false;
 
