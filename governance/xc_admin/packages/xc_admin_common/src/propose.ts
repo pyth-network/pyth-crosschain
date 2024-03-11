@@ -25,15 +25,10 @@ import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
-<<<<<<< HEAD
 import {
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
-=======
-import { PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET } from "@pythnetwork/solana-utils";
-import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
->>>>>>> 563d0473 (Continue)
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
