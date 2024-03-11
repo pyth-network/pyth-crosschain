@@ -43,10 +43,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
       )
     : {}
 
-  console.log(MULTISIG_SIGNER_MAPPING_PATH)
-  console.log(fs.existsSync(MULTISIG_SIGNER_MAPPING_PATH))
-  console.log(multisigSignerKeyToNameMapping)
-
   const proposerServerUrl =
     process.env.PROPOSER_SERVER_URL || 'http://localhost:4000'
   return {
