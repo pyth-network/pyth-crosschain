@@ -11,7 +11,7 @@ import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
 import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
-import 'mappings/signers.json'
+import '../mappings/signers.json'
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
