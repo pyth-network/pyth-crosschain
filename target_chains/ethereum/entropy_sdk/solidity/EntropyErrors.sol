@@ -34,8 +34,8 @@ library EntropyErrors {
     // The blockhash is 0.
     // Signature: 0x92555c0e
     error BlockhashUnavailable();
-    // If a callback is registered with request, the reveal call should be revealWithCallback.
-    // Else, it should be reveal.
+    // if a request was made using `requestWithCallback`, request should be fulfilled using `revealWithCallback`
+    // else if a request was made using `request`, request should be fulfilled using `reveal`
     // Signature: 0x50f0dc92
     error InvalidRevealCall();
 }

@@ -399,7 +399,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             req,
             userRandomNumber,
             providerRevelation,
-            blockHash,
             randomNumber
         );
 

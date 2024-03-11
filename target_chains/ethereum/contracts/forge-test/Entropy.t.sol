@@ -225,6 +225,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             ALL_ZEROS
         );
 
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+
         // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
         // the expected behavior.
         assertRevealReverts(
@@ -807,16 +813,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             assignedSequenceNumber
         );
         bytes32 blockHash = bytes32(uint256(0));
-        if (req.useBlockhash) {
-            blockHash = blockhash(req.blockNumber);
-        }
 
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
             req,
             userRandomNumber,
             provider1Proofs[assignedSequenceNumber],
-            blockHash,
             random.combineRandomValues(
                 userRandomNumber,
                 provider1Proofs[assignedSequenceNumber],
@@ -842,6 +844,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 0
             )
         );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
     }
 
     function testRequestAndRevealWithCallback() public {
