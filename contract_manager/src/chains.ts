@@ -47,7 +47,8 @@ export abstract class Chain extends Storable {
     this.wormholeChainName = wormholeChainName as ChainName;
     if (toChainId(this.wormholeChainName) === undefined)
       throw new Error(
-        `Invalid chain name ${wormholeChainName}. Try rebuilding xc_admin_common package`
+        `Invalid chain name ${wormholeChainName}.
+        Try rebuilding xc_admin_common: npx lerna run build --scope xc_admin_common`
       );
   }
 
