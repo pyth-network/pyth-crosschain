@@ -13,7 +13,7 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || 'mappings'
+  const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
   const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
   const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
 
