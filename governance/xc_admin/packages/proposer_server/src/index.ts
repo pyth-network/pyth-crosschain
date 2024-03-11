@@ -38,6 +38,11 @@ const RPC_URLS: Record<Cluster | "localnet", string> = {
   localnet: LOCALNET_RPC,
 };
 
+const COMPUTE_UNIT_PRICE_MICROLAMPORTS: number | undefined = process.env
+  .COMPUTE_UNIT_PRICE_MICROLAMPORTS
+  ? Number(process.env.COMPUTE_UNIT_PRICE_MICROLAMPORTS)
+  : undefined;
+
 const app = express();
 
 app.use(cors());
@@ -78,7 +83,11 @@ app.post("/api/propose", async (req: Request, res: Response) => {
 
     // preserve the existing API by returning only the first pubkey
     const proposalPubkey = (
-      await vault.proposeInstructions(instructions, cluster)
+      await vault.proposeInstructions(
+        instructions,
+        cluster,
+        COMPUTE_UNIT_PRICE_MICROLAMPORTS
+      )
     )[0];
     res.status(200).json({ proposalPubkey: proposalPubkey });
   } catch (error) {

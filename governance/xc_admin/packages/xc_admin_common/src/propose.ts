@@ -8,6 +8,7 @@ import {
   PACKET_DATA_SIZE,
   ConfirmOptions,
   sendAndConfirmRawTransaction,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -275,7 +276,8 @@ export class MultisigVault {
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
-    targetCluster?: PythCluster
+    targetCluster?: PythCluster,
+    computeUnitPriceMicroLamports?: number
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
@@ -367,11 +369,14 @@ export class MultisigVault {
 
     const txToSend = TransactionBuilder.batchIntoLegacyTransactions(ixToSend);
 
-    await this.sendAllTransactions(txToSend);
+    await this.sendAllTransactions(txToSend, computeUnitPriceMicroLamports);
     return newProposals;
   }
 
-  async sendAllTransactions(transactions: Transaction[]) {
+  async sendAllTransactions(
+    transactions: Transaction[],
+    computeUnitPriceMicroLamports?: number
+  ) {
     const provider = this.getAnchorProvider({
       preflightCommitment: "processed",
       commitment: "processed",
@@ -380,6 +385,17 @@ export class MultisigVault {
     let needToFetchBlockhash = true; // We don't fetch blockhash everytime to save time
     let blockhash: string = "";
     for (let [index, tx] of transactions.entries()) {
+      if (computeUnitPriceMicroLamports !== undefined) {
+        console.log(
+          `Setting compute unit price: ${computeUnitPriceMicroLamports} microLamports`
+        );
+        const params = {
+          microLamports: computeUnitPriceMicroLamports,
+        };
+        const ix = ComputeBudgetProgram.setComputeUnitPrice(params);
+        tx.add(ix);
+      }
+
       console.log("Trying to send transaction : " + index);
       let numberOfRetries = 0;
       let txHasLanded = false;
