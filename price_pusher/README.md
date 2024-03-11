@@ -207,9 +207,9 @@ It will take a few minutes until all the services are up and running.
 ## Reliability
 
 You can run multiple instances of the price pusher to increase the reliability. It is better to use
-difference RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
+different RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
 in different pushers, then due to blockchains nonce or sequence for accounts, a transaction won't be
-pushed twiced and you won't pay additional costs most of the time.** However, there might be some race
-condiitons in the RPCs because they are often behind a load balancer than can sometimes cause rejected
-transactions land on-chain. You can reduce the chances of additional cost overhead by reducing the
+pushed twice and you won't pay additional costs most of the time.** However, there might be some race
+conditions in the RPCs because they are often behind a load balancer which can sometimes cause rejected
+transactions to land on-chain. You can reduce the chances of additional cost overhead by reducing the
 pushing frequency.
