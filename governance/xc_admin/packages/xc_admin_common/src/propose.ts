@@ -375,7 +375,7 @@ export class MultisigVault {
 
     const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
       ixToSend,
-      priorityFeeConfig ?? {}
+      priorityFeeConfig
     );
 
     await this.sendAllTransactions(txToSend);
