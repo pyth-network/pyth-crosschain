@@ -160,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{ value: amount }("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
@@ -248,7 +248,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function requestWithCallback(
         address provider,
         bytes32 userRandomNumber
-    ) public payable override returns (uint64 assignedSequenceNumber) {
+    ) public payable override returns (uint64) {
         EntropyStructs.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userRandomNumber),
@@ -258,15 +258,16 @@ abstract contract Entropy is IEntropy, EntropyState {
             false,
             true
         );
-        assignedSequenceNumber = req.sequenceNumber;
 
         emit RequestedWithCallback(
             provider,
             req.requester,
-            assignedSequenceNumber,
+            req.sequenceNumber,
             userRandomNumber,
             req
         );
+
+        return req.sequenceNumber;
     }
 
     // This method validates the provided user's revelation and provider's revelation against the corresponding

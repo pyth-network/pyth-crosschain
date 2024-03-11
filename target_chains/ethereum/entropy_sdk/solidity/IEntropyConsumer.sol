@@ -13,8 +13,8 @@ abstract contract IEntropyConsumer {
         entropyCallback(sequence, randomNumber);
     }
 
-    // getEntropy returns Entropy contract address. It is being used to check that the callback
-    // is indeed from Entropy contract. The consumer is expected to implement this method.
+    // getEntropy returns Entropy contract address. The method is being used to check that the
+    // callback is indeed from Entropy contract. The consumer is expected to implement this method.
     // Entropy address can be found here - https://docs.pyth.network/entropy/contract-addresses
     function getEntropy() internal view virtual returns (address);
 
