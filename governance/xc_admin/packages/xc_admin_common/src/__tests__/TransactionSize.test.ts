@@ -110,7 +110,9 @@ it("Unit test for getSizeOfTransaction", async () => {
   }
 
   const txToSend: Transaction[] =
-    TransactionBuilder.batchIntoLegacyTransactions(ixsToSend);
+    TransactionBuilder.batchIntoLegacyTransactions(ixsToSend, {
+      computeUnitPriceMicroLamports: 50000,
+    });
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
   ).toBe(ixsToSend.length);
