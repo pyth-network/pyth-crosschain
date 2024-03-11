@@ -160,7 +160,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{ value: amount }("");
         require(sent, "withdrawal to msg.sender failed");
     }
 
@@ -276,7 +276,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         EntropyStructs.Request storage req,
         bytes32 userRevelation,
         bytes32 providerRevelation
-    ) internal returns (bytes32 randomNumber) {
+    ) internal returns (bytes32 randomNumber, bytes32 blockHash) {
         bytes32 providerCommitment = constructProviderCommitment(
             req.numHashes,
             providerRevelation
@@ -287,7 +287,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.commitment
         ) revert EntropyErrors.IncorrectRevelation();
 
-        bytes32 blockHash = bytes32(uint256(0));
+        blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
             bytes32 _blockHash = blockhash(req.blockNumber);
 
@@ -346,9 +346,19 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (req.requester != msg.sender) {
             revert EntropyErrors.Unauthorized();
         }
-
-        randomNumber = revealHelper(req, userRevelation, providerRevelation);
-        emit Revealed(req, userRevelation, providerRevelation, randomNumber);
+        bytes32 blockHash;
+        (randomNumber, blockHash) = revealHelper(
+            req,
+            userRevelation,
+            providerRevelation
+        );
+        emit Revealed(
+            req,
+            userRevelation,
+            providerRevelation,
+            blockHash,
+            randomNumber
+        );
         clearRequest(provider, sequenceNumber);
     }
 
@@ -375,8 +385,9 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (!req.isRequestWithCallback) {
             revert EntropyErrors.NoSuchRequest();
         }
-
-        bytes32 randomNumber = revealHelper(
+        bytes32 blockHash;
+        bytes32 randomNumber;
+        (randomNumber, blockHash) = revealHelper(
             req,
             userRandomNumber,
             providerRevelation
@@ -388,6 +399,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             req,
             userRandomNumber,
             providerRevelation,
+            blockHash,
             randomNumber
         );
 
