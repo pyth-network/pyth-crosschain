@@ -46,7 +46,11 @@ import {
 
 import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
 import { getPythProgramKeyForCluster, PythCluster } from '@pythnetwork/client'
-import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+  sendTransactions,
+} from '@pythnetwork/solana-utils'
 import { Wallet } from '@coral-xyz/anchor'
 const ProposalRow = ({
   proposal,
@@ -397,9 +401,9 @@ const Proposal = ({
           squads.connection
         )
         builder.addInstruction({ instruction, signers: [] })
-        const versionedTxs = await builder.getVersionedTransactions({
-          computeUnitPriceMicroLamports: 50000,
-        })
+        const versionedTxs = await builder.getVersionedTransactions(
+          DEFAULT_PRIORITY_FEE_CONFIG
+        )
         await sendTransactions(
           versionedTxs,
           squads.connection,

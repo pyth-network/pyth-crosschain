@@ -26,6 +26,10 @@ export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
 };
 
+export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
+  computeUnitPriceMicroLamports: 50000,
+};
+
 /**
  * Get the size of a transaction that would contain the provided array of instructions
  */
