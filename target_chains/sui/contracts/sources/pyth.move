@@ -687,7 +687,7 @@ module pyth::pyth_tests{
 
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
-        // Pass in a corrupt VAA, which should fail deseriaizing
+        // Pass in a corrupt VAA, which should fail deserializing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
         let verified_vaas = vector[vaa::parse_and_verify(&worm_state, corrupt_vaa, &clock)];
         // Create Pyth price feed
