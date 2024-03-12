@@ -1,6 +1,12 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta, Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import {
+  AccountMeta,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect, useState } from 'react'
@@ -375,7 +381,7 @@ const Proposal = ({
       squad: SquadsMesh,
       vaultKey: PublicKey,
       proposalKey: PublicKey
-    ) => any,
+    ) => Promise<TransactionInstruction>,
     msg: string
   ) => {
     if (proposal && squads) {
@@ -390,7 +396,7 @@ const Proposal = ({
           squads.wallet.publicKey,
           squads.connection
         )
-        builder.addInstruction(instruction)
+        builder.addInstruction({ instruction, signers: [] })
         const versionedTxs = await builder.getVersionedTransactions({
           computeUnitPriceMicroLamports: 50000,
         })
@@ -416,8 +422,8 @@ const Proposal = ({
         squad: SquadsMesh,
         vaultKey: PublicKey,
         proposalKey: PublicKey
-      ) => {
-        await squad.buildApproveTransaction(vaultKey, proposalKey)
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildApproveTransaction(vaultKey, proposalKey)
       },
       `Approved proposal ${proposal?.publicKey.toBase58()}`
     )
@@ -429,8 +435,8 @@ const Proposal = ({
         squad: SquadsMesh,
         vaultKey: PublicKey,
         proposalKey: PublicKey
-      ) => {
-        await squad.buildRejectTransaction(vaultKey, proposalKey)
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildRejectTransaction(vaultKey, proposalKey)
       },
       `Rejected proposal ${proposal?.publicKey.toBase58()}`
     )
@@ -442,8 +448,8 @@ const Proposal = ({
         squad: SquadsMesh,
         vaultKey: PublicKey,
         proposalKey: PublicKey
-      ) => {
-        await squad.buildExecuteTransaction(proposalKey)
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildExecuteTransaction(proposalKey)
       },
       `Executed proposal ${proposal?.publicKey.toBase58()}`
     )
@@ -455,8 +461,8 @@ const Proposal = ({
         squad: SquadsMesh,
         vaultKey: PublicKey,
         proposalKey: PublicKey
-      ) => {
-        await squad.buildCancelTransaction(vaultKey, proposalKey)
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildCancelTransaction(vaultKey, proposalKey)
       },
       `Cancelled proposal ${proposal?.publicKey.toBase58()}`
     )

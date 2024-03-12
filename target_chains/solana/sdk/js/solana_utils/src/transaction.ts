@@ -257,5 +257,5 @@ export async function sendTransactions(
   }
 
   const provider = new AnchorProvider(connection, wallet, opts);
-  provider.sendAll(transactions);
+  await provider.sendAll(transactions);
 }
