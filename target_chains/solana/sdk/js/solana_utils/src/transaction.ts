@@ -1,5 +1,7 @@
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
+  ConfirmOptions,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -239,4 +241,21 @@ export class TransactionBuilder {
       );
     }
   }
+}
+
+export async function sendTransactions(
+  transactions: {
+    tx: VersionedTransaction | Transaction;
+    signers?: Signer[] | undefined;
+  }[],
+  connection: Connection,
+  wallet: Wallet,
+  opts?: ConfirmOptions
+) {
+  if (opts === undefined) {
+    opts = AnchorProvider.defaultOptions();
+  }
+
+  const provider = new AnchorProvider(connection, wallet, opts);
+  provider.sendAll(transactions);
 }
