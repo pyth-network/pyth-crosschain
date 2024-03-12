@@ -1,6 +1,12 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta, Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import {
+  AccountMeta,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect, useState } from 'react'
@@ -40,6 +46,12 @@ import {
 
 import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
 import { getPythProgramKeyForCluster, PythCluster } from '@pythnetwork/client'
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+  sendTransactions,
+} from '@pythnetwork/solana-utils'
+import { Wallet } from '@coral-xyz/anchor'
 const ProposalRow = ({
   proposal,
   multisig,
@@ -369,13 +381,35 @@ const Proposal = ({
   }, [cluster, proposal, squads, connection])
 
   const handleClick = async (
-    handler: (squad: SquadsMesh, proposalKey: PublicKey) => any,
+    instructionGenerator: (
+      squad: SquadsMesh,
+      vaultKey: PublicKey,
+      proposalKey: PublicKey
+    ) => Promise<TransactionInstruction>,
     msg: string
   ) => {
     if (proposal && squads) {
       try {
         setIsTransactionLoading(true)
-        await handler(squads, proposal.publicKey)
+        const instruction = await instructionGenerator(
+          squads,
+          proposal.ms,
+          proposal.publicKey
+        )
+        const builder = new TransactionBuilder(
+          squads.wallet.publicKey,
+          squads.connection
+        )
+        builder.addInstruction({ instruction, signers: [] })
+        const versionedTxs = await builder.getVersionedTransactions(
+          DEFAULT_PRIORITY_FEE_CONFIG
+        )
+        await sendTransactions(
+          versionedTxs,
+          squads.connection,
+          squads.wallet as Wallet
+        )
+
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
       } catch (e: any) {
@@ -387,27 +421,55 @@ const Proposal = ({
   }
 
   const handleClickApprove = async () => {
-    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
-      await squad.approveTransaction(proposalKey)
-    }, `Approved proposal ${proposal?.publicKey.toBase58()}`)
+    await handleClick(
+      async (
+        squad: SquadsMesh,
+        vaultKey: PublicKey,
+        proposalKey: PublicKey
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildApproveTransaction(vaultKey, proposalKey)
+      },
+      `Approved proposal ${proposal?.publicKey.toBase58()}`
+    )
   }
 
   const handleClickReject = async () => {
-    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
-      await squad.rejectTransaction(proposalKey)
-    }, `Rejected proposal ${proposal?.publicKey.toBase58()}`)
+    await handleClick(
+      async (
+        squad: SquadsMesh,
+        vaultKey: PublicKey,
+        proposalKey: PublicKey
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildRejectTransaction(vaultKey, proposalKey)
+      },
+      `Rejected proposal ${proposal?.publicKey.toBase58()}`
+    )
   }
 
   const handleClickExecute = async () => {
-    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
-      await squad.executeTransaction(proposalKey)
-    }, `Executed proposal ${proposal?.publicKey.toBase58()}`)
+    await handleClick(
+      async (
+        squad: SquadsMesh,
+        vaultKey: PublicKey,
+        proposalKey: PublicKey
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildExecuteTransaction(proposalKey)
+      },
+      `Executed proposal ${proposal?.publicKey.toBase58()}`
+    )
   }
 
   const handleClickCancel = async () => {
-    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
-      await squad.cancelTransaction(proposalKey)
-    }, `Cancelled proposal ${proposal?.publicKey.toBase58()}`)
+    await handleClick(
+      async (
+        squad: SquadsMesh,
+        vaultKey: PublicKey,
+        proposalKey: PublicKey
+      ): Promise<TransactionInstruction> => {
+        return await squad.buildCancelTransaction(vaultKey, proposalKey)
+      },
+      `Cancelled proposal ${proposal?.publicKey.toBase58()}`
+    )
   }
 
   return proposal !== undefined &&

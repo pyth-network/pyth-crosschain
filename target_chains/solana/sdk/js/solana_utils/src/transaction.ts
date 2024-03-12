@@ -1,5 +1,7 @@
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
+  ConfirmOptions,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -22,6 +24,10 @@ export type InstructionWithEphemeralSigners = {
 
 export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
+};
+
+export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
+  computeUnitPriceMicroLamports: 50000,
 };
 
 /**
@@ -239,4 +245,21 @@ export class TransactionBuilder {
       );
     }
   }
+}
+
+export async function sendTransactions(
+  transactions: {
+    tx: VersionedTransaction | Transaction;
+    signers?: Signer[] | undefined;
+  }[],
+  connection: Connection,
+  wallet: Wallet,
+  opts?: ConfirmOptions
+) {
+  if (opts === undefined) {
+    opts = AnchorProvider.defaultOptions();
+  }
+
+  const provider = new AnchorProvider(connection, wallet, opts);
+  await provider.sendAll(transactions);
 }
