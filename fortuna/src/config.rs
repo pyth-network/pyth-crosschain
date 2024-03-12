@@ -30,6 +30,7 @@ pub use {
     register_provider::RegisterProviderOptions,
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
+    run_keeper::RunKeeperOptions,
     setup_provider::SetupProviderOptions,
 };
 
@@ -38,6 +39,7 @@ mod get_request;
 mod register_provider;
 mod request_randomness;
 mod run;
+mod run_keeper;
 mod setup_provider;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
@@ -68,6 +70,9 @@ pub enum Options {
 
     /// Get the status of a pending request for a random number.
     GetRequest(GetRequestOptions),
+
+    /// Run the keeper service
+    RunKeeper(RunKeeperOptions),
 }
 
 #[derive(Args, Clone, Debug)]
