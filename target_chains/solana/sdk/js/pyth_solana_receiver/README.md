@@ -1,10 +1,10 @@
 # Pyth Solana Receiver JS SDK
 
-This is a Javascript SDK to interact with the Pyth Solana Receiver contract on Solana whose code lives [here](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana).
+This is a Javascript SDK to interact with the Pyth Solana Receiver contract whose code lives [here](/target_chains/solana).
 
 ## Pull model
 
-The Pyth Solana Receiver allows users to consume Pyth price updates on a pull-basis. This means that the user is responsible for pushing the price data on-chain whenever they want to interact with an app that requires a price update.
+The Pyth Solana Receiver allows users to consume Pyth price updates on a pull basis. This means that the user is responsible for submitting the price data on-chain whenever they want to interact with an app that requires a price update.
 
 Price updates get posted into price update accounts, owned by the Receiver contract. Once an update has been posted to a price update account, it can be used by anyone by simply passing the price update account as one of the accounts in a Solana instruction.
 Price update accounts can be closed by whoever wrote them to recover the rent.
@@ -24,22 +24,19 @@ const ETH_PRICE_FEED_ID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d66548
 const priceServiceConnection = new PriceServiceConnection("https://hermes.pyth.network/", { priceFeedRequestConfig: { binary: true } });
 const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID]);  // Fetch off-chain price update data
 
-const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-const {postInstructions, cleanupInstructions, priceFeedIdToPriceUpdateAccount} = await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData); // Get instructions to post the price update data and to cleanup the accounts later
-
 
 const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
-const consumerInstruction : InstructionWithEphemeralSigners = {instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: []}
-consumed
+const getInstructions = async (priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>) => { return [{ instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: [] }] };
 
-const transactions = pythSolanaReceiver.batchIntoVersionedTransactions([...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
+const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {})
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
 
-Alternatively you can provide a `getInstructions` method that given the mapping from price feed id to price update account addresses, returns the intructions that you want to execute. For example:
+Or, alternatively:
 
 ```ts
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { PriceServiceConnection } from '@pythnetwork/price-service-client';
 import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver';
 import { MyFirstPythApp, IDL } from './idl/my_first_pyth_app';
@@ -51,11 +48,15 @@ const ETH_PRICE_FEED_ID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d66548
 const priceServiceConnection = new PriceServiceConnection("https://hermes.pyth.network/", { priceFeedRequestConfig: { binary: true } });
 const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID]);  // Fetch off-chain price update data
 
-
-const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
-const getInstructions = async (priceFeedIdToPriceUpdateAccount : Record<string, PublicKey>) => { return [{instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: []}] };
-
 const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {})
+const { postInstructions, cleanupInstructions, priceFeedIdToPriceUpdateAccount } = await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData); // Get instructions to post the price update data and to cleanup the accounts later
+
+
+const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, PublicKey.unique(), {})
+const consumerInstruction: InstructionWithEphemeralSigners = { instruction: await myFirstPythApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: [] }
+
+const transactions = pythSolanaReceiver.batchIntoVersionedTransactions([...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
+
+
