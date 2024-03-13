@@ -43,7 +43,7 @@ import {
  * A builder class to build transactions that:
  * - Post price updates (fully or partially verified)
  * - Consume price updates in a consumer program
- * - (Optionally) Close price update and encoded vaa accounts to recover rent
+ * - (Optionally) Close price update and encoded vaa accounts to recover the rent
  *
  * @example
  * ```typescript
@@ -103,12 +103,12 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *
    * @example
    * ```typescript
-   *  const priceUpdateData = await priceServiceConnection.getLatestVaas([
+   * const priceUpdateData = await priceServiceConnection.getLatestVaas([
    *    SOL_PRICE_FEED_ID,
    *    ETH_PRICE_FEED_ID,
-   *  ]);
+   * ]);
    *
-   *  const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
    * await transactionBuilder.withPostPartiallyVerifiedPriceUpdates(priceUpdateData);
    * await transactionBuilder.withPriceConsumerInstructions(...)
    * ...
