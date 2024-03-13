@@ -43,7 +43,7 @@ import {
  * A class to interact with the Pyth Solana Receiver program.
  *
  * This class provides helpful methods to:
- * - Post price updates from Pythnet to the Pyth Solana Receiver program
+ * - Post price updates from Pyth to the Pyth Solana Receiver program
  * - Consume price updates in a consumer program
  * - Cleanup price update accounts to recover rent
  */

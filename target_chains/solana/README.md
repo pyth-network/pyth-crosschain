@@ -2,19 +2,19 @@
 
 This folder contains:
 
-- A Pyth receiver program to receive Pythnet price feeds on Solana in `programs/pyth-solana-receiver`
+- A Pyth receiver program to receive Pyth price updates on Solana in `programs/pyth-solana-receiver`
 - A Cli that acts as a simple client to interact with the Pyth receiver program in `cli/`
 
 # Overview of the design
 
-Receiving a price update from Pythnet involves two steps:
+Posting a Pyth price update involves two steps:
 
 - First, verifying the VAA i.e. verifying the Wormhole guardians' signatures on the accumulator root that contains all the price updates for a given Pythnet slot.
 - Second, verifying the price update by providing an inclusion proof that proves the price update is part of the accumulator root that was verified in the first step.
 
 # Implementation
 
-This contract offers two ways to post a price update from Pythnet onto Solana:
+This contract offers two ways to post a Pyth price update onto Solana:
 
 - `post_update` allows you to do it in 2 transactions and checks all the Wormhole guardian signatures (the quorum is currently 13 signatures). It relies on the Wormhole contract to verify the signatures.
 - `post_update_atomic` allows you to do it in 1 transaction but only partially checks the Wormhole guardian signatures (5 signatures seems like the best it can currently do). Therefore it is less secure. It relies on a guardian set account from the Wormhole contract to check the signatures against the guardian keys.
