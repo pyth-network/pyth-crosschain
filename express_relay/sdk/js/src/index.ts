@@ -41,11 +41,11 @@ export type BidParams = {
 };
 
 /**
- * All the parameters necessary to represent a liquidation opportunity
+ * All the parameters necessary to represent an opportunity
  */
 export type Opportunity = {
   /**
-   * The chain id where the liquidation will be executed.
+   * The chain id where the opportunity will be executed.
    */
   chainId: ChainId;
 
@@ -54,34 +54,33 @@ export type Opportunity = {
    */
   opportunityId: string;
   /**
-   * Permission key required for succesful execution of the liquidation.
+   * Permission key required for successful execution of the opportunity.
    */
   permissionKey: Hex;
   /**
-   * Contract address to call for execution of the liquidation.
+   * Contract address to call for execution of the opportunity.
    */
-  contract: Address;
+  targetContract: Address;
   /**
-   * Calldata for the contract call.
+   * Calldata for the targetContract call.
    */
-  calldata: Hex;
+  targetCalldata: Hex;
   /**
-   * Value to send with the contract call.
+   * Value to send with the targetContract call.
    */
-  value: bigint;
-
+  targetCallValue: bigint;
   /**
    * Tokens required to repay the debt
    */
   sellTokens: TokenAmount[];
   /**
-   * Tokens to receive after the liquidation
+   * Tokens to receive after the opportunity is executed
    */
   buyTokens: TokenAmount[];
 };
 
 /**
- * Represents a bid for a liquidation opportunity
+ * Represents a bid for an opportunity
  */
 export type OpportunityBid = {
   /**
@@ -89,15 +88,15 @@ export type OpportunityBid = {
    */
   opportunityId: string;
   /**
-   * The permission key required for succesful execution of the liquidation.
+   * The permission key required for successful execution of the opportunity.
    */
   permissionKey: Hex;
   /**
-   * Liquidator address
+   * Executor address
    */
-  liquidator: Address;
+  executor: Address;
   /**
-   * Signature of the liquidator
+   * Signature of the executor
    */
   signature: Hex;
 
@@ -120,26 +119,25 @@ export type Bid = {
    */
   amount: bigint;
   /**
-   * @description Calldata for the contract call.
+   * @description Calldata for the targetContract call.
    * @example 0xdeadbeef
    */
-  calldata: Hex;
+  targetCalldata: Hex;
   /**
    * @description The chain id to bid on.
    * @example sepolia
    */
   chainId: ChainId;
   /**
-   * @description The contract address to call.
+   * @description The targetContract address to call.
    * @example 0xcA11bde05977b3631167028862bE2a173976CA11
    */
-  contract: Address;
+  targetContract: Address;
 };
 
 export type BidStatusUpdate = {
   id: BidId;
-  status: components["schemas"]["BidStatus"];
-};
+} & components["schemas"]["BidStatus"];
 
 export function checkHex(hex: string): Hex {
   if (isHex(hex)) {
@@ -228,7 +226,10 @@ export class Client {
         }
       } else if ("type" in message && message.type === "bid_status_update") {
         if (this.websocketBidStatusCallback !== undefined) {
-          await this.websocketBidStatusCallback(message);
+          await this.websocketBidStatusCallback({
+            id: message.status.id,
+            ...message.status.bid_status,
+          });
         }
       } else if ("id" in message && message.id) {
         // Response to a request sent earlier via the websocket with the same id
@@ -262,9 +263,9 @@ export class Client {
       chainId: opportunity.chain_id,
       opportunityId: opportunity.opportunity_id,
       permissionKey: checkHex(opportunity.permission_key),
-      contract: checkAddress(opportunity.contract),
-      calldata: checkHex(opportunity.calldata),
-      value: BigInt(opportunity.value),
+      targetContract: checkAddress(opportunity.target_contract),
+      targetCalldata: checkHex(opportunity.target_calldata),
+      targetCallValue: BigInt(opportunity.target_call_value),
       sellTokens: opportunity.sell_tokens.map(checkTokenQty),
       buyTokens: opportunity.buy_tokens.map(checkTokenQty),
     };
@@ -306,7 +307,7 @@ export class Client {
 
   async requestViaWebsocket(
     msg: components["schemas"]["ClientMessage"]
-  ): Promise<components["schemas"]["APIResposne"] | null> {
+  ): Promise<components["schemas"]["APIResponse"] | null> {
     const msg_with_id: components["schemas"]["ClientRequest"] = {
       ...msg,
       id: (this.idCounter++).toString(),
@@ -341,12 +342,12 @@ export class Client {
   }
 
   /**
-   * Fetches liquidation opportunities
+   * Fetches opportunities
    * @param chainId Chain id to fetch opportunities for. e.g: sepolia
    */
   async getOpportunities(chainId?: string): Promise<Opportunity[]> {
     const client = createClient<paths>(this.clientOptions);
-    const opportunities = await client.GET("/v1/liquidation/opportunities", {
+    const opportunities = await client.GET("/v1/opportunities", {
       params: { query: { chain_id: chainId } },
     });
     if (opportunities.data === undefined) {
@@ -362,19 +363,19 @@ export class Client {
   }
 
   /**
-   * Submits a liquidation opportunity to be exposed to searchers
+   * Submits an opportunity to be exposed to searchers
    * @param opportunity Opportunity to submit
    */
   async submitOpportunity(opportunity: Omit<Opportunity, "opportunityId">) {
     const client = createClient<paths>(this.clientOptions);
-    const response = await client.POST("/v1/liquidation/opportunities", {
+    const response = await client.POST("/v1/opportunities", {
       body: {
         chain_id: opportunity.chainId,
         version: "v1",
         permission_key: opportunity.permissionKey,
-        contract: opportunity.contract,
-        calldata: opportunity.calldata,
-        value: opportunity.value.toString(),
+        target_contract: opportunity.targetContract,
+        target_calldata: opportunity.targetCalldata,
+        target_call_value: opportunity.targetCallValue.toString(),
         sell_tokens: opportunity.sellTokens.map(({ token, amount }) => ({
           token,
           amount: amount.toString(),
@@ -391,7 +392,7 @@ export class Client {
   }
 
   /**
-   * Creates a signed bid for a liquidation opportunity
+   * Creates a signed bid for an opportunity
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with
@@ -441,9 +442,9 @@ export class Client {
       [
         opportunity.sellTokens.map(convertTokenQty),
         opportunity.buyTokens.map(convertTokenQty),
-        opportunity.contract,
-        opportunity.calldata,
-        opportunity.value,
+        opportunity.targetContract,
+        opportunity.targetCalldata,
+        opportunity.targetCallValue,
         bidParams.amount,
         bidParams.validUntil,
       ]
@@ -455,7 +456,7 @@ export class Client {
     return {
       permissionKey: opportunity.permissionKey,
       bid: bidParams,
-      liquidator: account.address,
+      executor: account.address,
       signature: hash,
       opportunityId: opportunity.opportunityId,
     };
@@ -466,7 +467,7 @@ export class Client {
   ): components["schemas"]["OpportunityBid"] {
     return {
       amount: bid.bid.amount.toString(),
-      liquidator: bid.liquidator,
+      executor: bid.executor,
       permission_key: bid.permissionKey,
       signature: bid.signature,
       valid_until: bid.bid.validUntil.toString(),
@@ -476,15 +477,15 @@ export class Client {
   private toServerBid(bid: Bid): components["schemas"]["Bid"] {
     return {
       amount: bid.amount.toString(),
-      calldata: bid.calldata,
+      target_calldata: bid.targetCalldata,
       chain_id: bid.chainId,
-      contract: bid.contract,
+      target_contract: bid.targetContract,
       permission_key: bid.permissionKey,
     };
   }
 
   /**
-   * Submits a bid for a liquidation opportunity
+   * Submits a bid for an opportunity
    * @param bid
    * @param subscribeToUpdates If true, the client will subscribe to bid status updates via websocket and will call the bid status callback if set
    * @returns The id of the submitted bid, you can use this id to track the status of the bid
@@ -496,7 +497,7 @@ export class Client {
     const serverBid = this.toServerOpportunityBid(bid);
     if (subscribeToUpdates) {
       const result = await this.requestViaWebsocket({
-        method: "post_liquidation_bid",
+        method: "post_opportunity_bid",
         params: {
           opportunity_bid: serverBid,
           opportunity_id: bid.opportunityId,
@@ -509,7 +510,7 @@ export class Client {
     } else {
       const client = createClient<paths>(this.clientOptions);
       const response = await client.POST(
-        "/v1/liquidation/opportunities/{opportunity_id}/bids",
+        "/v1/opportunities/{opportunity_id}/bids",
         {
           body: serverBid,
           params: { path: { opportunity_id: bid.opportunityId } },

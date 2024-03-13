@@ -22,9 +22,7 @@ class SimpleSearcher {
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
-    console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.status.status}`
-    );
+    console.log(`Bid status for bid ${bidStatus.id}: ${bidStatus.status}`);
   }
 
   async opportunityHandler(opportunity: Opportunity) {
