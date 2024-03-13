@@ -3,11 +3,8 @@ import asyncio
 import logging
 
 from eth_account.account import Account
-from express_relay_client import ExpressRelayClient, OpportunityBidInfo, sign_bid
-from openapi_client.models.bid_status_with_id import BidStatusWithId
-from openapi_client.models.opportunity_params_with_metadata import (
-    OpportunityParamsWithMetadata,
-)
+from express_relay_client import ExpressRelayClient, sign_bid
+from express_relay_types import *
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +70,13 @@ class SimpleSearcher:
             bid_status_with_id: A BidStatusWithId object, representing the status of a bid.
         """
         bid_id = bid_status_with_id.id
-        bid_status = bid_status_with_id.bid_status.actual_instance
+        bid_status = bid_status_with_id.bid_status
 
-        if bid_status.status == "submitted":
+        if bid_status.status == Status("submitted"):
             logger.info(f"Bid {bid_id} has been submitted in hash {bid_status.result}")
-        elif bid_status.status == "lost":
+        elif bid_status.status == Status("lost"):
             logger.info(f"Bid {bid_id} was unsuccessful")
-        elif bid_status.status == "pending":
+        elif bid_status.status == Status("pending"):
             logger.info(f"Bid {bid_id} is pending")
         else:
             logger.error(f"Unrecognized status {bid_status.status} for bid {bid_id}")

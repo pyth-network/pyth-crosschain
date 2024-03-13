@@ -1,43 +1,20 @@
 import asyncio
+from asyncio import Task
 import json
 import urllib.parse
-from typing import Callable
-from uuid import UUID
+from typing import Callable, Any
+from collections.abc import Coroutine
 
 import httpx
 import web3
 import websockets
+from websockets.client import WebSocketClientProtocol
 from eth_abi import encode
 from eth_account.account import Account
-from openapi_client.models.bid import Bid
-from openapi_client.models.bid_status_with_id import BidStatusWithId
-from openapi_client.models.client_message import ClientMessage
-from openapi_client.models.opportunity_bid import OpportunityBid
-from openapi_client.models.opportunity_params import OpportunityParams
-from openapi_client.models.opportunity_params_with_metadata import (
-    OpportunityParamsWithMetadata,
-)
+
 from web3.auto import w3
 
-
-class BidInfo:
-    def __init__(self, bid: Bid):
-        self.bid = bid
-
-    def to_dict(self):
-        return {"bid": self.bid.to_dict()}
-
-
-class OpportunityBidInfo:
-    def __init__(self, opportunity_id: UUID, opportunity_bid: OpportunityBid):
-        self.opportunity_id = opportunity_id
-        self.opportunity_bid = opportunity_bid
-
-    def to_dict(self):
-        return {
-            "opportunity_id": str(self.opportunity_id),
-            "opportunity_bid": self.opportunity_bid.to_dict(),
-        }
+from express_relay_types import *
 
 
 class ExpressRelayClientException(Exception):
@@ -72,10 +49,10 @@ class ExpressRelayClient:
         self.server_url = server_url
         self.ws_endpoint = parsed_url._replace(scheme=ws_scheme, path="/v1/ws").geturl()
         self.ws_msg_counter = 0
-        self.ws = None
+        self.ws: WebSocketClientProtocol
         self.ws_lock = asyncio.Lock()
-        self.ws_loop = None
-        self.ws_msg_futures = {}
+        self.ws_loop: Task[Any]
+        self.ws_msg_futures: dict[str, asyncio.Future] = {}
         self.ws_options = kwargs
         self.opportunity_callback = opportunity_callback
         self.bid_status_callback = bid_status_callback
@@ -85,10 +62,10 @@ class ExpressRelayClient:
         Initializes the websocket connection to the server, if not already connected.
         """
         async with self.ws_lock:
-            if self.ws is None:
+            if not hasattr(self, "ws"):
                 self.ws = await websockets.connect(self.ws_endpoint, **self.ws_options)
 
-            if self.ws_loop is None:
+            if not hasattr(self, "ws_loop"):
                 ws_call = self.ws_handler(
                     self.opportunity_callback, self.bid_status_callback
                 )
@@ -109,26 +86,28 @@ class ExpressRelayClient:
 
         return self.ws_loop
 
-    async def send_ws_message(self, msg: dict) -> dict:
+    async def send_ws_message(self, method: str, params: dict) -> dict:
         """
         Sends a message to the server via websocket.
 
         Args:
-            msg: The message to send.
+            method: The type of message to send.
+            params: The parameters to send in the message.
         Returns:
             The result of the response message from the server.
         """
         await self.start_ws()
 
         # validate the format of msg
-        msg = ClientMessage.from_dict(msg).to_dict()
-        msg["id"] = str(self.ws_msg_counter)
+        params.update({"method": method})
+        msg_validated = ClientMessage.model_validate({"params": params}).to_dict()
+        msg_validated["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
 
         future = asyncio.get_event_loop().create_future()
-        self.ws_msg_futures[msg["id"]] = future
+        self.ws_msg_futures[msg_validated["id"]] = future
 
-        await self.ws.send(json.dumps(msg))
+        await self.ws.send(json.dumps(msg_validated))
 
         # await the response for the sent ws message from the server
         msg = await future
@@ -157,13 +136,10 @@ class ExpressRelayClient:
         Args:
             chain_ids: A list of chain IDs to subscribe to.
         """
-        json_subscribe = {
-            "method": "subscribe",
-            "params": {
-                "chain_ids": chain_ids,
-            },
+        params = {
+            "chain_ids": chain_ids,
         }
-        await self.send_ws_message(json_subscribe)
+        await self.send_ws_message("subscribe", params)
 
     async def unsubscribe_chains(self, chain_ids: list[str]):
         """
@@ -172,16 +148,13 @@ class ExpressRelayClient:
         Args:
             chain_ids: A list of chain IDs to unsubscribe from.
         """
-        json_unsubscribe = {
-            "method": "unsubscribe",
-            "params": {
-                "chain_ids": chain_ids,
-            },
+        params = {
+            "chain_ids": chain_ids,
         }
-        await self.send_ws_message(json_unsubscribe)
+        await self.send_ws_message("unsubscribe", params)
 
     async def submit_bid(
-        self, bid_info: BidInfo, subscribe_to_updates: bool = True, **kwargs
+        self, bid: Bid, subscribe_to_updates: bool = True, **kwargs
     ) -> UUID:
         """
         Submits a bid to the auction server.
@@ -193,13 +166,8 @@ class ExpressRelayClient:
         Returns:
             The ID of the submitted bid.
         """
-        bid_info_dict = bid_info.to_dict()
         if subscribe_to_updates:
-            json_submit_bid = {
-                "method": "post_bid",
-                "params": bid_info_dict,
-            }
-            result = await self.send_ws_message(json_submit_bid)
+            result = await self.send_ws_message("post_bid", {"bid": bid})
             bid_id = UUID(result.get("id"))
         else:
             async with httpx.AsyncClient() as client:
@@ -207,7 +175,7 @@ class ExpressRelayClient:
                     urllib.parse.urlparse(self.server_url)
                     ._replace(path="/v1/bids")
                     .geturl(),
-                    json=bid_info.bid.to_dict(),
+                    json=bid.to_dict(),
                     **kwargs,
                 )
 
@@ -232,15 +200,17 @@ class ExpressRelayClient:
         Returns:
             The ID of the submitted bid.
         """
-        opportunity_bid_info_dict = opportunity_bid_info.to_dict()
         if subscribe_to_updates:
-            json_submit_opportunity_bid = {
-                "method": "post_liquidation_bid",
-                "params": opportunity_bid_info.to_dict(),
-            }
-            result = await self.send_ws_message(json_submit_opportunity_bid)
+            result = await self.send_ws_message(
+                "post_liquidation_bid",
+                {
+                    "opportunity_id": opportunity_bid_info.opportunity_id,
+                    "opportunity_bid": opportunity_bid_info.opportunity_bid,
+                },
+            )
             bid_id = UUID(result.get("id"))
         else:
+            opportunity_bid_info_dict = opportunity_bid_info.to_dict()
             opportunity_id = opportunity_bid_info_dict["opportunity_id"]
             opportunity_bid = opportunity_bid_info_dict["opportunity_bid"]
 
@@ -263,9 +233,11 @@ class ExpressRelayClient:
     async def ws_handler(
         self,
         opportunity_callback: (
-            Callable[[OpportunityParamsWithMetadata], None] | None
+            Callable[[OpportunityParamsWithMetadata], Coroutine[Any, Any, Any]] | None
         ) = None,
-        bid_status_callback: Callable[[BidStatusWithId], None] | None = None,
+        bid_status_callback: (
+            Callable[[BidStatusWithId], Coroutine[Any, Any, Any]] | None
+        ) = None,
     ):
         """
         Continually handles new ws messages as they are received from the server via websocket.
@@ -278,26 +250,26 @@ class ExpressRelayClient:
             raise ExpressRelayClientException("Websocket not connected")
 
         async for msg in self.ws:
-            msg = json.loads(msg)
+            msg_json = json.loads(msg)
 
-            if msg.get("type"):
-                if msg.get("type") == "new_opportunity":
+            if msg_json.get("type"):
+                if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
                         opportunity = OpportunityParamsWithMetadata.from_dict(
-                            msg.get("opportunity")
+                            msg_json.get("opportunity")
                         )
                         asyncio.create_task(opportunity_callback(opportunity))
 
-                elif msg.get("type") == "bid_status_update":
+                elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
                         bid_status_with_id = BidStatusWithId.from_dict(
-                            msg.get("status")
+                            msg_json.get("status")
                         )
                         asyncio.create_task(bid_status_callback(bid_status_with_id))
 
-            elif msg.get("id"):
-                future = self.ws_msg_futures.pop(msg["id"])
-                future.set_result(msg)
+            elif msg_json.get("id"):
+                future = self.ws_msg_futures.pop(msg_json["id"])
+                future.set_result(msg_json)
 
     async def get_opportunities(
         self, chain_id: str | None = None, timeout_secs: int = 10
@@ -359,7 +331,7 @@ class ExpressRelayClient:
 
 def sign_bid(
     liquidation_opportunity: OpportunityParamsWithMetadata,
-    bid: int,
+    bid_amount: int,
     valid_until: int,
     private_key: str,
 ) -> OpportunityBidInfo:
@@ -368,21 +340,21 @@ def sign_bid(
 
     Args:
         liquidation_opportunity: An object representing the liquidation opportunity, of type OpportunityParamsWithMetadata.
-        bid: An integer representing the amount of the bid (in wei).
+        bid_amount: An integer representing the amount of the bid (in wei).
         valid_until: An integer representing the unix timestamp until which the bid is valid.
         private_key: A 0x-prefixed hex string representing the liquidator's private key.
     Returns:
         A OpportunityBidInfo object, representing the transaction to submit to the liquidation server. This object contains the liquidator's signature.
     """
     repay_tokens = [
-        (token.contract, int(token.amount))
+        (token.contract.address, int(token.amount))
         for token in liquidation_opportunity.repay_tokens
     ]
     receipt_tokens = [
-        (token.contract, int(token.amount))
+        (token.contract.address, int(token.amount))
         for token in liquidation_opportunity.receipt_tokens
     ]
-    calldata = bytes.fromhex(liquidation_opportunity.calldata.replace("0x", ""))
+    calldata = bytes.fromhex(liquidation_opportunity.calldata.string.replace("0x", ""))
 
     digest = encode(
         [
@@ -397,27 +369,27 @@ def sign_bid(
         [
             repay_tokens,
             receipt_tokens,
-            liquidation_opportunity.contract,
+            liquidation_opportunity.contract.address,
             calldata,
             int(liquidation_opportunity.value),
-            bid,
+            bid_amount,
             valid_until,
         ],
     )
     msg_data = web3.Web3.solidity_keccak(["bytes"], [digest])
     signature = w3.eth.account.signHash(msg_data, private_key=private_key)
 
-    opportunity_bid = {
+    opportunity_bid_dict = {
         "permission_key": liquidation_opportunity.permission_key,
-        "amount": str(bid),
+        "amount": str(bid_amount),
         "valid_until": str(valid_until),
-        "liquidator": Account.from_key(private_key).address,
-        "signature": bytes(signature.signature).hex(),
+        "liquidator": Address(address=Account.from_key(private_key).address),
+        "signature": signature,
     }
-    opportunity_bid = OpportunityBid.from_dict(opportunity_bid)
+    opportunity_bid = OpportunityBid.model_validate(opportunity_bid_dict)
 
     opportunity_bid_info = OpportunityBidInfo(
-        opportunity_id=UUID(liquidation_opportunity.opportunity_id),
+        opportunity_id=liquidation_opportunity.opportunity_id,
         opportunity_bid=opportunity_bid,
     )
 

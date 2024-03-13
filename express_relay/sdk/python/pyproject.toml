@@ -19,11 +19,8 @@ pydantic = "^2.6.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
-ruff = "^0.3.0"
-
-[tool.ruff.lint]
-select = ["F", "E", "W", "I001"]
-ignore = ["E501"]
+pyflakes = "^3.2.0"
+mypy = "^1.9.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -115,11 +115,11 @@ repos:
       # For express relay python files
       - id: black
         name: black
-        entry: poetry -C express_relay/sdk/python/express_relay_utils run black express_relay/sdk/python/express_relay_utils --exclude openapi_client
+        entry: poetry -C express_relay/sdk/python/express_relay_utils run black express_relay/sdk/python/express_relay_utils
         pass_filenames: false
         language: system
-      - id: ruff
-        name: ruff
-        entry: poetry -C express_relay/sdk/python/express_relay_utils run ruff express_relay/sdk/python/express_relay_utils --exclude openapi_client --fix
+      - id: pyflakes
+        name: pyflakes
+        entry: poetry -C express_relay/sdk/python/express_relay_utils run pyflakes express_relay/sdk/python/express_relay_utils
         pass_filenames: false
         language: system
