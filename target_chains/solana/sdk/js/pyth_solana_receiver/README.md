@@ -109,7 +109,7 @@ const consumerInstruction: InstructionWithEphemeralSigners = {
 
 const transactions = pythSolanaReceiver.batchIntoVersionedTransactions(
   [...postInstructions, consumerInstruction, ...closeInstructions],
-  {}
+  { computeUnitPriceMicroLamports: 1000000 }
 ); // Put all the instructions together
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
