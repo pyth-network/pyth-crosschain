@@ -77,11 +77,12 @@ export async function buildEncodedVaaCreateInstruction(
 }
 
 /**
- * When we are writing to an encoded VAA account, we do it in two instructions.
+ * Writing the VAA to to an encoded VAA account is done in 2 instructions.
  *
- * We first call `writeEncodedVaa` with the first `VAA_SPLIT_INDEX` bytes and then a second time with the rest of the bytes.
+ * The first one writes the first `VAA_SPLIT_INDEX` bytes and the second one writes the rest.
  *
- * This number was chosen as the biggest number such that we can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
+ * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
+ * This way, the packing of the instructions to post an encoded vaa is more efficient.
  */
 export const VAA_SPLIT_INDEX = 792;
 
