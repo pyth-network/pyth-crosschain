@@ -28,7 +28,6 @@ const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FE
 const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
 
 const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
-await transactionBuilder.withPostPartiallyVerifiedPriceUpdates(priceUpdateData);
 await transactionBuilder.withPostPriceUpdates(priceUpdateData);
 await transactionBuilder.withPriceConsumerInstructions(
     async (
