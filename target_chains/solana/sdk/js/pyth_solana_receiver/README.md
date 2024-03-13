@@ -36,27 +36,48 @@ await pythSolanaReceiver.provider.sendAll(transactions);
 Or, alternatively:
 
 ```ts
-import { PublicKey } from '@solana/web3.js';
-import { PriceServiceConnection } from '@pythnetwork/price-service-client';
-import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver';
-import { MyFirstPythApp, IDL } from './idl/my_first_pyth_app';
+import { PublicKey } from "@solana/web3.js";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import { MyFirstPythApp, IDL } from "./idl/my_first_pyth_app";
 
+const SOL_PRICE_FEED_ID =
+  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+const ETH_PRICE_FEED_ID =
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
 
-const SOL_PRICE_FEED_ID = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
-const ETH_PRICE_FEED_ID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
-
-const priceServiceConnection = new PriceServiceConnection("https://hermes.pyth.network/", { priceFeedRequestConfig: { binary: true } });
-const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID]);  // Fetch off-chain price update data
+const priceServiceConnection = new PriceServiceConnection(
+  "https://hermes.pyth.network/",
+  { priceFeedRequestConfig: { binary: true } }
+);
+const priceUpdateData = await priceServiceConnection.getLatestVaas([
+  SOL_PRICE_FEED_ID,
+  ETH_PRICE_FEED_ID,
+]); // Fetch off-chain price update data
 
 const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-const { postInstructions, cleanupInstructions, priceFeedIdToPriceUpdateAccount } = await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData); // Get instructions to post the price update data and to cleanup the accounts later
+const { postInstructions, closeInstructions, priceFeedIdToPriceUpdateAccount } =
+  await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData); // Get instructions to post the price update data and to close the accounts later
 
+const myFirstPythApp = new Program<MyFirstPythApp>(
+  IDL as MyFirstPythApp,
+  PublicKey.unique(),
+  {}
+);
+const consumerInstruction: InstructionWithEphemeralSigners = {
+  instruction: await myFirstPythApp.methods
+    .consume()
+    .accounts({
+      solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID],
+      ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID],
+    })
+    .instruction(),
+  signers: [],
+};
 
-const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, PublicKey.unique(), {})
-const consumerInstruction: InstructionWithEphemeralSigners = { instruction: await myFirstPythApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: [] }
-
-const transactions = pythSolanaReceiver.batchIntoVersionedTransactions([...postInstructions, consumerInstruction, ...cleanupInstructions], {}); // Put all the instructions together
+const transactions = pythSolanaReceiver.batchIntoVersionedTransactions(
+  [...postInstructions, consumerInstruction, ...closeInstructions],
+  {}
+); // Put all the instructions together
 await pythSolanaReceiver.provider.sendAll(transactions);
 ```
-
-

@@ -43,9 +43,9 @@ import {
  * A class to interact with the Pyth Solana Receiver program.
  *
  * This class provides helpful methods to:
- * - Post price updates from Pyth to the Pyth Solana Receiver program
+ * - Post price updates from Pythnet to the Pyth Solana Receiver program
  * - Consume price updates in a consumer program
- * - Cleanup price update accounts to recover rent
+ * - Close price update and encoded vaa accounts to recover rent
  */
 export class PythSolanaReceiver {
   readonly connection: Connection;
@@ -83,7 +83,7 @@ export class PythSolanaReceiver {
   }
 
   /**
-   * Build a series of transactions that post price updates to the Pyth Solana Receiver program, consume them in a consumer program and cleanup the encoded vaa accounts and price update accounts.
+   * Build a series of transactions that post price updates to the Pyth Solana Receiver program, consume them in a consumer program and close the encoded vaa accounts and price update accounts.
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    * @param getInstructions a function that given a map of price feed IDs to price update accounts, returns a series of instructions to consume the price updates in a consumer program. This function is a way for the user to indicate which accounts in their instruction need to be "replaced" with price update accounts.
    * @param priorityFeeConfig a configuration for the compute unit price to use for the transactions.
@@ -99,20 +99,20 @@ export class PythSolanaReceiver {
     const {
       postInstructions,
       priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
-      cleanupInstructions,
+      closeInstructions,
     } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
     return this.batchIntoVersionedTransactions(
       [
         ...postInstructions,
         ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
-        ...cleanupInstructions,
+        ...closeInstructions,
       ],
       priorityFeeConfig ?? {}
     );
   }
 
   /**
-   * Build a series of transactions that post partially verified price updates to the Pyth Solana Receiver program, consume them in a consumer program and cleanup the price update accounts.
+   * Build a series of transactions that post partially verified price updates to the Pyth Solana Receiver program, consume them in a consumer program and close the price update accounts.
    *
    * Partially verified price updates are price updates where not all the guardian signatures have been verified. By default this methods checks `DEFAULT_REDUCED_GUARDIAN_SET_SIZE` signatures when posting the VAA.
    * If you are a on-chain program developer, make sure you understand the risks of consuming partially verified price updates here: {@link https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_state/src/price_update.rs}.
@@ -132,20 +132,20 @@ export class PythSolanaReceiver {
     const {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      cleanupInstructions,
+      closeInstructions,
     } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
     return this.batchIntoVersionedTransactions(
       [
         ...postInstructions,
         ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
-        ...cleanupInstructions,
+        ...closeInstructions,
       ],
       priorityFeeConfig ?? {}
     );
   }
 
   /**
-   * Build a series of helper instructions that post price updates to the Pyth Solana Receiver program and another series to clean up the price update accounts.
+   * Build a series of helper instructions that post price updates to the Pyth Solana Receiver program and another series to close the price update accounts.
    *
    * This function uses partially verified price updates. Partially verified price updates are price updates where not all the guardian signatures have been verified. By default this methods checks `DEFAULT_REDUCED_GUARDIAN_SET_SIZE` signatures when posting the VAA.
    * If you are a on-chain program developer, make sure you understand the risks of consuming partially verified price updates here: {@link https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_state/src/price_update.rs}.
@@ -153,18 +153,18 @@ export class PythSolanaReceiver {
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    * @returns `postInstructions`: the instructions to post the price updates, these should be called before consuming the price updates
    * @returns `priceFeedIdToPriceUpdateAccount`: this is a map of price feed IDs to Solana address. Given a price feed ID, you can use this map to find the account where `postInstructions` will post the price update.
-   * @returns `cleanupInstructions`: the instructions to clean up the price update accounts, these should be called after consuming the price updates
+   * @returns `closeInstructions`: the instructions to close the price update accounts, these should be called after consuming the price updates
    */
   async buildPostPriceUpdateAtomicInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
-    cleanupInstructions: InstructionWithEphemeralSigners[];
+    closeInstructions: InstructionWithEphemeralSigners[];
   }> {
     const postInstructions: InstructionWithEphemeralSigners[] = [];
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
-    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -202,7 +202,7 @@ export class PythSolanaReceiver {
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
         ] = priceUpdateKeypair.publicKey;
 
-        cleanupInstructions.push(
+        closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
             priceUpdateKeypair.publicKey
           )
@@ -212,7 +212,7 @@ export class PythSolanaReceiver {
     return {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      cleanupInstructions,
+      closeInstructions,
     };
   }
 
@@ -222,15 +222,15 @@ export class PythSolanaReceiver {
    * @param vaa a Wormhole VAA
    * @returns `postInstructions`: the instructions to post the VAA
    * @returns `encodedVaaAddress`: the address of the encoded VAA account where the VAA will be posted
-   * @returns `cleanupInstructions`: the instructions to clean up the encoded VAA account
+   * @returns `closeInstructions`: the instructions to close the encoded VAA account
    */
   async buildPostEncodedVaaInstructions(vaa: Buffer): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     encodedVaaAddress: PublicKey;
-    cleanupInstructions: InstructionWithEphemeralSigners[];
+    closeInstructions: InstructionWithEphemeralSigners[];
   }> {
     const postInstructions: InstructionWithEphemeralSigners[] = [];
-    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
     const encodedVaaKeypair = new Keypair();
     const guardianSetIndex = getGuardianSetIndex(vaa);
 
@@ -274,35 +274,35 @@ export class PythSolanaReceiver {
       computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
     });
 
-    cleanupInstructions.push(
+    closeInstructions.push(
       await this.buildCloseEncodedVaaInstruction(encodedVaaKeypair.publicKey)
     );
 
     return {
       postInstructions,
       encodedVaaAddress: encodedVaaKeypair.publicKey,
-      cleanupInstructions,
+      closeInstructions,
     };
   }
 
   /**
-   * Build a series of helper instructions that post price updates to the Pyth Solana Receiver program and another series to clean up the encoded vaa accounts and the price update accounts.
+   * Build a series of helper instructions that post price updates to the Pyth Solana Receiver program and another series to close the encoded vaa accounts and the price update accounts.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    * @returns `postInstructions`: the instructions to post the price updates, these should be called before consuming the price updates
    * @returns `priceFeedIdToPriceUpdateAccount`: this is a map of price feed IDs to Solana address. Given a price feed ID, you can use this map to find the account where `postInstructions` will post the price update.
-   * @returns `cleanupInstructions`: the instructions to clean up the price update accounts, these should be called after consuming the price updates
+   * @returns `closeInstructions`: the instructions to close the price update accounts, these should be called after consuming the price updates
    */
   async buildPostPriceUpdateInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
-    cleanupInstructions: InstructionWithEphemeralSigners[];
+    closeInstructions: InstructionWithEphemeralSigners[];
   }> {
     const postInstructions: InstructionWithEphemeralSigners[] = [];
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
-    const cleanupInstructions: InstructionWithEphemeralSigners[] = [];
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -312,10 +312,10 @@ export class PythSolanaReceiver {
       const {
         postInstructions: postEncodedVaaInstructions,
         encodedVaaAddress: encodedVaa,
-        cleanupInstructions: postEncodedVaaCleanupInstructions,
+        closeInstructions: postEncodedVaacloseInstructions,
       } = await this.buildPostEncodedVaaInstructions(accumulatorUpdateData.vaa);
       postInstructions.push(...postEncodedVaaInstructions);
-      cleanupInstructions.push(...postEncodedVaaCleanupInstructions);
+      closeInstructions.push(...postEncodedVaacloseInstructions);
 
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
@@ -342,7 +342,7 @@ export class PythSolanaReceiver {
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
         ] = priceUpdateKeypair.publicKey;
-        cleanupInstructions.push(
+        closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
             priceUpdateKeypair.publicKey
           )
@@ -353,7 +353,7 @@ export class PythSolanaReceiver {
     return {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      cleanupInstructions,
+      closeInstructions,
     };
   }
 
