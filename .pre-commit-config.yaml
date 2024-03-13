@@ -116,9 +116,9 @@ repos:
         name: black
         entry: poetry -C express_relay/sdk/python/express_relay_utils run black express_relay/sdk/python/express_relay_utils
         pass_filenames: false
-        language: system
+        language: "system"
       - id: pyflakes
         name: pyflakes
         entry: poetry -C express_relay/sdk/python/express_relay_utils run pyflakes express_relay/sdk/python/express_relay_utils
         pass_filenames: false
-        language: system
+        language: "system"

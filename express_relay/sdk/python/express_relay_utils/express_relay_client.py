@@ -27,17 +27,17 @@ class ExpressRelayClient:
         self,
         server_url: str,
         opportunity_callback: (
-            Callable[[OpportunityParamsWithMetadata], Coroutine[Any, Any, Any]] | None
+            Callable[[Opportunity], Coroutine[Any, Any, Any]] | None
         ) = None,
         bid_status_callback: (
-            Callable[[BidStatusWithId], Coroutine[Any, Any, Any]] | None
+            Callable[[BidStatus], Coroutine[Any, Any, Any]] | None
         ) = None,
         **kwargs,
     ):
         """
         Args:
             server_url: The URL of the auction server.
-            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
+            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatus.
             kwargs: Keyword arguments to pass to the websocket connection.
         """
@@ -101,11 +101,16 @@ class ExpressRelayClient:
         """
         await self.start_ws()
 
-        # validate the format of msg
         params.update({"method": method})
-        msg_validated = ClientMessage.model_validate({"params": params}).to_dict()
+
+        # validate the format of msg and construct the message dict to send
+        msg_validated = ClientMessage.model_validate({"params": params}).model_dump()
+        msg_validated["params"].pop("method")
+        msg_validated["method"] = method
         msg_validated["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
+
+        msg_validated = convert_to_server(msg_validated)
 
         future = asyncio.get_event_loop().create_future()
         self.ws_msg_futures[msg_validated["id"]] = future
@@ -169,8 +174,9 @@ class ExpressRelayClient:
         Returns:
             The ID of the submitted bid.
         """
+        bid_dict = bid.model_dump()
         if subscribe_to_updates:
-            result = await self.send_ws_message("post_bid", {"bid": bid})
+            result = await self.send_ws_message("post_bid", bid_dict)
             bid_id = UUID(result.get("id"))
         else:
             async with httpx.AsyncClient() as client:
@@ -178,7 +184,7 @@ class ExpressRelayClient:
                     urllib.parse.urlparse(self.server_url)
                     ._replace(path="/v1/bids")
                     .geturl(),
-                    json=bid.to_dict(),
+                    json=bid_dict,
                     **kwargs,
                 )
 
@@ -189,7 +195,7 @@ class ExpressRelayClient:
 
     async def submit_opportunity_bid(
         self,
-        opportunity_bid_info: OpportunityBidInfo,
+        opportunity_bid: OpportunityBid,
         subscribe_to_updates: bool = True,
         **kwargs,
     ) -> UUID:
@@ -203,26 +209,29 @@ class ExpressRelayClient:
         Returns:
             The ID of the submitted bid.
         """
+        opportunity_bid_dict = opportunity_bid.model_dump()
         if subscribe_to_updates:
             result = await self.send_ws_message(
                 "post_opportunity_bid",
                 {
-                    "opportunity_id": opportunity_bid_info.opportunity_id,
-                    "opportunity_bid": opportunity_bid_info.opportunity_bid,
+                    "opportunity_id": opportunity_bid.opportunity_id,
+                    "amount": opportunity_bid.amount,
+                    "executor": opportunity_bid.executor,
+                    "permission_key": opportunity_bid.permission_key,
+                    "signature": opportunity_bid.signature,
+                    "valid_until": opportunity_bid.valid_until,
                 },
             )
             bid_id = UUID(result.get("id"))
         else:
-            opportunity_bid_info_dict = opportunity_bid_info.to_dict()
-            opportunity_id = opportunity_bid_info_dict["opportunity_id"]
-            opportunity_bid = opportunity_bid_info_dict["opportunity_bid"]
-
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
-                    ._replace(path=f"/v1/opportunities/{opportunity_id}/bids")
+                    ._replace(
+                        path=f"/v1/opportunities/{opportunity_bid.opportunity_id}/bids"
+                    )
                     .geturl(),
-                    json=opportunity_bid,
+                    json=opportunity_bid_dict,
                     **kwargs,
                 )
 
@@ -234,17 +243,17 @@ class ExpressRelayClient:
     async def ws_handler(
         self,
         opportunity_callback: (
-            Callable[[OpportunityParamsWithMetadata], Coroutine[Any, Any, Any]] | None
+            Callable[[Opportunity], Coroutine[Any, Any, Any]] | None
         ) = None,
         bid_status_callback: (
-            Callable[[BidStatusWithId], Coroutine[Any, Any, Any]] | None
+            Callable[[BidStatus], Coroutine[Any, Any, Any]] | None
         ) = None,
     ):
         """
         Continually handles new ws messages as they are received from the server via websocket.
 
         Args:
-            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
+            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusWithId.
         """
         if not self.ws:
@@ -256,17 +265,21 @@ class ExpressRelayClient:
             if msg_json.get("type"):
                 if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
-                        opportunity = OpportunityParamsWithMetadata.from_dict(
+                        opportunity = Opportunity.model_validate(
                             msg_json.get("opportunity")
                         )
-                        asyncio.create_task(opportunity_callback(opportunity))
+                        if opportunity:
+                            asyncio.create_task(opportunity_callback(opportunity))
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        bid_status_with_id = BidStatusWithId.from_dict(
-                            msg_json.get("status")
+                        id = msg_json.get("status").get("id")
+                        status = msg_json.get("status").get("bid_status").get("status")
+                        result = msg_json.get("status").get("bid_status").get("result")
+                        bid_status = BidStatus(
+                            id=id, status=Status(status), result=result
                         )
-                        asyncio.create_task(bid_status_callback(bid_status_with_id))
+                        asyncio.create_task(bid_status_callback(bid_status))
 
             elif msg_json.get("id"):
                 future = self.ws_msg_futures.pop(msg_json["id"])
@@ -274,7 +287,7 @@ class ExpressRelayClient:
 
     async def get_opportunities(
         self, chain_id: str | None = None, timeout_secs: int = 10
-    ) -> list[OpportunityParamsWithMetadata]:
+    ) -> list[Opportunity]:
         """
         Connects to the server and fetches opportunities.
 
@@ -300,8 +313,7 @@ class ExpressRelayClient:
         resp.raise_for_status()
 
         opportunities = [
-            OpportunityParamsWithMetadata.from_dict(opportunity)
-            for opportunity in resp.json()
+            Opportunity.model_validate(opportunity) for opportunity in resp.json()
         ]
 
         return opportunities
@@ -323,7 +335,7 @@ class ExpressRelayClient:
                 urllib.parse.urlparse(self.server_url)
                 ._replace(path="/v1/opportunities")
                 .geturl(),
-                json=opportunity.to_dict(),
+                json=opportunity.params.model_dump(),
                 timeout=timeout_secs,
             )
         resp.raise_for_status()
@@ -331,31 +343,27 @@ class ExpressRelayClient:
 
 
 def sign_bid(
-    opportunity: OpportunityParamsWithMetadata,
+    opportunity: Opportunity,
     bid_amount: int,
     valid_until: int,
     private_key: str,
-) -> OpportunityBidInfo:
+) -> OpportunityBid:
     """
-    Constructs a signature for a searcher's bid and returns the OpportunityBidInfo object to be submitted to the server.
+    Constructs a signature for a searcher's bid and returns the OpportunityBid object to be submitted to the server.
 
     Args:
-        opportunity: An object representing the opportunity, of type OpportunityParamsWithMetadata.
+        opportunity: An object representing the opportunity, of type Opportunity.
         bid_amount: An integer representing the amount of the bid (in wei).
         valid_until: An integer representing the unix timestamp until which the bid is valid.
         private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
-        A OpportunityBidInfo object, representing the transaction to submit to the server. This object contains the searcher's signature.
+        A OpportunityBid object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
     sell_tokens = [
-        (token.token.address, int(token.amount)) for token in opportunity.sell_tokens
+        (token.token, int(token.amount)) for token in opportunity.sell_tokens
     ]
-    buy_tokens = [
-        (token.token.address, int(token.amount)) for token in opportunity.buy_tokens
-    ]
-    target_calldata = bytes.fromhex(
-        opportunity.target_calldata.string.replace("0x", "")
-    )
+    buy_tokens = [(token.token, int(token.amount)) for token in opportunity.buy_tokens]
+    target_calldata = bytes.fromhex(opportunity.target_calldata.replace("0x", ""))
 
     digest = encode(
         [
@@ -370,9 +378,9 @@ def sign_bid(
         [
             sell_tokens,
             buy_tokens,
-            opportunity.target_contract.address,
+            opportunity.target_contract,
             target_calldata,
-            int(opportunity.target_call_value),
+            opportunity.target_call_value,
             bid_amount,
             valid_until,
         ],
@@ -380,18 +388,42 @@ def sign_bid(
     msg_data = web3.Web3.solidity_keccak(["bytes"], [digest])
     signature = w3.eth.account.signHash(msg_data, private_key=private_key)
 
-    opportunity_bid_dict = {
-        "permission_key": opportunity.permission_key,
-        "amount": str(bid_amount),
-        "valid_until": str(valid_until),
-        "executor": Address(address=Account.from_key(private_key).address),
-        "signature": signature,
-    }
-    opportunity_bid = OpportunityBid.model_validate(opportunity_bid_dict)
-
-    opportunity_bid_info = OpportunityBidInfo(
+    opportunity_bid = OpportunityBid(
         opportunity_id=opportunity.opportunity_id,
-        opportunity_bid=opportunity_bid,
+        permission_key=opportunity.permission_key,
+        amount=bid_amount,
+        valid_until=valid_until,
+        executor=Account.from_key(private_key).address,
+        signature=signature,
     )
 
-    return opportunity_bid_info
+    return opportunity_bid
+
+
+def convert_to_server(msg: dict):
+    if msg["method"] == "post_bid":
+        params = {
+            "bid": {
+                "amount": msg["params"]["amount"],
+                "target_contract": msg["params"]["target_contract"],
+                "chain_id": msg["params"]["chain_id"],
+                "target_calldata": msg["params"]["target_calldata"],
+                "permission_key": msg["params"]["permission_key"],
+            }
+        }
+    elif msg["method"] == "post_opportunity_bid":
+        params = {
+            "opportunity_id": msg["params"]["opportunity_id"],
+            "opportunity_bid": {
+                "amount": msg["params"]["amount"],
+                "executor": msg["params"]["executor"],
+                "permission_key": msg["params"]["permission_key"],
+                "signature": msg["params"]["signature"],
+                "valid_until": msg["params"]["valid_until"],
+            },
+        }
+    else:
+        params = msg["params"]
+
+    msg["params"] = params
+    return msg
