@@ -133,6 +133,18 @@ npm run start -- sui \
   [--polling-frequency 5] \
   [--num-gas-objects 30]
 
+# For Near
+npm run start -- near \
+  --node-url https://rpc.testnet.near.org \
+  --network testnet \
+  --account-id payer.testnet \
+  --pyth-contract-address pyth-oracle.testnet \
+  --price-service-endpoint "https://hermes-beta.pyth.network" \
+  --price-config-file ./price-config.beta.sample.yaml \
+  [--private-key-path ./payer.testnet.json] \
+  [--pushing-frequency 10] \
+  [--polling-frequency 5]
+
 
 # Or, run the price pusher docker image instead of building from the source
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
@@ -195,9 +207,9 @@ It will take a few minutes until all the services are up and running.
 ## Reliability
 
 You can run multiple instances of the price pusher to increase the reliability. It is better to use
-difference RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
+different RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
 in different pushers, then due to blockchains nonce or sequence for accounts, a transaction won't be
-pushed twiced and you won't pay additional costs most of the time.** However, there might be some race
-condiitons in the RPCs because they are often behind a load balancer than can sometimes cause rejected
-transactions land on-chain. You can reduce the chances of additional cost overhead by reducing the
+pushed twice and you won't pay additional costs most of the time.** However, there might be some race
+conditions in the RPCs because they are often behind a load balancer which can sometimes cause rejected
+transactions to land on-chain. You can reduce the chances of additional cost overhead by reducing the
 pushing frequency.

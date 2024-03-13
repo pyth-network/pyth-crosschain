@@ -1,5 +1,7 @@
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
+  ConfirmOptions,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -38,6 +40,10 @@ export type InstructionWithEphemeralSigners = {
 export type PriorityFeeConfig = {
   /** This is the priority fee in micro lamports, it gets passed down to `setComputeUnitPrice`  */
   computeUnitPriceMicroLamports?: number;
+};
+
+export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
+  computeUnitPriceMicroLamports: 50000,
 };
 
 /**
@@ -238,7 +244,8 @@ export class TransactionBuilder {
    * Returns a set of transactions that contain the provided instructions in the same order and with efficient batching
    */
   static batchIntoLegacyTransactions(
-    instructions: TransactionInstruction[]
+    instructions: TransactionInstruction[],
+    priorityFeeConfig: PriorityFeeConfig
   ): Transaction[] {
     const transactionBuilder = new TransactionBuilder(
       PublicKey.unique(),
@@ -247,9 +254,11 @@ export class TransactionBuilder {
     for (const instruction of instructions) {
       transactionBuilder.addInstruction({ instruction, signers: [] });
     }
-    return transactionBuilder.getLegacyTransactions({}).map(({ tx }) => {
-      return tx;
-    });
+    return transactionBuilder
+      .getLegacyTransactions(priorityFeeConfig)
+      .map(({ tx }) => {
+        return tx;
+      });
   }
 
   /**
@@ -265,4 +274,34 @@ export class TransactionBuilder {
     transactionBuilder.addInstructions(instructions);
     return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
   }
+
+  static addPriorityFee(
+    transaction: Transaction,
+    priorityFeeConfig: PriorityFeeConfig
+  ) {
+    if (priorityFeeConfig.computeUnitPriceMicroLamports) {
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: priorityFeeConfig.computeUnitPriceMicroLamports,
+        })
+      );
+    }
+  }
+}
+
+export async function sendTransactions(
+  transactions: {
+    tx: VersionedTransaction | Transaction;
+    signers?: Signer[] | undefined;
+  }[],
+  connection: Connection,
+  wallet: Wallet,
+  opts?: ConfirmOptions
+) {
+  if (opts === undefined) {
+    opts = AnchorProvider.defaultOptions();
+  }
+
+  const provider = new AnchorProvider(connection, wallet, opts);
+  await provider.sendAll(transactions);
 }

@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.26.0",
+    "@coral-xyz/anchor": "^0.29.0",
     "@headlessui/react": "^1.7.7",
-    "@pythnetwork/client": "^2.15.0",
+    "@pythnetwork/client": "^2.21.0",
     "@radix-ui/react-label": "^2.0.0",
     "@radix-ui/react-tooltip": "^1.0.3",
     "@solana/spl-token": "^0.3.7",

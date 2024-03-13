@@ -34,7 +34,7 @@ ETHERSCAN_KEY=... npm run verify --module=PythUpgradable --contract_address=0x0e
 (Note: the network name comes from the `truffle-config.json`).
 (Note: In this case, the `ETHERSCAN_KEY` is your snowtrace API key).
 
-**You might need to add the the explorer api keys in [the truffle config](./truffle-config.js) `api_keys`.** Please look at
+**You might need to add the explorer api keys in [the truffle config](./truffle-config.js) `api_keys`.** Please look at
 `truffle-plugin-verify/utils.js` to find the key names. Here is an example:
 
 ```js

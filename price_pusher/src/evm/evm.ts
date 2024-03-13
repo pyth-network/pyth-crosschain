@@ -236,10 +236,11 @@ export class EvmPricePusher implements IPricePusher {
 
         if (
           err.message.includes("the tx doesn't have the correct nonce.") ||
-          err.message.includes("nonce too low")
+          err.message.includes("nonce too low") ||
+          err.message.includes("invalid nonce")
         ) {
           console.log(
-            "Multiple users are using the same accounts and nonce is incorrect. Skipping this push."
+            "The nonce is incorrect (are multiple users using this account?). Skipping this push."
           );
           return;
         }

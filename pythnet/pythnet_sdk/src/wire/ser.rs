@@ -45,7 +45,7 @@
 //! }
 //! ```
 //!
-//! The macro will expand into (a more complicated but equivelent) version of:
+//! The macro will expand into (a more complicated but equivalent) version of:
 //!
 //! ```rust,ignore
 //! impl serde::Serialize for ExampleEnum {
@@ -76,7 +76,7 @@
 //! any format we desire as long as there is a `Serializer` implementation for it. With aggressive
 //! inlining, the compiler will be able to optimize away the intermediate state objects and calls
 //! to `serialize_field` and `serialize_*_variant` and the final result of our parser will have
-//! very close to equivelent performance to a hand written implementation.
+//! very close to equivalent performance to a hand written implementation.
 //!
 //! The Pyth Serialization Format
 //! ================================================================================
@@ -92,7 +92,7 @@
 //! Integers:
 //!
 //! - `{u,i}8` are serialized as a single byte
-//! - `{u,i}16/32/64/128` are serialized as bytes specified by the parser endianess type param.
+//! - `{u,i}16/32/64/128` are serialized as bytes specified by the parser endianness type param.
 //! - Custom {U,I}128/256 wrappers may be implemented later (similar to Borsh) for better support
 //!   in JS, debugging, logging, etc.
 //!

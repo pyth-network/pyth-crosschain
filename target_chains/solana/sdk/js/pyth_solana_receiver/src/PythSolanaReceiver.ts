@@ -36,8 +36,8 @@ import {
 import {
   TransactionBuilder,
   InstructionWithEphemeralSigners,
+  PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
-import { PriorityFeeConfig } from "@pythnetwork/solana-utils/lib/transaction";
 
 /**
  * A class to interact with the Pyth Solana Receiver program.

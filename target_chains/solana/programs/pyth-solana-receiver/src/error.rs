@@ -51,4 +51,6 @@ pub enum ReceiverError {
     TargetGovernanceAuthorityMismatch,
     #[msg("The governance authority needs to request a transfer first")]
     NonexistentGovernanceAuthorityTransferRequest,
+    #[msg("The minimum number of signatures should be at least 1")]
+    ZeroMinimumSignatures,
 }

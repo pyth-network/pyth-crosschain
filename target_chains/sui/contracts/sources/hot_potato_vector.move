@@ -3,8 +3,6 @@
 module pyth::hot_potato_vector {
     use std::vector;
 
-    const E_EMPTY_HOT_POTATO: u64 = 0;
-
     friend pyth::pyth;
     #[test_only]
     friend pyth::pyth_tests;

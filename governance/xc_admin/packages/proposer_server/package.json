@@ -19,7 +19,7 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.27.0",
+    "@coral-xyz/anchor": "^0.29.0",
     "@pythnetwork/client": "^2.17.0",
     "@solana/web3.js": "^1.76.0",
     "@sqds/mesh": "^1.0.6",

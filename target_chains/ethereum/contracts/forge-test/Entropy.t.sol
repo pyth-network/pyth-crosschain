@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
 
 // TODO
 // - fuzz test?
-contract EntropyTest is Test, EntropyTestUtils {
+contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     ERC1967Proxy public proxy;
     EntropyUpgradable public random;
 
@@ -221,6 +224,12 @@ contract EntropyTest is Test, EntropyTestUtils {
             provider1Proofs[sequenceNumber],
             ALL_ZEROS
         );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
 
         // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
         // the expected behavior.
@@ -728,5 +737,206 @@ contract EntropyTest is Test, EntropyTestUtils {
         vm.prank(unregisteredProvider);
         vm.expectRevert();
         random.setProviderUri(newUri);
+    }
+
+    function testRequestWithCallbackAndReveal() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyStructs.ProviderInfo memory providerInfo = random
+            .getProviderInfo(provider1);
+
+        vm.roll(1234);
+        vm.deal(user1, fee);
+        vm.startPrank(user1);
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RequestedWithCallback(
+            provider1,
+            user1,
+            providerInfo.sequenceNumber,
+            userRandomNumber,
+            EntropyStructs.Request({
+                provider: provider1,
+                sequenceNumber: providerInfo.sequenceNumber,
+                numHashes: SafeCast.toUint32(
+                    providerInfo.sequenceNumber -
+                        providerInfo.currentCommitmentSequenceNumber
+                ),
+                commitment: keccak256(
+                    bytes.concat(
+                        random.constructUserCommitment(userRandomNumber),
+                        providerInfo.currentCommitment
+                    )
+                ),
+                blockNumber: 1234,
+                requester: user1,
+                useBlockhash: false,
+                isRequestWithCallback: true
+            })
+        );
+        vm.roll(1234);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).requester,
+            user1
+        );
+
+        assertEq(
+            random.getRequest(provider1, assignedSequenceNumber).provider,
+            provider1
+        );
+
+        vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
+        random.reveal(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+        vm.stopPrank();
+    }
+
+    function testRequestWithCallbackAndRevealWithCallback() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer(address(random));
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        bytes32 blockHash = bytes32(uint256(0));
+
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            req,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        vm.prank(user1);
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        assertEq(consumer.sequence(), assignedSequenceNumber);
+        assertEq(
+            consumer.randomness(),
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                // No blockhash is being used in callback method. As it
+                // is being depreceated. Passing 0 for it.
+                0
+            )
+        );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
+
+    function testRequestAndRevealWithCallback() public {
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+        assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
+
+        vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
+        vm.prank(user2);
+        random.revealWithCallback(
+            provider1,
+            sequenceNumber,
+            bytes32(uint256(42)),
+            provider1Proofs[sequenceNumber]
+        );
+    }
+
+    function testRequestWithCallbackAndRevealWithCallbackFailing() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumerFails consumer = new EntropyConsumerFails(
+            address(random)
+        );
+        vm.deal(address(consumer), fee);
+        vm.startPrank(address(consumer));
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
+
+        vm.expectRevert();
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+    }
+}
+
+contract EntropyConsumer is IEntropyConsumer {
+    uint64 public sequence;
+    bytes32 public randomness;
+    address public entropy;
+
+    constructor(address _entropy) {
+        entropy = _entropy;
+    }
+
+    function requestEntropy(
+        bytes32 randomNumber
+    ) public payable returns (uint64 sequenceNumber) {
+        address provider = IEntropy(entropy).getDefaultProvider();
+        sequenceNumber = IEntropy(entropy).requestWithCallback{
+            value: msg.value
+        }(provider, randomNumber);
+    }
+
+    function getEntropy() internal view override returns (address) {
+        return entropy;
+    }
+
+    function entropyCallback(
+        uint64 _sequence,
+        bytes32 _randomness
+    ) internal override {
+        sequence = _sequence;
+        randomness = _randomness;
+    }
+}
+
+contract EntropyConsumerFails is IEntropyConsumer {
+    uint64 public sequence;
+    bytes32 public randomness;
+    address public entropy;
+
+    constructor(address _entropy) {
+        entropy = _entropy;
+    }
+
+    function getEntropy() internal view override returns (address) {
+        return entropy;
+    }
+
+    function entropyCallback(
+        uint64 _sequence,
+        bytes32 _randomness
+    ) internal override {
+        revert("Callback failed");
     }
 }

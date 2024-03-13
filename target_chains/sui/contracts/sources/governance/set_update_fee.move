@@ -8,7 +8,6 @@ module pyth::set_update_fee {
 
     friend pyth::governance;
 
-    const MAX_U64: u128 = (1 << 64) - 1;
     const E_EXPONENT_DOES_NOT_FIT_IN_U8: u64 = 0;
 
     struct UpdateFee {
@@ -65,7 +64,7 @@ module pyth::set_update_fee_tests {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
-        let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_FEE_VAA, &clock);
+        let verified_vaa = wormhole::vaa::parse_and_verify(&worm_state, SET_FEE_VAA, &clock);
 
         let receipt = pyth::governance::verify_vaa(&pyth_state, verified_vaa);
 

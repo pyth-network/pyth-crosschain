@@ -15,6 +15,10 @@ const KEYPAIR: Keypair = Keypair.fromSecretKey(
 );
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
+const COMPUTE_UNIT_PRICE_MICROLAMPORTS: number | undefined = process.env
+  .COMPUTE_UNIT_PRICE_MICROLAMPORTS
+  ? Number(process.env.COMPUTE_UNIT_PRICE_MICROLAMPORTS)
+  : undefined;
 
 async function run() {
   const squad = new SquadsMesh({
@@ -29,7 +33,9 @@ async function run() {
     console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
-      await executeProposal(proposal, squad, CLUSTER, COMMITMENT);
+      await executeProposal(proposal, squad, CLUSTER, COMMITMENT, {
+        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS,
+      });
     } else {
       console.log("Skipping: ", proposal.publicKey.toBase58());
     }

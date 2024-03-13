@@ -46,7 +46,7 @@ The following steps are needed to upgrade our sui contracts:
 
 ## Generating the new contract hash:
 
-Run the following command to generate the new hash, make sure the contract addresses are idential to the deployed ones:
+Run the following command to generate the new hash, make sure the contract addresses are identical to the deployed ones:
 
 ```bash
 npm run cli -- generate-digest
@@ -65,5 +65,5 @@ Since clients try to fetch the latest version of the package automatically, it's
 
 ### FAQ:
 
-- I'm seeting the error `Transaction has non recoverable errors from at least 1/3 of validators`. What should I do?
+- I'm seeing the error `Transaction has non recoverable errors from at least 1/3 of validators`. What should I do?
   Make sure you have enough funding in the wallet and try again. Usually a more descriptive error message is available in the returned value of the transaction.

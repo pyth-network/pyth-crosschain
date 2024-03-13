@@ -99,5 +99,5 @@ This method will combine the user and provider's random numbers, along with the 
 
 ## Example Application
 
-The [Coin Flip](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
+The [Coin Flip](/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
 interacts with Pyth Entropy as well as a typescript client for that application.

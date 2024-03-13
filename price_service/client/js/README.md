@@ -1,7 +1,7 @@
 # Price Service Client
 
 [Pyth Network](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities.
-These prices are available either via HTTP or WebSocket from [Hermes](https://github.com/pyth-network/pyth-crosschain/tree/main/hermes).
+These prices are available either via HTTP or WebSocket from [Hermes](/hermes).
 This library is a client for interacting with Hermes, allowing your application to consume Pyth real-time prices in on- and off-chain Javascript/Typescript applications.
 
 ## Installation

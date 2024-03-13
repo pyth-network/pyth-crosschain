@@ -14,7 +14,6 @@ module pyth::governance {
     const E_INVALID_GOVERNANCE_ACTION: u64 = 0;
     const E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES: u64 = 1;
     const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 2;
-    const E_OLD_GUARDIAN_SET_GOVERNANCE: u64 = 3;
     const E_INVALID_GOVERNANCE_DATA_SOURCE: u64 = 4;
 
     // this struct does not have the store or key ability so it must be
