@@ -12,44 +12,56 @@ Price update accounts can be closed by whoever wrote them to recover the rent.
 ## Example use
 
 ```ts
-import { Connection, PublicKey } from '@solana/web3.js';
-import { PriceServiceConnection } from '@pythnetwork/price-service-client';
-import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver';
-import { MyFirstPythApp, IDL } from './idl/my_first_pyth_app';
+import { Connection, PublicKey } from "@solana/web3.js";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import { MyFirstPythApp, IDL } from "./idl/my_first_pyth_app";
 
+const SOL_PRICE_FEED_ID =
+  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+const ETH_PRICE_FEED_ID =
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
 
-const SOL_PRICE_FEED_ID = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
-const ETH_PRICE_FEED_ID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+const priceServiceConnection = new PriceServiceConnection(
+  "https://hermes.pyth.network/",
+  { priceFeedRequestConfig: { binary: true } }
+);
+const priceUpdateData = await priceServiceConnection.getLatestVaas([
+  SOL_PRICE_FEED_ID,
+  ETH_PRICE_FEED_ID,
+]); // Fetch off-chain price update data
 
-const priceServiceConnection = new PriceServiceConnection("https://hermes.pyth.network/", { priceFeedRequestConfig: { binary: true } });
-const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID]);  // Fetch off-chain price update data
-
-
-const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
+const myFirstPythApp = new Program<MyFirstPythApp>(
+  IDL as MyFirstPythApp,
+  MY_FIRST_PYTH_APP_PROGRAM_ID,
+  {}
+);
 
 const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
 await transactionBuilder.withPostPriceUpdates(priceUpdateData);
 await transactionBuilder.withPriceConsumerInstructions(
-    async (
+  async (
     priceFeedIdToPriceAccount: Record<string, PublicKey>
-    ): Promise<InstructionWithEphemeralSigners[]> => {
+  ): Promise<InstructionWithEphemeralSigners[]> => {
     return [
-        {
+      {
         instruction: await myFirstPythApp.methods
-            .consume()
-            .accounts({
+          .consume()
+          .accounts({
             solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID],
             ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID],
-            })
-            .instruction(),
+          })
+          .instruction(),
         signers: [],
-        },
+      },
     ];
-    }
+  }
 );
 transactionBuilder.withCloseInstructions();
 await pythSolanaReceiver.provider.sendAll(
-    await transactionBuilder.getVersionedTransactions({computeUnitPriceMicroLamports:1000000}),
+  await transactionBuilder.getVersionedTransactions({
+    computeUnitPriceMicroLamports: 1000000,
+  })
 );
 ```
 
@@ -81,7 +93,7 @@ const { postInstructions, closeInstructions, priceFeedIdToPriceUpdateAccount } =
 
 const myFirstPythApp = new Program<MyFirstPythApp>(
   IDL as MyFirstPythApp,
-  PublicKey.unique(),
+  MY_FIRST_PYTH_APP_PROGRAM_ID,
   {}
 );
 const consumerInstruction: InstructionWithEphemeralSigners = {
