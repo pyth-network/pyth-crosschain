@@ -1,10 +1,17 @@
 use {
     crate::{
         api,
-        chain::ethereum::PythContract,
+        chain::{
+            self,
+            ethereum::{
+                self,
+                PythContract,
+            },
+        },
         command::register_provider::CommitmentMetadata,
         config::{
             Config,
+            EthereumConfig,
             RunOptions,
         },
         state::{
@@ -16,17 +23,104 @@ use {
         anyhow,
         Result,
     },
-    axum::Router,
+    axum::{
+        response::sse::Event,
+        Router,
+    },
     std::{
         collections::HashMap,
+        os::unix::thread,
         sync::Arc,
+        thread::{
+            self,
+            sleep,
+        },
+        time::Duration,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
 
+pub async fn handle_events(
+    events: Vec<ethereum::RequestedWithCallbackFilter>,
+    contract: &SignablePythContract,
+    chain_config: &EthereumConfig,
+) -> Result<()> {
+    for event in events {
+        let call = contract.reveal_with_callback(
+            event.request.provider,
+            event.request.sequence_number,
+            event.user_random_number,
+            // TODO: inject provider commitment here
+        );
+        let mut gas_estimate = call.estimate_gas().await?;
+        let gas_multiplier = U256::from(2); //TODO: smarter gas estimation
+        gas_estimate = gas_estimate * gas_multiplier;
+        let call_with_gas = call.gas(gas_estimate);
+        if let Some(r) = call_with_gas.send().await?.await? {
+            tracing::info!("Revealed: {:?}", r);
+        }
+    }
+
+    Ok(())
+}
+
+pub fn run_keeper(&chains: HashMap<api::ChainId, EthereumConfig>) -> Result<()> {
+    for (chain_id, chain_config) in chains {
+        thread::spawn(|| {
+            // Initialize a Provider to interface with the EVM contract.
+            let contract =
+                Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
+
+            let starting_block = contract
+                .get_block_number(chain_config.confirmed_block_status)
+                .await?;
+
+            // TODO: inject from the config
+            let block_backlog: u32 = 10_000;
+
+            // TODO: inject from the config
+            let sleep_duration: u32 = 5 * 60;
+
+            thread::spawn(|| {
+                let events = contract
+                    .get_request_with_callback_events(
+                        starting_block,
+                        // TODO: maybe add a check max of 0 or this number
+                        starting_block - block_backlog,
+                    )
+                    .await?;
+
+                handle_events(events, &contract, chain_config)
+            });
+
+            // every 5 minutes run get event
+            loop {
+                let events = contract
+                    .get_request_with_callback_events(
+                        starting_block,
+                        starting_block + block_backlog,
+                    )
+                    .await?;
+
+                handleEvents(events, &contract, &chain_config).await?;
+
+                sleep(Duration::from_secs(sleep_duration));
+            }
+        });
+    }
+    Ok(())
+}
+
 pub async fn run(opts: &RunOptions) -> Result<()> {
+    let config = Config::load(&opts.config.config)?;
+
+    // TODO: not sure if this is the right way
+    thread::spawn(|| {
+        run_keeper(&config.chains);
+    });
+
     #[derive(OpenApi)]
     #[openapi(
     paths(
@@ -46,7 +140,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     )]
     struct ApiDoc;
 
-    let config = Config::load(&opts.config.config)?;
     let secret = opts.randomness.load_secret()?;
 
 

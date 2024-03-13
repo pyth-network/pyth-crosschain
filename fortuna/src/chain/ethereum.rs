@@ -55,14 +55,21 @@ use {
 // contract in the same repo.
 abigen!(
     PythRandom,
-    // "../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
-    "/Users/devkalra/Desktop/temp/EntropyUpgradable-std-output.json"
+    "../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
 
 pub type SignablePythContract = PythRandom<
     TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
+
+pub struct RequestedWithCallbackFilter {
+    pub provider:           Address,
+    pub requestor:          Address,
+    pub sequence_number:    u64,
+    pub user_random_number: [u8; 32],
+    pub request:            Request,
+}
 
 /// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
@@ -172,6 +179,58 @@ impl SignablePythContract {
         } else {
             Err(anyhow!("Request failed").into())
         }
+    }
+
+    pub async fn get_request_with_callback_events(
+        &self,
+        from_block: u64,
+        to_block: u64,
+    ) -> Result<Vec<RequestedWithCallbackFilter>> {
+        let mut event = self.requested_with_callback_filter();
+        event.filter = event.filter.from_block(from_block).to_block(to_block);
+
+        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+
+        Ok(res)
+    }
+
+    async fn get_request(
+        &self,
+        provider_address: Address,
+        sequence_number: u64,
+    ) -> Result<Option<reader::Request>> {
+        let r = self
+            .get_request(provider_address, sequence_number)
+            // TODO: This doesn't work for lighlink right now. Figure out how to do this in lightlink
+            // .block(ethers::core::types::BlockNumber::Finalized)
+            .call()
+            .await?;
+
+        // sequence_number == 0 means the request does not exist.
+        if r.sequence_number != 0 {
+            Ok(Some(reader::Request {
+                provider:        r.provider,
+                sequence_number: r.sequence_number,
+                block_number:    r.block_number.try_into()?,
+                use_blockhash:   r.use_blockhash,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
+        let block_number: EthersBlockNumber = confirmed_block_status.into();
+        let block = self
+            .client()
+            .get_block(block_number)
+            .await?
+            .ok_or_else(|| Error::msg("pending block confirmation"))?;
+
+        Ok(block
+            .number
+            .ok_or_else(|| Error::msg("pending confirmation"))?
+            .as_u64())
     }
 }
 
