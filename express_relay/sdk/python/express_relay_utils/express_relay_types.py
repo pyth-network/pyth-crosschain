@@ -22,7 +22,7 @@ def assert_hex_string(s: str):
     s_set = set(s)
     hex_set = set("0123456789abcdefABCDEF")
 
-    assert s_set.issubset(hex_set), "v must be a valid hex string"
+    assert s_set.issubset(hex_set), "string must be a valid hex string"
 
 
 class HexString(BaseModel):
@@ -52,7 +52,7 @@ class Address(BaseModel):
     @field_validator("address")
     @classmethod
     def check_address(cls, v: str):
-        assert web3.Web3.is_address(v), "s must be a valid Ethereum address"
+        assert web3.Web3.is_address(v), "string must be a valid Ethereum address"
         return v
 
 
@@ -68,7 +68,7 @@ class Bytes32(BaseModel):
     @classmethod
     def check_bytes32(cls, v: str):
         assert_hex_string(v)
-        assert len(v.replace("0x", "")) == 64, "permission key must be 32 bytes long"
+        assert len(v.replace("0x", "")) == 64, "string must be 32 bytes long"
         return v
 
 
@@ -76,24 +76,24 @@ class Bid(BaseModel):
     """
     Args:
         amount: The amount of the bid in wei.
-        calldata: The calldata for the contract call.
+        target_calldata: The calldata for the contract call.
         chain_id: The chain ID to bid on.
-        contract: The contract address to call.
+        target_contract: The contract address to call.
         permission_key: The permission key to bid on.
     """
 
     amount: int
-    calldata: HexString
+    target_calldata: HexString
     chain_id: str
-    contract: Address
+    target_contract: Address
     permission_key: HexString
 
     def to_dict(self):
         return {
             "amount": str(self.amount),
-            "calldata": self.calldata.string,
+            "target_calldata": self.target_calldata.string,
             "chain_id": self.chain_id,
-            "contract": self.contract.address,
+            "target_contract": self.target_contract.address,
             "permission_key": self.permission_key.string,
         }
 
@@ -107,8 +107,8 @@ class Status(Enum):
 class BidStatus(BaseModel):
     """
     Args:
-        status: The status tag, either 'submitted', 'lost', or 'pending'.
-        result: The result of the bid: a transaction hash if the status is 'submitted', else None.
+        status: The status enum, either SUBMITTED, LOST, or PENDING.
+        result: The result of the bid: a transaction hash if the status is SUBMITTED, else None.
     """
 
     status: Status
@@ -152,14 +152,14 @@ class OpportunityBid(BaseModel):
     """
     Args:
         amount: The amount of the bid in wei.
-        liquidator: The address of the liquidator.
+        executor: The address of the executor.
         permission_key: The permission key to bid on.
         signature: The signature of the bid.
         valid_until: The unix timestamp after which the bid becomes invalid.
     """
 
     amount: int
-    liquidator: Address
+    executor: Address
     permission_key: HexString
     signature: SignedMessage
     valid_until: int
@@ -171,7 +171,7 @@ class OpportunityBid(BaseModel):
     def to_dict(self):
         return {
             "amount": str(self.amount),
-            "liquidator": self.liquidator.address,
+            "executor": self.executor.address,
             "permission_key": self.permission_key.string,
             "signature": bytes(self.signature.signature).hex(),
             "valid_until": str(self.valid_until),
@@ -181,8 +181,8 @@ class OpportunityBid(BaseModel):
 class OpportunityBidInfo(BaseModel):
     """
     Args:
-        opportunity_id: The ID of the liquidation opportunity.
-        opportunity_bid: The bid to submit on the liquidation opportunity.
+        opportunity_id: The ID of the opportunity.
+        opportunity_bid: The bid to submit on the opportunity.
     """
 
     opportunity_id: UUID
@@ -198,51 +198,49 @@ class OpportunityBidInfo(BaseModel):
 class TokenAmount(BaseModel):
     """
     Args:
-        contract: The address of the token contract.
+        token: The address of the token contract.
         amount: The amount of the token.
     """
 
-    contract: Address
+    token: Address
     amount: int
 
 
 class OpportunityParamsV1(BaseModel):
     """
     Args:
-        calldata: The calldata for the contract call.
+        target_calldata: The calldata for the contract call.
         chain_id: The chain ID to bid on.
-        contract: The contract address to call.
+        target_contract: The contract address to call.
         permission_key: The permission key to bid on.
-        receipt_tokens: The tokens to receive in the liquidation.
-        repay_tokens: The tokens to repay in the liquidation.
-        value: The value to send with the contract call.
+        buy_tokens: The tokens to receive in the opportunity.
+        sell_tokens: The tokens to spend in the opportunity.
+        target_call_value: The value to send with the contract call.
         version: The version of the opportunity.
     """
 
-    calldata: HexString
+    target_calldata: HexString
     chain_id: str
-    contract: Address
+    target_contract: Address
     permission_key: HexString
-    receipt_tokens: list[TokenAmount]
-    repay_tokens: list[TokenAmount]
-    value: int
+    buy_tokens: list[TokenAmount]
+    sell_tokens: list[TokenAmount]
+    target_call_value: int
     version: Literal["v1"]
 
     def to_dict(self):
         return {
-            "calldata": self.calldata.string,
+            "target_calldata": self.target_calldata.string,
             "chain_id": self.chain_id,
-            "contract": self.contract.address,
+            "target_contract": self.target_contract.address,
             "permission_key": self.permission_key.string,
-            "receipt_tokens": [
-                (token.contract.address, str(token.amount))
-                for token in self.receipt_tokens
+            "buy_tokens": [
+                (token.token.address, str(token.amount)) for token in self.buy_tokens
             ],
-            "repay_tokens": [
-                (token.contract.address, str(token.amount))
-                for token in self.repay_tokens
+            "sell_tokens": [
+                (token.token.address, str(token.amount)) for token in self.sell_tokens
             ],
-            "value": str(self.value),
+            "target_call_value": str(self.target_call_value),
             "version": self.version,
         }
 
@@ -262,57 +260,53 @@ class OpportunityParams(BaseModel):
 class OpportunityParamsWithMetadata(BaseModel):
     """
     Args:
-        calldata: The calldata for the contract call.
+        target_calldata: The calldata for the contract call.
         chain_id: The chain ID to bid on.
-        contract: The contract address to call.
+        target_contract: The contract address to call.
         permission_key: The permission key to bid on.
-        receipt_tokens: The tokens to receive in the liquidation.
-        repay_tokens: The tokens to repay in the liquidation.
-        value: The value to send with the contract call.
+        buy_tokens: The tokens to receive in the opportunity.
+        sell_tokens: The tokens to spend in the opportunity.
+        target_call_value: The value to send with the contract call.
         version: The version of the opportunity.
         creation_time: The creation time of the opportunity.
         opportunity_id: The ID of the opportunity.
     """
 
-    calldata: HexString
+    target_calldata: HexString
     chain_id: str
-    contract: Address
+    target_contract: Address
     permission_key: HexString
-    receipt_tokens: list[TokenAmount]
-    repay_tokens: list[TokenAmount]
-    value: int
+    buy_tokens: list[TokenAmount]
+    sell_tokens: list[TokenAmount]
+    target_call_value: int
     version: str
     creation_time: int
     opportunity_id: UUID
 
     @classmethod
     def from_dict(cls, obj: Dict[str, Any]):
-        obj["calldata"] = HexString(string=obj["calldata"])
-        obj["contract"] = Address(address=obj["contract"])
+        obj["target_calldata"] = HexString(string=obj["target_calldata"])
+        obj["target_contract"] = Address(address=obj["target_contract"])
         obj["permission_key"] = HexString(string=obj["permission_key"])
-        obj["receipt_tokens"] = [
-            TokenAmount(
-                contract=Address(address=token["contract"]), amount=token["amount"]
-            )
-            for token in obj["receipt_tokens"]
+        obj["buy_tokens"] = [
+            TokenAmount(token=Address(address=token["token"]), amount=token["amount"])
+            for token in obj["buy_tokens"]
         ]
-        obj["repay_tokens"] = [
-            TokenAmount(
-                contract=Address(address=token["contract"]), amount=token["amount"]
-            )
-            for token in obj["repay_tokens"]
+        obj["sell_tokens"] = [
+            TokenAmount(token=Address(address=token["token"]), amount=token["amount"])
+            for token in obj["sell_tokens"]
         ]
         obj["opportunity_id"] = UUID(obj["opportunity_id"])
 
         _obj = cls.model_validate(
             {
-                "calldata": obj["calldata"],
+                "target_calldata": obj["target_calldata"],
                 "chain_id": obj["chain_id"],
-                "contract": obj["contract"],
+                "target_contract": obj["target_contract"],
                 "permission_key": obj["permission_key"],
-                "receipt_tokens": obj["receipt_tokens"],
-                "repay_tokens": obj["repay_tokens"],
-                "value": obj["value"],
+                "buy_tokens": obj["buy_tokens"],
+                "sell_tokens": obj["sell_tokens"],
+                "target_call_value": obj["target_call_value"],
                 "version": obj["version"],
                 "creation_time": obj["creation_time"],
                 "opportunity_id": obj["opportunity_id"],
@@ -364,15 +358,15 @@ class PostBidMessage(BaseModel):
         return {"method": str(self.method), "params": {"bid": self.bid.to_dict()}}
 
 
-class PostLiquidationBidMessage(BaseModel):
+class PostOpportunityBidMessage(BaseModel):
     """
     Args:
-        method: A string literal "post_liquidation_bid".
+        method: A string literal "post_opportunity_bid".
         opportunity_id: The ID of the opportunity.
         opportunity_bid: The bid to post on the opportunity.
     """
 
-    method: Literal["post_liquidation_bid"]
+    method: Literal["post_opportunity_bid"]
     opportunity_id: UUID
     opportunity_bid: OpportunityBid
 
@@ -393,7 +387,7 @@ class ClientMessage(BaseModel):
     """
 
     params: Union[
-        SubscribeMessage, UnsubscribeMessage, PostBidMessage, PostLiquidationBidMessage
+        SubscribeMessage, UnsubscribeMessage, PostBidMessage, PostOpportunityBidMessage
     ] = Field(..., discriminator="method")
 
     def to_dict(self):

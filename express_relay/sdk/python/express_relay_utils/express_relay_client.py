@@ -4,6 +4,7 @@ import json
 import urllib.parse
 from typing import Callable, Any
 from collections.abc import Coroutine
+from uuid import UUID
 
 import httpx
 import web3
@@ -14,7 +15,7 @@ from eth_account.account import Account
 
 from web3.auto import w3
 
-from express_relay_types import *
+from express_relay_utils.express_relay_types import *
 
 
 class ExpressRelayClientException(Exception):
@@ -26,15 +27,17 @@ class ExpressRelayClient:
         self,
         server_url: str,
         opportunity_callback: (
-            Callable[[OpportunityParamsWithMetadata], None] | None
+            Callable[[OpportunityParamsWithMetadata], Coroutine[Any, Any, Any]] | None
         ) = None,
-        bid_status_callback: Callable[[BidStatusWithId], None] | None = None,
+        bid_status_callback: (
+            Callable[[BidStatusWithId], Coroutine[Any, Any, Any]] | None
+        ) = None,
         **kwargs,
     ):
         """
         Args:
-            server_url: The URL of the liquidation server.
-            opportunity_callback: An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
+            server_url: The URL of the auction server.
+            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatus.
             kwargs: Keyword arguments to pass to the websocket connection.
         """
@@ -44,7 +47,7 @@ class ExpressRelayClient:
         elif parsed_url.scheme == "http":
             ws_scheme = "ws"
         else:
-            raise ValueError("Invalid liquidation server URL")
+            raise ValueError("Invalid server URL")
 
         self.server_url = server_url
         self.ws_endpoint = parsed_url._replace(scheme=ws_scheme, path="/v1/ws").geturl()
@@ -131,7 +134,7 @@ class ExpressRelayClient:
 
     async def subscribe_chains(self, chain_ids: list[str]):
         """
-        Subscribes websocket to a list of chain IDs for new liquidation opportunities.
+        Subscribes websocket to a list of chain IDs for new opportunities.
 
         Args:
             chain_ids: A list of chain IDs to subscribe to.
@@ -143,7 +146,7 @@ class ExpressRelayClient:
 
     async def unsubscribe_chains(self, chain_ids: list[str]):
         """
-        Unsubscribes websocket from a list of chain IDs for new liquidation opportunities.
+        Unsubscribes websocket from a list of chain IDs for new opportunities.
 
         Args:
             chain_ids: A list of chain IDs to unsubscribe from.
@@ -191,7 +194,7 @@ class ExpressRelayClient:
         **kwargs,
     ) -> UUID:
         """
-        Submits a bid on an opportunity to the liquidation server via websocket.
+        Submits a bid on an opportunity to the server via websocket.
 
         Args:
             opportunity_bid_info: An object representing the bid to submit on an opportunity.
@@ -202,7 +205,7 @@ class ExpressRelayClient:
         """
         if subscribe_to_updates:
             result = await self.send_ws_message(
-                "post_liquidation_bid",
+                "post_opportunity_bid",
                 {
                     "opportunity_id": opportunity_bid_info.opportunity_id,
                     "opportunity_bid": opportunity_bid_info.opportunity_bid,
@@ -217,9 +220,7 @@ class ExpressRelayClient:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
-                    ._replace(
-                        path=f"/v1/liquidation/opportunities/{opportunity_id}/bids"
-                    )
+                    ._replace(path=f"/v1/opportunities/{opportunity_id}/bids")
                     .geturl(),
                     json=opportunity_bid,
                     **kwargs,
@@ -243,7 +244,7 @@ class ExpressRelayClient:
         Continually handles new ws messages as they are received from the server via websocket.
 
         Args:
-            opportunity_callback: An async function that serves as the callback on a new liquidation opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
+            opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type OpportunityParamsWithMetadata.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusWithId.
         """
         if not self.ws:
@@ -275,13 +276,13 @@ class ExpressRelayClient:
         self, chain_id: str | None = None, timeout_secs: int = 10
     ) -> list[OpportunityParamsWithMetadata]:
         """
-        Connects to the liquidation server and fetches liquidation opportunities.
+        Connects to the server and fetches opportunities.
 
         Args:
-            chain_id: The chain ID to fetch liquidation opportunities for. If None, fetches opportunities across all chains.
+            chain_id: The chain ID to fetch opportunities for. If None, fetches opportunities across all chains.
             timeout_secs: The timeout for the HTTP request in seconds.
         Returns:
-            A list of liquidation opportunities.
+            A list of opportunities.
         """
         params = {}
         if chain_id:
@@ -290,7 +291,7 @@ class ExpressRelayClient:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 urllib.parse.urlparse(self.server_url)
-                ._replace(path="/v1/liquidation/opportunities")
+                ._replace(path="/v1/opportunities")
                 .geturl(),
                 params=params,
                 timeout=timeout_secs,
@@ -309,7 +310,7 @@ class ExpressRelayClient:
         self, opportunity: OpportunityParams, timeout_secs: int = 10
     ) -> UUID:
         """
-        Submits an opportunity to the liquidation server.
+        Submits an opportunity to the server.
 
         Args:
             opportunity: An object representing the opportunity to submit.
@@ -320,7 +321,7 @@ class ExpressRelayClient:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 urllib.parse.urlparse(self.server_url)
-                ._replace(path="/v1/liquidation/opportunities")
+                ._replace(path="/v1/opportunities")
                 .geturl(),
                 json=opportunity.to_dict(),
                 timeout=timeout_secs,
@@ -330,31 +331,31 @@ class ExpressRelayClient:
 
 
 def sign_bid(
-    liquidation_opportunity: OpportunityParamsWithMetadata,
+    opportunity: OpportunityParamsWithMetadata,
     bid_amount: int,
     valid_until: int,
     private_key: str,
 ) -> OpportunityBidInfo:
     """
-    Constructs a signature for a liquidator's bid and returns the OpportunityBidInfo object to be submitted to the liquidation server.
+    Constructs a signature for a searcher's bid and returns the OpportunityBidInfo object to be submitted to the server.
 
     Args:
-        liquidation_opportunity: An object representing the liquidation opportunity, of type OpportunityParamsWithMetadata.
+        opportunity: An object representing the opportunity, of type OpportunityParamsWithMetadata.
         bid_amount: An integer representing the amount of the bid (in wei).
         valid_until: An integer representing the unix timestamp until which the bid is valid.
-        private_key: A 0x-prefixed hex string representing the liquidator's private key.
+        private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
-        A OpportunityBidInfo object, representing the transaction to submit to the liquidation server. This object contains the liquidator's signature.
+        A OpportunityBidInfo object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
-    repay_tokens = [
-        (token.contract.address, int(token.amount))
-        for token in liquidation_opportunity.repay_tokens
+    sell_tokens = [
+        (token.token.address, int(token.amount)) for token in opportunity.sell_tokens
     ]
-    receipt_tokens = [
-        (token.contract.address, int(token.amount))
-        for token in liquidation_opportunity.receipt_tokens
+    buy_tokens = [
+        (token.token.address, int(token.amount)) for token in opportunity.buy_tokens
     ]
-    calldata = bytes.fromhex(liquidation_opportunity.calldata.string.replace("0x", ""))
+    target_calldata = bytes.fromhex(
+        opportunity.target_calldata.string.replace("0x", "")
+    )
 
     digest = encode(
         [
@@ -367,11 +368,11 @@ def sign_bid(
             "uint256",
         ],
         [
-            repay_tokens,
-            receipt_tokens,
-            liquidation_opportunity.contract.address,
-            calldata,
-            int(liquidation_opportunity.value),
+            sell_tokens,
+            buy_tokens,
+            opportunity.target_contract.address,
+            target_calldata,
+            int(opportunity.target_call_value),
             bid_amount,
             valid_until,
         ],
@@ -380,16 +381,16 @@ def sign_bid(
     signature = w3.eth.account.signHash(msg_data, private_key=private_key)
 
     opportunity_bid_dict = {
-        "permission_key": liquidation_opportunity.permission_key,
+        "permission_key": opportunity.permission_key,
         "amount": str(bid_amount),
         "valid_until": str(valid_until),
-        "liquidator": Address(address=Account.from_key(private_key).address),
+        "executor": Address(address=Account.from_key(private_key).address),
         "signature": signature,
     }
     opportunity_bid = OpportunityBid.model_validate(opportunity_bid_dict)
 
     opportunity_bid_info = OpportunityBidInfo(
-        opportunity_id=liquidation_opportunity.opportunity_id,
+        opportunity_id=opportunity.opportunity_id,
         opportunity_bid=opportunity_bid,
     )
 

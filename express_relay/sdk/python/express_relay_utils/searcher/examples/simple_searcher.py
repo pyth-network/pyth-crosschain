@@ -3,8 +3,8 @@ import asyncio
 import logging
 
 from eth_account.account import Account
-from express_relay_client import ExpressRelayClient, sign_bid
-from express_relay_types import *
+from express_relay_utils.express_relay_client import ExpressRelayClient, sign_bid
+from express_relay_utils.express_relay_types import *
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +18,22 @@ class SimpleSearcher:
         self.client = ExpressRelayClient(
             server_url, self.opportunity_callback, self.bid_status_callback
         )
-        self.private_key = private_key
-        self.liquidator = Account.from_key(private_key).address
+        self.private_key = Bytes32(string=private_key).string
+        self.public_key = Account.from_key(private_key).address
 
-    def assess_liquidation_opportunity(
+    def assess_opportunity(
         self,
         opp: OpportunityParamsWithMetadata,
     ) -> OpportunityBidInfo | None:
         """
-        Assesses whether a liquidation opportunity is worth liquidating; if so, returns an OpportunityBidInfo object. Otherwise returns None.
+        Assesses whether an opportunity is worth executing; if so, returns an OpportunityBidInfo object. Otherwise returns None.
 
-        This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the liquidation.
-        There are many ways to evaluate this, but the most common way is to check that the value of the amount the searcher will receive from the liquidation exceeds the value of the amount repaid.
-        Individual searchers will have their own methods to determine market impact and the profitability of conducting a liquidation. This function can be expanded to include external prices to perform this evaluation.
+        This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the opportunity.
+        There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of tokens spent.
+        Individual searchers will have their own methods to determine market impact and the profitability of executing an opportunity. This function can be expanded to include external prices to perform this evaluation.
         In this simple searcher, the function always (naively) returns an OpportunityBidInfo object with a default bid and valid_until timestamp.
         Args:
-            opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
+            opp: A OpportunityParamsWithMetadata object, representing a single opportunity.
         Returns:
             If the opportunity is deemed worthwhile, this function can return an OpportunityBidInfo object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
@@ -45,12 +45,12 @@ class SimpleSearcher:
 
     async def opportunity_callback(self, opp: OpportunityParamsWithMetadata):
         """
-        Callback function to run when a new liquidation opportunity is found.
+        Callback function to run when a new opportunity is found.
 
         Args:
-            opp: A OpportunityParamsWithMetadata object, representing a single liquidation opportunity.
+            opp: A OpportunityParamsWithMetadata object, representing a single opportunity.
         """
-        opportunity_bid_info = self.assess_liquidation_opportunity(opp)
+        opportunity_bid_info = self.assess_opportunity(opp)
         if opportunity_bid_info:
             try:
                 await self.client.submit_opportunity_bid(opportunity_bid_info)
@@ -89,14 +89,14 @@ async def main():
         "--private-key",
         type=str,
         required=True,
-        help="Private key of the searcher for signing calldata",
+        help="Private key of the searcher for signing calldata as a hex string",
     )
     parser.add_argument(
         "--chain-ids",
         type=str,
         required=True,
         nargs="+",
-        help="Chain ID(s) of the network(s) to monitor for liquidation opportunities",
+        help="Chain ID(s) of the network(s) to monitor for opportunities",
     )
     parser.add_argument(
         "--server-url",
@@ -115,10 +115,8 @@ async def main():
     log_handler.setFormatter(formatter)
     logger.addHandler(log_handler)
 
-    sk_liquidator = args.private_key
-
-    simple_searcher = SimpleSearcher(args.server_url, sk_liquidator)
-    logger.info("Liquidator address: %s", simple_searcher.liquidator)
+    simple_searcher = SimpleSearcher(args.server_url, args.private_key)
+    logger.info("Searcher address: %s", simple_searcher.public_key)
 
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
