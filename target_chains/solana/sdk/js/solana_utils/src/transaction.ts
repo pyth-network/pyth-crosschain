@@ -42,6 +42,9 @@ export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
 };
 
+/**
+ * A default priority fee configuration. Using a priority fee is helpful even when you're not writing to hot accounts.
+ */
 export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
   computeUnitPriceMicroLamports: 50000,
 };
@@ -275,6 +278,9 @@ export class TransactionBuilder {
     return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
   }
 
+  /**
+   * Add a priority fee to a legacy transaction
+   */
   static addPriorityFee(
     transaction: Transaction,
     priorityFeeConfig: PriorityFeeConfig
@@ -289,6 +295,9 @@ export class TransactionBuilder {
   }
 }
 
+/**
+ * Send a set of transactions to the network
+ */
 export async function sendTransactions(
   transactions: {
     tx: VersionedTransaction | Transaction;
