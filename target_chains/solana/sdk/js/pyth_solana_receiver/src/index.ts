@@ -1,4 +1,7 @@
-export { PythSolanaReceiver } from "./PythSolanaReceiver";
+export {
+  PythSolanaReceiver,
+  PythTransactionBuilder,
+} from "./PythSolanaReceiver";
 export {
   TransactionBuilder,
   InstructionWithEphemeralSigners,

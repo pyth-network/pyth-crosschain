@@ -26,14 +26,35 @@ const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FE
 
 
 const myFirstPythApp = new Program<MyFirstPythApp>(IDL as MyFirstPythApp, , PublicKey.unique(), {})
-const getInstructions = async (priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>) => { return [{ instruction: await myFirstApp.methods.consume().accounts({ solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID], ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID] }).instruction(), signers: [] }] };
 
-const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-const transactions = await pythSolanaReceiver.withPriceUpdate(priceUpdateData, getInstructions, {})
-await pythSolanaReceiver.provider.sendAll(transactions);
+const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
+await transactionBuilder.withPostPartiallyVerifiedPriceUpdates(priceUpdateData);
+await transactionBuilder.withPostPriceUpdates(priceUpdateData);
+await transactionBuilder.withPriceConsumerInstructions(
+    async (
+    priceFeedIdToPriceAccount: Record<string, PublicKey>
+    ): Promise<InstructionWithEphemeralSigners[]> => {
+    return [
+        {
+        instruction: await myFirstPythApp.methods
+            .consume()
+            .accounts({
+            solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID],
+            ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID],
+            })
+            .instruction(),
+        signers: [],
+        },
+    ];
+    }
+);
+transactionBuilder.withCloseInstructions();
+await pythSolanaReceiver.provider.sendAll(
+    await transactionBuilder.getVersionedTransactions({computeUnitPriceMicroLamports:1000000}),
+);
 ```
 
-Or, alternatively:
+Alternatively you can use `buildPostPriceUpdateInstructions` and build your own transactions instead of using `PythTransactionBuilder` :
 
 ```ts
 import { PublicKey } from "@solana/web3.js";
