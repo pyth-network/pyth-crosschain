@@ -19,6 +19,7 @@ use {
     axum::Router,
     std::{
         collections::HashMap,
+        net::SocketAddr,
         sync::Arc,
     },
     tower_http::cors::CorsLayer,
@@ -26,7 +27,10 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-pub async fn run(opts: &RunOptions) -> Result<()> {
+pub async fn run_api(
+    socket_addr: &SocketAddr,
+    chains: HashMap<String, api::BlockchainState>,
+) -> Result<()> {
     #[derive(OpenApi)]
     #[openapi(
     paths(
@@ -46,9 +50,38 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     )]
     struct ApiDoc;
 
+    let metrics_registry = api::Metrics::new();
+    let api_state = api::ApiState {
+        chains:  Arc::new(chains),
+        metrics: Arc::new(metrics_registry),
+    };
+
+    // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
+    // `with_state` method which replaces `Body` with `State` in the type signature.
+    let app = Router::new();
+    let app = app
+        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
+        .merge(api::routes(api_state))
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive());
+
+    tracing::info!("Starting server on: {:?}", socket_addr);
+    // Binds the axum's server to the configured address and port. This is a blocking call and will
+    // not return until the server is shutdown.
+    axum::Server::try_bind(socket_addr)?
+        .serve(app.into_make_service())
+        .await?;
+
+    Ok(())
+}
+
+pub async fn run(opts: &RunOptions) -> Result<()> {
+    // run the api
+    // run the keeper
+
+
     let config = Config::load(&opts.config.config)?;
     let secret = opts.randomness.load_secret()?;
-
 
     let mut chains = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
@@ -99,28 +132,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         chains.insert(chain_id.clone(), state);
     }
 
-    let metrics_registry = api::Metrics::new();
-    let api_state = api::ApiState {
-        chains:  Arc::new(chains),
-        metrics: Arc::new(metrics_registry),
-    };
-
-    // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
-    // `with_state` method which replaces `Body` with `State` in the type signature.
-    let app = Router::new();
-    let app = app
-        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .merge(api::routes(api_state))
-        // Permissive CORS layer to allow all origins
-        .layer(CorsLayer::permissive());
-
-
-    tracing::info!("Starting server on: {:?}", &opts.addr);
-    // Binds the axum's server to the configured address and port. This is a blocking call and will
-    // not return until the server is shutdown.
-    axum::Server::try_bind(&opts.addr)?
-        .serve(app.into_make_service())
-        .await?;
+    run_api(&opts.addr, chains).await?;
 
     Ok(())
 }
