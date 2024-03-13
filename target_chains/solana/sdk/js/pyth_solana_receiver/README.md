@@ -54,7 +54,7 @@ await pythSolanaReceiver.provider.sendAll(
 );
 ```
 
-Alternatively you can use `buildPostPriceUpdateInstructions` and build your own transactions instead of using `PythTransactionBuilder` :
+Alternatively you can use the instruction builder methods from `PythSolanaReceiver` :
 
 ```ts
 import { PublicKey } from "@solana/web3.js";
