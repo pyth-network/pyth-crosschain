@@ -4,7 +4,13 @@ import logging
 
 from eth_account.account import Account
 from express_relay_utils.express_relay_client import ExpressRelayClient, sign_bid
-from express_relay_utils.express_relay_types import *
+from express_relay_utils.express_relay_types import (
+    Opportunity,
+    OpportunityBid,
+    Bytes32,
+    Status,
+    BidStatus,
+)
 
 logger = logging.getLogger(__name__)
 

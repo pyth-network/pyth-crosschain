@@ -15,7 +15,15 @@ from eth_account.account import Account
 
 from web3.auto import w3
 
-from express_relay_utils.express_relay_types import *
+from express_relay_utils.express_relay_types import (
+    Opportunity,
+    BidStatus,
+    ClientMessage,
+    Status,
+    Bid,
+    OpportunityBid,
+    OpportunityParams,
+)
 
 
 class ExpressRelayClientException(Exception):
