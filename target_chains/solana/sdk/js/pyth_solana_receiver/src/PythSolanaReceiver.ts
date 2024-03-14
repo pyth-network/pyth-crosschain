@@ -1,5 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { Connection, Signer, VersionedTransaction } from "@solana/web3.js";
+import {
+  Connection,
+  Signer,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import {
   PythSolanaReceiver as PythSolanaReceiverProgram,
   IDL as Idl,
@@ -40,6 +45,14 @@ import {
 } from "@pythnetwork/solana-utils";
 
 /**
+ * Configuration for the PythTransactionBuilder
+ * @property closeUpdateAccounts (default: true) if true, the builder will add instructions to close the price update accounts and the encoded vaa accounts to recover the rent
+ */
+export type PythTransactionBuilderConfig = {
+  closeUpdateAccounts?: boolean;
+};
+
+/**
  * A builder class to build transactions that:
  * - Post price updates (fully or partially verified)
  * - Consume price updates in a consumer program
@@ -62,14 +75,19 @@ import {
  */
 export class PythTransactionBuilder extends TransactionBuilder {
   readonly pythSolanaReceiver: PythSolanaReceiver;
-  private closeInstructions: InstructionWithEphemeralSigners[];
-  private priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+  readonly closeInstructions: InstructionWithEphemeralSigners[];
+  readonly priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+  readonly closeUpdateAccounts: boolean;
 
-  constructor(pythSolanaReceiver: PythSolanaReceiver) {
+  constructor(
+    pythSolanaReceiver: PythSolanaReceiver,
+    config: PythTransactionBuilderConfig
+  ) {
     super(pythSolanaReceiver.wallet.publicKey, pythSolanaReceiver.connection);
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
     this.priceFeedIdToPriceUpdateAccount = {};
+    this.closeUpdateAccounts = config.closeUpdateAccounts ?? true;
   }
 
   /**
@@ -86,10 +104,10 @@ export class PythTransactionBuilder extends TransactionBuilder {
       priceUpdateDataArray
     );
     this.closeInstructions.push(...closeInstructions);
-    this.priceFeedIdToPriceUpdateAccount = {
-      ...this.priceFeedIdToPriceUpdateAccount,
-      ...priceFeedIdToPriceUpdateAccount,
-    };
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToPriceUpdateAccount
+    );
     this.addInstructions(postInstructions);
   }
 
@@ -123,10 +141,10 @@ export class PythTransactionBuilder extends TransactionBuilder {
       priceUpdateDataArray
     );
     this.closeInstructions.push(...closeInstructions);
-    this.priceFeedIdToPriceUpdateAccount = {
-      ...this.priceFeedIdToPriceUpdateAccount,
-      ...priceFeedIdToPriceUpdateAccount,
-    };
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToPriceUpdateAccount
+    );
     this.addInstructions(postInstructions);
   }
 
@@ -170,11 +188,22 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
-  /**
-   * Add instructions to close the encoded vaa accounts and the price update accounts created by `withPostPriceUpdates` and `withPostPartiallyVerifiedPriceUpdates` to reclaim rent.
-   */
-  withCloseInstructions() {
-    this.addInstructions(this.closeInstructions);
+  async getVersionedTransactions(
+    args: PriorityFeeConfig
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    if (this.closeUpdateAccounts) {
+      this.addInstructions(this.closeInstructions);
+    }
+    return super.getVersionedTransactions(args);
+  }
+
+  getLegacyTransactions(
+    args: PriorityFeeConfig
+  ): { tx: Transaction; signers: Signer[] }[] {
+    if (this.closeUpdateAccounts) {
+      this.addInstructions(this.closeInstructions);
+    }
+    return super.getLegacyTransactions(args);
   }
 }
 
@@ -223,8 +252,10 @@ export class PythSolanaReceiver {
   /**
    * Get a new transaction builder to build transactions that interact with the Pyth Solana Receiver program and consume price updates
    */
-  newTransactionBuilder(): PythTransactionBuilder {
-    return new PythTransactionBuilder(this);
+  newTransactionBuilder(
+    config: PythTransactionBuilderConfig
+  ): PythTransactionBuilder {
+    return new PythTransactionBuilder(this, config);
   }
 
   /**
