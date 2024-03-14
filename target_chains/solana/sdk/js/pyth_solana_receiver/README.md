@@ -38,8 +38,8 @@ const myFirstPythApp = new Program<MyFirstPythApp>(
 );
 
 const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
-await transactionBuilder.withPostPriceUpdates(priceUpdateData);
-await transactionBuilder.withPriceConsumerInstructions(
+await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+await transactionBuilder.addPriceConsumerInstructions(
   async (
     getPriceUpdateAccount: (priceFeedId: string) => PublicKey
   ): Promise<InstructionWithEphemeralSigners[]> => {

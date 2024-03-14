@@ -66,8 +66,8 @@ export type PythTransactionBuilderConfig = {
  *  ]);
  *
  * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
- * await transactionBuilder.withPostPriceUpdates(priceUpdateData);
- * await transactionBuilder.withPriceConsumerInstructions(...)
+ * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+ * await transactionBuilder.addPriceConsumerInstructions(...)
  *
  * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.getVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
  * ```
@@ -94,7 +94,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    */
-  async withPostPriceUpdates(priceUpdateDataArray: string[]) {
+  async addPostPriceUpdates(priceUpdateDataArray: string[]) {
     const {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
@@ -126,12 +126,12 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * ]);
    *
    * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
-   * await transactionBuilder.withPostPartiallyVerifiedPriceUpdates(priceUpdateData);
-   * await transactionBuilder.withPriceConsumerInstructions(...)
+   * await transactionBuilder.addPostPartiallyVerifiedPriceUpdates(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(...)
    * ...
    * ```
    */
-  async withPostPartiallyVerifiedPriceUpdates(priceUpdateDataArray: string[]) {
+  async addPostPartiallyVerifiedPriceUpdates(priceUpdateDataArray: string[]) {
     const {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
@@ -156,8 +156,8 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * @example
    * ```typescript
    * ...
-   * await transactionBuilder.withPostPriceUpdates(priceUpdateData);
-   * await transactionBuilder.withPriceConsumerInstructions(
+   * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(
    *   async (
    *     getPriceUpdateAccount: ( priceFeedId: string) => PublicKey
    *   ): Promise<InstructionWithEphemeralSigners[]> => {
@@ -177,7 +177,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * );
    * ```
    */
-  async withPriceConsumerInstructions(
+  async addPriceConsumerInstructions(
     getInstructions: (
       getPriceUpdateAccount: (priceFeedId: string) => PublicKey
     ) => Promise<InstructionWithEphemeralSigners[]>
@@ -220,7 +220,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.priceFeedIdToPriceUpdateAccount[priceFeedId];
     if (!priceUpdateAccount) {
       throw new Error(
-        `A price update account for the price feed ID ${priceFeedId} is being consumed before it was posted. Make sure to call withPostPriceUpdates or withPriceConsumerInstructions before calling withPriceConsumerInstructions.`
+        `A price update account for the price feed ID ${priceFeedId} is being consumed before it was posted. Make sure to call addPostPriceUpdates or addPriceConsumerInstructions before calling addPriceConsumerInstructions.`
       );
     }
     return priceUpdateAccount;
