@@ -1,7 +1,7 @@
 {
   "name": "@pythnetwork/express-relay-sdk-solidity",
   "version": "0.2.0",
-  "description": "Solidity SDK for interacting with express relay contracts",
+  "description": "Solidity SDK for interacting with Express Relay contracts",
   "repository": {
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain",
