@@ -56,7 +56,7 @@ export type PythTransactionBuilderConfig = {
  * A builder class to build transactions that:
  * - Post price updates (fully or partially verified)
  * - Consume price updates in a consumer program
- * - (Optionally) Close price update and encoded vaa accounts to recover the rent
+ * - (Optionally) Close price update and encoded vaa accounts to recover the rent (`closeUpdateAccounts` in `PythTransactionBuilderConfig`)
  *
  * @example
  * ```typescript
@@ -65,10 +65,9 @@ export type PythTransactionBuilderConfig = {
  *    ETH_PRICE_FEED_ID,
  *  ]);
  *
- * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
+ * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
  * await transactionBuilder.withPostPriceUpdates(priceUpdateData);
  * await transactionBuilder.withPriceConsumerInstructions(...)
- * transactionBuilder.withCloseInstructions();
  *
  * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.getVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
  * ```
@@ -126,7 +125,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *    ETH_PRICE_FEED_ID,
    * ]);
    *
-   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
    * await transactionBuilder.withPostPartiallyVerifiedPriceUpdates(priceUpdateData);
    * await transactionBuilder.withPriceConsumerInstructions(...)
    * ...
@@ -160,15 +159,15 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * await transactionBuilder.withPostPriceUpdates(priceUpdateData);
    * await transactionBuilder.withPriceConsumerInstructions(
    *   async (
-   *     priceFeedIdToPriceAccount: Record<string, PublicKey>
+   *     getPriceUpdateAccount: ( priceFeedId: string) => PublicKey
    *   ): Promise<InstructionWithEphemeralSigners[]> => {
    *     return [
    *       {
    *         instruction: await myFirstPythApp.methods
    *           .consume()
    *           .accounts({
-   *              solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID],
-   *              ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID],
+   *              solPriceUpdate: getPriceUpdateAccount(SOL_PRICE_FEED_ID),
+   *              ethPriceUpdate: getPriceUpdateAccount(ETH_PRICE_FEED_ID),
    *           })
    *           .instruction(),
    *         signers: [],
@@ -176,7 +175,6 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *     ];
    *   }
    * );
-   * transactionBuilder.withCloseInstructions();
    * ```
    */
   async withPriceConsumerInstructions(

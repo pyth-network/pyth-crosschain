@@ -37,19 +37,19 @@ const myFirstPythApp = new Program<MyFirstPythApp>(
   {}
 );
 
-const transactionBuilder = pythSolanaReceiver.newTransactionBuilder();
+const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
 await transactionBuilder.withPostPriceUpdates(priceUpdateData);
 await transactionBuilder.withPriceConsumerInstructions(
   async (
-    priceFeedIdToPriceAccount: Record<string, PublicKey>
+    getPriceUpdateAccount: (priceFeedId: string) => PublicKey
   ): Promise<InstructionWithEphemeralSigners[]> => {
     return [
       {
         instruction: await myFirstPythApp.methods
           .consume()
           .accounts({
-            solPriceUpdate: priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID],
-            ethPriceUpdate: priceFeedIdToPriceUpdateAccount[ETH_PRICE_FEED_ID],
+            solPriceUpdate: getPriceUpdateAccount(SOL_PRICE_FEED_ID),
+            ethPriceUpdate: getPriceUpdateAccount(ETH_PRICE_FEED_ID),
           })
           .instruction(),
         signers: [],
@@ -57,7 +57,6 @@ await transactionBuilder.withPriceConsumerInstructions(
     ];
   }
 );
-transactionBuilder.withCloseInstructions();
 await pythSolanaReceiver.provider.sendAll(
   await transactionBuilder.getVersionedTransactions({
     computeUnitPriceMicroLamports: 1000000,
