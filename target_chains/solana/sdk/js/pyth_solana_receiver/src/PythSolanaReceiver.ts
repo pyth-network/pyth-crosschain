@@ -151,7 +151,8 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Add instructions that consume price updates to the builder.
    *
-   * @param getInstructions a function that given a map of price feed IDs to price update accounts, generates a series of instructions. Price updates get posted to ephemeral accounts and this function allows the user to indicate which accounts in their instruction need to be "replaced" with each price update account.
+   * @param getInstructions a function that given a mapping of price feed IDs to price update accounts, generates a series of instructions. Price updates get posted to ephemeral accounts and this function allows the user to indicate which accounts in their instruction need to be "replaced" with each price update account.
+   * If multiple price updates for the same price feed id are posted with the same builder, the account corresponding to the last update to get posted will be used.
    *
    * @example
    * ```typescript
@@ -180,14 +181,17 @@ export class PythTransactionBuilder extends TransactionBuilder {
    */
   async withPriceConsumerInstructions(
     getInstructions: (
-      priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
+      getPriceUpdateAccount: (priceFeedId: string) => PublicKey
     ) => Promise<InstructionWithEphemeralSigners[]>
   ) {
     this.addInstructions(
-      await getInstructions(this.priceFeedIdToPriceUpdateAccount)
+      await getInstructions(this.getPriceUpdateAccount.bind(this))
     );
   }
 
+  /**
+   * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
   async getVersionedTransactions(
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
@@ -197,6 +201,9 @@ export class PythTransactionBuilder extends TransactionBuilder {
     return super.getVersionedTransactions(args);
   }
 
+  /**
+   * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
   getLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
@@ -204,6 +211,21 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.addInstructions(this.closeInstructions);
     }
     return super.getLegacyTransactions(args);
+  }
+
+  /**
+   * This method is used to retrieve the address of the price update account where the price update for a given price feed id will be posted.
+   * If multiple price updates for the same price feed id will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
+   * */
+  getPriceUpdateAccount(priceFeedId: string): PublicKey {
+    const priceUpdateAccount =
+      this.priceFeedIdToPriceUpdateAccount[priceFeedId];
+    if (!priceUpdateAccount) {
+      throw new Error(
+        `A price update account for the price feed ID ${priceFeedId} is being consumed before it was posted. Make sure to call withPostPriceUpdates or withPriceConsumerInstructions before calling withPriceConsumerInstructions.`
+      );
+    }
+    return priceUpdateAccount;
   }
 }
 
