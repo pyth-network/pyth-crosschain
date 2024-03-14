@@ -3,12 +3,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "protocol",
+        "name": "protocolFeeReceiver",
         "type": "address"
       },
       {
         "internalType": "bytes",
-        "name": "permissionKey",
+        "name": "permissionId",
         "type": "bytes"
       }
     ],
