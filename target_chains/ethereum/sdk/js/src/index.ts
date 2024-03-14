@@ -87,6 +87,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   lightlink_pegasus_testnet: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
   linea_goerli: "0xdF21D137Aadc95588205586636710ca2890538d5",
   manta_testnet: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+  manta_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   mantle_sepolia: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
   merlin_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   meter_testnet: "0x5a71C07a0588074443545eE0c08fb0375564c3E4",

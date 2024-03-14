@@ -308,6 +308,11 @@
   rpcUrl: https://pacific-rpc.testnet.manta.network/http
   networkId: 3441005
   type: EvmChain
+- id: manta_sepolia
+  mainnet: false
+  rpcUrl: https://manta-sepolia.rpc.caldera.xyz/http
+  networkId: 3441006
+  type: EvmChain
 - id: optimism_sepolia
   mainnet: false
   rpcUrl: https://sepolia.optimism.io
