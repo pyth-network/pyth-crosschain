@@ -8,7 +8,7 @@ from typing import Union
 from pydantic import Field
 from typing_extensions import Literal, Annotated
 import warnings
-
+import string
 from eth_account.datastructures import SignedMessage
 
 
@@ -19,14 +19,13 @@ def maybe_hex_string(s: str):
     Args:
         s: The string to validate as a hex string. Can be '0x'-prefixed.
     """
+    ind = 0
     if s.startswith("0x"):
-        s_set = set(s[2:])
-    else:
-        s_set = set(s)
+        ind = 2
 
-    hex_set = set("0123456789abcdefABCDEF")
-
-    assert s_set.issubset(hex_set), "string is not a valid hex string"
+    assert all(
+        c in string.hexdigits for c in s[ind:]
+    ), "string is not a valid hex string"
 
     return s
 
@@ -39,10 +38,12 @@ def maybe_bytes32(s: str):
         s: The string to validate as a 32-byte hex string. Can be '0x'-prefixed.
     """
     maybe_hex_string(s)
+    ind = 0
     if s.startswith("0x"):
-        assert len(s[2:]) == 64, "hex string is not 32 bytes long"
-    else:
-        assert len(s) == 64, "hex string is not 32 bytes long"
+        ind = 2
+
+    assert len(s[ind:]) == 64, "hex string is not 32 bytes long"
+
     return s
 
 
@@ -53,7 +54,6 @@ def maybe_address(s: str):
     Args:
         s: The string to validate as an Ethereum address. Can be '0x'-prefixed.
     """
-    ## TODO: check does this need to be 0x prefixed for stuff on rust side to work
     assert web3.Web3.is_address(s), "string is not a valid Ethereum address"
     return s
 
@@ -97,27 +97,27 @@ class Bid(BaseModel):
     permission_key: HexString
 
 
-class Status(Enum):
+class BidStatus(Enum):
     SUBMITTED = "submitted"
     LOST = "lost"
     PENDING = "pending"
 
 
-class BidStatus(BaseModel):
+class BidStatusUpdate(BaseModel):
     """
     Attributes:
         id: The ID of the bid.
-        status: The status enum, either SUBMITTED, LOST, or PENDING.
+        bid_status: The status enum, either SUBMITTED, LOST, or PENDING.
         result: The result of the bid: a transaction hash if the status is SUBMITTED, else None.
     """
 
     id: UUIDString
-    status: Status
+    bid_status: BidStatus
     result: Bytes32 | None = Field(default=None)
 
     @model_validator(mode="after")
     def check_result(self):
-        if self.status == Status("submitted"):
+        if self.bid_status == BidStatus("submitted"):
             assert self.result is not None, "result must be a valid 32-byte hash"
         else:
             assert self.result is None, "result must be None"

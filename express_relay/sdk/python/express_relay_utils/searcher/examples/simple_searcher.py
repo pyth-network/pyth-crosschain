@@ -1,15 +1,14 @@
 import argparse
 import asyncio
 import logging
-
 from eth_account.account import Account
 from express_relay_utils.express_relay_client import ExpressRelayClient, sign_bid
 from express_relay_utils.express_relay_types import (
     Opportunity,
     OpportunityBid,
     Bytes32,
-    Status,
     BidStatus,
+    BidStatusUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,9 +33,9 @@ class SimpleSearcher:
         """
         Assesses whether an opportunity is worth executing; if so, returns an OpportunityBid object. Otherwise returns None.
 
-        This function determines whether the given opportunity deals with the specified repay and receipt tokens that the searcher wishes to transact in and whether it is profitable to execute the opportunity.
-        There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of tokens spent.
-        Individual searchers will have their own methods to determine market impact and the profitability of executing an opportunity. This function can be expanded to include external prices to perform this evaluation.
+        This function determines whether the given opportunity is worthwhile to execute.
+        There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of the tokens spent.
+        Individual searchers will have their own methods to determine market impact and the profitability of executing an opportunity. This function can use external prices to perform this evaluation.
         In this simple searcher, the function always (naively) returns an OpportunityBid object with a default bid and valid_until timestamp.
         Args:
             opp: An object representing a single opportunity.
@@ -66,25 +65,25 @@ class SimpleSearcher:
                     f"Error submitting bid amount {opportunity_bid.amount} for opportunity {str(opportunity_bid.opportunity_id)}: {e}"
                 )
 
-    async def bid_status_callback(self, bid_status: BidStatus):
+    async def bid_status_callback(self, bid_status_update: BidStatusUpdate):
         """
         Callback function to run when a bid status is updated.
 
         Args:
-            bid_status: An object representing the status of a bid.
+            bid_status_update: An object representing an update to the status of a bid.
         """
-        id = bid_status.id
-        status = bid_status.status
-        result = bid_status.result
+        id = bid_status_update.id
+        bid_status = bid_status_update.bid_status
+        result = bid_status_update.result
 
-        if status == Status("submitted"):
+        if bid_status == BidStatus("submitted"):
             logger.info(f"Bid {id} has been submitted in hash {result}")
-        elif status == Status("lost"):
+        elif bid_status == BidStatus("lost"):
             logger.info(f"Bid {id} was unsuccessful")
-        elif status == Status("pending"):
+        elif bid_status == BidStatus("pending"):
             logger.info(f"Bid {id} is pending")
         else:
-            logger.error(f"Unrecognized status {status} for bid {id}")
+            logger.error(f"Unrecognized status {bid_status} for bid {id}")
 
 
 async def main():

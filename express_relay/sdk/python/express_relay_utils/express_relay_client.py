@@ -5,21 +5,18 @@ import urllib.parse
 from typing import Callable, Any
 from collections.abc import Coroutine
 from uuid import UUID
-
 import httpx
 import web3
 import websockets
 from websockets.client import WebSocketClientProtocol
 from eth_abi import encode
 from eth_account.account import Account
-
 from web3.auto import w3
-
 from express_relay_utils.express_relay_types import (
     Opportunity,
-    BidStatus,
+    BidStatusUpdate,
     ClientMessage,
-    Status,
+    BidStatus,
     Bid,
     OpportunityBid,
     OpportunityParams,
@@ -38,7 +35,7 @@ class ExpressRelayClient:
             Callable[[Opportunity], Coroutine[Any, Any, Any]] | None
         ) = None,
         bid_status_callback: (
-            Callable[[BidStatus], Coroutine[Any, Any, Any]] | None
+            Callable[[BidStatusUpdate], Coroutine[Any, Any, Any]] | None
         ) = None,
         **kwargs,
     ):
@@ -46,7 +43,7 @@ class ExpressRelayClient:
         Args:
             server_url: The URL of the auction server.
             opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
-            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatus.
+            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusUpdate.
             kwargs: Keyword arguments to pass to the websocket connection.
         """
         parsed_url = urllib.parse.urlparse(server_url)
@@ -176,7 +173,7 @@ class ExpressRelayClient:
         Submits a bid to the auction server.
 
         Args:
-            bid_info: An object representing the bid to submit.
+            bid: An object representing the bid to submit.
             subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
             kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
@@ -211,7 +208,7 @@ class ExpressRelayClient:
         Submits a bid on an opportunity to the server via websocket.
 
         Args:
-            opportunity_bid_info: An object representing the bid to submit on an opportunity.
+            opportunity_bid: An object representing the bid to submit on an opportunity.
             subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
             kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
@@ -254,7 +251,7 @@ class ExpressRelayClient:
             Callable[[Opportunity], Coroutine[Any, Any, Any]] | None
         ) = None,
         bid_status_callback: (
-            Callable[[BidStatus], Coroutine[Any, Any, Any]] | None
+            Callable[[BidStatusUpdate], Coroutine[Any, Any, Any]] | None
         ) = None,
     ):
         """
@@ -262,7 +259,7 @@ class ExpressRelayClient:
 
         Args:
             opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
-            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusWithId.
+            bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusUpdate.
         """
         if not self.ws:
             raise ExpressRelayClientException("Websocket not connected")
@@ -282,12 +279,14 @@ class ExpressRelayClient:
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
                         id = msg_json.get("status").get("id")
-                        status = msg_json.get("status").get("bid_status").get("status")
-                        result = msg_json.get("status").get("bid_status").get("result")
-                        bid_status = BidStatus(
-                            id=id, status=Status(status), result=result
+                        bid_status = (
+                            msg_json.get("status").get("bid_status").get("status")
                         )
-                        asyncio.create_task(bid_status_callback(bid_status))
+                        result = msg_json.get("status").get("bid_status").get("result")
+                        bid_status_update = BidStatusUpdate(
+                            id=id, bid_status=BidStatus(bid_status), result=result
+                        )
+                        asyncio.create_task(bid_status_callback(bid_status_update))
 
             elif msg_json.get("id"):
                 future = self.ws_msg_futures.pop(msg_json["id"])
@@ -408,7 +407,15 @@ def sign_bid(
     return opportunity_bid
 
 
-def convert_to_server(msg: dict):
+def convert_to_server(msg: dict) -> dict:
+    """
+    Converts the params of a client message to the format expected by the server.
+
+    Args:
+        msg: The message to convert.
+    Returns:
+        The message with the params converted to the format expected by the server.
+    """
     if msg["method"] == "post_bid":
         params = {
             "bid": {
@@ -419,6 +426,7 @@ def convert_to_server(msg: dict):
                 "permission_key": msg["params"]["permission_key"],
             }
         }
+        msg["params"] = params
     elif msg["method"] == "post_opportunity_bid":
         params = {
             "opportunity_id": msg["params"]["opportunity_id"],
@@ -430,8 +438,6 @@ def convert_to_server(msg: dict):
                 "valid_until": msg["params"]["valid_until"],
             },
         }
-    else:
-        params = msg["params"]
+        msg["params"] = params
 
-    msg["params"] = params
     return msg
