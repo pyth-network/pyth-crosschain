@@ -69,7 +69,7 @@ export type PythTransactionBuilderConfig = {
  * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
  * await transactionBuilder.addPriceConsumerInstructions(...)
  *
- * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.getVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
+ * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
  * ```
  */
 export class PythTransactionBuilder extends TransactionBuilder {
@@ -190,25 +190,25 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  async getVersionedTransactions(
+  async buildVersionedTransactions(
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     if (this.closeUpdateAccounts) {
       this.addInstructions(this.closeInstructions);
     }
-    return super.getVersionedTransactions(args);
+    return super.buildVersionedTransactions(args);
   }
 
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  getLegacyTransactions(
+  buildLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
     if (this.closeUpdateAccounts) {
       this.addInstructions(this.closeInstructions);
     }
-    return super.getLegacyTransactions(args);
+    return super.buildLegacyTransactions(args);
   }
 
   /**

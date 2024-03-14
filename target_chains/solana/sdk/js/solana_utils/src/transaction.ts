@@ -183,7 +183,7 @@ export class TransactionBuilder {
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  async getVersionedTransactions(
+  async buildVersionedTransactions(
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
@@ -223,7 +223,7 @@ export class TransactionBuilder {
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  getLegacyTransactions(
+  buildLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(({ instructions, signers }) => {
@@ -258,7 +258,7 @@ export class TransactionBuilder {
       transactionBuilder.addInstruction({ instruction, signers: [] });
     }
     return transactionBuilder
-      .getLegacyTransactions(priorityFeeConfig)
+      .buildLegacyTransactions(priorityFeeConfig)
       .map(({ tx }) => {
         return tx;
       });
@@ -275,7 +275,7 @@ export class TransactionBuilder {
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const transactionBuilder = new TransactionBuilder(payer, connection);
     transactionBuilder.addInstructions(instructions);
-    return transactionBuilder.getVersionedTransactions(priorityFeeConfig);
+    return transactionBuilder.buildVersionedTransactions(priorityFeeConfig);
   }
 
   /**

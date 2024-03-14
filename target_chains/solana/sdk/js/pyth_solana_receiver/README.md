@@ -58,7 +58,7 @@ await transactionBuilder.addPriceConsumerInstructions(
   }
 );
 await pythSolanaReceiver.provider.sendAll(
-  await transactionBuilder.getVersionedTransactions({
+  await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 1000000,
   })
 );
