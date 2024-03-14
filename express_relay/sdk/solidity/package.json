@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/per-sdk-solidity",
-  "version": "0.1.0",
-  "description": "Solidity SDK for interacting with Pyth express relay contracts",
+  "name": "@pythnetwork/express-relay-sdk-solidity",
+  "version": "0.2.0",
+  "description": "Solidity SDK for interacting with express relay contracts",
   "repository": {
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "npx generate-abis IPERMulticall IPERFeeReceiver",
+    "generate-abi": "npx generate-abis IExpressRelay IExpressRelayFeeReceiver",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
