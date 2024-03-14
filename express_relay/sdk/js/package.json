@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://pyth.network",
   "author": {
@@ -17,8 +17,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest src/ --passWithNoTests",
-    "simple-searcher": "npm run build && node lib/examples/SimpleSearcher.js",
-    "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/types.d.ts",
+    "simple-searcher": "npm run build && node lib/examples/simpleSearcher.js",
+    "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/serverTypes.d.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src",
     "prepublishOnly": "npm run build && npm test && npm run lint",
