@@ -109,18 +109,15 @@ class ExpressRelayClient:
         params.update({"method": method})
 
         # validate the format of msg and construct the message dict to send
-        msg_validated = ClientMessage.model_validate({"params": params}).model_dump()
-        msg_validated["params"].pop("method")
-        msg_validated["method"] = method
-        msg_validated["id"] = str(self.ws_msg_counter)
+        client_msg_validated = ClientMessage.model_validate({"params": params})
+        msg = client_msg_validated.convert_to_server()
+        msg["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
 
-        msg_validated = convert_to_server(msg_validated)
-
         future = asyncio.get_event_loop().create_future()
-        self.ws_msg_futures[msg_validated["id"]] = future
+        self.ws_msg_futures[msg["id"]] = future
 
-        await self.ws.send(json.dumps(msg_validated))
+        await self.ws.send(json.dumps(msg))
 
         # await the response for the sent ws message from the server
         msg = await future
@@ -405,39 +402,3 @@ def sign_bid(
     )
 
     return opportunity_bid
-
-
-def convert_to_server(msg: dict) -> dict:
-    """
-    Converts the params of a client message to the format expected by the server.
-
-    Args:
-        msg: The message to convert.
-    Returns:
-        The message with the params converted to the format expected by the server.
-    """
-    if msg["method"] == "post_bid":
-        params = {
-            "bid": {
-                "amount": msg["params"]["amount"],
-                "target_contract": msg["params"]["target_contract"],
-                "chain_id": msg["params"]["chain_id"],
-                "target_calldata": msg["params"]["target_calldata"],
-                "permission_key": msg["params"]["permission_key"],
-            }
-        }
-        msg["params"] = params
-    elif msg["method"] == "post_opportunity_bid":
-        params = {
-            "opportunity_id": msg["params"]["opportunity_id"],
-            "opportunity_bid": {
-                "amount": msg["params"]["amount"],
-                "executor": msg["params"]["executor"],
-                "permission_key": msg["params"]["permission_key"],
-                "signature": msg["params"]["signature"],
-                "valid_until": msg["params"]["valid_until"],
-            },
-        }
-        msg["params"] = params
-
-    return msg
