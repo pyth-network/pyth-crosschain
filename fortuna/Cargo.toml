@@ -13,6 +13,7 @@ byteorder   = "1.5.0"
 clap        = { version = "4.4.6", features = ["derive", "cargo", "env"] }
 ethabi      = "18.0.0"
 ethers      = "2.0.10"
+futures            = { version = "0.3.28" }
 hex         = "0.4.3"
 prometheus-client  = { version = "0.21.2" }
 pythnet-sdk = { path = "../pythnet/pythnet_sdk", features = ["strum"] }
@@ -33,6 +34,7 @@ utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }
 once_cell = "1.18.0"
 lazy_static = "1.4.0"
 url = "2.5.0"
+
 
 [dev-dependencies]
 axum-test = "13.1.1"

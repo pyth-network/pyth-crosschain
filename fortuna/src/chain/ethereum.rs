@@ -63,6 +63,15 @@ pub type SignablePythContract = PythRandom<
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
 
+// FIXME: this is probably not right.
+pub struct RequestedWithCallbackFilter {
+    pub provider:           Address,
+    pub requestor:          Address,
+    pub sequence_number:    u64,
+    pub user_random_number: [u8; 32],
+    pub request:            Request,
+}
+
 /// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
 pub struct LegacyTxTransformer {
@@ -225,4 +234,17 @@ impl EntropyReader for PythContract {
             .ok_or_else(|| Error::msg("pending confirmation"))?
             .as_u64())
     }
+
+    // async fn get_request_with_callback_events(
+    //     &self,
+    //     from_block: u64,
+    //     to_block: u64,
+    // ) -> Result<Vec<RequestedWithCallbackFilter>> {
+    //     let mut event = self.requested_with_callback_filter();
+    //     event.filter = event.filter.from_block(from_block).to_block(to_block);
+
+    //     let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+
+    //     Ok(res)
+    // }
 }

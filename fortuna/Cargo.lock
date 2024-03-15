@@ -1498,6 +1498,7 @@ dependencies = [
  "clap",
  "ethabi",
  "ethers",
+ "futures",
  "hex",
  "lazy_static",
  "once_cell",
