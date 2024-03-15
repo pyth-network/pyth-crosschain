@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade poetry
-          poetry build
+          poetry install
         working-directory: "express_relay/sdk/python/express_relay"
       - name: Build and publish
         run: |
