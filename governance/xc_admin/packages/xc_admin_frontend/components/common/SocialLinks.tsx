@@ -2,7 +2,6 @@ import Link from 'next/link'
 import Discord from '../../images/icons/discord.inline.svg'
 import Github from '../../images/icons/github.inline.svg'
 import LinkedIn from '../../images/icons/linkedin.inline.svg'
-import Substack from '../../images/icons/substack.inline.svg'
 import Telegram from '../../images/icons/telegram.inline.svg'
 import Twitter from '../../images/icons/twitter.inline.svg'
 import Youtube from '../../images/icons/youtube.inline.svg'
@@ -35,12 +34,7 @@ const SocialLinks = () => {
           <Github />
         </a>
       </Link>
-      <Link href="https://pyth.substack.com">
-        <a target="_blank" className="mr-6">
-          <Substack />
-        </a>
-      </Link>
-      <Link href="https://www.youtube.com/channel/UCjCkvPN9ohl0UDvldfn1neg">
+      <Link href="https://www.youtube.com/@pythnetwork">
         <a target="_blank" className="">
           <Youtube />
         </a>

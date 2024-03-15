@@ -7,12 +7,25 @@ interface EntropyEvents {
     event Registered(EntropyStructs.ProviderInfo provider);
 
     event Requested(EntropyStructs.Request request);
+    event RequestedWithCallback(
+        address indexed provider,
+        address indexed requestor,
+        uint64 indexed sequenceNumber,
+        bytes32 userRandomNumber,
+        EntropyStructs.Request request
+    );
 
     event Revealed(
         EntropyStructs.Request request,
         bytes32 userRevelation,
         bytes32 providerRevelation,
         bytes32 blockHash,
+        bytes32 randomNumber
+    );
+    event RevealedWithCallback(
+        EntropyStructs.Request request,
+        bytes32 userRandomNumber,
+        bytes32 providerRevelation,
         bytes32 randomNumber
     );
 

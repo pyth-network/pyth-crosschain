@@ -6,9 +6,9 @@ Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to
 
 - **Scopes**
   - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
-  - [Pyth Crosschain Ethereum](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/contracts/contracts/pyth)
-  - [Pyth Crosschain Aptos](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/aptos/contracts)
-  - [Pyth Crosschain Sui](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/sui/contracts)
+  - [Pyth Crosschain Ethereum](/target_chains/ethereum/contracts/contracts/pyth)
+  - [Pyth Crosschain Aptos](/target_chains/aptos/contracts)
+  - [Pyth Crosschain Sui](/target_chains/sui/contracts)
   - [Pyth Governance](https://github.com/pyth-network/governance/tree/master/staking/programs/staking)
 - **Rewards**
   - Critical: Up to $500,000
@@ -43,7 +43,7 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
 
 The Pyth project maintains a social media monitoring program to stay abreast of important ecosystem developments.
 
-These developments include monitoring services like Twitter for key phrases and patterns such that the Pyth project is informed of a compromise or vulnerability in a dependancy that could negatively affect Pyth or its users.
+These developments include monitoring services like Twitter for key phrases and patterns such that the Pyth project is informed of a compromise or vulnerability in a dependency that could negatively affect Pyth or its users.
 
 In the case of a large ecosystem development that requires response, the Pyth project will engage its security incident response program.
 
@@ -51,7 +51,7 @@ In the case of a large ecosystem development that requires response, the Pyth pr
 
 The Pyth project maintains an incident response program to respond to vulnerabilities or active threats to Pyth, its users, or the ecosystems it's connected to. Pyth can be made aware about a security event from a variety of different sources (eg. bug bounty program, audit finding, security monitoring, social media, etc.)
 
-When a Pyth project contributor becomes aware of a security event, that contributor immediately holds the role of [incident commander](https://en.wikipedia.org/wiki/Incident_commander) for the issue until they hand off to a more appropriate incident commander. A contributor does not need to be a "security person" or have any special priviledges to hold the role of incident commander, they simply need to be responsible, communicate effectively, and maintain the following obligations to manage the incident to completion.
+When a Pyth project contributor becomes aware of a security event, that contributor immediately holds the role of [incident commander](https://en.wikipedia.org/wiki/Incident_commander) for the issue until they hand off to a more appropriate incident commander. A contributor does not need to be a "security person" or have any special privileges to hold the role of incident commander, they simply need to be responsible, communicate effectively, and maintain the following obligations to manage the incident to completion.
 
 The role of the incident commander for Pyth includes the following minimum obligations:
 

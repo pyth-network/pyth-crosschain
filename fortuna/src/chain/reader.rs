@@ -1,10 +1,36 @@
 use {
     anyhow::Result,
     axum::async_trait,
-    ethers::types::Address,
+    ethers::types::{
+        Address,
+        BlockNumber as EthersBlockNumber,
+    },
 };
 
 pub type BlockNumber = u64;
+
+#[derive(
+    Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
+pub enum BlockStatus {
+    /// Latest block
+    #[default]
+    Latest,
+    /// Finalized block accepted as canonical
+    Finalized,
+    /// Safe head block
+    Safe,
+}
+
+impl Into<EthersBlockNumber> for BlockStatus {
+    fn into(self) -> EthersBlockNumber {
+        match self {
+            BlockStatus::Latest => EthersBlockNumber::Latest,
+            BlockStatus::Finalized => EthersBlockNumber::Finalized,
+            BlockStatus::Safe => EthersBlockNumber::Safe,
+        }
+    }
+}
 
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
@@ -15,7 +41,7 @@ pub trait EntropyReader: Send + Sync {
     async fn get_request(&self, provider: Address, sequence_number: u64)
         -> Result<Option<Request>>;
 
-    async fn get_block_number(&self) -> Result<BlockNumber>;
+    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
 }
 
 /// An in-flight request stored in the contract.
@@ -36,6 +62,7 @@ pub mod mock {
     use {
         crate::chain::reader::{
             BlockNumber,
+            BlockStatus,
             EntropyReader,
             Request,
         },
@@ -114,7 +141,10 @@ pub mod mock {
                 .map(|r| (*r).clone()))
         }
 
-        async fn get_block_number(&self) -> Result<BlockNumber> {
+        async fn get_block_number(
+            &self,
+            confirmed_block_status: BlockStatus,
+        ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
         }
     }

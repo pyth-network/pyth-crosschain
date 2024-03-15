@@ -38,6 +38,7 @@ use {
         state::GuardianSet,
     },
     wormhole_raw_vaas::{
+        utils::quorum,
         GuardianSetSig,
         Vaa,
     },
@@ -52,7 +53,12 @@ declare_id!(pyth_solana_receiver_state::ID);
 pub mod pyth_solana_receiver {
     use super::*;
 
+
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
+        require!(
+            initial_config.minimum_signatures > 0,
+            ReceiverError::ZeroMinimumSignatures
+        );
         let config = &mut ctx.accounts.config;
         **config = initial_config;
         Ok(())
@@ -67,6 +73,12 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    pub fn cancel_governance_authority_transfer(ctx: Context<Governance>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.target_governance_authority = None;
+        Ok(())
+    }
+
     pub fn accept_governance_authority_transfer(
         ctx: Context<AcceptGovernanceAuthorityTransfer>,
     ) -> Result<()> {
@@ -77,6 +89,7 @@ pub mod pyth_solana_receiver {
         config.target_governance_authority = None;
         Ok(())
     }
+
 
     pub fn set_data_sources(
         ctx: Context<Governance>,
@@ -101,14 +114,21 @@ pub mod pyth_solana_receiver {
 
     pub fn set_minimum_signatures(ctx: Context<Governance>, minimum_signatures: u8) -> Result<()> {
         let config = &mut ctx.accounts.config;
+        require!(minimum_signatures > 0, ReceiverError::ZeroMinimumSignatures);
         config.minimum_signatures = minimum_signatures;
         Ok(())
     }
 
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
-    /// Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.
-    /// Typically, you can fit 5 guardian signatures in a transaction that uses this.
+    /// Compared to `post_update`, it only checks whatever signatures are present in the provided VAA and doesn't fail if the number of signatures is lower than the Wormhole quorum of two thirds of the guardians.
+    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the `PriceUpdateV1` account.
+    ///
+    /// We recommend using `post_update_atomic` with 5 signatures. This is close to the maximum signatures you can verify in one transaction without exceeding the transaction size limit.
+    ///
+    /// # Warning
+    ///
+    /// Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update.
     pub fn post_update_atomic(
         ctx: Context<PostUpdateAtomic>,
         params: PostUpdateAtomicParams,
@@ -131,6 +151,19 @@ pub mod pyth_solana_receiver {
         );
 
         let guardian_keys = &guardian_set.keys;
+        let quorum = quorum(guardian_keys.len());
+        require_gte!(
+            vaa.signature_count(),
+            config.minimum_signatures,
+            ReceiverError::InsufficientGuardianSignatures
+        );
+        let verification_level = if usize::from(vaa.signature_count()) >= quorum {
+            VerificationLevel::Full
+        } else {
+            VerificationLevel::Partial {
+                num_signatures: vaa.signature_count(),
+            }
+        };
 
         // Generate the same message hash (using keccak) that the Guardians used to generate their
         // signatures. This message hash will be hashed again to produce the digest for
@@ -161,18 +194,10 @@ pub mod pyth_solana_receiver {
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
 
-        require_gte!(
-            vaa.signature_count(),
-            config.minimum_signatures,
-            ReceiverError::InsufficientGuardianSignatures
-        );
-
         let vaa_components = VaaComponents {
-            verification_level: VerificationLevel::Partial {
-                num_signatures: vaa.signature_count(),
-            },
-            emitter_address:    vaa.body().emitter_address(),
-            emitter_chain:      vaa.body().emitter_chain(),
+            verification_level,
+            emitter_address: vaa.body().emitter_address(),
+            emitter_chain: vaa.body().emitter_chain(),
         };
 
         post_price_update_from_vaa(
@@ -195,7 +220,7 @@ pub mod pyth_solana_receiver {
     pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
-        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?;
+        let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified. This check is critical otherwise the program could be tricked into accepting unverified VAAs.
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
             &mut ctx.accounts.price_update_account;
@@ -269,9 +294,8 @@ pub struct PostUpdate<'info> {
     pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config:               Account<'info, Config>,
-    #[account(seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
-    #[account(mut)]
+    #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
@@ -329,8 +353,7 @@ fn deserialize_guardian_set_checked(
     wormhole: &Pubkey,
 ) -> Result<AccountVariant<GuardianSet>> {
     let mut guardian_set_data: &[u8] = &account_info.try_borrow_data()?;
-    let guardian_set =
-        AccountVariant::<GuardianSet>::try_deserialize_unchecked(&mut guardian_set_data)?;
+    let guardian_set = AccountVariant::<GuardianSet>::try_deserialize(&mut guardian_set_data)?;
 
     let expected_address = Pubkey::find_program_address(
         &[
@@ -371,19 +394,22 @@ fn post_price_update_from_vaa<'info>(
     vaa_payload: &[u8],
     price_update: &MerklePriceUpdate,
 ) -> Result<()> {
+    let amount_to_pay = if treasury.lamports() == 0 {
+        Rent::get()?
+            .minimum_balance(0)
+            .max(config.single_update_fee_in_lamports)
+    } else {
+        config.single_update_fee_in_lamports
+    }; // First person to use the treasury account has to pay rent
     if payer.lamports()
         < Rent::get()?
-            .minimum_balance(0)
-            .saturating_add(config.single_update_fee_in_lamports)
+            .minimum_balance(payer.data_len())
+            .saturating_add(amount_to_pay)
     {
         return err!(ReceiverError::InsufficientFunds);
     };
 
-    let transfer_instruction = system_instruction::transfer(
-        payer.key,
-        treasury.key,
-        config.single_update_fee_in_lamports,
-    );
+    let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
     anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[payer.to_account_info(), treasury.to_account_info()],

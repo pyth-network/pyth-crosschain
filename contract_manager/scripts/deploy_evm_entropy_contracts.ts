@@ -5,12 +5,19 @@ import { DefaultStore } from "../src/store";
 import {
   DeploymentType,
   EvmEntropyContract,
+  EvmPriceFeedContract,
   getDefaultDeploymentConfig,
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
+  WormholeEvmContract,
 } from "../src";
-import { deployIfNotCached, getWeb3Contract } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getWeb3Contract,
+} from "./common";
+import Web3 from "web3";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -31,54 +38,14 @@ const ENTROPY_DEFAULT_PROVIDER = {
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_entropy_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --wormhole-addr <wormhole-addr>"
   )
   .options({
-    "std-output-dir": {
-      type: "string",
-      demandOption: true,
-      desc: "Path to the standard JSON output of the contracts (build artifact) directory",
-    },
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to use for the deployment",
-    },
+    ...COMMON_DEPLOY_OPTIONS,
     chain: {
       type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
-    },
-    "deployment-type": {
-      type: "string",
-      demandOption: false,
-      default: "stable",
-      desc: "Deployment type to use. Can be 'stable' or 'beta'",
-    },
-    "gas-multiplier": {
-      type: "number",
-      demandOption: false,
-      // Proxy (ERC1967) contract gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
-      default: 2,
-      desc: "Gas multiplier to use for the deployment. This is useful when gas estimates are not accurate",
-    },
-    "gas-price-multiplier": {
-      type: "number",
-      demandOption: false,
-      default: 1,
-      desc: "Gas price multiplier to use for the deployment. This is useful when gas price estimates are not accurate",
-    },
-    "save-contract": {
-      type: "boolean",
-      demandOption: false,
-      default: true,
-      desc: "Save the contract to the store",
-    },
-    // TODO: maintain a wormhole store
-    "wormhole-addr": {
-      type: "string",
-      demandOption: true,
-      desc: "Wormhole address",
     },
   });
 
@@ -163,22 +130,52 @@ async function deployEntropyContracts(
   );
 }
 
+async function topupProviderIfNecessary(
+  chain: EvmChain,
+  deploymentConfig: DeploymentConfig
+) {
+  const provider = chain.isMainnet()
+    ? ENTROPY_DEFAULT_PROVIDER.mainnet
+    : ENTROPY_DEFAULT_PROVIDER.testnet;
+  const web3 = new Web3(chain.getRpcUrl());
+  const balance = Number(
+    web3.utils.fromWei(await web3.eth.getBalance(provider), "ether")
+  );
+  const MIN_BALANCE = 0.01;
+  console.log(`Provider balance: ${balance} ETH`);
+  if (balance < MIN_BALANCE) {
+    console.log(
+      `Balance is less than ${MIN_BALANCE}. Topping up the provider address...`
+    );
+    const signer = web3.eth.accounts.privateKeyToAccount(
+      deploymentConfig.privateKey
+    );
+    web3.eth.accounts.wallet.add(signer);
+    const tx = await web3.eth.sendTransaction({
+      from: signer.address,
+      to: provider,
+      gas: 30000,
+      value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+    });
+    console.log("Topped up the provider address. Tx: ", tx.transactionHash);
+  }
+}
+
+async function findWormholeAddress(
+  chain: EvmChain
+): Promise<string | undefined> {
+  for (const contract of Object.values(DefaultStore.contracts)) {
+    if (
+      contract instanceof EvmPriceFeedContract &&
+      contract.getChain().getId() === chain.getId()
+    ) {
+      return (await contract.getWormholeContract()).address;
+    }
+  }
+}
+
 async function main() {
   const argv = await parser.argv;
-
-  const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
-    gasMultiplier: argv.gasMultiplier,
-    gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
-    jsonOutputDir: argv.stdOutputDir,
-    saveContract: argv.saveContract,
-    wormholeAddr: argv.wormholeAddr,
-  };
-
-  console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
-  );
 
   const chainName = argv.chain;
   const chain = DefaultStore.chains[chainName];
@@ -187,6 +184,37 @@ async function main() {
   } else if (!(chain instanceof EvmChain)) {
     throw new Error(`Chain ${chainName} is not an EVM chain`);
   }
+
+  const wormholeAddr = await findWormholeAddress(chain);
+  if (!wormholeAddr) {
+    // TODO: deploy wormhole if necessary and maintain a wormhole store
+    throw new Error(`Wormhole contract not found for chain ${chain.getId()}`);
+  }
+
+  const deploymentConfig: DeploymentConfig = {
+    type: toDeploymentType(argv.deploymentType),
+    gasMultiplier: argv.gasMultiplier,
+    gasPriceMultiplier: argv.gasPriceMultiplier,
+    privateKey: toPrivateKey(argv.privateKey),
+    jsonOutputDir: argv.stdOutputDir,
+    saveContract: argv.saveContract,
+    wormholeAddr,
+  };
+  const wormholeContract = new WormholeEvmContract(
+    chain,
+    deploymentConfig.wormholeAddr
+  );
+  const wormholeChainId = await wormholeContract.getChainId();
+  if (chain.getWormholeChainId() != wormholeChainId) {
+    throw new Error(
+      `Wormhole chain id mismatch. Expected ${chain.getWormholeChainId()} but got ${wormholeChainId}`
+    );
+  }
+  await topupProviderIfNecessary(chain, deploymentConfig);
+
+  console.log(
+    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
+  );
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 

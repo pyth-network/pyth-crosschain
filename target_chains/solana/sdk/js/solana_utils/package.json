@@ -1,0 +1,48 @@
+{
+  "name": "@pythnetwork/solana-utils",
+  "version": "0.2.0",
+  "description": "Utility functions for Solana",
+  "homepage": "https://pyth.network",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain.git",
+    "directory": "target_chains/solana/sdk/js/solana_utils"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.13.0",
+    "jest": "^29.4.0",
+    "prettier": "^2.6.2",
+    "quicktype": "^23.0.76",
+    "ts-jest": "^29.0.5",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.90.0"
+  }
+}

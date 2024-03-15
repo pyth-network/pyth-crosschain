@@ -1,4 +1,3 @@
-import { isAccumulatorUpdateData } from "./AccumulatorUpdateData";
 import {
   Convert,
   Price as JsonPrice,
@@ -14,6 +13,7 @@ export {
   isAccumulatorUpdateData,
   parseAccumulatorUpdateData,
   AccumulatorUpdateData,
+  parsePriceFeedMessage,
 } from "./AccumulatorUpdateData";
 
 /**

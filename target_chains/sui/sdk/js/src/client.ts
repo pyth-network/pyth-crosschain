@@ -1,18 +1,12 @@
-import {
-  builder,
-  JsonRpcProvider,
-  ObjectId,
-  SUI_CLOCK_OBJECT_ID,
-  TransactionBlock,
-} from "@mysten/sui.js";
-import {
-  HexString,
-  isAccumulatorUpdateData,
-  parseAccumulatorUpdateData,
-} from "@pythnetwork/price-service-client";
+import { SuiClient } from "@mysten/sui.js/client";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
+import { HexString } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
+export type ObjectId = string;
 
 export class SuiPythClient {
   private pythPackageId: ObjectId | undefined;
@@ -21,7 +15,7 @@ export class SuiPythClient {
   private priceFeedObjectIdCache: Map<HexString, ObjectId> = new Map();
   private baseUpdateFee: number | undefined;
   constructor(
-    public provider: JsonRpcProvider,
+    public provider: SuiClient,
     public pythStateId: ObjectId,
     public wormholeStateId: ObjectId
   ) {
@@ -41,6 +35,8 @@ export class SuiPythClient {
         result.data.content.dataType !== "moveObject"
       )
         throw new Error("Unable to fetch pyth state object");
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
     }
 
@@ -65,11 +61,14 @@ export class SuiPythClient {
         if (result.data?.content?.dataType == "moveObject") {
           return result.data.content.fields;
         }
+        console.log(result.data?.content);
 
-        throw new Error("not move object");
+        throw new Error(`Cannot fetch package id for object ${objectId}`);
       });
 
     if ("upgrade_cap" in state) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       return state.upgrade_cap.fields.package;
     }
 
@@ -90,7 +89,7 @@ export class SuiPythClient {
         arguments: [
           tx.object(this.wormholeStateId),
           tx.pure(
-            builder
+            bcs
               .ser("vector<u8>", Array.from(vaa), {
                 maxSize: MAX_ARGUMENT_SIZE,
               })
@@ -115,49 +114,31 @@ export class SuiPythClient {
     updates: Buffer[],
     feedIds: HexString[]
   ): Promise<ObjectId[]> {
-    const wormholePackageId = await this.getWormholePackageId();
     const packageId = await this.getPythPackageId();
 
     let priceUpdatesHotPotato;
-    if (updates.every((update) => isAccumulatorUpdateData(update))) {
-      if (updates.length > 1) {
-        throw new Error(
-          "SDK does not support sending multiple accumulator messages in a single transaction"
-        );
-      }
-      const vaa = parseAccumulatorUpdateData(updates[0]).vaa;
-      const verifiedVaas = await this.verifyVaas([vaa], tx);
-      [priceUpdatesHotPotato] = tx.moveCall({
-        target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
-        arguments: [
-          tx.object(this.pythStateId),
-          tx.pure(
-            builder
-              .ser("vector<u8>", Array.from(updates[0]), {
-                maxSize: MAX_ARGUMENT_SIZE,
-              })
-              .toBytes()
-          ),
-          verifiedVaas[0],
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-    } else if (updates.every((vaa) => !isAccumulatorUpdateData(vaa))) {
-      const verifiedVaas = await this.verifyVaas(updates, tx);
-      [priceUpdatesHotPotato] = tx.moveCall({
-        target: `${packageId}::pyth::create_price_infos_hot_potato`,
-        arguments: [
-          tx.object(this.pythStateId),
-          tx.makeMoveVec({
-            type: `${wormholePackageId}::vaa::VAA`,
-            objects: verifiedVaas,
-          }),
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-    } else {
-      throw new Error("Can't mix accumulator and non-accumulator messages");
+    if (updates.length > 1) {
+      throw new Error(
+        "SDK does not support sending multiple accumulator messages in a single transaction"
+      );
     }
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const verifiedVaas = await this.verifyVaas([vaa], tx);
+    [priceUpdatesHotPotato] = tx.moveCall({
+      target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
+      arguments: [
+        tx.object(this.pythStateId),
+        tx.pure(
+          bcs
+            .ser("vector<u8>", Array.from(updates[0]), {
+              maxSize: MAX_ARGUMENT_SIZE,
+            })
+            .toBytes()
+        ),
+        verifiedVaas[0],
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
 
     const priceInfoObjects: ObjectId[] = [];
     const baseUpdateFee = await this.getBaseUpdateFee();
@@ -194,47 +175,29 @@ export class SuiPythClient {
     return priceInfoObjects;
   }
   async createPriceFeed(tx: TransactionBlock, updates: Buffer[]) {
-    const wormholePackageId = await this.getWormholePackageId();
     const packageId = await this.getPythPackageId();
-    if (updates.every((update) => isAccumulatorUpdateData(update))) {
-      if (updates.length > 1) {
-        throw new Error(
-          "SDK does not support sending multiple accumulator messages in a single transaction"
-        );
-      }
-      const vaa = parseAccumulatorUpdateData(updates[0]).vaa;
-      const verifiedVaas = await this.verifyVaas([vaa], tx);
-      tx.moveCall({
-        target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
-        arguments: [
-          tx.object(this.pythStateId),
-          tx.pure(
-            builder
-              .ser("vector<u8>", Array.from(updates[0]), {
-                maxSize: MAX_ARGUMENT_SIZE,
-              })
-              .toBytes()
-          ),
-          verifiedVaas[0],
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-    } else if (updates.every((vaa) => !isAccumulatorUpdateData(vaa))) {
-      const verifiedVaas = await this.verifyVaas(updates, tx);
-      tx.moveCall({
-        target: `${packageId}::pyth::create_price_feeds`,
-        arguments: [
-          tx.object(this.pythStateId),
-          tx.makeMoveVec({
-            type: `${wormholePackageId}::vaa::VAA`,
-            objects: verifiedVaas,
-          }),
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-    } else {
-      throw new Error("Can't mix accumulator and non-accumulator messages");
+    if (updates.length > 1) {
+      throw new Error(
+        "SDK does not support sending multiple accumulator messages in a single transaction"
+      );
     }
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const verifiedVaas = await this.verifyVaas([vaa], tx);
+    tx.moveCall({
+      target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
+      arguments: [
+        tx.object(this.pythStateId),
+        tx.pure(
+          bcs
+            .ser("vector<u8>", Array.from(updates[0]), {
+              maxSize: MAX_ARGUMENT_SIZE,
+            })
+            .toBytes()
+        ),
+        verifiedVaas[0],
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
   }
 
   /**
@@ -282,6 +245,8 @@ export class SuiPythClient {
       }
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         result.data.content.fields.value
       );
     }
@@ -314,5 +279,23 @@ export class SuiPythClient {
       this.priceTableInfo = { id: result.data.objectId, fieldType: type };
     }
     return this.priceTableInfo;
+  }
+
+  /**
+   * Obtains the vaa bytes embedded in an accumulator message.
+   * @param accumulatorMessage - the accumulator price update message
+   * @returns vaa bytes as a uint8 array
+   */
+  extractVaaBytesFromAccumulatorMessage(accumulatorMessage: Buffer): Buffer {
+    // the first 6 bytes in the accumulator message encode the header, major, and minor bytes
+    // we ignore them, since we are only interested in the VAA bytes
+    const trailingPayloadSize = accumulatorMessage.readUint8(6);
+    const vaaSizeOffset =
+      7 + // header bytes (header(4) + major(1) + minor(1) + trailing payload size(1))
+      trailingPayloadSize + // trailing payload (variable number of bytes)
+      1; // proof_type (1 byte)
+    const vaaSize = accumulatorMessage.readUint16BE(vaaSizeOffset);
+    const vaaOffset = vaaSizeOffset + 2;
+    return accumulatorMessage.subarray(vaaOffset, vaaOffset + vaaSize);
   }
 }

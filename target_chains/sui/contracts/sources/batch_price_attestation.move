@@ -111,7 +111,7 @@ module pyth::batch_price_attestation {
 
     fun deserialize_price_info(cur: &mut Cursor<u8>, clock: &Clock): PriceInfo {
 
-        // Skip obselete field
+        // Skip obsolete field
         let _product_identifier = deserialize::deserialize_vector(cur, 32);
         let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(cur, 32));
         let price = deserialize::deserialize_i64(cur);
@@ -121,7 +121,7 @@ module pyth::batch_price_attestation {
         let ema_conf = deserialize::deserialize_u64(cur);
         let status = price_status::from_u64((deserialize::deserialize_u8(cur) as u64));
 
-        // Skip obselete fields
+        // Skip obsolete fields
         let _num_publishers = deserialize::deserialize_u32(cur);
         let _max_num_publishers = deserialize::deserialize_u32(cur);
 

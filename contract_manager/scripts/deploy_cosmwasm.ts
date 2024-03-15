@@ -4,6 +4,8 @@ import { CosmWasmChain } from "../src/chains";
 import { CosmWasmPriceFeedContract } from "../src/contracts/cosmwasm";
 import { DefaultStore } from "../src/store";
 
+import { COMMON_DEPLOY_OPTIONS } from "./common";
+
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_cosmwasm.ts")
   .usage(
@@ -15,11 +17,7 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "Path to the artifact .wasm file",
     },
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to use for the deployment",
-    },
+    "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     chain: {
       type: "string",
       demandOption: true,

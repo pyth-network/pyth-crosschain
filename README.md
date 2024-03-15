@@ -33,13 +33,9 @@ and examples for your blockchain runtime in the `target_chains` directory.
 
 ### Pull requests
 
-Use the following format for naming the pull requests:
-
-[component] PR description
-
-For example:
-
-[hermes] Add storage tests
+Use the [Conventional Commits](https://www.conventionalcommits.org) format for your commit messages and PR titles.
+In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
+to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
 
 ### Releases
 

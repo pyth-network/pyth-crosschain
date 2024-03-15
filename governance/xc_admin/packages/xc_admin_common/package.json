@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.22",
-    "@coral-xyz/anchor": "^0.26.0",
+    "@coral-xyz/anchor": "^0.29.0",
     "@pythnetwork/client": "^2.17.0",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.73.0",
@@ -29,7 +29,8 @@
     "bigint-buffer": "^1.1.5",
     "ethers": "^5.7.2",
     "lodash": "^4.17.21",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "@pythnetwork/solana-utils": "*"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

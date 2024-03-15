@@ -53,10 +53,10 @@
   rpcUrl: https://testnet.aurora.dev
   networkId: 1313161555
   type: EvmChain
-- id: mantle_testnet
+- id: mantle_sepolia
   mainnet: false
-  rpcUrl: https://rpc.testnet.mantle.xyz/
-  networkId: 5001
+  rpcUrl: https://rpc.sepolia.mantle.xyz
+  networkId: 5003
   type: EvmChain
 - id: gnosis
   mainnet: true
@@ -308,6 +308,11 @@
   rpcUrl: https://pacific-rpc.testnet.manta.network/http
   networkId: 3441005
   type: EvmChain
+- id: manta_sepolia
+  mainnet: false
+  rpcUrl: https://manta-sepolia.rpc.caldera.xyz/http
+  networkId: 3441006
+  type: EvmChain
 - id: optimism_sepolia
   mainnet: false
   rpcUrl: https://sepolia.optimism.io
@@ -333,10 +338,15 @@
   rpcUrl: https://zetachain-evm.blockpi.network/v1/rpc/public
   networkId: 7000
   type: EvmChain
-- id: astar_testnet
+- id: astar_zkevm_testnet
   mainnet: false
   rpcUrl: https://rpc.zkatana.gelato.digital
   networkId: 1261120
+  type: EvmChain
+- id: astar_zkevm
+  mainnet: true
+  rpcUrl: https://rpc.startale.com/astar-zkevm
+  networkId: 3776
   type: EvmChain
 - id: coredao_testnet
   mainnet: false
@@ -472,4 +482,19 @@
   mainnet: false
   rpcUrl: https://rpc.ankr.com/berachain_testnet
   networkId: 80085
+  type: EvmChain
+- id: blast
+  mainnet: true
+  rpcUrl: https://rpc.blast.io
+  networkId: 81457
+  type: EvmChain
+- id: merlin_testnet
+  mainnet: false
+  rpcUrl: https://testnet-rpc.merlinchain.io/
+  networkId: 686868
+  type: EvmChain
+- id: merlin
+  mainnet: true
+  rpcUrl: https://rpc.merlinchain.io
+  networkId: 4200
   type: EvmChain

@@ -6,7 +6,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
-import { Ed25519Keypair } from "@mysten/sui.js";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 
 export default {
   command: "sui",

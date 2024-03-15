@@ -49,6 +49,19 @@ const EXTENDED_ENTROPY_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "version",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
   ...EntropyAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const EXTENDED_PYTH_ABI = [
@@ -327,6 +340,19 @@ const EXECUTOR_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 export class WormholeEvmContract extends WormholeContract {
   constructor(public chain: EvmChain, public address: string) {
@@ -408,8 +434,17 @@ export class EvmEntropyContract extends Storable {
     return `${this.chain.getId()}_${this.address}`;
   }
 
+  getChain(): EvmChain {
+    return this.chain;
+  }
+
   getType(): string {
     return EvmEntropyContract.type;
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.version().call();
   }
 
   static fromJson(
@@ -465,12 +500,17 @@ export class EvmEntropyContract extends Storable {
     return this.generateExecutorPayload(executorAddr, executorAddr, data);
   }
 
-  getOwner(): string {
+  async getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
   }
 
-  getPendingOwner(): string {
+  async getExecutorContract(): Promise<EvmExecutorContract> {
+    const owner = await this.getOwner();
+    return new EvmExecutorContract(this.chain, owner);
+  }
+
+  async getPendingOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.pendingOwner().call();
   }
@@ -495,7 +535,13 @@ export class EvmEntropyContract extends Storable {
 
   async getProviderInfo(address: string): Promise<EntropyProviderInfo> {
     const contract = this.getContract();
-    return await contract.methods.getProviderInfo(address).call();
+    const info: EntropyProviderInfo = await contract.methods
+      .getProviderInfo(address)
+      .call();
+    return {
+      ...info,
+      uri: Web3.utils.toAscii(info.uri),
+    };
   }
 }
 
@@ -504,6 +550,15 @@ export class EvmExecutorContract {
 
   getId(): string {
     return `${this.chain.getId()}_${this.address}`;
+  }
+
+  async getWormholeContract(): Promise<WormholeEvmContract> {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    //Unfortunately, there is no public method to get the wormhole address
+    //Found 251 by using `forge build --extra-output storageLayout` and finding the slot for the wormhole variable.
+    let address = await web3.eth.getStorageAt(this.address, 251);
+    address = "0x" + address.slice(26);
+    return new WormholeEvmContract(this.chain, address);
   }
 
   getContract() {
@@ -527,6 +582,14 @@ export class EvmExecutorContract {
       emitterChain: Number(ownerEmitterChainid),
       emitterAddress: ownerEmitterAddress.replace("0x", ""),
     };
+  }
+
+  /**
+   * Returns the owner of the executor contract, this should always be the contract address itself
+   */
+  async getOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
   }
 
   async executeGovernanceInstruction(

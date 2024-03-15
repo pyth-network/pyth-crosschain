@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/entropy-sdk-solidity",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Generate secure random numbers with Pyth Entropy",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "node scripts/generateAbi.js",
+    "generate-abi": "npx generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
@@ -29,6 +29,6 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "solc": "^0.8.15"
+    "abi_generator": "*"
   }
 }

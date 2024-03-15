@@ -34,6 +34,7 @@ use {
             create_accumulator_message,
             create_dummy_price_feed_message,
             create_dummy_twap_message,
+            trim_vaa_signatures,
             DEFAULT_DATA_SOURCE,
             SECONDARY_DATA_SOURCE,
         },
@@ -43,6 +44,7 @@ use {
         pubkey::Pubkey,
     },
     solana_sdk::{
+        rent::Rent,
         signature::Keypair,
         signer::Signer,
     },
@@ -332,7 +334,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
-    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0),
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
     let mut price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
@@ -342,7 +349,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 }
+        VerificationLevel::Full
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -360,6 +367,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
 
+    // Change number of signatures too
+    let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
+        serde_wormhole::from_slice(&vaa).unwrap(),
+        12,
+    ))
+    .unwrap();
 
     assert_eq!(
         program_simulator
@@ -382,8 +395,14 @@ async fn test_post_price_update_from_vaa() {
         into_transaction_error(ReceiverError::InsufficientFunds)
     );
 
-    assert_treasury_balance(&mut program_simulator, 1, DEFAULT_TREASURY_ID).await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0),
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
+    // Transaction failed, so the account should not have been updated
     price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
         .await
@@ -391,7 +410,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 }
+        VerificationLevel::Full
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
@@ -432,7 +451,7 @@ async fn test_post_price_update_from_vaa() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        LAMPORTS_PER_SOL + 1,
+        Rent::default().minimum_balance(0) + LAMPORTS_PER_SOL,
         DEFAULT_TREASURY_ID,
     )
     .await;
@@ -444,7 +463,7 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(price_update_account.write_authority, poster.pubkey());
     assert_eq!(
         price_update_account.verification_level,
-        VerificationLevel::Partial { num_signatures: 13 },
+        VerificationLevel::Partial { num_signatures: 12 }
     );
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),

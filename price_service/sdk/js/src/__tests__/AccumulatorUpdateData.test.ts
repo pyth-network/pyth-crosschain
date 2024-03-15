@@ -1,14 +1,28 @@
-import { parseAccumulatorUpdateData } from "../AccumulatorUpdateData";
+import {
+  parseAccumulatorUpdateData,
+  parsePriceFeedMessage,
+} from "../AccumulatorUpdateData";
 
 // This is just a sample update data from hermes
 const TEST_ACCUMULATOR_UPDATE_DATA =
-  "UE5BVQEAAAADuAEAAAADDQCRWcud7VE0FQkptV7iZh1Ls8O4dszQ4HmdOZLNDVQiQnMB5Q9jVd52Y9IMI8k1QhOhT2xn82hveqZ6AIn+c6vPAQL4nN+ynbzaJnbGFpWW5ysEA811BblKr+DXO5I5tD3SgEjPmByPIEVPHRqdgnq7M8r6AG4q8qfbmeonROr67i4eAAPVteKrUXD6f13GG/Qj0xHcJ/NuR+xwrbs6KGmYZHq0fHv4m0C3LPIOgVo9iy2ednK5IB/pAEMoaGK/fwoL2ouSAQSulF0XQGZ0J5oFKvCwPBSZOYtITwEQSicnwIWu9a+j7SjMh/zF4vtqWFAqfkFatVMZI6/dkQkmwlcMkEkGHvN5AQZYiYD8teZVpmCzn9jxZo/qTF4qrWgrHWv3/i4kZsXmkDSq1QTiYd7ikQQVWVxgH3PKl03SPFvqoc7SmwKIZKyyAQjfPTwpqeTTi0zFRyyb9HKMYjcbXEcuRXn7uOaNF83ry1s+cudCcWsiaCNYEPzv1BvHxgYYXcx2MkNxUbXiLlmoAQpQSpOkNb9780k2EsrUjZd/ieD+sTQA6P0iZWL5jA8ONEi46mAufCfRlAO2a5jfUvjuN4Z/ZOklgT9eZ7v3JoleAAv/2wkZ5rQx+cl/jlL9k6rbzrDU8sYLTJnlFTsuOr66/iVUqCe0Clwv682NgvH8yLbtw9He/vdn3OeLn19eDU0qAQxk47DIhc9EAtNrdhFSyAoEBtQtgcxRvSnjIIMPTGIhIzv52WFY/I2CwyKcQLhERdjjfh7EhZvBUXHTFRk2xjc2AA3wNaGbjUXsJqL8VyBQg7t0dILbUQ8AiOZJQVfx+L+1mFVZAc4v8/0BWsIF5b7+YmoN6psArWCvZcd9Hkjuxda4AQ5Rxgs32U2Jm43W4voTk42MibgvPMas3xQbuCW88pH1skdSTfvtgoIOa6BdoS3YEUJu78a0X3AiIUem1fDOdOs7AA/lHyqNz4vwuTNs8U6G51VqO2g1yEJyRwrMqsjEvK9VC0EjieacqPBwPL9/DMssbHU01bL+YzEY5XTxi1QiBeyFABJuE+6jHgEh9WvwaPDZe7me9sl5EiPDUxAAryErsB0LDTrnzls7qgDymCp+MSJur8U4I08ul/mL1rVesK3uUqqtAGV20Z0AAAAAABrhAfrtrFhR4yubI7X5QRqMK6xKrj7U3XuBHdGnLqSqcQAAAAAB1IYyAUFVV1YAAAAAAAbbm1gAACcQralfDHbB9c321F6ngWz+RspcmdsBAFUAyWRY05P+net6fWOgrEHiiYpnp3UNvRZmcyeeBsho3woAAAAAAFEIJAAAAAAAAAxT////+AAAAABldtGcAAAAAGV20ZsAAAAAAFEWJQAAAAAAAAu6CqMvc3++cZquwewCu6kJe8aPB1SFPI41uwi10MgNwqRbCue30EvorUjF4mKpFB+Cwx8KH5bFnAAX13DPmu7OCbX7k0LdKtr9pb8zPVsXwlx+BteFyBWNtJmeLIx7tG88H2uARL/B+MJw2GcVujs6qdnIQkIjjBdDIR3XRtY2zMfK58eeXuiAkJDHIQ3H41GmYRAVe8FtPvtMWTY51Q63Tkmfq60qsB1yy4Srd5QI/x60eBnOlAYC67+gjB0sGHLrjSapbXzGUf//";
-
+  "UE5BVQEAAAADuAEAAAADDQILBDsleD7xENCN7O7KjXAe15OQQ8FvD0E6L+bIemppBjNEZEOF0XuxCPQ/ti4gWUplKpieCWYiibuaDvXOeSFFAQOuYekUPV6yqK2BRWo/KRmJ00SV01OJDRhNzc1YnzUi+j8dt1tNBkVY99NIs5leyixUmeq4Dn1n8y37xN4JtAacAQSxJzGeZ6tejBD1YlPBlVwaCX8crkp19R1es7rDBhX/iit2plz5grz66fPj/mpoffZqKo95Fq/0sxWHIvn4nhgXAQYLl99cpa6KlaA8q1Pj7sN6TXNrXtmTBlzRU6dZ0ptO8VKp4K3zkVqbWkB5mbHCeuYNgOGMCnVsS7Ce9J7NganNAQf0nyez/5yR/U2zu+XRbi8eNzI1yJ9Hc4lmMl8pTPPQRgrs9HyiVCliCOcHdLzLio3JoLBhmFxQ3ygYj2eB+k3UAQgHX1e/+vbCjBNnmx/UQV8m0y/wifKAMfYpK4mR8voG3wgxo5MIFUvvCZ9/Gt1GizTX5CuoQD9J4ioxjoCFghVtAQqG5lFSpVRpC0dQlMv2ju2K89Ph0tJGsX7LGRXRnh9lEkkM8W+Uxf1R50HFsZHiXU08Grz0mKRPavesrzD+1xYGAQuYL6q5SagvBS7TfZJYS4kUMw74TvMiHLWx2ps3EdEJbh3WCWGfOM3amrplQBnqctDYh3StqspyTdaU5QTxfyYvAQwNWdPBEtAR6yIHB8KYrEDGGUH91uqD768NGigW6ziLwnNw2un+gcDUiafL3pZpqC4yIDhmnEz26PmQs4cAI5nkAA3/Zl3Pt7fLG3E5xBa/lbdrBUT3J+znFExbuFZuZipvbBwnQq/yyBSXqyfuHG3GTQZ/wXBto5zUEyex9889XYzaAQ52EUUCG0X4i0nWHeAf00+s6cODkW6hanQ1MHfTdvvVMXqK9nfvicz8pBna/NVp1wiTN5zR9rWjQuAf0g0c6TRLARCPT46a0/3xER/tV7WLQ6JQUWHMbV0G6cXKmdFT0Qg3/m08Dlabic+EHW9u2ugZA5sJ/Jl4oGk/lWLJoNoxDFMZARJgsgN2RdhjvJMRmf/Kj0d5PSvI7kE+J7ShlJd5058+ETZVPR15fJpT3BWUJ8i/vdGmU90A6iGyXRmNRBFx21qqAGXeGOEAAAAAABrhAfrtrFhR4yubI7X5QRqMK6xKrj7U3XuBHdGnLqSqcQAAAAACjFEsAUFVV1YAAAAAAAeUpesAACcQy5naBQ5EEmAnr2RvKBD1SUJH9zwBAFUA7w2Lb9os66QdoV1AldHaOSoNL47Qxse8D0z6yMKAtW0AAAACgAWPuQAAAAAAX+C0////+AAAAABl3hjhAAAAAGXeGOEAAAACgrM/OAAAAAAAaAvYCuE9uKnM0BlXJ1E/fLYtWytcVLhkSCzHW9p1ReYbPMt07qbcN5KykfYDlCJxjBT3UmyTbhTT30PmOLkZu9zraLg22Wysdg1W67WoQZi654djZPBpAiHRU2KQXbDSGqJcekD0W+TqKO+QagPAoXksP0iMGEYpBdVZKGhSvw0NpXv/5Qb5NHO/+dTahPFBgXJH+9geJaxYru9ZRMg5o+YjIvkwuom/2NP0mTbfp4syeDQBs+fmcdGmAjgcdF0wt1gR6kYbsWQ/CZ08";
 describe("Test parse accumulator update", () => {
   test("Happy path", async () => {
-    parseAccumulatorUpdateData(
+    const { vaa, updates } = parseAccumulatorUpdateData(
       Buffer.from(TEST_ACCUMULATOR_UPDATE_DATA, "base64")
     );
+
+    const priceMessage = parsePriceFeedMessage(updates[0].message);
+    expect(priceMessage.feedId.toString("hex")).toBe(
+      "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
+    );
+    expect(priceMessage.price.toString()).toBe("10737782713");
+    expect(priceMessage.confidence.toString()).toBe("6283444");
+    expect(priceMessage.exponent).toBe(-8);
+    expect(priceMessage.publishTime.toString()).toBe("1709054177");
+    expect(priceMessage.prevPublishTime.toString()).toBe("1709054177");
+    expect(priceMessage.emaPrice.toString()).toBe("10782719800");
+    expect(priceMessage.emaConf.toString()).toBe("6818776");
   });
 
   test("Wrong magic number", async () => {

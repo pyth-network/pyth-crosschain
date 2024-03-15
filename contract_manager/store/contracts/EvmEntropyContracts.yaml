@@ -49,3 +49,12 @@
 - chain: coredao_testnet
   address: "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67"
   type: EvmEntropyContract
+- chain: blast
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
+- chain: zetachain_testnet
+  address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
+  type: EvmEntropyContract
+- chain: zetachain
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+  type: EvmEntropyContract

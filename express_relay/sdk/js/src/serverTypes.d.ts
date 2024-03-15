@@ -10,31 +10,38 @@ export interface paths {
      * @description Bid on a specific permission key for a specific chain.
      *
      * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-     * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+     * containing the targetContract call will be sent to the blockchain expecting the bid amount to be paid after the call.
      */
     post: operations["bid"];
   };
-  "/v1/liquidation/opportunities": {
+  "/v1/bids/{bid_id}": {
     /**
-     * Fetch all liquidation opportunities ready to be exectued.
-     * @description Fetch all liquidation opportunities ready to be exectued.
+     * Query the status of a specific bid.
+     * @description Query the status of a specific bid.
+     */
+    get: operations["bid_status"];
+  };
+  "/v1/opportunities": {
+    /**
+     * Fetch all opportunities ready to be exectued.
+     * @description Fetch all opportunities ready to be exectued.
      */
     get: operations["get_opportunities"];
     /**
-     * Submit a liquidation opportunity ready to be executed.
-     * @description Submit a liquidation opportunity ready to be executed.
+     * Submit an opportunity ready to be executed.
+     * @description Submit an opportunity ready to be executed.
      *
      * The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
      * and will be available for bidding.
      */
     post: operations["post_opportunity"];
   };
-  "/v1/liquidation/opportunities/{opportunity_id}/bids": {
+  "/v1/opportunities/{opportunity_id}/bids": {
     /**
-     * Bid on liquidation opportunity
-     * @description Bid on liquidation opportunity
+     * Bid on opportunity
+     * @description Bid on opportunity
      */
-    post: operations["post_bid"];
+    post: operations["opportunity_bid"];
   };
 }
 
@@ -42,6 +49,7 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    APIResponse: components["schemas"]["BidResult"];
     Bid: {
       /**
        * @description Amount of bid in wei.
@@ -49,28 +57,55 @@ export interface components {
        */
       amount: string;
       /**
-       * @description Calldata for the contract call.
-       * @example 0xdeadbeef
-       */
-      calldata: string;
-      /**
        * @description The chain id to bid on.
        * @example sepolia
        */
       chain_id: string;
       /**
-       * @description The contract address to call.
-       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
-       */
-      contract: string;
-      /**
        * @description The permission key to bid on.
        * @example 0xdeadbeef
        */
       permission_key: string;
+      /**
+       * @description Calldata for the targetContract call.
+       * @example 0xdeadbeef
+       */
+      target_calldata: string;
+      /**
+       * @description The targetContract address to call.
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      target_contract: string;
     };
     BidResult: {
+      /**
+       * @description The unique id created to identify the bid. This id can be used to query the status of the bid.
+       * @example beedbeed-58cc-4372-a567-0e02b2c3d479
+       */
+      id: string;
       status: string;
+    };
+    BidStatus:
+      | {
+          /** @enum {string} */
+          status: "pending";
+        }
+      | {
+          /**
+           * @description The bid won the auction and was submitted to the chain in a transaction with the given hash
+           * @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3
+           */
+          result: string;
+          /** @enum {string} */
+          status: "submitted";
+        }
+      | {
+          /** @enum {string} */
+          status: "lost";
+        };
+    BidStatusWithId: {
+      bid_status: components["schemas"]["BidStatus"];
+      id: string;
     };
     ClientMessage:
       | {
@@ -86,6 +121,21 @@ export interface components {
           params: {
             chain_ids: string[];
           };
+        }
+      | {
+          /** @enum {string} */
+          method: "post_bid";
+          params: {
+            bid: components["schemas"]["Bid"];
+          };
+        }
+      | {
+          /** @enum {string} */
+          method: "post_opportunity_bid";
+          params: {
+            opportunity_bid: components["schemas"]["OpportunityBid"];
+            opportunity_id: string;
+          };
         };
     ClientRequest: components["schemas"]["ClientMessage"] & {
       id: string;
@@ -100,10 +150,10 @@ export interface components {
        */
       amount: string;
       /**
-       * @description Liquidator address
+       * @description Executor address
        * @example 0x5FbDB2315678afecb367f032d93F642f64180aa2
        */
-      liquidator: string;
+      executor: string;
       /**
        * @description The opportunity permission key
        * @example 0xdeadbeefcafe
@@ -123,38 +173,38 @@ export interface components {
     };
     /**
      * @description Opportunity parameters needed for on-chain execution
-     * If a searcher signs the opportunity and have approved enough tokens to liquidation adapter,
-     * by calling this contract with the given calldata and structures, they will receive the tokens specified
-     * in the receipt_tokens field, and will send the tokens specified in the repay_tokens field.
+     * If a searcher signs the opportunity and have approved enough tokens to opportunity adapter,
+     * by calling this target targetContract with the given target targetCalldata and structures, they will
+     * send the tokens specified in the sell_tokens field and receive the tokens specified in the buy_tokens field.
      */
     OpportunityParamsV1: {
+      buy_tokens: components["schemas"]["TokenAmount"][];
       /**
-       * @description Calldata for the contract call.
-       * @example 0xdeadbeef
-       */
-      calldata: string;
-      /**
-       * @description The chain id where the liquidation will be executed.
+       * @description The chain id where the opportunity will be executed.
        * @example sepolia
        */
       chain_id: string;
       /**
-       * @description The contract address to call for execution of the liquidation.
-       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
-       */
-      contract: string;
-      /**
-       * @description The permission key required for succesful execution of the liquidation.
+       * @description The permission key required for successful execution of the opportunity.
        * @example 0xdeadbeefcafe
        */
       permission_key: string;
-      receipt_tokens: components["schemas"]["TokenQty"][];
-      repay_tokens: components["schemas"]["TokenQty"][];
+      sell_tokens: components["schemas"]["TokenAmount"][];
       /**
-       * @description The value to send with the contract call.
+       * @description The targetCallValue to send with the targetContract call.
        * @example 1
        */
-      value: string;
+      target_call_value: string;
+      /**
+       * @description Calldata for the target targetContract call.
+       * @example 0xdeadbeef
+       */
+      target_calldata: string;
+      /**
+       * @description The targetContract address to call for execution of the opportunity.
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      target_contract: string;
     };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
     OpportunityParamsWithMetadata: (components["schemas"]["OpportunityParamsV1"] & {
@@ -169,12 +219,13 @@ export interface components {
       creation_time: number;
       /**
        * @description The opportunity unique id
-       * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
     };
     ServerResultMessage:
       | {
+          result: components["schemas"]["APIResponse"] | null;
           /** @enum {string} */
           status: "success";
         }
@@ -191,28 +242,39 @@ export interface components {
       id?: string | null;
     };
     /** @description This enum is used to send an update to the client for any subscriptions made */
-    ServerUpdateResponse: {
-      opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
-      /** @enum {string} */
-      type: "new_opportunity";
-    };
-    TokenQty: {
+    ServerUpdateResponse:
+      | {
+          opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
+          /** @enum {string} */
+          type: "new_opportunity";
+        }
+      | {
+          status: components["schemas"]["BidStatusWithId"];
+          /** @enum {string} */
+          type: "bid_status_update";
+        };
+    TokenAmount: {
       /**
        * @description Token amount
        * @example 1000
        */
       amount: string;
       /**
-       * @description Token contract address
+       * @description Token targetContract address
        * @example 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
        */
-      contract: string;
+      token: string;
     };
   };
   responses: {
     BidResult: {
       content: {
         "application/json": {
+          /**
+           * @description The unique id created to identify the bid. This id can be used to query the status of the bid.
+           * @example beedbeed-58cc-4372-a567-0e02b2c3d479
+           */
+          id: string;
           status: string;
         };
       };
@@ -240,7 +302,7 @@ export interface components {
           creation_time: number;
           /**
            * @description The opportunity unique id
-           * @example f47ac10b-58cc-4372-a567-0e02b2c3d479
+           * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
            */
           opportunity_id: string;
         };
@@ -263,7 +325,7 @@ export interface operations {
    * @description Bid on a specific permission key for a specific chain.
    *
    * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-   * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+   * containing the targetContract call will be sent to the blockchain expecting the bid amount to be paid after the call.
    */
   bid: {
     requestBody: {
@@ -272,7 +334,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Bid was placed succesfully */
+      /** @description Bid was placed successfully */
       200: {
         content: {
           "application/json": components["schemas"]["BidResult"];
@@ -288,8 +350,35 @@ export interface operations {
     };
   };
   /**
-   * Fetch all liquidation opportunities ready to be exectued.
-   * @description Fetch all liquidation opportunities ready to be exectued.
+   * Query the status of a specific bid.
+   * @description Query the status of a specific bid.
+   */
+  bid_status: {
+    parameters: {
+      path: {
+        /** @description Bid id to query for */
+        bid_id: string;
+      };
+    };
+    responses: {
+      /** @description Latest status of the bid */
+      200: {
+        content: {
+          "application/json": components["schemas"]["BidStatus"];
+        };
+      };
+      400: components["responses"]["ErrorBodyResponse"];
+      /** @description Bid was not found */
+      404: {
+        content: {
+          "application/json": components["schemas"]["ErrorBodyResponse"];
+        };
+      };
+    };
+  };
+  /**
+   * Fetch all opportunities ready to be exectued.
+   * @description Fetch all opportunities ready to be exectued.
    */
   get_opportunities: {
     parameters: {
@@ -299,7 +388,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Array of liquidation opportunities ready for bidding */
+      /** @description Array of opportunities ready for bidding */
       200: {
         content: {
           "application/json": components["schemas"]["OpportunityParamsWithMetadata"][];
@@ -315,8 +404,8 @@ export interface operations {
     };
   };
   /**
-   * Submit a liquidation opportunity ready to be executed.
-   * @description Submit a liquidation opportunity ready to be executed.
+   * Submit an opportunity ready to be executed.
+   * @description Submit an opportunity ready to be executed.
    *
    * The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
    * and will be available for bidding.
@@ -344,10 +433,10 @@ export interface operations {
     };
   };
   /**
-   * Bid on liquidation opportunity
-   * @description Bid on liquidation opportunity
+   * Bid on opportunity
+   * @description Bid on opportunity
    */
-  post_bid: {
+  opportunity_bid: {
     parameters: {
       path: {
         /** @description Opportunity id to bid on */

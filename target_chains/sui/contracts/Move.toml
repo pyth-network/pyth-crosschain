@@ -5,12 +5,12 @@ version = "0.0.2"
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
 subdir = "crates/sui-framework/packages/sui-framework"
-rev = "09b2081498366df936abae26eea4b2d5cafb2788"
+rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
 
 [dependencies.Wormhole]
 git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
-rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
+rev = "82d82bffd5a8566e4b5d94be4e4678ad55ab1f4f"
 
 [addresses]
 pyth = "0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302"

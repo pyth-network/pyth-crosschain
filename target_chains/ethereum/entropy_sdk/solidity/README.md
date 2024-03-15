@@ -6,7 +6,7 @@ This SDK can be used for any application that requires random numbers, such as N
 
 ## Install
 
-####Truffle/Hardhat
+###Truffle/Hardhat
 
 If you are using Truffle or Hardhat, simply install the NPM package:
 
@@ -14,7 +14,7 @@ If you are using Truffle or Hardhat, simply install the NPM package:
 npm install @pythnetwork/entropy-sdk-solidity
 ```
 
-####Foundry
+###Foundry
 
 If you are using Foundry, you will need to create an NPM project if you don't already have one.
 From the root directory of your project, run:
@@ -99,5 +99,5 @@ This method will combine the user and provider's random numbers, along with the 
 
 ## Example Application
 
-The [Coin Flip](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
+The [Coin Flip](/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
 interacts with Pyth Entropy as well as a typescript client for that application.

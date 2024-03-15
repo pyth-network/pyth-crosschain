@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-sdk-solidity",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Read prices from the Pyth oracle",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "node scripts/generateAbi.js",
+    "generate-abi": "npx generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors",
     "check-abi": "git diff --exit-code abis",
     "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
   },
@@ -27,6 +27,6 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "solc": "^0.8.15"
+    "abi_generator": "*"
   }
 }

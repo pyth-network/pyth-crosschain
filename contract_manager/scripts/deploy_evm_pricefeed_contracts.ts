@@ -11,7 +11,11 @@ import {
   toPrivateKey,
   WormholeEvmContract,
 } from "../src";
-import { deployIfNotCached, getWeb3Contract } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getWeb3Contract,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -32,27 +36,7 @@ const parser = yargs(hideBin(process.argv))
     "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
   )
   .options({
-    "std-output-dir": {
-      type: "string",
-      demandOption: true,
-      desc: "Path to the standard JSON output of the contracts (build artifact) directory",
-    },
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to use for the deployment",
-    },
-    chain: {
-      type: "array",
-      demandOption: true,
-      desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
-    },
-    "deployment-type": {
-      type: "string",
-      demandOption: false,
-      default: "stable",
-      desc: "Deployment type to use. Can be 'stable' or 'beta'",
-    },
+    ...COMMON_DEPLOY_OPTIONS,
     "valid-time-period-seconds": {
       type: "number",
       demandOption: false,
@@ -64,25 +48,6 @@ const parser = yargs(hideBin(process.argv))
       demandOption: false,
       default: 1,
       desc: "Single update fee in wei for the price feed",
-    },
-    "gas-multiplier": {
-      type: "number",
-      demandOption: false,
-      // Pyth Proxy (ERC1967) gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
-      default: 2,
-      desc: "Gas multiplier to use for the deployment. This is useful when gas estimates are not accurate",
-    },
-    "gas-price-multiplier": {
-      type: "number",
-      demandOption: false,
-      default: 1,
-      desc: "Gas price multiplier to use for the deployment. This is useful when gas price estimates are not accurate",
-    },
-    "save-contract": {
-      type: "boolean",
-      demandOption: false,
-      default: true,
-      desc: "Save the contract to the store",
     },
   });
 

@@ -27,11 +27,6 @@ module pyth::contract_upgrade {
     const E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO: u64 = 2;
     const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 3;
 
-    /// Specific governance payload ID (action) to complete upgrading the
-    /// contract.
-    /// TODO: is it okay for the contract upgrade action for Pyth to be 0? Or should it be 1?
-    const CONTRACT_UPGRADE: u8 = 0;
-
     // Event reflecting package upgrade.
     struct ContractUpgraded has drop, copy {
         old_contract: ID,
@@ -130,6 +125,13 @@ module pyth::contract_upgrade {
         cursor::take_rest(cur);
         UpgradeContract { digest }
     }
+
+    #[test_only]
+    /// Specific governance payload ID (action) to complete upgrading the
+    /// contract.
+    /// TODO: is it okay for the contract upgrade action for Pyth to be 0? Or should it be 1?
+    const CONTRACT_UPGRADE: u8 = 0;
+
 
     #[test_only]
     public fun action(): u8 {

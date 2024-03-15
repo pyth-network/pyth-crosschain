@@ -431,6 +431,7 @@ where
 
 pub async fn is_ready(state: &State) -> bool {
     let metadata = state.aggregate_state.read().await;
+    let price_feeds_metadata = state.price_feeds_metadata.read().await;
 
     let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
         Some(latest_completed_update_time) => {
@@ -449,7 +450,9 @@ pub async fn is_ready(state: &State) -> bool {
         _ => false,
     };
 
-    has_completed_recently && is_not_behind
+    let is_metadata_loaded = !price_feeds_metadata.is_empty();
+
+    has_completed_recently && is_not_behind && is_metadata_loaded
 }
 
 #[cfg(test)]
