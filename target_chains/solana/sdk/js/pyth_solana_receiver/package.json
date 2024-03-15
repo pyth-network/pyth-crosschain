@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-solana-receiver",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
