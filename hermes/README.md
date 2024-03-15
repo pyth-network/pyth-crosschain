@@ -6,7 +6,7 @@ Price Service, offering these updates through a user-friendly web API. The
 service facilitates easy querying for recent price updates via a REST API, as
 well as provides the option to subscribe to a websocket for real-time updates.
 Hermes maintains compatibility with the price service API, allowing the [Price
-Service JS client](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js)
+Service JS client](/price_service/client/js)
 to seamlessly connect to an instance of Hermes and fetch on-demand price
 updates.
 

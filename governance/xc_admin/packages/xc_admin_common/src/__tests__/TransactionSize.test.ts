@@ -15,19 +15,13 @@ import {
 } from "@solana/web3.js";
 import {
   batchIntoExecutorPayload,
-  batchIntoTransactions,
-  getSizeOfCompressedU16,
   getSizeOfExecutorInstructions,
-  getSizeOfTransaction,
   MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-
-it("Unit test compressed u16 size", async () => {
-  expect(getSizeOfCompressedU16(127)).toBe(1);
-  expect(getSizeOfCompressedU16(128)).toBe(2);
-  expect(getSizeOfCompressedU16(16383)).toBe(2);
-  expect(getSizeOfCompressedU16(16384)).toBe(3);
-});
+import {
+  getSizeOfTransaction,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
 
 it("Unit test for getSizeOfTransaction", async () => {
   jest.setTimeout(60000);
@@ -84,7 +78,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   transaction.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
   transaction.feePayer = payer.publicKey;
   expect(transaction.serialize({ requireAllSignatures: false }).length).toBe(
-    getSizeOfTransaction(ixsToSend)
+    getSizeOfTransaction(ixsToSend, false)
   );
 });
 
@@ -115,13 +109,16 @@ it("Unit test for getSizeOfTransaction", async () => {
     );
   }
 
-  const txToSend: Transaction[] = batchIntoTransactions(ixsToSend);
+  const txToSend: Transaction[] =
+    TransactionBuilder.batchIntoLegacyTransactions(ixsToSend, {
+      computeUnitPriceMicroLamports: 50000,
+    });
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
-  ).toBe(ixsToSend.length);
+  ).toBe(ixsToSend.length + txToSend.length);
   expect(
     txToSend.every(
-      (tx) => getSizeOfTransaction(tx.instructions) <= PACKET_DATA_SIZE
+      (tx) => getSizeOfTransaction(tx.instructions, false) <= PACKET_DATA_SIZE
     )
   ).toBeTruthy();
 
@@ -129,7 +126,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
     tx.feePayer = payer.publicKey;
     expect(tx.serialize({ requireAllSignatures: false }).length).toBe(
-      getSizeOfTransaction(tx.instructions)
+      getSizeOfTransaction(tx.instructions, false)
     );
   }
 

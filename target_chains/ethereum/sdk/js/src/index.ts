@@ -12,6 +12,7 @@ export {
 export const CONTRACT_ADDR: Record<string, string> = {
   // Mainnets
   arbitrum: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+  astar_zkevm: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   aurora: "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9",
   avalanche: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
   blast: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
@@ -39,6 +40,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   linea: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   manta: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   mantle: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  merlin: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   meter: "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16",
   mode: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   neon: "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5",
@@ -85,7 +87,8 @@ export const CONTRACT_ADDR: Record<string, string> = {
   lightlink_pegasus_testnet: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
   linea_goerli: "0xdF21D137Aadc95588205586636710ca2890538d5",
   manta_testnet: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
-  mantle_testnet: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+  mantle_sepolia: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+  merlin_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   meter_testnet: "0x5a71C07a0588074443545eE0c08fb0375564c3E4",
   mode_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   movement_evm_devnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",

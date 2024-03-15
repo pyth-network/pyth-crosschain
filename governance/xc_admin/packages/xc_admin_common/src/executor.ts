@@ -21,6 +21,10 @@ import {
 import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import { AccountType, parseProductData } from "@pythnetwork/client";
 import { AnchorProvider } from "@project-serum/anchor";
+import {
+  TransactionBuilder,
+  PriorityFeeConfig,
+} from "@pythnetwork/solana-utils";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -62,7 +66,8 @@ export async function executeProposal(
   proposal: TransactionAccount,
   squad: SquadsMesh,
   cluster: PythCluster,
-  commitment: Commitment = "confirmed"
+  commitment: Commitment = "confirmed",
+  priorityFeeConfig: PriorityFeeConfig
 ) {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const signatures: string[] = [];
@@ -130,6 +135,8 @@ export async function executeProposal(
         throw Error("Product account not found");
       }
     }
+
+    TransactionBuilder.addPriorityFee(transaction, priorityFeeConfig);
 
     transaction.add(
       await squad.buildExecuteInstruction(

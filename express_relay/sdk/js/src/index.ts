@@ -1,4 +1,4 @@
-import type { paths, components } from "./types";
+import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
@@ -12,132 +12,33 @@ import {
 } from "viem";
 import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
+import {
+  Bid,
+  BidId,
+  BidParams,
+  BidStatusUpdate,
+  Opportunity,
+  OpportunityBid,
+  OpportunityParams,
+  TokenAmount,
+} from "./types";
+
+export * from "./types";
 
 export class ClientError extends Error {}
 
-/**
- * ERC20 token with contract address and amount
- */
-export type TokenAmount = {
-  token: Address;
-  amount: bigint;
+type ClientOptions = FetchClientOptions & { baseUrl: string };
+
+export interface WsOptions {
+  /**
+   * Max time to wait for a response from the server in milliseconds
+   */
+  response_timeout: number;
+}
+
+const DEFAULT_WS_OPTIONS: WsOptions = {
+  response_timeout: 5000,
 };
-
-export type BidId = string;
-export type ChainId = string;
-
-/**
- * Bid parameters
- */
-export type BidParams = {
-  /**
-   * Bid amount in wei
-   */
-  amount: bigint;
-  /**
-   * Unix timestamp for when the bid is no longer valid in seconds
-   */
-  validUntil: bigint;
-};
-
-/**
- * All the parameters necessary to represent an opportunity
- */
-export type Opportunity = {
-  /**
-   * The chain id where the opportunity will be executed.
-   */
-  chainId: ChainId;
-
-  /**
-   * Unique identifier for the opportunity
-   */
-  opportunityId: string;
-  /**
-   * Permission key required for successful execution of the opportunity.
-   */
-  permissionKey: Hex;
-  /**
-   * Contract address to call for execution of the opportunity.
-   */
-  targetContract: Address;
-  /**
-   * Calldata for the targetContract call.
-   */
-  targetCalldata: Hex;
-  /**
-   * Value to send with the targetContract call.
-   */
-  targetCallValue: bigint;
-  /**
-   * Tokens required to repay the debt
-   */
-  sellTokens: TokenAmount[];
-  /**
-   * Tokens to receive after the opportunity is executed
-   */
-  buyTokens: TokenAmount[];
-};
-
-/**
- * Represents a bid for an opportunity
- */
-export type OpportunityBid = {
-  /**
-   * Opportunity unique identifier in uuid format
-   */
-  opportunityId: string;
-  /**
-   * The permission key required for successful execution of the opportunity.
-   */
-  permissionKey: Hex;
-  /**
-   * Executor address
-   */
-  executor: Address;
-  /**
-   * Signature of the executor
-   */
-  signature: Hex;
-
-  bid: BidParams;
-};
-
-/**
- * Represents a raw bid on acquiring a permission key
- */
-export type Bid = {
-  /**
-   * The permission key to bid on
-   * @example 0xc0ffeebabe
-   *
-   */
-  permissionKey: Hex;
-  /**
-   * @description Amount of bid in wei.
-   * @example 10
-   */
-  amount: bigint;
-  /**
-   * @description Calldata for the targetContract call.
-   * @example 0xdeadbeef
-   */
-  targetCalldata: Hex;
-  /**
-   * @description The chain id to bid on.
-   * @example sepolia
-   */
-  chainId: ChainId;
-  /**
-   * @description The targetContract address to call.
-   * @example 0xcA11bde05977b3631167028862bE2a173976CA11
-   */
-  targetContract: Address;
-};
-
-export type BidStatusUpdate = {
-  id: BidId;
-} & components["schemas"]["BidStatus"];
 
 export function checkHex(hex: string): Hex {
   if (isHex(hex)) {
@@ -153,25 +54,15 @@ export function checkAddress(address: string): Address {
   throw new ClientError(`Invalid address: ${address}`);
 }
 
-function checkTokenQty(token: { token: string; amount: string }): TokenAmount {
+export function checkTokenQty(token: {
+  token: string;
+  amount: string;
+}): TokenAmount {
   return {
     token: checkAddress(token.token),
     amount: BigInt(token.amount),
   };
 }
-
-type ClientOptions = FetchClientOptions & { baseUrl: string };
-
-export interface WsOptions {
-  /**
-   * Max time to wait for a response from the server in milliseconds
-   */
-  response_timeout: number;
-}
-
-const DEFAULT_WS_OPTIONS: WsOptions = {
-  response_timeout: 5000,
-};
 
 export class Client {
   public clientOptions: ClientOptions;
@@ -366,7 +257,7 @@ export class Client {
    * Submits an opportunity to be exposed to searchers
    * @param opportunity Opportunity to submit
    */
-  async submitOpportunity(opportunity: Omit<Opportunity, "opportunityId">) {
+  async submitOpportunity(opportunity: OpportunityParams) {
     const client = createClient<paths>(this.clientOptions);
     const response = await client.POST("/v1/opportunities", {
       body: {

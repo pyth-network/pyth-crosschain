@@ -1,4 +1,4 @@
-- endpoint: https://injective-rpc.quickapi.com:443
+- endpoint: https://sentry.tm.injective.network:443
   id: injective
   wormholeChainName: injective
   mainnet: true
@@ -20,7 +20,7 @@
   prefix: osmo
   feeDenom: uosmo
   type: CosmWasmChain
-- endpoint: https://k8s.testnet.tm.injective.network:443
+- endpoint: https://testnet.sentry.tm.injective.network:443
   id: injective_testnet
   wormholeChainName: injective_testnet
   mainnet: false
@@ -58,7 +58,7 @@
   prefix: neutron
   feeDenom: untrn
   type: CosmWasmChain
-- endpoint: https://rpc.uni.junonetwork.io/
+- endpoint: https://juno-testnet-rpc.polkachu.com/
   id: juno_testnet
   wormholeChainName: juno_testnet
   mainnet: false

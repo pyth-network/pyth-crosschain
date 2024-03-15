@@ -38,7 +38,20 @@ interface IEntropy is EntropyEvents {
         bool useBlockHash
     ) external payable returns (uint64 assignedSequenceNumber);
 
-    // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
+    // Request a random number. The method expects the provider address and a secret random number
+    // in the arguments. It returns a sequence number.
+    //
+    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the generated random number.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // Note that excess value is *not* refunded to the caller.
+    function requestWithCallback(
+        address provider,
+        bytes32 userRandomNumber
+    ) external payable returns (uint64 assignedSequenceNumber);
+
+    // Fulfill a request for a random number. This method validates the provided userRevelation and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
     //
@@ -48,9 +61,25 @@ interface IEntropy is EntropyEvents {
     function reveal(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomness,
+        bytes32 userRevelation,
         bytes32 providerRevelation
     ) external returns (bytes32 randomNumber);
+
+    // Fulfill a request for a random number and call back the requester. This method validates the provided userRandomness
+    // and provider's revelation against the corresponding commitment in the in-flight request. If both values are validated,
+    // this function calls the requester's entropyCallback method with the sequence number and the random number as arguments.
+    //
+    // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
+    // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
+    // If you need to use the returned random number more than once, you are responsible for storing it.
+    //
+    // Anyone can call this method to fulfill a request, but the callback will only be made to the original requester.
+    function revealWithCallback(
+        address provider,
+        uint64 sequenceNumber,
+        bytes32 userRandomNumber,
+        bytes32 providerRevelation
+    ) external;
 
     function getProviderInfo(
         address provider

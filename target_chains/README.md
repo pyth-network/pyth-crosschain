@@ -27,7 +27,7 @@ A basic implementation of pyth on a target chain includes the following pieces o
 
 ## What is stored on each contract
 
-In terms of contract configuration the following states exists on all the implementations:
+In terms of contract configuration the following states exist on all the implementations:
 
 1. Price feeds: each contract stores the latest values for each price feed
 2. Wormhole address: wormhole contract to be used for verifying the VAAs
@@ -40,7 +40,7 @@ In terms of contract configuration the following states exists on all the implem
 ## Wormhole deployments
 
 In the case that wormhole is not deployed on a new chain we want to deploy pyth on, we need to deploy wormhole too.
-The deployment process is chain dependant, but should be very similar to how pyth is deployed on the target chain.
+The deployment process is chain dependent, but should be very similar to how pyth is deployed on the target chain.
 After the initial deployment, we need to make sure wormhole configuration is also on the latest version.
 This is done by running a set of fixed, known VAAs that update the wormhole configurations (guardians sets) on all chains.
 

@@ -2,6 +2,7 @@
   "name": "root",
   "workspaces": [
     "express_relay/sdk/js",
+    "express_relay/sdk/solidity",
     "governance/xc_admin/packages/*",
     "governance/multisig_wh_message_builder",
     "price_pusher",
@@ -12,6 +13,7 @@
     "target_chains/cosmwasm/tools",
     "target_chains/cosmwasm/deploy-scripts",
     "target_chains/ethereum/contracts",
+    "target_chains/ethereum/abi_generator",
     "target_chains/ethereum/entropy_sdk/solidity",
     "target_chains/ethereum/sdk/js",
     "target_chains/ethereum/sdk/solidity",
@@ -19,6 +21,8 @@
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
     "target_chains/sui/cli",
+    "target_chains/solana/sdk/js/solana_utils",
+    "target_chains/solana/sdk/js/pyth_solana_receiver",
     "contract_manager"
   ],
   "dependencies": {
@@ -27,5 +31,6 @@
   },
   "devDependencies": {
     "lerna": "^6.4.1"
-  }
+  },
+  "version": "0.0.1"
 }

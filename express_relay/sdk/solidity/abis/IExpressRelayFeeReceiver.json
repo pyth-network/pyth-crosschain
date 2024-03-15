@@ -1,0 +1,15 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "permissionKey",
+        "type": "bytes"
+      }
+    ],
+    "name": "receiveAuctionProceedings",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  }
+]

@@ -68,14 +68,13 @@ There is an example searcher in [examples](./src/examples/) directory.
 
 #### SimpleSearcher
 
-[This example](./src/examples/SimpleSearcher.ts) fetches `OpportunityParams` from the specified endpoint,
+[This example](./src/examples/simpleSearcher.ts) fetches `OpportunityParams` from the specified endpoint,
 creates a fixed bid on each opportunity and signs them with the provided private key, and finally submits them back to the server. You can run it with
 `npm run simple-searcher`. A full command looks like this:
 
 ```bash
 npm run simple-searcher -- \
   --endpoint https://per-staging.dourolabs.app/ \
-  --bid 100000 \
   --chain-id op_sepolia \
   --private-key <YOUR-PRIVATE-KEY>
 ```

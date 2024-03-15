@@ -8,8 +8,6 @@ use {
             get_config_address,
             get_guardian_set_address,
             get_treasury_address,
-            DEFAULT_TREASURY_ID,
-            SECONDARY_TREASURY_ID,
         },
         ID,
     },
@@ -201,22 +199,6 @@ pub async fn setup_pyth_receiver(
         .unwrap();
     assert_eq!(config_account, initial_config);
 
-    program_simulator
-        .airdrop(
-            &get_treasury_address(DEFAULT_TREASURY_ID),
-            Rent::default().minimum_balance(0),
-        )
-        .await
-        .unwrap();
-
-    program_simulator
-        .airdrop(
-            &get_treasury_address(SECONDARY_TREASURY_ID),
-            Rent::default().minimum_balance(0),
-        )
-        .await
-        .unwrap();
-
     ProgramTestFixtures {
         program_simulator,
         encoded_vaa_addresses,
@@ -234,8 +216,5 @@ pub async fn assert_treasury_balance(
         .await
         .unwrap();
 
-    assert_eq!(
-        treasury_balance,
-        expected_balance + Rent::default().minimum_balance(0)
-    );
+    assert_eq!(treasury_balance, expected_balance);
 }

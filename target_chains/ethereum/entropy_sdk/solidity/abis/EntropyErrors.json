@@ -21,6 +21,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidRevealCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidUpgradeMagic",
     "type": "error"
   },
