@@ -37,16 +37,18 @@ class ExpressRelayClient:
         bid_status_callback: (
             Callable[[BidStatusUpdate], Coroutine[Any, Any, Any]] | None
         ) = None,
-        ws_options: dict[str, Any] = {},
-        httpx_options: dict[str, Any] = {},
+        timeout_response_secs: int = 10,
+        ws_options: dict[str, Any] | None = None,
+        http_options: dict[str, Any] | None = None,
     ):
         """
         Args:
             server_url: The URL of the auction server.
             opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusUpdate.
+            timeout_response_secs: The number of seconds to wait for a response message from the server.
             ws_options: Keyword arguments to pass to the websocket connection.
-            httpx_options: Keyword arguments to pass to the HTTP client.
+            http_options: Keyword arguments to pass to the HTTP client.
         """
         parsed_url = urllib.parse.urlparse(server_url)
         if parsed_url.scheme == "https":
@@ -63,8 +65,13 @@ class ExpressRelayClient:
         self.ws_lock = asyncio.Lock()
         self.ws_loop: Task[Any]
         self.ws_msg_futures: dict[str, asyncio.Future] = {}
+        self.timeout_response_secs = timeout_response_secs
+        if ws_options is None:
+            ws_options = {}
         self.ws_options = ws_options
-        self.httpx_options = httpx_options
+        if http_options is None:
+            http_options = {}
+        self.http_options = http_options
         self.opportunity_callback = opportunity_callback
         self.bid_status_callback = bid_status_callback
 
@@ -97,7 +104,49 @@ class ExpressRelayClient:
 
         return self.ws_loop
 
-    async def send_ws_message(self, client_msg: ClientMessage) -> dict:
+    def convert_client_msg_to_server(self, client_msg: ClientMessage) -> dict:
+        """
+        Converts the params of a ClientMessage model dict to the format expected by the server.
+
+        Args:
+            client_msg: The message to send to the server.
+        Returns:
+            The message as a dict with the params converted to the format expected by the server.
+        """
+        msg = client_msg.model_dump()
+        method = msg["params"]["method"]
+        msg["id"] = str(self.ws_msg_counter)
+        self.ws_msg_counter += 1
+
+        if method == "post_bid":
+            params = {
+                "bid": {
+                    "amount": msg["params"]["amount"],
+                    "target_contract": msg["params"]["target_contract"],
+                    "chain_id": msg["params"]["chain_id"],
+                    "target_calldata": msg["params"]["target_calldata"],
+                    "permission_key": msg["params"]["permission_key"],
+                }
+            }
+            msg["params"] = params
+        elif method == "post_opportunity_bid":
+            params = {
+                "opportunity_id": msg["params"]["opportunity_id"],
+                "opportunity_bid": {
+                    "amount": msg["params"]["amount"],
+                    "executor": msg["params"]["executor"],
+                    "permission_key": msg["params"]["permission_key"],
+                    "signature": msg["params"]["signature"],
+                    "valid_until": msg["params"]["valid_until"],
+                },
+            }
+            msg["params"] = params
+
+        msg["method"] = method
+
+        return msg
+
+    async def send_ws_msg(self, client_msg: ClientMessage) -> dict:
         """
         Sends a message to the server via websocket.
 
@@ -108,10 +157,7 @@ class ExpressRelayClient:
         """
         await self.start_ws()
 
-        # construct the message dict to send to server
-        msg = client_msg.convert_to_server()
-        msg["id"] = str(self.ws_msg_counter)
-        self.ws_msg_counter += 1
+        msg = self.convert_client_msg_to_server(client_msg)
 
         future = asyncio.get_event_loop().create_future()
         self.ws_msg_futures[msg["id"]] = future
@@ -119,9 +165,11 @@ class ExpressRelayClient:
         await self.ws.send(json.dumps(msg))
 
         # await the response for the sent ws message from the server
-        msg = await future
+        msg_response = await asyncio.wait_for(
+            future, timeout=self.timeout_response_secs
+        )
 
-        return self.process_response_msg(msg)
+        return self.process_response_msg(msg_response)
 
     def process_response_msg(self, msg: dict) -> dict:
         """
@@ -150,7 +198,7 @@ class ExpressRelayClient:
             "chain_ids": chain_ids,
         }
         client_msg = ClientMessage.model_validate({"params": params})
-        await self.send_ws_message(client_msg)
+        await self.send_ws_msg(client_msg)
 
     async def unsubscribe_chains(self, chain_ids: list[str]):
         """
@@ -164,7 +212,7 @@ class ExpressRelayClient:
             "chain_ids": chain_ids,
         }
         client_msg = ClientMessage.model_validate({"params": params})
-        await self.send_ws_message(client_msg)
+        await self.send_ws_msg(client_msg)
 
     async def submit_bid(self, bid: Bid, subscribe_to_updates: bool = True) -> UUID:
         """
@@ -180,10 +228,10 @@ class ExpressRelayClient:
         if subscribe_to_updates:
             bid_dict["method"] = "post_bid"
             client_msg = ClientMessage.model_validate({"params": bid_dict})
-            result = await self.send_ws_message(client_msg)
+            result = await self.send_ws_msg(client_msg)
             bid_id = UUID(result.get("id"))
         else:
-            async with httpx.AsyncClient(**self.httpx_options) as client:
+            async with httpx.AsyncClient(**self.http_options) as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
                     ._replace(path="/v1/bids")
@@ -222,10 +270,10 @@ class ExpressRelayClient:
                 "valid_until": opportunity_bid.valid_until,
             }
             client_msg = ClientMessage.model_validate({"params": params})
-            result = await self.send_ws_message(client_msg)
+            result = await self.send_ws_msg(client_msg)
             bid_id = UUID(result.get("id"))
         else:
-            async with httpx.AsyncClient(**self.httpx_options) as client:
+            async with httpx.AsyncClient(**self.http_options) as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
                     ._replace(
@@ -266,18 +314,16 @@ class ExpressRelayClient:
                 if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
                         opportunity = Opportunity.process_opportunity_dict(
-                            msg_json.get("opportunity")
+                            msg_json["opportunity"]
                         )
                         if opportunity:
                             asyncio.create_task(opportunity_callback(opportunity))
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        id = msg_json.get("status").get("id")
-                        bid_status = (
-                            msg_json.get("status").get("bid_status").get("status")
-                        )
-                        result = msg_json.get("status").get("bid_status").get("result")
+                        id = msg_json["status"]["id"]
+                        bid_status = msg_json["status"]["bid_status"]["status"]
+                        result = msg_json["status"]["bid_status"].get("result")
                         bid_status_update = BidStatusUpdate(
                             id=id, bid_status=BidStatus(bid_status), result=result
                         )
@@ -287,15 +333,12 @@ class ExpressRelayClient:
                 future = self.ws_msg_futures.pop(msg_json["id"])
                 future.set_result(msg_json)
 
-    async def get_opportunities(
-        self, chain_id: str | None = None, timeout_secs: int = 10
-    ) -> list[Opportunity]:
+    async def get_opportunities(self, chain_id: str | None = None) -> list[Opportunity]:
         """
         Connects to the server and fetches opportunities.
 
         Args:
             chain_id: The chain ID to fetch opportunities for. If None, fetches opportunities across all chains.
-            timeout_secs: The timeout for the HTTP request in seconds.
         Returns:
             A list of opportunities.
         """
@@ -309,27 +352,24 @@ class ExpressRelayClient:
                 ._replace(path="/v1/opportunities")
                 .geturl(),
                 params=params,
-                timeout=timeout_secs,
             )
 
         resp.raise_for_status()
 
-        opportunities = [
-            Opportunity.process_opportunity_dict(opportunity)
-            for opportunity in resp.json()
-        ]
+        opportunities = []
+        for opportunity in resp.json():
+            opportunity_processed = Opportunity.process_opportunity_dict(opportunity)
+            if opportunity_processed:
+                opportunities.append(opportunity_processed)
 
         return opportunities
 
-    async def submit_opportunity(
-        self, opportunity: OpportunityParams, timeout_secs: int = 10
-    ) -> UUID:
+    async def submit_opportunity(self, opportunity: OpportunityParams) -> UUID:
         """
         Submits an opportunity to the server.
 
         Args:
             opportunity: An object representing the opportunity to submit.
-            timeout_secs: The timeout for the HTTP request in seconds.
         Returns:
             The ID of the submitted opportunity.
         """
@@ -339,7 +379,6 @@ class ExpressRelayClient:
                 ._replace(path="/v1/opportunities")
                 .geturl(),
                 json=opportunity.params.model_dump(),
-                timeout=timeout_secs,
             )
         resp.raise_for_status()
         return UUID(resp.json()["opportunity_id"])
