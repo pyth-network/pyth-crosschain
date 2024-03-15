@@ -1,5 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { Connection, Signer, VersionedTransaction } from "@solana/web3.js";
+import {
+  Connection,
+  Signer,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import {
   PythSolanaReceiver as PythSolanaReceiverProgram,
   IDL as Idl,
@@ -40,11 +45,193 @@ import {
 } from "@pythnetwork/solana-utils";
 
 /**
+ * Configuration for the PythTransactionBuilder
+ * @property closeUpdateAccounts (default: true) if true, the builder will add instructions to close the price update accounts and the encoded vaa accounts to recover the rent
+ */
+export type PythTransactionBuilderConfig = {
+  closeUpdateAccounts?: boolean;
+};
+
+/**
+ * A builder class to build transactions that:
+ * - Post price updates (fully or partially verified)
+ * - Consume price updates in a consumer program
+ * - (Optionally) Close price update and encoded vaa accounts to recover the rent (`closeUpdateAccounts` in `PythTransactionBuilderConfig`)
+ *
+ * @example
+ * ```typescript
+ *  const priceUpdateData = await priceServiceConnection.getLatestVaas([
+ *    SOL_PRICE_FEED_ID,
+ *    ETH_PRICE_FEED_ID,
+ *  ]);
+ *
+ * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
+ * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+ * await transactionBuilder.addPriceConsumerInstructions(...)
+ *
+ * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
+ * ```
+ */
+export class PythTransactionBuilder extends TransactionBuilder {
+  readonly pythSolanaReceiver: PythSolanaReceiver;
+  readonly closeInstructions: InstructionWithEphemeralSigners[];
+  readonly priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+  readonly closeUpdateAccounts: boolean;
+
+  constructor(
+    pythSolanaReceiver: PythSolanaReceiver,
+    config: PythTransactionBuilderConfig
+  ) {
+    super(pythSolanaReceiver.wallet.publicKey, pythSolanaReceiver.connection);
+    this.pythSolanaReceiver = pythSolanaReceiver;
+    this.closeInstructions = [];
+    this.priceFeedIdToPriceUpdateAccount = {};
+    this.closeUpdateAccounts = config.closeUpdateAccounts ?? true;
+  }
+
+  /**
+   * Add instructions to post price updates to the builder.
+   *
+   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   */
+  async addPostPriceUpdates(priceUpdateDataArray: string[]) {
+    const {
+      postInstructions,
+      priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    } = await this.pythSolanaReceiver.buildPostPriceUpdateInstructions(
+      priceUpdateDataArray
+    );
+    this.closeInstructions.push(...closeInstructions);
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToPriceUpdateAccount
+    );
+    this.addInstructions(postInstructions);
+  }
+
+  /**
+   * Add instructions to post partially verified price updates to the builder.
+   *
+   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   *
+   * Partially verified price updates are price updates where not all the guardian signatures have been verified. By default this methods checks `DEFAULT_REDUCED_GUARDIAN_SET_SIZE` signatures when posting the VAA.
+   * If you are a on-chain program developer, make sure you understand the risks of consuming partially verified price updates here: {@link https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_state/src/price_update.rs}.
+   *
+   * @example
+   * ```typescript
+   * const priceUpdateData = await priceServiceConnection.getLatestVaas([
+   *    SOL_PRICE_FEED_ID,
+   *    ETH_PRICE_FEED_ID,
+   * ]);
+   *
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
+   * await transactionBuilder.addPostPartiallyVerifiedPriceUpdates(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(...)
+   * ...
+   * ```
+   */
+  async addPostPartiallyVerifiedPriceUpdates(priceUpdateDataArray: string[]) {
+    const {
+      postInstructions,
+      priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    } = await this.pythSolanaReceiver.buildPostPriceUpdateAtomicInstructions(
+      priceUpdateDataArray
+    );
+    this.closeInstructions.push(...closeInstructions);
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToPriceUpdateAccount
+    );
+    this.addInstructions(postInstructions);
+  }
+
+  /**
+   * Add instructions that consume price updates to the builder.
+   *
+   * @param getInstructions a function that given a mapping of price feed IDs to price update accounts, generates a series of instructions. Price updates get posted to ephemeral accounts and this function allows the user to indicate which accounts in their instruction need to be "replaced" with each price update account.
+   * If multiple price updates for the same price feed id are posted with the same builder, the account corresponding to the last update to get posted will be used.
+   *
+   * @example
+   * ```typescript
+   * ...
+   * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(
+   *   async (
+   *     getPriceUpdateAccount: ( priceFeedId: string) => PublicKey
+   *   ): Promise<InstructionWithEphemeralSigners[]> => {
+   *     return [
+   *       {
+   *         instruction: await myFirstPythApp.methods
+   *           .consume()
+   *           .accounts({
+   *              solPriceUpdate: getPriceUpdateAccount(SOL_PRICE_FEED_ID),
+   *              ethPriceUpdate: getPriceUpdateAccount(ETH_PRICE_FEED_ID),
+   *           })
+   *           .instruction(),
+   *         signers: [],
+   *       },
+   *     ];
+   *   }
+   * );
+   * ```
+   */
+  async addPriceConsumerInstructions(
+    getInstructions: (
+      getPriceUpdateAccount: (priceFeedId: string) => PublicKey
+    ) => Promise<InstructionWithEphemeralSigners[]>
+  ) {
+    this.addInstructions(
+      await getInstructions(this.getPriceUpdateAccount.bind(this))
+    );
+  }
+
+  /**
+   * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
+  async buildVersionedTransactions(
+    args: PriorityFeeConfig
+  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
+    if (this.closeUpdateAccounts) {
+      this.addInstructions(this.closeInstructions);
+    }
+    return super.buildVersionedTransactions(args);
+  }
+
+  /**
+   * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
+   */
+  buildLegacyTransactions(
+    args: PriorityFeeConfig
+  ): { tx: Transaction; signers: Signer[] }[] {
+    if (this.closeUpdateAccounts) {
+      this.addInstructions(this.closeInstructions);
+    }
+    return super.buildLegacyTransactions(args);
+  }
+
+  /**
+   * This method is used to retrieve the address of the price update account where the price update for a given price feed id will be posted.
+   * If multiple price updates for the same price feed id will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
+   * */
+  getPriceUpdateAccount(priceFeedId: string): PublicKey {
+    const priceUpdateAccount =
+      this.priceFeedIdToPriceUpdateAccount[priceFeedId];
+    if (!priceUpdateAccount) {
+      throw new Error(
+        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`
+      );
+    }
+    return priceUpdateAccount;
+  }
+}
+
+/**
  * A class to interact with the Pyth Solana Receiver program.
  *
- * This class provides helpful methods to:
- * - Post price updates from Pythnet to the Pyth Solana Receiver program
- * - Consume price updates in a consumer program
+ * This class provides helpful methods to build instructions to interact with the Pyth Solana Receiver program:
+ * - Post price updates (fully or partially verified)
  * - Close price update and encoded vaa accounts to recover rent
  */
 export class PythSolanaReceiver {
@@ -83,65 +270,12 @@ export class PythSolanaReceiver {
   }
 
   /**
-   * Build a series of transactions that post price updates to the Pyth Solana Receiver program, consume them in a consumer program and close the encoded vaa accounts and price update accounts.
-   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
-   * @param getInstructions a function that given a map of price feed IDs to price update accounts, returns a series of instructions to consume the price updates in a consumer program. This function is a way for the user to indicate which accounts in their instruction need to be "replaced" with price update accounts.
-   * @param priorityFeeConfig a configuration for the compute unit price to use for the transactions.
-   * @returns an array of transactions and their corresponding ephemeral signers
+   * Get a new transaction builder to build transactions that interact with the Pyth Solana Receiver program and consume price updates
    */
-  async withPriceUpdate(
-    priceUpdateDataArray: string[],
-    getInstructions: (
-      priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
-    ) => Promise<InstructionWithEphemeralSigners[]>,
-    priorityFeeConfig?: PriorityFeeConfig
-  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const {
-      postInstructions,
-      priceFeedIdToPriceUpdateAccount: priceFeedIdToPriceUpdateAccount,
-      closeInstructions,
-    } = await this.buildPostPriceUpdateInstructions(priceUpdateDataArray);
-    return this.batchIntoVersionedTransactions(
-      [
-        ...postInstructions,
-        ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
-        ...closeInstructions,
-      ],
-      priorityFeeConfig ?? {}
-    );
-  }
-
-  /**
-   * Build a series of transactions that post partially verified price updates to the Pyth Solana Receiver program, consume them in a consumer program and close the price update accounts.
-   *
-   * Partially verified price updates are price updates where not all the guardian signatures have been verified. By default this methods checks `DEFAULT_REDUCED_GUARDIAN_SET_SIZE` signatures when posting the VAA.
-   * If you are a on-chain program developer, make sure you understand the risks of consuming partially verified price updates here: {@link https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_state/src/price_update.rs}.
-   *
-   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
-   * @param getInstructions a function that given a map of price feed IDs to price update accounts, returns a series of instructions to consume the price updates in a consumer program. This function is a way for the user to indicate which accounts in their instruction need to be "replaced" with price update accounts.
-   * @param priorityFeeConfig a configuration for the compute unit price to use for the transactions.
-   * @returns an array of transactions and their corresponding ephemeral signers
-   */
-  async withPartiallyVerifiedPriceUpdate(
-    priceUpdateDataArray: string[],
-    getInstructions: (
-      priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>
-    ) => Promise<InstructionWithEphemeralSigners[]>,
-    priorityFeeConfig?: PriorityFeeConfig
-  ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const {
-      postInstructions,
-      priceFeedIdToPriceUpdateAccount,
-      closeInstructions,
-    } = await this.buildPostPriceUpdateAtomicInstructions(priceUpdateDataArray);
-    return this.batchIntoVersionedTransactions(
-      [
-        ...postInstructions,
-        ...(await getInstructions(priceFeedIdToPriceUpdateAccount)),
-        ...closeInstructions,
-      ],
-      priorityFeeConfig ?? {}
-    );
+  newTransactionBuilder(
+    config: PythTransactionBuilderConfig
+  ): PythTransactionBuilder {
+    return new PythTransactionBuilder(this, config);
   }
 
   /**

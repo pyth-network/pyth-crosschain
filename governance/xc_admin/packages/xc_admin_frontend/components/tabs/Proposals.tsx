@@ -401,7 +401,7 @@ const Proposal = ({
           squads.connection
         )
         builder.addInstruction({ instruction, signers: [] })
-        const versionedTxs = await builder.getVersionedTransactions(
+        const versionedTxs = await builder.buildVersionedTransactions(
           DEFAULT_PRIORITY_FEE_CONFIG
         )
         await sendTransactions(
