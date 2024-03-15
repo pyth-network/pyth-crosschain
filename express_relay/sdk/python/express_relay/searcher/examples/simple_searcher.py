@@ -2,8 +2,8 @@ import argparse
 import asyncio
 import logging
 from eth_account.account import Account
-from express_relay.express_relay_client import ExpressRelayClient, sign_bid
-from express_relay.express_relay_types import (
+from express_relay.client import ExpressRelayClient, sign_bid
+from express_relay.types import (
     Opportunity,
     OpportunityBid,
     Bytes32,

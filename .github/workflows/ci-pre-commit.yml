@@ -40,7 +40,7 @@ jobs:
           path: ~/.cache/pypoetry
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
       - name: Install poetry dependencies
-        run: poetry -C express_relay/sdk/python/express_relay_utils install
+        run: poetry -C express_relay/sdk/python/express_relay install
         shell: sh
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}

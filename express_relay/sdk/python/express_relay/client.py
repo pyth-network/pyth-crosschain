@@ -12,7 +12,7 @@ from websockets.client import WebSocketClientProtocol
 from eth_abi import encode
 from eth_account.account import Account
 from web3.auto import w3
-from express_relay.express_relay_types import (
+from express_relay.types import (
     Opportunity,
     BidStatusUpdate,
     ClientMessage,

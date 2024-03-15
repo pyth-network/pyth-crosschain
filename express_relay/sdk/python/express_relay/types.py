@@ -11,6 +11,7 @@ import warnings
 import string
 from eth_account.datastructures import SignedMessage
 
+
 class UnsupportedOpportunityVersionException(Exception):
     pass
 
@@ -213,8 +214,10 @@ class Opportunity(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_version(cls, data):
-        if data['version'] not in cls.supported_versions:
-            raise UnsupportedOpportunityVersionException(f"Cannot handle opportunity version: {data['version']}. Please upgrade your client.")
+        if data["version"] not in cls.supported_versions:
+            raise UnsupportedOpportunityVersionException(
+                f"Cannot handle opportunity version: {data['version']}. Please upgrade your client."
+            )
         return data
 
     @classmethod
