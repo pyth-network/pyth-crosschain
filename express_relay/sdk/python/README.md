@@ -11,15 +11,15 @@ The SDK includes searcher-side utilities and protocol-side utilities. The search
 ### poetry
 
 ```
-$ poetry add express-relay-utils
+$ poetry add express-relay
 ```
 
 ## Quickstart
 
-To run the simple searcher script, navigate to `express_relay_utils/` and run
+To run the simple searcher script, navigate to `python/` and run
 
 ```
-$ python3 -m searcher.examples.simple_searcher --private-key <PRIVATE_KEY_HEX_STRING> --chain-id development --verbose --server-url https://per-staging.dourolabs.app/
+$ python3 -m express_relay.searcher.examples.simple_searcher --private-key <PRIVATE_KEY_HEX_STRING> --chain-id development --verbose --server-url https://per-staging.dourolabs.app/
 ```
 
 This simple example runs a searcher that queries the Express Relay liquidation server for available liquidation opportunities and naively submits a bid on each available opportunity.

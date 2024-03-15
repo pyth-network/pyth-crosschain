@@ -11,6 +11,9 @@ import warnings
 import string
 from eth_account.datastructures import SignedMessage
 
+class UnsupportedOpportunityVersionException(Exception):
+    pass
+
 
 def check_hex_string(s: str):
     """
@@ -206,15 +209,13 @@ class Opportunity(BaseModel):
     opportunity_id: UUIDString
 
     supported_versions: ClassVar[list[str]] = ["v1"]
-    unsupported_version_error_text: ClassVar[str] = (
-        "Cannot handle opportunity version: {%s}. Please upgrade your client."
-    )
 
-    @model_validator(mode="after")
-    def check_version(self):
-        if self.version not in self.supported_versions:
-            raise Exception("Unsupported version")
-        return self
+    @model_validator(mode="before")
+    @classmethod
+    def check_version(cls, data):
+        if data['version'] not in cls.supported_versions:
+            raise UnsupportedOpportunityVersionException(f"Cannot handle opportunity version: {data['version']}. Please upgrade your client.")
+        return data
 
     @classmethod
     def process_opportunity_dict(cls, opportunity_dict: dict):
@@ -229,13 +230,9 @@ class Opportunity(BaseModel):
         """
         try:
             return cls.model_validate(opportunity_dict)
-        except Exception as e:
-            if str(e) == "Unsupported version":
-                warnings.warn(
-                    cls.unsupported_version_error_text % opportunity_dict["version"]
-                )
-                return None
-            raise
+        except UnsupportedOpportunityVersionException as e:
+            warnings.warn(str(e))
+            return None
 
 
 class SubscribeMessageParams(BaseModel):
