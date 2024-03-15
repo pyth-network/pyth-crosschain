@@ -346,7 +346,7 @@ class ExpressRelayClient:
         if chain_id:
             params["chain_id"] = chain_id
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(**self.http_options) as client:
             resp = await client.get(
                 urllib.parse.urlparse(self.server_url)
                 ._replace(path="/v1/opportunities")
@@ -373,7 +373,7 @@ class ExpressRelayClient:
         Returns:
             The ID of the submitted opportunity.
         """
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(**self.http_options) as client:
             resp = await client.post(
                 urllib.parse.urlparse(self.server_url)
                 ._replace(path="/v1/opportunities")
