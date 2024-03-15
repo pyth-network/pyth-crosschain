@@ -14,10 +14,10 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade poetry
-          cd express_relay/sdk/python/express_relay
           poetry build
+        working-directory: "express_relay/sdk/python/express_relay"
       - name: Build and publish
         run: |
-          cd express_relay/sdk/python/express_relay
           poetry build
           poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+        working-directory: "express_relay/sdk/python/express_relay"
