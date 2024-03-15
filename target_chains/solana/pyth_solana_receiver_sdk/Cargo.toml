@@ -1,11 +1,11 @@
 [package]
-name = "pyth-solana-receiver-state"
+name = "pyth-solana-receiver-sdk"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
 crate-type = ["lib"]
-name = "pyth_solana_receiver_state"
+name = "pyth_solana_receiver_sdk"
 
 
 [dependencies]

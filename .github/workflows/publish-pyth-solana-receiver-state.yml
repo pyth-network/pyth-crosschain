@@ -3,9 +3,9 @@ name: Publish Pyth SDK for the Solana Receiver to crates.io
 on:
   push:
     tags:
-      - pyth-solana-receiver-state-v*
+      - pyth-solana-receiver-sdk-v*
 jobs:
-  publish-pyth-solana-receiver-state:
+  publish-pyth-solana-receiver-sdk:
     name: Publish Pyth SDK for the Solana Receiver
     runs-on: ubuntu-latest
     steps:

@@ -108,7 +108,7 @@ impl PriceUpdateV1 {
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV1};
+    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV1};
     /// use anchor_lang::prelude::*;
     ///
     /// const MAXIMUM_AGE : u64 = 30;
@@ -152,7 +152,7 @@ impl PriceUpdateV1 {
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_state::price_update::{get_feed_id_from_hex, PriceUpdateV1};
+    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV1};
     /// use anchor_lang::prelude::*;
     ///
     /// const MAXIMUM_AGE : u64 = 30;
@@ -193,7 +193,7 @@ impl PriceUpdateV1 {
 /// # Example
 ///
 /// ```
-/// use pyth_solana_receiver_state::price_update::get_feed_id_from_hex;
+/// use pyth_solana_receiver_sdk::price_update::get_feed_id_from_hex;
 /// let feed_id = get_feed_id_from_hex("0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d").unwrap();
 /// ```
 pub fn get_feed_id_from_hex(input: &str) -> std::result::Result<FeedId, GetPriceError> {

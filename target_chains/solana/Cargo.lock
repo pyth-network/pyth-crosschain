@@ -3033,7 +3033,7 @@ dependencies = [
  "program-simulator",
  "pyth-sdk",
  "pyth-sdk-solana",
- "pyth-solana-receiver-state",
+ "pyth-solana-receiver-sdk",
  "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
@@ -3057,7 +3057,7 @@ dependencies = [
  "clap 3.2.23",
  "hex",
  "pyth-solana-receiver",
- "pyth-solana-receiver-state",
+ "pyth-solana-receiver-sdk",
  "pythnet-sdk",
  "serde_wormhole",
  "shellexpand",
@@ -3069,7 +3069,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-solana-receiver-state"
+name = "pyth-solana-receiver-sdk"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
