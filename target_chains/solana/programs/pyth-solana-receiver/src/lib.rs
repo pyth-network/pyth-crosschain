@@ -1,7 +1,7 @@
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
-    pyth_solana_receiver_state::{
+    pyth_solana_receiver_sdk::{
         config::{
             Config,
             DataSource,
@@ -47,7 +47,7 @@ use {
 pub mod error;
 pub mod sdk;
 
-declare_id!(pyth_solana_receiver_state::ID);
+declare_id!(pyth_solana_receiver_sdk::ID);
 
 #[program]
 pub mod pyth_solana_receiver {

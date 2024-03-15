@@ -1,0 +1,18 @@
+name: Publish Pythnet SDK to crates.io
+
+on:
+  push:
+    tags:
+      - pythnet-sdk-v*
+jobs:
+  publish-pythnet-sdk:
+    name: Publish Pythnet SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        working-directory: "pythnet/pythnet_sdk"

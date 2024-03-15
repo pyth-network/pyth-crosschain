@@ -21,7 +21,7 @@ use {
             DEFAULT_TREASURY_ID,
         },
     },
-    pyth_solana_receiver_state::{
+    pyth_solana_receiver_sdk::{
         config::DataSource,
         price_update::{
             PriceUpdateV1,

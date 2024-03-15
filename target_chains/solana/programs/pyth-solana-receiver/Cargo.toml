@@ -22,7 +22,7 @@ solana-program = { workspace = true }
 byteorder = "1.4.3"
 wormhole-core-bridge-solana = {workspace = true}
 wormhole-raw-vaas = {version = "0.1.3", features = ["ruint", "on-chain"], default-features = false }
-pyth-solana-receiver-state = { path = "../../pyth_solana_receiver_state"}
+pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
 
 [dev-dependencies]
 pyth-sdk = "0.8.0"

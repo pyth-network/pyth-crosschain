@@ -19,7 +19,7 @@ use {
             SECONDARY_TREASURY_ID,
         },
     },
-    pyth_solana_receiver_state::price_update::{
+    pyth_solana_receiver_sdk::price_update::{
         PriceUpdateV1,
         VerificationLevel,
     },
