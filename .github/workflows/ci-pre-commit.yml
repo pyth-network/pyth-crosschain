@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+env:
+  PYTHON_VERSION: "3.11"
+  POETRY_VERSION: "1.4.2"
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -13,7 +17,6 @@ jobs:
         with:
           # Need to grab the history of the PR
           fetch-depth: 0
-      - uses: actions/setup-python@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -24,6 +27,21 @@ jobs:
           profile: minimal
           toolchain: nightly-2023-07-23
           components: rustfmt, clippy
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+        id: setup_python
+      - name: Cache Poetry cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
+      - name: Install poetry dependencies
+        run: poetry -C express_relay/sdk/python/express_relay install
+        shell: sh
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
         with:
