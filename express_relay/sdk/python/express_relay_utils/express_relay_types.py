@@ -4,7 +4,7 @@ from pydantic.functional_validators import AfterValidator
 from pydantic.functional_serializers import PlainSerializer
 from uuid import UUID
 import web3
-from typing import Union
+from typing import Union, ClassVar
 from pydantic import Field
 from typing_extensions import Literal, Annotated
 import warnings
@@ -12,7 +12,7 @@ import string
 from eth_account.datastructures import SignedMessage
 
 
-def maybe_hex_string(s: str):
+def check_hex_string(s: str):
     """
     Validates that a string is a valid hex string.
 
@@ -30,14 +30,14 @@ def maybe_hex_string(s: str):
     return s
 
 
-def maybe_bytes32(s: str):
+def check_bytes32(s: str):
     """
     Validates that a string is a valid 32-byte hex string.
 
     Args:
         s: The string to validate as a 32-byte hex string. Can be '0x'-prefixed.
     """
-    maybe_hex_string(s)
+    check_hex_string(s)
     ind = 0
     if s.startswith("0x"):
         ind = 2
@@ -47,7 +47,7 @@ def maybe_bytes32(s: str):
     return s
 
 
-def maybe_address(s: str):
+def check_address(s: str):
     """
     Validates that a string is a valid Ethereum address.
 
@@ -58,9 +58,9 @@ def maybe_address(s: str):
     return s
 
 
-HexString = Annotated[str, AfterValidator(maybe_hex_string)]
-Bytes32 = Annotated[str, AfterValidator(maybe_bytes32)]
-Address = Annotated[str, AfterValidator(maybe_address)]
+HexString = Annotated[str, AfterValidator(check_hex_string)]
+Bytes32 = Annotated[str, AfterValidator(check_bytes32)]
+Address = Annotated[str, AfterValidator(check_address)]
 
 IntString = Annotated[int, PlainSerializer(lambda x: str(x), return_type=str)]
 UUIDString = Annotated[UUID, PlainSerializer(lambda x: str(x), return_type=str)]
@@ -178,9 +178,6 @@ class OpportunityParams(BaseModel):
 
     params: Union[OpportunityParamsV1] = Field(..., discriminator="version")
 
-    def to_dict(self):
-        return self.params.to_dict()
-
 
 class Opportunity(BaseModel):
     """
@@ -208,14 +205,37 @@ class Opportunity(BaseModel):
     creation_time: IntString
     opportunity_id: UUIDString
 
+    supported_versions: ClassVar[list[str]] = ["v1"]
+    unsupported_version_error_text: ClassVar[str] = (
+        "Cannot handle opportunity version: {%s}. Please upgrade your client."
+    )
+
     @model_validator(mode="after")
     def check_version(self):
-        if self.version not in ["v1"]:
-            warnings.warn(
-                f"Cannot handle opportunity version: {self.version}. Please upgrade your client."
-            )
-            return None
+        if self.version not in self.supported_versions:
+            raise Exception("Unsupported version")
         return self
+
+    @classmethod
+    def process_opportunity_dict(cls, opportunity_dict: dict):
+        """
+        Processes an opportunity dictionary and converts to a class object.
+
+        Args:
+            opportunity_dict: The opportunity dictionary to convert.
+
+        Returns:
+            The opportunity as a class object.
+        """
+        try:
+            return cls.model_validate(opportunity_dict)
+        except Exception as e:
+            if str(e) == "Unsupported version":
+                warnings.warn(
+                    cls.unsupported_version_error_text % opportunity_dict["version"]
+                )
+                return None
+            raise
 
 
 class SubscribeMessageParams(BaseModel):

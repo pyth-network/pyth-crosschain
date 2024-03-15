@@ -37,14 +37,16 @@ class ExpressRelayClient:
         bid_status_callback: (
             Callable[[BidStatusUpdate], Coroutine[Any, Any, Any]] | None
         ) = None,
-        **kwargs,
+        ws_options: dict[str, Any] = {},
+        httpx_options: dict[str, Any] = {},
     ):
         """
         Args:
             server_url: The URL of the auction server.
             opportunity_callback: An async function that serves as the callback on a new opportunity. Should take in one external argument of type Opportunity.
             bid_status_callback: An async function that serves as the callback on a new bid status update. Should take in one external argument of type BidStatusUpdate.
-            kwargs: Keyword arguments to pass to the websocket connection.
+            ws_options: Keyword arguments to pass to the websocket connection.
+            httpx_options: Keyword arguments to pass to the HTTP client.
         """
         parsed_url = urllib.parse.urlparse(server_url)
         if parsed_url.scheme == "https":
@@ -61,7 +63,8 @@ class ExpressRelayClient:
         self.ws_lock = asyncio.Lock()
         self.ws_loop: Task[Any]
         self.ws_msg_futures: dict[str, asyncio.Future] = {}
-        self.ws_options = kwargs
+        self.ws_options = ws_options
+        self.httpx_options = httpx_options
         self.opportunity_callback = opportunity_callback
         self.bid_status_callback = bid_status_callback
 
@@ -94,23 +97,19 @@ class ExpressRelayClient:
 
         return self.ws_loop
 
-    async def send_ws_message(self, method: str, params: dict) -> dict:
+    async def send_ws_message(self, client_msg: ClientMessage) -> dict:
         """
         Sends a message to the server via websocket.
 
         Args:
-            method: The type of message to send.
-            params: The parameters to send in the message.
+            client_msg: The message to send.
         Returns:
             The result of the response message from the server.
         """
         await self.start_ws()
 
-        params.update({"method": method})
-
-        # validate the format of msg and construct the message dict to send
-        client_msg_validated = ClientMessage.model_validate({"params": params})
-        msg = client_msg_validated.convert_to_server()
+        # construct the message dict to send to server
+        msg = client_msg.convert_to_server()
         msg["id"] = str(self.ws_msg_counter)
         self.ws_msg_counter += 1
 
@@ -147,9 +146,11 @@ class ExpressRelayClient:
             chain_ids: A list of chain IDs to subscribe to.
         """
         params = {
+            "method": "subscribe",
             "chain_ids": chain_ids,
         }
-        await self.send_ws_message("subscribe", params)
+        client_msg = ClientMessage.model_validate({"params": params})
+        await self.send_ws_message(client_msg)
 
     async def unsubscribe_chains(self, chain_ids: list[str]):
         """
@@ -159,35 +160,35 @@ class ExpressRelayClient:
             chain_ids: A list of chain IDs to unsubscribe from.
         """
         params = {
+            "method": "unsubscribe",
             "chain_ids": chain_ids,
         }
-        await self.send_ws_message("unsubscribe", params)
+        client_msg = ClientMessage.model_validate({"params": params})
+        await self.send_ws_message(client_msg)
 
-    async def submit_bid(
-        self, bid: Bid, subscribe_to_updates: bool = True, **kwargs
-    ) -> UUID:
+    async def submit_bid(self, bid: Bid, subscribe_to_updates: bool = True) -> UUID:
         """
         Submits a bid to the auction server.
 
         Args:
             bid: An object representing the bid to submit.
             subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
-            kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
         bid_dict = bid.model_dump()
         if subscribe_to_updates:
-            result = await self.send_ws_message("post_bid", bid_dict)
+            bid_dict["method"] = "post_bid"
+            client_msg = ClientMessage.model_validate({"params": bid_dict})
+            result = await self.send_ws_message(client_msg)
             bid_id = UUID(result.get("id"))
         else:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(**self.httpx_options) as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
                     ._replace(path="/v1/bids")
                     .geturl(),
                     json=bid_dict,
-                    **kwargs,
                 )
 
             resp.raise_for_status()
@@ -199,7 +200,6 @@ class ExpressRelayClient:
         self,
         opportunity_bid: OpportunityBid,
         subscribe_to_updates: bool = True,
-        **kwargs,
     ) -> UUID:
         """
         Submits a bid on an opportunity to the server via websocket.
@@ -207,26 +207,25 @@ class ExpressRelayClient:
         Args:
             opportunity_bid: An object representing the bid to submit on an opportunity.
             subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
-            kwargs: Keyword arguments to pass to the HTTP post request.
         Returns:
             The ID of the submitted bid.
         """
         opportunity_bid_dict = opportunity_bid.model_dump()
         if subscribe_to_updates:
-            result = await self.send_ws_message(
-                "post_opportunity_bid",
-                {
-                    "opportunity_id": opportunity_bid.opportunity_id,
-                    "amount": opportunity_bid.amount,
-                    "executor": opportunity_bid.executor,
-                    "permission_key": opportunity_bid.permission_key,
-                    "signature": opportunity_bid.signature,
-                    "valid_until": opportunity_bid.valid_until,
-                },
-            )
+            params = {
+                "method": "post_opportunity_bid",
+                "opportunity_id": opportunity_bid.opportunity_id,
+                "amount": opportunity_bid.amount,
+                "executor": opportunity_bid.executor,
+                "permission_key": opportunity_bid.permission_key,
+                "signature": opportunity_bid.signature,
+                "valid_until": opportunity_bid.valid_until,
+            }
+            client_msg = ClientMessage.model_validate({"params": params})
+            result = await self.send_ws_message(client_msg)
             bid_id = UUID(result.get("id"))
         else:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(**self.httpx_options) as client:
                 resp = await client.post(
                     urllib.parse.urlparse(self.server_url)
                     ._replace(
@@ -234,7 +233,6 @@ class ExpressRelayClient:
                     )
                     .geturl(),
                     json=opportunity_bid_dict,
-                    **kwargs,
                 )
 
             resp.raise_for_status()
@@ -267,7 +265,7 @@ class ExpressRelayClient:
             if msg_json.get("type"):
                 if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
-                        opportunity = Opportunity.model_validate(
+                        opportunity = Opportunity.process_opportunity_dict(
                             msg_json.get("opportunity")
                         )
                         if opportunity:
@@ -317,7 +315,8 @@ class ExpressRelayClient:
         resp.raise_for_status()
 
         opportunities = [
-            Opportunity.model_validate(opportunity) for opportunity in resp.json()
+            Opportunity.process_opportunity_dict(opportunity)
+            for opportunity in resp.json()
         ]
 
         return opportunities

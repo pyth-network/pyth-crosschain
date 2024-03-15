@@ -1,6 +1,6 @@
-# Pyth Express Relay Python SDK
+# Express Relay Python SDK
 
-Utility library for searchers and protocols to interact with the Pyth Express Relay API.
+Utility library for searchers and protocols to interact with the Express Relay API.
 
 The SDK includes searcher-side utilities and protocol-side utilities. The searcher-side utilities include a basic Searcher client for connecting to the Express Relay server as well as an example SimpleSearcher class that provides a simple workflow for assessing and bidding on liquidation opportunities.
 
