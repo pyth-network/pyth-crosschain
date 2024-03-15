@@ -220,7 +220,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.priceFeedIdToPriceUpdateAccount[priceFeedId];
     if (!priceUpdateAccount) {
       throw new Error(
-        `A price update account for the price feed ID ${priceFeedId} is being consumed before it was posted. Make sure to call addPostPriceUpdates or addPriceConsumerInstructions before calling addPriceConsumerInstructions.`
+        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`
       );
     }
     return priceUpdateAccount;
