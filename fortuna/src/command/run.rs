@@ -234,6 +234,12 @@ pub async fn run_keeper(
     Ok(())
 }
 
+let (tx, mut rx) = watch::channel(false);
+fn thread_retry() {
+    let rx = rx.clone();
+    loop 
+}
+
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let secret = opts.randomness.load_secret()?;
@@ -289,9 +295,15 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let chains_clone = chains.clone();
 
-    // TODO: use tokio watch to gracefully exit
-
     let tasks = join_all([
+         // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
+     spawn(async move {
+        tracing::info!("Registered shutdown signal handler...");
+        tokio::signal::ctrl_c().await.unwrap();
+        tracing::info!("Shut down signal received, waiting for tasks...");
+        tx.send(true);
+    });
+
         spawn(run_api(opts.addr.clone(), chains)),
         spawn(run_keeper(chains_clone, config)),
     ])
