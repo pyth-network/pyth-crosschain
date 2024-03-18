@@ -1,13 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  BidStatusUpdate,
-  checkAddress,
-  checkHex,
-  Client,
-  Opportunity,
-} from "../index";
+import { checkAddress, Client, OpportunityParams } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
+import type { ContractFunctionReturnType } from "viem";
 import {
   Address,
   createPublicClient,
@@ -17,9 +12,7 @@ import {
   Hex,
   http,
   isHex,
-  parseAbi,
 } from "viem";
-import type { ContractFunctionReturnType } from "viem";
 import { optimismSepolia } from "viem/chains";
 import { abi } from "./abi";
 import {
@@ -27,8 +20,11 @@ import {
   PriceServiceConnection,
 } from "@pythnetwork/price-service-client";
 
-const DAY_IN_SECONDS = 60 * 60 * 24;
-
+type VaultWithId = ContractFunctionReturnType<
+  typeof abi,
+  "view",
+  "getVault"
+> & { id: bigint };
 class ProtocolMonitor {
   private client: Client;
   private subscribedIds: Set<string> = new Set();
@@ -76,7 +72,7 @@ class ProtocolMonitor {
       client: rpcClient,
     });
     const lastVaultId = await contract.read.getLastVaultId();
-    const vaults = [];
+    const vaults: VaultWithId[] = [];
     for (let vaultId = 0n; vaultId < lastVaultId; vaultId++) {
       const vault = await contract.read.getVault([vaultId]);
       // Already liquidated vault
@@ -89,87 +85,92 @@ class ProtocolMonitor {
     }
 
     for (const vault of vaults) {
-      if (
-        !this.prices[vault.tokenIDCollateral] ||
-        !this.prices[vault.tokenIDDebt]
-      ) {
-        continue;
-      }
-      const priceCollateral = BigInt(
-        this.prices[vault.tokenIDCollateral].getPriceUnchecked().price
-      );
-      const priceDebt = BigInt(
-        this.prices[vault.tokenIDDebt].getPriceUnchecked().price
-      );
-      const valueCollateral = priceCollateral * vault.amountCollateral;
-      const valueDebt = priceDebt * vault.amountDebt;
-      const health = valueCollateral / valueDebt;
-      if (valueDebt * vault.minHealthRatio > valueCollateral * 10n ** 18n) {
-        console.log(
-          `Vault ${vault.id} is undercollateralized health: ${health}`
-        );
-        const priceUpdates = [
-          this.prices[vault.tokenIDCollateral].getVAA()!,
-          this.prices[vault.tokenIDDebt].getVAA()!,
-        ];
-        const vaas: Hex[] = priceUpdates.map(
-          (vaa): Hex => `0x${Buffer.from(vaa, "base64").toString("hex")}`
-        );
-        const calldata = encodeFunctionData({
-          abi,
-          functionName: "liquidateWithPriceUpdate",
-          args: [vault.id, vaas],
-        });
-        const permissionPayload = encodeAbiParameters(
-          [{ type: "uint256", name: "vaultId" }],
-          [vault.id]
-        );
-        const permission = encodeAbiParameters(
-          [
-            { type: "address", name: "contract" },
-            { type: "bytes", name: "vaultId" },
-          ],
-          [this.vaultContract, permissionPayload]
-        );
-        const targetCallValue = BigInt(priceUpdates.length);
-        let sellTokens;
-        if (targetCallValue > 0 && vault.tokenDebt == this.wethContract) {
-          sellTokens = [
-            {
-              token: this.wethContract,
-              amount: targetCallValue + vault.amountDebt,
-            },
-          ];
-        } else {
-          sellTokens = [
-            { token: vault.tokenDebt, amount: vault.amountDebt },
-            { token: this.wethContract, amount: targetCallValue },
-          ];
-        }
-        const opportunity: Omit<Opportunity, "opportunityId"> = {
-          chainId: this.chainId,
-          targetContract: this.vaultContract,
-          targetCalldata: calldata,
-          permissionKey: permission,
-          targetCallValue: targetCallValue,
-          buyTokens: [
-            { token: vault.tokenCollateral, amount: vault.amountCollateral },
-          ],
-          sellTokens: sellTokens,
-        };
+      if (this.isLiquidatable(vault)) {
+        const opportunity = this.createOpportunity(vault);
         await this.client.submitOpportunity(opportunity);
       }
     }
+  }
 
-    try {
-      await this.client.subscribeChains([argv.chainId]);
-      console.log(
-        `Subscribed to chain ${argv.chainId}. Waiting for opportunities...`
-      );
-    } catch (error) {
-      console.error(error);
-      this.client.websocket?.close();
+  private createOpportunity(vault: VaultWithId) {
+    const priceUpdates = [
+      this.prices[vault.tokenIDCollateral].getVAA()!,
+      this.prices[vault.tokenIDDebt].getVAA()!,
+    ];
+    const vaas: Hex[] = priceUpdates.map(
+      (vaa): Hex => `0x${Buffer.from(vaa, "base64").toString("hex")}`
+    );
+    const calldata = encodeFunctionData({
+      abi,
+      functionName: "liquidateWithPriceUpdate",
+      args: [vault.id, vaas],
+    });
+    const permission = this.createPermission(vault.id);
+    const targetCallValue = BigInt(priceUpdates.length);
+    let sellTokens;
+    if (targetCallValue > 0 && vault.tokenDebt == this.wethContract) {
+      sellTokens = [
+        {
+          token: this.wethContract,
+          amount: targetCallValue + vault.amountDebt,
+        },
+      ];
+    } else {
+      sellTokens = [
+        { token: vault.tokenDebt, amount: vault.amountDebt },
+        { token: this.wethContract, amount: targetCallValue },
+      ];
     }
+    const opportunity: OpportunityParams = {
+      chainId: this.chainId,
+      targetContract: this.vaultContract,
+      targetCalldata: calldata,
+      permissionKey: permission,
+      targetCallValue: targetCallValue,
+      buyTokens: [
+        { token: vault.tokenCollateral, amount: vault.amountCollateral },
+      ],
+      sellTokens: sellTokens,
+    };
+    return opportunity;
+  }
+
+  private isLiquidatable(vault: VaultWithId): boolean {
+    if (
+      !this.prices[vault.tokenIDCollateral] ||
+      !this.prices[vault.tokenIDDebt]
+    ) {
+      return false;
+    }
+    const priceCollateral = BigInt(
+      this.prices[vault.tokenIDCollateral].getPriceUnchecked().price
+    );
+    const priceDebt = BigInt(
+      this.prices[vault.tokenIDDebt].getPriceUnchecked().price
+    );
+    const valueCollateral = priceCollateral * vault.amountCollateral;
+    const valueDebt = priceDebt * vault.amountDebt;
+    if (valueDebt * vault.minHealthRatio > valueCollateral * 10n ** 18n) {
+      const health = valueCollateral / valueDebt;
+      console.log(`Vault ${vault.id} is undercollateralized health: ${health}`);
+      return true;
+    }
+    return false;
+  }
+
+  private createPermission(vaultId: bigint) {
+    const permissionPayload = encodeAbiParameters(
+      [{ type: "uint256", name: "vaultId" }],
+      [vaultId]
+    );
+    const permission = encodeAbiParameters(
+      [
+        { type: "address", name: "contract" },
+        { type: "bytes", name: "vaultId" },
+      ],
+      [this.vaultContract, permissionPayload]
+    );
+    return permission;
   }
 }
 
