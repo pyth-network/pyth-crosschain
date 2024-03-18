@@ -11,6 +11,10 @@ import { Idl, BorshCoder } from "@coral-xyz/anchor";
 import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
 import meshIdl from "@sqds/mesh/lib/mesh-idl/mesh.json";
 import stakingIdl from "./idl/staking.json";
+import {
+  DEFAULT_RECEIVER_PROGRAM_ID,
+  pythSolanaReceiverIdl,
+} from "@pythnetwork/pyth-solana-receiver";
 
 export const MESH_PROGRAM_ID = new PublicKey(
   "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
@@ -54,6 +58,10 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
       case STAKING_PROGRAM_ID.toBase58():
         idl = stakingIdl as Idl;
         program = MultisigInstructionProgram.Staking;
+        break;
+      case DEFAULT_RECEIVER_PROGRAM_ID.toBase58():
+        idl = pythSolanaReceiverIdl as Idl;
+        program = MultisigInstructionProgram.SolanaReceiver;
         break;
       default:
         return UnrecognizedProgram.fromTransactionInstruction(instruction);
