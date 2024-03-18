@@ -38,10 +38,7 @@ import {
 } from "xc_admin_common";
 
 import {
-  PythSolanaReceiver as PythSolanaReceiverProgram,
-  IDL as PythSolanaReceiverIdl,
-} from "@pythnetwork/pyth-solana-receiver/lib/idl/pyth_solana_receiver";
-import {
+  pythSolanaReceiverIdl,
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,
 } from "@pythnetwork/pyth-solana-receiver";
@@ -168,7 +165,7 @@ multisigCommand(
   const targetCluster: PythCluster = options.cluster;
 
   const programSolanaReceiver = new Program(
-    PythSolanaReceiverIdl as PythSolanaReceiverProgram,
+    pythSolanaReceiverIdl,
     DEFAULT_RECEIVER_PROGRAM_ID,
     vault.getAnchorProvider()
   );
@@ -188,14 +185,18 @@ multisigCommand(
   "solana-receiver-program-request-governance-authority-transfer",
   "Request governance authority transfer for the solana receiver program"
 )
-  .requiredOption("-t, --target <pubkey>", "")
+  .requiredOption(
+    "-t, --target <pubkey>",
+    "The new governance authority to take over. " +
+      "If the target is another multisig, it will be the multisig's vault authority PDA."
+  )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const targetCluster: PythCluster = options.cluster;
     const target: PublicKey = new PublicKey(options.target);
 
     const programSolanaReceiver = new Program(
-      PythSolanaReceiverIdl as PythSolanaReceiverProgram,
+      pythSolanaReceiverIdl,
       DEFAULT_RECEIVER_PROGRAM_ID,
       vault.getAnchorProvider()
     );
@@ -203,6 +204,7 @@ multisigCommand(
     const proposalInstruction = await programSolanaReceiver.methods
       .requestGovernanceAuthorityTransfer(target)
       .accounts({
+        payer: await vault.getVaultAuthorityPDA(targetCluster),
         config: getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID),
       })
       .instruction();
