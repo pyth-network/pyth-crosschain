@@ -23,6 +23,7 @@ use {
         },
         core::types::Address,
         middleware::{
+            nonce_manager,
             transformer::{
                 Transformer,
                 TransformerError,
@@ -43,6 +44,7 @@ use {
         types::{
             transaction::eip2718::TypedTransaction,
             BlockNumber as EthersBlockNumber,
+            U256,
         },
     },
     sha3::{
@@ -63,15 +65,6 @@ pub type SignablePythContract = PythRandom<
     TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
-
-// FIXME: this is probably not right.
-pub struct RequestedWithCallbackFilter {
-    pub provider:           Address,
-    pub requestor:          Address,
-    pub sequence_number:    u64,
-    pub user_random_number: [u8; 32],
-    pub request:            Request,
-}
 
 /// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
@@ -147,6 +140,32 @@ impl SignablePythContract {
         } else {
             Err(anyhow!("Request failed").into())
         }
+    }
+
+    pub async fn reveal_with_callback_wrapper(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+        nonce: U256,
+    ) -> Result<()> {
+        let r = self
+            .reveal_with_callback(
+                provider,
+                sequence_number,
+                user_random_number,
+                provider_revelation,
+            )
+            // TODO: gas should be configurable
+            .gas(1000000)
+            .nonce(nonce)
+            .send()
+            .await?
+            .await?;
+
+        tracing::info!("Revealed with callback for provider: {provider} with sequence number: {sequence_number} res: {:?}", r);
+        Ok(())
     }
 
     /// Reveal the generated random number to the contract.
@@ -248,9 +267,10 @@ impl EntropyReader for PythContract {
 
         Ok(res
             .iter()
-            .map(|r| RequestWithCallbackEvent {
+            .map(|r| RequestedWithCallbackEvent {
                 sequence_number:    r.sequence_number,
                 user_random_number: r.user_random_number,
+                provider_address:   r.request.provider,
             })
             .collect())
     }

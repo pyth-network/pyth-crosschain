@@ -3,7 +3,10 @@ use {
         api,
         chain::{
             self,
-            ethereum::PythContract,
+            ethereum::{
+                PythContract,
+                SignablePythContract,
+            },
             reader::{
                 BlockNumber,
                 BlockStatus,
@@ -26,17 +29,25 @@ use {
     axum::Router,
     ethers::{
         etherscan::blocks,
+        middleware::MiddlewareBuilder,
         providers::{
             Http,
             Middleware,
             Provider,
             StreamExt,
         },
+        signers::{
+            LocalWallet,
+            Signer,
+        },
     },
     futures::future::join_all,
     std::{
         borrow::Borrow,
-        collections::HashMap,
+        collections::{
+            HashMap,
+            HashSet,
+        },
         net::SocketAddr,
         sync::{
             atomic::{
@@ -71,6 +82,7 @@ pub async fn run_api_with_exit_check(
     chains: HashMap<String, api::BlockchainState>,
     rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
+    // tokio::select! {}
     while !*rx_exit.borrow() {
         // TODO: this may not work as we have passed the ownership here
         // for the loop to work again we should have pass a copy
@@ -148,13 +160,21 @@ pub async fn run_keeper_with_exit_check(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
     rx_exit: watch::Receiver<bool>,
+    private_key: String,
 ) -> Result<()> {
     while !*rx_exit.borrow() {
         // TODO: this may not work as we have passed the ownership here
         // for the loop to work again we should have pass a copy
         // Is it better to use Arc?
         // Clone can be expensive.
-        if let Err(e) = run_keeper(chains.clone(), config.clone(), rx_exit.clone()).await {
+        if let Err(e) = run_keeper(
+            chains.clone(),
+            config.clone(),
+            rx_exit.clone(),
+            private_key.clone(),
+        )
+        .await
+        {
             tracing::error!("Keeper service failed. {:?}", e);
         }
 
@@ -169,11 +189,10 @@ pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
     rx_exit: watch::Receiver<bool>,
+    private_key: String,
 ) -> Result<()> {
     let handles = Vec::new();
     for (chain_id, chain_config) in chains {
-        let chain_eth_config = config.chains.get(&chain_id).unwrap();
-
         let rx_exit = rx_exit.clone();
         handles.push(spawn(async move {
             let latest_safe_block = chain_config
@@ -182,8 +201,29 @@ pub async fn run_keeper(
                 .await?
                 - chain_config.reveal_delay_blocks;
 
+            let chain_eth_config = config.chains.get(&chain_id).unwrap();
+
+            // create a contract and a nonce manager
+            let contract =
+                Arc::new(SignablePythContract::from_config(&chain_eth_config, &private_key).await?);
+
+            // TODO:use
+            // contract.client().provider()
+
+            let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr)?;
+            let nonce_manager =
+                Arc::new(provider.nonce_manager(private_key.parse::<LocalWallet>()?.address()));
+            nonce_manager
+                .initialize_nonce(Some(latest_safe_block.into()))
+                .await?;
+
             let rx_exit_handle_backlog = rx_exit.clone();
-            let handle_backlog = spawn(async {
+            let contract_clone = contract.clone();
+            let nonce_manager_clone = nonce_manager.clone();
+            let provider_address = chain_config.provider_address.clone();
+            let hash_chain_state = chain_config.state.clone();
+            let contract_reader_clone = chain_config.contract.clone();
+            let handle_backlog = spawn(async move {
                 while !*rx_exit_handle_backlog.borrow() {
                     let res = async {
                         // TODO: add to config
@@ -205,8 +245,40 @@ pub async fn run_keeper(
                                 .await?;
 
                             for event in events {
-                                // TODO
-                                println!("handle event: {:?}", event);
+                                if event.provider_address == provider_address {
+                                    let res = contract_reader_clone
+                                        .get_request(event.provider_address, event.sequence_number)
+                                        .await;
+
+                                    if let Ok(req) = res {
+                                        match req {
+                                            Some(req) => {
+                                                if req.sequence_number == 0
+                                                    || req.provider != event.provider_address
+                                                    || req.sequence_number != event.sequence_number
+                                                {
+                                                    continue;
+                                                }
+                                            }
+                                            None => continue,
+                                        }
+                                    }
+
+                                    let res = contract_clone
+                                        .reveal_with_callback_wrapper(
+                                            provider_address,
+                                            event.sequence_number,
+                                            event.user_random_number,
+                                            hash_chain_state.reveal(event.sequence_number)?,
+                                            nonce_manager_clone.next(),
+                                        )
+                                        .await;
+                                }
+
+                                // adding a delay of 1 seconds for backlog events
+                                // as we want to prioritize the latest events
+                                // also, it reduces the load on the node
+                                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                             }
                             println!("from_block: {}, to_block: {}", from_block, to_block);
 
@@ -221,6 +293,9 @@ pub async fn run_keeper(
 
                     if let Err(e) = res.await {
                         tracing::error!("Error in handle_backlog: {:?}", e);
+                    } else {
+                        tracing::info!("Backlog processed successfully");
+                        break;
                     }
 
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
@@ -275,8 +350,14 @@ pub async fn run_keeper(
             });
 
             let rx_exit_handle_events = rx_exit.clone();
+            let rx_exit_handle_backlog = rx_exit.clone();
+            let contract_clone = contract.clone();
+            let nonce_manager_clone = nonce_manager.clone();
+            let provider_address = chain_config.provider_address.clone();
+            let hash_chain_state = chain_config.state.clone();
+            let contract_reader_clone = chain_config.contract.clone();
             let handle_events = spawn(async {
-                while !*rx_exit_handle_events {
+                while !*rx_exit_handle_events.borrow() {
                     let res = async {
                         while !*rx_exit_handle_events.borrow()
                             && let Some(block_range) = rx.recv().await
@@ -297,8 +378,44 @@ pub async fn run_keeper(
                                     .await?;
 
                                 for event in events {
-                                    // TODO
-                                    println!("handle event: {:?}", event);
+                                    if event.provider_address == provider_address {
+                                        let res = contract_reader_clone
+                                            .get_request(
+                                                event.provider_address,
+                                                event.sequence_number,
+                                            )
+                                            .await;
+
+                                        if let Ok(req) = res {
+                                            match req {
+                                                Some(req) => {
+                                                    if req.sequence_number == 0
+                                                        || req.provider != event.provider_address
+                                                        || req.sequence_number
+                                                            != event.sequence_number
+                                                    {
+                                                        continue;
+                                                    }
+                                                }
+                                                None => continue,
+                                            }
+                                        }
+
+                                        let res = contract_clone
+                                            .reveal_with_callback_wrapper(
+                                                provider_address,
+                                                event.sequence_number,
+                                                event.user_random_number,
+                                                hash_chain_state.reveal(event.sequence_number)?,
+                                                nonce_manager_clone.next(),
+                                            )
+                                            .await;
+                                    }
+
+                                    // adding a delay of 1 seconds for backlog events
+                                    // as we want to prioritize the latest events
+                                    // also, it reduces the load on the node
+                                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                                 }
 
                                 println!("from_block: {}, to_block: {}", from_block, to_block);
@@ -340,7 +457,7 @@ pub async fn run_keeper(
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let secret = opts.randomness.load_secret()?;
-    let (tx_exit, mut rx_exit) = watch::channel(false);
+    let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
@@ -402,6 +519,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             // no need to handle error here, as it will only occur when all the
             // receiver has been dropped and that's what we want to do
             tx_exit.send(true);
+
+            Ok(())
         }),
         spawn(run_api_with_exit_check(
             opts.addr.clone(),
@@ -412,6 +531,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             chains_clone,
             config,
             rx_exit.clone(),
+            opts.private_key.clone(),
         )),
     ])
     .await;

@@ -27,4 +27,10 @@ pub struct RunOptions {
     #[arg(long = "provider")]
     #[arg(env = "FORTUNA_PROVIDER")]
     pub provider: Address,
+
+    /// A 20-byte (40 char) hex encoded Ethereum private key.
+    /// This key is required to submit transactions (such as registering with the contract).
+    #[arg(long = "private-key")]
+    #[arg(env = "PRIVATE_KEY")]
+    pub private_key: String,
 }
