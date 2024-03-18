@@ -56,8 +56,16 @@ pub mod sdk;
 
 declare_id!("F9SP6tBXw9Af7BYauo7Y2R5Es2mpv8FP5aNCXMihp6Za");
 
+#[error_code]
+pub enum OracleInstanceError {
+    #[msg("Updates must be monotonically increasing")]
+    UpdatesNotMonotonic,
+    #[msg("Price feed id mismatch")]
+    PriceFeedMessageMismatch
+}
 #[program]
 pub mod oracle_instance {
+
     use super::*;
 
     pub fn update_price_feed(
@@ -82,7 +90,27 @@ pub mod oracle_instance {
         ];
         let signer_seeds = &[&seeds[..]];
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+
+        let old_timestamp = {
+            let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
+            let price_feed_account = PriceUpdateV1::try_deserialize(&mut &price_feed_account_data[..])?;
+            price_feed_account.price_message.publish_time
+        };
         pyth_solana_receiver::cpi::post_update(cpi_context, params)?;
+        {
+            let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
+            let price_feed_account = PriceUpdateV1::try_deserialize(&mut &price_feed_account_data[..])?;
+
+            if price_feed_account.price_message.publish_time <= old_timestamp {
+                return Err(OracleInstanceError::UpdatesNotMonotonic.into());
+            }
+            if price_feed_account.price_message.feed_id != feed_id {
+                return Err(OracleInstanceError::PriceFeedMessageMismatch.into());
+            }
+        }
+
+
+
         Ok(())
     }
 }
