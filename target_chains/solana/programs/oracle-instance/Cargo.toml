@@ -1,0 +1,41 @@
+[package]
+name = "oracle-instance"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "oracle_instance"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+test-bpf = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+solana-program = { workspace = true }
+byteorder = "1.4.3"
+wormhole-core-bridge-solana = {workspace = true}
+wormhole-raw-vaas = {version = "0.1.3", features = ["ruint", "on-chain"], default-features = false }
+pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
+pyth-solana-receiver = { path = "../pyth-solana-receiver", features = ["cpi"]}
+
+[dev-dependencies]
+pyth-sdk = "0.8.0"
+pyth-sdk-solana = "0.8.0"
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }
+tokio = "1.14.1"
+bincode = "1.3.3"
+libsecp256k1 = "0.7.1"
+rand = "0.8.5"
+lazy_static = "1.4.0"
+program-simulator = { path = "../../program_simulator" }
+wormhole-sdk = { workspace = true }
+serde_wormhole = { workspace = true }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }

@@ -65,11 +65,12 @@ impl accounts::PostUpdateAtomic {
 }
 
 impl accounts::PostUpdate {
-    pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
+    pub fn populate(payer: Pubkey, write_authority: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
         let config = get_config_address();
         let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
         accounts::PostUpdate {
             payer,
+            write_authority,
             encoded_vaa,
             config,
             treasury,
@@ -116,12 +117,13 @@ impl instruction::Initialize {
 impl instruction::PostUpdate {
     pub fn populate(
         payer: Pubkey,
+        write_authority : Pubkey, 
         encoded_vaa: Pubkey,
         price_update_account: Pubkey,
         merkle_price_update: MerklePriceUpdate,
     ) -> Instruction {
         let post_update_accounts =
-            accounts::PostUpdate::populate(payer, encoded_vaa, price_update_account)
+            accounts::PostUpdate::populate(payer, write_authority, encoded_vaa, price_update_account)
                 .to_account_metas(None);
         Instruction {
             program_id: ID,

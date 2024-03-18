@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 pub mod cli;
 
@@ -25,7 +25,7 @@ use {
         PostUpdateParams,
     },
     pyth_solana_receiver_sdk::config::DataSource,
-    pythnet_sdk::wire::v1::MerklePriceUpdate,
+    pythnet_sdk::{messages::{Message, PriceFeedMessage}, wire::{from_slice, v1::MerklePriceUpdate}},
     serde_wormhole::RawMessage,
     solana_client::{
         rpc_client::RpcClient,
@@ -469,25 +469,32 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         data:       wormhole_core_bridge_solana::instruction::VerifyEncodedVaaV1 {}.data(),
     };
 
-    let price_update_keypair = Keypair::new();
+    // let price_update_keypair = Keypair::new();
 
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
-        payer.pubkey(),
-        encoded_vaa_keypair.pubkey(),
-        price_update_keypair.pubkey(),
-    )
-    .to_account_metas(None);
-    let post_update_instructions = Instruction {
-        program_id: pyth_solana_receiver::id(),
-        accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdate {
-            params: PostUpdateParams {
-                merkle_price_update: merkle_price_update.clone(),
-                treasury_id:         DEFAULT_TREASURY_ID,
-            },
+    // let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
+    //     payer.pubkey(),
+    //     encoded_vaa_keypair.pubkey(),
+    //     price_update_keypair.pubkey(),
+    // )
+    // .to_account_metas(None);
+    // let post_update_instructions = Instruction {
+    //     program_id: pyth_solana_receiver::id(),
+    //     accounts:   post_update_accounts,
+    //     data:       pyth_solana_receiver::instruction::PostUpdate {
+    //         params: PostUpdateParams {
+    //             merkle_price_update: merkle_price_update.clone(),
+    //             treasury_id:         DEFAULT_TREASURY_ID,
+    //         },
+    //     }
+    //     .data(),
+    // };
+    let feed_id = {
+        match from_slice::<byteorder::BE, Message>(merkle_price_update.message.as_ref()).unwrap() {
+            Message::PriceFeedMessage(price_feed_message) => price_feed_message.feed_id,
+            _ => panic!("Invalid message type"),
         }
-        .data(),
     };
+    let update_price_feed_instruction = oracle_instance::instruction::UpdatePriceFeed::populate(payer.pubkey(), encoded_vaa_keypair.pubkey(), feed_id, 0, merkle_price_update.clone());
 
     // 2nd transaction
     process_transaction(
@@ -496,13 +503,13 @@ pub fn process_write_encoded_vaa_and_post_price_update(
             request_compute_units_instruction,
             write_encoded_vaa_accounts_instruction_2,
             verify_encoded_vaa_instruction,
-            post_update_instructions,
+            update_price_feed_instruction,
         ],
-        &vec![payer, &price_update_keypair],
+        &vec![payer],
     )?;
 
 
-    Ok(price_update_keypair.pubkey())
+    Ok(payer.pubkey())
 }
 
 pub fn process_transaction(

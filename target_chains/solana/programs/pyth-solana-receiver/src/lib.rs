@@ -203,11 +203,13 @@ pub mod pyth_solana_receiver {
         post_price_update_from_vaa(
             config,
             payer,
+            payer,
             treasury,
             price_update_account,
             &vaa_components,
             vaa.payload().as_ref(),
             &params.merkle_price_update,
+
         )?;
 
 
@@ -220,6 +222,8 @@ pub mod pyth_solana_receiver {
     pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
+        let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
+
         let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified. This check is critical otherwise the program could be tricked into accepting unverified VAAs.
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
@@ -234,6 +238,7 @@ pub mod pyth_solana_receiver {
         post_price_update_from_vaa(
             config,
             payer,
+            write_authority,
             treasury,
             price_update_account,
             &vaa_components,
@@ -299,9 +304,10 @@ pub struct PostUpdate<'info> {
     pub treasury:             AccountInfo<'info>,
     /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
+    pub write_authority: Signer<'info>
 }
 
 #[derive(Accounts)]
@@ -388,6 +394,7 @@ struct VaaComponents {
 fn post_price_update_from_vaa<'info>(
     config: &Account<'info, Config>,
     payer: &Signer<'info>,
+    write_authority : &Signer<'info>,
     treasury: &AccountInfo<'info>,
     price_update_account: &mut Account<'_, PriceUpdateV1>,
     vaa_components: &VaaComponents,
@@ -440,7 +447,7 @@ fn post_price_update_from_vaa<'info>(
 
     match message {
         Message::PriceFeedMessage(price_feed_message) => {
-            price_update_account.write_authority = payer.key();
+            price_update_account.write_authority = write_authority.key();
             price_update_account.verification_level = vaa_components.verification_level;
             price_update_account.price_message = price_feed_message;
         }
