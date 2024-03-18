@@ -22,6 +22,7 @@ import {
 import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { TransactionObject } from "web3/eth/types";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -384,6 +385,25 @@ export class EvmChain extends Chain {
       gasPrice = (BigInt(gasPrice) * 2n).toString();
     }
     return gasPrice;
+  }
+
+  async estiamteAndSendTransaction(
+    transactionObject: TransactionObject<any>,
+    txParams: { from?: string; value?: string }
+  ) {
+    const GAS_ESTIMATE_MULTIPLIER = 2;
+    const gasEstimate = await transactionObject.estimateGas({
+      gas: 15000000,
+      ...txParams,
+    });
+    // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
+    // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
+    // `0x2` to the transaction configuration parameters.
+    return transactionObject.send({
+      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
+      gasPrice: await this.getGasPrice(),
+      ...txParams,
+    });
   }
 
   /**
