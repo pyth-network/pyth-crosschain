@@ -32,6 +32,11 @@ impl Into<EthersBlockNumber> for BlockStatus {
     }
 }
 
+pub struct RequestWithCallbackEvent {
+    pub sequence_number:    u64,
+    pub user_random_number: [u8; 32],
+}
+
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
 pub trait EntropyReader: Send + Sync {
@@ -42,6 +47,12 @@ pub trait EntropyReader: Send + Sync {
         -> Result<Option<Request>>;
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
+
+    async fn get_request_with_callback_events(
+        &self,
+        from_block: BlockNumber,
+        to_block: BlockNumber,
+    ) -> Result<Vec<RequestWithCallbackEvent>>;
 }
 
 /// An in-flight request stored in the contract.
@@ -146,6 +157,14 @@ pub mod mock {
             confirmed_block_status: BlockStatus,
         ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
+        }
+
+        async fn get_request_with_callback_events(
+            &self,
+            _from_block: BlockNumber,
+            _to_block: BlockNumber,
+        ) -> Result<Vec<super::RequestWithCallbackEvent>> {
+            Ok(vec![])
         }
     }
 }

@@ -5,6 +5,7 @@ use {
             BlockNumber,
             BlockStatus,
             EntropyReader,
+            RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
     },
@@ -235,16 +236,22 @@ impl EntropyReader for PythContract {
             .as_u64())
     }
 
-    // async fn get_request_with_callback_events(
-    //     &self,
-    //     from_block: u64,
-    //     to_block: u64,
-    // ) -> Result<Vec<RequestedWithCallbackFilter>> {
-    //     let mut event = self.requested_with_callback_filter();
-    //     event.filter = event.filter.from_block(from_block).to_block(to_block);
+    async fn get_request_with_callback_events(
+        &self,
+        from_block: BlockNumber,
+        to_block: BlockNumber,
+    ) -> Result<Vec<RequestedWithCallbackEvent>> {
+        let mut event = self.requested_with_callback_filter();
+        event.filter = event.filter.from_block(from_block).to_block(to_block);
 
-    //     let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
 
-    //     Ok(res)
-    // }
+        Ok(res
+            .iter()
+            .map(|r| RequestWithCallbackEvent {
+                sequence_number:    r.sequence_number,
+                user_random_number: r.user_random_number,
+            })
+            .collect())
+    }
 }

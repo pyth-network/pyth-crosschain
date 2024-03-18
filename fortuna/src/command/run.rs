@@ -35,6 +35,7 @@ use {
     },
     futures::future::join_all,
     std::{
+        borrow::Borrow,
         collections::HashMap,
         net::SocketAddr,
         sync::{
@@ -55,6 +56,7 @@ use {
         },
     },
     tower_http::cors::CorsLayer,
+    tracing::event,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
@@ -182,28 +184,45 @@ pub async fn run_keeper(
 
             let rx_exit_handle_backlog = rx_exit.clone();
             let handle_backlog = spawn(async {
-                // TODO: add to config
-                let backlog_blocks: u64 = 10_000;
-                let blocks_at_a_time = 100;
+                while !*rx_exit_handle_backlog.borrow() {
+                    let res = async {
+                        // TODO: add to config
+                        let backlog_blocks: u64 = 10_000;
+                        let blocks_at_a_time = 100;
 
-                let from_block = latest_safe_block - backlog_blocks;
-                let last_block = latest_safe_block;
+                        let from_block = latest_safe_block - backlog_blocks;
+                        let last_block = latest_safe_block;
 
-                while !*rx_exit_handle_backlog.borrow() && from_block < last_block {
-                    let mut to_block = from_block + blocks_at_a_time;
-                    if to_block > last_block {
-                        to_block = last_block;
+                        while !*rx_exit_handle_backlog.borrow() && from_block < last_block {
+                            let mut to_block = from_block + blocks_at_a_time;
+                            if to_block > last_block {
+                                to_block = last_block;
+                            }
+
+                            let events = chain_config
+                                .contract
+                                .get_request_with_callback_events(from_block, to_block)
+                                .await?;
+
+                            for event in events {
+                                // TODO
+                                println!("handle event: {:?}", event);
+                            }
+                            println!("from_block: {}, to_block: {}", from_block, to_block);
+
+                            from_block = to_block + 1;
+
+                            // wait for 5 seconds before processing the next lot of blocks
+                            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                        }
+
+                        Ok(())
+                    };
+
+                    if let Err(e) = res.await {
+                        tracing::error!("Error in handle_backlog: {:?}", e);
                     }
 
-                    // let events = chain_config
-                    //     .contract
-                    //     .get_request_with_callback_events(from_block, to_block)
-                    //     .await?;
-                    println!("from_block: {}, to_block: {}", from_block, to_block);
-
-                    from_block = to_block + 1;
-
-                    // wait for 5 seconds before processing the next lot of blocks
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
@@ -214,30 +233,42 @@ pub async fn run_keeper(
 
             let rx_exit_handle_watch_blocks = rx_exit.clone();
             let handle_watch_blocks = spawn(async {
-                let last_safe_block = latest_safe_block;
+                while !*rx_exit_handle_watch_blocks.borrow() {
+                    let res = async {
+                        let last_safe_block_processed = latest_safe_block;
 
-                // for a http provider it only supports streaming
-                let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr)?;
-                let mut stream = provider.watch_blocks().await?;
+                        // for a http provider it only supports streaming
+                        let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr)?;
+                        let mut stream = provider.watch_blocks().await?;
 
-                while !*rx_exit_handle_watch_blocks.borrow()
-                    && let Some(block) = stream.next().await
-                {
-                    let latest_safe_block = chain_config
-                        .contract
-                        .get_block_number(chain_config.confirmed_block_status)
-                        .await?
-                        - chain_config.reveal_delay_blocks;
+                        while !*rx_exit_handle_watch_blocks.borrow()
+                            && let Some(block) = stream.next().await
+                        {
+                            let latest_safe_block = chain_config
+                                .contract
+                                .get_block_number(chain_config.confirmed_block_status)
+                                .await?
+                                - chain_config.reveal_delay_blocks;
 
-                    if latest_safe_block > last_safe_block {
-                        tx.send(BlockRange {
-                            from: last_safe_block,
-                            to:   latest_safe_block,
-                        })
-                        .await?;
+                            if latest_safe_block > last_safe_block_processed {
+                                tx.send(BlockRange {
+                                    from: last_safe_block_processed + 1,
+                                    to:   latest_safe_block,
+                                })
+                                .await?;
 
-                        last_safe_block = latest_safe_block;
+                                last_safe_block_processed = latest_safe_block;
+                            }
+                        }
+
+                        Ok(())
+                    };
+
+                    if let Err(e) = res.await {
+                        tracing::error!("Error in handle_watch_blocks: {:?}", e);
                     }
+
+                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
                 Ok(())
@@ -245,32 +276,45 @@ pub async fn run_keeper(
 
             let rx_exit_handle_events = rx_exit.clone();
             let handle_events = spawn(async {
-                while !*rx_exit_handle_events.borrow()
-                    && let Some(block_range) = rx.recv().await
-                {
-                    // TODO: add to config
-                    let blocks_at_a_time = 100;
-                    let mut from_block = block_range.from;
+                while !*rx_exit_handle_events {
+                    let res = async {
+                        while !*rx_exit_handle_events.borrow()
+                            && let Some(block_range) = rx.recv().await
+                        {
+                            // TODO: add to config
+                            let blocks_at_a_time = 100;
+                            let mut from_block = block_range.from;
 
-                    while from_block < block_range.to {
-                        let mut to_block = from_block + blocks_at_a_time;
-                        if to_block > block_range.to {
-                            to_block = block_range.to;
+                            while from_block < block_range.to {
+                                let mut to_block = from_block + blocks_at_a_time;
+                                if to_block > block_range.to {
+                                    to_block = block_range.to;
+                                }
+
+                                let events = chain_config
+                                    .contract
+                                    .get_request_with_callback_events(from_block, to_block)
+                                    .await?;
+
+                                for event in events {
+                                    // TODO
+                                    println!("handle event: {:?}", event);
+                                }
+
+                                println!("from_block: {}, to_block: {}", from_block, to_block);
+
+                                from_block = to_block + 1;
+                            }
                         }
 
-                        // let events = chain_config
-                        //     .contract
-                        //     .get_request_with_callback_events(from_block, to_block)
-                        //     .await?;
+                        Ok(())
+                    };
 
-                        // // TODO: handle events;
-                        // // Probably can have another thread which will handle these events;
-                        // println!("events: {:?}", events);
-
-                        println!("from_block: {}, to_block: {}", from_block, to_block);
-
-                        from_block = to_block + 1;
+                    if let Err(e) = res.await {
+                        tracing::error!("Error in handle_events: {:?}", e);
                     }
+
+                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
                 Ok(())
