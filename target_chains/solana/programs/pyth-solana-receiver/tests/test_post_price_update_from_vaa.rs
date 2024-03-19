@@ -82,6 +82,7 @@ async fn test_invalid_wormhole_message() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -126,6 +127,7 @@ async fn test_invalid_update_message() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -185,6 +187,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -206,6 +209,7 @@ async fn test_post_price_update_from_vaa() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -246,6 +250,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -284,6 +289,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -320,6 +326,7 @@ async fn test_post_price_update_from_vaa() {
     program_simulator
         .process_ix_with_default_compute_limit(
             PostUpdateAtomic::populate(
+                poster.pubkey(),
                 poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
@@ -379,6 +386,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -436,6 +444,7 @@ async fn test_post_price_update_from_vaa() {
         .process_ix_with_default_compute_limit(
             PostUpdateAtomic::populate(
                 poster.pubkey(),
+                poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
                 DEFAULT_GUARDIAN_SET_INDEX,
@@ -478,6 +487,7 @@ async fn test_post_price_update_from_vaa() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster_2.pubkey(),
                     poster_2.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,

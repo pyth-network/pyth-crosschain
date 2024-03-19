@@ -297,11 +297,12 @@ pub struct PostUpdate<'info> {
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     pub treasury:             AccountInfo<'info>,
-    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// The contraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -319,11 +320,12 @@ pub struct PostUpdateAtomic<'info> {
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     pub treasury:             AccountInfo<'info>,
-    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// The contraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV1::LEN)]
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV1::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV1>,
     pub system_program:       Program<'info, System>,
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
