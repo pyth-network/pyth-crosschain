@@ -1,0 +1,3 @@
+forge-std/=lib/forge-std/src/
+@openzeppelin/=../../../node_modules/@openzeppelin/
+@pythnetwork/=../../../node_modules/@pythnetwork/
