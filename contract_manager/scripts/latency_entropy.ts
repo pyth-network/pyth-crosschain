@@ -42,6 +42,7 @@ async function main() {
   const sequenceNumber = providerInfo.sequenceNumber;
   const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
   console.log("Checking this url for revelation:", revealUrl);
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status === 200) {
