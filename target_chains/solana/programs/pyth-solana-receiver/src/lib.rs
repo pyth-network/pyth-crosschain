@@ -191,6 +191,7 @@ pub mod pyth_solana_receiver {
         // End borrowed section
 
         let payer = &ctx.accounts.payer;
+        let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
 
@@ -203,6 +204,7 @@ pub mod pyth_solana_receiver {
         post_price_update_from_vaa(
             config,
             payer,
+            write_authority,
             treasury,
             price_update_account,
             &vaa_components,
@@ -220,6 +222,7 @@ pub mod pyth_solana_receiver {
     pub fn post_update(ctx: Context<PostUpdate>, params: PostUpdateParams) -> Result<()> {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
+        let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
         let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified. This check is critical otherwise the program could be tricked into accepting unverified VAAs.
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
         let price_update_account: &mut Account<'_, PriceUpdateV1> =
@@ -234,6 +237,7 @@ pub mod pyth_solana_receiver {
         post_price_update_from_vaa(
             config,
             payer,
+            write_authority,
             treasury,
             price_update_account,
             &vaa_components,
@@ -390,6 +394,7 @@ struct VaaComponents {
 fn post_price_update_from_vaa<'info>(
     config: &Account<'info, Config>,
     payer: &Signer<'info>,
+    write_authority: &Signer<'info>,
     treasury: &AccountInfo<'info>,
     price_update_account: &mut Account<'_, PriceUpdateV1>,
     vaa_components: &VaaComponents,
@@ -442,7 +447,7 @@ fn post_price_update_from_vaa<'info>(
 
     match message {
         Message::PriceFeedMessage(price_feed_message) => {
-            price_update_account.write_authority = payer.key();
+            price_update_account.write_authority = write_authority.key();
             price_update_account.verification_level = vaa_components.verification_level;
             price_update_account.price_message = price_feed_message;
         }
