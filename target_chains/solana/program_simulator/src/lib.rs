@@ -114,8 +114,7 @@ impl ProgramSimulator {
     }
 
     pub async fn get_clock(&mut self) -> Result<Clock, BanksClientError> {
-        let clock: Clock = self.banks_client.get_sysvar::<Clock>().await.unwrap();
-        Ok(clock)
+        self.banks_client.get_sysvar::<Clock>().await
     }
 }
 
