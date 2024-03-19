@@ -2,15 +2,11 @@ use {
     crate::{
         api,
         chain::{
-            self,
             ethereum::{
                 PythContract,
                 SignablePythContract,
             },
-            reader::{
-                BlockNumber,
-                BlockStatus,
-            },
+            reader::BlockNumber,
         },
         command::register_provider::CommitmentMetadata,
         config::{
@@ -24,11 +20,11 @@ use {
     },
     anyhow::{
         anyhow,
+        Error,
         Result,
     },
     axum::Router,
     ethers::{
-        etherscan::blocks,
         middleware::MiddlewareBuilder,
         providers::{
             Http,
@@ -43,20 +39,9 @@ use {
     },
     futures::future::join_all,
     std::{
-        borrow::Borrow,
-        collections::{
-            HashMap,
-            HashSet,
-        },
+        collections::HashMap,
         net::SocketAddr,
-        sync::{
-            atomic::{
-                AtomicBool,
-                Ordering,
-            },
-            Arc,
-        },
-        thread,
+        sync::Arc,
         vec,
     },
     tokio::{
@@ -67,7 +52,6 @@ use {
         },
     },
     tower_http::cors::CorsLayer,
-    tracing::event,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
@@ -191,17 +175,17 @@ pub async fn run_keeper(
     rx_exit: watch::Receiver<bool>,
     private_key: String,
 ) -> Result<()> {
-    let handles = Vec::new();
+    let mut handles = Vec::new();
     for (chain_id, chain_config) in chains {
         let rx_exit = rx_exit.clone();
+        let chain_eth_config = config.chains.get(&chain_id).unwrap().clone();
+        let private_key = private_key.clone();
         handles.push(spawn(async move {
             let latest_safe_block = chain_config
                 .contract
                 .get_block_number(chain_config.confirmed_block_status)
                 .await?
                 - chain_config.reveal_delay_blocks;
-
-            let chain_eth_config = config.chains.get(&chain_id).unwrap();
 
             // create a contract and a nonce manager
             let contract =
@@ -210,7 +194,7 @@ pub async fn run_keeper(
             // TODO:use
             // contract.client().provider()
 
-            let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr)?;
+            let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr.clone())?;
             let nonce_manager =
                 Arc::new(provider.nonce_manager(private_key.parse::<LocalWallet>()?.address()));
             nonce_manager
@@ -230,7 +214,7 @@ pub async fn run_keeper(
                         let backlog_blocks: u64 = 10_000;
                         let blocks_at_a_time = 100;
 
-                        let from_block = latest_safe_block - backlog_blocks;
+                        let mut from_block = latest_safe_block - backlog_blocks;
                         let last_block = latest_safe_block;
 
                         while !*rx_exit_handle_backlog.borrow() && from_block < last_block {
@@ -239,8 +223,7 @@ pub async fn run_keeper(
                                 to_block = last_block;
                             }
 
-                            let events = chain_config
-                                .contract
+                            let events = contract_reader_clone
                                 .get_request_with_callback_events(from_block, to_block)
                                 .await?;
 
@@ -273,6 +256,7 @@ pub async fn run_keeper(
                                             nonce_manager_clone.next(),
                                         )
                                         .await;
+                                    tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res)
                                 }
 
                                 // adding a delay of 1 seconds for backlog events
@@ -288,7 +272,7 @@ pub async fn run_keeper(
                             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                         }
 
-                        Ok(())
+                        Ok::<(), Error>(())
                     };
 
                     if let Err(e) = res.await {
@@ -301,42 +285,42 @@ pub async fn run_keeper(
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
-                Ok(())
+                Ok::<(), Error>(())
             });
 
             let (tx, mut rx) = mpsc::channel::<BlockRange>(1000);
 
             let rx_exit_handle_watch_blocks = rx_exit.clone();
-            let handle_watch_blocks = spawn(async {
+            let contract_reader_clone = chain_config.contract.clone();
+            let handle_watch_blocks = spawn(async move {
                 while !*rx_exit_handle_watch_blocks.borrow() {
                     let res = async {
-                        let last_safe_block_processed = latest_safe_block;
+                        let mut last_safe_block_processed = latest_safe_block;
 
                         // for a http provider it only supports streaming
-                        let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr)?;
+                        let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr.clone())?;
                         let mut stream = provider.watch_blocks().await?;
 
-                        while !*rx_exit_handle_watch_blocks.borrow()
-                            && let Some(block) = stream.next().await
-                        {
-                            let latest_safe_block = chain_config
-                                .contract
-                                .get_block_number(chain_config.confirmed_block_status)
-                                .await?
-                                - chain_config.reveal_delay_blocks;
+                        while !*rx_exit_handle_watch_blocks.borrow() {
+                            if let Some(_) = stream.next().await {
+                                let latest_safe_block = contract_reader_clone
+                                    .get_block_number(chain_config.confirmed_block_status)
+                                    .await?
+                                    - chain_config.reveal_delay_blocks;
 
-                            if latest_safe_block > last_safe_block_processed {
-                                tx.send(BlockRange {
-                                    from: last_safe_block_processed + 1,
-                                    to:   latest_safe_block,
-                                })
-                                .await?;
+                                if latest_safe_block > last_safe_block_processed {
+                                    tx.send(BlockRange {
+                                        from: last_safe_block_processed + 1,
+                                        to:   latest_safe_block,
+                                    })
+                                    .await?;
 
-                                last_safe_block_processed = latest_safe_block;
+                                    last_safe_block_processed = latest_safe_block;
+                                }
                             }
                         }
 
-                        Ok(())
+                        Ok::<(), Error>(())
                     };
 
                     if let Err(e) = res.await {
@@ -346,85 +330,88 @@ pub async fn run_keeper(
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
-                Ok(())
+                Ok::<(), Error>(())
             });
 
             let rx_exit_handle_events = rx_exit.clone();
-            let rx_exit_handle_backlog = rx_exit.clone();
             let contract_clone = contract.clone();
             let nonce_manager_clone = nonce_manager.clone();
             let provider_address = chain_config.provider_address.clone();
             let hash_chain_state = chain_config.state.clone();
             let contract_reader_clone = chain_config.contract.clone();
-            let handle_events = spawn(async {
+            let handle_events = spawn(async move {
                 while !*rx_exit_handle_events.borrow() {
                     let res = async {
-                        while !*rx_exit_handle_events.borrow()
-                            && let Some(block_range) = rx.recv().await
-                        {
-                            // TODO: add to config
-                            let blocks_at_a_time = 100;
-                            let mut from_block = block_range.from;
+                        while !*rx_exit_handle_events.borrow() {
+                            if let Some(block_range) = rx.recv().await {
+                                // TODO: add to config
+                                let blocks_at_a_time = 100;
+                                let mut from_block = block_range.from;
 
-                            while from_block < block_range.to {
-                                let mut to_block = from_block + blocks_at_a_time;
-                                if to_block > block_range.to {
-                                    to_block = block_range.to;
-                                }
+                                while from_block < block_range.to {
+                                    let mut to_block = from_block + blocks_at_a_time;
+                                    if to_block > block_range.to {
+                                        to_block = block_range.to;
+                                    }
 
-                                let events = chain_config
-                                    .contract
-                                    .get_request_with_callback_events(from_block, to_block)
-                                    .await?;
+                                    let events = contract_reader_clone
+                                        .get_request_with_callback_events(from_block, to_block)
+                                        .await?;
 
-                                for event in events {
-                                    if event.provider_address == provider_address {
-                                        let res = contract_reader_clone
-                                            .get_request(
-                                                event.provider_address,
-                                                event.sequence_number,
-                                            )
-                                            .await;
+                                    for event in events {
+                                        if event.provider_address == provider_address {
+                                            let res = contract_reader_clone
+                                                .get_request(
+                                                    event.provider_address,
+                                                    event.sequence_number,
+                                                )
+                                                .await;
 
-                                        if let Ok(req) = res {
-                                            match req {
-                                                Some(req) => {
-                                                    if req.sequence_number == 0
-                                                        || req.provider != event.provider_address
-                                                        || req.sequence_number
-                                                            != event.sequence_number
-                                                    {
-                                                        continue;
+                                            if let Ok(req) = res {
+                                                match req {
+                                                    Some(req) => {
+                                                        if req.sequence_number == 0
+                                                            || req.provider
+                                                                != event.provider_address
+                                                            || req.sequence_number
+                                                                != event.sequence_number
+                                                        {
+                                                            continue;
+                                                        }
                                                     }
+                                                    None => continue,
                                                 }
-                                                None => continue,
                                             }
+
+                                            let res = contract_clone
+                                                .reveal_with_callback_wrapper(
+                                                    provider_address,
+                                                    event.sequence_number,
+                                                    event.user_random_number,
+                                                    hash_chain_state
+                                                        .reveal(event.sequence_number)?,
+                                                    nonce_manager_clone.next(),
+                                                )
+                                                .await;
+
+                                            tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res)
                                         }
 
-                                        let res = contract_clone
-                                            .reveal_with_callback_wrapper(
-                                                provider_address,
-                                                event.sequence_number,
-                                                event.user_random_number,
-                                                hash_chain_state.reveal(event.sequence_number)?,
-                                                nonce_manager_clone.next(),
-                                            )
+                                        // adding a delay of 1 seconds for backlog events
+                                        // as we want to prioritize the latest events
+                                        // also, it reduces the load on the node
+                                        tokio::time::sleep(tokio::time::Duration::from_secs(1))
                                             .await;
                                     }
 
-                                    // adding a delay of 1 seconds for backlog events
-                                    // as we want to prioritize the latest events
-                                    // also, it reduces the load on the node
-                                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                                    println!("from_block: {}, to_block: {}", from_block, to_block);
+
+                                    from_block = to_block + 1;
                                 }
-
-                                println!("from_block: {}, to_block: {}", from_block, to_block);
-
-                                from_block = to_block + 1;
                             }
                         }
 
-                        Ok(())
+                        Ok::<(), Error>(())
                     };
 
                     if let Err(e) = res.await {
@@ -442,7 +429,7 @@ pub async fn run_keeper(
                 task??;
             }
 
-            Ok(())
+            Ok::<(), Error>(())
         }));
     }
 
@@ -451,7 +438,7 @@ pub async fn run_keeper(
         task??;
     }
 
-    Ok(())
+    Ok::<(), Error>(())
 }
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
@@ -518,7 +505,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             tracing::info!("Shut down signal received, waiting for tasks...");
             // no need to handle error here, as it will only occur when all the
             // receiver has been dropped and that's what we want to do
-            tx_exit.send(true);
+            tx_exit.send(true)?;
 
             Ok(())
         }),

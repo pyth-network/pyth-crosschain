@@ -23,7 +23,6 @@ use {
         },
         core::types::Address,
         middleware::{
-            nonce_manager,
             transformer::{
                 Transformer,
                 TransformerError,
