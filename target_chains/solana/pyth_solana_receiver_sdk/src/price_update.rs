@@ -59,7 +59,7 @@ pub struct PriceUpdateV2 {
     pub write_authority:    Pubkey,
     pub verification_level: VerificationLevel,
     pub price_message:      PriceFeedMessage,
-    pub posted_slot : u64
+    pub posted_slot:        u64,
 }
 
 impl PriceUpdateV2 {
@@ -306,9 +306,8 @@ pub mod tests {
                 exponent: 3,
                 prev_publish_time: 899,
                 publish_time: 900,
-                
             },
-            posted_slot: 0
+            posted_slot:        0,
         };
 
         let price_update_partially_verified = PriceUpdateV2 {
@@ -324,7 +323,7 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot: 0
+            posted_slot:        0,
         };
 
         let price_update_fully_verified = PriceUpdateV2 {
@@ -340,7 +339,7 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot: 0
+            posted_slot:        0,
         };
 
 

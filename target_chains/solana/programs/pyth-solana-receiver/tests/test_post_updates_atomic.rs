@@ -107,7 +107,10 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
-    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
     // post another update to the same account
     program_simulator
@@ -150,7 +153,10 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
     );
-    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
     // use another treasury account
     program_simulator
@@ -197,7 +203,10 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
-    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 }
 
 #[tokio::test]
