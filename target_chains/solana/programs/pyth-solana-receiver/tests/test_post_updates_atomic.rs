@@ -20,7 +20,7 @@ use {
         },
     },
     pyth_solana_receiver_sdk::price_update::{
-        PriceUpdateV1,
+        PriceUpdateV2,
         VerificationLevel,
     },
     pythnet_sdk::{
@@ -94,7 +94,7 @@ async fn test_post_update_atomic() {
     .await;
 
     let mut price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -107,6 +107,7 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
+    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
 
     // post another update to the same account
     program_simulator
@@ -136,7 +137,7 @@ async fn test_post_update_atomic() {
     assert_treasury_balance(&mut program_simulator, 0, SECONDARY_TREASURY_ID).await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -149,6 +150,7 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
     );
+    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
 
     // use another treasury account
     program_simulator
@@ -183,7 +185,7 @@ async fn test_post_update_atomic() {
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
@@ -195,6 +197,7 @@ async fn test_post_update_atomic() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
+    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
 }
 
 #[tokio::test]

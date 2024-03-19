@@ -20,7 +20,7 @@ use {
         },
     },
     pyth_solana_receiver_sdk::price_update::{
-        PriceUpdateV1,
+        PriceUpdateV2,
         VerificationLevel,
     },
     pythnet_sdk::{
@@ -88,7 +88,7 @@ async fn test_post_update() {
     .await;
 
     let mut price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -101,6 +101,7 @@ async fn test_post_update() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
+    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
 
     // post another update to the same account
     program_simulator
@@ -126,7 +127,7 @@ async fn test_post_update() {
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -139,6 +140,8 @@ async fn test_post_update() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
     );
+    assert_eq!(price_update_account.posted_slot, program_simulator.get_clock().await.unwrap().slot);
+    
 
     // This poster doesn't have the write authority
     let poster_2 = program_simulator.get_funded_keypair().await.unwrap();

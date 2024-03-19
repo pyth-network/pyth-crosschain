@@ -18,15 +18,13 @@ use {
         ProgramTestBanksClientExt,
     },
     solana_sdk::{
-        compute_budget,
-        signature::{
+        clock::Clock, compute_budget, signature::{
             Keypair,
             Signer,
-        },
-        transaction::{
+        }, transaction::{
             Transaction,
             TransactionError,
-        },
+        }
     },
 };
 
@@ -111,6 +109,12 @@ impl ProgramSimulator {
         let lamports = self.banks_client.get_balance(pubkey).await.unwrap();
         Ok(lamports)
     }
+
+    pub async fn get_clock(&mut self) -> Result<Clock, BanksClientError> {
+        let clock : Clock = self.banks_client.get_sysvar::<Clock>().await.unwrap();
+        Ok(clock)
+    }
+
 }
 
 pub fn into_transaction_error<T: Into<anchor_lang::prelude::Error>>(error: T) -> TransactionError {
