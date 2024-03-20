@@ -265,6 +265,7 @@ pub fn process_post_price_update_atomic(
 
     let post_update_accounts = pyth_solana_receiver::accounts::PostUpdateAtomic::populate(
         payer.pubkey(),
+        payer.pubkey(),
         price_update_keypair.pubkey(),
         *wormhole,
         header.guardian_set_index,
@@ -472,6 +473,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let price_update_keypair = Keypair::new();
 
     let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
+        payer.pubkey(),
         payer.pubkey(),
         encoded_vaa_keypair.pubkey(),
         price_update_keypair.pubkey(),

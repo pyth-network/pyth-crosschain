@@ -69,6 +69,7 @@ async fn test_post_update() {
         .process_ix_with_default_compute_limit(
             PostUpdate::populate(
                 poster.pubkey(),
+                poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
                 merkle_price_updates[0].clone(),
@@ -105,6 +106,7 @@ async fn test_post_update() {
     program_simulator
         .process_ix_with_default_compute_limit(
             PostUpdate::populate(
+                poster.pubkey(),
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
@@ -196,6 +198,7 @@ async fn test_post_update_wrong_encoded_vaa_owner() {
             .process_ix_with_default_compute_limit(
                 PostUpdate::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
                     price_update_keypair.pubkey(),
                     merkle_price_updates[0].clone(),
@@ -234,6 +237,7 @@ async fn test_post_update_wrong_setup() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdate::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
                     price_update_keypair.pubkey(),

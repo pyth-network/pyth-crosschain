@@ -43,6 +43,7 @@ impl accounts::Initialize {
 impl accounts::PostUpdateAtomic {
     pub fn populate(
         payer: Pubkey,
+        write_authority: Pubkey,
         price_update_account: Pubkey,
         wormhole_address: Pubkey,
         guardian_set_index: u32,
@@ -60,12 +61,18 @@ impl accounts::PostUpdateAtomic {
             treasury,
             price_update_account,
             system_program: system_program::ID,
+            write_authority,
         }
     }
 }
 
 impl accounts::PostUpdate {
-    pub fn populate(payer: Pubkey, encoded_vaa: Pubkey, price_update_account: Pubkey) -> Self {
+    pub fn populate(
+        payer: Pubkey,
+        write_authority: Pubkey,
+        encoded_vaa: Pubkey,
+        price_update_account: Pubkey,
+    ) -> Self {
         let config = get_config_address();
         let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
         accounts::PostUpdate {
@@ -75,6 +82,7 @@ impl accounts::PostUpdate {
             treasury,
             price_update_account,
             system_program: system_program::ID,
+            write_authority,
         }
     }
 }
@@ -116,13 +124,18 @@ impl instruction::Initialize {
 impl instruction::PostUpdate {
     pub fn populate(
         payer: Pubkey,
+        write_authority: Pubkey,
         encoded_vaa: Pubkey,
         price_update_account: Pubkey,
         merkle_price_update: MerklePriceUpdate,
     ) -> Instruction {
-        let post_update_accounts =
-            accounts::PostUpdate::populate(payer, encoded_vaa, price_update_account)
-                .to_account_metas(None);
+        let post_update_accounts = accounts::PostUpdate::populate(
+            payer,
+            write_authority,
+            encoded_vaa,
+            price_update_account,
+        )
+        .to_account_metas(None);
         Instruction {
             program_id: ID,
             accounts:   post_update_accounts,
@@ -141,6 +154,7 @@ impl instruction::PostUpdate {
 impl instruction::PostUpdateAtomic {
     pub fn populate(
         payer: Pubkey,
+        write_authority: Pubkey,
         price_update_account: Pubkey,
         wormhole_address: Pubkey,
         guardian_set_index: u32,
@@ -150,6 +164,7 @@ impl instruction::PostUpdateAtomic {
     ) -> Instruction {
         let post_update_accounts = accounts::PostUpdateAtomic::populate(
             payer,
+            write_authority,
             price_update_account,
             wormhole_address,
             guardian_set_index,
