@@ -3043,7 +3043,7 @@ dependencies = [
  "tokio",
  "wormhole-core-bridge-solana",
  "wormhole-raw-vaas",
- "wormhole-sdk",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]
@@ -3064,8 +3064,8 @@ dependencies = [
  "solana-client",
  "solana-sdk",
  "wormhole-core-bridge-solana",
- "wormhole-sdk",
  "wormhole-solana",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]
@@ -3096,7 +3096,7 @@ dependencies = [
  "sha3 0.10.6",
  "slow_primes",
  "thiserror",
- "wormhole-sdk",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]
@@ -3775,7 +3775,8 @@ dependencies = [
 [[package]]
 name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25#55faa9ca1fe456e90e957b33aa7bcc565a33c3fa"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24b022bf813578a06341fd453c3fd6e64945d9975191193d5d45e8dbd97d1d84"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -6201,20 +6202,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wormhole-sdk"
-version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25#55faa9ca1fe456e90e957b33aa7bcc565a33c3fa"
-dependencies = [
- "anyhow",
- "bstr 1.6.0",
- "schemars",
- "serde",
- "serde_wormhole",
- "sha3 0.10.6",
- "thiserror",
-]
-
-[[package]]
 name = "wormhole-solana"
 version = "0.1.0"
 source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#b0da20525fe68408ed2c8b331eb5f63101381936"
@@ -6230,6 +6217,32 @@ dependencies = [
  "solana-program",
  "thiserror",
  "wormhole-core",
+]
+
+[[package]]
+name = "wormhole-supported-chains"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f42a80a24212937cc7d7b0ab8115bb87d82f949a1a42f75d500807072c94ba4"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "wormhole-vaas-serde"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "240c5a6136dc66ecc65097bb6d159e849b5df4ecbbbb220868d0edbdcc568ed3"
+dependencies = [
+ "anyhow",
+ "bstr 1.6.0",
+ "schemars",
+ "serde",
+ "serde_wormhole",
+ "sha3 0.10.6",
+ "thiserror",
+ "wormhole-supported-chains",
 ]
 
 [[package]]
