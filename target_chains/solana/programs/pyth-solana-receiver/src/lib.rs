@@ -460,7 +460,7 @@ fn post_price_update_from_vaa<'info>(
 }
 
 /**
- * Borrowed from https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L121
+ * Borrowed from  https://github.com/wormhole-foundation/wormhole/blob/wen/solana-rewrite/solana/programs/core-bridge/src/processor/parse_and_verify_vaa/verify_encoded_vaa_v1.rs#L121
  */
 fn verify_guardian_signature(
     sig: &GuardianSetSig,
