@@ -279,18 +279,22 @@ contract EasyLend is IExpressRelayFeeReceiver {
         Vault memory vault = _vaults[vaultId];
         uint256 vaultHealth = _getVaultHealth(vault);
 
+        // if vault health is above the minimum health ratio, don't liquidate
         if (vaultHealth >= vault.minHealthRatio) {
             revert InvalidLiquidation();
         }
 
-        if (
-            vaultHealth >= vault.minPermissionLessHealthRatio &&
-            !IExpressRelay(expressRelay).isPermissioned(
-                address(this),
-                abi.encode(vaultId)
-            )
-        ) {
-            revert InvalidLiquidation();
+        if (vaultHealth >= vault.minPermissionLessHealthRatio) {
+            // if vault health is below the minimum health ratio but above the minimum permissionless health ratio,
+            // only liquidate if permissioned
+            if (
+                !IExpressRelay(expressRelay).isPermissioned(
+                    address(this), // protocol fee receiver
+                    abi.encode(vaultId) // vault id uniquely represents the opportunity and can be used as permission id
+                )
+            ) {
+                revert InvalidLiquidation();
+            }
         }
 
         IERC20(vault.tokenDebt).transferFrom(
@@ -321,6 +325,12 @@ contract EasyLend is IExpressRelayFeeReceiver {
         liquidate(vaultId);
     }
 
+    /**
+     * @notice receiveAuctionProceedings function - receives native token from the express relay
+     * You can use permission key to distribute the received funds to users who got liquidated, LPs, etc...
+     *
+     * @param permissionKey: permission key that was used for the auction
+     */
     function receiveAuctionProceedings(
         bytes calldata permissionKey
     ) external payable {
