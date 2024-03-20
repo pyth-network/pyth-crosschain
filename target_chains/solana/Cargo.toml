@@ -17,7 +17,7 @@ codegen-units = 1
 
 [workspace.dependencies]
 wormhole-core-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", rev = "7bd40b595e22c5512dfaa2ed8e6d7441df743a69"}
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
+wormhole-vaas-serde = "0.0.0-alpha.1"
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "rust-sdk-2024-01-25" }
 anchor-lang = "0.28.0"
 anchor-client = "0.28.0"
