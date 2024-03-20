@@ -273,4 +273,22 @@ impl EntropyReader for PythContract {
             })
             .collect())
     }
+
+    async fn similate_reveal(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+    ) -> Result<()> {
+        self.reveal_with_callback(
+            provider,
+            sequence_number,
+            user_random_number,
+            provider_revelation,
+        )
+        .await?;
+
+        Ok(())
+    }
 }

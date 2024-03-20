@@ -254,16 +254,33 @@ pub async fn run_keeper(
                                         }
                                     }
 
-                                    let res = contract_clone
-                                        .reveal_with_callback_wrapper(
-                                            provider_address,
-                                            event.sequence_number,
-                                            event.user_random_number,
-                                            hash_chain_state.reveal(event.sequence_number)?,
-                                            nonce_manager_clone.next(),
-                                        )
-                                        .await;
-                                    tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res)
+                                    let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
+
+                                    let sim_res = contract_reader_clone.similate_reveal(provider_address, event.sequence_number, event.user_random_number, provider_revelation).await;
+                                    match sim_res {
+                                        Ok(_) => {
+                                            let res = contract_clone
+                                                .reveal_with_callback_wrapper(
+                                                    provider_address,
+                                                    event.sequence_number,
+                                                    event.user_random_number,
+                                                    provider_revelation,
+                                                    nonce_manager_clone.next(),
+                                                )
+                                                .await;
+                                            match res {
+                                                Ok(_) => {
+                                                    tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res);
+                                                },
+                                                Err(e) => {
+                                                    tracing::error!("Error while revealing for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
+                                                }
+                                            }
+                                        },
+                                        Err(e) => {
+                                            tracing::error!("Error while simulating reveal for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
+                                        }
+                                    }
                                 }
 
                                 // adding a delay of 1 seconds for backlog events
@@ -371,7 +388,7 @@ pub async fn run_keeper(
                                 let blocks_at_a_time = 100;
                                 let mut from_block = block_range.from;
 
-                                while from_block < block_range.to {
+                                while from_block <= block_range.to {
                                     let mut to_block = from_block + blocks_at_a_time;
                                     if to_block > block_range.to {
                                         to_block = block_range.to;
@@ -408,18 +425,33 @@ pub async fn run_keeper(
                                                 }
                                             }
 
-                                            let res = contract_clone
-                                                .reveal_with_callback_wrapper(
-                                                    provider_address,
-                                                    event.sequence_number,
-                                                    event.user_random_number,
-                                                    hash_chain_state
-                                                        .reveal(event.sequence_number)?,
-                                                    nonce_manager_clone.next(),
-                                                )
-                                                .await;
+                                            let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
 
-                                            tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res)
+                                            let sim_res = contract_reader_clone.similate_reveal(provider_address, event.sequence_number, event.user_random_number, provider_revelation).await;
+                                            match sim_res {
+                                                Ok(_) => {
+                                                    let res = contract_clone
+                                                        .reveal_with_callback_wrapper(
+                                                            provider_address,
+                                                            event.sequence_number,
+                                                            event.user_random_number,
+                                                            provider_revelation,
+                                                            nonce_manager_clone.next(),
+                                                        )
+                                                        .await;
+                                                    match res {
+                                                        Ok(_) => {
+                                                            tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res);
+                                                        },
+                                                        Err(e) => {
+                                                            tracing::error!("Error while revealing for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
+                                                        }
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    tracing::error!("Error while simulating reveal for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
+                                                }
+                                            }
                                         }
                                     }
 

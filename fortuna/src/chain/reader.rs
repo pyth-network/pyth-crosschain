@@ -54,6 +54,14 @@ pub trait EntropyReader: Send + Sync {
         from_block: BlockNumber,
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
+
+    async fn similate_reveal(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+    ) -> Result<()>;
 }
 
 /// An in-flight request stored in the contract.
@@ -166,6 +174,16 @@ pub mod mock {
             _to_block: BlockNumber,
         ) -> Result<Vec<super::RequestWithCallbackEvent>> {
             Ok(vec![])
+        }
+
+        async fn similate_reveal(
+            &self,
+            provider: Address,
+            sequence_number: u64,
+            user_random_number: [u8; 32],
+            provider_revelation: [u8; 32],
+        ) -> Result<()> {
+            Ok(())
         }
     }
 }
