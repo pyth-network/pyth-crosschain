@@ -33,3 +33,9 @@ jobs:
         run: cargo-test-sbf
       - name: Run sdk tests
         run: cargo test --package pyth-solana-receiver-sdk
+      - name: Setup Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --rev 4e5280be46d859ba1c57fabe4c3916bec742fd69 anchor-cli --locked --force
+      - name: Verifiable Build
+        run: |
+          anchor build --verifiable --docker-image backpackapp/build:v0.28.0 --solana-version 1.16.20
