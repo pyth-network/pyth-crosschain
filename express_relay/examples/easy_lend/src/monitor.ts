@@ -36,11 +36,12 @@ class ProtocolMonitor {
   private priceConnection: PriceServiceConnection;
 
   constructor(
-    public expressRelayEndpoint: string,
-    public pythEndpoint: string,
-    public chainId: string,
-    public wethContract: Address,
-    public vaultContract: Address
+    expressRelayEndpoint: string,
+    pythEndpoint: string,
+    private chainId: string,
+    private wethContract: Address,
+    private vaultContract: Address,
+    private onlyRecent: number | undefined
   ) {
     this.client = new Client({ baseUrl: expressRelayEndpoint });
     this.priceConnection = new PriceServiceConnection(pythEndpoint, {
@@ -62,7 +63,7 @@ class ProtocolMonitor {
     }
   }
 
-  async start() {
+  async checkVaults() {
     const rpcClient = createPublicClient({
       chain: optimismSepolia,
       transport: http(),
@@ -74,7 +75,11 @@ class ProtocolMonitor {
     });
     const lastVaultId = await contract.read.getLastVaultId();
     const vaults: VaultWithId[] = [];
-    for (let vaultId = 0n; vaultId < lastVaultId; vaultId++) {
+    let startVaultId = 0n;
+    if (this.onlyRecent && lastVaultId > BigInt(this.onlyRecent)) {
+      startVaultId = lastVaultId - BigInt(this.onlyRecent);
+    }
+    for (let vaultId = startVaultId; vaultId < lastVaultId; vaultId++) {
       const vault = await contract.read.getVault([vaultId]);
       // Already liquidated vault
       if (vault.amountCollateral == 0n && vault.amountDebt == 0n) {
@@ -90,6 +95,14 @@ class ProtocolMonitor {
         const opportunity = this.createOpportunity(vault);
         await this.client.submitOpportunity(opportunity);
       }
+    }
+  }
+
+  async start() {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      await this.checkVaults();
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     }
   }
 
@@ -202,6 +215,11 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: true,
   })
+  .option("only-recent", {
+    description:
+      "Instead of checking all vaults, only check recent ones. Specify the number of recent vaults to check",
+    type: "number",
+  })
   .help()
   .alias("help", "h")
   .parseSync();
@@ -218,7 +236,8 @@ async function run() {
     argv.pythEndpoint,
     argv.chainId,
     checkAddress(argv.wethContract),
-    checkAddress(argv.vaultContract)
+    checkAddress(argv.vaultContract),
+    argv.onlyRecent
   );
   await monitor.start();
 }
