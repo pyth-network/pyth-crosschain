@@ -180,12 +180,16 @@ pub async fn run_keeper(
         let rx_exit = rx_exit.clone();
         let chain_eth_config = config.chains.get(&chain_id).unwrap().clone();
         let private_key = private_key.clone();
+        let chain_id = chain_id.clone();
         handles.push(spawn(async move {
+            tracing::info!("Starting keeper for chain: {}", &chain_id);
             let latest_safe_block = chain_config
                 .contract
                 .get_block_number(chain_config.confirmed_block_status)
                 .await?
                 - chain_config.reveal_delay_blocks;
+
+            tracing::info!("Latest safe block for chain {}: {} ", &chain_id, &latest_safe_block);
 
             // create a contract and a nonce manager
             let contract =
@@ -207,17 +211,20 @@ pub async fn run_keeper(
             let provider_address = chain_config.provider_address.clone();
             let hash_chain_state = chain_config.state.clone();
             let contract_reader_clone = chain_config.contract.clone();
+            let chain_id_clone = chain_id.clone();
             let handle_backlog = spawn(async move {
+                tracing::info!("Starting backlog handler for chain: {}", &chain_id_clone);
                 while !*rx_exit_handle_backlog.borrow() {
                     let res = async {
                         // TODO: add to config
                         let backlog_blocks: u64 = 10_000;
                         let blocks_at_a_time = 100;
 
-                        let mut from_block = latest_safe_block - backlog_blocks;
+                        let mut from_block = if backlog_blocks > latest_safe_block { 0 } else {latest_safe_block - backlog_blocks};
                         let last_block = latest_safe_block;
 
                         while !*rx_exit_handle_backlog.borrow() && from_block < last_block {
+                            tracing::info!("Processing backlog for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &last_block);
                             let mut to_block = from_block + blocks_at_a_time;
                             if to_block > last_block {
                                 to_block = last_block;
@@ -264,10 +271,12 @@ pub async fn run_keeper(
                                 // also, it reduces the load on the node
                                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                             }
-                            println!("from_block: {}, to_block: {}", from_block, to_block);
 
                             from_block = to_block + 1;
 
+                            tracing::info!("Backlog processed for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &from_block);
+
+                            tracing::info!("Waiting for 5 seconds before processing the next lot of blocks");
                             // wait for 5 seconds before processing the next lot of blocks
                             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                         }
@@ -276,13 +285,13 @@ pub async fn run_keeper(
                     };
 
                     if let Err(e) = res.await {
-                        tracing::error!("Error in handle_backlog: {:?}", e);
+                        tracing::error!("Error while handling backlog: {:?}", e);
+                        tracing::info!("Waiting for 5 seconds before re-handling the backlog");
+                        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                     } else {
                         tracing::info!("Backlog processed successfully");
                         break;
                     }
-
-                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
                 Ok::<(), Error>(())
@@ -292,7 +301,9 @@ pub async fn run_keeper(
 
             let rx_exit_handle_watch_blocks = rx_exit.clone();
             let contract_reader_clone = chain_config.contract.clone();
+            let chain_id_clone = chain_id.clone();
             let handle_watch_blocks = spawn(async move {
+                tracing::info!("Watching blocks to handle new events for chain: {}", &chain_id_clone);
                 while !*rx_exit_handle_watch_blocks.borrow() {
                     let res = async {
                         let mut last_safe_block_processed = latest_safe_block;
@@ -302,18 +313,25 @@ pub async fn run_keeper(
                         let mut stream = provider.watch_blocks().await?;
 
                         while !*rx_exit_handle_watch_blocks.borrow() {
+                            tracing::info!("Waiting for next block for chain: {}", &chain_id_clone);
                             if let Some(_) = stream.next().await {
                                 let latest_safe_block = contract_reader_clone
                                     .get_block_number(chain_config.confirmed_block_status)
                                     .await?
                                     - chain_config.reveal_delay_blocks;
 
+                                tracing::info!("Last safe block processed for chain {}: {} ", &chain_id_clone, &last_safe_block_processed);
+                                tracing::info!("Latest safe block for chain {}: {} ", &chain_id_clone, &latest_safe_block);
+
                                 if latest_safe_block > last_safe_block_processed {
-                                    tx.send(BlockRange {
+                                    if let Err(_) = tx.send(BlockRange {
                                         from: last_safe_block_processed + 1,
                                         to:   latest_safe_block,
                                     })
-                                    .await?;
+                                    .await {
+                                        tracing::error!("Error while sending block range to handle events. These will be handled in next call.");
+                                        continue;
+                                    };
 
                                     last_safe_block_processed = latest_safe_block;
                                 }
@@ -327,6 +345,7 @@ pub async fn run_keeper(
                         tracing::error!("Error in handle_watch_blocks: {:?}", e);
                     }
 
+                    tracing::error!("Waiting for 5 seconds before re-watching the blocks");
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
@@ -339,11 +358,15 @@ pub async fn run_keeper(
             let provider_address = chain_config.provider_address.clone();
             let hash_chain_state = chain_config.state.clone();
             let contract_reader_clone = chain_config.contract.clone();
+            let chain_id_clone  = chain_id.clone();
             let handle_events = spawn(async move {
+                tracing::info!("Handling events for chain: {}", &chain_id_clone);
                 while !*rx_exit_handle_events.borrow() {
                     let res = async {
                         while !*rx_exit_handle_events.borrow() {
+                            tracing::info!("Waiting for block range to handle events for chain: {}", &chain_id_clone);
                             if let Some(block_range) = rx.recv().await {
+                                tracing::info!("Handling events for chain: {} from block: {} to block: {}", &chain_id_clone, &block_range.from, &block_range.to);
                                 // TODO: add to config
                                 let blocks_at_a_time = 100;
                                 let mut from_block = block_range.from;
@@ -353,6 +376,8 @@ pub async fn run_keeper(
                                     if to_block > block_range.to {
                                         to_block = block_range.to;
                                     }
+
+                                    tracing::info!("Processing events for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &to_block);
 
                                     let events = contract_reader_clone
                                         .get_request_with_callback_events(from_block, to_block)
@@ -396,15 +421,9 @@ pub async fn run_keeper(
 
                                             tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res)
                                         }
-
-                                        // adding a delay of 1 seconds for backlog events
-                                        // as we want to prioritize the latest events
-                                        // also, it reduces the load on the node
-                                        tokio::time::sleep(tokio::time::Duration::from_secs(1))
-                                            .await;
                                     }
 
-                                    println!("from_block: {}, to_block: {}", from_block, to_block);
+                                    tracing::info!("Events processed for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &to_block);
 
                                     from_block = to_block + 1;
                                 }
@@ -418,6 +437,7 @@ pub async fn run_keeper(
                         tracing::error!("Error in handle_events: {:?}", e);
                     }
 
+                    tracing::info!("Waiting for 5 seconds before re-handling the events");
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
 
