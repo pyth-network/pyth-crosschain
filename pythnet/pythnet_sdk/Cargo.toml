@@ -26,8 +26,8 @@ quickcheck = { version = "1", optional = true}
 sha3 = "0.10.4"
 slow_primes = "0.1.14"
 thiserror = "1.0.40"
-serde_wormhole = {version ="0.0.0-alpha.1", optional = true}
-wormhole-vaas-serde = {version = "0.0.0-alpha.1", optional = true}
+serde_wormhole = {version ="0.1.0", optional = true}
+wormhole-vaas-serde = {version = "0.1.0", optional = true}
 libsecp256k1 = {version ="0.7.1", optional = true}
 rand = {version = "0.8.5", optional = true}
 

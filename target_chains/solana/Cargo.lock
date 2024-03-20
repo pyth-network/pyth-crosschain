@@ -3036,7 +3036,7 @@ dependencies = [
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
  "rand 0.8.5",
- "serde_wormhole 0.1.0",
+ "serde_wormhole",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -3059,7 +3059,7 @@ dependencies = [
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
- "serde_wormhole 0.1.0",
+ "serde_wormhole",
  "shellexpand",
  "solana-client",
  "solana-sdk",
@@ -3092,7 +3092,7 @@ dependencies = [
  "rand 0.8.5",
  "rustc_version",
  "serde",
- "serde_wormhole 0.0.0-alpha.1",
+ "serde_wormhole",
  "sha3 0.10.6",
  "slow_primes",
  "thiserror",
@@ -3774,21 +3774,9 @@ dependencies = [
 
 [[package]]
 name = "serde_wormhole"
-version = "0.0.0-alpha.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f8de15d219b2e92bb466b99b2ad7a673967473477df9220004ac58e3c753a8"
-dependencies = [
- "base64 0.13.1",
- "itoa",
- "serde",
- "serde_bytes",
- "thiserror",
-]
-
-[[package]]
-name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25#55faa9ca1fe456e90e957b33aa7bcc565a33c3fa"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24b022bf813578a06341fd453c3fd6e64945d9975191193d5d45e8dbd97d1d84"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -6233,9 +6221,9 @@ dependencies = [
 
 [[package]]
 name = "wormhole-supported-chains"
-version = "0.0.0-alpha.1"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "404f9a4ad582a632db81203032850d45691cee84ba468421cfe8b502d7c8fcc8"
+checksum = "3f42a80a24212937cc7d7b0ab8115bb87d82f949a1a42f75d500807072c94ba4"
 dependencies = [
  "serde",
  "thiserror",
@@ -6243,15 +6231,15 @@ dependencies = [
 
 [[package]]
 name = "wormhole-vaas-serde"
-version = "0.0.0-alpha.1"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15cf07d418541d2f675aabf8180317d72e125d28f63978ccb53b057a533678f4"
+checksum = "240c5a6136dc66ecc65097bb6d159e849b5df4ecbbbb220868d0edbdcc568ed3"
 dependencies = [
  "anyhow",
  "bstr 1.6.0",
  "schemars",
  "serde",
- "serde_wormhole 0.0.0-alpha.1",
+ "serde_wormhole",
  "sha3 0.10.6",
  "thiserror",
  "wormhole-supported-chains",
