@@ -410,6 +410,10 @@ async fn test_post_price_update_from_vaa() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
 
     // Now change the fee!
