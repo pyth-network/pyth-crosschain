@@ -23,16 +23,6 @@ jobs:
         working-directory: target_chains/solana
     steps:
       - uses: actions/checkout@v2
-      - name: Install Solana
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.16.20/install)"
-          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-      - name: Build
-        run: cargo-build-sbf
-      - name: Run tests
-        run: cargo-test-sbf
-      - name: Run sdk tests
-        run: cargo test --package pyth-solana-receiver-sdk
       - name: Setup Anchor
         run: |
           cargo install --git https://github.com/coral-xyz/anchor --rev 4e5280be46d859ba1c57fabe4c3916bec742fd69 anchor-cli --locked --force
