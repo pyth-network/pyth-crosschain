@@ -53,6 +53,7 @@ impl VerificationLevel {
 /// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different price update.
 /// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this price update.
 /// - `price_message`: The actual price update.
+/// - `posted_slot`: The slot at which this price update was posted.
 #[account]
 #[derive(BorshSchema)]
 pub struct PriceUpdateV2 {
