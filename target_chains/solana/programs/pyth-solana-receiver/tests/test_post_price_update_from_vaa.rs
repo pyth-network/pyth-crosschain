@@ -24,7 +24,7 @@ use {
     pyth_solana_receiver_sdk::{
         config::DataSource,
         price_update::{
-            PriceUpdateV1,
+            PriceUpdateV2,
             VerificationLevel,
         },
     },
@@ -352,7 +352,7 @@ async fn test_post_price_update_from_vaa() {
     .await;
 
     let mut price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -364,6 +364,10 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
     // Now poster_2 will pay
@@ -393,7 +397,7 @@ async fn test_post_price_update_from_vaa() {
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -405,6 +409,10 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
 
@@ -456,7 +464,7 @@ async fn test_post_price_update_from_vaa() {
 
     // Transaction failed, so the account should not have been updated
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
@@ -467,6 +475,10 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
 
@@ -510,7 +522,7 @@ async fn test_post_price_update_from_vaa() {
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
@@ -521,6 +533,10 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
     assert_eq!(

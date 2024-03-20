@@ -53,16 +53,18 @@ impl VerificationLevel {
 /// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different price update.
 /// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this price update.
 /// - `price_message`: The actual price update.
+/// - `posted_slot`: The slot at which this price update was posted.
 #[account]
 #[derive(BorshSchema)]
-pub struct PriceUpdateV1 {
+pub struct PriceUpdateV2 {
     pub write_authority:    Pubkey,
     pub verification_level: VerificationLevel,
     pub price_message:      PriceFeedMessage,
+    pub posted_slot:        u64,
 }
 
-impl PriceUpdateV1 {
-    pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8;
+impl PriceUpdateV2 {
+    pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
 }
 
 /// A Pyth price.
@@ -75,8 +77,8 @@ pub struct Price {
     pub publish_time: i64,
 }
 
-impl PriceUpdateV1 {
-    /// Get a `Price` from a `PriceUpdateV1` account for a given `FeedId`.
+impl PriceUpdateV2 {
+    /// Get a `Price` from a `PriceUpdateV2` account for a given `FeedId`.
     ///
     /// # Warning
     /// This function does not check :
@@ -100,7 +102,7 @@ impl PriceUpdateV1 {
         })
     }
 
-    /// Get a `Price` from a `PriceUpdateV1` account for a given `FeedId` no older than `maximum_age` with customizable verification level.
+    /// Get a `Price` from a `PriceUpdateV2` account for a given `FeedId` no older than `maximum_age` with customizable verification level.
     ///
     /// # Warning
     /// Lowering the verification level from `Full` to `Partial` increases the risk of using a malicious price update.
@@ -108,7 +110,7 @@ impl PriceUpdateV1 {
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV1};
+    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
     /// const MAXIMUM_AGE : u64 = 30;
@@ -117,7 +119,7 @@ impl PriceUpdateV1 {
     /// #[derive(Accounts)]
     /// #[instruction(amount_in_usd : u64)]
     /// pub struct ReadPriceAccount<'info> {
-    ///     pub price_update: Account<'info, PriceUpdateV1>,
+    ///     pub price_update: Account<'info, PriceUpdateV2>,
     /// }
     ///
     /// pub fn read_price_account(ctx : Context<ReadPriceAccount>) -> Result<()> {
@@ -148,11 +150,11 @@ impl PriceUpdateV1 {
         Ok(price)
     }
 
-    /// Get a `Price` from a `PriceUpdateV1` account for a given `FeedId` no older than `maximum_age` with `Full` verification.
+    /// Get a `Price` from a `PriceUpdateV2` account for a given `FeedId` no older than `maximum_age` with `Full` verification.
     ///
     /// # Example
     /// ```
-    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV1};
+    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
     /// const MAXIMUM_AGE : u64 = 30;
@@ -161,7 +163,7 @@ impl PriceUpdateV1 {
     /// #[derive(Accounts)]
     /// #[instruction(amount_in_usd : u64)]
     /// pub struct ReadPriceAccount<'info> {
-    ///     pub price_update: Account<'info, PriceUpdateV1>,
+    ///     pub price_update: Account<'info, PriceUpdateV2>,
     /// }
     ///
     /// pub fn read_price_account(ctx : Context<ReadPriceAccount>) -> Result<()> {
@@ -217,7 +219,7 @@ pub mod tests {
             error::GetPriceError,
             price_update::{
                 Price,
-                PriceUpdateV1,
+                PriceUpdateV2,
                 VerificationLevel,
             },
         },
@@ -233,8 +235,8 @@ pub mod tests {
     #[test]
     fn check_size() {
         assert!(
-            PriceUpdateV1::discriminator().len() + borsh0_10::get_packed_len::<PriceUpdateV1>()
-                == PriceUpdateV1::LEN
+            PriceUpdateV2::discriminator().len() + borsh0_10::get_packed_len::<PriceUpdateV2>()
+                == PriceUpdateV2::LEN
         );
     }
 
@@ -293,7 +295,7 @@ pub mod tests {
             ..Default::default()
         };
 
-        let price_update_unverified = PriceUpdateV1 {
+        let price_update_unverified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 0 },
             price_message:      PriceFeedMessage {
@@ -306,9 +308,10 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
+            posted_slot:        0,
         };
 
-        let price_update_partially_verified = PriceUpdateV1 {
+        let price_update_partially_verified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 5 },
             price_message:      PriceFeedMessage {
@@ -321,9 +324,10 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
+            posted_slot:        0,
         };
 
-        let price_update_fully_verified = PriceUpdateV1 {
+        let price_update_fully_verified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Full,
             price_message:      PriceFeedMessage {
@@ -336,6 +340,7 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
+            posted_slot:        0,
         };
 
 
