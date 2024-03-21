@@ -29,6 +29,7 @@ pub mod oracle_instance {
     pub fn update_price_feed(
         ctx: Context<UpdatePriceFeed>,
         params: PostUpdateParams,
+        instance_id: u8,
         feed_id: FeedId,
     ) -> Result<()> {
         let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
@@ -43,17 +44,23 @@ pub mod oracle_instance {
         };
 
         let seeds = &[
+            &instance_id.to_le_bytes(),
             feed_id.as_ref(),
             &[*ctx.bumps.get("price_feed_account").unwrap()],
         ];
         let signer_seeds = &[&seeds[..]];
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
 
+
         let old_timestamp = {
-            let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
-            let price_feed_account =
-                PriceUpdateV2::try_deserialize(&mut &price_feed_account_data[..])?;
-            price_feed_account.price_message.publish_time
+            if ctx.accounts.price_feed_account.data_len() == 0 {
+                0
+            } else {
+                let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
+                let price_feed_account =
+                    PriceUpdateV2::try_deserialize(&mut &price_feed_account_data[..])?;
+                price_feed_account.price_message.publish_time
+            }
         };
         pyth_solana_receiver::cpi::post_update(cpi_context, params)?;
         {
@@ -75,7 +82,7 @@ pub mod oracle_instance {
 }
 
 #[derive(Accounts)]
-#[instruction(params : PostUpdateParams, feed_id : FeedId)]
+#[instruction(params : PostUpdateParams, instance_id : u8, feed_id : FeedId)]
 pub struct UpdatePriceFeed<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
@@ -84,7 +91,7 @@ pub struct UpdatePriceFeed<'info> {
     pub config:               AccountInfo<'info>,
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
-    #[account(mut, seeds = [&feed_id], bump)]
+    #[account(mut, seeds = [&[instance_id], &feed_id], bump)]
     pub price_feed_account:   AccountInfo<'info>,
     pub system_program:       Program<'info, System>,
 }

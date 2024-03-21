@@ -58,6 +58,7 @@ impl instruction::UpdatePriceFeed {
                     merkle_price_update,
                     treasury_id,
                 },
+                instance_id: 0,
                 feed_id,
             }
             .data(),
