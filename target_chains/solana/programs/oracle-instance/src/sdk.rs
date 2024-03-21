@@ -22,7 +22,7 @@ use {
 };
 
 pub fn get_price_feed_address(feed_id: FeedId) -> Pubkey {
-    Pubkey::find_program_address(&[feed_id.as_ref()], &ID).0
+    Pubkey::find_program_address(&[&[0], feed_id.as_ref()], &ID).0
 }
 
 impl accounts::UpdatePriceFeed {
