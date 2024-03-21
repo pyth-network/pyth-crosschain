@@ -2,6 +2,7 @@
 .anchor
 .DS_Store
 target
+artifacts
 **/*.rs.bk
 node_modules
 lib
