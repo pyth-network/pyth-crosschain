@@ -32,7 +32,7 @@ type VaultWithId = ContractFunctionReturnType<
 class ProtocolMonitor {
   private client: Client;
   private subscribedIds: Set<string> = new Set();
-  private prices: Record<string, PriceFeed> = {};
+  private prices: Record<Hex, PriceFeed> = {};
   private priceConnection: PriceServiceConnection;
 
   constructor(
@@ -50,7 +50,7 @@ class ProtocolMonitor {
   }
 
   updatePrice(feed: PriceFeed) {
-    this.prices[feed.id] = feed;
+    this.prices[`0x${feed.id}`] = feed;
   }
 
   async subscribeToPriceFeed(tokenId: string) {
@@ -193,7 +193,7 @@ const argv = yargs(hideBin(process.argv))
     description:
       "Express relay endpoint. e.g: https://per-staging.dourolabs.app/",
     type: "string",
-    demandOption: true,
+    default: "https://per-staging.dourolabs.app/",
   })
   .option("pyth-endpoint", {
     description: "Pyth endpoint to use for fetching prices",
@@ -225,12 +225,6 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  if (isHex(argv.privateKey)) {
-    const account = privateKeyToAccount(argv.privateKey);
-    console.log(`Using account: ${account.address}`);
-  } else {
-    throw new Error(`Invalid private key: ${argv.privateKey}`);
-  }
   const monitor = new ProtocolMonitor(
     argv.expressRelayEndpoint,
     argv.pythEndpoint,
