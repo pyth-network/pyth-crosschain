@@ -14,7 +14,7 @@ clap = {version ="3.2.22", features = ["derive"]}
 pyth-solana-receiver = {path = "../programs/pyth-solana-receiver" }
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"} # Used for initializing the wormhole receiver
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
-wormhole-sdk = { workspace = true }
+wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = "0.4.3"
 borsh = "0.9.3" # Old version of borsh needed for wormhole-solana

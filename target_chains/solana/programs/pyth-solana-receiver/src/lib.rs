@@ -7,7 +7,7 @@ use {
             DataSource,
         },
         price_update::{
-            PriceUpdateV1,
+            PriceUpdateV2,
             VerificationLevel,
         },
     },
@@ -122,7 +122,7 @@ pub mod pyth_solana_receiver {
     /// Post a price update using a VAA and a MerklePriceUpdate.
     /// This function allows you to post a price update in a single transaction.
     /// Compared to `post_update`, it only checks whatever signatures are present in the provided VAA and doesn't fail if the number of signatures is lower than the Wormhole quorum of two thirds of the guardians.
-    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the `PriceUpdateV1` account.
+    /// The number of signatures that were in the VAA is stored in the `VerificationLevel` of the `PriceUpdateV2` account.
     ///
     /// We recommend using `post_update_atomic` with 5 signatures. This is close to the maximum signatures you can verify in one transaction without exceeding the transaction size limit.
     ///
@@ -191,6 +191,7 @@ pub mod pyth_solana_receiver {
         // End borrowed section
 
         let payer = &ctx.accounts.payer;
+        let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
         let treasury = &ctx.accounts.treasury;
         let price_update_account = &mut ctx.accounts.price_update_account;
 
@@ -203,13 +204,12 @@ pub mod pyth_solana_receiver {
         post_price_update_from_vaa(
             config,
             payer,
-            payer,
+            write_authority,
             treasury,
             price_update_account,
             &vaa_components,
             vaa.payload().as_ref(),
             &params.merkle_price_update,
-
         )?;
 
 
@@ -223,10 +223,9 @@ pub mod pyth_solana_receiver {
         let config = &ctx.accounts.config;
         let payer: &Signer<'_> = &ctx.accounts.payer;
         let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
-
         let encoded_vaa = VaaAccount::load(&ctx.accounts.encoded_vaa)?; // IMPORTANT: This line checks that the encoded_vaa has ProcessingStatus::Verified. This check is critical otherwise the program could be tricked into accepting unverified VAAs.
         let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
-        let price_update_account: &mut Account<'_, PriceUpdateV1> =
+        let price_update_account: &mut Account<'_, PriceUpdateV2> =
             &mut ctx.accounts.price_update_account;
 
         let vaa_components = VaaComponents {
@@ -302,12 +301,12 @@ pub struct PostUpdate<'info> {
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     pub treasury:             AccountInfo<'info>,
-    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV1::LEN)]
-    pub price_update_account: Account<'info, PriceUpdateV1>,
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV2::LEN)]
+    pub price_update_account: Account<'info, PriceUpdateV2>,
     pub system_program:       Program<'info, System>,
-    pub write_authority: Signer<'info>
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -325,11 +324,12 @@ pub struct PostUpdateAtomic<'info> {
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     pub treasury:             AccountInfo<'info>,
-    /// The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.
+    /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
-    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV1::LEN)]
-    pub price_update_account: Account<'info, PriceUpdateV1>,
+    #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV2::LEN)]
+    pub price_update_account: Account<'info, PriceUpdateV2>,
     pub system_program:       Program<'info, System>,
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -337,7 +337,7 @@ pub struct ReclaimRent<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
-    pub price_update_account: Account<'info, PriceUpdateV1>,
+    pub price_update_account: Account<'info, PriceUpdateV2>,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
@@ -394,9 +394,9 @@ struct VaaComponents {
 fn post_price_update_from_vaa<'info>(
     config: &Account<'info, Config>,
     payer: &Signer<'info>,
-    write_authority : &Signer<'info>,
+    write_authority: &Signer<'info>,
     treasury: &AccountInfo<'info>,
-    price_update_account: &mut Account<'_, PriceUpdateV1>,
+    price_update_account: &mut Account<'_, PriceUpdateV2>,
     vaa_components: &VaaComponents,
     vaa_payload: &[u8],
     price_update: &MerklePriceUpdate,
@@ -450,6 +450,7 @@ fn post_price_update_from_vaa<'info>(
             price_update_account.write_authority = write_authority.key();
             price_update_account.verification_level = vaa_components.verification_level;
             price_update_account.price_message = price_feed_message;
+            price_update_account.posted_slot = Clock::get()?.slot;
         }
         Message::TwapMessage(_) => {
             return err!(ReceiverError::UnsupportedMessageType);

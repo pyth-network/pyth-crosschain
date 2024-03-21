@@ -112,18 +112,24 @@ repos:
         pass_filenames: false
         files: target_chains/solana
       # For express relay python files
+      - id: poetry-install
+        name: poetry install
+        entry: poetry -C express_relay/sdk/python/express_relay install
+        pass_filenames: false
+        files: express_relay/sdk/python/express_relay
+        language: "system"
       - id: black
         name: black
-        entry: poetry -C express_relay/sdk/python/express_relay run black express_relay/sdk/python/express_relay
-        pass_filenames: false
+        entry: poetry -C express_relay/sdk/python/express_relay run black
+        files: express_relay/sdk/python/express_relay
         language: "system"
       - id: pyflakes
         name: pyflakes
-        entry: poetry -C express_relay/sdk/python/express_relay run pyflakes express_relay/sdk/python/express_relay
-        pass_filenames: false
+        entry: poetry -C express_relay/sdk/python/express_relay run pyflakes
+        files: express_relay/sdk/python/express_relay
         language: "system"
       - id: mypy
         name: mypy
-        entry: poetry -C express_relay/sdk/python/express_relay run mypy express_relay/sdk/python/express_relay
-        pass_filenames: false
+        entry: poetry -C express_relay/sdk/python/express_relay run mypy
+        files: express_relay/sdk/python/express_relay
         language: "system"

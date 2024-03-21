@@ -22,6 +22,7 @@ import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigIns
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
 import { AnchorAccounts } from "./anchor";
 import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
+import { DEFAULT_RECEIVER_PROGRAM_ID } from "@pythnetwork/pyth-solana-receiver";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -33,6 +34,7 @@ export enum MultisigInstructionProgram {
   SystemProgram,
   BpfUpgradableLoader,
   SolanaStakingProgram,
+  SolanaReceiver,
   UnrecognizedProgram,
 }
 
@@ -54,6 +56,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Mesh Multisig Program";
     case MultisigInstructionProgram.Staking:
       return "Pyth Staking Program";
+    case MultisigInstructionProgram.SolanaReceiver:
+      return "Pyth Solana Receiver";
     case MultisigInstructionProgram.UnrecognizedProgram:
       return "Unknown";
   }
@@ -123,7 +127,8 @@ export class MultisigParser {
     } else if (
       instruction.programId.equals(MESSAGE_BUFFER_PROGRAM_ID) ||
       instruction.programId.equals(MESH_PROGRAM_ID) ||
-      instruction.programId.equals(STAKING_PROGRAM_ID)
+      instruction.programId.equals(STAKING_PROGRAM_ID) ||
+      instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID)
     ) {
       return AnchorMultisigInstruction.fromTransactionInstruction(instruction);
     } else if (instruction.programId.equals(SystemProgram.programId)) {

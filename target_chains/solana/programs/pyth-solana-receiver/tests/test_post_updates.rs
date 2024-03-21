@@ -20,7 +20,7 @@ use {
         },
     },
     pyth_solana_receiver_sdk::price_update::{
-        PriceUpdateV1,
+        PriceUpdateV2,
         VerificationLevel,
     },
     pythnet_sdk::{
@@ -69,6 +69,7 @@ async fn test_post_update() {
         .process_ix_with_default_compute_limit(
             PostUpdate::populate(
                 poster.pubkey(),
+                poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
                 merkle_price_updates[0].clone(),
@@ -87,7 +88,7 @@ async fn test_post_update() {
     .await;
 
     let mut price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -100,11 +101,16 @@ async fn test_post_update() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
     );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
     // post another update to the same account
     program_simulator
         .process_ix_with_default_compute_limit(
             PostUpdate::populate(
+                poster.pubkey(),
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
@@ -124,7 +130,7 @@ async fn test_post_update() {
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -137,6 +143,11 @@ async fn test_post_update() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
     );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
+
 
     // This poster doesn't have the write authority
     let poster_2 = program_simulator.get_funded_keypair().await.unwrap();
@@ -196,6 +207,7 @@ async fn test_post_update_wrong_encoded_vaa_owner() {
             .process_ix_with_default_compute_limit(
                 PostUpdate::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
                     price_update_keypair.pubkey(),
                     merkle_price_updates[0].clone(),
@@ -234,6 +246,7 @@ async fn test_post_update_wrong_setup() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdate::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
                     price_update_keypair.pubkey(),

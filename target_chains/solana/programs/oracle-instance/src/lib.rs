@@ -5,50 +5,8 @@ use {
         program::PythSolanaReceiver,
         PostUpdateParams,
     },
-    pyth_solana_receiver_sdk::{
-        config::{
-            Config,
-            DataSource,
-        },
-        price_update::{
-            PriceUpdateV1,
-            VerificationLevel,
-        },
-    },
-    pythnet_sdk::{
-        accumulators::merkle::MerkleRoot,
-        hashers::keccak256_160::Keccak160,
-        messages::{
-            FeedId,
-            Message,
-        },
-        wire::{
-            from_slice,
-            v1::{
-                MerklePriceUpdate,
-                WormholeMessage,
-                WormholePayload,
-            },
-        },
-    },
-    solana_program::{
-        keccak,
-        program_memory::sol_memcpy,
-        secp256k1_recover::secp256k1_recover,
-        system_instruction,
-    },
-    wormhole_core_bridge_solana::{
-        sdk::{
-            legacy::AccountVariant,
-            VaaAccount,
-        },
-        state::GuardianSet,
-    },
-    wormhole_raw_vaas::{
-        utils::quorum,
-        GuardianSetSig,
-        Vaa,
-    },
+    pyth_solana_receiver_sdk::price_update::PriceUpdateV2,
+    pythnet_sdk::messages::FeedId,
 };
 
 // pub mod error;
@@ -61,7 +19,7 @@ pub enum OracleInstanceError {
     #[msg("Updates must be monotonically increasing")]
     UpdatesNotMonotonic,
     #[msg("Price feed id mismatch")]
-    PriceFeedMessageMismatch
+    PriceFeedMessageMismatch,
 }
 #[program]
 pub mod oracle_instance {
@@ -76,7 +34,7 @@ pub mod oracle_instance {
         let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
         let cpi_accounts = PostUpdate {
             payer:                ctx.accounts.payer.to_account_info().clone(),
-            write_authority : ctx.accounts.price_feed_account.to_account_info().clone(),
+            write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
             encoded_vaa:          ctx.accounts.encoded_vaa.to_account_info().clone(),
             config:               ctx.accounts.config.to_account_info().clone(),
             treasury:             ctx.accounts.treasury.to_account_info().clone(),
@@ -93,13 +51,15 @@ pub mod oracle_instance {
 
         let old_timestamp = {
             let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
-            let price_feed_account = PriceUpdateV1::try_deserialize(&mut &price_feed_account_data[..])?;
+            let price_feed_account =
+                PriceUpdateV2::try_deserialize(&mut &price_feed_account_data[..])?;
             price_feed_account.price_message.publish_time
         };
         pyth_solana_receiver::cpi::post_update(cpi_context, params)?;
         {
             let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
-            let price_feed_account = PriceUpdateV1::try_deserialize(&mut &price_feed_account_data[..])?;
+            let price_feed_account =
+                PriceUpdateV2::try_deserialize(&mut &price_feed_account_data[..])?;
 
             if price_feed_account.price_message.publish_time <= old_timestamp {
                 return Err(OracleInstanceError::UpdatesNotMonotonic.into());
@@ -108,7 +68,6 @@ pub mod oracle_instance {
                 return Err(OracleInstanceError::PriceFeedMessageMismatch.into());
             }
         }
-
 
 
         Ok(())

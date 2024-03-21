@@ -36,6 +36,6 @@ libsecp256k1 = "0.7.1"
 rand = "0.8.5"
 lazy_static = "1.4.0"
 program-simulator = { path = "../../program_simulator" }
-wormhole-sdk = { workspace = true }
+wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
