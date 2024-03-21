@@ -115,6 +115,7 @@ repos:
       - id: poetry-install
         name: poetry install
         entry: poetry -C express_relay/sdk/python/express_relay install
+        pass_filenames: false
         files: express_relay/sdk/python/express_relay
         language: "system"
       - id: black
@@ -132,4 +133,3 @@ repos:
         entry: poetry -C express_relay/sdk/python/express_relay run mypy
         files: express_relay/sdk/python/express_relay
         language: "system"
-
