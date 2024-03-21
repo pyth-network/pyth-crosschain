@@ -77,12 +77,12 @@ impl accounts::PostUpdate {
         let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
         accounts::PostUpdate {
             payer,
-            write_authority,
             encoded_vaa,
             config,
             treasury,
             price_update_account,
             system_program: system_program::ID,
+            write_authority,
         }
     }
 }
