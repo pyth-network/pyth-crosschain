@@ -4,7 +4,7 @@ This folder contains:
 
 - A Pyth Receiver program to receive Pyth price updates on Solana in `programs/pyth-solana-receiver`
 - A Rust Cli that acts as a simple client to interact with the Pyth receiver program in `cli/`
-- A Rust SDK to be used to consume Pyth price updates created by the Pyth Receiver in `pyth_solana_receiver_sdk`
+- A Rust SDK to be used in Solana programs to consume Pyth price updates created by the Pyth Receiver in `pyth_solana_receiver_sdk`
 - A JS SDK to be used in client side Javascript code to interact with the Pyth Receiver program in `sdk/js/pyth_solana_receiver`
 
 # Overview of the design
