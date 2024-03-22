@@ -2,6 +2,8 @@
 
 This is a Javascript SDK to interact with the Pyth Solana Receiver contract whose code lives [here](/target_chains/solana).
 
+It is available on [npm](https://www.npmjs.com/package/@pythnetwork/pyth-solana-receiver).
+
 ## Pull model
 
 The Pyth Solana Receiver allows users to consume Pyth price updates on a pull basis. This means that the user is responsible for submitting the price data on-chain whenever they want to interact with an app that requires a price update.

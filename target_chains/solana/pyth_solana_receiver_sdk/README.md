@@ -2,6 +2,8 @@
 
 This is a Rust SDK to build Solana programs that consume Pyth price updates posted by the Pyth Solana Receiver.
 
+It is available on [crates.io](https://crates.io/crates/pyth-solana-receiver-sdk).
+
 ## Pull model
 
 The Pyth Solana Receiver allows users to consume Pyth price updates on a pull basis. This means that the user is responsible for submitting the price data on-chain whenever they want to interact with an app that requires a price update.
