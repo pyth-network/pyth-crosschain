@@ -2,8 +2,10 @@
 
 This folder contains:
 
-- A Pyth receiver program to receive Pyth price updates on Solana in `programs/pyth-solana-receiver`
-- A Cli that acts as a simple client to interact with the Pyth receiver program in `cli/`
+- A Pyth Receiver program to receive Pyth price updates on Solana in `programs/pyth-solana-receiver`
+- A Rust Cli that acts as a simple client to interact with the Pyth receiver program in `cli/`
+- A Rust SDK to be used to consume Pyth price updates created by the Pyth Receiver in `pyth_solana_receiver_sdk`
+- A JS SDK to be used in client side Javascript code to interact with the Pyth Receiver program in `sdk/js/pyth_solana_receiver`
 
 # Overview of the design
 
@@ -22,9 +24,9 @@ This contract offers two ways to post a Pyth price update onto Solana:
 `post_update` is also a more efficient way to post updates if you're looking to post data for many different price feeds at a single point in time.
 This is because it persists a verified encoded VAA, so guardian signatures will only get checked once. Then that single posted VAA can be used to prove the price update for all price feeds for that given point in time.
 
-# Devnet deployment
+# Program addresses
 
-The program is currently deployed on Devnet and Eclipse Testnet with addresses:
+The program is currently deployed on Solana (Mainnet, Devnet) and Eclipse Testnet with addresses:
 
 - `HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ` for the Wormhole receiver
 - `rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ` for the Pyth receiver
