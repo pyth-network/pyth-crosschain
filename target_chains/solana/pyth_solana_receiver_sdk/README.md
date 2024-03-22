@@ -1,6 +1,6 @@
 # Pyth Solana Receiver Rust SDK
 
-This is a Rust SDK to build Solana programs that consume Pyth price posted by the Pyth Solana Receiver.
+This is a Rust SDK to build Solana programs that consume Pyth price updates posted by the Pyth Solana Receiver.
 
 ## Pull model
 
@@ -15,7 +15,6 @@ A Solana program can consume price update accounts created by the Pyth Solana Re
 
 ```rust
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{native_token::LAMPORTS_PER_SOL, system_instruction};
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
 
 declare_id!("2e5gZD3suxgJgkCg4pkoogxDKszy1SAwokz8mNeZUj4M");
