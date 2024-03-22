@@ -165,7 +165,7 @@ class ProtocolMonitor {
     const valueCollateral = priceCollateral * vault.amountCollateral;
     const valueDebt = priceDebt * vault.amountDebt;
     if (valueDebt * vault.minHealthRatio > valueCollateral * 10n ** 18n) {
-      const health = valueCollateral / valueDebt;
+      const health = Number(valueCollateral) / Number(valueDebt);
       console.log(`Vault ${vault.id} is undercollateralized health: ${health}`);
       return true;
     }

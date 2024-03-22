@@ -23,17 +23,24 @@ contract EasyLend is IExpressRelayFeeReceiver {
     address public immutable expressRelay;
     mapping(uint256 => Vault) _vaults;
     address _oracle;
+    bool _allowUndercollateralized;
 
     /**
      * @notice EasyLend constructor - Initializes a new token vault contract with given parameters
      *
      * @param expressRelayAddress: address of the express relay
      * @param oracleAddress: address of the oracle contract
+     * @param allowUndercollateralized: boolean to allow undercollateralized vaults to be created and updated. Can be set to true for testing.
      */
-    constructor(address expressRelayAddress, address oracleAddress) {
+    constructor(
+        address expressRelayAddress,
+        address oracleAddress,
+        bool allowUndercollateralized
+    ) {
         _nVaults = 0;
         expressRelay = expressRelayAddress;
         _oracle = oracleAddress;
+        _allowUndercollateralized = allowUndercollateralized;
     }
 
     /**
@@ -79,6 +86,10 @@ contract EasyLend is IExpressRelayFeeReceiver {
     function _getPrice(bytes32 id) internal view returns (uint256) {
         IPyth oracle = IPyth(payable(_oracle));
         return convertToUint(oracle.getPrice(id), 18);
+    }
+
+    function getAllowUndercollateralized() public view returns (bool) {
+        return _allowUndercollateralized;
     }
 
     function getOracle() public view returns (address) {
@@ -128,7 +139,7 @@ contract EasyLend is IExpressRelayFeeReceiver {
      * @param amountCollateral: amount of collateral tokens in the vault
      * @param amountDebt: amount of debt tokens in the vault
      * @param minHealthRatio: minimum health ratio of the vault, 10**18 is 100%
-     * @param minPermissionLessHealthRatio: minimum health ratio of the vault before permissionless liquidations are allowed. This should be less than minHealthRatio
+     * @param minPermissionlessHealthRatio: minimum health ratio of the vault before permissionless liquidations are allowed. This should be less than minHealthRatio
      * @param tokenIdCollateral: price feed Id of the collateral token
      * @param tokenIdDebt: price feed Id of the debt token
      * @param updateData: data to update price feeds with
@@ -139,7 +150,7 @@ contract EasyLend is IExpressRelayFeeReceiver {
         uint256 amountCollateral,
         uint256 amountDebt,
         uint256 minHealthRatio,
-        uint256 minPermissionLessHealthRatio,
+        uint256 minPermissionlessHealthRatio,
         bytes32 tokenIdCollateral,
         bytes32 tokenIdDebt,
         bytes[] calldata updateData
@@ -151,14 +162,17 @@ contract EasyLend is IExpressRelayFeeReceiver {
             amountCollateral,
             amountDebt,
             minHealthRatio,
-            minPermissionLessHealthRatio,
+            minPermissionlessHealthRatio,
             tokenIdCollateral,
             tokenIdDebt
         );
-        if (minPermissionLessHealthRatio > minHealthRatio) {
+        if (minPermissionlessHealthRatio > minHealthRatio) {
             revert InvalidHealthRatios();
         }
-        if (_getVaultHealth(vault) < vault.minHealthRatio) {
+        if (
+            !_allowUndercollateralized &&
+            _getVaultHealth(vault) < vault.minHealthRatio
+        ) {
             revert UncollateralizedVaultCreation();
         }
 
@@ -209,7 +223,10 @@ contract EasyLend is IExpressRelayFeeReceiver {
         vault.amountCollateral = futureCollateral;
         vault.amountDebt = futureDebt;
 
-        if (_getVaultHealth(vault) < vault.minHealthRatio) {
+        if (
+            !_allowUndercollateralized &&
+            _getVaultHealth(vault) < vault.minHealthRatio
+        ) {
             revert InvalidVaultUpdate();
         }
 
@@ -270,8 +287,8 @@ contract EasyLend is IExpressRelayFeeReceiver {
      * @notice liquidate function - liquidates a vault
      * This function calculates the health of the vault and based on the vault parameters one of the following actions is taken:
      * 1. If health >= minHealthRatio, don't liquidate
-     * 2. If minHealthRatio > health >= minPermissionLessHealthRatio, only liquidate if the vault is permissioned via express relay
-     * 3. If minPermissionLessHealthRatio > health, liquidate no matter what
+     * 2. If minHealthRatio > health >= minPermissionlessHealthRatio, only liquidate if the vault is permissioned via express relay
+     * 3. If minPermissionlessHealthRatio > health, liquidate no matter what
      *
      * @param vaultId: Id of the vault to be liquidated
      */
@@ -284,7 +301,7 @@ contract EasyLend is IExpressRelayFeeReceiver {
             revert InvalidLiquidation();
         }
 
-        if (vaultHealth >= vault.minPermissionLessHealthRatio) {
+        if (vaultHealth >= vault.minPermissionlessHealthRatio) {
             // if vault health is below the minimum health ratio but above the minimum permissionless health ratio,
             // only liquidate if permissioned
             if (
