@@ -8,13 +8,8 @@ import {
 } from "contract_manager";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
-import {
-  Connection,
-  Ed25519Keypair,
-  JsonRpcProvider,
-  RawSigner,
-} from "@mysten/sui.js";
 import { initPyth, publishPackage } from "./pyth_deploy";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
@@ -174,18 +169,19 @@ yargs(hideBin(process.argv))
     async (argv) => {
       const walletPrivateKey = argv["private-key"];
       const chain = DefaultStore.chains[argv.chain] as SuiChain;
-      const provider = new JsonRpcProvider(
-        new Connection({ fullnode: chain.rpcUrl })
+      const keypair = Ed25519Keypair.fromSecretKey(
+        Buffer.from(walletPrivateKey, "hex")
       );
-      const wallet = new RawSigner(
-        Ed25519Keypair.fromSecretKey(Buffer.from(walletPrivateKey, "hex")),
-        provider
+      const result = await publishPackage(
+        keypair,
+        chain.getProvider(),
+        argv.path
       );
-      const result = await publishPackage(wallet, argv.path);
       const deploymentType = chain.isMainnet() ? "stable" : "beta";
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
-        wallet,
+        keypair,
+        chain.getProvider(),
         result.packageId,
         result.deployerCapId,
         result.upgradeCapId,
@@ -242,10 +238,8 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-
-      const wallet = new RawSigner(
-        Ed25519Keypair.fromSecretKey(Buffer.from(argv["private-key"], "hex")),
-        contract.getProvider()
+      const keypair = Ed25519Keypair.fromSecretKey(
+        Buffer.from(argv["private-key"], "hex")
       );
 
       const pythContractsPath = resolve(`${__dirname}/${argv.path}`);
@@ -259,7 +253,8 @@ yargs(hideBin(process.argv))
       console.log("Old package id:", pythPackageOld);
       const signedVaa = Buffer.from(argv.vaa, "hex");
       const upgradeResults = await upgradePyth(
-        wallet,
+        keypair,
+        contract.chain.getProvider(),
         modules,
         dependencies,
         signedVaa,
@@ -281,7 +276,8 @@ yargs(hideBin(process.argv))
       // on chain at the beginning of the transaction.
 
       const migrateResults = await migratePyth(
-        wallet,
+        keypair,
+        contract.chain.getProvider(),
         signedVaa,
         contract,
         pythPackageOld

@@ -1,16 +1,19 @@
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+
 import {
-  fromB64,
-  getPublishedObjectChanges,
   MIST_PER_SUI,
   normalizeSuiObjectId,
-  RawSigner,
-  TransactionBlock,
-} from "@mysten/sui.js";
+  fromB64,
+} from "@mysten/sui.js/utils";
+
+import { Ed25519Keypair } from "@mysten/sui.js/dist/cjs/keypairs/ed25519";
 import { execSync } from "child_process";
 import { DataSource } from "xc_admin_common";
+import { SuiClient } from "@mysten/sui.js/client";
 
 export async function publishPackage(
-  signer: RawSigner,
+  keypair: Ed25519Keypair,
+  provider: SuiClient,
   packagePath: string
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
@@ -43,11 +46,12 @@ export async function publishPackage(
   // Transfer upgrade capability to deployer
   transactionBlock.transferObjects(
     [upgradeCap],
-    transactionBlock.pure(await signer.getAddress())
+    transactionBlock.pure(keypair.toSuiAddress())
   );
 
   // Execute transactions
-  const result = await signer.signAndExecuteTransactionBlock({
+  const result = await provider.signAndExecuteTransactionBlock({
+    signer: keypair,
     transactionBlock,
     options: {
       showInput: true,
@@ -55,19 +59,27 @@ export async function publishPackage(
     },
   });
 
-  const publishEvents = getPublishedObjectChanges(result);
-  if (!result.objectChanges || publishEvents.length !== 1) {
+  const publishedChanges = result.objectChanges?.filter(
+    (change) => change.type === "published"
+  );
+
+  if (
+    publishedChanges?.length !== 1 ||
+    publishedChanges[0].type !== "published"
+  ) {
     throw new Error(
       "No publish event found in transaction:" +
         JSON.stringify(result.objectChanges, null, 2)
     );
   }
-  const packageId = publishEvents[0].packageId;
+
+  const packageId = publishedChanges[0].packageId;
+
   console.log("Published with package id: ", packageId);
   console.log("Tx digest", result.digest);
   let upgradeCapId: string | undefined;
   let deployerCapId: string | undefined;
-  for (const objectChange of result.objectChanges) {
+  for (const objectChange of result.objectChanges!) {
     if (objectChange.type === "created") {
       if (objectChange.objectType === "0x2::package::UpgradeCap") {
         upgradeCapId = objectChange.objectId;
@@ -90,7 +102,8 @@ export async function publishPackage(
 }
 
 export async function initPyth(
-  signer: RawSigner,
+  keypair: Ed25519Keypair,
+  provider: SuiClient,
   pythPackageId: string,
   deployerCapId: string,
   upgradeCapId: string,
@@ -133,7 +146,8 @@ export async function initPyth(
 
   tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
 
-  let result = await signer.signAndExecuteTransactionBlock({
+  let result = await provider.signAndExecuteTransactionBlock({
+    signer: keypair,
     transactionBlock: tx,
     options: {
       showInput: true,
