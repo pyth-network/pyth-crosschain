@@ -1,0 +1,5 @@
+lib/*
+out
+cache
+tslib
+!lib/README.md
