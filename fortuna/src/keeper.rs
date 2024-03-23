@@ -1,17 +1,24 @@
 use {
     crate::{
-        api::{
-            self,
-            BlockchainState,
+        chain::{
+            ethereum::SignablePythContract,
+            reader::EntropyReader,
         },
-        chain::ethereum::SignablePythContract,
         state::HashChainState,
     },
     anyhow::{
         Error,
         Result,
     },
-    ethers::signers::LocalWallet,
+    ethers::{
+        middleware::NonceManagerMiddleware,
+        providers::{
+            Http,
+            Provider,
+        },
+        signers::LocalWallet,
+        types::H160,
+    },
     std::sync::Arc,
     tokio::{
         sync::watch,
@@ -24,11 +31,11 @@ use {
 
 pub async fn handle_backlog(
     chain_id: String,
-    provider_address: String,
+    provider_address: H160,
     latest_safe_block: u64,
-    contract_reader: Arc<SignablePythContract>,
+    contract_reader: Arc<dyn EntropyReader>,
     hash_chain_state: Arc<HashChainState>,
-    nonce_manager: Arc<LocalWallet>,
+    nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
     rx_exit_handle_backlog: watch::Receiver<bool>,
 ) -> Result<()> {
