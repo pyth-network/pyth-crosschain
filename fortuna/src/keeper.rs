@@ -2,7 +2,10 @@ use {
     crate::{
         chain::{
             ethereum::SignablePythContract,
-            reader::EntropyReader,
+            reader::{
+                EntropyReader,
+                RequestedWithCallbackEvent,
+            },
         },
         state::HashChainState,
     },
@@ -16,7 +19,6 @@ use {
             Http,
             Provider,
         },
-        signers::LocalWallet,
         types::H160,
     },
     std::sync::Arc,
@@ -28,6 +30,101 @@ use {
         },
     },
 };
+
+async fn is_valid_request(
+    event: &RequestedWithCallbackEvent,
+    contract_reader: &Arc<dyn EntropyReader>,
+) -> bool {
+    let res = contract_reader
+        .get_request(event.provider_address, event.sequence_number)
+        .await;
+
+    match res {
+        Ok(req) => match req {
+            Some(req) => {
+                if req.sequence_number == 0
+                    || req.provider != event.provider_address
+                    || req.sequence_number != event.sequence_number
+                {
+                    false
+                } else {
+                    true
+                }
+            }
+            None => false,
+        },
+
+        // When there is an error getting the request, we are not sure whether it is a
+        // valid request or not. We are considering the request to be valid in such cases.
+        // This should happen rarely.
+        Err(_) => true,
+    }
+}
+
+pub async fn process_event(
+    event: RequestedWithCallbackEvent,
+    contract_reader: &Arc<dyn EntropyReader>,
+    hash_chain_state: &Arc<HashChainState>,
+    contract: &Arc<SignablePythContract>,
+    nonce_manager: &Arc<NonceManagerMiddleware<Provider<Http>>>,
+) -> Result<()> {
+    if !is_valid_request(&event, &contract_reader).await {
+        return Ok(());
+    }
+
+    let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
+
+    let sim_res = contract_reader
+        .similate_reveal(
+            event.provider_address,
+            event.sequence_number,
+            event.user_random_number,
+            provider_revelation,
+        )
+        .await;
+
+    match sim_res {
+        Ok(_) => {
+            let res = contract
+                .reveal_with_callback_wrapper(
+                    event.provider_address,
+                    event.sequence_number,
+                    event.user_random_number,
+                    provider_revelation,
+                    nonce_manager.next(),
+                )
+                .await;
+            match res {
+                Ok(_) => {
+                    tracing::info!(
+                        "Revealed for provider: {} and sequence number: {} \n res: {:?}",
+                        event.provider_address,
+                        event.sequence_number,
+                        res
+                    );
+                }
+                Err(e) => {
+                    // TODO: find a way to handle different errors.
+                    tracing::error!(
+                        "Error while revealing for provider: {} and sequence number: {} \n res: {:?}",
+                        event.provider_address,
+                        event.sequence_number,
+                        e
+                    );
+                }
+            }
+        }
+        Err(e) => {
+            tracing::error!(
+                "Error while simulating reveal for provider: {} and sequence number: {} \n res: {:?}",
+                event.provider_address,
+                event.sequence_number,
+                e
+            );
+        }
+    }
+    Ok(())
+}
 
 pub async fn handle_backlog(
     chain_id: String,
@@ -69,59 +166,20 @@ pub async fn handle_backlog(
                     .await?;
 
                 for event in events {
-                    if event.provider_address == provider_address {
-                        let res = contract_reader
-                            .get_request(event.provider_address, event.sequence_number)
-                            .await;
+                    if provider_address != event.provider_address {
+                        continue;
+                    }
 
-                        if let Ok(req) = res {
-                            match req {
-                                Some(req) => {
-                                    if req.sequence_number == 0
-                                        || req.provider != event.provider_address
-                                        || req.sequence_number != event.sequence_number
-                                    {
-                                        continue;
-                                    }
-                                }
-                                None => continue,
-                            }
-                        }
-
-                        let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
-
-                        let sim_res = contract_reader
-                            .similate_reveal(
-                                provider_address,
-                                event.sequence_number,
-                                event.user_random_number,
-                                provider_revelation,
-                            )
-                            .await;
-                        match sim_res {
-                            Ok(_) => {
-                                let res = contract
-                                    .reveal_with_callback_wrapper(
-                                        provider_address,
-                                        event.sequence_number,
-                                        event.user_random_number,
-                                        provider_revelation,
-                                        nonce_manager.next(),
-                                    )
-                                    .await;
-                                match res {
-                                    Ok(_) => {
-                                        tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res);
-                                    }
-                                    Err(e) => {
-                                        tracing::error!("Error while revealing for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                tracing::error!("Error while simulating reveal for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
-                            }
-                        }
+                    if let Err(e) = process_event(
+                        event,
+                        &contract_reader,
+                        &hash_chain_state,
+                        &contract,
+                        &nonce_manager,
+                    )
+                    .await
+                    {
+                        tracing::error!("Error processing event: {:?}", e);
                     }
                 }
 
