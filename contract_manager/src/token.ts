@@ -7,6 +7,7 @@ export class Token extends Storable {
   public constructor(
     public id: string,
     public pythId: string | undefined,
+    public decimals: number,
   ) {
     super();
   }
@@ -27,7 +28,7 @@ export class Token extends Storable {
 
       // Note that this conversion can lose some precision.
       // We don't really care about that in this application.
-      return parseInt(price.price) * Math.pow(10, price.expo);
+      return parseInt(price.price) * Math.pow(10, price.expo) / Math.pow(10, this.decimals);
     } else {
       // If the token doesn't have a pyth id, assume it's a shitcoin
       // and worth 0.
@@ -42,10 +43,11 @@ export class Token extends Storable {
     };
   }
 
-  static fromJson(parsed: {id: string, pythId?: string}): Token {
+  static fromJson(parsed: {id: string, pythId?: string, decimals: number}): Token {
     return new Token(
       parsed.id,
       parsed.pythId,
+      parsed.decimals,
     );
   }
 }

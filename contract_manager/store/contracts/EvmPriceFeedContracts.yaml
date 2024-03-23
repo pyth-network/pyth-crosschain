@@ -1,30 +1,39 @@
 - chain: evmos
   address: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12"
   type: EvmPriceFeedContract
+  denom: EVMOS
 - chain: ethereum
   address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: polygon
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmPriceFeedContract
+  denom: MATIC
 - chain: aurora
   address: "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9"
   type: EvmPriceFeedContract
+  denom: NEAR
 - chain: fantom
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmPriceFeedContract
+  denom: FTM
 - chain: optimism
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: arbitrum
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: gnosis
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
+  denom: DAI
 - chain: polygon_zkevm
   address: "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: conflux_espace
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmPriceFeedContract
@@ -43,18 +52,21 @@
 - chain: linea
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: neon
   address: "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5"
   type: EvmPriceFeedContract
 - chain: mantle
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
+  denom: MNT
 - chain: meter
   address: "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16"
   type: EvmPriceFeedContract
 - chain: kcc
   address: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B"
   type: EvmPriceFeedContract
+  denom: KCS
 - chain: eos
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
@@ -67,12 +79,14 @@
 - chain: base
   address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: cronos
   address: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B"
   type: EvmPriceFeedContract
 - chain: zksync
   address: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834"
   type: EvmPriceFeedContract
+  denom: ETH
 - chain: ronin
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
@@ -97,6 +111,7 @@
 - chain: coredao
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
+  denom: CORE
 - chain: tomochain
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
@@ -277,6 +292,7 @@
 - chain: hedera
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
+  denom: HBAR
 - chain: berachain_testnet
   address: "0x8D254a21b3C86D32F7179855531CE99164721933"
   type: EvmPriceFeedContract

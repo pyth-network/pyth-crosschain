@@ -26,6 +26,7 @@ async function main() {
     prices[token.id] = await token.getPrice();
   }
 
+  let totalFeeUsd = 0;
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (
@@ -35,12 +36,20 @@ async function main() {
     ) {
       try {
         const fee = await contract.getTotalFee();
-        console.log(`${contract.getId()} ${fee.amount} ${fee.denom}`);
+        let feeUsd = 0;
+        if (fee.denom !== undefined) {
+          feeUsd = Number(fee.amount) * prices[fee.denom];
+        }
+        totalFeeUsd += feeUsd;
+
+        console.log(`${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`);
       } catch (e) {
         console.error(`Error fetching fees for ${contract.getId()}`, e);
       }
     }
   }
+
+  console.log(`Total fees in USD: $${totalFeeUsd}`)
 }
 
 main();
