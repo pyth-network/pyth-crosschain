@@ -21,7 +21,7 @@ async function main() {
   const argv = await parser.argv;
   console.log(DefaultStore.tokens);
 
-  const prices = {}
+  const prices: Record<string, number> = {}
   for (const token of Object.values(DefaultStore.tokens)) {
     prices[token.id] = await token.getPrice();
   }
@@ -34,7 +34,8 @@ async function main() {
       contract instanceof CosmWasmPriceFeedContract
     ) {
       try {
-        console.log(`${contract.getId()} ${await contract.getTotalFee()}`);
+        const fee = await contract.getTotalFee();
+        console.log(`${contract.getId()} ${fee.amount} ${fee.denom}`);
       } catch (e) {
         console.error(`Error fetching fees for ${contract.getId()}`, e);
       }

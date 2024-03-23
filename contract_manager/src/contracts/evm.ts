@@ -652,19 +652,19 @@ export class EvmExecutorContract {
 export class EvmPriceFeedContract extends PriceFeedContract {
   static type = "EvmPriceFeedContract";
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(public chain: EvmChain, public address: string, public denom: string | undefined) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string, denom?: string }
   ): EvmPriceFeedContract {
     if (parsed.type !== EvmPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmPriceFeedContract(chain, parsed.address);
+    return new EvmPriceFeedContract(chain, parsed.address, parsed.denom);
   }
 
   getId(): string {
@@ -724,9 +724,13 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     return Web3.utils.keccak256(strippedCode);
   }
 
-  async getTotalFee(): Promise<bigint> {
+  async getTotalFee(): Promise<{ amount: bigint, denom?: string }> {
     const web3 = new Web3(this.chain.getRpcUrl());
-    return BigInt(await web3.eth.getBalance(this.address));
+    const amount = BigInt(await web3.eth.getBalance(this.address));
+    return {
+      amount,
+      ...(this.denom !== undefined ? {denom: this.denom} : {})
+    }
   }
 
   async getLastExecutedGovernanceSequence() {

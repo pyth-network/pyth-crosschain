@@ -38,7 +38,7 @@ export interface DeploymentConfig {
 }
 
 export class WormholeCosmWasmContract extends WormholeContract {
-  constructor(public chain: CosmWasmChain, public address: string) {
+  constructor(public chain: CosmWasmChain, public address: string, public denom: string | undefined) {
     super();
   }
 
@@ -113,19 +113,19 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     };
   }
 
-  constructor(public chain: CosmWasmChain, public address: string) {
+  constructor(public chain: CosmWasmChain, public address: string, public denom: string | undefined) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string, denom?: string }
   ): CosmWasmPriceFeedContract {
     if (parsed.type !== CosmWasmPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof CosmWasmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new CosmWasmPriceFeedContract(chain, parsed.address);
+    return new CosmWasmPriceFeedContract(chain, parsed.address, parsed.denom);
   }
 
   getType(): string {
@@ -172,7 +172,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       newAdminAddr: result.contractAddr,
       contractAddr: result.contractAddr,
     });
-    return new CosmWasmPriceFeedContract(chain, result.contractAddr);
+    return new CosmWasmPriceFeedContract(chain, result.contractAddr, config.fee.denom);
   }
 
   getId(): string {
@@ -310,7 +310,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   async getWormholeContract(): Promise<WormholeCosmWasmContract> {
     const config = await this.getConfig();
     const wormholeAddress = config.config_v1.wormhole_contract;
-    return new WormholeCosmWasmContract(this.chain, wormholeAddress);
+    // FIXME
+    return new WormholeCosmWasmContract(this.chain, wormholeAddress, undefined);
   }
 
   async getUpdateFee(msgs: string[]): Promise<Coin> {
@@ -332,13 +333,16 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     return this.chain;
   }
 
-  async getTotalFee(): Promise<bigint> {
+  async getTotalFee(): Promise<{amount: bigint, denom?: string}> {
     const client = await CosmWasmClient.connect(this.chain.endpoint);
     const coin = await client.getBalance(
       this.address,
       this.getChain().feeDenom
     );
-    return BigInt(coin.amount);
+    return {
+      amount: BigInt(coin.amount),
+      ...(this.denom !== undefined ? {denom: this.denom} : {})
+    };
   }
 
   async getValidTimePeriod() {

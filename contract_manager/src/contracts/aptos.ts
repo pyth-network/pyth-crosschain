@@ -84,14 +84,15 @@ export class AptosPriceFeedContract extends PriceFeedContract {
   constructor(
     public chain: AptosChain,
     public stateId: string,
-    public wormholeStateId: string
+    public wormholeStateId: string,
+    public denom: string | undefined,
   ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; stateId: string; wormholeStateId: string }
+    parsed: { type: string; stateId: string; wormholeStateId: string, denom?: string }
   ): AptosPriceFeedContract {
     if (parsed.type !== AptosPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -100,7 +101,8 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return new AptosPriceFeedContract(
       chain,
       parsed.stateId,
-      parsed.wormholeStateId
+      parsed.wormholeStateId,
+      parsed.denom
     );
   }
 
@@ -260,9 +262,13 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return AptosPriceFeedContract.type;
   }
 
-  async getTotalFee(): Promise<bigint> {
+  async getTotalFee(): Promise<{ amount: bigint, denom?: string }> {
     const client = new CoinClient(this.chain.getClient());
-    return await client.checkBalance(this.stateId);
+    const amount = await client.checkBalance(this.stateId);
+    return {
+      amount,
+      ...(this.denom !== undefined ? {denom: this.denom} : {})
+    }
   }
 
   async getValidTimePeriod() {
