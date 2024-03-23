@@ -13,6 +13,9 @@ import {
   EvmPriceFeedContract,
   SuiPriceFeedContract,
 } from "./contracts";
+import {
+  Token
+} from "./token"
 import { PriceFeedContract, Storable } from "./base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
@@ -22,11 +25,13 @@ export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
+  public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
 
   constructor(public path: string) {
     this.loadAllChains();
     this.loadAllContracts();
+    this.loadAllTokens();
     this.loadAllVaults();
   }
 
@@ -139,6 +144,20 @@ export class Store {
         } else {
           this.contracts[chainContract.getId()] = chainContract;
         }
+      }
+    });
+  }
+
+  loadAllTokens() {
+    this.getYamlFiles(`${this.path}/tokens/`).forEach((yamlFile) => {
+      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (parsed.type !== Token.type) return;
+
+        const token = Token.fromJson(parsed);
+        if (this.tokens[token.getId()])
+          throw new Error(`Multiple vaults with id ${token.getId()} found`);
+        this.tokens[token.getId()] = token;
       }
     });
   }
