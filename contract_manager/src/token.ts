@@ -1,7 +1,8 @@
+import axios from 'axios';
 import { KeyValueConfig, Storable } from "./base";
 
 export class Token extends Storable {
-  static type = "Token";
+  static type = "token";
 
   public constructor(
     public id: string,
@@ -18,9 +19,19 @@ export class Token extends Storable {
     return Token.type;
   }
 
-  getPrice(): Promise<bigint> {
+  async getPrice(): Promise<number> {
     if (this.pythId) {
-      axios.get()
+      const url = `https://hermes.pyth.network/v2/updates/price/latest?ids%5B%5D=${this.pythId}&parsed=true`;
+      const response = await axios.get(url)
+      const price = response.data.parsed[0].price;
+
+      // Note that this conversion can lose some precision.
+      // We don't really care about that in this application.
+      return parseInt(price.price) * Math.pow(10, price.expo);
+    } else {
+      // If the token doesn't have a pyth id, assume it's a shitcoin
+      // and worth 0.
+      return 0;
     }
   }
 

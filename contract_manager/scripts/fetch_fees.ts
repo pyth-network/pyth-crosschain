@@ -19,10 +19,12 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  for (const token of Object.values(DefaultStore.tokens)) {
-    token.
-  }
+  console.log(DefaultStore.tokens);
 
+  const prices = {}
+  for (const token of Object.values(DefaultStore.tokens)) {
+    prices[token.id] = await token.getPrice();
+  }
 
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;

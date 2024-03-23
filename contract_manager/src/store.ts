@@ -151,6 +151,7 @@ export class Store {
   loadAllTokens() {
     this.getYamlFiles(`${this.path}/tokens/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      console.log(parsedArray);
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
 
