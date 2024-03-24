@@ -57,11 +57,6 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-struct BlockRange {
-    from: BlockNumber,
-    to:   BlockNumber,
-}
-
 pub async fn run_api_with_exit_check(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
@@ -195,89 +190,36 @@ pub async fn run_keeper(
             // create a contract and a nonce manager
             let contract =
                 Arc::new(SignablePythContract::from_config(&chain_eth_config, &private_key).await?);
-
-            // TODO:use
-            // contract.client().provider()
-
-            let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr.clone())?;
+            let provider = contract.client().provider().clone();
             let nonce_manager =
                 Arc::new(provider.nonce_manager(private_key.parse::<LocalWallet>()?.address()));
+
             nonce_manager
                 .initialize_nonce(Some(latest_safe_block.into()))
                 .await?;
 
-            let rx_exit_handle_backlog = rx_exit.clone();
-            let contract_clone = contract.clone();
-            let nonce_manager_clone = nonce_manager.clone();
-            let provider_address = chain_config.provider_address.clone();
-            let hash_chain_state = chain_config.state.clone();
-            let contract_reader_clone = chain_config.contract.clone();
-            let chain_id_clone = chain_id.clone();
             let handle_backlog = spawn(keeper::handle_backlog(
-                chain_id_clone,
-                provider_address,
+                chain_id.clone(),
+                chain_config.provider_address.clone(),
                 latest_safe_block,
-                contract_reader_clone,
-                hash_chain_state,
-                nonce_manager_clone,
-                contract_clone,
-                rx_exit_handle_backlog,
+                Arc::clone(&chain_config.contract),
+                Arc::clone(&chain_config.state),
+                Arc::clone(&nonce_manager),
+                Arc::clone(&contract),
+                rx_exit.clone(),
             ));
 
-            let (tx, mut rx) = mpsc::channel::<BlockRange>(1000);
+            let (tx, mut rx) = mpsc::channel::<keeper::BlockRange>(1000);
 
-            let rx_exit_handle_watch_blocks = rx_exit.clone();
-            let contract_reader_clone = chain_config.contract.clone();
-            let chain_id_clone = chain_id.clone();
-            let handle_watch_blocks = spawn(async move {
-                tracing::info!("Watching blocks to handle new events for chain: {}", &chain_id_clone);
-                while !*rx_exit_handle_watch_blocks.borrow() {
-                    let res = async {
-                        let mut last_safe_block_processed = latest_safe_block;
-
-                        // for a http provider it only supports streaming
-                        let provider = Provider::<Http>::try_from(chain_eth_config.geth_rpc_addr.clone())?;
-                        let mut stream = provider.watch_blocks().await?;
-
-                        while !*rx_exit_handle_watch_blocks.borrow() {
-                            tracing::info!("Waiting for next block for chain: {}", &chain_id_clone);
-                            if let Some(_) = stream.next().await {
-                                let latest_safe_block = contract_reader_clone
-                                    .get_block_number(chain_config.confirmed_block_status)
-                                    .await?
-                                    - chain_config.reveal_delay_blocks;
-
-                                tracing::info!("Last safe block processed for chain {}: {} ", &chain_id_clone, &last_safe_block_processed);
-                                tracing::info!("Latest safe block for chain {}: {} ", &chain_id_clone, &latest_safe_block);
-
-                                if latest_safe_block > last_safe_block_processed {
-                                    if let Err(_) = tx.send(BlockRange {
-                                        from: last_safe_block_processed + 1,
-                                        to:   latest_safe_block,
-                                    })
-                                    .await {
-                                        tracing::error!("Error while sending block range to handle events. These will be handled in next call.");
-                                        continue;
-                                    };
-
-                                    last_safe_block_processed = latest_safe_block;
-                                }
-                            }
-                        }
-
-                        Ok::<(), Error>(())
-                    };
-
-                    if let Err(e) = res.await {
-                        tracing::error!("Error in handle_watch_blocks: {:?}", e);
-                    }
-
-                    tracing::error!("Waiting for 5 seconds before re-watching the blocks");
-                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-                }
-
-                Ok::<(), Error>(())
-            });
+            let handle_watch_blocks = spawn(keeper::watch_blocks(
+                chain_id.clone(),
+                chain_eth_config.clone(),
+                Arc::clone(&chain_config.contract),
+                chain_config.clone(),
+                latest_safe_block,
+                tx.clone(),
+                rx_exit.clone(),
+            ));
 
             let rx_exit_handle_events = rx_exit.clone();
             let contract_clone = contract.clone();

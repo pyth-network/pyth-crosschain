@@ -1,11 +1,20 @@
 use {
     crate::{
+        api,
         chain::{
-            ethereum::SignablePythContract,
+            ethereum::{
+                PythContract,
+                SignablePythContract,
+            },
             reader::{
+                BlockNumber,
                 EntropyReader,
                 RequestedWithCallbackEvent,
             },
+        },
+        config::{
+            Config,
+            EthereumConfig,
         },
         state::HashChainState,
     },
@@ -17,15 +26,22 @@ use {
         middleware::NonceManagerMiddleware,
         providers::{
             Http,
+            Middleware,
             Provider,
+            StreamExt,
         },
         types::H160,
     },
     std::sync::Arc,
     tokio::{
-        sync::watch,
+        spawn,
+        sync::{
+            mpsc,
+            watch,
+        },
         time::{
             self,
+            sleep,
             Duration,
         },
     },
@@ -207,6 +223,82 @@ pub async fn handle_backlog(
             tracing::info!("Backlog processed successfully");
             break;
         }
+    }
+
+    Ok(())
+}
+
+pub struct BlockRange {
+    pub from: BlockNumber,
+    pub to:   BlockNumber,
+}
+
+pub async fn watch_blocks(
+    chain_id: String,
+    chain_eth_config: EthereumConfig,
+    contract_reader: Arc<dyn EntropyReader>,
+    chain_config: api::BlockchainState,
+    latest_safe_block: BlockNumber,
+    tx: mpsc::Sender<BlockRange>,
+    rx_exit: watch::Receiver<bool>,
+) -> Result<()> {
+    tracing::info!(
+        "Watching blocks to handle new events for chain: {}",
+        &chain_id
+    );
+    while !*rx_exit.borrow() {
+        let res = async {
+            let mut last_safe_block_processed = latest_safe_block;
+
+            // for a http provider it only supports streaming
+            let provider = Provider::<Http>::try_from(&chain_eth_config.geth_rpc_addr)?;
+            let mut stream = provider.watch_blocks().await?;
+
+            while !*rx_exit.borrow() {
+                tracing::info!("Waiting for next block for chain: {}", &chain_id);
+                if let Some(_) = stream.next().await {
+                    let latest_safe_block = contract_reader
+                        .get_block_number(chain_config.confirmed_block_status)
+                        .await?
+                        - chain_config.reveal_delay_blocks;
+
+                    tracing::info!(
+                        "Last safe block processed for chain {}: {} ",
+                        &chain_id,
+                        &last_safe_block_processed
+                    );
+                    tracing::info!(
+                        "Latest safe block for chain {}: {} ",
+                        &chain_id,
+                        &latest_safe_block
+                    );
+
+                    if latest_safe_block > last_safe_block_processed {
+                        if let Err(_) = tx
+                            .send(BlockRange {
+                                from: last_safe_block_processed + 1,
+                                to:   latest_safe_block,
+                            })
+                            .await
+                        {
+                            tracing::error!("Error while sending block range to handle events. These will be handled in next call.");
+                            continue;
+                        };
+
+                        last_safe_block_processed = latest_safe_block;
+                    }
+                }
+            }
+
+            Ok::<(), Error>(())
+        };
+
+        if let Err(e) = res.await {
+            tracing::error!("Error in watch_blocks: {:?}", e);
+        }
+
+        tracing::error!("Waiting for 5 seconds before re-watching the blocks");
+        sleep(tokio::time::Duration::from_secs(5)).await;
     }
 
     Ok(())
