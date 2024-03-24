@@ -185,7 +185,11 @@ pub async fn run_keeper(
                 .await?
                 - chain_config.reveal_delay_blocks;
 
-            tracing::info!("Latest safe block for chain {}: {} ", &chain_id, &latest_safe_block);
+            tracing::info!(
+                "Latest safe block for chain {}: {} ",
+                &chain_id,
+                &latest_safe_block
+            );
 
             // create a contract and a nonce manager
             let contract =
@@ -220,113 +224,16 @@ pub async fn run_keeper(
                 tx.clone(),
                 rx_exit.clone(),
             ));
-
-            let rx_exit_handle_events = rx_exit.clone();
-            let contract_clone = contract.clone();
-            let nonce_manager_clone = nonce_manager.clone();
-            let provider_address = chain_config.provider_address.clone();
-            let hash_chain_state = chain_config.state.clone();
-            let contract_reader_clone = chain_config.contract.clone();
-            let chain_id_clone  = chain_id.clone();
-            let handle_events = spawn(async move {
-                tracing::info!("Handling events for chain: {}", &chain_id_clone);
-                while !*rx_exit_handle_events.borrow() {
-                    let res = async {
-                        while !*rx_exit_handle_events.borrow() {
-                            tracing::info!("Waiting for block range to handle events for chain: {}", &chain_id_clone);
-                            if let Some(block_range) = rx.recv().await {
-                                tracing::info!("Handling events for chain: {} from block: {} to block: {}", &chain_id_clone, &block_range.from, &block_range.to);
-                                // TODO: add to config
-                                let blocks_at_a_time = 100;
-                                let mut from_block = block_range.from;
-
-                                while from_block <= block_range.to {
-                                    let mut to_block = from_block + blocks_at_a_time;
-                                    if to_block > block_range.to {
-                                        to_block = block_range.to;
-                                    }
-
-                                    tracing::info!("Processing events for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &to_block);
-
-                                    let events = contract_reader_clone
-                                        .get_request_with_callback_events(from_block, to_block)
-                                        .await?;
-
-                                    for event in events {
-                                        if event.provider_address == provider_address {
-                                            let res = contract_reader_clone
-                                                .get_request(
-                                                    event.provider_address,
-                                                    event.sequence_number,
-                                                )
-                                                .await;
-
-                                            if let Ok(req) = res {
-                                                match req {
-                                                    Some(req) => {
-                                                        if req.sequence_number == 0
-                                                            || req.provider
-                                                                != event.provider_address
-                                                            || req.sequence_number
-                                                                != event.sequence_number
-                                                        {
-                                                            continue;
-                                                        }
-                                                    }
-                                                    None => continue,
-                                                }
-                                            }
-
-                                            let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
-
-                                            let sim_res = contract_reader_clone.similate_reveal(provider_address, event.sequence_number, event.user_random_number, provider_revelation).await;
-                                            match sim_res {
-                                                Ok(_) => {
-                                                    let res = contract_clone
-                                                        .reveal_with_callback_wrapper(
-                                                            provider_address,
-                                                            event.sequence_number,
-                                                            event.user_random_number,
-                                                            provider_revelation,
-                                                            nonce_manager_clone.next(),
-                                                        )
-                                                        .await;
-                                                    match res {
-                                                        Ok(_) => {
-                                                            tracing::info!("Revealed for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, res);
-                                                        },
-                                                        Err(e) => {
-                                                            tracing::error!("Error while revealing for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
-                                                        }
-                                                    }
-                                                },
-                                                Err(e) => {
-                                                    tracing::error!("Error while simulating reveal for provider: {provider_address} and sequence number: {} \n res: {:?}", event.sequence_number, e);
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    tracing::info!("Events processed for chain: {} from block: {} to block: {}", &chain_id_clone, &from_block, &to_block);
-
-                                    from_block = to_block + 1;
-                                }
-                            }
-                        }
-
-                        Ok::<(), Error>(())
-                    };
-
-                    if let Err(e) = res.await {
-                        tracing::error!("Error in handle_events: {:?}", e);
-                    }
-
-                    tracing::info!("Waiting for 5 seconds before re-handling the events");
-                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-                }
-
-                Ok(())
-            });
+            let handle_events = spawn(keeper::handle_events(
+                chain_id.clone(),
+                chain_config.provider_address,
+                rx_exit.clone(),
+                rx,
+                Arc::clone(&chain_config.contract),
+                Arc::clone(&chain_config.state),
+                Arc::clone(&nonce_manager),
+                Arc::clone(&contract),
+            ));
 
             let tasks = join_all([handle_backlog, handle_watch_blocks, handle_events]).await;
             for task in tasks {

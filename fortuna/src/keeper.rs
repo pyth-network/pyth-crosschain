@@ -1,6 +1,9 @@
 use {
     crate::{
-        api,
+        api::{
+            self,
+            BlockchainState,
+        },
         chain::{
             ethereum::{
                 PythContract,
@@ -30,6 +33,7 @@ use {
             Provider,
             StreamExt,
         },
+        signers::LocalWallet,
         types::H160,
     },
     std::sync::Arc,
@@ -37,14 +41,19 @@ use {
         spawn,
         sync::{
             mpsc,
-            watch,
+            watch::{
+                self,
+                Receiver,
+            },
         },
+        task::JoinHandle,
         time::{
             self,
             sleep,
             Duration,
         },
     },
+    tracing,
 };
 
 async fn is_valid_request(
@@ -299,6 +308,97 @@ pub async fn watch_blocks(
 
         tracing::error!("Waiting for 5 seconds before re-watching the blocks");
         sleep(tokio::time::Duration::from_secs(5)).await;
+    }
+
+    Ok(())
+}
+
+/// Handles events for a specific blockchain chain.
+pub async fn handle_events(
+    chain_id: String,
+    provider_address: H160,
+    rx_exit: Receiver<bool>,
+    mut rx: mpsc::Receiver<crate::keeper::BlockRange>,
+    contract_reader: Arc<dyn EntropyReader>,
+    hash_chain_state: Arc<crate::state::HashChainState>,
+    nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
+    contract: Arc<SignablePythContract>,
+) -> Result<()> {
+    tracing::info!("Handling events for chain: {}", &chain_id);
+    while !*rx_exit.borrow() {
+        let res = async {
+            while !*rx_exit.borrow() {
+                tracing::info!(
+                    "Waiting for block range to handle events for chain: {}",
+                    &chain_id
+                );
+                if let Some(block_range) = rx.recv().await {
+                    tracing::info!(
+                        "Handling events for chain: {} from block: {} to block: {}",
+                        &chain_id,
+                        &block_range.from,
+                        &block_range.to
+                    );
+                    // TODO: add to config
+                    let blocks_at_a_time = 100;
+                    let mut from_block = block_range.from;
+
+                    while from_block <= block_range.to {
+                        let mut to_block = from_block + blocks_at_a_time;
+                        if to_block > block_range.to {
+                            to_block = block_range.to;
+                        }
+
+                        tracing::info!(
+                            "Processing events for chain: {} from block: {} to block: {}",
+                            &chain_id,
+                            &from_block,
+                            &to_block
+                        );
+
+                        let events = contract_reader
+                            .get_request_with_callback_events(from_block, to_block)
+                            .await?;
+
+                        for event in events {
+                            if provider_address != event.provider_address {
+                                continue;
+                            }
+
+                            if let Err(e) = process_event(
+                                event,
+                                &contract_reader,
+                                &hash_chain_state,
+                                &contract,
+                                &nonce_manager,
+                            )
+                            .await
+                            {
+                                tracing::error!("Error processing event: {:?}", e);
+                            }
+                        }
+
+                        tracing::info!(
+                            "Events processed for chain: {} from block: {} to block: {}",
+                            &chain_id,
+                            &from_block,
+                            &to_block
+                        );
+
+                        from_block = to_block + 1;
+                    }
+                }
+            }
+
+            Ok::<(), Error>(())
+        };
+
+        if let Err(e) = res.await {
+            tracing::error!("Error in handle_events: {:?}", e);
+        }
+
+        tracing::info!("Waiting for 5 seconds before re-handling the events");
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     }
 
     Ok(())
