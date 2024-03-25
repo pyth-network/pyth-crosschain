@@ -1,30 +1,18 @@
 use {
     crate::{
-        api::{
-            self,
-            BlockchainState,
-        },
+        api,
         chain::{
-            ethereum::{
-                PythContract,
-                SignablePythContract,
-            },
+            ethereum::SignablePythContract,
             reader::{
                 BlockNumber,
                 EntropyReader,
                 RequestedWithCallbackEvent,
             },
         },
-        config::{
-            Config,
-            EthereumConfig,
-        },
+        config::EthereumConfig,
         state::HashChainState,
     },
-    anyhow::{
-        Error,
-        Result,
-    },
+    anyhow::Result,
     ethers::{
         middleware::NonceManagerMiddleware,
         providers::{
@@ -33,12 +21,10 @@ use {
             Provider,
             StreamExt,
         },
-        signers::LocalWallet,
         types::H160,
     },
     std::sync::Arc,
     tokio::{
-        spawn,
         sync::{
             mpsc,
             watch::{
@@ -46,7 +32,6 @@ use {
                 Receiver,
             },
         },
-        task::JoinHandle,
         time::{
             self,
             sleep,
@@ -229,7 +214,7 @@ pub async fn handle_backlog(
                         &from_block
                     );
                 }
-                Err(e) => {
+                Err(_) => {
                     tracing::error!(
                         "Error while getting events for chain: {} from block: {} to block: {}",
                         &chain_id,
@@ -316,7 +301,7 @@ pub async fn watch_blocks(
                                     last_safe_block_processed = latest_safe_block;
                                 }
                             }
-                            Err(e) => {
+                            Err(_) => {
                                 tracing::error!(
                                     "Error while getting latest safe block for chain: {}",
                                     &chain_id
@@ -417,7 +402,7 @@ pub async fn handle_events(
 
                         from_block = to_block + 1;
                     }
-                    Err(e) => {
+                    Err(_) => {
                         tracing::error!(
                             "Error while getting events for chain: {} from block: {} to block: {}",
                             &chain_id,

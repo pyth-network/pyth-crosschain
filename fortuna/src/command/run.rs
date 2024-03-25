@@ -1,12 +1,9 @@
 use {
     crate::{
         api,
-        chain::{
-            ethereum::{
-                PythContract,
-                SignablePythContract,
-            },
-            reader::BlockNumber,
+        chain::ethereum::{
+            PythContract,
+            SignablePythContract,
         },
         command::register_provider::CommitmentMetadata,
         config::{
@@ -27,12 +24,7 @@ use {
     axum::Router,
     ethers::{
         middleware::MiddlewareBuilder,
-        providers::{
-            Http,
-            Middleware,
-            Provider,
-            StreamExt,
-        },
+        providers::Middleware,
         signers::{
             LocalWallet,
             Signer,
@@ -214,7 +206,7 @@ pub async fn run_keeper(
                 chain_eth_config.gas_limit,
             ));
 
-            let (tx, mut rx) = mpsc::channel::<keeper::BlockRange>(1000);
+            let (tx, rx) = mpsc::channel::<keeper::BlockRange>(1000);
 
             let handle_watch_blocks = spawn(keeper::watch_blocks(
                 chain_id.clone(),
