@@ -272,14 +272,15 @@ pub async fn watch_blocks(
     while !*rx_exit.borrow() {
         // for a http provider it only supports streaming
         let provider = Provider::<Http>::try_from(&chain_eth_config.geth_rpc_addr)?;
-        let mut stream = provider.watch_blocks().await;
+        let stream = provider.watch_blocks().await;
 
         let mut last_safe_block_processed = latest_safe_block;
 
         match stream {
-            Ok(stream) => {
+            Ok(mut stream) => {
                 while !*rx_exit.borrow() {
                     tracing::info!("Waiting for next block for chain: {}", &chain_id);
+                    // TODO: handle exit graciously
                     if let Some(_) = stream.next().await {
                         let latest_confirmed_block_res = contract_reader
                             .get_block_number(chain_config.confirmed_block_status)
@@ -348,40 +349,40 @@ pub async fn handle_events(
 ) -> Result<()> {
     tracing::info!("Handling events for chain: {}", &chain_id);
     while !*rx_exit.borrow() {
-        let res = async {
-            while !*rx_exit.borrow() {
+        tracing::info!(
+            "Waiting for block range to handle events for chain: {}",
+            &chain_id
+        );
+        if let Some(block_range) = rx.recv().await {
+            tracing::info!(
+                "Handling events for chain: {} from block: {} to block: {}",
+                &chain_id,
+                &block_range.from,
+                &block_range.to
+            );
+            // TODO: add to config
+            let blocks_at_a_time = 100;
+            let mut from_block = block_range.from;
+
+            while from_block <= block_range.to {
+                let mut to_block = from_block + blocks_at_a_time;
+                if to_block > block_range.to {
+                    to_block = block_range.to;
+                }
+
                 tracing::info!(
-                    "Waiting for block range to handle events for chain: {}",
-                    &chain_id
+                    "Processing events for chain: {} from block: {} to block: {}",
+                    &chain_id,
+                    &from_block,
+                    &to_block
                 );
-                if let Some(block_range) = rx.recv().await {
-                    tracing::info!(
-                        "Handling events for chain: {} from block: {} to block: {}",
-                        &chain_id,
-                        &block_range.from,
-                        &block_range.to
-                    );
-                    // TODO: add to config
-                    let blocks_at_a_time = 100;
-                    let mut from_block = block_range.from;
 
-                    while from_block <= block_range.to {
-                        let mut to_block = from_block + blocks_at_a_time;
-                        if to_block > block_range.to {
-                            to_block = block_range.to;
-                        }
+                let events_res = contract_reader
+                    .get_request_with_callback_events(from_block, to_block)
+                    .await;
 
-                        tracing::info!(
-                            "Processing events for chain: {} from block: {} to block: {}",
-                            &chain_id,
-                            &from_block,
-                            &to_block
-                        );
-
-                        let events = contract_reader
-                            .get_request_with_callback_events(from_block, to_block)
-                            .await?;
-
+                match events_res {
+                    Ok(events) => {
                         for event in events {
                             if provider_address != event.provider_address {
                                 continue;
@@ -396,6 +397,7 @@ pub async fn handle_events(
                             )
                             .await
                             {
+                                // TODO: retry mechanisms
                                 tracing::error!("Error processing event: {:?}", e);
                             }
                         }
@@ -409,18 +411,18 @@ pub async fn handle_events(
 
                         from_block = to_block + 1;
                     }
+                    Err(e) => {
+                        tracing::error!(
+                            "Error while getting events for chain: {} from block: {} to block: {}",
+                            &chain_id,
+                            &from_block,
+                            &to_block
+                        );
+                        continue;
+                    }
                 }
             }
-
-            Ok::<(), Error>(())
-        };
-
-        if let Err(e) = res.await {
-            tracing::error!("Error in handle_events: {:?}", e);
         }
-
-        tracing::info!("Waiting for 5 seconds before re-handling the events");
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     }
 
     Ok(())
