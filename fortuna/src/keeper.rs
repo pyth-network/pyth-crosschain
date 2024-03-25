@@ -92,6 +92,7 @@ pub async fn process_event(
     hash_chain_state: &Arc<HashChainState>,
     contract: &Arc<SignablePythContract>,
     nonce_manager: &Arc<NonceManagerMiddleware<Provider<Http>>>,
+    gas_limit: u64,
 ) -> Result<()> {
     if !is_valid_request(&event, &contract_reader).await {
         return Ok(());
@@ -117,6 +118,7 @@ pub async fn process_event(
                     event.user_random_number,
                     provider_revelation,
                     nonce_manager.next(),
+                    gas_limit,
                 )
                 .await;
             match res {
@@ -160,6 +162,7 @@ pub async fn handle_backlog(
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
     rx_exit: watch::Receiver<bool>,
+    gas_limit: u64,
 ) -> Result<()> {
     tracing::info!("Starting backlog handler for chain: {}", &chain_id);
     while !*rx_exit.borrow() {
@@ -209,6 +212,7 @@ pub async fn handle_backlog(
                             &hash_chain_state,
                             &contract,
                             &nonce_manager,
+                            gas_limit,
                         )
                         .await
                         {
@@ -346,6 +350,7 @@ pub async fn handle_events(
     hash_chain_state: Arc<crate::state::HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
+    gas_limit: u64,
 ) -> Result<()> {
     tracing::info!("Handling events for chain: {}", &chain_id);
     while !*rx_exit.borrow() {
@@ -394,6 +399,7 @@ pub async fn handle_events(
                                 &hash_chain_state,
                                 &contract,
                                 &nonce_manager,
+                                gas_limit,
                             )
                             .await
                             {

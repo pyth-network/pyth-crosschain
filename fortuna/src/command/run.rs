@@ -211,6 +211,7 @@ pub async fn run_keeper(
                 Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
                 rx_exit.clone(),
+                chain_eth_config.gas_limit,
             ));
 
             let (tx, mut rx) = mpsc::channel::<keeper::BlockRange>(1000);
@@ -233,6 +234,7 @@ pub async fn run_keeper(
                 Arc::clone(&chain_config.state),
                 Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
+                chain_eth_config.gas_limit,
             ));
 
             let tasks = join_all([handle_backlog, handle_watch_blocks, handle_events]).await;

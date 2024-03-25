@@ -148,6 +148,7 @@ impl SignablePythContract {
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
         nonce: U256,
+        gas_limit: u64,
     ) -> Result<()> {
         let r = self
             .reveal_with_callback(
@@ -156,8 +157,7 @@ impl SignablePythContract {
                 user_random_number,
                 provider_revelation,
             )
-            // TODO: gas should be configurable
-            .gas(1000000)
+            .gas(gas_limit)
             .nonce(nonce)
             .send()
             .await?

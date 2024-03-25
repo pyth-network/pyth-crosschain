@@ -148,4 +148,7 @@ pub struct EthereumConfig {
     /// For example, Finalized, Safe, Latest
     #[serde(default)]
     pub confirmed_block_status: BlockStatus,
+
+    /// The gas limit to use for entropy callback transactions.
+    pub gas_limit: u64,
 }
