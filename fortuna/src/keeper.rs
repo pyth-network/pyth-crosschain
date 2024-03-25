@@ -28,13 +28,7 @@ use {
     },
     std::sync::Arc,
     tokio::{
-        sync::{
-            mpsc,
-            watch::{
-                self,
-                Receiver,
-            },
-        },
+        sync::mpsc,
         time::{
             self,
             sleep,
@@ -112,7 +106,7 @@ pub async fn process_event(
             match res {
                 Ok(_) => {
                     tracing::info!(
-                        "Revealed for provider: {} and sequence number: {} \n res: {:?}",
+                        "Revealed for provider: {} and sequence number: {} with res: {:?}",
                         event.provider_address,
                         event.sequence_number,
                         res
@@ -121,7 +115,7 @@ pub async fn process_event(
                 Err(e) => {
                     // TODO: find a way to handle different errors.
                     tracing::error!(
-                        "Error while revealing for provider: {} and sequence number: {} \n res: {:?}",
+                        "Error while revealing for provider: {} and sequence number: {} with error: {:?}",
                         event.provider_address,
                         event.sequence_number,
                         e
@@ -149,94 +143,81 @@ pub async fn handle_backlog(
     hash_chain_state: Arc<HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
-    rx_exit: watch::Receiver<bool>,
     gas_limit: U256,
 ) -> Result<()> {
     tracing::info!("Starting backlog handler for chain: {}", &chain_id);
-    while !*rx_exit.borrow() {
-        let backlog_blocks: u64 = 10_000;
-        let blocks_at_a_time = 100;
+    let backlog_blocks: u64 = 10_000;
+    let blocks_at_a_time = 100;
 
-        let mut from_block = if backlog_blocks > latest_safe_block {
-            0
-        } else {
-            latest_safe_block - backlog_blocks
-        };
-        let last_block = latest_safe_block;
+    let mut from_block = if backlog_blocks > latest_safe_block {
+        0
+    } else {
+        latest_safe_block - backlog_blocks
+    };
+    let last_block = latest_safe_block;
 
-        while !*rx_exit.borrow() && from_block < last_block {
-            tracing::info!("Waiting for 5 seconds before processing the a lot of blocks");
-            time::sleep(Duration::from_secs(5)).await;
+    while from_block < last_block {
+        tracing::info!("Waiting for 5 seconds before processing the a lot of blocks");
+        time::sleep(Duration::from_secs(5)).await;
 
-            tracing::info!(
-                "Processing backlog for chain: {} from block: {} to block: {}",
-                &chain_id,
-                &from_block,
-                &last_block
-            );
-            let mut to_block = from_block + blocks_at_a_time;
-            if to_block > last_block {
-                to_block = last_block;
-            }
-
-            let events_res = contract_reader
-                .get_request_with_callback_events(from_block, to_block)
-                .await;
-
-            match events_res {
-                Ok(events) => {
-                    for event in events {
-                        if *rx_exit.borrow() {
-                            break;
-                        }
-
-                        if provider_address != event.provider_address {
-                            continue;
-                        }
-
-                        if let Err(e) = process_event(
-                            event,
-                            &contract_reader,
-                            &hash_chain_state,
-                            &contract,
-                            &nonce_manager,
-                            gas_limit,
-                        )
-                        .await
-                        {
-                            // TODO: some retry mechanisms here
-                            tracing::error!("Error processing event: {:?}", e);
-                        }
-                    }
-
-                    from_block = to_block + 1;
-
-                    tracing::info!(
-                        "Backlog processed for chain: {} from block: {}",
-                        &chain_id,
-                        &from_block
-                    );
-                }
-                Err(_) => {
-                    tracing::error!(
-                        "Error while getting events for chain: {} from block: {} to block: {}",
-                        &chain_id,
-                        &from_block,
-                        &to_block
-                    );
-
-                    continue;
-                }
-            }
+        tracing::info!(
+            "Processing backlog for chain: {} from block: {} to block: {}",
+            &chain_id,
+            &from_block,
+            &last_block
+        );
+        let mut to_block = from_block + blocks_at_a_time;
+        if to_block > last_block {
+            to_block = last_block;
         }
 
+        let events_res = contract_reader
+            .get_request_with_callback_events(from_block, to_block)
+            .await;
 
-        if from_block > last_block {
-            tracing::info!("Backlog processed successfully");
-            break;
-        } else {
-            tracing::info!("Waiting for 5 seconds before re-handling the backlog");
-            time::sleep(Duration::from_secs(5)).await;
+        match events_res {
+            Ok(events) => {
+                for event in events {
+                    if provider_address != event.provider_address {
+                        continue;
+                    }
+
+                    if let Err(e) = process_event(
+                        event,
+                        &contract_reader,
+                        &hash_chain_state,
+                        &contract,
+                        &nonce_manager,
+                        gas_limit,
+                    )
+                    .await
+                    {
+                        // TODO: some retry mechanisms here
+                        tracing::error!("Error processing event: {:?}", e);
+                    }
+                }
+
+                from_block = to_block + 1;
+
+                tracing::info!(
+                    "Backlog processed for chain: {} from block: {}",
+                    &chain_id,
+                    &from_block
+                );
+            }
+            Err(_) => {
+                tracing::error!(
+                    "Error while getting events for chain: {} from block: {} to block: {}",
+                    &chain_id,
+                    &from_block,
+                    &to_block
+                );
+
+                tracing::info!("Waiting for 5 seconds before re-handling the backlog");
+                time::sleep(Duration::from_secs(5)).await;
+
+                continue;
+            }
         }
     }
 
@@ -255,13 +236,12 @@ pub async fn watch_blocks(
     chain_config: api::BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
-    rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     tracing::info!(
         "Watching blocks to handle new events for chain: {}",
         &chain_id
     );
-    while !*rx_exit.borrow() {
+    loop {
         // for a http provider it only supports streaming
         let provider = Provider::<Http>::try_from(&chain_eth_config.geth_rpc_addr)?;
         let stream = provider.watch_blocks().await;
@@ -269,52 +249,49 @@ pub async fn watch_blocks(
         let mut last_safe_block_processed = latest_safe_block;
 
         match stream {
-            Ok(mut stream) => {
-                while !*rx_exit.borrow() {
-                    tracing::info!("Waiting for next block for chain: {}", &chain_id);
-                    // TODO: handle exit graciously
-                    if let Some(_) = stream.next().await {
-                        let latest_confirmed_block_res = contract_reader
-                            .get_block_number(chain_config.confirmed_block_status)
-                            .await;
+            Ok(mut stream) => loop {
+                tracing::info!("Waiting for next block for chain: {}", &chain_id);
+                if let Some(_) = stream.next().await {
+                    let latest_confirmed_block_res = contract_reader
+                        .get_block_number(chain_config.confirmed_block_status)
+                        .await;
 
-                        match latest_confirmed_block_res {
-                            Ok(latest_confirmed_block) => {
-                                let latest_safe_block =
-                                    latest_confirmed_block - chain_config.reveal_delay_blocks;
+                    match latest_confirmed_block_res {
+                        Ok(latest_confirmed_block) => {
+                            let latest_safe_block =
+                                latest_confirmed_block - chain_config.reveal_delay_blocks;
 
-                                if latest_safe_block > last_safe_block_processed {
-                                    if let Err(_) = tx
-                                        .send(BlockRange {
-                                            from: last_safe_block_processed + 1,
-                                            to:   latest_safe_block,
-                                        })
-                                        .await
-                                    {
-                                        tracing::error!("Error while sending block range to handle events for chain {chain_id}. These will be handled in next call.");
-                                        continue;
-                                    };
+                            if latest_safe_block > last_safe_block_processed {
+                                if let Err(_) = tx
+                                    .send(BlockRange {
+                                        from: last_safe_block_processed + 1,
+                                        to:   latest_safe_block,
+                                    })
+                                    .await
+                                {
+                                    tracing::error!("Error while sending block range to handle events for chain {chain_id}. These will be handled in next call.");
+                                    continue;
+                                };
 
-                                    tracing::info!(
-                                        "Block range sent to handle events for chain {}: {} to {}",
-                                        &chain_id,
-                                        &last_safe_block_processed + 1,
-                                        &latest_safe_block
-                                    );
-                                    last_safe_block_processed = latest_safe_block;
-                                }
-                            }
-                            Err(_) => {
-                                tracing::error!(
-                                    "Error while getting latest safe block for chain: {}",
-                                    &chain_id
+                                tracing::info!(
+                                    "Block range sent to handle events for chain {}: {} to {}",
+                                    &chain_id,
+                                    &last_safe_block_processed + 1,
+                                    &latest_safe_block
                                 );
-                                continue;
+                                last_safe_block_processed = latest_safe_block;
                             }
+                        }
+                        Err(_) => {
+                            tracing::error!(
+                                "Error while getting latest safe block for chain: {}",
+                                &chain_id
+                            );
+                            continue;
                         }
                     }
                 }
-            }
+            },
             Err(e) => {
                 tracing::error!("Error while watching blocks for chain: {}", &chain_id);
                 tracing::error!("Error: {:?}", e);
@@ -324,15 +301,12 @@ pub async fn watch_blocks(
             }
         }
     }
-
-    Ok(())
 }
 
 /// Handles events for a specific blockchain chain.
 pub async fn handle_events(
     chain_id: String,
     provider_address: H160,
-    rx_exit: Receiver<bool>,
     mut rx: mpsc::Receiver<crate::keeper::BlockRange>,
     contract_reader: Arc<dyn EntropyReader>,
     hash_chain_state: Arc<crate::state::HashChainState>,
@@ -341,7 +315,7 @@ pub async fn handle_events(
     gas_limit: U256,
 ) -> Result<()> {
     tracing::info!("Handling events for chain: {}", &chain_id);
-    while !*rx_exit.borrow() {
+    loop {
         tracing::info!(
             "Waiting for block range to handle events for chain: {}",
             &chain_id
@@ -418,6 +392,4 @@ pub async fn handle_events(
             }
         }
     }
-
-    Ok(())
 }

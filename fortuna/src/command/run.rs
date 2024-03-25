@@ -110,27 +110,28 @@ pub async fn run_api(
 pub async fn run_keeper_with_exit_check(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
-    rx_exit: watch::Receiver<bool>,
+    mut rx_exit: watch::Receiver<bool>,
     private_key: String,
 ) -> Result<()> {
-    while !*rx_exit.borrow() {
-        // TODO: this may not work as we have passed the ownership here
-        // for the loop to work again we should have pass a copy
-        // Is it better to use Arc?
-        // Clone can be expensive.
-        if let Err(e) = run_keeper(
-            chains.clone(),
-            config.clone(),
-            rx_exit.clone(),
-            private_key.clone(),
-        )
-        .await
-        {
-            tracing::error!("Keeper service failed. {:?}", e);
-        }
+    loop {
+        tokio::select! {
+            _ = rx_exit.changed() => {
+                tracing::info!("Shutting down keeper...");
+                break;
+            }
+            keeper_res = run_keeper (
+                chains.clone(),
+                config.clone(),
+                private_key.clone(),
+            ) => {
+                if let Err(e) = keeper_res {
+                    tracing::error!("Keeper service failed. {:?}", e);
+                }
 
-        // Wait for 5 seconds before restarting the service
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                tracing::info!("Restarting keeper service in 5 seconds.");
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+            }
+        }
     }
 
     Ok(())
@@ -139,12 +140,10 @@ pub async fn run_keeper_with_exit_check(
 pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
-    rx_exit: watch::Receiver<bool>,
     private_key: String,
 ) -> Result<()> {
     let mut handles = Vec::new();
     for (chain_id, chain_config) in chains {
-        let rx_exit = rx_exit.clone();
         let chain_eth_config = config.chains.get(&chain_id).unwrap().clone();
         let private_key = private_key.clone();
         let chain_id = chain_id.clone();
@@ -181,7 +180,6 @@ pub async fn run_keeper(
                 Arc::clone(&chain_config.state),
                 Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
-                rx_exit.clone(),
                 chain_eth_config.gas_limit,
             ));
 
@@ -194,12 +192,10 @@ pub async fn run_keeper(
                 chain_config.clone(),
                 latest_safe_block,
                 tx.clone(),
-                rx_exit.clone(),
             ));
             let handle_events = spawn(keeper::handle_events(
                 chain_id.clone(),
                 chain_config.provider_address,
-                rx_exit.clone(),
                 rx,
                 Arc::clone(&chain_config.contract),
                 Arc::clone(&chain_config.state),
