@@ -21,7 +21,10 @@ use {
             Provider,
             StreamExt,
         },
-        types::H160,
+        types::{
+            H160,
+            U256,
+        },
     },
     std::sync::Arc,
     tokio::{
@@ -77,7 +80,7 @@ pub async fn process_event(
     hash_chain_state: &Arc<HashChainState>,
     contract: &Arc<SignablePythContract>,
     nonce_manager: &Arc<NonceManagerMiddleware<Provider<Http>>>,
-    gas_limit: u64,
+    gas_limit: U256,
 ) -> Result<()> {
     if !is_valid_request(&event, &contract_reader).await {
         return Ok(());
@@ -147,7 +150,7 @@ pub async fn handle_backlog(
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
     rx_exit: watch::Receiver<bool>,
-    gas_limit: u64,
+    gas_limit: U256,
 ) -> Result<()> {
     tracing::info!("Starting backlog handler for chain: {}", &chain_id);
     while !*rx_exit.borrow() {
@@ -335,7 +338,7 @@ pub async fn handle_events(
     hash_chain_state: Arc<crate::state::HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
-    gas_limit: u64,
+    gas_limit: U256,
 ) -> Result<()> {
     tracing::info!("Handling events for chain: {}", &chain_id);
     while !*rx_exit.borrow() {
