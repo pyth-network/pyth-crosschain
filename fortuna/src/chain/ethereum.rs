@@ -272,7 +272,7 @@ impl EntropyReader for PythContract {
             .collect())
     }
 
-    async fn similate_reveal(
+    async fn simulate_reveal(
         &self,
         provider: Address,
         sequence_number: u64,

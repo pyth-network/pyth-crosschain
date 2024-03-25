@@ -89,7 +89,7 @@ pub async fn process_event(
     let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
 
     let sim_res = contract_reader
-        .similate_reveal(
+        .simulate_reveal(
             event.provider_address,
             event.sequence_number,
             event.user_random_number,

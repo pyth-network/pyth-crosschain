@@ -55,7 +55,7 @@ pub trait EntropyReader: Send + Sync {
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
 
-    async fn similate_reveal(
+    async fn simulate_reveal(
         &self,
         provider: Address,
         sequence_number: u64,
@@ -176,7 +176,7 @@ pub mod mock {
             Ok(vec![])
         }
 
-        async fn similate_reveal(
+        async fn simulate_reveal(
             &self,
             provider: Address,
             sequence_number: u64,
