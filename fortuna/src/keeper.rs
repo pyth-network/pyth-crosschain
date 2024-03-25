@@ -38,36 +38,6 @@ use {
     tracing,
 };
 
-async fn is_valid_request(
-    event: &RequestedWithCallbackEvent,
-    contract_reader: &Arc<dyn EntropyReader>,
-) -> bool {
-    let res = contract_reader
-        .get_request(event.provider_address, event.sequence_number)
-        .await;
-
-    match res {
-        Ok(req) => match req {
-            Some(req) => {
-                if req.sequence_number == 0
-                    || req.provider != event.provider_address
-                    || req.sequence_number != event.sequence_number
-                {
-                    false
-                } else {
-                    true
-                }
-            }
-            None => false,
-        },
-
-        // When there is an error getting the request, we are not sure whether it is a
-        // valid request or not. We are considering the request to be valid in such cases.
-        // This should happen rarely.
-        Err(_) => true,
-    }
-}
-
 pub async fn process_event(
     event: RequestedWithCallbackEvent,
     contract_reader: &Arc<dyn EntropyReader>,
@@ -76,10 +46,6 @@ pub async fn process_event(
     nonce_manager: &Arc<NonceManagerMiddleware<Provider<Http>>>,
     gas_limit: U256,
 ) -> Result<()> {
-    if !is_valid_request(&event, &contract_reader).await {
-        return Ok(());
-    }
-
     let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
 
     let sim_res = contract_reader
