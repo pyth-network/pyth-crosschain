@@ -163,7 +163,6 @@ impl SignablePythContract {
             .await?
             .await?;
 
-        tracing::info!("Revealed with callback for provider: {provider} with sequence number: {sequence_number} res: {:?}", r);
         Ok(())
     }
 
