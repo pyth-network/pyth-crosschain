@@ -33,14 +33,15 @@ pub struct RunOptions {
     pub provider: Address,
 
     /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
-    /// This key is required to submit transactions (such as registering with the contract).
-    #[arg(long = "private-key")]
-    #[arg(env = "PRIVATE_KEY")]
-    pub private_key_file: String,
+    /// This key is required to submit transactions for entropy callback requests.
+    /// This key should not have any specific privileges.
+    #[arg(long = "keeper-private-key")]
+    #[arg(env = "KEEPER_PRIVATE_KEY")]
+    pub keeper_private_key_file: String,
 }
 
 impl RunOptions {
     pub fn load_private_key(&self) -> Result<String> {
-        return Ok((fs::read_to_string(&self.private_key_file))?);
+        return Ok((fs::read_to_string(&self.keeper_private_key_file))?);
     }
 }
