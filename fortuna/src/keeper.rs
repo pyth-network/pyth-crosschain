@@ -270,58 +270,66 @@ pub async fn watch_blocks(
         &chain_id
     );
     while !*rx_exit.borrow() {
-        let res = async {
-            let mut last_safe_block_processed = latest_safe_block;
+        // for a http provider it only supports streaming
+        let provider = Provider::<Http>::try_from(&chain_eth_config.geth_rpc_addr)?;
+        let mut stream = provider.watch_blocks().await;
 
-            // for a http provider it only supports streaming
-            let provider = Provider::<Http>::try_from(&chain_eth_config.geth_rpc_addr)?;
-            let mut stream = provider.watch_blocks().await?;
+        let mut last_safe_block_processed = latest_safe_block;
 
-            while !*rx_exit.borrow() {
-                tracing::info!("Waiting for next block for chain: {}", &chain_id);
-                if let Some(_) = stream.next().await {
-                    let latest_safe_block = contract_reader
-                        .get_block_number(chain_config.confirmed_block_status)
-                        .await?
-                        - chain_config.reveal_delay_blocks;
+        match stream {
+            Ok(stream) => {
+                while !*rx_exit.borrow() {
+                    tracing::info!("Waiting for next block for chain: {}", &chain_id);
+                    if let Some(_) = stream.next().await {
+                        let latest_confirmed_block_res = contract_reader
+                            .get_block_number(chain_config.confirmed_block_status)
+                            .await;
 
-                    tracing::info!(
-                        "Last safe block processed for chain {}: {} ",
-                        &chain_id,
-                        &last_safe_block_processed
-                    );
-                    tracing::info!(
-                        "Latest safe block for chain {}: {} ",
-                        &chain_id,
-                        &latest_safe_block
-                    );
+                        match latest_confirmed_block_res {
+                            Ok(latest_confirmed_block) => {
+                                let latest_safe_block =
+                                    latest_confirmed_block - chain_config.reveal_delay_blocks;
 
-                    if latest_safe_block > last_safe_block_processed {
-                        if let Err(_) = tx
-                            .send(BlockRange {
-                                from: last_safe_block_processed + 1,
-                                to:   latest_safe_block,
-                            })
-                            .await
-                        {
-                            tracing::error!("Error while sending block range to handle events. These will be handled in next call.");
-                            continue;
-                        };
+                                if latest_safe_block > last_safe_block_processed {
+                                    if let Err(_) = tx
+                                        .send(BlockRange {
+                                            from: last_safe_block_processed + 1,
+                                            to:   latest_safe_block,
+                                        })
+                                        .await
+                                    {
+                                        tracing::error!("Error while sending block range to handle events for chain {chain_id}. These will be handled in next call.");
+                                        continue;
+                                    };
 
-                        last_safe_block_processed = latest_safe_block;
+                                    tracing::info!(
+                                        "Block range sent to handle events for chain {}: {} to {}",
+                                        &chain_id,
+                                        &last_safe_block_processed + 1,
+                                        &latest_safe_block
+                                    );
+                                    last_safe_block_processed = latest_safe_block;
+                                }
+                            }
+                            Err(e) => {
+                                tracing::error!(
+                                    "Error while getting latest safe block for chain: {}",
+                                    &chain_id
+                                );
+                                continue;
+                            }
+                        }
                     }
                 }
             }
-
-            Ok::<(), Error>(())
-        };
-
-        if let Err(e) = res.await {
-            tracing::error!("Error in watch_blocks: {:?}", e);
+            Err(e) => {
+                tracing::error!("Error while watching blocks for chain: {}", &chain_id);
+                tracing::error!("Error: {:?}", e);
+                tracing::error!("Waiting for 5 seconds before re-watching the blocks");
+                sleep(tokio::time::Duration::from_secs(5)).await;
+                continue;
+            }
         }
-
-        tracing::error!("Waiting for 5 seconds before re-watching the blocks");
-        sleep(tokio::time::Duration::from_secs(5)).await;
     }
 
     Ok(())
