@@ -159,78 +159,92 @@ pub async fn handle_backlog(
     hash_chain_state: Arc<HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
-    rx_exit_handle_backlog: watch::Receiver<bool>,
+    rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     tracing::info!("Starting backlog handler for chain: {}", &chain_id);
-    while !*rx_exit_handle_backlog.borrow() {
-        let res = async {
-            let backlog_blocks: u64 = 10_000;
-            let blocks_at_a_time = 100;
+    while !*rx_exit.borrow() {
+        let backlog_blocks: u64 = 10_000;
+        let blocks_at_a_time = 100;
 
-            let mut from_block = if backlog_blocks > latest_safe_block {
-                0
-            } else {
-                latest_safe_block - backlog_blocks
-            };
-            let last_block = latest_safe_block;
+        let mut from_block = if backlog_blocks > latest_safe_block {
+            0
+        } else {
+            latest_safe_block - backlog_blocks
+        };
+        let last_block = latest_safe_block;
 
-            while !*rx_exit_handle_backlog.borrow() && from_block < last_block {
-                tracing::info!(
-                    "Processing backlog for chain: {} from block: {} to block: {}",
-                    &chain_id,
-                    &from_block,
-                    &last_block
-                );
-                let mut to_block = from_block + blocks_at_a_time;
-                if to_block > last_block {
-                    to_block = last_block;
-                }
+        while !*rx_exit.borrow() && from_block < last_block {
+            tracing::info!("Waiting for 5 seconds before processing the a lot of blocks");
+            time::sleep(Duration::from_secs(5)).await;
 
-                let events = contract_reader
-                    .get_request_with_callback_events(from_block, to_block)
-                    .await?;
-
-                for event in events {
-                    if provider_address != event.provider_address {
-                        continue;
-                    }
-
-                    if let Err(e) = process_event(
-                        event,
-                        &contract_reader,
-                        &hash_chain_state,
-                        &contract,
-                        &nonce_manager,
-                    )
-                    .await
-                    {
-                        tracing::error!("Error processing event: {:?}", e);
-                    }
-                }
-
-                tokio::time::sleep(Duration::from_secs(1)).await;
-                from_block = to_block + 1;
-
-                tracing::info!(
-                    "Backlog processed for chain: {} from block: {}",
-                    &chain_id,
-                    &from_block
-                );
-
-                tracing::info!("Waiting for 5 seconds before processing the next lot of blocks");
-                time::sleep(Duration::from_secs(5)).await;
+            tracing::info!(
+                "Processing backlog for chain: {} from block: {} to block: {}",
+                &chain_id,
+                &from_block,
+                &last_block
+            );
+            let mut to_block = from_block + blocks_at_a_time;
+            if to_block > last_block {
+                to_block = last_block;
             }
 
-            Ok::<(), Error>(())
-        };
+            let events_res = contract_reader
+                .get_request_with_callback_events(from_block, to_block)
+                .await;
 
-        if let Err(e) = res.await {
-            tracing::error!("Error while handling backlog: {:?}", e);
-            tracing::info!("Waiting for 5 seconds before re-handling the backlog");
-            time::sleep(Duration::from_secs(5)).await;
-        } else {
+            match events_res {
+                Ok(events) => {
+                    for event in events {
+                        if *rx_exit.borrow() {
+                            break;
+                        }
+
+                        if provider_address != event.provider_address {
+                            continue;
+                        }
+
+                        if let Err(e) = process_event(
+                            event,
+                            &contract_reader,
+                            &hash_chain_state,
+                            &contract,
+                            &nonce_manager,
+                        )
+                        .await
+                        {
+                            // TODO: some retry mechanisms here
+                            tracing::error!("Error processing event: {:?}", e);
+                        }
+                    }
+
+                    from_block = to_block + 1;
+
+                    tracing::info!(
+                        "Backlog processed for chain: {} from block: {}",
+                        &chain_id,
+                        &from_block
+                    );
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Error while getting events for chain: {} from block: {} to block: {}",
+                        &chain_id,
+                        &from_block,
+                        &to_block
+                    );
+
+                    continue;
+                }
+            }
+        }
+
+
+        if from_block > last_block {
             tracing::info!("Backlog processed successfully");
             break;
+        } else {
+            tracing::info!("Waiting for 5 seconds before re-handling the backlog");
+            time::sleep(Duration::from_secs(5)).await;
         }
     }
 
