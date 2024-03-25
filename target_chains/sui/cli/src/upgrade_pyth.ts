@@ -1,10 +1,12 @@
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
   fromB64,
   MIST_PER_SUI,
   normalizeSuiObjectId,
-  RawSigner,
-  TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/utils";
+import { SuiClient } from "@mysten/sui.js/client";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+
 import { execSync } from "child_process";
 import { SuiPriceFeedContract } from "contract_manager";
 
@@ -29,7 +31,8 @@ export function buildForBytecodeAndDigest(packagePath: string) {
 }
 
 export async function upgradePyth(
-  signer: RawSigner,
+  keypair: Ed25519Keypair,
+  provider: SuiClient,
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
@@ -66,7 +69,8 @@ export async function upgradePyth(
 
   tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI
 
-  return signer.signAndExecuteTransactionBlock({
+  return provider.signAndExecuteTransactionBlock({
+    signer: keypair,
     transactionBlock: tx,
     options: {
       showEffects: true,
@@ -76,7 +80,8 @@ export async function upgradePyth(
 }
 
 export async function migratePyth(
-  signer: RawSigner,
+  keypair: Ed25519Keypair,
+  provider: SuiClient,
   signedUpgradeVaa: Buffer,
   contract: SuiPriceFeedContract,
   pythPackageOld: string
@@ -98,7 +103,8 @@ export async function migratePyth(
 
   tx.setGasBudget(MIST_PER_SUI / 10n); //0.1 SUI
 
-  return signer.signAndExecuteTransactionBlock({
+  return provider.signAndExecuteTransactionBlock({
+    signer: keypair,
     transactionBlock: tx,
     options: {
       showEffects: true,

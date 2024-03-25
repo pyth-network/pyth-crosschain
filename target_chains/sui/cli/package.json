@@ -5,16 +5,19 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "cli": "ts-node src/cli.ts"
+    "cli": "ts-node src/cli.ts",
+    "build": "tsc"
   },
   "private": "true",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.12",
-    "@mysten/sui.js": "^0.37.1",
+    "@mysten/sui.js": "^0.49.1",
     "@pythnetwork/client": "^2.17.0",
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
+    "contract_manager": "*",
     "prettier": "^2.8.7",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "xc_admin_common": "*"
   }
 }
