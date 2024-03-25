@@ -49,32 +49,10 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-pub async fn run_api_with_exit_check(
-    socket_addr: SocketAddr,
-    chains: HashMap<String, api::BlockchainState>,
-    rx_exit: watch::Receiver<bool>,
-) -> Result<()> {
-    // tokio::select! {}
-    while !*rx_exit.borrow() {
-        // TODO: this may not work as we have passed the ownership here
-        // for the loop to work again we should have pass a copy
-        // Is it better to use Arc?
-        // Clone can be expensive.
-        if let Err(e) = run_api(socket_addr.clone(), chains.clone(), rx_exit.clone()).await {
-            tracing::error!("API service failed. {:?}", e);
-        }
-
-        // Wait for 5 seconds before restarting the service
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-    }
-
-    Ok(())
-}
-
 pub async fn run_api(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
-    rx_exit: watch::Receiver<bool>,
+    mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
     #[openapi(
@@ -116,9 +94,10 @@ pub async fn run_api(
     axum::Server::try_bind(&socket_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
-            while !*rx_exit.borrow() {
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-            }
+            // It can return an error or an Ok(()). In both cases, we would shut down.
+            // As Ok(()) means, exit signal (ctrl + c) was received.
+            // And Err(e) means, the sender was dropped which should not be the case.
+            let _ = rx_exit.changed().await;
 
             tracing::info!("Shutting down RPC server...");
         })
@@ -303,35 +282,25 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let chains_clone = chains.clone();
 
-    let tasks = join_all([
-        // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
-        spawn(async move {
-            tracing::info!("Registered shutdown signal handler...");
-            tokio::signal::ctrl_c().await.unwrap();
-            tracing::info!("Shut down signal received, waiting for tasks...");
-            // no need to handle error here, as it will only occur when all the
-            // receiver has been dropped and that's what we want to do
-            tx_exit.send(true)?;
+    // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
+    spawn(async move {
+        tracing::info!("Registered shutdown signal handler...");
+        tokio::signal::ctrl_c().await.unwrap();
+        tracing::info!("Shut down signal received, waiting for tasks...");
+        // no need to handle error here, as it will only occur when all the
+        // receiver has been dropped and that's what we want to do
+        tx_exit.send(true)?;
 
-            Ok(())
-        }),
-        spawn(run_api_with_exit_check(
-            opts.addr.clone(),
-            chains,
-            rx_exit.clone(),
-        )),
-        spawn(run_keeper_with_exit_check(
-            chains_clone,
-            config,
-            rx_exit.clone(),
-            private_key,
-        )),
-    ])
-    .await;
+        Ok::<(), Error>(())
+    });
+    spawn(run_keeper_with_exit_check(
+        chains_clone,
+        config,
+        rx_exit.clone(),
+        private_key,
+    ));
 
-    for task in tasks {
-        task??;
-    }
+    run_api(opts.addr.clone(), chains, rx_exit).await?;
 
     Ok(())
 }
