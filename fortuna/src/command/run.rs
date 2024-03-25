@@ -254,6 +254,7 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
+    let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
@@ -329,7 +330,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             chains_clone,
             config,
             rx_exit.clone(),
-            opts.private_key.clone(),
+            private_key,
         )),
     ])
     .await;
