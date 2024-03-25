@@ -35,6 +35,9 @@ contract VerificationExperiments is
     // Private key for the threshold signature
     uint256 THRESHOLD_KEY = 1234;
 
+    // We will have less than 512 price for a foreseeable future.
+    uint8 constant MERKLE_TREE_DEPTH = 9;
+
     PythExperimental public pyth;
 
     bytes32[] priceIds;
@@ -106,7 +109,7 @@ contract VerificationExperiments is
 
         setRandSeed(12345);
         for (uint i = 0; i < NUM_PRICES; ++i) {
-            uint64 publishTime = uint64(getRandUint() % 10);
+            uint64 publishTime = uint64(getRandUint() % 10) + 1; // to make sure prevPublishTime is >= 0
 
             cachedPrices.push(
                 PythStructs.Price(
@@ -147,17 +150,17 @@ contract VerificationExperiments is
 
         // Generate the update payloads for the various verification systems
 
-        whMerkleUpdateDepth0 = generateWhMerkleUpdate(
+        whMerkleUpdateDepth0 = generateSingleWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             0
         );
-        whMerkleUpdateDepth1 = generateWhMerkleUpdate(
+        whMerkleUpdateDepth1 = generateSingleWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             1
         );
-        whMerkleUpdateDepth8 = generateWhMerkleUpdate(
+        whMerkleUpdateDepth8 = generateSingleWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             8
@@ -188,9 +191,9 @@ contract VerificationExperiments is
     function generateWormholeUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        bytes memory vaa = generateWhBatchUpdate(
-            pricesToPriceAttestations(priceIds, prices),
-            sequence,
+        bytes memory vaa = generateWhMerkleUpdate(
+            pricesToPriceFeedMessages(priceIds, prices),
+            MERKLE_TREE_DEPTH,
             NUM_GUARDIAN_SIGNERS
         );
 
@@ -252,7 +255,7 @@ contract VerificationExperiments is
     }
 
     // Generate a wormhole-attested merkle proof with the given depth.
-    function generateWhMerkleUpdate(
+    function generateSingleWhMerkleUpdate(
         bytes32 priceId,
         PythStructs.Price memory price,
         uint depth

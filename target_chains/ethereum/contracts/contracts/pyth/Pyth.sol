@@ -62,29 +62,14 @@ abstract contract Pyth is
         PythSetters.setSingleUpdateFeeInWei(singleUpdateFeeInWei);
     }
 
-    function updatePriceBatchFromVm(bytes calldata encodedVm) private {
-        parseAndProcessBatchPriceAttestation(
-            parseAndVerifyBatchAttestationVM(encodedVm)
-        );
-    }
-
     function updatePriceFeeds(
         bytes[] calldata updateData
     ) public payable override {
         uint totalNumUpdates = 0;
         for (uint i = 0; i < updateData.length; ) {
-            if (
-                updateData[i].length > 4 &&
-                UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
-                ACCUMULATOR_MAGIC
-            ) {
-                totalNumUpdates += updatePriceInfosFromAccumulatorUpdate(
-                    updateData[i]
-                );
-            } else {
-                updatePriceBatchFromVm(updateData[i]);
-                totalNumUpdates += 1;
-            }
+            totalNumUpdates += updatePriceInfosFromAccumulatorUpdate(
+                updateData[i]
+            );
 
             unchecked {
                 i++;
@@ -136,43 +121,6 @@ abstract contract Pyth is
         IWormhole.VM memory vm
     ) private view returns (bool valid) {
         return isValidDataSource(vm.emitterChainId, vm.emitterAddress);
-    }
-
-    function parseAndProcessBatchPriceAttestation(
-        IWormhole.VM memory vm
-    ) internal {
-        // Most of the math operations below are simple additions.
-        // In the places that there is more complex operation there is
-        // a comment explaining why it is safe. Also, byteslib
-        // operations have proper require.
-        unchecked {
-            bytes memory encoded = vm.payload;
-            (
-                uint index,
-                uint nAttestations,
-                uint attestationSize
-            ) = parseBatchAttestationHeader(encoded);
-
-            // Deserialize each attestation
-            for (uint j = 0; j < nAttestations; j++) {
-                (
-                    PythInternalStructs.PriceInfo memory info,
-                    bytes32 priceId
-                ) = parseSingleAttestationFromBatch(
-                        encoded,
-                        index,
-                        attestationSize
-                    );
-
-                // Respect specified attestation size for forward-compat
-                index += attestationSize;
-
-                // Store the attestation
-                updateLatestPriceIfNecessary(priceId, info);
-            }
-
-            emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
-        }
     }
 
     function parseSingleAttestationFromBatch(
