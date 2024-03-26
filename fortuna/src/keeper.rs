@@ -109,11 +109,8 @@ pub async fn handle_backlog(
     let backlog_blocks: u64 = 10_000;
     let blocks_at_a_time = 100;
 
-    let mut from_block = if backlog_blocks > latest_safe_block {
-        0
-    } else {
-        latest_safe_block - backlog_blocks
-    };
+
+    let mut from_block = latest_safe_block.saturating_sub(backlog_blocks);
     let last_block = latest_safe_block;
 
     while from_block < last_block {
