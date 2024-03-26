@@ -138,7 +138,6 @@ pub async fn run_keeper(
 
             let handle_watch_blocks = spawn(keeper::watch_blocks(
                 chain_id.clone(),
-                chain_eth_config.clone(),
                 Arc::clone(&chain_config.contract),
                 chain_config.clone(),
                 latest_safe_block,

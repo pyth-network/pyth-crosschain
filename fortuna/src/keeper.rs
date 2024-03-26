@@ -9,16 +9,9 @@ use {
                 RequestedWithCallbackEvent,
             },
         },
-        config::EthereumConfig,
     },
     anyhow::Result,
-    ethers::{
-        providers::{
-            Http,
-            Provider,
-        },
-        types::U256,
-    },
+    ethers::types::U256,
     std::sync::Arc,
     tokio::{
         sync::mpsc,
@@ -175,7 +168,6 @@ pub struct BlockRange {
 
 pub async fn watch_blocks(
     chain_id: String,
-    chain_eth_config: EthereumConfig,
     contract_reader: Arc<dyn EntropyReader>,
     chain_config: api::BlockchainState,
     latest_safe_block: BlockNumber,
@@ -229,7 +221,7 @@ pub async fn watch_blocks(
                 }
             }
 
-            time::sleep(Duration::from_secs(5)).await;
+            time::sleep(Duration::from_secs(10)).await;
         }
     }
 }
