@@ -1,11 +1,9 @@
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 library PythUtils {
-    
     /// @notice Converts a Pyth price to a uint256 with a target number of decimals
-    /// @param price The Pyth price 
+    /// @param price The Pyth price
     /// @param expo The Pyth price exponent
     /// @param targetDecimals The target number of decimals
     /// @return The price as a uint256
