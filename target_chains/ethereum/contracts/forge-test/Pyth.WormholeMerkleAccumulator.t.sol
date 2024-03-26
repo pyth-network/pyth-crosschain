@@ -17,8 +17,7 @@ import "../contracts/libraries/MerkleTree.sol";
 contract PythWormholeMerkleAccumulatorTest is
     Test,
     WormholeTestUtils,
-    PythTestUtils,
-    RandTestUtils
+    PythTestUtils
 {
     IPyth public pyth;
 
