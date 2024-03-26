@@ -1,4 +1,4 @@
-name: Check Remote Executor
+name: Check Hermes
 
 on:
   pull_request:
@@ -17,5 +17,7 @@ jobs:
           toolchain: nightly-2023-07-23
           components: rustfmt, clippy
           override: true
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
       - name: Run executor tests
         run: cargo test --manifest-path ./hermes/Cargo.toml
