@@ -429,6 +429,24 @@ contract PythExperimental is Pyth {
         updateLatestPriceIfNecessary(priceId, info);
     }
 
+    function parseAndVerifyBatchAttestationVM(
+        bytes calldata encodedVm
+    ) internal view returns (IWormhole.VM memory vm) {
+        {
+            bool valid;
+            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
+            if (!valid) revert PythErrors.InvalidWormholeVaa();
+        }
+
+        if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
+    }
+
+    function verifyPythVM(
+        IWormhole.VM memory vm
+    ) private view returns (bool valid) {
+        return isValidDataSource(vm.emitterChainId, vm.emitterAddress);
+    }
+
     // Update a single price feed via a threshold-signed merkle proof.
     // data is expected to be a serialized PriceAttestation
     function updatePriceFeedsThresholdMerkle(
@@ -479,6 +497,121 @@ contract PythExperimental is Pyth {
             bytes32 priceId
         ) = parseSingleAttestationFromBatch(data, 0, data.length);
         updateLatestPriceIfNecessary(priceId, info);
+    }
+
+    function parseSingleAttestationFromBatch(
+        bytes memory encoded,
+        uint index,
+        uint attestationSize
+    )
+        internal
+        pure
+        returns (PythInternalStructs.PriceInfo memory info, bytes32 priceId)
+    {
+        unchecked {
+            // NOTE: We don't advance the global index immediately.
+            // attestationIndex is an attestation-local offset used
+            // for readability and easier debugging.
+            uint attestationIndex = 0;
+
+            // Unused bytes32 product id
+            attestationIndex += 32;
+
+            priceId = UnsafeBytesLib.toBytes32(
+                encoded,
+                index + attestationIndex
+            );
+            attestationIndex += 32;
+
+            info.price = int64(
+                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            );
+            attestationIndex += 8;
+
+            info.conf = UnsafeBytesLib.toUint64(
+                encoded,
+                index + attestationIndex
+            );
+            attestationIndex += 8;
+
+            info.expo = int32(
+                UnsafeBytesLib.toUint32(encoded, index + attestationIndex)
+            );
+            attestationIndex += 4;
+
+            info.emaPrice = int64(
+                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            );
+            attestationIndex += 8;
+
+            info.emaConf = UnsafeBytesLib.toUint64(
+                encoded,
+                index + attestationIndex
+            );
+            attestationIndex += 8;
+
+            {
+                // Status is an enum (encoded as uint8) with the following values:
+                // 0 = UNKNOWN: The price feed is not currently updating for an unknown reason.
+                // 1 = TRADING: The price feed is updating as expected.
+                // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
+                // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
+                uint8 status = UnsafeBytesLib.toUint8(
+                    encoded,
+                    index + attestationIndex
+                );
+                attestationIndex += 1;
+
+                // Unused uint32 numPublishers
+                attestationIndex += 4;
+
+                // Unused uint32 numPublishers
+                attestationIndex += 4;
+
+                // Unused uint64 attestationTime
+                attestationIndex += 8;
+
+                info.publishTime = UnsafeBytesLib.toUint64(
+                    encoded,
+                    index + attestationIndex
+                );
+                attestationIndex += 8;
+
+                if (status == 1) {
+                    // status == TRADING
+                    attestationIndex += 24;
+                } else {
+                    // If status is not trading then the latest available price is
+                    // the previous price info that are passed here.
+
+                    // Previous publish time
+                    info.publishTime = UnsafeBytesLib.toUint64(
+                        encoded,
+                        index + attestationIndex
+                    );
+                    attestationIndex += 8;
+
+                    // Previous price
+                    info.price = int64(
+                        UnsafeBytesLib.toUint64(
+                            encoded,
+                            index + attestationIndex
+                        )
+                    );
+                    attestationIndex += 8;
+
+                    // Previous confidence
+                    info.conf = UnsafeBytesLib.toUint64(
+                        encoded,
+                        index + attestationIndex
+                    );
+                    attestationIndex += 8;
+                }
+            }
+
+            if (attestationIndex > attestationSize)
+                revert PythErrors.InvalidUpdateData();
+        }
     }
 
     // Verify that signature is a valid ECDSA signature of messageHash by signer.
