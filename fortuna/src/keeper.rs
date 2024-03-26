@@ -87,7 +87,7 @@ pub async fn process_event(
         }
         Err(e) => {
             tracing::error!(
-                "Error while simulating reveal for provider: {} and sequence number: {} \n res: {:?}",
+                "Error while simulating reveal for provider: {} and sequence number: {} \n error: {:?}",
                 event.provider_address,
                 event.sequence_number,
                 e
@@ -243,9 +243,15 @@ pub async fn watch_blocks(
                 }
             },
             Err(e) => {
-                tracing::error!("Error while watching blocks for chain: {}", &chain_id);
-                tracing::error!("Error: {:?}", e);
-                tracing::error!("Waiting for 5 seconds before re-watching the blocks");
+                tracing::error!(
+                    "Error while watching blocks for chain: {} error: {:?}",
+                    &chain_id,
+                    e
+                );
+                tracing::error!(
+                    "Waiting for 5 seconds before re-watching the blocks for chain: {}",
+                    &chain_id
+                );
                 sleep(tokio::time::Duration::from_secs(5)).await;
                 continue;
             }
