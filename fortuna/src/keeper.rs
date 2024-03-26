@@ -113,7 +113,7 @@ pub async fn handle_backlog(
     let mut from_block = latest_safe_block.saturating_sub(backlog_blocks);
     let last_block = latest_safe_block;
 
-    while from_block < last_block {
+    while from_block <= last_block {
         tracing::info!("Waiting for 5 seconds before processing the a lot of blocks");
         time::sleep(Duration::from_secs(5)).await;
 
@@ -164,9 +164,6 @@ pub async fn handle_backlog(
                     &from_block,
                     &to_block
                 );
-
-                tracing::info!("Waiting for 5 seconds before re-handling the backlog");
-                time::sleep(Duration::from_secs(5)).await;
 
                 continue;
             }
