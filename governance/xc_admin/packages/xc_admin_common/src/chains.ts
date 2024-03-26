@@ -131,6 +131,9 @@ export const RECEIVER_CHAINS = {
   berachain_testnet: 50056,
   merlin_testnet: 50057,
   manta_sepolia: 50058,
+  polygon_blackberry: 50059, // Gelato Testnet
+  arbitrum_blueberry: 50060, // Gelato Testnet
+  optimism_celestia_raspberry: 50061, // Gelato Testnet
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

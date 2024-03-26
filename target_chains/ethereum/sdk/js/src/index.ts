@@ -109,6 +109,9 @@ export const CONTRACT_ADDR: Record<string, string> = {
   zkfair_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   zksync_era_goerli: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
   zksync_era_sepolia: "0x056f829183Ec806A78c26C98961678c24faB71af",
+  arbitrum_blueberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729", 
+  polygon_blackberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  optimism_celestia_raspberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   // Testnets (Beta sources)
   horizen_gobi_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
 };
