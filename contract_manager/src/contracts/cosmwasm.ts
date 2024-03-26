@@ -38,7 +38,7 @@ export interface DeploymentConfig {
 }
 
 export class WormholeCosmWasmContract extends WormholeContract {
-  constructor(public chain: CosmWasmChain, public address: string, public denom: string | undefined) {
+  constructor(public chain: CosmWasmChain, public address: string) {
     super();
   }
 
@@ -310,8 +310,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   async getWormholeContract(): Promise<WormholeCosmWasmContract> {
     const config = await this.getConfig();
     const wormholeAddress = config.config_v1.wormhole_contract;
-    // FIXME
-    return new WormholeCosmWasmContract(this.chain, wormholeAddress, undefined);
+    return new WormholeCosmWasmContract(this.chain, wormholeAddress);
   }
 
   async getUpdateFee(msgs: string[]): Promise<Coin> {

@@ -151,13 +151,12 @@ export class Store {
   loadAllTokens() {
     this.getYamlFiles(`${this.path}/tokens/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
-      console.log(parsedArray);
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
 
         const token = Token.fromJson(parsed);
         if (this.tokens[token.getId()])
-          throw new Error(`Multiple vaults with id ${token.getId()} found`);
+          throw new Error(`Multiple tokens with id ${token.getId()} found`);
         this.tokens[token.getId()] = token;
       }
     });

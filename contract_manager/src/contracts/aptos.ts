@@ -80,6 +80,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
    * @param chain the chain which this contract is deployed on
    * @param stateId id of the pyth state for the deployed contract
    * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
+   * @param denom the denomination of the fee token -- this field should be the id of a Token object
    */
   constructor(
     public chain: AptosChain,
