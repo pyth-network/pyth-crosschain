@@ -407,6 +407,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         IEntropyConsumer(callAddress)._entropyCallback(
             sequenceNumber,
+            provider,
             randomNumber
         );
     }

@@ -130,6 +130,7 @@ export const RECEIVER_CHAINS = {
   idex_xchain_testnet: 50055,
   berachain_testnet: 50056,
   merlin_testnet: 50057,
+  manta_sepolia: 50058,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

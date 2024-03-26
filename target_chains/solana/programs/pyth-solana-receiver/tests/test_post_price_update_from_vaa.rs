@@ -21,10 +21,10 @@ use {
             DEFAULT_TREASURY_ID,
         },
     },
-    pyth_solana_receiver_state::{
+    pyth_solana_receiver_sdk::{
         config::DataSource,
         price_update::{
-            PriceUpdateV1,
+            PriceUpdateV2,
             VerificationLevel,
         },
     },
@@ -82,6 +82,7 @@ async fn test_invalid_wormhole_message() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -126,6 +127,7 @@ async fn test_invalid_update_message() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -177,6 +179,9 @@ async fn test_post_price_update_from_vaa() {
     assert_treasury_balance(&mut program_simulator, 0, DEFAULT_TREASURY_ID).await;
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
+    // poster_2 can't write to this price update account
+    let poster_2 = program_simulator.get_funded_keypair().await.unwrap();
+
     let price_update_keypair = Keypair::new();
 
     // this update is not in the proof
@@ -184,6 +189,7 @@ async fn test_post_price_update_from_vaa() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -206,6 +212,7 @@ async fn test_post_price_update_from_vaa() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster.pubkey(),
                     poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -246,6 +253,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -284,6 +292,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -321,6 +330,7 @@ async fn test_post_price_update_from_vaa() {
         .process_ix_with_default_compute_limit(
             PostUpdateAtomic::populate(
                 poster.pubkey(),
+                poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
                 DEFAULT_GUARDIAN_SET_INDEX,
@@ -342,7 +352,7 @@ async fn test_post_price_update_from_vaa() {
     .await;
 
     let mut price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
 
@@ -354,6 +364,55 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
+
+    // Now poster_2 will pay
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            PostUpdateAtomic::populate(
+                poster_2.pubkey(),
+                poster.pubkey(),
+                price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
+                merkle_price_updates[0].clone(),
+                DEFAULT_TREASURY_ID,
+            ),
+            &vec![&poster, &poster_2, &price_update_keypair],
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 1,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
+
+    price_update_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
+        .await
+        .unwrap();
+
+    assert_eq!(price_update_account.write_authority, poster.pubkey());
+    assert_eq!(
+        price_update_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_update_account.price_message),
+        feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
 
@@ -379,6 +438,7 @@ async fn test_post_price_update_from_vaa() {
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
                     poster.pubkey(),
+                    poster.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
                     DEFAULT_GUARDIAN_SET_INDEX,
@@ -397,14 +457,14 @@ async fn test_post_price_update_from_vaa() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0),
+        Rent::default().minimum_balance(0) + 1,
         DEFAULT_TREASURY_ID,
     )
     .await;
 
     // Transaction failed, so the account should not have been updated
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
@@ -415,6 +475,10 @@ async fn test_post_price_update_from_vaa() {
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_1
+    );
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 
 
@@ -436,6 +500,7 @@ async fn test_post_price_update_from_vaa() {
         .process_ix_with_default_compute_limit(
             PostUpdateAtomic::populate(
                 poster.pubkey(),
+                poster.pubkey(),
                 price_update_keypair.pubkey(),
                 BRIDGE_ID,
                 DEFAULT_GUARDIAN_SET_INDEX,
@@ -451,13 +516,13 @@ async fn test_post_price_update_from_vaa() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0) + LAMPORTS_PER_SOL,
+        Rent::default().minimum_balance(0) + 1 + LAMPORTS_PER_SOL,
         DEFAULT_TREASURY_ID,
     )
     .await;
 
     price_update_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV1>(price_update_keypair.pubkey())
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
@@ -469,15 +534,16 @@ async fn test_post_price_update_from_vaa() {
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
     );
-
-
-    // poster_2 can't write to this price update account
-    let poster_2 = program_simulator.get_funded_keypair().await.unwrap();
+    assert_eq!(
+        price_update_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
     assert_eq!(
         program_simulator
             .process_ix_with_default_compute_limit(
                 PostUpdateAtomic::populate(
+                    poster_2.pubkey(),
                     poster_2.pubkey(),
                     price_update_keypair.pubkey(),
                     BRIDGE_ID,
@@ -487,6 +553,29 @@ async fn test_post_price_update_from_vaa() {
                     DEFAULT_TREASURY_ID
                 ),
                 &vec![&poster_2, &price_update_keypair],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transaction_error(ReceiverError::WrongWriteAuthority)
+    );
+
+    // poster_2 can't write to this price update account not even if poster pays
+    assert_eq!(
+        program_simulator
+            .process_ix_with_default_compute_limit(
+                PostUpdateAtomic::populate(
+                    poster.pubkey(),
+                    poster_2.pubkey(),
+                    price_update_keypair.pubkey(),
+                    BRIDGE_ID,
+                    DEFAULT_GUARDIAN_SET_INDEX,
+                    vaa.clone(),
+                    merkle_price_updates[0].clone(),
+                    DEFAULT_TREASURY_ID
+                ),
+                &vec![&poster, &poster_2, &price_update_keypair],
                 None,
             )
             .await

@@ -1,5 +1,4 @@
 use {
-    self::ws::notify_updates,
     crate::{
         aggregate::AggregationEvent,
         config::RunOptions,
@@ -18,7 +17,7 @@ use {
         atomic::Ordering,
         Arc,
     },
-    tokio::sync::mpsc::Receiver,
+    tokio::sync::broadcast::Sender,
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
@@ -32,9 +31,10 @@ mod ws;
 
 #[derive(Clone)]
 pub struct ApiState {
-    pub state:   Arc<State>,
-    pub ws:      Arc<ws::WsState>,
-    pub metrics: Arc<metrics_middleware::Metrics>,
+    pub state:     Arc<State>,
+    pub ws:        Arc<ws::WsState>,
+    pub metrics:   Arc<metrics_middleware::Metrics>,
+    pub update_tx: Sender<AggregationEvent>,
 }
 
 impl ApiState {
@@ -42,6 +42,7 @@ impl ApiState {
         state: Arc<State>,
         ws_whitelist: Vec<IpNet>,
         requester_ip_header_name: String,
+        update_tx: Sender<AggregationEvent>,
     ) -> Self {
         Self {
             metrics: Arc::new(metrics_middleware::Metrics::new(state.clone())),
@@ -51,15 +52,16 @@ impl ApiState {
                 state.clone(),
             )),
             state,
+            update_tx,
         }
     }
 }
 
-#[tracing::instrument(skip(opts, state, update_rx))]
+#[tracing::instrument(skip(opts, state, update_tx))]
 pub async fn spawn(
     opts: RunOptions,
     state: Arc<State>,
-    mut update_rx: Receiver<AggregationEvent>,
+    update_tx: Sender<AggregationEvent>,
 ) -> Result<()> {
     let state = {
         let opts = opts.clone();
@@ -67,41 +69,11 @@ pub async fn spawn(
             state,
             opts.rpc.ws_whitelist,
             opts.rpc.requester_ip_header_name,
+            update_tx,
         )
     };
 
-    let rpc_server = tokio::spawn(run(opts, state.clone()));
-
-    let ws_notifier = tokio::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
-
-        while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-            tokio::select! {
-                update = update_rx.recv() => {
-                    match update {
-                        None => {
-                            // When the received message is None it means the channel has been closed. This
-                            // should never happen as the channel is never closed. As we can't recover from
-                            // this we shut down the application.
-                            tracing::error!("Failed to receive update from store.");
-                            crate::SHOULD_EXIT.store(true, Ordering::Release);
-                            break;
-                        }
-                        Some(event) => {
-                            notify_updates(state.ws.clone(), event).await;
-                        },
-                    }
-                },
-                _ = interval.tick() => {}
-            }
-        }
-
-        tracing::info!("Shutting down Websocket notifier...")
-    });
-
-
-    let _ = tokio::join!(ws_notifier, rpc_server);
-    Ok(())
+    run(opts, state.clone()).await
 }
 
 /// This method provides a background service that responds to REST requests

@@ -7,7 +7,6 @@ import { DataSource, EvmExecute } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
 
 // Just to make sure tx gas limit is enough
-const GAS_ESTIMATE_MULTIPLIER = 2;
 const EXTENDED_ENTROPY_ABI = [
   {
     inputs: [],
@@ -394,18 +393,10 @@ export class WormholeEvmContract extends WormholeContract {
     const transactionObject = wormholeContract.methods.submitNewGuardianSet(
       "0x" + vaa.toString("hex")
     );
-    const gasEstiamte = await transactionObject.estimateGas({
-      from: address,
-      gas: 15000000,
-    });
-    // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
-    // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
-    // `0x2` to the transaction configuration parameters.
-    const result = await transactionObject.send({
-      from: address,
-      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.chain.getGasPrice(),
-    });
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address }
+    );
     return { id: result.transactionHash, info: result };
   }
 }
@@ -543,6 +534,54 @@ export class EvmEntropyContract extends Storable {
       uri: Web3.utils.toAscii(info.uri),
     };
   }
+
+  generateUserRandomNumber() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return web3.utils.randomHex(32);
+  }
+
+  async requestRandomness(
+    userRandomNumber: string,
+    provider: string,
+    senderPrivateKey: PrivateKey
+  ) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const userCommitment = web3.utils.keccak256(userRandomNumber);
+    const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
+    const fee = await contract.methods.getFee(provider).call();
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const useBlockHash = false;
+    const transactionObject = contract.methods.request(
+      provider,
+      userCommitment,
+      useBlockHash
+    );
+    return this.chain.estiamteAndSendTransaction(transactionObject, {
+      from: address,
+      value: fee,
+    });
+  }
+
+  async revealRandomness(
+    userRevelation: string,
+    providerRevelation: string,
+    provider: string,
+    sequenceNumber: string,
+    senderPrivateKey: PrivateKey
+  ) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const transactionObject = contract.methods.reveal(
+      provider,
+      sequenceNumber,
+      userRevelation,
+      providerRevelation
+    );
+    return this.chain.estiamteAndSendTransaction(transactionObject, {
+      from: address,
+    });
+  }
 }
 
 export class EvmExecutorContract {
@@ -602,15 +641,10 @@ export class EvmExecutorContract {
     const transactionObject = executorContract.methods.execute(
       "0x" + vaa.toString("hex")
     );
-    const gasEstimate = await transactionObject.estimateGas({
-      from: address,
-      gas: 100000000,
-    });
-    const result = await transactionObject.send({
-      from: address,
-      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.chain.getGasPrice(),
-    });
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address }
+    );
     return { id: result.transactionHash, info: result };
   }
 }
@@ -787,17 +821,10 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       .call();
     const transactionObject =
       pythContract.methods.updatePriceFeeds(priceFeedUpdateData);
-    const gasEstimate = await transactionObject.estimateGas({
-      from: address,
-      gas: 15000000,
-      value: updateFee,
-    });
-    const result = await transactionObject.send({
-      from: address,
-      value: updateFee,
-      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.chain.getGasPrice(),
-    });
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address, value: updateFee }
+    );
     return { id: result.transactionHash, info: result };
   }
 
@@ -811,15 +838,10 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const transactionObject = pythContract.methods.executeGovernanceInstruction(
       "0x" + vaa.toString("hex")
     );
-    const gasEstiamte = await transactionObject.estimateGas({
-      from: address,
-      gas: 15000000,
-    });
-    const result = await transactionObject.send({
-      from: address,
-      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.chain.getGasPrice(),
-    });
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address }
+    );
     return { id: result.transactionHash, info: result };
   }
 

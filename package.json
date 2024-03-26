@@ -1,6 +1,7 @@
 {
   "name": "root",
   "workspaces": [
+    "express_relay/examples/easy_lend",
     "express_relay/sdk/js",
     "express_relay/sdk/solidity",
     "governance/xc_admin/packages/*",

@@ -36,6 +36,13 @@ import {
   getMultisigCluster,
   getProposalInstructions,
 } from "xc_admin_common";
+
+import {
+  pythSolanaReceiverIdl,
+  getConfigPda,
+  DEFAULT_RECEIVER_PROGRAM_ID,
+} from "@pythnetwork/pyth-solana-receiver";
+
 import { LedgerNodeWallet } from "./ledger";
 
 export async function loadHotWalletOrLedger(
@@ -102,7 +109,7 @@ program
   .version("0.1.0");
 
 multisigCommand(
-  "accept-authority",
+  "escrow-program-accept-authority",
   "Accept authority from the program authority escrow"
 )
   .requiredOption(
@@ -144,6 +151,61 @@ multisigCommand(
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
+      })
+      .instruction();
+
+    await vault.proposeInstructions([proposalInstruction], targetCluster);
+  });
+
+multisigCommand(
+  "solana-receiver-program-accept-governance-authority-transfer",
+  "Accept governance authority transfer for the solana receiver program"
+).action(async (options: any) => {
+  const vault = await loadVaultFromOptions(options);
+  const targetCluster: PythCluster = options.cluster;
+
+  const programSolanaReceiver = new Program(
+    pythSolanaReceiverIdl,
+    DEFAULT_RECEIVER_PROGRAM_ID,
+    vault.getAnchorProvider()
+  );
+
+  const proposalInstruction = await programSolanaReceiver.methods
+    .acceptGovernanceAuthorityTransfer()
+    .accounts({
+      payer: await vault.getVaultAuthorityPDA(targetCluster),
+      config: getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID),
+    })
+    .instruction();
+
+  await vault.proposeInstructions([proposalInstruction], targetCluster);
+});
+
+multisigCommand(
+  "solana-receiver-program-request-governance-authority-transfer",
+  "Request governance authority transfer for the solana receiver program"
+)
+  .requiredOption(
+    "-t, --target <pubkey>",
+    "The new governance authority to take over. " +
+      "If the target is another multisig, it will be the multisig's vault authority PDA."
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+    const target: PublicKey = new PublicKey(options.target);
+
+    const programSolanaReceiver = new Program(
+      pythSolanaReceiverIdl,
+      DEFAULT_RECEIVER_PROGRAM_ID,
+      vault.getAnchorProvider()
+    );
+
+    const proposalInstruction = await programSolanaReceiver.methods
+      .requestGovernanceAuthorityTransfer(target)
+      .accounts({
+        payer: await vault.getVaultAuthorityPDA(targetCluster),
+        config: getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID),
       })
       .instruction();
 

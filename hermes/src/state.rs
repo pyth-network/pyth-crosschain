@@ -20,7 +20,7 @@ use {
         sync::Arc,
     },
     tokio::sync::{
-        mpsc::Sender,
+        broadcast::Sender,
         RwLock,
     },
 };
@@ -81,11 +81,11 @@ pub mod test {
     use {
         super::*,
         crate::network::wormhole::update_guardian_set,
-        tokio::sync::mpsc::Receiver,
+        tokio::sync::broadcast::Receiver,
     };
 
     pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
-        let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
+        let (update_tx, update_rx) = tokio::sync::broadcast::channel(1000);
         let state = State::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0

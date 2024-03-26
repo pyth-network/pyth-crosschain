@@ -67,7 +67,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   "private-key": {
     type: "string",
     demandOption: true,
-    desc: "Private key to sign the trnasactions with",
+    desc: "Private key to sign the transactions with",
   },
   chain: {
     type: "array",

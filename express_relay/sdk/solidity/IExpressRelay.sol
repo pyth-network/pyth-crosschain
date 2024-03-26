@@ -2,14 +2,14 @@
 // Copyright (C) 2024 Lavra Holdings Limited - All Rights Reserved
 pragma solidity ^0.8.0;
 
-interface IPERMulticall {
+interface IExpressRelay {
     // Check if the combination of protocol and permissionKey is allowed within this transaction.
-    // This will return true if and only if it's being called while executing the auction winner call.
-    // @param protocol The address of the protocol that is gating an action behind this permission
-    // @param permissionKey The permission key that is being checked
+    // This will return true if and only if it's being called while executing the auction winner(s) call.
+    // @param protocolFeeReceiver The address of the protocol that is gating an action behind this permission
+    // @param permissionId The id that represents the action being gated
     // @return permissioned True if the permission is allowed, false otherwise
     function isPermissioned(
-        address protocol,
-        bytes calldata permissionKey
+        address protocolFeeReceiver,
+        bytes calldata permissionId
     ) external view returns (bool permissioned);
 }

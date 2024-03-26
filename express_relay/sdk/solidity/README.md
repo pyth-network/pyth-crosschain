@@ -1,4 +1,4 @@
-# Pyth Express Relay Solidity SDK
+# Express Relay Solidity SDK
 
 ## Install
 
@@ -7,7 +7,7 @@
 If you are using Truffle or Hardhat, simply install the NPM package:
 
 ```bash
-npm install @pythnetwork/per-sdk-solidity
+npm install @pythnetwork/express-relay-sdk-solidity
 ```
 
 ### Foundry
@@ -17,11 +17,11 @@ From the root directory of your project, run:
 
 ```bash
 npm init -y
-npm install @pythnetwork/per-sdk-solidity
+npm install @pythnetwork/express-relay-sdk-solidity
 ```
 
 Then add the following line to your `remappings.txt` file:
 
 ```text
-@pythnetwork/per-sdk-solidity/=node_modules/@pythnetwork/per-sdk-solidity
+@pythnetwork/express-relay-sdk-solidity/=node_modules/@pythnetwork/express-relay-sdk-solidity
 ```

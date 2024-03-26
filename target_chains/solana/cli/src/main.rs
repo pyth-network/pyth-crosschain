@@ -24,7 +24,7 @@ use {
         PostUpdateAtomicParams,
         PostUpdateParams,
     },
-    pyth_solana_receiver_state::config::DataSource,
+    pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
     solana_client::{
@@ -184,7 +184,7 @@ fn main() -> Result<()> {
                 program_id: pyth_solana_receiver::ID,
                 accounts:   initialize_pyth_receiver_accounts,
                 data:       pyth_solana_receiver::instruction::Initialize {
-                    initial_config: pyth_solana_receiver_state::config::Config {
+                    initial_config: pyth_solana_receiver_sdk::config::Config {
                         governance_authority: payer.pubkey(),
                         target_governance_authority: None,
                         wormhole,
@@ -264,6 +264,7 @@ pub fn process_post_price_update_atomic(
 
 
     let post_update_accounts = pyth_solana_receiver::accounts::PostUpdateAtomic::populate(
+        payer.pubkey(),
         payer.pubkey(),
         price_update_keypair.pubkey(),
         *wormhole,
@@ -472,6 +473,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let price_update_keypair = Keypair::new();
 
     let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
+        payer.pubkey(),
         payer.pubkey(),
         encoded_vaa_keypair.pubkey(),
         price_update_keypair.pubkey(),

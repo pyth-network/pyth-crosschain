@@ -18,3 +18,4 @@ tsconfig.tsbuildinfo
 *mnemonic*
 .envrc
 */*.sui.log*
+__pycache__

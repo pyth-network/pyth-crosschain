@@ -26,9 +26,7 @@ use {
         http::HeaderMap,
         response::IntoResponse,
     },
-    dashmap::DashMap,
     futures::{
-        future::join_all,
         stream::{
             SplitSink,
             SplitStream,
@@ -71,11 +69,10 @@ use {
         },
         time::Duration,
     },
-    tokio::sync::mpsc,
+    tokio::sync::broadcast::Receiver,
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
-const NOTIFICATIONS_CHAN_LEN: usize = 1000;
 const MAX_CLIENT_MESSAGE_SIZE: usize = 100 * 1024; // 100 KiB
 
 /// The maximum number of bytes that can be sent per second per IP address.
@@ -139,7 +136,6 @@ impl Metrics {
 
 pub struct WsState {
     pub subscriber_counter:       AtomicUsize,
-    pub subscribers:              DashMap<SubscriberId, mpsc::Sender<AggregationEvent>>,
     pub bytes_limit_whitelist:    Vec<IpNet>,
     pub rate_limiter:             DefaultKeyedRateLimiter<IpAddr>,
     pub requester_ip_header_name: String,
@@ -150,7 +146,6 @@ impl WsState {
     pub fn new(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<State>) -> Self {
         Self {
             subscriber_counter: AtomicUsize::new(0),
-            subscribers: DashMap::new(),
             rate_limiter: RateLimiter::dashmap(Quota::per_second(nonzero!(
                 BYTES_LIMIT_PER_IP_PER_SECOND
             ))),
@@ -220,6 +215,11 @@ async fn websocket_handler(
     subscriber_ip: Option<IpAddr>,
 ) {
     let ws_state = state.ws.clone();
+
+    // Retain the recent rate limit data for the IP addresses to
+    // prevent the rate limiter size from growing indefinitely.
+    ws_state.rate_limiter.retain_recent();
+
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
 
     tracing::debug!(id, ?subscriber_ip, "New Websocket Connection");
@@ -232,7 +232,7 @@ async fn websocket_handler(
         })
         .inc();
 
-    let (notify_sender, notify_receiver) = mpsc::channel(NOTIFICATIONS_CHAN_LEN);
+    let notify_receiver = state.update_tx.subscribe();
     let (sender, receiver) = stream.split();
     let mut subscriber = Subscriber::new(
         id,
@@ -244,7 +244,6 @@ async fn websocket_handler(
         sender,
     );
 
-    ws_state.subscribers.insert(id, notify_sender);
     subscriber.run().await;
 }
 
@@ -258,7 +257,7 @@ pub struct Subscriber {
     closed:                  bool,
     store:                   Arc<State>,
     ws_state:                Arc<WsState>,
-    notify_receiver:         mpsc::Receiver<AggregationEvent>,
+    notify_receiver:         Receiver<AggregationEvent>,
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
@@ -273,7 +272,7 @@ impl Subscriber {
         ip_addr: Option<IpAddr>,
         store: Arc<State>,
         ws_state: Arc<WsState>,
-        notify_receiver: mpsc::Receiver<AggregationEvent>,
+        notify_receiver: Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
     ) -> Self {
@@ -307,8 +306,8 @@ impl Subscriber {
         tokio::select! {
             maybe_update_feeds_event = self.notify_receiver.recv() => {
                 match maybe_update_feeds_event {
-                    Some(event) => self.handle_price_feeds_update(event).await,
-                    None => Err(anyhow!("Update channel closed. This should never happen. Closing connection."))
+                    Ok(event) => self.handle_price_feeds_update(event).await,
+                    Err(e) => Err(anyhow!("Failed to receive update from store: {:?}", e)),
                 }
             },
             maybe_message_or_err = self.receiver.next() => {
@@ -609,34 +608,4 @@ impl Subscriber {
 
         Ok(())
     }
-}
-
-pub async fn notify_updates(ws_state: Arc<WsState>, event: AggregationEvent) {
-    let closed_subscribers: Vec<Option<SubscriberId>> =
-        join_all(ws_state.subscribers.iter_mut().map(|subscriber| {
-            let event = event.clone();
-            async move {
-                match subscriber.send(event).await {
-                    Ok(_) => None,
-                    Err(_) => {
-                        // An error here indicates the channel is closed (which may happen either when the
-                        // client has sent Message::Close or some other abrupt disconnection). We remove
-                        // subscribers only when send fails so we can handle closure only once when we are
-                        // able to see send() fail.
-                        Some(*subscriber.key())
-                    }
-                }
-            }
-        }))
-        .await;
-
-    // Remove closed_subscribers from ws_state
-    closed_subscribers.into_iter().for_each(|id| {
-        if let Some(id) = id {
-            ws_state.subscribers.remove(&id);
-        }
-    });
-
-    // Clean the bytes limiting dictionary
-    ws_state.rate_limiter.retain_recent();
 }

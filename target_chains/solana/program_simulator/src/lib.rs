@@ -18,6 +18,7 @@ use {
         ProgramTestBanksClientExt,
     },
     solana_sdk::{
+        clock::Clock,
         compute_budget,
         signature::{
             Keypair,
@@ -110,6 +111,10 @@ impl ProgramSimulator {
     pub async fn get_balance(&mut self, pubkey: Pubkey) -> Result<u64, BanksClientError> {
         let lamports = self.banks_client.get_balance(pubkey).await.unwrap();
         Ok(lamports)
+    }
+
+    pub async fn get_clock(&mut self) -> Result<Clock, BanksClientError> {
+        self.banks_client.get_sysvar::<Clock>().await
     }
 }
 

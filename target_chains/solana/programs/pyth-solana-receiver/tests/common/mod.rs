@@ -11,7 +11,7 @@ use {
         },
         ID,
     },
-    pyth_solana_receiver_state::config::{
+    pyth_solana_receiver_sdk::config::{
         Config,
         DataSource,
     },

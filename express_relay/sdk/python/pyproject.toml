@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "express-relay"
+version = "0.2.0"
+description = "Utilities for searchers and protocols to interact with the Express Relay protocol."
+authors = ["dourolabs"]
+license = "Proprietary"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+web3 = "^6.15.1"
+eth_abi = "^4.2.1"
+eth_account = "^0.10.0"
+httpx = "^0.23.3"
+websockets = "^11.0.3"
+asyncio = "^3.4.3"
+argparse = "^1.4.0"
+pydantic = "^2.6.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+pyflakes = "^3.2.0"
+mypy = "^1.9.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
