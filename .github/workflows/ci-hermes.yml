@@ -1,0 +1,21 @@
+name: Check Remote Executor
+
+on:
+  pull_request:
+    paths: [hermes/**]
+  push:
+    branches: [main]
+    paths: [hermes/**]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2023-07-23
+          components: rustfmt, clippy
+          override: true
+      - name: Run executor tests
+        run: cargo test --manifest-path ./hermes/Cargo.toml
