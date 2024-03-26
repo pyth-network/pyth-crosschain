@@ -919,8 +919,8 @@ contract EntropyConsumer is IEntropyConsumer {
         bytes32 _randomness
     ) internal override {
         sequence = _sequence;
-        randomness = _randomness;
         provider = _provider;
+        randomness = _randomness;
     }
 }
 
