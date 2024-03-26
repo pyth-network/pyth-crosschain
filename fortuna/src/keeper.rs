@@ -152,9 +152,10 @@ pub async fn handle_backlog(
                 from_block = to_block + 1;
 
                 tracing::info!(
-                    "Backlog processed for chain: {} from block: {}",
+                    "Backlog processed for chain: {} from block: {} to block: {}",
                     &chain_id,
-                    &from_block
+                    &from_block,
+                    &to_block
                 );
             }
             Err(_) => {
