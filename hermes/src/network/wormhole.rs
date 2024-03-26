@@ -14,7 +14,7 @@ use {
         ensure,
         Result,
     },
-    chrono::NaiveDateTime,
+    chrono::DateTime,
     futures::StreamExt,
     proto::spy::v1::{
         filter_entry::Filter,
@@ -200,9 +200,11 @@ pub async fn process_message(state: Arc<State>, vaa_bytes: Vec<u8>) -> Result<()
     let vaa = serde_wormhole::from_slice::<Vaa<&RawMessage>>(&vaa_bytes)?;
 
     // Log VAA Processing.
-    let vaa_timestamp = NaiveDateTime::from_timestamp_opt(vaa.timestamp as i64, 0);
-    let vaa_timestamp = vaa_timestamp.unwrap();
-    let vaa_timestamp = vaa_timestamp.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
+    let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp as i64, 0)
+        .ok_or(anyhow!("Failed to parse VAA Tiestamp"))?
+        .format("%Y-%m-%dT%H:%M:%S.%fZ")
+        .to_string();
+
     let slot = match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
         WormholePayload::Merkle(proof) => proof.slot,
     };
