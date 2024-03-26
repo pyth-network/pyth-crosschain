@@ -44,8 +44,8 @@ async fn init() -> Result<()> {
         config::Options::Run(opts) => {
             tracing::info!("Starting hermes service...");
 
-            // The update channel is used to send store update notifications to the public API.
-            let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
+            // The update broadcast channel is used to send store update notifications to the public API.
+            let (update_tx, _) = tokio::sync::broadcast::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
             let store = State::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
@@ -64,7 +64,7 @@ async fn init() -> Result<()> {
                 Box::pin(spawn(network::wormhole::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(network::pythnet::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(metrics_server::run(opts.clone(), store.clone()))),
-                Box::pin(spawn(api::spawn(opts.clone(), store.clone(), update_rx))),
+                Box::pin(spawn(api::spawn(opts.clone(), store.clone(), update_tx))),
             ])
             .await;
 

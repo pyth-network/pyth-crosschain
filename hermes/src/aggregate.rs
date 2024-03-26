@@ -268,24 +268,17 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     match aggregate_state.latest_completed_slot {
         None => {
             aggregate_state.latest_completed_slot.replace(slot);
-            state
-                .api_update_tx
-                .send(AggregationEvent::New { slot })
-                .await?;
+            state.api_update_tx.send(AggregationEvent::New { slot })?;
         }
         Some(latest) if slot > latest => {
             state.prune_removed_keys(message_state_keys).await;
             aggregate_state.latest_completed_slot.replace(slot);
-            state
-                .api_update_tx
-                .send(AggregationEvent::New { slot })
-                .await?;
+            state.api_update_tx.send(AggregationEvent::New { slot })?;
         }
         _ => {
             state
                 .api_update_tx
-                .send(AggregationEvent::OutOfOrder { slot })
-                .await?;
+                .send(AggregationEvent::OutOfOrder { slot })?;
         }
     }
 
@@ -583,7 +576,7 @@ mod test {
         // Check that the update_rx channel has received a message
         assert_eq!(
             update_rx.recv().await,
-            Some(AggregationEvent::New { slot: 10 })
+            Ok(AggregationEvent::New { slot: 10 })
         );
 
         // Check the price ids are stored correctly
@@ -708,7 +701,7 @@ mod test {
         // Check that the update_rx channel has received a message
         assert_eq!(
             update_rx.recv().await,
-            Some(AggregationEvent::New { slot: 10 })
+            Ok(AggregationEvent::New { slot: 10 })
         );
 
         // Check the price ids are stored correctly
@@ -745,7 +738,7 @@ mod test {
         // Check that the update_rx channel has received a message
         assert_eq!(
             update_rx.recv().await,
-            Some(AggregationEvent::New { slot: 15 })
+            Ok(AggregationEvent::New { slot: 15 })
         );
 
         // Check that price feed 2 does not exist anymore
