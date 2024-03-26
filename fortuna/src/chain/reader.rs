@@ -172,7 +172,7 @@ pub mod mock {
             &self,
             _from_block: BlockNumber,
             _to_block: BlockNumber,
-        ) -> Result<Vec<super::RequestWithCallbackEvent>> {
+        ) -> Result<Vec<super::RequestedWithCallbackEvent>> {
             Ok(vec![])
         }
 
