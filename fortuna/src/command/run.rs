@@ -174,13 +174,11 @@ pub async fn run_keeper(
 
             let handle_backlog = spawn(keeper::handle_backlog(
                 chain_id.clone(),
-                chain_config.provider_address.clone(),
                 latest_safe_block,
-                Arc::clone(&chain_config.contract),
-                Arc::clone(&chain_config.state),
                 Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
                 chain_eth_config.gas_limit,
+                chain_config.clone(),
             ));
 
             let (tx, rx) = mpsc::channel::<keeper::BlockRange>(1000);
@@ -195,10 +193,8 @@ pub async fn run_keeper(
             ));
             let handle_events = spawn(keeper::handle_events(
                 chain_id.clone(),
-                chain_config.provider_address,
+                chain_config.clone(),
                 rx,
-                Arc::clone(&chain_config.contract),
-                Arc::clone(&chain_config.state),
                 Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
                 chain_eth_config.gas_limit,

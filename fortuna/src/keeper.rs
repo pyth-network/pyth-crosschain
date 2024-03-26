@@ -10,7 +10,6 @@ use {
             },
         },
         config::EthereumConfig,
-        state::HashChainState,
     },
     anyhow::Result,
     ethers::{
@@ -21,10 +20,7 @@ use {
             Provider,
             StreamExt,
         },
-        types::{
-            H160,
-            U256,
-        },
+        types::U256,
     },
     std::sync::Arc,
     tokio::{
@@ -40,15 +36,15 @@ use {
 
 pub async fn process_event(
     event: RequestedWithCallbackEvent,
-    contract_reader: &Arc<dyn EntropyReader>,
-    hash_chain_state: &Arc<HashChainState>,
+    chain_config: &api::BlockchainState,
     contract: &Arc<SignablePythContract>,
     nonce_manager: &Arc<NonceManagerMiddleware<Provider<Http>>>,
     gas_limit: U256,
 ) -> Result<()> {
-    let provider_revelation = hash_chain_state.reveal(event.sequence_number)?;
+    let provider_revelation = chain_config.state.reveal(event.sequence_number)?;
 
-    let sim_res = contract_reader
+    let sim_res = chain_config
+        .contract
         .simulate_reveal(
             event.provider_address,
             event.sequence_number,
@@ -103,13 +99,11 @@ pub async fn process_event(
 
 pub async fn handle_backlog(
     chain_id: String,
-    provider_address: H160,
     latest_safe_block: u64,
-    contract_reader: Arc<dyn EntropyReader>,
-    hash_chain_state: Arc<HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
+    chain_config: api::BlockchainState,
 ) -> Result<()> {
     tracing::info!("Starting backlog handler for chain: {}", &chain_id);
     let backlog_blocks: u64 = 10_000;
@@ -137,26 +131,21 @@ pub async fn handle_backlog(
             to_block = last_block;
         }
 
-        let events_res = contract_reader
+        let events_res = chain_config
+            .contract
             .get_request_with_callback_events(from_block, to_block)
             .await;
 
         match events_res {
             Ok(events) => {
                 for event in events {
-                    if provider_address != event.provider_address {
+                    if chain_config.provider_address != event.provider_address {
                         continue;
                     }
 
-                    if let Err(e) = process_event(
-                        event,
-                        &contract_reader,
-                        &hash_chain_state,
-                        &contract,
-                        &nonce_manager,
-                        gas_limit,
-                    )
-                    .await
+                    if let Err(e) =
+                        process_event(event, &chain_config, &contract, &nonce_manager, gas_limit)
+                            .await
                     {
                         // TODO: some retry mechanisms here
                         tracing::error!("Error processing event: {:?}", e);
@@ -272,10 +261,8 @@ pub async fn watch_blocks(
 /// Handles events for a specific blockchain chain.
 pub async fn handle_events(
     chain_id: String,
-    provider_address: H160,
+    chain_config: api::BlockchainState,
     mut rx: mpsc::Receiver<crate::keeper::BlockRange>,
-    contract_reader: Arc<dyn EntropyReader>,
-    hash_chain_state: Arc<crate::state::HashChainState>,
     nonce_manager: Arc<NonceManagerMiddleware<Provider<Http>>>,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
@@ -310,21 +297,21 @@ pub async fn handle_events(
                     &to_block
                 );
 
-                let events_res = contract_reader
+                let events_res = chain_config
+                    .contract
                     .get_request_with_callback_events(from_block, to_block)
                     .await;
 
                 match events_res {
                     Ok(events) => {
                         for event in events {
-                            if provider_address != event.provider_address {
+                            if chain_config.provider_address != event.provider_address {
                                 continue;
                             }
 
                             if let Err(e) = process_event(
                                 event,
-                                &contract_reader,
-                                &hash_chain_state,
+                                &chain_config,
                                 &contract,
                                 &nonce_manager,
                                 gas_limit,
