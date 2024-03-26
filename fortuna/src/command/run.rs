@@ -22,14 +22,6 @@ use {
         Result,
     },
     axum::Router,
-    ethers::{
-        middleware::MiddlewareBuilder,
-        providers::Middleware,
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-    },
     futures::future::join_all,
     std::{
         collections::HashMap,
@@ -131,21 +123,12 @@ pub async fn run_keeper(
                 &latest_safe_block
             );
 
-            // create a contract and a nonce manager
             let contract =
                 Arc::new(SignablePythContract::from_config(&chain_eth_config, &private_key).await?);
-            let provider = contract.client().provider().clone();
-            let nonce_manager =
-                Arc::new(provider.nonce_manager(private_key.parse::<LocalWallet>()?.address()));
-
-            nonce_manager
-                .initialize_nonce(Some(latest_safe_block.into()))
-                .await?;
 
             let handle_backlog = spawn(keeper::handle_backlog(
                 chain_id.clone(),
                 latest_safe_block,
-                Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
                 chain_eth_config.gas_limit,
                 chain_config.clone(),
@@ -165,7 +148,6 @@ pub async fn run_keeper(
                 chain_id.clone(),
                 chain_config.clone(),
                 rx,
-                Arc::clone(&nonce_manager),
                 Arc::clone(&contract),
                 chain_eth_config.gas_limit,
             ));

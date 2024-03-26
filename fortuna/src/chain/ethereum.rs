@@ -28,6 +28,7 @@ use {
                 TransformerError,
                 TransformerMiddleware,
             },
+            NonceManagerMiddleware,
             SignerMiddleware,
         },
         prelude::TransactionRequest,
@@ -60,7 +61,10 @@ abigen!(
 );
 
 pub type SignablePythContract = PythRandom<
-    TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
+    TransformerMiddleware<
+        NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
+        LegacyTxTransformer,
+    >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
 
@@ -98,10 +102,12 @@ impl SignablePythContract {
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
 
+        let address = wallet__.address();
+
         Ok(PythRandom::new(
             chain_config.contract_addr,
             Arc::new(TransformerMiddleware::new(
-                SignerMiddleware::new(provider, wallet__),
+                NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
                 transformer,
             )),
         ))
