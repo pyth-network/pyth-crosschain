@@ -834,6 +834,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         assertEq(consumer.sequence(), assignedSequenceNumber);
+        assertEq(consumer.provider(), provider1);
         assertEq(
             consumer.randomness(),
             random.combineRandomValues(
@@ -893,6 +894,7 @@ contract EntropyConsumer is IEntropyConsumer {
     uint64 public sequence;
     bytes32 public randomness;
     address public entropy;
+    address public provider;
 
     constructor(address _entropy) {
         entropy = _entropy;
@@ -913,9 +915,11 @@ contract EntropyConsumer is IEntropyConsumer {
 
     function entropyCallback(
         uint64 _sequence,
+        address _provider,
         bytes32 _randomness
     ) internal override {
         sequence = _sequence;
+        provider = _provider;
         randomness = _randomness;
     }
 }
@@ -935,6 +939,7 @@ contract EntropyConsumerFails is IEntropyConsumer {
 
     function entropyCallback(
         uint64 _sequence,
+        address _provider,
         bytes32 _randomness
     ) internal override {
         revert("Callback failed");

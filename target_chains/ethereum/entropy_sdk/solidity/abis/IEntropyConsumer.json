@@ -7,6 +7,11 @@
         "type": "uint64"
       },
       {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
         "internalType": "bytes32",
         "name": "randomNumber",
         "type": "bytes32"

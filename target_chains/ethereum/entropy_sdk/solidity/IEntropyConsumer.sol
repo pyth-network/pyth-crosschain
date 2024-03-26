@@ -5,12 +5,16 @@ abstract contract IEntropyConsumer {
     // This method is called by Entropy to provide the random number to the consumer.
     // It asserts that the msg.sender is the Entropy contract. It is not meant to be
     // override by the consumer.
-    function _entropyCallback(uint64 sequence, bytes32 randomNumber) external {
+    function _entropyCallback(
+        uint64 sequence,
+        address provider,
+        bytes32 randomNumber
+    ) external {
         address entropy = getEntropy();
         require(entropy != address(0), "Entropy address not set");
         require(msg.sender == entropy, "Only Entropy can call this function");
 
-        entropyCallback(sequence, randomNumber);
+        entropyCallback(sequence, provider, randomNumber);
     }
 
     // getEntropy returns Entropy contract address. The method is being used to check that the
@@ -23,6 +27,7 @@ abstract contract IEntropyConsumer {
     // indeed from Entropy contract.
     function entropyCallback(
         uint64 sequence,
+        address provider,
         bytes32 randomNumber
     ) internal virtual;
 }
