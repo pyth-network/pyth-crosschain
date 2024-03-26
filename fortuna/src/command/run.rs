@@ -107,36 +107,6 @@ pub async fn run_api(
 }
 
 
-pub async fn run_keeper_with_exit_check(
-    chains: HashMap<String, api::BlockchainState>,
-    config: Config,
-    mut rx_exit: watch::Receiver<bool>,
-    private_key: String,
-) -> Result<()> {
-    loop {
-        tokio::select! {
-            _ = rx_exit.changed() => {
-                tracing::info!("Shutting down keeper...");
-                break;
-            }
-            keeper_res = run_keeper (
-                chains.clone(),
-                config.clone(),
-                private_key.clone(),
-            ) => {
-                if let Err(e) = keeper_res {
-                    tracing::error!("Keeper service failed. {:?}", e);
-                }
-
-                tracing::info!("Restarting keeper service in 5 seconds.");
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-            }
-        }
-    }
-
-    Ok(())
-}
-
 pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
@@ -285,12 +255,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         Ok::<(), Error>(())
     });
-    spawn(run_keeper_with_exit_check(
-        chains_clone,
-        config,
-        rx_exit.clone(),
-        private_key,
-    ));
+    spawn(run_keeper(chains_clone, config, private_key));
 
     run_api(opts.addr.clone(), chains, rx_exit).await?;
 
