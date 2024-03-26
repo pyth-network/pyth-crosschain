@@ -48,6 +48,11 @@
   rpcUrl: https://rpc.public.zkevm-test.net/
   networkId: 1442
   type: EvmChain
+- id: polygon_blackberry
+  mainnet: false
+  rpcUrl: https://rpc.polygon-blackberry.gelato.digital
+  networkId: 94204209
+  type: EvmChain
 - id: aurora_testnet
   mainnet: false
   rpcUrl: https://testnet.aurora.dev
@@ -288,6 +293,11 @@
   rpcUrl: https://sepolia-rollup.arbitrum.io/rpc
   networkId: 421614
   type: EvmChain
+- id: arbitrum_blueberry
+  mainnet: false
+  rpcUrl: https://rpc.arb-blueberry.gelato.digital
+  networkId: 88153591557
+  type: EvmChain
 - id: boba
   mainnet: true
   rpcUrl: https://replica.boba.network
@@ -317,6 +327,11 @@
   mainnet: false
   rpcUrl: https://sepolia.optimism.io
   networkId: 11155420
+  type: EvmChain
+- id: optimism_celestia_raspberry
+  mainnet: false
+  rpcUrl: https://rpc.opcelestia-raspberry.gelato.digital
+  networkId: 123420111
   type: EvmChain
 - id: chiliz_spicy
   mainnet: false
