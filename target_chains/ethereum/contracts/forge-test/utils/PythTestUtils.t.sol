@@ -17,7 +17,7 @@ import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
 import "./RandTestUtils.t.sol";
 
-abstract contract PythTestUtils is Test, WormholeTestUtils {
+abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
     uint16 constant SOURCE_EMITTER_CHAIN_ID = 0x1;
     bytes32 constant SOURCE_EMITTER_ADDRESS =
         0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
@@ -95,6 +95,14 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         uint64 emaConf;
     }
 
+    struct MerkleUpdateConfig {
+        uint8 depth;
+        uint8 numSigners;
+        uint16 source_chain_id;
+        bytes32 source_emitter_address;
+        bool brokenVaa;
+    }
+
     function encodePriceFeedMessages(
         PriceFeedMessage[] memory priceFeedMessages
     ) internal pure returns (bytes[] memory encodedPriceFeedMessages) {
@@ -115,17 +123,16 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         }
     }
 
-    function generateWhMerkleUpdate(
+    function generateWhMerkleUpdateWithSource(
         PriceFeedMessage[] memory priceFeedMessages,
-        uint8 depth,
-        uint8 numSigners
+        MerkleUpdateConfig memory config
     ) internal returns (bytes memory whMerkleUpdateData) {
         bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
             priceFeedMessages
         );
 
         (bytes20 rootDigest, bytes[] memory proofs) = MerkleTree
-            .constructProofs(encodedPriceFeedMessages, depth);
+            .constructProofs(encodedPriceFeedMessages, config.depth);
 
         bytes memory wormholePayload = abi.encodePacked(
             uint32(0x41555756), // PythAccumulator.ACCUMULATOR_WORMHOLE_MAGIC
@@ -137,12 +144,21 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
 
         bytes memory wormholeMerkleVaa = generateVaa(
             0,
-            SOURCE_EMITTER_CHAIN_ID,
-            SOURCE_EMITTER_ADDRESS,
+            config.source_chain_id,
+            config.source_emitter_address,
             0,
             wormholePayload,
-            numSigners
+            config.numSigners
         );
+
+        if (config.brokenVaa) {
+            uint mutPos = getRandUint() % wormholeMerkleVaa.length;
+
+            // mutate the random position by 1 bit
+            wormholeMerkleVaa[mutPos] = bytes1(
+                uint8(wormholeMerkleVaa[mutPos]) ^ 1
+            );
+        }
 
         whMerkleUpdateData = abi.encodePacked(
             uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
@@ -163,6 +179,23 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
                 proofs[i]
             );
         }
+    }
+
+    function generateWhMerkleUpdate(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 depth,
+        uint8 numSigners
+    ) internal returns (bytes memory whMerkleUpdateData) {
+        whMerkleUpdateData = generateWhMerkleUpdateWithSource(
+            priceFeedMessages,
+            MerkleUpdateConfig(
+                depth,
+                numSigners,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
     }
 
     function generateForwardCompatibleWhMerkleUpdate(

@@ -111,7 +111,7 @@ abstract contract Pyth is
                     offset
                 );
             } else {
-                totalNumUpdates += 1;
+                revert PythErrors.InvalidUpdateData();
             }
         }
         return getTotalFee(totalNumUpdates);
@@ -472,80 +472,7 @@ abstract contract Pyth is
                     if (offset != encoded.length)
                         revert PythErrors.InvalidUpdateData();
                 } else {
-                    bytes memory encoded;
-                    {
-                        IWormhole.VM
-                            memory vm = parseAndVerifyBatchAttestationVM(
-                                updateData[i]
-                            );
-                        encoded = vm.payload;
-                    }
-
-                    /** Batch price logic */
-                    // TODO: gas optimization
-                    (
-                        uint index,
-                        uint nAttestations,
-                        uint attestationSize
-                    ) = parseBatchAttestationHeader(encoded);
-
-                    // Deserialize each attestation
-                    for (uint j = 0; j < nAttestations; j++) {
-                        // NOTE: We don't advance the global index immediately.
-                        // attestationIndex is an attestation-local offset used
-                        // for readability and easier debugging.
-                        uint attestationIndex = 0;
-
-                        // Unused bytes32 product id
-                        attestationIndex += 32;
-
-                        bytes32 priceId = UnsafeBytesLib.toBytes32(
-                            encoded,
-                            index + attestationIndex
-                        );
-
-                        // check whether caller requested for this data
-                        uint k = findIndexOfPriceId(priceIds, priceId);
-
-                        // If priceFeed[k].id != 0 then it means that there was a valid
-                        // update for priceIds[k] and we don't need to process this one.
-                        if (k == priceIds.length || priceFeeds[k].id != 0) {
-                            index += attestationSize;
-                            continue;
-                        }
-
-                        (
-                            PythInternalStructs.PriceInfo memory priceInfo,
-
-                        ) = parseSingleAttestationFromBatch(
-                                encoded,
-                                index,
-                                attestationSize
-                            );
-
-                        updateLatestPriceIfNecessary(priceId, priceInfo);
-
-                        uint publishTime = uint(priceInfo.publishTime);
-                        // Check the publish time of the price is within the given range
-                        // and only fill the priceFeedsInfo if it is.
-                        // If is not, default id value of 0 will still be set and
-                        // this will allow other updates for this price id to be processed.
-                        if (
-                            publishTime >= config.minPublishTime &&
-                            publishTime <= config.maxPublishTime &&
-                            !config.checkUniqueness // do not allow batch updates to be used by parsePriceFeedUpdatesUnique
-                        ) {
-                            fillPriceFeedFromPriceInfo(
-                                priceFeeds,
-                                k,
-                                priceId,
-                                priceInfo,
-                                publishTime
-                            );
-                        }
-
-                        index += attestationSize;
-                    }
+                    revert PythErrors.InvalidUpdateData();
                 }
             }
 
