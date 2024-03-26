@@ -55,16 +55,20 @@ pub async fn process_event(
 
     match sim_res {
         Ok(_) => {
-            let res = contract
-                .reveal_with_callback_wrapper(
+            let reveal_call = contract
+                .reveal_with_callback(
                     event.provider_address,
                     event.sequence_number,
                     event.user_random_number,
                     provider_revelation,
-                    nonce_manager.next(),
-                    gas_limit,
                 )
+                .gas(gas_limit);
+
+            let res = nonce_manager
+                .send_transaction(reveal_call.tx, None)
+                .await?
                 .await;
+
             match res {
                 Ok(_) => {
                     tracing::info!(

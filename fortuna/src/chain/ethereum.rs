@@ -43,7 +43,6 @@ use {
         types::{
             transaction::eip2718::TypedTransaction,
             BlockNumber as EthersBlockNumber,
-            U256,
         },
     },
     sha3::{
@@ -139,30 +138,6 @@ impl SignablePythContract {
         } else {
             Err(anyhow!("Request failed").into())
         }
-    }
-
-    pub async fn reveal_with_callback_wrapper(
-        &self,
-        provider: Address,
-        sequence_number: u64,
-        user_random_number: [u8; 32],
-        provider_revelation: [u8; 32],
-        nonce: U256,
-        gas_limit: U256,
-    ) -> Result<()> {
-        self.reveal_with_callback(
-            provider,
-            sequence_number,
-            user_random_number,
-            provider_revelation,
-        )
-        .gas(gas_limit)
-        .nonce(nonce)
-        .send()
-        .await?
-        .await?;
-
-        Ok(())
     }
 
     /// Reveal the generated random number to the contract.
