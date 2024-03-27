@@ -405,11 +405,18 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         clearRequest(provider, sequenceNumber);
 
-        IEntropyConsumer(callAddress)._entropyCallback(
-            sequenceNumber,
-            provider,
-            randomNumber
-        );
+        // Check if the gi.callAddress is a contract account.
+        uint len;
+        assembly {
+            len := extcodesize(callAddress)
+        }
+        if (len != 0) {
+            IEntropyConsumer(callAddress)._entropyCallback(
+                sequenceNumber,
+                provider,
+                randomNumber
+            );
+        }
     }
 
     function getProviderInfo(
