@@ -3095,6 +3095,7 @@ dependencies = [
  "serde_wormhole",
  "sha3 0.10.6",
  "slow_primes",
+ "solana-program",
  "thiserror",
  "wormhole-vaas-serde",
 ]
