@@ -13,10 +13,7 @@ use {
     },
     ipnet::IpNet,
     serde_qs::axum::QsQueryConfig,
-    std::sync::{
-        atomic::Ordering,
-        Arc,
-    },
+    std::sync::Arc,
     tokio::sync::broadcast::Sender,
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
@@ -159,10 +156,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
     axum::Server::try_bind(&opts.rpc.listen_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
-            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-            }
-
+            let _ = crate::EXIT.subscribe().changed().await;
             tracing::info!("Shutting down RPC server...");
         })
         .await?;
