@@ -513,3 +513,18 @@
   rpcUrl: https://rpc.merlinchain.io
   networkId: 4200
   type: EvmChain
+- id: parallel_testnet
+  mainnet: false
+  rpcUrl: https://rpc-accused-coffee-koala-b9fn1dik76.t.conduit.xyz
+  networkId: 9659
+  type: EvmChain
+- id: parallel
+  mainnet: true
+  rpcUrl: https://rpc.parallel.fi/
+  networkId: 1024
+  type: EvmChain
+- id: polynomial_testnet
+  mainnet: false
+  rpcUrl: https://rpc-polynomial-network-testnet-x0tryg8u1c.t.conduit.xyz
+  networkId: 80008
+  type: EvmChain
