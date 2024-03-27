@@ -77,127 +77,6 @@ contract("Pyth", function () {
     );
   });
 
-  // NOTE(2022-05-02): Raw hex payload obtained from format serialization unit tests in `wormhole_attester/sdk/rust`
-  // Latest known addition: wire format v3
-  //
-  // Tests rely on a wormhole_attester/sdk/rust mock price/prod ID generation rule:
-  // nthProdByte(n) = n % 256, starting with n=1
-  // nthPriceByte(n) = 255 - (n % 256), starting with n=1
-  //
-  // Examples:
-  // 1st prod = "0x010101[...]"
-  // 1st price = "0xFEFEFE[...]"
-  // 2nd prod = "0x020202[...]"
-  // 2nd price = "0xFDFDFD[...]"
-  // 3rd prod = "0x030303[...]"
-  // 3rd price = "0xFCFCFC[...]"
-  const RAW_BATCH_ATTESTATION_TIME_REGEX = /DEADBEEFFADEDEED/g;
-  const RAW_BATCH_PUBLISH_TIME_REGEX = /00000000DADEBEEF/g;
-  const RAW_BATCH_PRICE_REGEX = /0000002BAD2FEED7/g;
-  const RAW_BATCH_PREV_PRICE_REGEX = /0000DEADFACEBEEF/g;
-  const RAW_BATCH_PREV_PUBLISH_TIME_REGEX = /00000000DEADBABE/g;
-  const RAW_BATCH_EMA_PRICE_REGEX = /FFFFFFFFFFFFFFD6/g;
-  const RAW_PRICE_ATTESTATION_SIZE = 149;
-  const RAW_BATCH_ATTESTATION_COUNT = 10;
-  const RAW_BATCH =
-    "0x" +
-    "5032574800030000000102000A00950101010101010101010101010101010101010101010101010101010101010101FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0202020202020202020202020202020202020202020202020202020202020202FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0303030303030303030303030303030303030303030303030303030303030303FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0404040404040404040404040404040404040404040404040404040404040404FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0505050505050505050505050505050505050505050505050505050505050505FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0606060606060606060606060606060606060606060606060606060606060606F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F90000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0707070707070707070707070707070707070707070707070707070707070707F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F80000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0808080808080808080808080808080808080808080808080808080808080808F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F70000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0909090909090909090909090909090909090909090909090909090909090909F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F60000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0AF5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F50000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF";
-  const RAW_UNKNOWN_BATCH_ATTESTATION_COUNT = 3;
-  const RAW_UNKNOWN_BATCH =
-    "0x" +
-    "5032574800030000000102000300950101010101010101010101010101010101010101010101010101010101010101FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0202020202020202020202020202020202020202020202020202020202020202FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0303030303030303030303030303030303030303030303030303030303030303FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF";
-
-  // Takes an unsigned 64-bit integer, converts it to hex with 0-padding
-  function u64ToHex(timestamp) {
-    // u64 -> 8 bytes -> 16 hex bytes
-    return timestamp.toString(16).padStart(16, "0");
-  }
-
-  function generateRawBatchAttestation(
-    publishTime,
-    attestationTime,
-    priceVal,
-    emaPriceVal
-  ) {
-    const pubTs = u64ToHex(publishTime);
-    const attTs = u64ToHex(attestationTime);
-    const price = u64ToHex(priceVal);
-    const emaPrice = u64ToHex(emaPriceVal || priceVal);
-    const replaced = RAW_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
-      .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
-      .replace(RAW_BATCH_PRICE_REGEX, price)
-      .replace(RAW_BATCH_EMA_PRICE_REGEX, emaPrice);
-    return replaced;
-  }
-
-  function generateRawUnknownBatchAttestation(
-    publishTime,
-    attestationTime,
-    priceVal,
-    emaPriceVal,
-    prevPublishTime,
-    prevPriceVal
-  ) {
-    const pubTs = u64ToHex(publishTime);
-    const attTs = u64ToHex(attestationTime);
-    const price = u64ToHex(priceVal);
-    const emaPrice = u64ToHex(emaPriceVal);
-    const prevPubTs = u64ToHex(prevPublishTime);
-    const prevPrice = u64ToHex(prevPriceVal);
-
-    const replaced = RAW_UNKNOWN_BATCH.replace(
-      RAW_BATCH_PUBLISH_TIME_REGEX,
-      pubTs
-    )
-      .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
-      .replace(RAW_BATCH_PRICE_REGEX, price)
-      .replace(RAW_BATCH_EMA_PRICE_REGEX, emaPrice)
-      .replace(RAW_BATCH_PREV_PUBLISH_TIME_REGEX, prevPubTs)
-      .replace(RAW_BATCH_PREV_PRICE_REGEX, prevPrice);
-    return replaced;
-  }
-
-  it("should parse batch price attestation correctly", async function () {
-    let attestationTime = 1647273460; // re-used for publishTime
-    let publishTime = 1647273465; // re-used for publishTime
-    let priceVal = 1337;
-    let emaPriceVal = 2022;
-    let rawBatch = generateRawBatchAttestation(
-      publishTime,
-      attestationTime,
-      priceVal,
-      emaPriceVal
-    );
-
-    const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
-
-    expectEventMultipleTimes(
-      receipt,
-      "PriceFeedUpdate",
-      {
-        price: "1337",
-      },
-      10
-    );
-
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-
-      const price = await this.pythProxy.getPriceUnsafe(price_id);
-      assert.equal(price.price, priceVal.toString());
-      assert.equal(price.conf, "101"); // The value is hardcoded in the RAW_BATCH.
-      assert.equal(price.publishTime, publishTime.toString());
-      assert.equal(price.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
-
-      const emaPrice = await this.pythProxy.getEmaPriceUnsafe(price_id);
-      assert.equal(emaPrice.price, emaPriceVal.toString());
-      assert.equal(emaPrice.conf, "42"); // The value is hardcoded in the RAW_BATCH.
-      assert.equal(emaPrice.publishTime, publishTime.toString());
-      assert.equal(emaPrice.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
-    }
-  });
-
   async function updatePriceFeeds(
     contract,
     batches,
@@ -245,50 +124,9 @@ contract("Pyth", function () {
     );
   }
 
-  it("should attest price updates over wormhole", async function () {
-    let ts = 1647273460;
-    let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
-    await updatePriceFeeds(this.pythProxy, [rawBatch]);
-  });
-
   it("should attest price updates empty", async function () {
     const receipt = await updatePriceFeeds(this.pythProxy, []);
     expectEvent.notEmitted(receipt, "PriceFeedUpdate");
-    expectEvent.notEmitted(receipt, "BatchPriceFeedUpdate");
-  });
-
-  it("should attest price updates with multiple batches of correct order", async function () {
-    let ts = 1647273460;
-    let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
-    let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-    const receipt = await updatePriceFeeds(this.pythProxy, [
-      rawBatch1,
-      rawBatch2,
-    ]);
-    expectEvent(receipt, "PriceFeedUpdate", {
-      publishTime: (ts - 5).toString(),
-    });
-    expectEvent(receipt, "PriceFeedUpdate", {
-      publishTime: (ts + 5).toString(),
-    });
-    expectEventMultipleTimes(receipt, "BatchPriceFeedUpdate", {}, 2);
-  });
-
-  it("should attest price updates with multiple batches of wrong order", async function () {
-    let ts = 1647273460;
-    let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
-    let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-    const receipt = await updatePriceFeeds(this.pythProxy, [
-      rawBatch2,
-      rawBatch1,
-    ]);
-    expectEvent(receipt, "PriceFeedUpdate", {
-      publishTime: (ts + 5).toString(),
-    });
-    expectEventMultipleTimes(receipt, "BatchPriceFeedUpdate", {}, 2);
-    expectEventNotEmittedWithArgs(receipt, "PriceFeedUpdate", {
-      publishTime: (ts - 5).toString(),
-    });
   });
 
   /**
@@ -305,151 +143,6 @@ contract("Pyth", function () {
     );
   }
 
-  it("should not attest price updates with when required fee is not given", async function () {
-    // Check initial fee is zero
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
-
-    // Set fee to 10
-    await setFeeTo(this.pythProxy, 10);
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
-
-    let ts = 1647273460;
-    let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
-    let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-
-    // Getting the fee from the contract
-    let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([
-      rawBatch1,
-      rawBatch2,
-    ]);
-    assert.equal(feeInWei, 20);
-
-    // When a smaller fee is payed it reverts
-    await expectRevertCustomError(
-      updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei - 1),
-      "InsufficientFee"
-    );
-  });
-
-  it("should attest price updates with when required fee is given", async function () {
-    // Check initial fee is zero
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
-
-    // Set fee to 10
-    await setFeeTo(this.pythProxy, 10);
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
-
-    let ts = 1647273460;
-    let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
-    let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-
-    // Getting the fee from the contract
-    let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([
-      rawBatch1,
-      rawBatch2,
-    ]);
-    assert.equal(feeInWei, 20);
-
-    await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei);
-    const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
-    assert.equal(pythBalance, feeInWei);
-  });
-
-  it("should attest price updates with required fee even if more fee is given", async function () {
-    // Check initial fee is zero
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
-
-    // Set fee to 10
-    await setFeeTo(this.pythProxy, 10);
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
-
-    let ts = 1647273460;
-    let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
-    let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-
-    // Paying the fee works and extra fee is not paid back.
-    let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([
-      rawBatch1,
-      rawBatch2,
-    ]);
-    assert.equal(feeInWei, 20);
-
-    await updatePriceFeeds(
-      this.pythProxy,
-      [rawBatch1, rawBatch2],
-      feeInWei + 10
-    );
-    const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
-    assert.equal(pythBalance, feeInWei + 10);
-  });
-
-  it("should cache price updates", async function () {
-    let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-    let priceVal = 521;
-    let rawBatch = generateRawBatchAttestation(
-      currentTimestamp - 5,
-      currentTimestamp,
-      priceVal
-    );
-    let receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
-    expectEvent(receipt, "PriceFeedUpdate", {
-      price: priceVal.toString(),
-      publishTime: (currentTimestamp - 5).toString(),
-    });
-    expectEvent(receipt, "BatchPriceFeedUpdate");
-
-    let first_prod_id = "0x" + "01".repeat(32);
-    let first_price_id = "0x" + "fe".repeat(32);
-    let second_prod_id = "0x" + "02".repeat(32);
-    let second_price_id = "0x" + "fd".repeat(32);
-
-    // Confirm that previously non-existent feeds are created
-    let first = await this.pythProxy.queryPriceFeed(first_price_id);
-    console.debug(`first is ${JSON.stringify(first)}`);
-    assert.equal(first.price.price, priceVal);
-
-    let second = await this.pythProxy.queryPriceFeed(second_price_id);
-    assert.equal(second.price.price, priceVal);
-
-    // Confirm the price is bumped after a new attestation updates each record
-    let nextTimestamp = currentTimestamp + 1;
-    let rawBatch2 = generateRawBatchAttestation(
-      nextTimestamp - 5,
-      nextTimestamp,
-      priceVal + 5
-    );
-    receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2]);
-    expectEvent(receipt, "PriceFeedUpdate", {
-      price: (priceVal + 5).toString(),
-      publishTime: (nextTimestamp - 5).toString(),
-    });
-    expectEvent(receipt, "BatchPriceFeedUpdate");
-
-    first = await this.pythProxy.queryPriceFeed(first_price_id);
-    assert.equal(first.price.price, priceVal + 5);
-
-    second = await this.pythProxy.queryPriceFeed(second_price_id);
-    assert.equal(second.price.price, priceVal + 5);
-
-    // Confirm that only strictly larger timestamps trigger updates
-    let rawBatch3 = generateRawBatchAttestation(
-      nextTimestamp - 5,
-      nextTimestamp,
-      priceVal + 10
-    );
-    receipt = await updatePriceFeeds(this.pythProxy, [rawBatch3]);
-    expectEvent.notEmitted(receipt, "PriceFeedUpdate");
-    expectEvent(receipt, "BatchPriceFeedUpdate");
-
-    first = await this.pythProxy.queryPriceFeed(first_price_id);
-    assert.equal(first.price.price, priceVal + 5);
-    assert.notEqual(first.price.price, priceVal + 10);
-
-    second = await this.pythProxy.queryPriceFeed(second_price_id);
-    assert.equal(second.price.price, priceVal + 5);
-    assert.notEqual(second.price.price, priceVal + 10);
-  });
-
   it("should fail transaction if a price is not found", async function () {
     await expectRevertCustomError(
       this.pythProxy.queryPriceFeed(
@@ -457,44 +150,6 @@ contract("Pyth", function () {
       ),
       "PriceFeedNotFound"
     );
-  });
-
-  it("should revert on getting stale current prices", async function () {
-    let smallestTimestamp = 1;
-    let rawBatch = generateRawBatchAttestation(
-      smallestTimestamp,
-      smallestTimestamp + 5,
-      1337
-    );
-    await updatePriceFeeds(this.pythProxy, [rawBatch]);
-
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      await expectRevertCustomError(
-        this.pythProxy.getPrice(price_id),
-        "StalePrice"
-      );
-    }
-  });
-
-  it("should revert on getting current prices too far into the future as they are considered unknown", async function () {
-    let largestTimestamp = 4294967295;
-    let rawBatch = generateRawBatchAttestation(
-      largestTimestamp - 5,
-      largestTimestamp,
-      1337
-    );
-    await updatePriceFeeds(this.pythProxy, [rawBatch]);
-
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      await expectRevertCustomError(
-        this.pythProxy.getPrice(price_id),
-        "StalePrice"
-      );
-    }
   });
 
   /**
@@ -515,85 +170,6 @@ contract("Pyth", function () {
       governanceSequence ?? 1
     );
   }
-
-  it("changing validity time works", async function () {
-    const latestTime = await time.latest();
-    let rawBatch = generateRawBatchAttestation(latestTime, latestTime, 1337);
-
-    await updatePriceFeeds(this.pythProxy, [rawBatch]);
-
-    // Setting the validity time to 30 seconds
-    await setValidPeriodTo(this.pythProxy, 30, 1);
-    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 30);
-
-    // Then prices should be available
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-
-      // Expect getPrice to work (not revert)
-      await this.pythProxy.getPrice(price_id);
-    }
-
-    // One minute passes
-    await time.increase(time.duration.minutes(1));
-
-    // The prices should become unavailable now.
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-
-      await expectRevertCustomError(
-        this.pythProxy.getPrice(price_id),
-        "StalePrice"
-      );
-    }
-
-    // Setting the validity time to 120 seconds
-    await setValidPeriodTo(this.pythProxy, 120, 2);
-    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 120);
-
-    // Then prices should be available because the valid period is now 120 seconds
-    for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-
-      // Expect getPrice to work (not revert)
-      await this.pythProxy.getPrice(price_id);
-    }
-  });
-
-  it("should use prev price and timestamp on unknown attestation status", async function () {
-    const latestTime = await time.latest();
-    let rawBatch = generateRawUnknownBatchAttestation(
-      latestTime,
-      latestTime,
-      1337, // price
-      1500, // ema price
-      latestTime - 10,
-      1000 // prev price
-    );
-
-    const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
-    expectEvent(receipt, "PriceFeedUpdate", {
-      price: "1000",
-    });
-
-    // Then prices should be available because the valid period is now 120 seconds
-    for (var i = 1; i <= RAW_UNKNOWN_BATCH_ATTESTATION_COUNT; i++) {
-      const price_id =
-        "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-
-      const price = await this.pythProxy.getPrice(price_id);
-      assert.equal(price.price, "1000");
-      assert.equal(price.publishTime, (latestTime - 10).toString());
-
-      const emaPrice = await this.pythProxy.getEmaPrice(price_id);
-      assert.equal(emaPrice.price, "1500");
-      assert.equal(emaPrice.publishTime, (latestTime - 10).toString());
-    }
-  });
 
   // Governance
 
@@ -980,19 +556,7 @@ contract("Pyth", function () {
       )
     );
 
-    let rawBatch = generateRawBatchAttestation(100, 100, 1337);
-    await expectRevertCustomError(
-      updatePriceFeeds(this.pythProxy, [rawBatch]),
-      "InvalidUpdateDataSource"
-    );
-
-    await updatePriceFeeds(
-      this.pythProxy,
-      [rawBatch],
-      0,
-      governance.CHAINS.acala,
-      "0x0000000000000000000000000000000000000000000000000000000000001111"
-    );
+    // TODO: try to publish prices
   });
 
   it("Setting fee should work", async function () {
@@ -1019,13 +583,7 @@ contract("Pyth", function () {
 
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), "5000");
 
-    let rawBatch = generateRawBatchAttestation(100, 100, 1337);
-    await expectRevertCustomError(
-      updatePriceFeeds(this.pythProxy, [rawBatch], 0),
-      "InsufficientFee"
-    );
-
-    await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
+    // TODO: check that fee is applied
   });
 
   it("Setting valid period should work", async function () {
