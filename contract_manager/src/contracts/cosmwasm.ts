@@ -114,23 +114,19 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     };
   }
 
-  constructor(
-    public chain: CosmWasmChain,
-    public address: string,
-    public denom: string | undefined
-  ) {
+  constructor(public chain: CosmWasmChain, public address: string) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string; denom?: string }
+    parsed: { type: string; address: string }
   ): CosmWasmPriceFeedContract {
     if (parsed.type !== CosmWasmPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof CosmWasmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new CosmWasmPriceFeedContract(chain, parsed.address, parsed.denom);
+    return new CosmWasmPriceFeedContract(chain, parsed.address);
   }
 
   getType(): string {
@@ -177,11 +173,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       newAdminAddr: result.contractAddr,
       contractAddr: result.contractAddr,
     });
-    return new CosmWasmPriceFeedContract(
-      chain,
-      result.contractAddr,
-      config.fee.denom
-    );
+    return new CosmWasmPriceFeedContract(chain, result.contractAddr);
   }
 
   getId(): string {
