@@ -96,7 +96,7 @@ async function run() {
   });
   console.log(`Contract admin set to ${address}`);
 
-  const contract = new CosmWasmPriceFeedContract(chain, address, undefined);
+  const contract = new CosmWasmPriceFeedContract(chain, address);
   DefaultStore.contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
   console.log("Added the following to your CosmWasm contracts configs");
