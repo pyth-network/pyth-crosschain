@@ -140,6 +140,8 @@ export const RECEIVER_CHAINS = {
   linea_sepolia: 50064,
   rol_testnet: 50065,
   morph_testnet: 50066,
+  astar_zkatana_testnet: 50067,
+  boba_sepolia: 50068,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
