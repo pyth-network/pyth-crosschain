@@ -410,9 +410,9 @@ contract PythTestUtilsTest is
     }
 
     using PythUtils for *;
+
     function testConvertToUnit() public {
-        
         vm.expectRevert();
-        uint256 price = PythUtils.convertToUnit(-100, -5,18);
+        uint256 price = PythUtils.convertToUnit(-100, -5, 18);
     }
 }
