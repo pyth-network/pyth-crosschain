@@ -324,26 +324,6 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         );
     }
 
-    // Generates a VAA for the given attestations.
-    // This method calls generatePriceFeedUpdatePayload and then creates a VAA with it.
-    // The VAAs generated from this method use block timestamp as their timestamp.
-    function generateWhBatchUpdate(
-        PriceAttestation[] memory attestations,
-        uint64 sequence,
-        uint8 numSigners
-    ) public returns (bytes memory vaa) {
-        bytes memory payload = generatePriceFeedUpdatePayload(attestations);
-
-        vaa = generateVaa(
-            uint32(block.timestamp),
-            SOURCE_EMITTER_CHAIN_ID,
-            SOURCE_EMITTER_ADDRESS,
-            sequence,
-            payload,
-            numSigners
-        );
-    }
-
     function pricesToPriceAttestations(
         bytes32[] memory priceIds,
         PythStructs.Price[] memory prices
