@@ -8,12 +8,13 @@ use {
         Parser,
     },
     futures::future::join_all,
+    lazy_static::lazy_static,
     state::State,
-    std::{
-        io::IsTerminal,
-        sync::atomic::AtomicBool,
+    std::io::IsTerminal,
+    tokio::{
+        spawn,
+        sync::watch,
     },
-    tokio::spawn,
 };
 
 mod aggregate;
@@ -25,13 +26,18 @@ mod price_feeds_metadata;
 mod serde;
 mod state;
 
-// A static exit flag to indicate to running threads that we're shutting down. This is used to
-// gracefully shutdown the application.
-//
-// NOTE: A more idiomatic approach would be to use a tokio::sync::broadcast channel, and to send a
-// shutdown signal to all running tasks. However, this is a bit more complicated to implement and
-// we don't rely on global state for anything else.
-pub(crate) static SHOULD_EXIT: AtomicBool = AtomicBool::new(false);
+lazy_static! {
+    /// A static exit flag to indicate to running threads that we're shutting down. This is used to
+    /// gracefully shutdown the application.
+    ///
+    /// We make this global based on the fact the:
+    /// - The `Sender` side does not rely on any async runtime.
+    /// - Exit logic doesn't really require carefully threading this value through the app.
+    /// - The `Receiver` side of a watch channel performs the detection based on if the change
+    ///   happened after the subscribe, so it means all listeners should always be notified
+    ///   currectly.
+    pub static ref EXIT: watch::Sender<bool> = watch::channel(false).0;
+}
 
 /// Initialize the Application. This can be invoked either by real main, or by the Geyser plugin.
 #[tracing::instrument]
@@ -55,7 +61,7 @@ async fn init() -> Result<()> {
                 tracing::info!("Registered shutdown signal handler...");
                 tokio::signal::ctrl_c().await.unwrap();
                 tracing::info!("Shut down signal received, waiting for tasks...");
-                SHOULD_EXIT.store(true, std::sync::atomic::Ordering::Release);
+                let _ = EXIT.send(true);
             });
 
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown

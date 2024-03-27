@@ -58,10 +58,7 @@ use {
     },
     std::{
         collections::BTreeMap,
-        sync::{
-            atomic::Ordering,
-            Arc,
-        },
+        sync::Arc,
         time::Duration,
     },
     tokio::time::Instant,
@@ -160,7 +157,7 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
         .program_subscribe(&system_program::id(), Some(config))
         .await?;
 
-    while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
+    loop {
         match notif.next().await {
             Some(update) => {
                 let account: Account = match update.value.account.decode() {
@@ -213,8 +210,6 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
             }
         }
     }
-
-    Ok(())
 }
 
 /// Fetch existing GuardianSet accounts from Wormhole.
@@ -281,19 +276,21 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     let task_listener = {
         let store = state.clone();
         let pythnet_ws_endpoint = opts.pythnet.ws_addr.clone();
+        let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
-            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
+            loop {
                 let current_time = Instant::now();
-
-                if let Err(ref e) = run(store.clone(), pythnet_ws_endpoint.clone()).await {
-                    tracing::error!(error = ?e, "Error in Pythnet network listener.");
-                    if current_time.elapsed() < Duration::from_secs(30) {
-                        tracing::error!("Pythnet listener restarting too quickly. Sleep 1s.");
-                        tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::select! {
+                    _ = exit.changed() => break,
+                    Err(err) = run(store.clone(), pythnet_ws_endpoint.clone()) => {
+                        tracing::error!(error = ?err, "Error in Pythnet network listener.");
+                        if current_time.elapsed() < Duration::from_secs(30) {
+                            tracing::error!("Pythnet listener restarting too quickly. Sleep 1s.");
+                            tokio::time::sleep(Duration::from_secs(1)).await;
+                        }
                     }
                 }
             }
-
             tracing::info!("Shutting down Pythnet listener...");
         })
     };
@@ -301,32 +298,24 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     let task_guardian_watcher = {
         let store = state.clone();
         let pythnet_http_endpoint = opts.pythnet.http_addr.clone();
+        let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
-            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                // Poll for new guardian sets every 60 seconds. We use a short wait time so we can
-                // properly exit if a quit signal was received. This isn't a perfect solution, but
-                // it's good enough for now.
-                for _ in 0..60 {
-                    if crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                        break;
-                    }
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                }
-
-                match fetch_existing_guardian_sets(
-                    store.clone(),
-                    pythnet_http_endpoint.clone(),
-                    opts.wormhole.contract_addr,
-                )
-                .await
-                {
-                    Ok(_) => {}
-                    Err(err) => {
-                        tracing::error!(error = ?err, "Failed to poll for new guardian sets.")
+            loop {
+                tokio::select! {
+                    _ = exit.changed() => break,
+                    _ = tokio::time::sleep(Duration::from_secs(60)) => {
+                        if let Err(err) = fetch_existing_guardian_sets(
+                            store.clone(),
+                            pythnet_http_endpoint.clone(),
+                            opts.wormhole.contract_addr,
+                        )
+                        .await
+                        {
+                            tracing::error!(error = ?err, "Failed to poll for new guardian sets.")
+                        }
                     }
                 }
             }
-
             tracing::info!("Shutting down Pythnet guardian set poller...");
         })
     };
@@ -334,26 +323,22 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
     let task_price_feeds_metadata_updater = {
         let price_feeds_state = state.clone();
+        let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
-            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                if let Err(e) = fetch_and_store_price_feeds_metadata(
-                    price_feeds_state.as_ref(),
-                    &opts.pythnet.mapping_addr,
-                    &rpc_client,
-                )
-                .await
-                {
-                    tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
-                }
-                // This loop with a sleep interval of 1 second allows the task to check for an exit signal at a
-                // fine-grained interval. Instead of sleeping directly for the entire `price_feeds_update_interval`,
-                // which could delay the response to an exit signal, this approach ensures the task can exit promptly
-                // if `crate::SHOULD_EXIT` is set, enhancing the responsiveness of the service to shutdown requests.
-                for _ in 0..DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL {
-                    if crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                        break;
+            loop {
+                tokio::select! {
+                    _ = exit.changed() => break,
+                    _ = tokio::time::sleep(Duration::from_secs(DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL)) => {
+                        if let Err(e) = fetch_and_store_price_feeds_metadata(
+                            price_feeds_state.as_ref(),
+                            &opts.pythnet.mapping_addr,
+                            &rpc_client,
+                        )
+                        .await
+                        {
+                            tracing::error!("Error in fetching and storing price feeds metadata: {}", e);
+                        }
                     }
-                    tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
         })
