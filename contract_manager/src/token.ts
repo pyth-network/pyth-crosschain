@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import { KeyValueConfig, Storable } from "./base";
 
 /**
@@ -13,7 +13,7 @@ export class Token extends Storable {
     // The hexadecimal pyth id of the tokens X/USD price feed
     // (get this from hermes or the Pyth docs page)
     public pythId: string | undefined,
-    public decimals: number,
+    public decimals: number
   ) {
     super();
   }
@@ -33,7 +33,7 @@ export class Token extends Storable {
   async getPrice(): Promise<number | undefined> {
     if (this.pythId) {
       const url = `https://hermes.pyth.network/v2/updates/price/latest?ids%5B%5D=${this.pythId}&parsed=true`;
-      const response = await axios.get(url)
+      const response = await axios.get(url);
       const price = response.data.parsed[0].price;
 
       // Note that this conversion can lose some precision.
@@ -51,21 +51,21 @@ export class Token extends Storable {
    */
   async getPriceForMinUnit(): Promise<number | undefined> {
     const price = await this.getPrice();
-    return (price ? price / Math.pow(10, this.decimals) : undefined);
+    return price ? price / Math.pow(10, this.decimals) : undefined;
   }
 
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      ...(this.pythId !== undefined ? {pythId: this.pythId} : {}),
+      ...(this.pythId !== undefined ? { pythId: this.pythId } : {}),
     };
   }
 
-  static fromJson(parsed: {id: string, pythId?: string, decimals: number}): Token {
-    return new Token(
-      parsed.id,
-      parsed.pythId,
-      parsed.decimals,
-    );
+  static fromJson(parsed: {
+    id: string;
+    pythId?: string;
+    decimals: number;
+  }): Token {
+    return new Token(parsed.id, parsed.pythId, parsed.decimals);
   }
 }

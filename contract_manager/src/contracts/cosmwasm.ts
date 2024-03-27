@@ -113,13 +113,17 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     };
   }
 
-  constructor(public chain: CosmWasmChain, public address: string, public denom: string | undefined) {
+  constructor(
+    public chain: CosmWasmChain,
+    public address: string,
+    public denom: string | undefined
+  ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string, denom?: string }
+    parsed: { type: string; address: string; denom?: string }
   ): CosmWasmPriceFeedContract {
     if (parsed.type !== CosmWasmPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -172,7 +176,11 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       newAdminAddr: result.contractAddr,
       contractAddr: result.contractAddr,
     });
-    return new CosmWasmPriceFeedContract(chain, result.contractAddr, config.fee.denom);
+    return new CosmWasmPriceFeedContract(
+      chain,
+      result.contractAddr,
+      config.fee.denom
+    );
   }
 
   getId(): string {
@@ -332,7 +340,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     return this.chain;
   }
 
-  async getTotalFee(): Promise<{amount: bigint, denom?: string}> {
+  async getTotalFee(): Promise<{ amount: bigint; denom?: string }> {
     const client = await CosmWasmClient.connect(this.chain.endpoint);
     const coin = await client.getBalance(
       this.address,
@@ -340,7 +348,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     );
     return {
       amount: BigInt(coin.amount),
-      ...(this.denom !== undefined ? {denom: this.denom} : {})
+      ...(this.denom !== undefined ? { denom: this.denom } : {}),
     };
   }
 

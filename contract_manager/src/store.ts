@@ -13,9 +13,7 @@ import {
   EvmPriceFeedContract,
   SuiPriceFeedContract,
 } from "./contracts";
-import {
-  Token
-} from "./token"
+import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
