@@ -1,6 +1,7 @@
-ARG RUST_VERSION=1.79.0
-
-FROM rust:${RUST_VERSION} AS build
+# The rust version itself is not so important as we install a fixed
+# nightly version. We use the latest stable version to get the latest
+# updates and dependencies.
+FROM rust:1.77.0 AS build
 
 # Install OS packages
 RUN apt-get update && apt-get install --yes \
@@ -19,7 +20,7 @@ WORKDIR /src/hermes
 
 RUN --mount=type=cache,target=/root/.cargo/registry cargo build --release
 
-FROM rust:${RUST_VERSION}
+FROM rust:1.77.0
 
 # Copy artifacts from other images
 COPY --from=build /src/hermes/target/release/hermes /usr/local/bin/
