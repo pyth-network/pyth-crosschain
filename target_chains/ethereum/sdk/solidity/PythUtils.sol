@@ -11,7 +11,7 @@ library PythUtils {
         int64 price,
         int32 expo,
         uint8 targetDecimals
-    ) private pure returns (uint256) {
+    ) public pure returns (uint256) {
         if (price < 0 || expo > 0 || expo < -255) {
             revert();
         }

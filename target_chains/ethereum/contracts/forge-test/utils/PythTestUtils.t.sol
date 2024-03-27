@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
@@ -273,5 +274,19 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             priceFeedMessages[i].emaPrice = prices[i].price;
             priceFeedMessages[i].emaConf = prices[i].conf;
         }
+    }
+}
+
+contract PythTestUtilsTest is
+    Test,
+    WormholeTestUtils,
+    PythTestUtils,
+    IPythEvents
+{
+    using PythUtils for *;
+    function testConvertToUnit() public {
+        
+        vm.expectRevert();
+        uint256 price = PythUtils.convertToUnit(-100, -5,18);
     }
 }
