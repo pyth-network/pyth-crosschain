@@ -7,7 +7,6 @@ import "./PythErrors.sol";
 
 contract MockPyth is AbstractPyth {
     mapping(bytes32 => PythStructs.PriceFeed) priceFeeds;
-    uint64 sequenceNumber;
 
     uint singleUpdateFeeInWei;
     uint validTimePeriod;
@@ -41,10 +40,6 @@ contract MockPyth is AbstractPyth {
         uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
-        // Chain ID is id of the source chain that the price update comes from. Since it is just a mock contract
-        // We set it to 1.
-        uint16 chainId = 1;
-
         for (uint i = 0; i < updateData.length; i++) {
             PythStructs.PriceFeed memory priceFeed = abi.decode(
                 updateData[i],
@@ -64,12 +59,6 @@ contract MockPyth is AbstractPyth {
                 );
             }
         }
-
-        // In the real contract, the input of this function contains multiple batches that each contain multiple prices.
-        // This event is emitted when a batch is processed. In this mock contract we consider there is only one batch of prices.
-        // Each batch has (chainId, sequenceNumber) as it's unique identifier. Here chainId is set to 1 and an increasing sequence number is used.
-        emit BatchPriceFeedUpdate(chainId, sequenceNumber);
-        sequenceNumber += 1;
     }
 
     function getUpdateFee(
