@@ -5,6 +5,7 @@ import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource, EvmExecute } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
+import { TokenQty } from "../token";
 
 // Just to make sure tx gas limit is enough
 const EXTENDED_ENTROPY_ABI = [
@@ -652,23 +653,19 @@ export class EvmExecutorContract {
 export class EvmPriceFeedContract extends PriceFeedContract {
   static type = "EvmPriceFeedContract";
 
-  constructor(
-    public chain: EvmChain,
-    public address: string,
-    public denom: string | undefined
-  ) {
+  constructor(public chain: EvmChain, public address: string) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string; denom?: string }
+    parsed: { type: string; address: string }
   ): EvmPriceFeedContract {
     if (parsed.type !== EvmPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmPriceFeedContract(chain, parsed.address, parsed.denom);
+    return new EvmPriceFeedContract(chain, parsed.address);
   }
 
   getId(): string {
@@ -728,12 +725,12 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     return Web3.utils.keccak256(strippedCode);
   }
 
-  async getTotalFee(): Promise<{ amount: bigint; denom?: string }> {
+  async getTotalFee(): Promise<TokenQty> {
     const web3 = new Web3(this.chain.getRpcUrl());
     const amount = BigInt(await web3.eth.getBalance(this.address));
     return {
       amount,
-      ...(this.denom !== undefined ? { denom: this.denom } : {}),
+      denom: this.chain.getNativeToken(),
     };
   }
 

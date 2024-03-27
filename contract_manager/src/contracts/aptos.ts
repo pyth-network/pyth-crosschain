@@ -3,6 +3,7 @@ import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
+import { TokenQty } from "../token";
 
 type WormholeState = {
   chain_id: { number: string };
@@ -80,13 +81,11 @@ export class AptosPriceFeedContract extends PriceFeedContract {
    * @param chain the chain which this contract is deployed on
    * @param stateId id of the pyth state for the deployed contract
    * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
-   * @param denom the denomination of the fee token -- this field should be the id of a Token object
    */
   constructor(
     public chain: AptosChain,
     public stateId: string,
-    public wormholeStateId: string,
-    public denom: string | undefined
+    public wormholeStateId: string
   ) {
     super();
   }
@@ -97,7 +96,6 @@ export class AptosPriceFeedContract extends PriceFeedContract {
       type: string;
       stateId: string;
       wormholeStateId: string;
-      denom?: string;
     }
   ): AptosPriceFeedContract {
     if (parsed.type !== AptosPriceFeedContract.type)
@@ -107,8 +105,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return new AptosPriceFeedContract(
       chain,
       parsed.stateId,
-      parsed.wormholeStateId,
-      parsed.denom
+      parsed.wormholeStateId
     );
   }
 
@@ -268,12 +265,12 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return AptosPriceFeedContract.type;
   }
 
-  async getTotalFee(): Promise<{ amount: bigint; denom?: string }> {
+  async getTotalFee(): Promise<TokenQty> {
     const client = new CoinClient(this.chain.getClient());
     const amount = await client.checkBalance(this.stateId);
     return {
       amount,
-      ...(this.denom !== undefined ? { denom: this.denom } : {}),
+      denom: this.chain.getNativeToken(),
     };
   }
 

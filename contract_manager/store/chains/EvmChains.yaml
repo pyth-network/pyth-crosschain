@@ -13,6 +13,7 @@
   rpcUrl: https://evmos-evm.publicnode.com
   networkId: 9001
   type: EvmChain
+  nativeToken: EVMOS
 - id: canto
   mainnet: true
   rpcUrl: https://canto.slingshot.finance
@@ -63,6 +64,7 @@
   rpcUrl: https://rpc.gnosischain.com
   networkId: 100
   type: EvmChain
+  nativeToken: DAI
 - id: fantom_testnet
   mainnet: false
   rpcUrl: https://fantom-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -78,6 +80,7 @@
   rpcUrl: https://rpc.ankr.com/fantom
   networkId: 250
   type: EvmChain
+  nativeToken: FTM
 - id: mumbai
   mainnet: false
   rpcUrl: https://polygon-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -103,6 +106,7 @@
   rpcUrl: https://rpc.mantle.xyz/
   networkId: 5000
   type: EvmChain
+  nativeToken: MNT
 - id: kava_testnet
   mainnet: false
   rpcUrl: https://evm.testnet.kava.io
@@ -123,6 +127,7 @@
   rpcUrl: https://eth-mainnet.blastapi.io/$ENV_BLAST_API_KEY
   networkId: 1
   type: EvmChain
+  nativeToken: ETH
 - id: bsc_testnet
   mainnet: false
   rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel
@@ -138,6 +143,7 @@
   rpcUrl: https://mainnet.aurora.dev
   networkId: 1313161554
   type: EvmChain
+  nativeToken: NEAR
 - id: bsc
   mainnet: true
   rpcUrl: https://rpc.ankr.com/bsc
@@ -173,6 +179,7 @@
   rpcUrl: https://polygon-rpc.com
   networkId: 137
   type: EvmChain
+  nativeToken: MATIC
 - id: wemix_testnet
   mainnet: false
   rpcUrl: https://api.test.wemix.com
@@ -183,11 +190,13 @@
   rpcUrl: https://rpc-mainnet.kcc.network
   networkId: 321
   type: EvmChain
+  nativeToken: KCS
 - id: polygon_zkevm
   mainnet: true
   rpcUrl: https://zkevm-rpc.com
   networkId: 1101
   type: EvmChain
+  nativeToken: ETH
 - id: celo_alfajores_testnet
   mainnet: false
   rpcUrl: https://alfajores-forno.celo-testnet.org
@@ -203,21 +212,25 @@
   rpcUrl: https://zksync2-mainnet.zksync.io
   networkId: 324
   type: EvmChain
+  nativeToken: ETH
 - id: base
   mainnet: true
   rpcUrl: https://developer-access-mainnet.base.org/
   networkId: 8453
   type: EvmChain
+  nativeToken: ETH
 - id: arbitrum
   mainnet: true
   rpcUrl: https://arb1.arbitrum.io/rpc
   networkId: 42161
   type: EvmChain
+  nativeToken: ETH
 - id: optimism
   mainnet: true
   rpcUrl: https://rpc.ankr.com/optimism
   networkId: 10
   type: EvmChain
+  nativeToken: ETH
 - id: kcc_testnet
   mainnet: false
   rpcUrl: https://rpc-testnet.kcc.network
@@ -238,6 +251,7 @@
   rpcUrl: https://linea.rpc.thirdweb.com
   networkId: 59144
   type: EvmChain
+  nativeToken: ETH
 - id: shimmer_testnet
   mainnet: false
   rpcUrl: https://json-rpc.evm.testnet.shimmer.network
@@ -358,6 +372,7 @@
   rpcUrl: https://rpc.coredao.org
   networkId: 1116
   type: EvmChain
+  nativeToken: CORE
 - id: tomochain
   mainnet: true
   rpcUrl: https://rpc.tomochain.com
@@ -428,6 +443,7 @@
   rpcUrl: https://mainnet.hashio.io/api
   networkId: 295
   type: EvmChain
+  nativeToken: HBAR
 - id: filecoin_calibration
   mainnet: false
   rpcUrl: https://rpc.ankr.com/filecoin_testnet

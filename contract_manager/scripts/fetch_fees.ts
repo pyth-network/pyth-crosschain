@@ -32,6 +32,7 @@ async function main() {
 
   let totalFeeUsd = 0;
   for (const contract of Object.values(DefaultStore.contracts)) {
+    console.log(contract.getId());
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (
       contract instanceof AptosPriceFeedContract ||

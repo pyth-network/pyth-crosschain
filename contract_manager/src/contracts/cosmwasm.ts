@@ -17,6 +17,7 @@ import {
   TxResult,
 } from "../base";
 import { WormholeContract } from "./wormhole";
+import { TokenQty } from "../token";
 
 /**
  * Variables here need to be snake case to match the on-chain contract configs
@@ -340,7 +341,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     return this.chain;
   }
 
-  async getTotalFee(): Promise<{ amount: bigint; denom?: string }> {
+  async getTotalFee(): Promise<TokenQty> {
     const client = await CosmWasmClient.connect(this.chain.endpoint);
     const coin = await client.getBalance(
       this.address,
@@ -348,7 +349,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     );
     return {
       amount: BigInt(coin.amount),
-      ...(this.denom !== undefined ? { denom: this.denom } : {}),
+      denom: this.chain.getNativeToken(),
     };
   }
 

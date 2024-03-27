@@ -1,6 +1,16 @@
 import axios from "axios";
 import { KeyValueConfig, Storable } from "./base";
 
+export type TokenId = string;
+/**
+ * A quantity of a token, represented as an integer number of the minimum denomination of the token.
+ * This can also represent a quantity of an unknown token (represented by an undefined denom).
+ */
+export type TokenQty = {
+  amount: bigint;
+  denom: TokenId | undefined;
+};
+
 /**
  * A token represents a cryptocurrency like ETH or BTC.
  * The main use of this class is to calculate the dollar value of accrued fees.
@@ -9,7 +19,7 @@ export class Token extends Storable {
   static type = "token";
 
   public constructor(
-    public id: string,
+    public id: TokenId,
     // The hexadecimal pyth id of the tokens X/USD price feed
     // (get this from hermes or the Pyth docs page)
     public pythId: string | undefined,
@@ -18,7 +28,7 @@ export class Token extends Storable {
     super();
   }
 
-  getId(): string {
+  getId(): TokenId {
     return this.id;
   }
 
