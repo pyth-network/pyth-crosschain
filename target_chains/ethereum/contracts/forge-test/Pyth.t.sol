@@ -29,57 +29,55 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         pyth = IPyth(setUpPyth(setUpWormholeReceiver(NUM_GUARDIAN_SIGNERS)));
     }
 
-    function generateRandomPriceAttestations(
+    function generateRandomPriceMessages(
         uint length
     )
         internal
-        returns (
-            bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        )
+        returns (bytes32[] memory priceIds, PriceFeedMessage[] memory messages)
     {
-        attestations = new PriceFeedMessage[](length);
+        messages = new PriceFeedMessage[](length);
         priceIds = new bytes32[](length);
 
         for (uint i = 0; i < length; i++) {
-            attestations[i].priceId = bytes32(i + 1); // price ids should be non-zero and unique
-            attestations[i].price = getRandInt64();
-            attestations[i].conf = getRandUint64();
-            attestations[i].expo = getRandInt32();
-            attestations[i].emaPrice = getRandInt64();
-            attestations[i].emaConf = getRandUint64();
-            attestations[i].publishTime = getRandUint64();
-            attestations[i].prevPublishTime = getRandUint64();
+            messages[i].priceId = bytes32(i + 1); // price ids should be non-zero and unique
+            messages[i].price = getRandInt64();
+            messages[i].conf = getRandUint64();
+            messages[i].expo = getRandInt32();
+            messages[i].emaPrice = getRandInt64();
+            messages[i].emaConf = getRandUint64();
+            messages[i].publishTime = getRandUint64();
+            messages[i].prevPublishTime = getRandUint64();
 
-            priceIds[i] = attestations[i].priceId;
+            priceIds[i] = messages[i].priceId;
         }
     }
 
-    // This method divides attestations into a couple of batches and creates
+    // This method divides messages into a couple of batches and creates
     // updateData for them. It returns the updateData and the updateFee
-    function createBatchedUpdateDataFromAttestationsWithConfig(
-        PriceFeedMessage[] memory attestations,
+    function createBatchedUpdateDataFromMessagesWithConfig(
+        PriceFeedMessage[] memory messages,
         MerkleUpdateConfig memory config
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        uint batchSize = 1 + (getRandUint() % attestations.length);
-        uint numBatches = (attestations.length + batchSize - 1) / batchSize;
+        uint batchSize = 1 + (getRandUint() % messages.length);
+        uint numBatches = (messages.length + batchSize - 1) / batchSize;
 
         updateData = new bytes[](numBatches);
 
-        for (uint i = 0; i < attestations.length; i += batchSize) {
+        for (uint i = 0; i < messages.length; i += batchSize) {
             uint len = batchSize;
-            if (attestations.length - i < len) {
-                len = attestations.length - i;
+            if (messages.length - i < len) {
+                len = messages.length - i;
             }
 
-            PriceFeedMessage[]
-                memory batchAttestations = new PriceFeedMessage[](len);
+            PriceFeedMessage[] memory batchMessages = new PriceFeedMessage[](
+                len
+            );
             for (uint j = i; j < i + len; j++) {
-                batchAttestations[j - i] = attestations[j];
+                batchMessages[j - i] = messages[j];
             }
 
             updateData[i / batchSize] = generateWhMerkleUpdateWithSource(
-                batchAttestations,
+                batchMessages,
                 config
             );
         }
@@ -87,14 +85,11 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         updateFee = pyth.getUpdateFee(updateData);
     }
 
-    function createBatchedUpdateDataFromAttestations(
-        PriceFeedMessage[] memory attestations
+    function createBatchedUpdateDataFromMessages(
+        PriceFeedMessage[] memory messages
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        (
-            updateData,
-            updateFee
-        ) = createBatchedUpdateDataFromAttestationsWithConfig(
-            attestations,
+        (updateData, updateFee) = createBatchedUpdateDataFromMessagesWithConfig(
+            messages,
             MerkleUpdateConfig(
                 MERKLE_TREE_DEPTH,
                 NUM_GUARDIAN_SIGNERS,
@@ -108,35 +103,32 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     /// Testing parsePriceFeedUpdates method.
     function testParsePriceFeedUpdatesWorks(uint seed) public {
         setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 10);
+        uint numMessages = 1 + (getRandUint() % 10);
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
         }(updateData, priceIds, 0, MAX_UINT64);
 
-        for (uint i = 0; i < numAttestations; i++) {
+        for (uint i = 0; i < numMessages; i++) {
             assertEq(priceFeeds[i].id, priceIds[i]);
-            assertEq(priceFeeds[i].price.price, attestations[i].price);
-            assertEq(priceFeeds[i].price.conf, attestations[i].conf);
-            assertEq(priceFeeds[i].price.expo, attestations[i].expo);
-            assertEq(
-                priceFeeds[i].price.publishTime,
-                attestations[i].publishTime
-            );
-            assertEq(priceFeeds[i].emaPrice.price, attestations[i].emaPrice);
-            assertEq(priceFeeds[i].emaPrice.conf, attestations[i].emaConf);
-            assertEq(priceFeeds[i].emaPrice.expo, attestations[i].expo);
+            assertEq(priceFeeds[i].price.price, messages[i].price);
+            assertEq(priceFeeds[i].price.conf, messages[i].conf);
+            assertEq(priceFeeds[i].price.expo, messages[i].expo);
+            assertEq(priceFeeds[i].price.publishTime, messages[i].publishTime);
+            assertEq(priceFeeds[i].emaPrice.price, messages[i].emaPrice);
+            assertEq(priceFeeds[i].emaPrice.conf, messages[i].emaConf);
+            assertEq(priceFeeds[i].emaPrice.expo, messages[i].expo);
             assertEq(
                 priceFeeds[i].emaPrice.publishTime,
-                attestations[i].publishTime
+                messages[i].publishTime
             );
         }
     }
@@ -145,23 +137,23 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         uint seed
     ) public {
         setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 30);
+        uint numMessages = 1 + (getRandUint() % 30);
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
-        // Shuffle the attestations
-        for (uint i = 1; i < numAttestations; i++) {
+        // Shuffle the messages
+        for (uint i = 1; i < numMessages; i++) {
             uint swapWith = getRandUint() % (i + 1);
-            (attestations[i], attestations[swapWith]) = (
-                attestations[swapWith],
-                attestations[i]
+            (messages[i], messages[swapWith]) = (
+                messages[swapWith],
+                messages[i]
             );
             (priceIds[i], priceIds[swapWith]) = (
                 priceIds[swapWith],
@@ -169,48 +161,43 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             );
         }
 
-        // Select only first numSelectedAttestations. numSelectedAttestations will be in [0, numAttestations]
-        uint numSelectedAttestations = getRandUint() % (numAttestations + 1);
+        // Select only first numSelectedMessages. numSelectedMessages will be in [0, numMessages]
+        uint numSelectedMessages = getRandUint() % (numMessages + 1);
 
-        PriceFeedMessage[] memory selectedAttestations = new PriceFeedMessage[](
-            numSelectedAttestations
+        PriceFeedMessage[] memory selectedMessages = new PriceFeedMessage[](
+            numSelectedMessages
         );
-        bytes32[] memory selectedPriceIds = new bytes32[](
-            numSelectedAttestations
-        );
+        bytes32[] memory selectedPriceIds = new bytes32[](numSelectedMessages);
 
-        for (uint i = 0; i < numSelectedAttestations; i++) {
-            selectedAttestations[i] = attestations[i];
+        for (uint i = 0; i < numSelectedMessages; i++) {
+            selectedMessages[i] = messages[i];
             selectedPriceIds[i] = priceIds[i];
         }
 
-        // Only parse selected attestations
+        // Only parse selected messages
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
         }(updateData, selectedPriceIds, 0, MAX_UINT64);
 
-        for (uint i = 0; i < numSelectedAttestations; i++) {
+        for (uint i = 0; i < numSelectedMessages; i++) {
             assertEq(priceFeeds[i].id, selectedPriceIds[i]);
-            assertEq(priceFeeds[i].price.expo, selectedAttestations[i].expo);
+            assertEq(priceFeeds[i].price.expo, selectedMessages[i].expo);
             assertEq(
                 priceFeeds[i].emaPrice.price,
-                selectedAttestations[i].emaPrice
+                selectedMessages[i].emaPrice
             );
-            assertEq(
-                priceFeeds[i].emaPrice.conf,
-                selectedAttestations[i].emaConf
-            );
-            assertEq(priceFeeds[i].emaPrice.expo, selectedAttestations[i].expo);
+            assertEq(priceFeeds[i].emaPrice.conf, selectedMessages[i].emaConf);
+            assertEq(priceFeeds[i].emaPrice.expo, selectedMessages[i].expo);
 
-            assertEq(priceFeeds[i].price.price, selectedAttestations[i].price);
-            assertEq(priceFeeds[i].price.conf, selectedAttestations[i].conf);
+            assertEq(priceFeeds[i].price.price, selectedMessages[i].price);
+            assertEq(priceFeeds[i].price.conf, selectedMessages[i].conf);
             assertEq(
                 priceFeeds[i].price.publishTime,
-                selectedAttestations[i].publishTime
+                selectedMessages[i].publishTime
             );
             assertEq(
                 priceFeeds[i].emaPrice.publishTime,
-                selectedAttestations[i].publishTime
+                selectedMessages[i].publishTime
             );
         }
     }
@@ -218,20 +205,20 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     function testParsePriceFeedUpdatesWorksWithOverlappingWithinTimeRangeUpdates()
         public
     {
-        PriceFeedMessage[] memory attestations = new PriceFeedMessage[](2);
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
 
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
+        messages[0].priceId = bytes32(uint(1));
+        messages[0].price = 1000;
+        messages[0].publishTime = 10;
 
-        attestations[1].priceId = bytes32(uint(1));
-        attestations[1].price = 2000;
-        attestations[1].publishTime = 20;
+        messages[1].priceId = bytes32(uint(1));
+        messages[1].price = 2000;
+        messages[1].publishTime = 20;
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(1));
@@ -254,20 +241,20 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     function testParsePriceFeedUpdatesWorksWithOverlappingMixedTimeRangeUpdates()
         public
     {
-        PriceFeedMessage[] memory attestations = new PriceFeedMessage[](2);
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
 
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
+        messages[0].priceId = bytes32(uint(1));
+        messages[0].price = 1000;
+        messages[0].publishTime = 10;
 
-        attestations[1].priceId = bytes32(uint(1));
-        attestations[1].price = 2000;
-        attestations[1].publishTime = 20;
+        messages[1].priceId = bytes32(uint(1));
+        messages[1].price = 2000;
+        messages[1].publishTime = 20;
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(1));
@@ -295,18 +282,18 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testParsePriceFeedUpdatesRevertsIfUpdateFeeIsNotPaid() public {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
-        // Since attestations are not empty the fee should be at least 1
+        // Since messages are not empty the fee should be at least 1
         assertGe(updateFee, 1);
 
         vm.expectRevert(PythErrors.InsufficientFee.selector);
@@ -323,17 +310,17 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         uint seed
     ) public {
         setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 10);
+        uint numMessages = 1 + (getRandUint() % 10);
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestationsWithConfig(
-                attestations,
+        ) = createBatchedUpdateDataFromMessagesWithConfig(
+                messages,
                 MerkleUpdateConfig(
                     MERKLE_TREE_DEPTH,
                     NUM_GUARDIAN_SIGNERS,
@@ -356,17 +343,17 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     function testParsePriceFeedUpdatesRevertsIfUpdateSourceChainIsInvalid()
         public
     {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestationsWithConfig(
-                attestations,
+        ) = createBatchedUpdateDataFromMessagesWithConfig(
+                messages,
                 MerkleUpdateConfig(
                     MERKLE_TREE_DEPTH,
                     NUM_GUARDIAN_SIGNERS,
@@ -388,14 +375,14 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     function testParsePriceFeedUpdatesRevertsIfUpdateSourceAddressIsInvalid()
         public
     {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
-        (bytes[] memory updateData, uint updateFee) = createBatchedUpdateDataFromAttestationsWithConfig(
-            attestations,
+        (bytes[] memory updateData, uint updateFee) = createBatchedUpdateDataFromMessagesWithConfig(
+            messages,
             MerkleUpdateConfig(
                 MERKLE_TREE_DEPTH,
                 NUM_GUARDIAN_SIGNERS,
@@ -415,16 +402,16 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testParsePriceFeedUpdatesRevertsIfPriceIdNotIncluded() public {
-        PriceFeedMessage[] memory attestations = new PriceFeedMessage[](1);
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](1);
 
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
+        messages[0].priceId = bytes32(uint(1));
+        messages[0].price = 1000;
+        messages[0].publishTime = 10;
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(2));
@@ -439,20 +426,20 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testParsePriceFeedUpdateRevertsIfPricesOutOfTimeRange() public {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
-        for (uint i = 0; i < numAttestations; i++) {
-            attestations[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
+        for (uint i = 0; i < numMessages; i++) {
+            messages[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
         }
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         // Request for parse within the given time range should work
         pyth.parsePriceFeedUpdates{value: updateFee}(
@@ -473,20 +460,20 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testParsePriceFeedUpdatesLatestPriceIfNecessary() public {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceFeedMessage[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
-        for (uint i = 0; i < numAttestations; i++) {
-            attestations[i].publishTime = uint64((getRandUint() % 101)); // All between [0, 100]
+        for (uint i = 0; i < numMessages; i++) {
+            messages[i].publishTime = uint64((getRandUint() % 101)); // All between [0, 100]
         }
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         // Request for parse within the given time range should work and update the latest price
         pyth.parsePriceFeedUpdates{value: updateFee}(
@@ -497,20 +484,18 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
 
         // Check if the latest price is updated
-        for (uint i = 0; i < numAttestations; i++) {
+        for (uint i = 0; i < numMessages; i++) {
             assertEq(
                 pyth.getPriceUnsafe(priceIds[i]).publishTime,
-                attestations[i].publishTime
+                messages[i].publishTime
             );
         }
 
-        for (uint i = 0; i < numAttestations; i++) {
-            attestations[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
+        for (uint i = 0; i < numMessages; i++) {
+            messages[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
         }
 
-        (updateData, updateFee) = createBatchedUpdateDataFromAttestations(
-            attestations
-        );
+        (updateData, updateFee) = createBatchedUpdateDataFromMessages(messages);
 
         // Request for parse after the time range should revert.
         vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
@@ -522,7 +507,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
 
         // parse function reverted so publishTimes should remain less than or equal to 100
-        for (uint i = 0; i < numAttestations; i++) {
+        for (uint i = 0; i < numMessages; i++) {
             assertGe(100, pyth.getPriceUnsafe(priceIds[i]).publishTime);
         }
 
@@ -535,10 +520,10 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
 
         // Check if the latest price is updated
-        for (uint i = 0; i < numAttestations; i++) {
+        for (uint i = 0; i < numMessages; i++) {
             assertEq(
                 pyth.getPriceUnsafe(priceIds[i]).publishTime,
-                attestations[i].publishTime
+                messages[i].publishTime
             );
         }
     }
