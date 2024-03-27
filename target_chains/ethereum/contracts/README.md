@@ -47,7 +47,7 @@ npx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --ho
 2. deploy the contracts:
 
 ```bash
-cp .env.test .env && npx truffle compile --all && npx truffle migrate
+cp .env.test .env && npx truffle compile --all && npx truffle migrate --network development
 ```
 
 3. Run the test suite:

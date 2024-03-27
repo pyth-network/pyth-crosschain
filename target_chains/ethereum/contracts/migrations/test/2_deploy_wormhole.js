@@ -1,5 +1,4 @@
-const loadEnv = require("../../scripts/loadEnv");
-loadEnv("../../");
+require("dotenv").config();
 
 const Setup = artifacts.require("Setup");
 const Implementation = artifacts.require("Implementation");
