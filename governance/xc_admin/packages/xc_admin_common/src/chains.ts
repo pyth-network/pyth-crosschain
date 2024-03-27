@@ -64,6 +64,7 @@ export const RECEIVER_CHAINS = {
   injective_inevm: 60045,
   blast: 60046,
   merlin: 60047,
+  parallel: 60048,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -131,9 +132,11 @@ export const RECEIVER_CHAINS = {
   berachain_testnet: 50056,
   merlin_testnet: 50057,
   manta_sepolia: 50058,
-  polygon_blackberry: 50059, // Gelato Testnet
-  arbitrum_blueberry: 50060, // Gelato Testnet
-  optimism_celestia_raspberry: 50061, // Gelato Testnet
+  polygon_blackberry: 50059, // Gelato shared testnet
+  arbitrum_blueberry: 50060, // Gelato shared testnet
+  optimism_celestia_raspberry: 50061, // Gelato shared testnet
+  parallel_testnet: 50062,
+  polynomial_testnet: 50063,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
