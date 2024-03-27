@@ -93,7 +93,7 @@ pub async fn get_vaa(
 
     let vaa = price_feeds_with_update_data
         .update_data
-        .get(0)
+        .first()
         .map(|bytes| base64_standard_engine.encode(bytes))
         .ok_or(RestError::UpdateDataNotFound)?;
 

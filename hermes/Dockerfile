@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.73.0
+ARG RUST_VERSION=1.79.0
 
 FROM rust:${RUST_VERSION} AS build
 
@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install --yes \
     build-essential curl clang libssl-dev protobuf-compiler
 
 # Set default toolchain
-RUN rustup default nightly-2023-07-23
+RUN rustup default nightly-2024-03-26
 
 # Build
 WORKDIR /src
