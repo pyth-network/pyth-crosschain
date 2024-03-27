@@ -452,7 +452,11 @@ pub async fn is_ready(state: &State) -> bool {
 mod test {
     use {
         super::*,
-        crate::state::test::setup_state,
+        crate::{
+            api::types::PriceFeedMetadata,
+            price_feeds_metadata::store_price_feeds_metadata,
+            state::test::setup_state,
+        },
         futures::future::join_all,
         mock_instant::MockClock,
         pythnet_sdk::{
@@ -624,7 +628,7 @@ mod test {
 
         // Check the update data is correct.
         assert_eq!(price_feeds_with_update_data.update_data.len(), 1);
-        let update_data = price_feeds_with_update_data.update_data.get(0).unwrap();
+        let update_data = price_feeds_with_update_data.update_data.first().unwrap();
         let update_data = AccumulatorUpdateData::try_from_slice(update_data.as_ref()).unwrap();
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
@@ -659,7 +663,7 @@ mod test {
 
                 // Check the updates
                 assert_eq!(updates.len(), 1);
-                let update = updates.get(0).unwrap();
+                let update = updates.first().unwrap();
                 let message: Vec<u8> = update.message.clone().into();
                 // Check the serialized message is the price feed message generated above.
                 assert_eq!(
@@ -803,6 +807,18 @@ mod test {
             price_feeds_with_update_data.price_feeds[0].received_at,
             Some(unix_timestamp as i64)
         );
+
+
+        // Add a dummy price feeds metadata
+        store_price_feeds_metadata(
+            &state,
+            &[PriceFeedMetadata {
+                id:         PriceIdentifier::new([100; 32]),
+                attributes: Default::default(),
+            }],
+        )
+        .await
+        .unwrap();
 
         // Check the state is ready
         assert!(is_ready(&state).await);

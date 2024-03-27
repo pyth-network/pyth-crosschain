@@ -90,7 +90,7 @@ pub async fn get_vaa_ccip(
 
     let bytes = price_feeds_with_update_data
         .update_data
-        .get(0) // One price feed has only a single VAA as proof.
+        .first() // One price feed has only a single VAA as proof.
         .ok_or(RestError::UpdateDataNotFound)?;
 
     Ok(Json(GetVaaCcipResponse {

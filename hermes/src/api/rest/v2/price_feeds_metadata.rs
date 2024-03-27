@@ -51,7 +51,7 @@ pub async fn price_feeds_metadata(
     QsQuery(params): QsQuery<PriceFeedsMetadataQueryParams>,
 ) -> Result<Json<Vec<PriceFeedMetadata>>, RestError> {
     let price_feeds_metadata =
-        get_price_feeds_metadata(&*state.state, params.query, params.asset_type)
+        get_price_feeds_metadata(&state.state, params.query, params.asset_type)
             .await
             .map_err(|e| {
                 tracing::warn!("RPC connection error: {}", e);
