@@ -137,7 +137,8 @@ async fn retrieve_message_state(
                     // Get the first element that is greater than or equal to the lookup time.
                     key_cache
                         .lower_bound(Bound::Included(&lookup_time))
-                        .value()
+                        .peek_next()
+                        .map(|(_, v)| v)
                         .cloned()
                 }
                 RequestTime::AtSlot(slot) => {
