@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
@@ -406,5 +407,12 @@ contract PythTestUtilsTest is
         emit PriceFeedUpdate(priceIds[0], 1, 100, 10);
 
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+    }
+
+    using PythUtils for *;
+    function testConvertToUnit() public {
+        
+        vm.expectRevert();
+        uint256 price = PythUtils.convertToUnit(-100, -5,18);
     }
 }
