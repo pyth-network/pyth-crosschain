@@ -175,6 +175,17 @@ module pyth::price_info {
         object::delete(id);
     }
 
+    #[test_only]
+    public fun new_test_price_info_object(
+        price_info: PriceInfo,
+        ctx: &mut TxContext
+    ): PriceInfoObject {
+        PriceInfoObject {
+            id: object::new(ctx),
+            price_info
+        }
+    }
+
     public fun uid_to_inner(price_info: &PriceInfoObject): ID {
         object::uid_to_inner(&price_info.id)
     }
