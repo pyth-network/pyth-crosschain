@@ -27,10 +27,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push server docker image
+      - name: Build and push docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
           file: "./governance/xc_admin/packages/xc_admin_frontend/Dockerfile"
-          push: github.ref == 'refs/heads/main'
+          push: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
