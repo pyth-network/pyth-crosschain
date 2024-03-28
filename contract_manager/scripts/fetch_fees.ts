@@ -19,6 +19,18 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
+
+  const prices: Record<string, number> = {};
+  for (const token of Object.values(DefaultStore.tokens)) {
+    const price = await token.getPriceForMinUnit();
+    // We're going to ignore the value of tokens that aren't configured
+    // in the store -- these are likely not worth much anyway.
+    if (price !== undefined) {
+      prices[token.id] = price;
+    }
+  }
+
+  let totalFeeUsd = 0;
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (
@@ -27,12 +39,26 @@ async function main() {
       contract instanceof CosmWasmPriceFeedContract
     ) {
       try {
-        console.log(`${contract.getId()} ${await contract.getTotalFee()}`);
+        const fee = await contract.getTotalFee();
+        let feeUsd = 0;
+        if (fee.denom !== undefined && prices[fee.denom] !== undefined) {
+          feeUsd = Number(fee.amount) * prices[fee.denom];
+          totalFeeUsd += feeUsd;
+          console.log(
+            `${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`
+          );
+        } else {
+          console.log(
+            `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`
+          );
+        }
       } catch (e) {
         console.error(`Error fetching fees for ${contract.getId()}`, e);
       }
     }
   }
+
+  console.log(`Total fees in USD: $${totalFeeUsd}`);
 }
 
 main();

@@ -8,6 +8,7 @@
   mainnet: true
   rpcUrl: https://fullnode.mainnet.aptoslabs.com/v1
   type: AptosChain
+  nativeToken: APT
 - id: movement_move_devnet
   wormholeChainName: movement_move_devnet
   mainnet: false
