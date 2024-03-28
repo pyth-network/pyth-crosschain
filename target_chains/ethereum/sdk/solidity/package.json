@@ -9,7 +9,7 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "generate-abi": "npx generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors",
+    "generate-abi": "npx generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors PythUtils",
     "check-abi": "git diff --exit-code abis",
     "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
   },
@@ -25,8 +25,9 @@
   },
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/sdk/solidity",
   "devDependencies": {
+    "abi_generator": "*",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "abi_generator": "*"
+    "solc": "^0.8.25"
   }
 }

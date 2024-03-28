@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
@@ -273,5 +274,37 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             priceFeedMessages[i].emaPrice = prices[i].price;
             priceFeedMessages[i].emaConf = prices[i].conf;
         }
+    }
+}
+
+contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
+    function testConvertToUnit() public {
+        // Price can't be negative
+        vm.expectRevert();
+        PythUtils.convertToUint(-100, -5, 18);
+
+        // Exponent can't be positive
+        vm.expectRevert();
+        PythUtils.convertToUint(100, 5, 18);
+
+        // Price with 18 decimals and exponent -5
+        assertEq(
+            PythUtils.convertToUint(100, -5, 18),
+            1000000000000000 // 100 * 10^13
+        );
+
+        // Price with 9 decimals and exponent -2
+        assertEq(
+            PythUtils.convertToUint(100, -2, 9),
+            1000000000 // 100 * 10^7
+        );
+
+        // Price with 4 decimals and exponent -5
+        assertEq(PythUtils.convertToUint(100, -5, 4), 10);
+
+        // Price with 5 decimals and exponent -2
+        // @note: We will lose precision here as price is
+        // 0.00001 and we are targetDecimals is 2.
+        assertEq(PythUtils.convertToUint(100, -5, 2), 0);
     }
 }
