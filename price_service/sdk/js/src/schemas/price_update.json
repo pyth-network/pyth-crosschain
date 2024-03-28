@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PriceUpdate",
+  "description": "Represents a price update from Pyth publisher feeds.",
+  "type": "object",
+  "required": [
+    "binary"
+  ],
+  "properties": {
+    "binary": {
+      "$ref": "#/definitions/BinaryPriceUpdate"
+    },
+    "parsed": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ParsedPriceUpdate"
+      },
+      "nullable": true
+    }
+  },
+
+  "definitions": {
+    "BinaryPriceUpdate": {
+      "type": "object",
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "encoding": {
+          "$ref": "#/definitions/EncodingType"
+        }
+      }
+    },
+    "EncodingType": {
+      "type": "string",
+      "enum": [
+        "hex",
+        "base64"
+      ]
+    },
+    "ParsedPriceUpdate": {
+      "type": "object",
+      "required": [
+        "id",
+        "price",
+        "ema_price",
+        "metadata"
+      ],
+      "properties": {
+        "ema_price": {
+          "$ref": "#/definitions/RpcPrice"
+        },
+        "id": {
+          "$ref": "#/definitions/RpcPriceIdentifier"
+        },
+        "metadata": {
+          "$ref": "#/definitions/RpcPriceFeedMetadataV2"
+        },
+        "price": {
+          "$ref": "#/definitions/RpcPrice"
+        }
+      }
+    },
+    "RpcPrice": {
+      "type": "object",
+      "description": "A price with a degree of uncertainty at a certain time, represented as a price +- a confidence\ninterval.\n\nThe confidence interval roughly corresponds to the standard error of a normal distribution.\nBoth the price and confidence are stored in a fixed-point numeric representation, `x *\n10^expo`, where `expo` is the exponent. For example:",
+      "required": [
+        "price",
+        "conf",
+        "expo",
+        "publish_time"
+      ],
+      "properties": {
+        "conf": {
+          "type": "string",
+          "description": "The confidence interval associated with the price, stored as a string to avoid precision loss",
+          "example": "509500001"
+        },
+        "expo": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The exponent associated with both the price and confidence interval. Multiply those values\nby `10^expo` to get the real value.",
+          "example": -8
+        },
+        "price": {
+          "type": "string",
+          "description": "The price itself, stored as a string to avoid precision loss",
+          "example": "2920679499999"
+        },
+        "publish_time": {
+          "type": "integer",
+          "format": "int64",
+          "description": "When the price was published. The `publish_time` is a unix timestamp, i.e., the number of\nseconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).",
+          "example": 1708363376
+        }
+      }
+    },
+    "RpcPriceIdentifier": {
+      "type": "string",
+      "example": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+    },
+    "RpcPriceFeedMetadataV2": {
+      "type": "object",
+      "properties": {
+        "prev_publish_time": {
+          "type": "integer",
+          "format": "int64",
+          "example": 1708363376,
+          "nullable": true
+        },
+        "proof_available_time": {
+          "type": "integer",
+          "format": "int64",
+          "example": 1708363376,
+          "nullable": true
+        },
+        "slot": {
+          "type": "integer",
+          "format": "int64",
+          "example": 85480034,
+          "nullable": true,
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

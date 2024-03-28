@@ -1,4 +1,4 @@
-import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import { HexString, PriceFeed, PriceUpdate, PriceUpdateConvert } from "@pythnetwork/price-service-sdk";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
@@ -234,6 +234,48 @@ export class PriceServiceConnection {
   async getPriceFeedIds(): Promise<HexString[]> {
     const response = await this.httpClient.get("/api/price_feed_ids");
     return response.data;
+  }
+
+  /**
+   * Fetch the latest PriceUpdates of the given price ids
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
+   *
+   * @param priceIds Hex-encoded price ids.
+   * @returns PriceUpdate
+   */
+  async getLatestPriceUpdates(
+    priceIds: HexString[],
+  ): Promise<PriceUpdate> {
+    const response = await this.httpClient.get("/v2/updates/price/latest", {
+      params: {
+        ids: priceIds,
+      },
+    });
+
+    return PriceUpdateConvert.toPriceUpdate(response.data)
+  }
+
+  /**
+   * Fetch the PriceUpdates of the given price ids that is published since the given publish time.
+   * This will throw an error if the given publish time is in the future, or if the publish time
+   * is old and the price service endpoint does not have a db backend for historical requests.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price id)
+   *
+   * @param priceIds Hex-encoded price ids.
+   * @param publishTime Epoch timestamp in seconds.
+   * @returns PriceUpdate
+   */
+  async getPriceUpdates(
+    priceIds: HexString[],
+    publishTime: EpochTimeStamp
+  ): Promise<PriceUpdate> {
+    const response = await this.httpClient.get(`/v2/updates/price/${publishTime}`, {
+      params: {
+        ids: priceIds,
+      },
+    });
+
+    return PriceUpdateConvert.toPriceUpdate(response.data)
   }
 
   /**
