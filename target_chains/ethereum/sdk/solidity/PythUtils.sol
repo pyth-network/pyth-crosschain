@@ -7,7 +7,8 @@ library PythUtils {
     /// @param expo The Pyth price exponent
     /// @param targetDecimals The target number of decimals
     /// @return The price as a uint256
-    /// @dev Function will loose precision if targetDecimals is less than the Pyth price decimals
+    /// @dev Function will lose precision if targetDecimals is less than the Pyth price decimals.
+    /// This method will truncate any digits that cannot be represented by the targetDecimals.
     /// e.g. If the price is 0.000123 and the targetDecimals is 2, the result will be 0
     function convertToUint(
         int64 price,

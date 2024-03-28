@@ -277,12 +277,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
     }
 }
 
-contract PythTestUtilsTest is
-    Test,
-    WormholeTestUtils,
-    PythTestUtils,
-    IPythEvents
-{
+contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     function testConvertToUnit() public {
         // Price can't be negative
         vm.expectRevert();
