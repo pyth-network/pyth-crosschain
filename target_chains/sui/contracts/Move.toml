@@ -11,7 +11,8 @@ rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
 [dependencies.Wormhole]
 git = "https://github.com/0xaslan/wormhole.git"
 subdir = "sui/wormhole"
-rev = "sui/published-at"
+rev = "sui/testnet-published-at"
 
 [addresses]
 pyth = "0xe76d8a37d4132278a7a752183e90e04890b9e7d0f6657eadb68821609a2a56a3"
+wormhole = "0x200"
