@@ -5,6 +5,7 @@ use {
             BlockNumber,
             BlockStatus,
             EntropyReader,
+            RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
     },
@@ -27,6 +28,7 @@ use {
                 TransformerError,
                 TransformerMiddleware,
             },
+            NonceManagerMiddleware,
             SignerMiddleware,
         },
         prelude::TransactionRequest,
@@ -59,7 +61,10 @@ abigen!(
 );
 
 pub type SignablePythContract = PythRandom<
-    TransformerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>, LegacyTxTransformer>,
+    TransformerMiddleware<
+        NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
+        LegacyTxTransformer,
+    >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
 
@@ -97,10 +102,12 @@ impl SignablePythContract {
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
 
+        let address = wallet__.address();
+
         Ok(PythRandom::new(
             chain_config.contract_addr,
             Arc::new(TransformerMiddleware::new(
-                SignerMiddleware::new(provider, wallet__),
+                NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
                 transformer,
             )),
         ))
@@ -224,5 +231,43 @@ impl EntropyReader for PythContract {
             .number
             .ok_or_else(|| Error::msg("pending confirmation"))?
             .as_u64())
+    }
+
+    async fn get_request_with_callback_events(
+        &self,
+        from_block: BlockNumber,
+        to_block: BlockNumber,
+    ) -> Result<Vec<RequestedWithCallbackEvent>> {
+        let mut event = self.requested_with_callback_filter();
+        event.filter = event.filter.from_block(from_block).to_block(to_block);
+
+        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+
+        Ok(res
+            .iter()
+            .map(|r| RequestedWithCallbackEvent {
+                sequence_number:    r.sequence_number,
+                user_random_number: r.user_random_number,
+                provider_address:   r.request.provider,
+            })
+            .collect())
+    }
+
+    async fn simulate_reveal(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+    ) -> Result<()> {
+        self.reveal_with_callback(
+            provider,
+            sequence_number,
+            user_random_number,
+            provider_revelation,
+        )
+        .await?;
+
+        Ok(())
     }
 }

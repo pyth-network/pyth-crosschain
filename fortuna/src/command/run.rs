@@ -1,12 +1,16 @@
 use {
     crate::{
         api,
-        chain::ethereum::PythContract,
+        chain::ethereum::{
+            PythContract,
+            SignablePythContract,
+        },
         command::register_provider::CommitmentMetadata,
         config::{
             Config,
             RunOptions,
         },
+        keeper,
         state::{
             HashChainState,
             PebbleHashChain,
@@ -14,19 +18,34 @@ use {
     },
     anyhow::{
         anyhow,
+        Error,
         Result,
     },
     axum::Router,
+    futures::future::join_all,
     std::{
         collections::HashMap,
+        net::SocketAddr,
         sync::Arc,
+        vec,
+    },
+    tokio::{
+        spawn,
+        sync::{
+            mpsc,
+            watch,
+        },
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
 
-pub async fn run(opts: &RunOptions) -> Result<()> {
+pub async fn run_api(
+    socket_addr: SocketAddr,
+    chains: HashMap<String, api::BlockchainState>,
+    mut rx_exit: watch::Receiver<bool>,
+) -> Result<()> {
     #[derive(OpenApi)]
     #[openapi(
     paths(
@@ -46,9 +65,115 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     )]
     struct ApiDoc;
 
-    let config = Config::load(&opts.config.config)?;
-    let secret = opts.randomness.load_secret()?;
+    let metrics_registry = api::Metrics::new();
+    let api_state = api::ApiState {
+        chains:  Arc::new(chains),
+        metrics: Arc::new(metrics_registry),
+    };
 
+    // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
+    // `with_state` method which replaces `Body` with `State` in the type signature.
+    let app = Router::new();
+    let app = app
+        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
+        .merge(api::routes(api_state))
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive());
+
+    tracing::info!("Starting server on: {:?}", &socket_addr);
+    // Binds the axum's server to the configured address and port. This is a blocking call and will
+    // not return until the server is shutdown.
+    axum::Server::try_bind(&socket_addr)?
+        .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            // It can return an error or an Ok(()). In both cases, we would shut down.
+            // As Ok(()) means, exit signal (ctrl + c) was received.
+            // And Err(e) means, the sender was dropped which should not be the case.
+            let _ = rx_exit.changed().await;
+
+            tracing::info!("Shutting down RPC server...");
+        })
+        .await?;
+
+    Ok(())
+}
+
+
+pub async fn run_keeper(
+    chains: HashMap<String, api::BlockchainState>,
+    config: Config,
+    private_key: String,
+) -> Result<()> {
+    let mut handles = Vec::new();
+    for (chain_id, chain_config) in chains {
+        let chain_eth_config = config.chains.get(&chain_id).unwrap().clone();
+        let private_key = private_key.clone();
+        let chain_id = chain_id.clone();
+        handles.push(spawn(async move {
+            tracing::info!("Starting keeper for chain: {}", &chain_id);
+            let latest_safe_block = chain_config
+                .contract
+                .get_block_number(chain_config.confirmed_block_status)
+                .await?
+                - chain_config.reveal_delay_blocks;
+
+            tracing::info!(
+                "Latest safe block for chain {}: {} ",
+                &chain_id,
+                &latest_safe_block
+            );
+
+            let contract =
+                Arc::new(SignablePythContract::from_config(&chain_eth_config, &private_key).await?);
+
+            let handle_backlog = spawn(keeper::handle_backlog(
+                chain_id.clone(),
+                latest_safe_block,
+                Arc::clone(&contract),
+                chain_eth_config.gas_limit,
+                chain_config.clone(),
+            ));
+
+            let (tx, rx) = mpsc::channel::<keeper::BlockRange>(1000);
+
+            let handle_watch_blocks = spawn(keeper::watch_blocks(
+                chain_id.clone(),
+                Arc::clone(&chain_config.contract),
+                chain_config.clone(),
+                latest_safe_block,
+                tx.clone(),
+                chain_eth_config.geth_rpc_wss,
+            ));
+            let handle_events = spawn(keeper::handle_events(
+                chain_id.clone(),
+                chain_config.clone(),
+                rx,
+                Arc::clone(&contract),
+                chain_eth_config.gas_limit,
+            ));
+
+            let tasks = join_all([handle_backlog, handle_watch_blocks, handle_events]).await;
+            for task in tasks {
+                task??;
+            }
+
+            Ok::<(), Error>(())
+        }));
+    }
+
+    let tasks = join_all(handles).await;
+    for task in tasks {
+        task??;
+    }
+
+    Ok::<(), Error>(())
+}
+
+pub async fn run(opts: &RunOptions) -> Result<()> {
+    let config = Config::load(&opts.config.config)?;
+    let private_key = opts.load_private_key()?;
+    let secret = opts.randomness.load_secret()?;
+    let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
@@ -99,28 +224,22 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         chains.insert(chain_id.clone(), state);
     }
 
-    let metrics_registry = api::Metrics::new();
-    let api_state = api::ApiState {
-        chains:  Arc::new(chains),
-        metrics: Arc::new(metrics_registry),
-    };
+    let chains_clone = chains.clone();
 
-    // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
-    // `with_state` method which replaces `Body` with `State` in the type signature.
-    let app = Router::new();
-    let app = app
-        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .merge(api::routes(api_state))
-        // Permissive CORS layer to allow all origins
-        .layer(CorsLayer::permissive());
+    // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
+    spawn(async move {
+        tracing::info!("Registered shutdown signal handler...");
+        tokio::signal::ctrl_c().await.unwrap();
+        tracing::info!("Shut down signal received, waiting for tasks...");
+        // no need to handle error here, as it will only occur when all the
+        // receiver has been dropped and that's what we want to do
+        tx_exit.send(true)?;
 
+        Ok::<(), Error>(())
+    });
+    spawn(run_keeper(chains_clone, config, private_key));
 
-    tracing::info!("Starting server on: {:?}", &opts.addr);
-    // Binds the axum's server to the configured address and port. This is a blocking call and will
-    // not return until the server is shutdown.
-    axum::Server::try_bind(&opts.addr)?
-        .serve(app.into_make_service())
-        .await?;
+    run_api(opts.addr.clone(), chains, rx_exit).await?;
 
     Ok(())
 }
