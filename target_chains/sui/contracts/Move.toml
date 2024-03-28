@@ -1,7 +1,7 @@
 [package]
 name = "Pyth"
 version = "0.0.2"
-published-at = "0xe76d8a37d4132278a7a752183e90e04890b9e7d0f6657eadb68821609a2a56a3"
+published-at = "0xf7114cc10266d90c0c9e4b84455bddf29b40bd78fe56832c7ac98682c3daa95b"
 
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
@@ -9,10 +9,14 @@ subdir = "crates/sui-framework/packages/sui-framework"
 rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
 
 [dependencies.Wormhole]
-git = "https://github.com/0xaslan/wormhole.git"
+git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
-rev = "sui/testnet-published-at"
+rev = "sui-upgrade-testnet"
 
 [addresses]
-pyth = "0xe76d8a37d4132278a7a752183e90e04890b9e7d0f6657eadb68821609a2a56a3"
-wormhole = "0x0"
+pyth = "0x0"
+wormhole = "0xf47329f4344f3bf0f8e436e2f7b485466cff300f12a166563995d3888c296a94"
+
+[dev-addresses]
+pyth = "0x100"
+wormhole = "0x200"
