@@ -200,6 +200,11 @@ export type PythSolanaReceiver = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "writeAuthority";
+          isMut: false;
+          isSigner: true;
         }
       ];
       args: [
@@ -252,6 +257,11 @@ export type PythSolanaReceiver = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "writeAuthority";
+          isMut: false;
+          isSigner: true;
         }
       ];
       args: [
@@ -320,7 +330,7 @@ export type PythSolanaReceiver = {
       };
     },
     {
-      name: "priceUpdateV1";
+      name: "priceUpdateV2";
       type: {
         kind: "struct";
         fields: [
@@ -339,6 +349,10 @@ export type PythSolanaReceiver = {
             type: {
               defined: "PriceFeedMessage";
             };
+          },
+          {
+            name: "postedSlot";
+            type: "u64";
           }
         ];
       };
@@ -804,6 +818,11 @@ export const IDL: PythSolanaReceiver = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "writeAuthority",
+          isMut: false,
+          isSigner: true,
+        },
       ],
       args: [
         {
@@ -855,6 +874,11 @@ export const IDL: PythSolanaReceiver = {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "writeAuthority",
+          isMut: false,
+          isSigner: true,
         },
       ],
       args: [
@@ -923,7 +947,7 @@ export const IDL: PythSolanaReceiver = {
       },
     },
     {
-      name: "priceUpdateV1",
+      name: "priceUpdateV2",
       type: {
         kind: "struct",
         fields: [
@@ -942,6 +966,10 @@ export const IDL: PythSolanaReceiver = {
             type: {
               defined: "PriceFeedMessage",
             },
+          },
+          {
+            name: "postedSlot",
+            type: "u64",
           },
         ],
       },
