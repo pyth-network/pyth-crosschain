@@ -391,6 +391,7 @@
   mainnet: false
   rpcUrl: https://rpc.startale.com/zkyoto
   networkId: 6038361
+  type: EvmChain
 - id: coredao_testnet
   mainnet: false
   rpcUrl: https://rpc.test.btcs.network
