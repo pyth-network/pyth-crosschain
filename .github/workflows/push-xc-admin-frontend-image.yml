@@ -10,7 +10,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: pyth-network/xc-admin-frontend
 jobs:
-  xc-admin-image:
+  xc-admin-frontend-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
