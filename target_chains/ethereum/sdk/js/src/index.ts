@@ -60,7 +60,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   arbitrum_blueberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   arbitrum_sepolia: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
   astar_zkevm_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",
-  astar_zkatana_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  astar_zkyoto_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   aurora_testnet: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
   base_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   berachain_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",

@@ -387,7 +387,7 @@
   rpcUrl: https://rpc.startale.com/astar-zkevm
   networkId: 3776
   type: EvmChain
-- id: astar_zkatana_testnet
+- id: astar_zkyoto_testnet
   mainnet: false
   rpcUrl: https://rpc.startale.com/zkyoto
   networkId: 6038361
