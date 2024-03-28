@@ -134,6 +134,9 @@ pub struct EthereumConfig {
     /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
     pub geth_rpc_addr: String,
 
+    /// URL of a Geth RPC wss endpoint to use for subscribing to blockchain events.
+    pub geth_rpc_wss: String,
+
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
 

@@ -11,7 +11,15 @@ use {
         },
     },
     anyhow::Result,
-    ethers::types::U256,
+    ethers::{
+        providers::{
+            Middleware,
+            Provider,
+            Ws,
+        },
+        types::U256,
+    },
+    futures::StreamExt,
     std::sync::Arc,
     tokio::{
         sync::mpsc,
@@ -145,12 +153,12 @@ pub async fn handle_backlog(
                     &to_block
                 );
             }
-            Err(_) => {
+            Err(e) => {
                 tracing::error!(
-                    "Error while getting events for chain: {} from block: {} to block: {}",
+                    "Error while getting events for chain: {} from block: {} to block: {} error: {:?}",
                     &chain_id,
                     &from_block,
-                    &to_block
+                    &to_block, e
                 );
 
                 continue;
@@ -172,6 +180,7 @@ pub async fn watch_blocks(
     chain_config: api::BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
+    geth_rpc_wss: String,
 ) -> Result<()> {
     tracing::info!(
         "Watching blocks to handle new events for chain: {}",
@@ -179,11 +188,15 @@ pub async fn watch_blocks(
     );
     // get the new blocks mined every 5 seconds and send the new block range to process events.
     loop {
+        let provider = Provider::<Ws>::connect(geth_rpc_wss.clone()).await?;
+        let mut stream = provider.subscribe_blocks().await?;
+
         let mut last_safe_block_processed = latest_safe_block;
-        loop {
+        while let Some(_) = stream.next().await {
             let latest_confirmed_block_res = contract_reader
                 .get_block_number(chain_config.confirmed_block_status)
                 .await;
+
 
             match latest_confirmed_block_res {
                 Ok(latest_confirmed_block) => {
@@ -293,12 +306,13 @@ pub async fn handle_events(
 
                         from_block = to_block + 1;
                     }
-                    Err(_) => {
+                    Err(e) => {
                         tracing::error!(
-                            "Error while getting events for chain: {} from block: {} to block: {}",
+                            "Error while getting events for chain: {} from block: {} to block: {} error: {:?}",
                             &chain_id,
                             &from_block,
-                            &to_block
+                            &to_block,
+                            e
                         );
                         continue;
                     }

@@ -142,6 +142,7 @@ pub async fn run_keeper(
                 chain_config.clone(),
                 latest_safe_block,
                 tx.clone(),
+                chain_eth_config.geth_rpc_wss,
             ));
             let handle_events = spawn(keeper::handle_events(
                 chain_id.clone(),
