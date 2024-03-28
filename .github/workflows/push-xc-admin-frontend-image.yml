@@ -33,4 +33,4 @@ jobs:
           context: .
           file: "./governance/xc_admin/packages/xc_admin_frontend/Dockerfile"
           push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:{{ env.IMAGE_TAG }}
