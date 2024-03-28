@@ -59,30 +59,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         return SINGLE_UPDATE_FEE_IN_WEI;
     }
 
-    /// Utilities to help generating price attestations and VAAs for them
-
-    enum PriceAttestationStatus {
-        Unknown,
-        Trading
-    }
-
-    struct PriceAttestation {
-        bytes32 productId;
-        bytes32 priceId;
-        int64 price;
-        uint64 conf;
-        int32 expo;
-        int64 emaPrice;
-        uint64 emaConf;
-        PriceAttestationStatus status;
-        uint32 numPublishers;
-        uint32 maxNumPublishers;
-        uint64 attestationTime;
-        uint64 publishTime;
-        uint64 prevPublishTime;
-        int64 prevPrice;
-        uint64 prevConf;
-    }
+    /// Utilities to help generating price feed messages and VAAs for them
 
     struct PriceFeedMessage {
         bytes32 priceId;
@@ -275,83 +252,6 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             ),
             numSigners
         );
-    }
-
-    // Generates byte-encoded payload for the given price attestations. You can use this to mock wormhole
-    // call using `vm.mockCall` and return a VM struct with this payload.
-    // You can use generatePriceFeedUpdate to generate a VAA for a price update.
-    function generatePriceFeedUpdatePayload(
-        PriceAttestation[] memory attestations
-    ) public pure returns (bytes memory payload) {
-        bytes memory encodedAttestations = new bytes(0);
-
-        for (uint i = 0; i < attestations.length; ++i) {
-            // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
-            encodedAttestations = abi.encodePacked(
-                encodedAttestations,
-                attestations[i].productId,
-                attestations[i].priceId,
-                attestations[i].price,
-                attestations[i].conf,
-                attestations[i].expo,
-                attestations[i].emaPrice,
-                attestations[i].emaConf
-            );
-
-            // Breaking this in two encodePackes because of the limited EVM stack.
-            encodedAttestations = abi.encodePacked(
-                encodedAttestations,
-                uint8(attestations[i].status),
-                attestations[i].numPublishers,
-                attestations[i].maxNumPublishers,
-                attestations[i].attestationTime,
-                attestations[i].publishTime,
-                attestations[i].prevPublishTime,
-                attestations[i].prevPrice,
-                attestations[i].prevConf
-            );
-        }
-
-        payload = abi.encodePacked(
-            uint32(0x50325748), // Magic
-            uint16(3), // Major version
-            uint16(0), // Minor version
-            uint16(1), // Header size of 1 byte as it only contains payloadId
-            uint8(2), // Payload ID 2 means it's a batch price attestation
-            uint16(attestations.length), // Number of attestations
-            uint16(encodedAttestations.length / attestations.length), // Size of a single price attestation.
-            encodedAttestations
-        );
-    }
-
-    function pricesToPriceAttestations(
-        bytes32[] memory priceIds,
-        PythStructs.Price[] memory prices
-    ) public returns (PriceAttestation[] memory attestations) {
-        assertEq(priceIds.length, prices.length);
-        attestations = new PriceAttestation[](prices.length);
-
-        for (uint i = 0; i < prices.length; ++i) {
-            // Product ID, we use the same price Id. This field is not used.
-            attestations[i].productId = priceIds[i];
-            attestations[i].priceId = priceIds[i];
-            attestations[i].price = prices[i].price;
-            attestations[i].conf = prices[i].conf;
-            attestations[i].expo = prices[i].expo;
-            // Same price and conf is used for emaPrice and emaConf
-            attestations[i].emaPrice = prices[i].price;
-            attestations[i].emaConf = prices[i].conf;
-            attestations[i].status = PriceAttestationStatus.Trading;
-            attestations[i].numPublishers = 5; // This field is not used
-            attestations[i].maxNumPublishers = 10; // This field is not used
-            attestations[i].attestationTime = uint64(prices[i].publishTime); // This field is not used
-            attestations[i].publishTime = uint64(prices[i].publishTime);
-            // Fields below are not used when status is Trading. just setting them to
-            // the same value as the prices.
-            attestations[i].prevPublishTime = uint64(prices[i].publishTime);
-            attestations[i].prevPrice = prices[i].price;
-            attestations[i].prevConf = prices[i].conf;
-        }
     }
 
     function pricesToPriceFeedMessages(

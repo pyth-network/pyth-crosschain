@@ -179,7 +179,7 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
 
         thresholdUpdate = generateThresholdUpdate(priceIds[0], freshPrices[0]);
 
-        nativeUpdate = generateAttestationPayload(priceIds[0], freshPrices[0]);
+        nativeUpdate = generateMessagePayload(priceIds[0], freshPrices[0]);
     }
 
     // Get the payload for a wormhole batch price update
@@ -201,20 +201,18 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
     }
 
     // Helper function to serialize a single price update to bytes.
-    // Returns a serialized PriceAttestation.
-    function generateAttestationPayload(
+    // Returns a serialized PriceFeedMessage.
+    function generateMessagePayload(
         bytes32 priceId,
         PythStructs.Price memory price
     ) internal returns (bytes memory data) {
-        bytes32[] memory attestationPriceIds = new bytes32[](1);
-        attestationPriceIds[0] = priceId;
+        bytes32[] memory messagePriceIds = new bytes32[](1);
+        messagePriceIds[0] = priceId;
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
         prices[0] = price;
-        PriceAttestation[] memory attestation = pricesToPriceAttestations(
-            attestationPriceIds,
-            prices
-        );
-        data = generatePriceFeedUpdatePayload(attestation);
+        data = encodePriceFeedMessages(
+            pricesToPriceFeedMessages(messagePriceIds, prices)
+        )[0];
 
         return data;
     }
@@ -230,7 +228,7 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
         internal
         returns (bytes32 root, bytes memory data, bytes32[] memory proof)
     {
-        data = generateAttestationPayload(priceId, price);
+        data = generateMessagePayload(priceId, price);
 
         bytes32 curNodeHash = keccak256(data);
         proof = new bytes32[](depth);
@@ -287,7 +285,7 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             bytes32[] memory proof
         ) = generateMerkleProof(priceId, price, depth);
 
-        data = generateAttestationPayload(priceId, price);
+        data = generateMessagePayload(priceId, price);
         bytes32 hash = keccak256(data);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, root);
@@ -296,12 +294,12 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
         return ThresholdMerkleUpdate(signature, root, data, proof);
     }
 
-    // Generate a threshold-signed price attestation.
+    // Generate a threshold-signed price feed message.
     function generateThresholdUpdate(
         bytes32 priceId,
         PythStructs.Price memory price
     ) internal returns (ThresholdUpdate memory update) {
-        bytes memory data = generateAttestationPayload(priceId, price);
+        bytes memory data = generateMessagePayload(priceId, price);
         bytes32 hash = keccak256(data);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, hash);
@@ -409,13 +407,13 @@ contract PythExperimental is Pyth {
     }
 
     // Update a single price feed via a wormhole-attested merkle proof.
-    // data is expected to be a serialized PriceAttestation
+    // data is expected to be a serialized PriceFeedMessage
     function updatePriceFeedsWhMerkle(
         bytes calldata rootVaa,
         bytes memory data,
         bytes32[] memory proof
     ) public payable {
-        IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(rootVaa);
+        IWormhole.VM memory vm = parseAndVerifyBatchMessageVM(rootVaa);
         assert(vm.payload.length == 32);
 
         bytes32 expectedRoot = UnsafeBytesLib.toBytes32(vm.payload, 0);
@@ -424,12 +422,14 @@ contract PythExperimental is Pyth {
 
         (
             PythInternalStructs.PriceInfo memory info,
-            bytes32 priceId
-        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+            bytes32 priceId,
+
+        ) = parsePriceFeedMessageFromMemory(data, 0);
+
         updateLatestPriceIfNecessary(priceId, info);
     }
 
-    function parseAndVerifyBatchAttestationVM(
+    function parseAndVerifyBatchMessageVM(
         bytes calldata encodedVm
     ) internal view returns (IWormhole.VM memory vm) {
         {
@@ -448,7 +448,7 @@ contract PythExperimental is Pyth {
     }
 
     // Update a single price feed via a threshold-signed merkle proof.
-    // data is expected to be a serialized PriceAttestation
+    // data is expected to be a serialized PriceFeedMessage
     function updatePriceFeedsThresholdMerkle(
         bytes memory rootSignature,
         bytes32 rootHash,
@@ -463,13 +463,14 @@ contract PythExperimental is Pyth {
 
         (
             PythInternalStructs.PriceInfo memory info,
-            bytes32 priceId
-        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+            bytes32 priceId,
+
+        ) = parsePriceFeedMessageFromMemory(data, 0);
         updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Update a single price feed via a threshold-signed price update.
-    // data is expected to be a serialized PriceAttestation.
+    // data is expected to be a serialized PriceFeedMessage.
     function updatePriceFeedsThreshold(
         bytes memory signature,
         bytes memory data
@@ -480,13 +481,14 @@ contract PythExperimental is Pyth {
 
         (
             PythInternalStructs.PriceInfo memory info,
-            bytes32 priceId
-        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+            bytes32 priceId,
+
+        ) = parsePriceFeedMessageFromMemory(data, 0);
         updateLatestPriceIfNecessary(priceId, info);
     }
 
     // Update a single price feed via a "native" price update (i.e., using the default ethereum tx signature for authentication).
-    // data is expected to be a serialized PriceAttestation.
+    // data is expected to be a serialized PriceFeedMessage.
     // This function represents the lower bound on how much gas we can use.
     function updatePriceFeedsNative(bytes memory data) public payable {
         // TODO: this function should have a check on the sender.
@@ -494,122 +496,67 @@ contract PythExperimental is Pyth {
 
         (
             PythInternalStructs.PriceInfo memory info,
-            bytes32 priceId
-        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+            bytes32 priceId,
+
+        ) = parsePriceFeedMessageFromMemory(data, 0);
         updateLatestPriceIfNecessary(priceId, info);
     }
 
-    function parseSingleAttestationFromBatch(
-        bytes memory encoded,
-        uint index,
-        uint attestationSize
+    function parsePriceFeedMessageFromMemory(
+        bytes memory encodedPriceFeed,
+        uint offset
     )
         internal
         pure
-        returns (PythInternalStructs.PriceInfo memory info, bytes32 priceId)
+        returns (
+            PythInternalStructs.PriceInfo memory priceInfo,
+            bytes32 priceId,
+            uint64 prevPublishTime
+        )
     {
         unchecked {
-            // NOTE: We don't advance the global index immediately.
-            // attestationIndex is an attestation-local offset used
-            // for readability and easier debugging.
-            uint attestationIndex = 0;
+            priceId = UnsafeBytesLib.toBytes32(encodedPriceFeed, offset);
+            offset += 32;
 
-            // Unused bytes32 product id
-            attestationIndex += 32;
-
-            priceId = UnsafeBytesLib.toBytes32(
-                encoded,
-                index + attestationIndex
+            priceInfo.price = int64(
+                UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
             );
-            attestationIndex += 32;
+            offset += 8;
 
-            info.price = int64(
-                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            priceInfo.conf = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+            offset += 8;
+
+            priceInfo.expo = int32(
+                UnsafeBytesLib.toUint32(encodedPriceFeed, offset)
             );
-            attestationIndex += 8;
+            offset += 4;
 
-            info.conf = UnsafeBytesLib.toUint64(
-                encoded,
-                index + attestationIndex
+            // Publish time is i64 in some environments due to the standard in that
+            // environment. This would not cause any problem because since the signed
+            // integer is represented in two's complement, the value would be the same
+            // in both cases (for a million year at least)
+            priceInfo.publishTime = UnsafeBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
             );
-            attestationIndex += 8;
+            offset += 8;
 
-            info.expo = int32(
-                UnsafeBytesLib.toUint32(encoded, index + attestationIndex)
+            // We do not store this field because it is not used on the latest feed queries.
+            prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+            offset += 8;
+
+            priceInfo.emaPrice = int64(
+                UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
             );
-            attestationIndex += 4;
+            offset += 8;
 
-            info.emaPrice = int64(
-                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            priceInfo.emaConf = UnsafeBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
             );
-            attestationIndex += 8;
+            offset += 8;
 
-            info.emaConf = UnsafeBytesLib.toUint64(
-                encoded,
-                index + attestationIndex
-            );
-            attestationIndex += 8;
-
-            {
-                // Status is an enum (encoded as uint8) with the following values:
-                // 0 = UNKNOWN: The price feed is not currently updating for an unknown reason.
-                // 1 = TRADING: The price feed is updating as expected.
-                // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
-                // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
-                uint8 status = UnsafeBytesLib.toUint8(
-                    encoded,
-                    index + attestationIndex
-                );
-                attestationIndex += 1;
-
-                // Unused uint32 numPublishers
-                attestationIndex += 4;
-
-                // Unused uint32 numPublishers
-                attestationIndex += 4;
-
-                // Unused uint64 attestationTime
-                attestationIndex += 8;
-
-                info.publishTime = UnsafeBytesLib.toUint64(
-                    encoded,
-                    index + attestationIndex
-                );
-                attestationIndex += 8;
-
-                if (status == 1) {
-                    // status == TRADING
-                    attestationIndex += 24;
-                } else {
-                    // If status is not trading then the latest available price is
-                    // the previous price info that are passed here.
-
-                    // Previous publish time
-                    info.publishTime = UnsafeBytesLib.toUint64(
-                        encoded,
-                        index + attestationIndex
-                    );
-                    attestationIndex += 8;
-
-                    // Previous price
-                    info.price = int64(
-                        UnsafeBytesLib.toUint64(
-                            encoded,
-                            index + attestationIndex
-                        )
-                    );
-                    attestationIndex += 8;
-
-                    // Previous confidence
-                    info.conf = UnsafeBytesLib.toUint64(
-                        encoded,
-                        index + attestationIndex
-                    );
-                    attestationIndex += 8;
-                }
-            }
-
-            if (attestationIndex > attestationSize)
+            if (offset > encodedPriceFeed.length)
                 revert PythErrors.InvalidUpdateData();
         }
     }
@@ -665,7 +612,7 @@ struct WormholeMerkleUpdate {
     // The serialized bytes of a wormhole VAA
     // The payload of this VAA is a single 32-byte root hash for the merkle tree.
     bytes rootVaa;
-    // The serialized bytes of a PriceAttestation
+    // The serialized bytes of a PriceFeedMessage
     bytes data;
     // The chain of proof nodes.
     bytes32[] proof;
@@ -677,7 +624,7 @@ struct WormholeMerkleUpdate {
 struct ThresholdMerkleUpdate {
     bytes rootSignature;
     bytes32 rootHash;
-    // The serialized bytes of a PriceAttestation
+    // The serialized bytes of a PriceFeedMessage
     bytes data;
     // The chain of proof nodes.
     bytes32[] proof;
@@ -689,6 +636,6 @@ struct ThresholdMerkleUpdate {
 struct ThresholdUpdate {
     // Signature of the hash of the data.
     bytes signature;
-    // The serialized bytes of a PriceAttestation
+    // The serialized bytes of a PriceFeedMessage
     bytes data;
 }
