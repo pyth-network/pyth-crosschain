@@ -32,7 +32,7 @@ const walletConnectConfig: WalletConnectWalletAdapterConfig = {
     relayUrl: 'wss://relay.walletconnect.com',
     projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
     metadata: {
-      name: 'Pyth Proposals',
+      name: 'Pyth Proposals Page',
       description: 'Vote on Pyth Improvement Proposals',
       url: 'https://proposals.pyth.network/',
       icons: ['https://pyth.network/token.svg'],
