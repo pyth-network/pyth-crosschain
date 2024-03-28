@@ -363,10 +363,10 @@ abstract contract Entropy is IEntropy, EntropyState {
         clearRequest(provider, sequenceNumber);
     }
 
-    // Fulfill a request for a random number and call back the requester. This method validates the provided userRandomness
+    // Fulfill a request for a random number. This method validates the provided userRandomness
     // and provider's revelation against the corresponding commitment in the in-flight request. If both values are validated
     // and the requestor address is a contract address, this function calls the requester's entropyCallback method with the
-    // sequence number and the random number as arguments. Else if the requestor is an EOA, it won't call it.
+    // sequence number, provider address and the random number as arguments. Else if the requestor is an EOA, it won't call it.
     //
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
