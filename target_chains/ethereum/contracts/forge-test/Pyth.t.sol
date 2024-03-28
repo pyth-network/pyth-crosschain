@@ -12,280 +12,144 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
-contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
+contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     IPyth public pyth;
 
     // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
+    // 2/3 of the guardians should sign a message for a VAA which is 13 out of 19 guardians.
+    // It is possible to have more signers but the median seems to be 13.
+    uint8 constant NUM_GUARDIAN_SIGNERS = 13;
+
+    // We will have less than 512 price for a foreseeable future.
+    uint8 constant MERKLE_TREE_DEPTH = 9;
+
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(setUpWormholeReceiver(NUM_GUARDIAN_SIGNERS)));
     }
 
-    function generateRandomPriceAttestations(
+    function generateRandomPriceMessages(
         uint length
     )
         internal
-        returns (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        )
+        returns (bytes32[] memory priceIds, PriceFeedMessage[] memory messages)
     {
-        attestations = new PriceAttestation[](length);
+        messages = new PriceFeedMessage[](length);
         priceIds = new bytes32[](length);
 
         for (uint i = 0; i < length; i++) {
-            attestations[i].productId = getRandBytes32();
-            attestations[i].priceId = bytes32(i + 1); // price ids should be non-zero and unique
-            attestations[i].price = getRandInt64();
-            attestations[i].conf = getRandUint64();
-            attestations[i].expo = getRandInt32();
-            attestations[i].emaPrice = getRandInt64();
-            attestations[i].emaConf = getRandUint64();
-            attestations[i].status = PriceAttestationStatus(getRandUint() % 2);
-            attestations[i].numPublishers = getRandUint32();
-            attestations[i].maxNumPublishers = getRandUint32();
-            attestations[i].attestationTime = getRandUint64();
-            attestations[i].publishTime = getRandUint64();
-            attestations[i].prevPublishTime = getRandUint64();
-            attestations[i].price = getRandInt64();
-            attestations[i].conf = getRandUint64();
+            messages[i].priceId = bytes32(i + 1); // price ids should be non-zero and unique
+            messages[i].price = getRandInt64();
+            messages[i].conf = getRandUint64();
+            messages[i].expo = getRandInt32();
+            messages[i].emaPrice = getRandInt64();
+            messages[i].emaConf = getRandUint64();
+            messages[i].publishTime = getRandUint64();
+            messages[i].prevPublishTime = getRandUint64();
 
-            priceIds[i] = attestations[i].priceId;
+            priceIds[i] = messages[i].priceId;
         }
     }
 
-    // This method divides attestations into a couple of batches and creates
+    // This method divides messages into a couple of batches and creates
     // updateData for them. It returns the updateData and the updateFee
-    function createBatchedUpdateDataFromAttestations(
-        PriceAttestation[] memory attestations
+    function createBatchedUpdateDataFromMessagesWithConfig(
+        PriceFeedMessage[] memory messages,
+        MerkleUpdateConfig memory config
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        uint batchSize = 1 + (getRandUint() % attestations.length);
-        uint numBatches = (attestations.length + batchSize - 1) / batchSize;
+        uint batchSize = 1 + (getRandUint() % messages.length);
+        uint numBatches = (messages.length + batchSize - 1) / batchSize;
 
         updateData = new bytes[](numBatches);
 
-        for (uint i = 0; i < attestations.length; i += batchSize) {
+        for (uint i = 0; i < messages.length; i += batchSize) {
             uint len = batchSize;
-            if (attestations.length - i < len) {
-                len = attestations.length - i;
+            if (messages.length - i < len) {
+                len = messages.length - i;
             }
 
-            PriceAttestation[]
-                memory batchAttestations = new PriceAttestation[](len);
+            PriceFeedMessage[] memory batchMessages = new PriceFeedMessage[](
+                len
+            );
             for (uint j = i; j < i + len; j++) {
-                batchAttestations[j - i] = attestations[j];
+                batchMessages[j - i] = messages[j];
             }
 
-            updateData[i / batchSize] = generateWhBatchUpdate(
-                batchAttestations,
-                0,
-                1
+            updateData[i / batchSize] = generateWhMerkleUpdateWithSource(
+                batchMessages,
+                config
             );
         }
 
         updateFee = pyth.getUpdateFee(updateData);
     }
 
+    function createBatchedUpdateDataFromMessages(
+        PriceFeedMessage[] memory messages
+    ) internal returns (bytes[] memory updateData, uint updateFee) {
+        (updateData, updateFee) = createBatchedUpdateDataFromMessagesWithConfig(
+            messages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+    }
+
     /// Testing parsePriceFeedUpdates method.
-    function testParsePriceFeedUpdatesWorksWithTradingStatus(uint seed) public {
+    function testParsePriceFeedUpdatesWorks(uint seed) public {
         setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 10);
+        uint numMessages = 1 + (getRandUint() % 10);
         (
             bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        for (uint i = 0; i < numAttestations; i++) {
-            attestations[i].status = PriceAttestationStatus.Trading;
-        }
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
         }(updateData, priceIds, 0, MAX_UINT64);
 
-        for (uint i = 0; i < numAttestations; i++) {
+        for (uint i = 0; i < numMessages; i++) {
             assertEq(priceFeeds[i].id, priceIds[i]);
-            assertEq(priceFeeds[i].price.price, attestations[i].price);
-            assertEq(priceFeeds[i].price.conf, attestations[i].conf);
-            assertEq(priceFeeds[i].price.expo, attestations[i].expo);
-            assertEq(
-                priceFeeds[i].price.publishTime,
-                attestations[i].publishTime
-            );
-            assertEq(priceFeeds[i].emaPrice.price, attestations[i].emaPrice);
-            assertEq(priceFeeds[i].emaPrice.conf, attestations[i].emaConf);
-            assertEq(priceFeeds[i].emaPrice.expo, attestations[i].expo);
+            assertEq(priceFeeds[i].price.price, messages[i].price);
+            assertEq(priceFeeds[i].price.conf, messages[i].conf);
+            assertEq(priceFeeds[i].price.expo, messages[i].expo);
+            assertEq(priceFeeds[i].price.publishTime, messages[i].publishTime);
+            assertEq(priceFeeds[i].emaPrice.price, messages[i].emaPrice);
+            assertEq(priceFeeds[i].emaPrice.conf, messages[i].emaConf);
+            assertEq(priceFeeds[i].emaPrice.expo, messages[i].expo);
             assertEq(
                 priceFeeds[i].emaPrice.publishTime,
-                attestations[i].publishTime
+                messages[i].publishTime
             );
-        }
-    }
-
-    function testParsePriceFeedUpdatesWorksWithUnknownStatus(uint seed) public {
-        setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 10);
-        (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        for (uint i = 0; i < numAttestations; i++) {
-            attestations[i].status = PriceAttestationStatus.Unknown;
-        }
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
-            value: updateFee
-        }(updateData, priceIds, 0, MAX_UINT64);
-
-        for (uint i = 0; i < numAttestations; i++) {
-            assertEq(priceFeeds[i].id, priceIds[i]);
-            assertEq(priceFeeds[i].price.price, attestations[i].prevPrice);
-            assertEq(priceFeeds[i].price.conf, attestations[i].prevConf);
-            assertEq(priceFeeds[i].price.expo, attestations[i].expo);
-            assertEq(
-                priceFeeds[i].price.publishTime,
-                attestations[i].prevPublishTime
-            );
-            assertEq(priceFeeds[i].emaPrice.price, attestations[i].emaPrice);
-            assertEq(priceFeeds[i].emaPrice.conf, attestations[i].emaConf);
-            assertEq(priceFeeds[i].emaPrice.expo, attestations[i].expo);
-            assertEq(
-                priceFeeds[i].emaPrice.publishTime,
-                attestations[i].prevPublishTime
-            );
-        }
-    }
-
-    function testParsePriceFeedUpdatesWorksWithRandomDistinctUpdatesInput(
-        uint seed
-    ) public {
-        setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 30);
-        (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        // Shuffle the attestations
-        for (uint i = 1; i < numAttestations; i++) {
-            uint swapWith = getRandUint() % (i + 1);
-            (attestations[i], attestations[swapWith]) = (
-                attestations[swapWith],
-                attestations[i]
-            );
-            (priceIds[i], priceIds[swapWith]) = (
-                priceIds[swapWith],
-                priceIds[i]
-            );
-        }
-
-        // Select only first numSelectedAttestations. numSelectedAttestations will be in [0, numAttestations]
-        uint numSelectedAttestations = getRandUint() % (numAttestations + 1);
-
-        PriceAttestation[] memory selectedAttestations = new PriceAttestation[](
-            numSelectedAttestations
-        );
-        bytes32[] memory selectedPriceIds = new bytes32[](
-            numSelectedAttestations
-        );
-
-        for (uint i = 0; i < numSelectedAttestations; i++) {
-            selectedAttestations[i] = attestations[i];
-            selectedPriceIds[i] = priceIds[i];
-        }
-
-        // Only parse selected attestations
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
-            value: updateFee
-        }(updateData, selectedPriceIds, 0, MAX_UINT64);
-
-        for (uint i = 0; i < numSelectedAttestations; i++) {
-            assertEq(priceFeeds[i].id, selectedPriceIds[i]);
-            assertEq(priceFeeds[i].price.expo, selectedAttestations[i].expo);
-            assertEq(
-                priceFeeds[i].emaPrice.price,
-                selectedAttestations[i].emaPrice
-            );
-            assertEq(
-                priceFeeds[i].emaPrice.conf,
-                selectedAttestations[i].emaConf
-            );
-            assertEq(priceFeeds[i].emaPrice.expo, selectedAttestations[i].expo);
-
-            if (
-                selectedAttestations[i].status == PriceAttestationStatus.Trading
-            ) {
-                assertEq(
-                    priceFeeds[i].price.price,
-                    selectedAttestations[i].price
-                );
-                assertEq(
-                    priceFeeds[i].price.conf,
-                    selectedAttestations[i].conf
-                );
-                assertEq(
-                    priceFeeds[i].price.publishTime,
-                    selectedAttestations[i].publishTime
-                );
-                assertEq(
-                    priceFeeds[i].emaPrice.publishTime,
-                    selectedAttestations[i].publishTime
-                );
-            } else {
-                assertEq(
-                    priceFeeds[i].price.price,
-                    selectedAttestations[i].prevPrice
-                );
-                assertEq(
-                    priceFeeds[i].price.conf,
-                    selectedAttestations[i].prevConf
-                );
-                assertEq(
-                    priceFeeds[i].price.publishTime,
-                    selectedAttestations[i].prevPublishTime
-                );
-                assertEq(
-                    priceFeeds[i].emaPrice.publishTime,
-                    selectedAttestations[i].prevPublishTime
-                );
-            }
         }
     }
 
     function testParsePriceFeedUpdatesWorksWithOverlappingWithinTimeRangeUpdates()
         public
     {
-        PriceAttestation[] memory attestations = new PriceAttestation[](2);
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
 
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].status = PriceAttestationStatus.Trading;
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
+        messages[0].priceId = bytes32(uint(1));
+        messages[0].price = 1000;
+        messages[0].publishTime = 10;
 
-        attestations[1].priceId = bytes32(uint(1));
-        attestations[1].status = PriceAttestationStatus.Trading;
-        attestations[1].price = 2000;
-        attestations[1].publishTime = 20;
+        messages[1].priceId = bytes32(uint(1));
+        messages[1].price = 2000;
+        messages[1].publishTime = 20;
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(1));
@@ -308,22 +172,20 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
     function testParsePriceFeedUpdatesWorksWithOverlappingMixedTimeRangeUpdates()
         public
     {
-        PriceAttestation[] memory attestations = new PriceAttestation[](2);
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
 
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].status = PriceAttestationStatus.Trading;
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
+        messages[0].priceId = bytes32(uint(1));
+        messages[0].price = 1000;
+        messages[0].publishTime = 10;
 
-        attestations[1].priceId = bytes32(uint(1));
-        attestations[1].status = PriceAttestationStatus.Trading;
-        attestations[1].price = 2000;
-        attestations[1].publishTime = 20;
+        messages[1].priceId = bytes32(uint(1));
+        messages[1].price = 2000;
+        messages[1].publishTime = 20;
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
+        ) = createBatchedUpdateDataFromMessages(messages);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(1));
@@ -350,50 +212,29 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         assertEq(priceFeeds[0].price.publishTime, 20);
     }
 
-    function testParsePriceFeedUpdatesRevertsIfUpdateFeeIsNotPaid() public {
-        uint numAttestations = 10;
-        (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        // Since attestations are not empty the fee should be at least 1
-        assertGe(updateFee, 1);
-
-        vm.expectRevert(PythErrors.InsufficientFee.selector);
-
-        pyth.parsePriceFeedUpdates{value: updateFee - 1}(
-            updateData,
-            priceIds,
-            0,
-            MAX_UINT64
-        );
-    }
-
     function testParsePriceFeedUpdatesRevertsIfUpdateVAAIsInvalid(
         uint seed
     ) public {
         setRandSeed(seed);
-        uint numAttestations = 1 + (getRandUint() % 10);
+        uint numMessages = 1 + (getRandUint() % 10);
         (
             bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
         (
             bytes[] memory updateData,
             uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        uint mutPos = getRandUint() % updateData[0].length;
-
-        // mutate the random position by 1 bit
-        updateData[0][mutPos] = bytes1(uint8(updateData[0][mutPos]) ^ 1);
+        ) = createBatchedUpdateDataFromMessagesWithConfig(
+                messages,
+                MerkleUpdateConfig(
+                    MERKLE_TREE_DEPTH,
+                    NUM_GUARDIAN_SIGNERS,
+                    SOURCE_EMITTER_CHAIN_ID,
+                    SOURCE_EMITTER_ADDRESS,
+                    true
+                )
+            );
 
         // It might revert due to different wormhole errors
         vm.expectRevert();
@@ -408,23 +249,25 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
     function testParsePriceFeedUpdatesRevertsIfUpdateSourceChainIsInvalid()
         public
     {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
-        bytes[] memory updateData = new bytes[](1);
-        updateData[0] = generateVaa(
-            uint32(block.timestamp),
-            SOURCE_EMITTER_CHAIN_ID + 1,
-            SOURCE_EMITTER_ADDRESS,
-            1, // Sequence
-            generatePriceFeedUpdatePayload(attestations),
-            1 // Num signers
-        );
-
-        uint updateFee = pyth.getUpdateFee(updateData);
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessagesWithConfig(
+                messages,
+                MerkleUpdateConfig(
+                    MERKLE_TREE_DEPTH,
+                    NUM_GUARDIAN_SIGNERS,
+                    SOURCE_EMITTER_CHAIN_ID + 1,
+                    SOURCE_EMITTER_ADDRESS,
+                    false
+                )
+            );
 
         vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
@@ -438,23 +281,22 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
     function testParsePriceFeedUpdatesRevertsIfUpdateSourceAddressIsInvalid()
         public
     {
-        uint numAttestations = 10;
+        uint numMessages = 10;
         (
             bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
 
-        bytes[] memory updateData = new bytes[](1);
-        updateData[0] = generateVaa(
-            uint32(block.timestamp),
-            SOURCE_EMITTER_CHAIN_ID,
-            0x00000000000000000000000000000000000000000000000000000000000000aa, // Random wrong source address
-            1, // Sequence
-            generatePriceFeedUpdatePayload(attestations),
-            1 // Num signers
+        (bytes[] memory updateData, uint updateFee) = createBatchedUpdateDataFromMessagesWithConfig(
+            messages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                0x00000000000000000000000000000000000000000000000000000000000000aa, // Random wrong source address
+                false
+            )
         );
-
-        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
@@ -463,141 +305,5 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
             0,
             MAX_UINT64
         );
-    }
-
-    function testParsePriceFeedUpdatesRevertsIfPriceIdNotIncluded() public {
-        PriceAttestation[] memory attestations = new PriceAttestation[](1);
-
-        attestations[0].priceId = bytes32(uint(1));
-        attestations[0].status = PriceAttestationStatus.Trading;
-        attestations[0].price = 1000;
-        attestations[0].publishTime = 10;
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        bytes32[] memory priceIds = new bytes32[](1);
-        priceIds[0] = bytes32(uint(2));
-
-        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            0,
-            MAX_UINT64
-        );
-    }
-
-    function testParsePriceFeedUpdateRevertsIfPricesOutOfTimeRange() public {
-        uint numAttestations = 10;
-        (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        for (uint i = 0; i < numAttestations; i++) {
-            // Set status to Trading so publishTime is used
-            attestations[i].status = PriceAttestationStatus.Trading;
-            attestations[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
-        }
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        // Request for parse within the given time range should work
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            100,
-            200
-        );
-
-        // Request for parse after the time range should revert.
-        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            300,
-            MAX_UINT64
-        );
-    }
-
-    function testParsePriceFeedUpdatesLatestPriceIfNecessary() public {
-        uint numAttestations = 10;
-        (
-            bytes32[] memory priceIds,
-            PriceAttestation[] memory attestations
-        ) = generateRandomPriceAttestations(numAttestations);
-
-        for (uint i = 0; i < numAttestations; i++) {
-            // Set status to Trading so publishTime is used
-            attestations[i].status = PriceAttestationStatus.Trading;
-            attestations[i].publishTime = uint64((getRandUint() % 101)); // All between [0, 100]
-        }
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedUpdateDataFromAttestations(attestations);
-
-        // Request for parse within the given time range should work and update the latest price
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            0,
-            100
-        );
-
-        // Check if the latest price is updated
-        for (uint i = 0; i < numAttestations; i++) {
-            assertEq(
-                pyth.getPriceUnsafe(priceIds[i]).publishTime,
-                attestations[i].publishTime
-            );
-        }
-
-        for (uint i = 0; i < numAttestations; i++) {
-            // Set status to Trading so publishTime is used
-            attestations[i].status = PriceAttestationStatus.Trading;
-            attestations[i].publishTime = uint64(100 + (getRandUint() % 101)); // All between [100, 200]
-        }
-
-        (updateData, updateFee) = createBatchedUpdateDataFromAttestations(
-            attestations
-        );
-
-        // Request for parse after the time range should revert.
-        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            300,
-            400
-        );
-
-        // parse function reverted so publishTimes should remain less than or equal to 100
-        for (uint i = 0; i < numAttestations; i++) {
-            assertGe(100, pyth.getPriceUnsafe(priceIds[i]).publishTime);
-        }
-
-        // Time range is now fixed, so parse should work and update the latest price
-        pyth.parsePriceFeedUpdates{value: updateFee}(
-            updateData,
-            priceIds,
-            100,
-            200
-        );
-
-        // Check if the latest price is updated
-        for (uint i = 0; i < numAttestations; i++) {
-            assertEq(
-                pyth.getPriceUnsafe(priceIds[i]).publishTime,
-                attestations[i].publishTime
-            );
-        }
     }
 }

@@ -5,6 +5,7 @@ import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource, EvmExecute } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
+import { TokenQty } from "../token";
 
 // Just to make sure tx gas limit is enough
 const EXTENDED_ENTROPY_ABI = [
@@ -724,9 +725,13 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     return Web3.utils.keccak256(strippedCode);
   }
 
-  async getTotalFee(): Promise<bigint> {
+  async getTotalFee(): Promise<TokenQty> {
     const web3 = new Web3(this.chain.getRpcUrl());
-    return BigInt(await web3.eth.getBalance(this.address));
+    const amount = BigInt(await web3.eth.getBalance(this.address));
+    return {
+      amount,
+      denom: this.chain.getNativeToken(),
+    };
   }
 
   async getLastExecutedGovernanceSequence() {

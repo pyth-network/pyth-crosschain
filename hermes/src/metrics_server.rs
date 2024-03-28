@@ -16,10 +16,7 @@ use {
         Router,
     },
     prometheus_client::encoding::text::encode,
-    std::sync::{
-        atomic::Ordering,
-        Arc,
-    },
+    std::sync::Arc,
 };
 
 
@@ -37,10 +34,7 @@ pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
     axum::Server::try_bind(&opts.metrics.server_listen_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
-            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-            }
-
+            let _ = crate::EXIT.subscribe().changed().await;
             tracing::info!("Shutting down metrics server...");
         })
         .await?;

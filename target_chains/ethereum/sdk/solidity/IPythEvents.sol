@@ -15,9 +15,4 @@ interface IPythEvents {
         int64 price,
         uint64 conf
     );
-
-    /// @dev Emitted when a batch price update is processed successfully.
-    /// @param chainId ID of the source chain that the batch price update comes from.
-    /// @param sequenceNumber Sequence number of the batch price update.
-    event BatchPriceFeedUpdate(uint16 chainId, uint64 sequenceNumber);
 }

@@ -9,7 +9,7 @@ use {
     anyhow::Result,
 };
 
-pub const DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL: u16 = 600;
+pub const DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL: u64 = 600;
 
 pub async fn retrieve_price_feeds_metadata(state: &State) -> Result<Vec<PriceFeedMetadata>> {
     let price_feeds_metadata = state.price_feeds_metadata.read().await;
