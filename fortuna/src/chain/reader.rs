@@ -32,6 +32,7 @@ impl Into<EthersBlockNumber> for BlockStatus {
     }
 }
 
+#[derive(Clone)]
 pub struct RequestedWithCallbackEvent {
     pub sequence_number:    u64,
     pub user_random_number: [u8; 32],
@@ -55,13 +56,16 @@ pub trait EntropyReader: Send + Sync {
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
 
-    async fn simulate_reveal(
+    /// Simulate a reveal with callback. Returns true if the simulation was successful.
+    /// Returns false if the simulation failed. Returns an error if the simulation could not be
+    /// performed.
+    async fn simulate_reveal_with_callback(
         &self,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<()>;
+    ) -> Result<bool>;
 }
 
 /// An in-flight request stored in the contract.
@@ -176,14 +180,14 @@ pub mod mock {
             Ok(vec![])
         }
 
-        async fn simulate_reveal(
+        async fn simulate_reveal_with_callback(
             &self,
             provider: Address,
             sequence_number: u64,
             user_random_number: [u8; 32],
             provider_revelation: [u8; 32],
-        ) -> Result<()> {
-            Ok(())
+        ) -> Result<bool> {
+            Ok(true)
         }
     }
 }

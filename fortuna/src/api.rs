@@ -73,6 +73,8 @@ impl ApiState {
 /// The state of the randomness service for a single blockchain.
 #[derive(Clone)]
 pub struct BlockchainState {
+    /// The chain id for this blockchain, useful for logging
+    pub id:                     ChainId,
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state:                  Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
@@ -245,6 +247,7 @@ mod test {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
+            id:                     "ethereum".into(),
             state:                  ETH_CHAIN.clone(),
             contract:               eth_read.clone(),
             provider_address:       PROVIDER,
@@ -255,6 +258,7 @@ mod test {
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let avax_state = BlockchainState {
+            id:                     "avalanche".into(),
             state:                  AVAX_CHAIN.clone(),
             contract:               avax_read.clone(),
             provider_address:       PROVIDER,

@@ -1,6 +1,10 @@
 use {
     crate::{
-        api,
+        api::{
+            self,
+            BlockchainState,
+            ChainId,
+        },
         chain::ethereum::{
             PythContract,
             SignablePythContract,
@@ -106,67 +110,20 @@ pub async fn run_keeper(
 ) -> Result<()> {
     let mut handles = Vec::new();
     for (chain_id, chain_config) in chains {
-        let chain_eth_config = config.chains.get(&chain_id).unwrap().clone();
+        let chain_eth_config = config
+            .chains
+            .get(&chain_id)
+            .expect("All chains should be present in the config file")
+            .clone();
         let private_key = private_key.clone();
-        let chain_id = chain_id.clone();
-        handles.push(spawn(async move {
-            tracing::info!("Starting keeper for chain: {}", &chain_id);
-            let latest_safe_block = chain_config
-                .contract
-                .get_block_number(chain_config.confirmed_block_status)
-                .await?
-                - chain_config.reveal_delay_blocks;
-
-            tracing::info!(
-                "Latest safe block for chain {}: {} ",
-                &chain_id,
-                &latest_safe_block
-            );
-
-            let contract =
-                Arc::new(SignablePythContract::from_config(&chain_eth_config, &private_key).await?);
-
-            let handle_backlog = spawn(keeper::handle_backlog(
-                chain_id.clone(),
-                latest_safe_block,
-                Arc::clone(&contract),
-                chain_eth_config.gas_limit,
-                chain_config.clone(),
-            ));
-
-            let (tx, rx) = mpsc::channel::<keeper::BlockRange>(1000);
-
-            let handle_watch_blocks = spawn(keeper::watch_blocks(
-                chain_id.clone(),
-                Arc::clone(&chain_config.contract),
-                chain_config.clone(),
-                latest_safe_block,
-                tx.clone(),
-                chain_eth_config.geth_rpc_wss,
-            ));
-            let handle_events = spawn(keeper::handle_events(
-                chain_id.clone(),
-                chain_config.clone(),
-                rx,
-                Arc::clone(&contract),
-                chain_eth_config.gas_limit,
-            ));
-
-            let tasks = join_all([handle_backlog, handle_watch_blocks, handle_events]).await;
-            for task in tasks {
-                task??;
-            }
-
-            Ok::<(), Error>(())
-        }));
+        handles.push(spawn(keeper::run_keeper_threads(
+            private_key,
+            chain_eth_config,
+            chain_config.clone(),
+        )));
     }
 
-    let tasks = join_all(handles).await;
-    for task in tasks {
-        task??;
-    }
-
-    Ok::<(), Error>(())
+    Ok(())
 }
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
@@ -175,7 +132,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
-    let mut chains = HashMap::new();
+    let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
@@ -214,6 +171,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         }
 
         let state = api::BlockchainState {
+            id: chain_id.clone(),
             state: Arc::new(chain_state),
             contract,
             provider_address: opts.provider,
@@ -224,7 +182,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         chains.insert(chain_id.clone(), state);
     }
 
-    let chains_clone = chains.clone();
 
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
     spawn(async move {
@@ -237,7 +194,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         Ok::<(), Error>(())
     });
-    spawn(run_keeper(chains_clone, config, private_key));
+    spawn(run_keeper(chains.clone(), config, private_key));
 
     run_api(opts.addr.clone(), chains, rx_exit).await?;
 

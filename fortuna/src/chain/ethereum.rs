@@ -19,6 +19,7 @@ use {
         abi::RawLog,
         contract::{
             abigen,
+            ContractError,
             EthLogDecode,
         },
         core::types::Address,
@@ -253,21 +254,30 @@ impl EntropyReader for PythContract {
             .collect())
     }
 
-    async fn simulate_reveal(
+    async fn simulate_reveal_with_callback(
         &self,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<()> {
-        self.reveal_with_callback(
-            provider,
-            sequence_number,
-            user_random_number,
-            provider_revelation,
-        )
-        .await?;
-
-        Ok(())
+    ) -> Result<bool> {
+        let result: Result<(), ContractError<Provider<Http>>> = self
+            .reveal_with_callback(
+                provider,
+                sequence_number,
+                user_random_number,
+                provider_revelation,
+            )
+            .await;
+        match result {
+            Ok(_) => Ok(true),
+            Err(e) => match e {
+                ContractError::ProviderError { e } => Err(anyhow!(e)),
+                _ => {
+                    tracing::info!("Simulate reveal with callback failed: {:?}", e);
+                    Ok(false)
+                }
+            },
+        }
     }
 }
