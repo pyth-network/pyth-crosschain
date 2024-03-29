@@ -1019,6 +1019,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "common-test-utils"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "lazy_static",
+ "libsecp256k1 0.7.1",
+ "program-simulator",
+ "pyth-sdk",
+ "pyth-sdk-solana",
+ "pyth-solana-receiver",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
+ "rand 0.8.5",
+ "serde_wormhole",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+ "wormhole-core-bridge-solana",
+ "wormhole-vaas-serde",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3039,10 +3063,10 @@ dependencies = [
  "anchor-lang",
  "bincode",
  "byteorder",
+ "common-test-utils",
  "lazy_static",
  "libsecp256k1 0.7.1",
  "program-simulator",
- "pyth-push-oracle",
  "pyth-sdk",
  "pyth-sdk-solana",
  "pyth-solana-receiver-sdk",

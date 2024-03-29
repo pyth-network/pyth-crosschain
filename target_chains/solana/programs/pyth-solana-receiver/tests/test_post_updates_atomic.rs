@@ -1,12 +1,10 @@
 use {
-    crate::common::{
+    common_test_utils::{
         assert_treasury_balance,
-        WrongSetupOption,
-        DEFAULT_GUARDIAN_SET_INDEX,
-    },
-    common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
+        WrongSetupOption,
+        DEFAULT_GUARDIAN_SET_INDEX,
     },
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
@@ -40,8 +38,6 @@ use {
     wormhole_core_bridge_solana::ID as BRIDGE_ID,
     wormhole_sdk::Vaa,
 };
-
-mod common;
 
 
 #[tokio::test]

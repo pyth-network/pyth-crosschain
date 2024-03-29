@@ -3,7 +3,8 @@ members = [
     "programs/*",
     "cli/",
     "program_simulator/",
-    "pyth_solana_receiver_sdk/"
+    "pyth_solana_receiver_sdk/",
+    "common_test_utils"
 ]
 
 [profile.release]

@@ -1,11 +1,9 @@
 use {
-    crate::common::{
+    common_test_utils::{
         assert_treasury_balance,
-        WrongSetupOption,
-    },
-    common::{
         setup_pyth_receiver,
         ProgramTestFixtures,
+        WrongSetupOption,
     },
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
@@ -37,8 +35,6 @@ use {
         signer::Signer,
     },
 };
-
-mod common;
 
 
 #[tokio::test]

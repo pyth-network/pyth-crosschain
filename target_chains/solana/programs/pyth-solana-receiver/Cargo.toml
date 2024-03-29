@@ -38,4 +38,4 @@ program-simulator = { path = "../../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
-pyth-push-oracle = { path = "../pyth-push-oracle" }
+common-test-utils = { path = "../../common_test_utils" }

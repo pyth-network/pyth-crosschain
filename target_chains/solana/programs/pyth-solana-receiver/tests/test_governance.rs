@@ -1,8 +1,8 @@
 use {
-    crate::common::WrongSetupOption,
-    common::{
+    common_test_utils::{
         setup_pyth_receiver,
         ProgramTestFixtures,
+        WrongSetupOption,
     },
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
@@ -29,8 +29,6 @@ use {
     },
     solana_sdk::signer::Signer,
 };
-
-mod common;
 
 
 #[tokio::test]
