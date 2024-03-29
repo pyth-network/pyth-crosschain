@@ -21,3 +21,11 @@ pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 solana-program = { workspace = true }
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
 pyth-solana-receiver = { path = "../pyth-solana-receiver", features = ["cpi"]}
+
+[dev-dependencies]
+solana-sdk = { workspace = true }
+tokio = "1.14.1"
+program-simulator = { path = "../../program_simulator" }
+wormhole-vaas-serde = { workspace = true }
+serde_wormhole = { workspace = true }
+common-test-utils = { path = "../../common_test_utils" }

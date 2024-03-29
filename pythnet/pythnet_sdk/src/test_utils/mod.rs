@@ -102,19 +102,22 @@ pub fn dummy_feed_id(value: i64) -> FeedId {
     dummy_id
 }
 
-pub fn create_dummy_price_feed_message(value: i64) -> Message {
-    let dummy_id = dummy_feed_id(value);
+pub fn create_dummy_price_feed_message_with_feed_id(value: i64, feed_id: FeedId) -> Message {
     let msg = PriceFeedMessage {
-        feed_id:           dummy_id,
-        price:             value,
-        conf:              value as u64,
-        exponent:          value as i32,
-        publish_time:      value,
+        feed_id,
+        price: value,
+        conf: value as u64,
+        exponent: value as i32,
+        publish_time: value,
         prev_publish_time: value,
-        ema_price:         value,
-        ema_conf:          value as u64,
+        ema_price: value,
+        ema_conf: value as u64,
     };
     Message::PriceFeedMessage(msg)
+}
+
+pub fn create_dummy_price_feed_message(value: i64) -> Message {
+    create_dummy_price_feed_message_with_feed_id(value, dummy_feed_id(value))
 }
 
 pub fn create_dummy_twap_message() -> Message {

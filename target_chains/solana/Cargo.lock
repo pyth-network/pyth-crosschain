@@ -3019,10 +3019,16 @@ name = "pyth-push-oracle"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "common-test-utils",
+ "program-simulator",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
+ "serde_wormhole",
  "solana-program",
+ "solana-sdk",
+ "tokio",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]

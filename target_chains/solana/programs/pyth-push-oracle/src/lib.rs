@@ -5,14 +5,17 @@ use {
         program::PythSolanaReceiver,
         PostUpdateParams,
     },
-    pyth_solana_receiver_sdk::price_update::PriceUpdateV2,
+    pyth_solana_receiver_sdk::{
+        price_update::PriceUpdateV2,
+        PYTH_PUSH_ORACLE_ID,
+    },
     pythnet_sdk::messages::FeedId,
 };
 
 // pub mod error;
 pub mod sdk;
 
-declare_id!("F9SP6tBXw9Af7BYauo7Y2R5Es2mpv8FP5aNCXMihp6Za");
+pub const ID: Pubkey = PYTH_PUSH_ORACLE_ID;
 
 #[error_code]
 pub enum PushOracleError {
