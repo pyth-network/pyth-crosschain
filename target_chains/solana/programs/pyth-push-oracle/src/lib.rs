@@ -37,12 +37,12 @@ pub mod pyth_push_oracle {
         let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
         let cpi_accounts = PostUpdate {
             payer:                ctx.accounts.payer.to_account_info().clone(),
-            write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
             encoded_vaa:          ctx.accounts.encoded_vaa.to_account_info().clone(),
             config:               ctx.accounts.config.to_account_info().clone(),
             treasury:             ctx.accounts.treasury.to_account_info().clone(),
             price_update_account: ctx.accounts.price_feed_account.to_account_info().clone(),
             system_program:       ctx.accounts.system_program.to_account_info().clone(),
+            write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
         };
 
         let seeds = &[
