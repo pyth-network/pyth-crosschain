@@ -1,6 +1,6 @@
 [package]
 name = "Pyth"
-version = "0.0.1"
+version = "0.0.2"
 published-at = "0xe76d8a37d4132278a7a752183e90e04890b9e7d0f6657eadb68821609a2a56a3"
 
 [dependencies.Sui]
@@ -10,9 +10,9 @@ rev = "framework/testnet"
 override = true
 
 [dependencies.Wormhole]
-git = "https://github.com/0xaslan/wormhole.git"
+git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
-rev = "sui/testnet-published-at"
+rev = "sui-upgrade-testnet"
 
 [addresses]
-pyth = "0xe76d8a37d4132278a7a752183e90e04890b9e7d0f6657eadb68821609a2a56a3"
+pyth = "0x0"
