@@ -38,4 +38,5 @@ lazy_static = "1.4.0"
 program-simulator = { path = "../../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
+
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }

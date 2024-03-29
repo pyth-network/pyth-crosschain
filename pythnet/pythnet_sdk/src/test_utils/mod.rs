@@ -6,6 +6,7 @@ use {
         },
         hashers::keccak256_160::Keccak160,
         messages::{
+            FeedId,
             Message,
             PriceFeedMessage,
             TwapMessage,
@@ -95,9 +96,14 @@ pub fn dummy_guardians() -> Vec<SecretKey> {
     result
 }
 
-pub fn create_dummy_price_feed_message(value: i64) -> Message {
+pub fn dummy_feed_id(value: i64) -> FeedId {
     let mut dummy_id = [0; 32];
     dummy_id[0] = value as u8;
+    dummy_id
+}
+
+pub fn create_dummy_price_feed_message(value: i64) -> Message {
+    let dummy_id = dummy_feed_id(value);
     let msg = PriceFeedMessage {
         feed_id:           dummy_id,
         price:             value,
