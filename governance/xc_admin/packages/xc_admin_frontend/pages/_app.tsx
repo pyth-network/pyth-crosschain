@@ -13,6 +13,8 @@ import {
   SolletExtensionWalletAdapter,
   SolletWalletAdapter,
   TorusWalletAdapter,
+  WalletConnectWalletAdapter,
+  WalletConnectWalletAdapterConfig,
 } from '@solana/wallet-adapter-wallets'
 import { clusterApiUrl } from '@solana/web3.js'
 import { DefaultSeo } from 'next-seo'
@@ -23,6 +25,20 @@ import { Toaster } from 'react-hot-toast'
 import { ClusterProvider } from '../contexts/ClusterContext'
 import SEO from '../next-seo.config'
 import '../styles/globals.css'
+
+const walletConnectConfig: WalletConnectWalletAdapterConfig = {
+  network: WalletAdapterNetwork.Mainnet,
+  options: {
+    relayUrl: 'wss://relay.walletconnect.com',
+    projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+    metadata: {
+      name: 'Pyth Proposals Page',
+      description: 'Vote on Pyth Improvement Proposals',
+      url: 'https://proposals.pyth.network/',
+      icons: ['https://pyth.network/token.svg'],
+    },
+  },
+}
 
 function MyApp({ Component, pageProps }: AppProps) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
@@ -44,6 +60,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       new LedgerWalletAdapter(),
       new SolletWalletAdapter(),
       new SolletExtensionWalletAdapter(),
+      new WalletConnectWalletAdapter(walletConnectConfig),
     ],
     []
   )

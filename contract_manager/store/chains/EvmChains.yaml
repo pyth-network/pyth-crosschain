@@ -13,6 +13,7 @@
   rpcUrl: https://evmos-evm.publicnode.com
   networkId: 9001
   type: EvmChain
+  nativeToken: EVMOS
 - id: canto
   mainnet: true
   rpcUrl: https://canto.slingshot.finance
@@ -48,6 +49,11 @@
   rpcUrl: https://rpc.public.zkevm-test.net/
   networkId: 1442
   type: EvmChain
+- id: polygon_blackberry
+  mainnet: false
+  rpcUrl: https://rpc.polygon-blackberry.gelato.digital
+  networkId: 94204209
+  type: EvmChain
 - id: aurora_testnet
   mainnet: false
   rpcUrl: https://testnet.aurora.dev
@@ -63,6 +69,7 @@
   rpcUrl: https://rpc.gnosischain.com
   networkId: 100
   type: EvmChain
+  nativeToken: DAI
 - id: fantom_testnet
   mainnet: false
   rpcUrl: https://fantom-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -78,6 +85,7 @@
   rpcUrl: https://rpc.ankr.com/fantom
   networkId: 250
   type: EvmChain
+  nativeToken: FTM
 - id: mumbai
   mainnet: false
   rpcUrl: https://polygon-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -103,6 +111,7 @@
   rpcUrl: https://rpc.mantle.xyz/
   networkId: 5000
   type: EvmChain
+  nativeToken: MNT
 - id: kava_testnet
   mainnet: false
   rpcUrl: https://evm.testnet.kava.io
@@ -123,6 +132,7 @@
   rpcUrl: https://eth-mainnet.blastapi.io/$ENV_BLAST_API_KEY
   networkId: 1
   type: EvmChain
+  nativeToken: ETH
 - id: bsc_testnet
   mainnet: false
   rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel
@@ -138,6 +148,7 @@
   rpcUrl: https://mainnet.aurora.dev
   networkId: 1313161554
   type: EvmChain
+  nativeToken: NEAR
 - id: bsc
   mainnet: true
   rpcUrl: https://rpc.ankr.com/bsc
@@ -173,6 +184,7 @@
   rpcUrl: https://polygon-rpc.com
   networkId: 137
   type: EvmChain
+  nativeToken: MATIC
 - id: wemix_testnet
   mainnet: false
   rpcUrl: https://api.test.wemix.com
@@ -183,11 +195,13 @@
   rpcUrl: https://rpc-mainnet.kcc.network
   networkId: 321
   type: EvmChain
+  nativeToken: KCS
 - id: polygon_zkevm
   mainnet: true
   rpcUrl: https://zkevm-rpc.com
   networkId: 1101
   type: EvmChain
+  nativeToken: ETH
 - id: celo_alfajores_testnet
   mainnet: false
   rpcUrl: https://alfajores-forno.celo-testnet.org
@@ -203,21 +217,25 @@
   rpcUrl: https://zksync2-mainnet.zksync.io
   networkId: 324
   type: EvmChain
+  nativeToken: ETH
 - id: base
   mainnet: true
   rpcUrl: https://developer-access-mainnet.base.org/
   networkId: 8453
   type: EvmChain
+  nativeToken: ETH
 - id: arbitrum
   mainnet: true
   rpcUrl: https://arb1.arbitrum.io/rpc
   networkId: 42161
   type: EvmChain
+  nativeToken: ETH
 - id: optimism
   mainnet: true
   rpcUrl: https://rpc.ankr.com/optimism
   networkId: 10
   type: EvmChain
+  nativeToken: ETH
 - id: kcc_testnet
   mainnet: false
   rpcUrl: https://rpc-testnet.kcc.network
@@ -238,6 +256,7 @@
   rpcUrl: https://linea.rpc.thirdweb.com
   networkId: 59144
   type: EvmChain
+  nativeToken: ETH
 - id: shimmer_testnet
   mainnet: false
   rpcUrl: https://json-rpc.evm.testnet.shimmer.network
@@ -288,6 +307,11 @@
   rpcUrl: https://sepolia-rollup.arbitrum.io/rpc
   networkId: 421614
   type: EvmChain
+- id: arbitrum_blueberry
+  mainnet: false
+  rpcUrl: https://rpc.arb-blueberry.gelato.digital
+  networkId: 88153591557
+  type: EvmChain
 - id: boba
   mainnet: true
   rpcUrl: https://replica.boba.network
@@ -317,6 +341,11 @@
   mainnet: false
   rpcUrl: https://sepolia.optimism.io
   networkId: 11155420
+  type: EvmChain
+- id: optimism_celestia_raspberry
+  mainnet: false
+  rpcUrl: https://rpc.opcelestia-raspberry.gelato.digital
+  networkId: 123420111
   type: EvmChain
 - id: chiliz_spicy
   mainnet: false
@@ -358,6 +387,7 @@
   rpcUrl: https://rpc.coredao.org
   networkId: 1116
   type: EvmChain
+  nativeToken: CORE
 - id: tomochain
   mainnet: true
   rpcUrl: https://rpc.tomochain.com
@@ -428,6 +458,7 @@
   rpcUrl: https://mainnet.hashio.io/api
   networkId: 295
   type: EvmChain
+  nativeToken: HBAR
 - id: filecoin_calibration
   mainnet: false
   rpcUrl: https://rpc.ankr.com/filecoin_testnet
@@ -497,4 +528,19 @@
   mainnet: true
   rpcUrl: https://rpc.merlinchain.io
   networkId: 4200
+  type: EvmChain
+- id: parallel_testnet
+  mainnet: false
+  rpcUrl: https://rpc-accused-coffee-koala-b9fn1dik76.t.conduit.xyz
+  networkId: 9659
+  type: EvmChain
+- id: parallel
+  mainnet: true
+  rpcUrl: https://rpc.parallel.fi/
+  networkId: 1024
+  type: EvmChain
+- id: polynomial_testnet
+  mainnet: false
+  rpcUrl: https://rpc-polynomial-network-testnet-x0tryg8u1c.t.conduit.xyz
+  networkId: 80008
   type: EvmChain

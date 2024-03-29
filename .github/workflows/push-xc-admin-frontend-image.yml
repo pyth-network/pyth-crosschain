@@ -6,8 +6,12 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pyth-network/xc-admin-frontend
 jobs:
-  xc-admin-image:
+  xc-admin-frontend-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,23 +20,17 @@ jobs:
           SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
           TIMESTAMP=$(date +%s)
           echo "IMAGE_TAG=${TIMESTAMP}-${SHORT_HASH}" >> "${GITHUB_ENV}"
-      - uses: aws-actions/configure-aws-credentials@8a84b07f2009032ade05a88a28750d733cc30db1
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
-          role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
-          aws-region: eu-west-2
-      - uses: aws-actions/amazon-ecr-login@v1
-        id: ecr_login
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build docker image
         run: |
           DOCKER_BUILDKIT=1 docker build -t lerna -f Dockerfile.lerna .
-          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
-        env:
-          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
-          ECR_REPOSITORY: xc-admin-frontend
+          DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
       - name: Push docker image
         if: github.ref == 'refs/heads/main'
         run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        env:
-          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
-          ECR_REPOSITORY: xc-admin-frontend
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}

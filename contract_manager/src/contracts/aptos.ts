@@ -3,6 +3,7 @@ import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
+import { TokenQty } from "../token";
 
 type WormholeState = {
   chain_id: { number: string };
@@ -91,7 +92,11 @@ export class AptosPriceFeedContract extends PriceFeedContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; stateId: string; wormholeStateId: string }
+    parsed: {
+      type: string;
+      stateId: string;
+      wormholeStateId: string;
+    }
   ): AptosPriceFeedContract {
     if (parsed.type !== AptosPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -260,9 +265,13 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return AptosPriceFeedContract.type;
   }
 
-  async getTotalFee(): Promise<bigint> {
+  async getTotalFee(): Promise<TokenQty> {
     const client = new CoinClient(this.chain.getClient());
-    return await client.checkBalance(this.stateId);
+    const amount = await client.checkBalance(this.stateId);
+    return {
+      amount,
+      denom: this.chain.getNativeToken(),
+    };
   }
 
   async getValidTimePeriod() {

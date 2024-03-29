@@ -14,7 +14,7 @@ use {
         ensure,
         Result,
     },
-    chrono::NaiveDateTime,
+    chrono::DateTime,
     futures::StreamExt,
     proto::spy::v1::{
         filter_entry::Filter,
@@ -43,10 +43,7 @@ use {
         Digest,
         Keccak256,
     },
-    std::sync::{
-        atomic::Ordering,
-        Arc,
-    },
+    std::sync::Arc,
     tonic::Request,
     wormhole_sdk::{
         vaa::{
@@ -153,16 +150,16 @@ mod proto {
 // Launches the Wormhole gRPC service.
 #[tracing::instrument(skip(opts, state))]
 pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
-    while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-        if let Err(e) = run(opts.clone(), state.clone()).await {
-            tracing::error!(error = ?e, "Wormhole gRPC service failed.");
+    let mut exit = crate::EXIT.subscribe();
+    loop {
+        tokio::select! {
+            _ = exit.changed() => break,
+            Err(err) = run(opts.clone(), state.clone()) => {
+                tracing::error!(error = ?err, "Wormhole gRPC service failed.");
+            }
         }
-
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     }
-
     tracing::info!("Shutting down Wormhole gRPC service...");
-
     Ok(())
 }
 
@@ -182,10 +179,6 @@ async fn run(opts: RunOptions, state: Arc<State>) -> Result<()> {
         .into_inner();
 
     while let Some(Ok(message)) = stream.next().await {
-        if crate::SHOULD_EXIT.load(Ordering::Acquire) {
-            return Ok(());
-        }
-
         if let Err(e) = process_message(state.clone(), message.vaa_bytes).await {
             tracing::debug!(error = ?e, "Skipped VAA.");
         }
@@ -200,9 +193,11 @@ pub async fn process_message(state: Arc<State>, vaa_bytes: Vec<u8>) -> Result<()
     let vaa = serde_wormhole::from_slice::<Vaa<&RawMessage>>(&vaa_bytes)?;
 
     // Log VAA Processing.
-    let vaa_timestamp = NaiveDateTime::from_timestamp_opt(vaa.timestamp as i64, 0);
-    let vaa_timestamp = vaa_timestamp.unwrap();
-    let vaa_timestamp = vaa_timestamp.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
+    let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp as i64, 0)
+        .ok_or(anyhow!("Failed to parse VAA Tiestamp"))?
+        .format("%Y-%m-%dT%H:%M:%S.%fZ")
+        .to_string();
+
     let slot = match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
         WormholePayload::Merkle(proof) => proof.slot,
     };

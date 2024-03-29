@@ -23,10 +23,12 @@ import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TransactionObject } from "web3/eth/types";
+import { TokenId } from "./token";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
   id: string;
+  nativeToken: TokenId;
 };
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
@@ -37,12 +39,14 @@ export abstract class Chain extends Storable {
    * @param mainnet whether this chain is mainnet or testnet/devnet
    * @param wormholeChainName the name of the wormhole chain that this chain is associated with.
    * Note that pyth has included additional chain names and ids to the wormhole spec.
+   * @param nativeToken the id of the token used to pay gas on this chain
    * @protected
    */
   protected constructor(
     protected id: string,
     protected mainnet: boolean,
-    wormholeChainName: string
+    wormholeChainName: string,
+    protected nativeToken: TokenId | undefined
   ) {
     super();
     this.wormholeChainName = wormholeChainName as ChainName;
@@ -63,6 +67,10 @@ export abstract class Chain extends Storable {
 
   isMainnet(): boolean {
     return this.mainnet;
+  }
+
+  public getNativeToken(): TokenId | undefined {
+    return this.nativeToken;
   }
 
   /**
@@ -125,7 +133,7 @@ export abstract class Chain extends Storable {
 export class GlobalChain extends Chain {
   static type = "GlobalChain";
   constructor() {
-    super("global", true, "unset");
+    super("global", true, "unset", undefined);
   }
 
   generateGovernanceUpgradePayload(): Buffer {
@@ -163,12 +171,13 @@ export class CosmWasmChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
+    nativeToken: TokenId | undefined,
     public endpoint: string,
     public gasPrice: string,
     public prefix: string,
     public feeDenom: string
   ) {
-    super(id, mainnet, wormholeChainName);
+    super(id, mainnet, wormholeChainName, nativeToken);
   }
 
   static fromJson(parsed: ChainConfig): CosmWasmChain {
@@ -180,7 +189,8 @@ export class CosmWasmChain extends Chain {
       parsed.endpoint,
       parsed.gasPrice,
       parsed.prefix,
-      parsed.feeDenom
+      parsed.feeDenom,
+      parsed.nativeToken
     );
   }
 
@@ -248,9 +258,10 @@ export class SuiChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
+    nativeToken: TokenId | undefined,
     public rpcUrl: string
   ) {
-    super(id, mainnet, wormholeChainName);
+    super(id, mainnet, wormholeChainName, nativeToken);
   }
 
   static fromJson(parsed: ChainConfig): SuiChain {
@@ -259,6 +270,7 @@ export class SuiChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
+      parsed.nativeToken,
       parsed.rpcUrl
     );
   }
@@ -314,11 +326,12 @@ export class EvmChain extends Chain {
   constructor(
     id: string,
     mainnet: boolean,
+    nativeToken: TokenId | undefined,
     private rpcUrl: string,
     private networkId: number
   ) {
     // On EVM networks we use the chain id as the wormhole chain name
-    super(id, mainnet, id);
+    super(id, mainnet, id, nativeToken);
   }
 
   static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
@@ -326,6 +339,7 @@ export class EvmChain extends Chain {
     return new EvmChain(
       parsed.id,
       parsed.mainnet,
+      parsed.nativeToken,
       parsed.rpcUrl,
       parsed.networkId
     );
@@ -392,10 +406,7 @@ export class EvmChain extends Chain {
     txParams: { from?: string; value?: string }
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
-    const gasEstimate = await transactionObject.estimateGas({
-      gas: 15000000,
-      ...txParams,
-    });
+    const gasEstimate = await transactionObject.estimateGas(txParams);
     // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
     // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
     // `0x2` to the transaction configuration parameters.
@@ -471,9 +482,10 @@ export class AptosChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
+    nativeToken: TokenId | undefined,
     public rpcUrl: string
   ) {
-    super(id, mainnet, wormholeChainName);
+    super(id, mainnet, wormholeChainName, nativeToken);
   }
 
   getClient(): AptosClient {
@@ -511,6 +523,7 @@ export class AptosChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
+      parsed.nativeToken,
       parsed.rpcUrl
     );
   }

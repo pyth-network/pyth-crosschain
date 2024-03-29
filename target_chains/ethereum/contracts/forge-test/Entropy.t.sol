@@ -799,7 +799,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.stopPrank();
     }
 
-    function testRequestWithCallbackAndRevealWithCallback() public {
+    function testRequestWithCallbackAndRevealWithCallbackByContract() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random));
@@ -844,6 +844,46 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 // is being depreceated. Passing 0 for it.
                 0
             )
+        );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
+
+    function testRequestWithCallbackAndRevealWithCallbackByEoa() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        bytes32 blockHash = bytes32(uint256(0));
+
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            req,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
         );
 
         EntropyStructs.Request memory reqAfterReveal = random.getRequest(

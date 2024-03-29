@@ -69,7 +69,10 @@ use {
         },
         time::Duration,
     },
-    tokio::sync::broadcast::Receiver,
+    tokio::sync::{
+        broadcast::Receiver,
+        watch,
+    },
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -262,7 +265,7 @@ pub struct Subscriber {
     sender:                  SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
     ping_interval:           tokio::time::Interval,
-    exit_check_interval:     tokio::time::Interval,
+    exit:                    watch::Receiver<bool>,
     responded_to_ping:       bool,
 }
 
@@ -287,7 +290,7 @@ impl Subscriber {
             sender,
             price_feeds_with_config: HashMap::new(),
             ping_interval: tokio::time::interval(PING_INTERVAL_DURATION),
-            exit_check_interval: tokio::time::interval(Duration::from_secs(5)),
+            exit: crate::EXIT.subscribe(),
             responded_to_ping: true, // We start with true so we don't close the connection immediately
         }
     }
@@ -332,13 +335,10 @@ impl Subscriber {
                 self.sender.send(Message::Ping(vec![])).await?;
                 Ok(())
             },
-            _ = self.exit_check_interval.tick() => {
-                if crate::SHOULD_EXIT.load(Ordering::Acquire) {
-                    self.sender.close().await?;
-                    self.closed = true;
-                    return Err(anyhow!("Application is shutting down. Closing connection."));
-                }
-                Ok(())
+            _ = self.exit.changed() => {
+                self.sender.close().await?;
+                self.closed = true;
+                return Err(anyhow!("Application is shutting down. Closing connection."));
             }
         }
     }

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-contract",
-  "version": "1.4.0",
+  "version": "1.4.3",
   "description": "",
   "private": "true",
   "devDependencies": {
@@ -35,7 +35,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@pythnetwork/pyth-multisig-wh-message-builder": "*",
-    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "^3.0.0",
     "@pythnetwork/entropy-sdk-solidity": "*",
     "contract_manager": "*",
     "dotenv": "^10.0.0",

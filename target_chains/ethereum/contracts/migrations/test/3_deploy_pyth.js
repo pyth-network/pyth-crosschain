@@ -1,5 +1,4 @@
-const loadEnv = require("../../scripts/loadEnv");
-loadEnv("../../");
+require("dotenv").config();
 
 const bs58 = require("bs58");
 
