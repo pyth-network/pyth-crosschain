@@ -21,7 +21,7 @@ pub const ID: Pubkey = PYTH_PUSH_ORACLE_ID;
 pub enum PushOracleError {
     #[msg("Updates must be monotonically increasing")]
     UpdatesNotMonotonic,
-    #[msg("Price feed id mismatch")]
+    #[msg("Trying to update price feed with the wrong feed id")]
     PriceFeedMessageMismatch,
 }
 #[program]
