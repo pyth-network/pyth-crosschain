@@ -13,7 +13,7 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import assert from 'assert'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { ClusterContext } from '../contexts/ClusterContext'
-import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
+import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 const ONES = '11111111111111111111111111111111'
 
@@ -67,9 +67,9 @@ const usePyth = (): PythHookData => {
   useEffect(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(cluster)
-    const connection = new Connection(urls[urlsIndex].rpcUrl, {
+    const connection = new Connection(urls[urlsIndex], {
       commitment: 'confirmed',
-      wsEndpoint: urls[urlsIndex].wsUrl,
+      wsEndpoint: deriveWsUrl(urls[urlsIndex]),
     })
 
     connectionRef.current = connection

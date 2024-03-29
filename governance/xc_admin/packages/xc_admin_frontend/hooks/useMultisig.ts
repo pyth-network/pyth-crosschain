@@ -12,7 +12,7 @@ import {
   UPGRADE_MULTISIG,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
-import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
+import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 export interface MultisigHookData {
   isLoading: boolean
@@ -69,9 +69,9 @@ export const useMultisig = (): MultisigHookData => {
 
   const connection = useMemo(() => {
     const urls = pythClusterApiUrls(multisigCluster)
-    return new Connection(urls[urlsIndex].rpcUrl, {
+    return new Connection(urls[urlsIndex], {
       commitment: 'confirmed',
-      wsEndpoint: urls[urlsIndex].wsUrl,
+      wsEndpoint: deriveWsUrl(urls[urlsIndex]),
     })
   }, [urlsIndex, multisigCluster])
 
