@@ -15,5 +15,5 @@ subdir = "sui/wormhole"
 rev = "sui/testnet-published-at"
 
 [addresses]
-pyth = "0xf7114cc10266d90c0c9e4b84455bddf29b40bd78fe56832c7ac98682c3daa95b"
+pyth = "0x0"
 wormhole = "0xf47329f4344f3bf0f8e436e2f7b485466cff300f12a166563995d3888c296a94"
