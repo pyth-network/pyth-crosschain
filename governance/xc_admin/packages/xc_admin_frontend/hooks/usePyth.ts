@@ -67,7 +67,6 @@ const usePyth = (): PythHookData => {
   useEffect(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(cluster)
-    console.log(deriveWsUrl(urls[urlsIndex]))
     const connection = new Connection(urls[urlsIndex], {
       commitment: 'confirmed',
       wsEndpoint: deriveWsUrl(urls[urlsIndex]),
