@@ -23,8 +23,8 @@ use {
         messages::Message,
         test_utils::{
             create_accumulator_message,
+            create_dummy_feed_id,
             create_dummy_price_feed_message_with_feed_id,
-            dummy_feed_id,
         },
     },
     solana_sdk::{
@@ -36,8 +36,8 @@ use {
 
 #[tokio::test]
 async fn test_update_price_feed() {
-    let feed_id: [u8; 32] = dummy_feed_id(100);
-    let feed_id_2: [u8; 32] = dummy_feed_id(200);
+    let feed_id: [u8; 32] = create_dummy_feed_id(100);
+    let feed_id_2: [u8; 32] = create_dummy_feed_id(200);
 
     let feed_1_old = create_dummy_price_feed_message_with_feed_id(100, feed_id);
     let feed_1_recent = create_dummy_price_feed_message_with_feed_id(200, feed_id);

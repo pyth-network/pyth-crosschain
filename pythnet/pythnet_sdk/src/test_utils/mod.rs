@@ -96,7 +96,7 @@ pub fn dummy_guardians() -> Vec<SecretKey> {
     result
 }
 
-pub fn dummy_feed_id(value: i64) -> FeedId {
+pub fn create_dummy_feed_id(value: i64) -> FeedId {
     let mut dummy_id = [0; 32];
     dummy_id[0] = value as u8;
     dummy_id
@@ -117,7 +117,7 @@ pub fn create_dummy_price_feed_message_with_feed_id(value: i64, feed_id: FeedId)
 }
 
 pub fn create_dummy_price_feed_message(value: i64) -> Message {
-    create_dummy_price_feed_message_with_feed_id(value, dummy_feed_id(value))
+    create_dummy_price_feed_message_with_feed_id(value, create_dummy_feed_id(value))
 }
 
 pub fn create_dummy_twap_message() -> Message {
