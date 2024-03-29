@@ -33,6 +33,8 @@ use {
     },
 };
 
+const DEFAULT_SHARD: u8 = 0;
+const SECOND_SHARD: u8 = 1;
 
 #[tokio::test]
 async fn test_update_price_feed() {
@@ -73,7 +75,7 @@ async fn test_update_price_feed() {
             UpdatePriceFeed::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
-                0,
+                DEFAULT_SHARD,
                 feed_id,
                 DEFAULT_TREASURY_ID,
                 merkle_price_updates[0].clone(),
@@ -92,13 +94,13 @@ async fn test_update_price_feed() {
     .await;
 
     let price_feed_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
         .await
         .unwrap();
 
     assert_eq!(
         price_feed_account.write_authority,
-        get_price_feed_address(0, feed_id)
+        get_price_feed_address(DEFAULT_SHARD, feed_id)
     );
     assert_eq!(
         price_feed_account.verification_level,
@@ -119,7 +121,7 @@ async fn test_update_price_feed() {
             UpdatePriceFeed::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
-                0,
+                DEFAULT_SHARD,
                 feed_id,
                 DEFAULT_TREASURY_ID,
                 merkle_price_updates[1].clone(),
@@ -138,13 +140,13 @@ async fn test_update_price_feed() {
     .await;
 
     let price_feed_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
         .await
         .unwrap();
 
     assert_eq!(
         price_feed_account.write_authority,
-        get_price_feed_address(0, feed_id)
+        get_price_feed_address(DEFAULT_SHARD, feed_id)
     );
     assert_eq!(
         price_feed_account.verification_level,
@@ -166,7 +168,7 @@ async fn test_update_price_feed() {
                 UpdatePriceFeed::populate(
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
-                    0,
+                    DEFAULT_SHARD,
                     feed_id,
                     DEFAULT_TREASURY_ID,
                     merkle_price_updates[1].clone(),
@@ -188,13 +190,13 @@ async fn test_update_price_feed() {
     .await;
 
     let price_feed_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
         .await
         .unwrap();
 
     assert_eq!(
         price_feed_account.write_authority,
-        get_price_feed_address(0, feed_id)
+        get_price_feed_address(DEFAULT_SHARD, feed_id)
     );
     assert_eq!(
         price_feed_account.verification_level,
@@ -215,7 +217,7 @@ async fn test_update_price_feed() {
             UpdatePriceFeed::populate(
                 poster.pubkey(),
                 encoded_vaa_addresses[0],
-                1,
+                SECOND_SHARD,
                 feed_id,
                 DEFAULT_TREASURY_ID,
                 merkle_price_updates[0].clone(),
@@ -226,11 +228,6 @@ async fn test_update_price_feed() {
         .await
         .unwrap();
 
-    let price_feed_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
-        .await
-        .unwrap();
-
     assert_treasury_balance(
         &mut program_simulator,
         Rent::default().minimum_balance(0) + 2,
@@ -238,9 +235,14 @@ async fn test_update_price_feed() {
     )
     .await;
 
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
+        .await
+        .unwrap();
+
     assert_eq!(
         price_feed_account.write_authority,
-        get_price_feed_address(0, feed_id)
+        get_price_feed_address(DEFAULT_SHARD, feed_id)
     );
     assert_eq!(
         price_feed_account.verification_level,
@@ -256,13 +258,13 @@ async fn test_update_price_feed() {
     );
 
     let price_feed_account = program_simulator
-        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(1, feed_id))
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(SECOND_SHARD, feed_id))
         .await
         .unwrap();
 
     assert_eq!(
         price_feed_account.write_authority,
-        get_price_feed_address(1, feed_id)
+        get_price_feed_address(SECOND_SHARD, feed_id)
     );
     assert_eq!(
         price_feed_account.verification_level,
@@ -284,7 +286,7 @@ async fn test_update_price_feed() {
                 UpdatePriceFeed::populate(
                     poster.pubkey(),
                     encoded_vaa_addresses[0],
-                    0,
+                    DEFAULT_SHARD,
                     feed_id,
                     DEFAULT_TREASURY_ID,
                     merkle_price_updates[2].clone(),
@@ -296,5 +298,27 @@ async fn test_update_price_feed() {
             .unwrap_err()
             .unwrap(),
         into_transaction_error(PushOracleError::PriceFeedMessageMismatch)
+    );
+
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
+        .await
+        .unwrap();
+
+    assert_eq!(
+        price_feed_account.write_authority,
+        get_price_feed_address(DEFAULT_SHARD, feed_id)
+    );
+    assert_eq!(
+        price_feed_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_recent
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
     );
 }
