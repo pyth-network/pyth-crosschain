@@ -2,7 +2,7 @@
 
 [move]
 version = 0
-manifest_digest = "ABA914D82D2A511F8BE257EC003D20AA02D6CF9438DDE09D3A1C421AFD253CF5"
+manifest_digest = "22B8A6960AD00206B36391FC8E6E1A9D346CCC36BC032DBC234957ABEDCD448B"
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 
 dependencies = [
@@ -24,7 +24,7 @@ dependencies = [
 
 [[move.package]]
 name = "Wormhole"
-source = { git = "https://github.com/0xaslan/wormhole.git", rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad", subdir = "sui/wormhole" }
+source = { git = "https://github.com/0xaslan/wormhole.git", rev = "sui/testnet-published-at", subdir = "sui/wormhole" }
 
 dependencies = [
   { name = "Sui" },
