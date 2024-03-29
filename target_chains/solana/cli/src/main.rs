@@ -500,7 +500,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
             _ => panic!("Invalid message type"),
         }
     };
-    let update_price_feed_instruction = oracle_instance::instruction::UpdatePriceFeed::populate(
+    let update_price_feed_instruction = pyth_push_oracle::instruction::UpdatePriceFeed::populate(
         payer.pubkey(),
         encoded_vaa_keypair.pubkey(),
         feed_id,

@@ -2728,32 +2728,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "oracle-instance"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "bincode",
- "byteorder",
- "lazy_static",
- "libsecp256k1 0.7.1",
- "program-simulator",
- "pyth-sdk",
- "pyth-sdk-solana",
- "pyth-solana-receiver",
- "pyth-solana-receiver-sdk",
- "pythnet-sdk",
- "rand 0.8.5",
- "serde_wormhole",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "tokio",
- "wormhole-core-bridge-solana",
- "wormhole-raw-vaas",
- "wormhole-vaas-serde",
-]
-
-[[package]]
 name = "os_str_bytes"
 version = "6.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3017,6 +2991,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-push-oracle"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "byteorder",
+ "lazy_static",
+ "libsecp256k1 0.7.1",
+ "program-simulator",
+ "pyth-sdk",
+ "pyth-sdk-solana",
+ "pyth-solana-receiver",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
+ "rand 0.8.5",
+ "serde_wormhole",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+ "wormhole-core-bridge-solana",
+ "wormhole-raw-vaas",
+ "wormhole-vaas-serde",
+]
+
+[[package]]
 name = "pyth-sdk"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3083,7 +3083,7 @@ dependencies = [
  "byteorder",
  "clap 3.2.23",
  "hex",
- "oracle-instance",
+ "pyth-push-oracle",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
