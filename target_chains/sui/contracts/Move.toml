@@ -15,7 +15,6 @@ rev = "sui/testnet-pubilshed-at"
 
 [addresses]
 pyth = "0x0"
-wormhole = "0xf47329f4344f3bf0f8e436e2f7b485466cff300f12a166563995d3888c296a94"
 
 [dev-addresses]
 pyth = "0x100"
