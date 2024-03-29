@@ -5,9 +5,11 @@ use {
         ProgramTestFixtures,
         WrongSetupOption,
     },
+    program_simulator::into_transaction_error,
     pyth_push_oracle::{
         instruction::UpdatePriceFeed,
         sdk::get_price_feed_address,
+        PushOracleError,
     },
     pyth_solana_receiver::sdk::{
         deserialize_accumulator_update_data,
@@ -111,188 +113,188 @@ async fn test_update_price_feed() {
         program_simulator.get_clock().await.unwrap().slot
     );
 
-    // // post another update, same price feed
-    // program_simulator
-    //     .process_ix_with_default_compute_limit(
-    //         UpdatePriceFeed::populate(
-    //             poster.pubkey(),
-    //             encoded_vaa_addresses[0],
-    //             0,
-    //             feed_id,
-    //             DEFAULT_TREASURY_ID,
-    //             merkle_price_updates[1].clone(),
-    //         ),
-    //         &vec![&poster],
-    //         None,
-    //     )
-    //     .await
-    //     .unwrap();
+    // post another update, same price feed
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            UpdatePriceFeed::populate(
+                poster.pubkey(),
+                encoded_vaa_addresses[0],
+                0,
+                feed_id,
+                DEFAULT_TREASURY_ID,
+                merkle_price_updates[1].clone(),
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
 
-    // assert_treasury_balance(
-    //     &mut program_simulator,
-    //     Rent::default().minimum_balance(0) + 1,
-    //     DEFAULT_TREASURY_ID,
-    // )
-    // .await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 1,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
-    // let price_feed_account = program_simulator
-    //     .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
-    //     .await
-    //     .unwrap();
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .await
+        .unwrap();
 
-    // assert_eq!(
-    //     price_feed_account.write_authority,
-    //     get_price_feed_address(0, feed_id)
-    // );
-    // assert_eq!(
-    //     price_feed_account.verification_level,
-    //     VerificationLevel::Full
-    // );
-    // assert_eq!(
-    //     Message::PriceFeedMessage(price_feed_account.price_message),
-    //     feed_1_recent
-    // );
-    // assert_eq!(
-    //     price_feed_account.posted_slot,
-    //     program_simulator.get_clock().await.unwrap().slot
-    // );
+    assert_eq!(
+        price_feed_account.write_authority,
+        get_price_feed_address(0, feed_id)
+    );
+    assert_eq!(
+        price_feed_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_recent
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
-    // // post another update, outdated
-    // assert_eq!(
-    //     program_simulator
-    //         .process_ix_with_default_compute_limit(
-    //             UpdatePriceFeed::populate(
-    //                 poster.pubkey(),
-    //                 encoded_vaa_addresses[0],
-    //                 0,
-    //                 feed_id,
-    //                 DEFAULT_TREASURY_ID,
-    //                 merkle_price_updates[1].clone(),
-    //             ),
-    //             &vec![&poster],
-    //             None,
-    //         )
-    //         .await
-    //         .unwrap_err()
-    //         .unwrap(),
-    //     into_transaction_error(PushOracleError::UpdatesNotMonotonic)
-    // );
+    // post another update, outdated
+    assert_eq!(
+        program_simulator
+            .process_ix_with_default_compute_limit(
+                UpdatePriceFeed::populate(
+                    poster.pubkey(),
+                    encoded_vaa_addresses[0],
+                    0,
+                    feed_id,
+                    DEFAULT_TREASURY_ID,
+                    merkle_price_updates[1].clone(),
+                ),
+                &vec![&poster],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transaction_error(PushOracleError::UpdatesNotMonotonic)
+    );
 
-    // assert_treasury_balance(
-    //     &mut program_simulator,
-    //     Rent::default().minimum_balance(0) + 1,
-    //     DEFAULT_TREASURY_ID,
-    // )
-    // .await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 1,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
-    // let price_feed_account = program_simulator
-    //     .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
-    //     .await
-    //     .unwrap();
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .await
+        .unwrap();
 
-    // assert_eq!(
-    //     price_feed_account.write_authority,
-    //     get_price_feed_address(0, feed_id)
-    // );
-    // assert_eq!(
-    //     price_feed_account.verification_level,
-    //     VerificationLevel::Full
-    // );
-    // assert_eq!(
-    //     Message::PriceFeedMessage(price_feed_account.price_message),
-    //     feed_1_recent
-    // );
-    // assert_eq!(
-    //     price_feed_account.posted_slot,
-    //     program_simulator.get_clock().await.unwrap().slot
-    // );
+    assert_eq!(
+        price_feed_account.write_authority,
+        get_price_feed_address(0, feed_id)
+    );
+    assert_eq!(
+        price_feed_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_recent
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
-    // // works if you change the instance
-    // program_simulator
-    //     .process_ix_with_default_compute_limit(
-    //         UpdatePriceFeed::populate(
-    //             poster.pubkey(),
-    //             encoded_vaa_addresses[0],
-    //             1,
-    //             feed_id,
-    //             DEFAULT_TREASURY_ID,
-    //             merkle_price_updates[0].clone(),
-    //         ),
-    //         &vec![&poster],
-    //         None,
-    //     )
-    //     .await
-    //     .unwrap();
+    // works if you change the instance
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            UpdatePriceFeed::populate(
+                poster.pubkey(),
+                encoded_vaa_addresses[0],
+                1,
+                feed_id,
+                DEFAULT_TREASURY_ID,
+                merkle_price_updates[0].clone(),
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
 
-    // let price_feed_account = program_simulator
-    //     .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
-    //     .await
-    //     .unwrap();
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(0, feed_id))
+        .await
+        .unwrap();
 
-    // assert_treasury_balance(
-    //     &mut program_simulator,
-    //     Rent::default().minimum_balance(0) + 2,
-    //     DEFAULT_TREASURY_ID,
-    // )
-    // .await;
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 2,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
 
-    // assert_eq!(
-    //     price_feed_account.write_authority,
-    //     get_price_feed_address(0, feed_id)
-    // );
-    // assert_eq!(
-    //     price_feed_account.verification_level,
-    //     VerificationLevel::Full
-    // );
-    // assert_eq!(
-    //     Message::PriceFeedMessage(price_feed_account.price_message),
-    //     feed_1_recent
-    // );
-    // assert_eq!(
-    //     price_feed_account.posted_slot,
-    //     program_simulator.get_clock().await.unwrap().slot
-    // );
+    assert_eq!(
+        price_feed_account.write_authority,
+        get_price_feed_address(0, feed_id)
+    );
+    assert_eq!(
+        price_feed_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_recent
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
-    // let price_feed_account = program_simulator
-    //     .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(1, feed_id))
-    //     .await
-    //     .unwrap();
+    let price_feed_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(1, feed_id))
+        .await
+        .unwrap();
 
-    // assert_eq!(
-    //     price_feed_account.write_authority,
-    //     get_price_feed_address(1, feed_id)
-    // );
-    // assert_eq!(
-    //     price_feed_account.verification_level,
-    //     VerificationLevel::Full
-    // );
-    // assert_eq!(
-    //     Message::PriceFeedMessage(price_feed_account.price_message),
-    //     feed_1_old
-    // );
-    // assert_eq!(
-    //     price_feed_account.posted_slot,
-    //     program_simulator.get_clock().await.unwrap().slot
-    // );
+    assert_eq!(
+        price_feed_account.write_authority,
+        get_price_feed_address(1, feed_id)
+    );
+    assert_eq!(
+        price_feed_account.verification_level,
+        VerificationLevel::Full
+    );
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_old
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
-    // // try to post the wrong price feed id
-    // assert_eq!(
-    //     program_simulator
-    //         .process_ix_with_default_compute_limit(
-    //             UpdatePriceFeed::populate(
-    //                 poster.pubkey(),
-    //                 encoded_vaa_addresses[0],
-    //                 0,
-    //                 feed_id,
-    //                 DEFAULT_TREASURY_ID,
-    //                 merkle_price_updates[2].clone(),
-    //             ),
-    //             &vec![&poster],
-    //             None,
-    //         )
-    //         .await
-    //         .unwrap_err()
-    //         .unwrap(),
-    //     into_transaction_error(PushOracleError::PriceFeedMessageMismatch)
-    // );
+    // try to post the wrong price feed id
+    assert_eq!(
+        program_simulator
+            .process_ix_with_default_compute_limit(
+                UpdatePriceFeed::populate(
+                    poster.pubkey(),
+                    encoded_vaa_addresses[0],
+                    0,
+                    feed_id,
+                    DEFAULT_TREASURY_ID,
+                    merkle_price_updates[2].clone(),
+                ),
+                &vec![&poster],
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        into_transaction_error(PushOracleError::PriceFeedMessageMismatch)
+    );
 }
