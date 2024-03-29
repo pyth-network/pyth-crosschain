@@ -209,7 +209,7 @@ async fn test_update_price_feed() {
         program_simulator.get_clock().await.unwrap().slot
     );
 
-    // works if you change the instance
+    // works if you change the shard
     program_simulator
         .process_ix_with_default_compute_limit(
             UpdatePriceFeed::populate(
