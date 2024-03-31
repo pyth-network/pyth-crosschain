@@ -35,6 +35,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   hedera: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   horizen_eon: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   injective_inevm: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  iota: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   kava: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   lightlink: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   linea: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
