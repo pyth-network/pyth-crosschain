@@ -3,6 +3,10 @@ import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
+import { SolanaPriceListener, SolanaPricePusher } from "./solana";
+import { Controller } from "../controller";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import { KeyPair } from "near-api-js";
 
 export default {
   command: "solana",
@@ -58,6 +62,26 @@ export default {
       priceItems
     );
 
-    console.log("hello world");
+    // const pythSolanaReceiver = new PythSolanaReceiver(
+    //     {connection : new Connection(endpoint),
+    //     keypair : }
+    // )
+
+    const solanaPricePusher = new SolanaPricePusher();
+    const solanaPriceListener = new SolanaPriceListener(
+      "solana",
+      pollingFrequency,
+      priceItems
+    );
+
+    const controller = new Controller(
+      priceConfigs,
+      pythListener,
+      solanaPriceListener,
+      solanaPricePusher,
+      { pushingFrequency }
+    );
+
+    controller.start();
   },
 };

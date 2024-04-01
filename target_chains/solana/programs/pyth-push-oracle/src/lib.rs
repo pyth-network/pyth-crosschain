@@ -89,10 +89,14 @@ pub struct UpdatePriceFeed<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
     pub pyth_solana_receiver: Program<'info, PythSolanaReceiver>,
+    /// CHECK: Checked by CPI into the Pyth Solana Receiver
     pub encoded_vaa:          AccountInfo<'info>,
+    /// CHECK: Checked by CPI into the Pyth Solana Receiver
     pub config:               AccountInfo<'info>,
+    /// CHECK: Checked by CPI into the Pyth Solana Receiver
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
+    /// CHECK: This account's seeds are checked
     #[account(mut, seeds = [&shard_id.to_le_bytes(), &feed_id], bump)]
     pub price_feed_account:   AccountInfo<'info>,
     pub system_program:       Program<'info, System>,

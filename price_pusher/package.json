@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@injectivelabs/sdk-ts": "1.10.72",
+    "@pythnetwork/pyth-solana-receiver": "*",
     "@mysten/sui.js": "^0.49.1",
     "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-sdk-solidity": "*",

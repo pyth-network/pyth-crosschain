@@ -1,4 +1,9 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import {
+  AnchorProvider,
+  IdlAccounts,
+  IdlTypes,
+  Program,
+} from "@coral-xyz/anchor";
 import {
   Connection,
   Signer,
@@ -14,6 +19,7 @@ import {
   IDL as WormholeCoreBridgeSolanaIdl,
 } from "./idl/wormhole_core_bridge_solana";
 import {
+  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   DEFAULT_RECEIVER_PROGRAM_ID,
   DEFAULT_TREASURY_ID,
   DEFAULT_WORMHOLE_PROGRAM_ID,
@@ -43,7 +49,13 @@ import {
   InstructionWithEphemeralSigners,
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
+import {
+  PythPushOracle,
+  IDL as PythPushOracleIdl,
+} from "./idl/pyth_push_oracle";
 
+export type PriceUpdateAccount =
+  IdlAccounts<PythSolanaReceiverProgram>["priceUpdateV2"];
 /**
  * Configuration for the PythTransactionBuilder
  * @property closeUpdateAccounts (default: true) if true, the builder will add instructions to close the price update accounts and the encoded vaa accounts to recover the rent
@@ -240,17 +252,20 @@ export class PythSolanaReceiver {
   readonly provider: AnchorProvider;
   readonly receiver: Program<PythSolanaReceiverProgram>;
   readonly wormhole: Program<WormholeCoreBridgeSolana>;
+  readonly pushOracle: Program<PythPushOracle>;
 
   constructor({
     connection,
     wallet,
     wormholeProgramId = DEFAULT_WORMHOLE_PROGRAM_ID,
     receiverProgramId = DEFAULT_RECEIVER_PROGRAM_ID,
+    pushOracleProgramId = DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   }: {
     connection: Connection;
     wallet: Wallet;
     wormholeProgramId?: PublicKey;
     receiverProgramId?: PublicKey;
+    pushOracleProgramId?: PublicKey;
   }) {
     this.connection = connection;
     this.wallet = wallet;
@@ -265,6 +280,11 @@ export class PythSolanaReceiver {
     this.wormhole = new Program<WormholeCoreBridgeSolana>(
       WormholeCoreBridgeSolanaIdl as WormholeCoreBridgeSolana,
       wormholeProgramId,
+      this.provider
+    );
+    this.pushOracle = new Program<PythPushOracle>(
+      PythPushOracleIdl as PythPushOracle,
+      pushOracleProgramId,
       this.provider
     );
   }
@@ -531,4 +551,39 @@ export class PythSolanaReceiver {
       priorityFeeConfig
     );
   }
+
+  async fetchPriceUpdateAccount(
+    priceUpdateAccount: PublicKey
+  ): Promise<PriceUpdateAccount | null> {
+    return this.receiver.account.priceUpdateV2.fetchNullable(
+      priceUpdateAccount
+    );
+  }
+
+  async fetchPriceFeedAccount(
+    shardId: number,
+    priceFeedId: Buffer
+  ): Promise<PriceUpdateAccount | null> {
+    return this.receiver.account.priceUpdateV2.fetchNullable(
+      getPriceFeedAccountAddress(0, priceFeedId, this.pushOracle.programId)
+    );
+  }
+}
+
+function getPriceFeedAccountAddress(
+  shardId: number,
+  feedId: Buffer,
+  pushOracleProgramId?: PublicKey
+) {
+  if (feedId.length != 32) {
+    throw new Error("Feed ID should be 32 bytes long");
+  }
+  const seedBuffer = Buffer.alloc(2 + feedId.length);
+  seedBuffer.writeUInt16BE(shardId, 0);
+  seedBuffer.copy(feedId, 2);
+
+  return PublicKey.findProgramAddressSync(
+    [seedBuffer],
+    pushOracleProgramId ?? DEFAULT_PUSH_ORACLE_PROGRAM_ID
+  )[0];
 }

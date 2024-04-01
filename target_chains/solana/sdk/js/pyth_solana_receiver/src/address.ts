@@ -15,6 +15,10 @@ export const DEFAULT_WORMHOLE_PROGRAM_ID = new PublicKey(
   "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ"
 );
 
+export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
+  "3a8iuFcGaMHFTX8sagDx55nPWp14fHxzWUbn2Mr4E8NR"
+);
+
 /**
  * Returns the address of a guardian set account from the Wormhole program.
  */
