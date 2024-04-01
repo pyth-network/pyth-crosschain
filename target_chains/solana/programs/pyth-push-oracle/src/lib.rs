@@ -31,7 +31,7 @@ pub mod pyth_push_oracle {
     pub fn update_price_feed(
         ctx: Context<UpdatePriceFeed>,
         params: PostUpdateParams,
-        shard_id: u8,
+        shard_id: u16,
         feed_id: FeedId,
     ) -> Result<()> {
         let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
@@ -84,7 +84,7 @@ pub mod pyth_push_oracle {
 }
 
 #[derive(Accounts)]
-#[instruction(params : PostUpdateParams, shard_id : u8, feed_id : FeedId)]
+#[instruction(params : PostUpdateParams, shard_id : u16, feed_id : FeedId)]
 pub struct UpdatePriceFeed<'info> {
     #[account(mut)]
     pub payer:                Signer<'info>,
@@ -93,7 +93,7 @@ pub struct UpdatePriceFeed<'info> {
     pub config:               AccountInfo<'info>,
     #[account(mut)]
     pub treasury:             AccountInfo<'info>,
-    #[account(mut, seeds = [&[shard_id], &feed_id], bump)]
+    #[account(mut, seeds = [&shard_id.to_le_bytes(), &feed_id], bump)]
     pub price_feed_account:   AccountInfo<'info>,
     pub system_program:       Program<'info, System>,
 }

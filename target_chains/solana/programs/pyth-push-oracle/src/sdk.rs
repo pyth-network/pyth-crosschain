@@ -21,15 +21,15 @@ use {
     solana_program::instruction::Instruction,
 };
 
-pub fn get_price_feed_address(shard_id: u8, feed_id: FeedId) -> Pubkey {
-    Pubkey::find_program_address(&[&[shard_id], feed_id.as_ref()], &ID).0
+pub fn get_price_feed_address(shard_id: u16, feed_id: FeedId) -> Pubkey {
+    Pubkey::find_program_address(&[&shard_id.to_le_bytes(), feed_id.as_ref()], &ID).0
 }
 
 impl accounts::UpdatePriceFeed {
     pub fn populate(
         payer: Pubkey,
         encoded_vaa: Pubkey,
-        shard_id: u8,
+        shard_id: u16,
         feed_id: FeedId,
         treasury_id: u8,
     ) -> Self {
@@ -49,7 +49,7 @@ impl instruction::UpdatePriceFeed {
     pub fn populate(
         payer: Pubkey,
         encoded_vaa: Pubkey,
-        shard_id: u8,
+        shard_id: u16,
         feed_id: FeedId,
         treasury_id: u8,
         merkle_price_update: MerklePriceUpdate,

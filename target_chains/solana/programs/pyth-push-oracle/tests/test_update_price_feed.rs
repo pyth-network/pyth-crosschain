@@ -33,8 +33,8 @@ use {
     },
 };
 
-const DEFAULT_SHARD: u8 = 0;
-const SECOND_SHARD: u8 = 1;
+const DEFAULT_SHARD: u16 = 0;
+const SECOND_SHARD: u16 = 1;
 
 #[tokio::test]
 async fn test_update_price_feed() {
