@@ -11,9 +11,12 @@ use {
         },
         ID,
     },
-    pyth_solana_receiver_sdk::config::{
-        Config,
-        DataSource,
+    pyth_solana_receiver_sdk::{
+        config::{
+            Config,
+            DataSource,
+        },
+        PYTH_PUSH_ORACLE_ID,
     },
     pythnet_sdk::test_utils::{
         dummy_guardians,
@@ -163,6 +166,7 @@ pub async fn setup_pyth_receiver(
 ) -> ProgramTestFixtures {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", ID, None);
+    program_test.add_program("pyth_push_oracle", PYTH_PUSH_ORACLE_ID, None);
 
     let mut encoded_vaa_addresses: Vec<Pubkey> = vec![];
     for vaa in vaas {
