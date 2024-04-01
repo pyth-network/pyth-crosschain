@@ -45,6 +45,7 @@ use {
         types::{
             transaction::eip2718::TypedTransaction,
             BlockNumber as EthersBlockNumber,
+            U256,
         },
     },
     sha3::{
@@ -254,28 +255,30 @@ impl EntropyReader for PythContract {
             .collect())
     }
 
-    async fn simulate_reveal_with_callback(
+    async fn estimate_reveal_with_callback_gas(
         &self,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<bool> {
-        let result: Result<(), ContractError<Provider<Http>>> = self
+    ) -> Result<Option<U256>> {
+        let result: Result<U256, ContractError<Provider<Http>>> = self
             .reveal_with_callback(
                 provider,
                 sequence_number,
                 user_random_number,
                 provider_revelation,
             )
+            .estimate_gas()
             .await;
+
         match result {
-            Ok(_) => Ok(true),
+            Ok(gas) => Ok(Some(gas)),
             Err(e) => match e {
                 ContractError::ProviderError { e } => Err(anyhow!(e)),
                 _ => {
-                    tracing::info!("Simulate reveal with callback failed: {:?}", e);
-                    Ok(false)
+                    tracing::info!("Gas estimation for reveal with callback failed: {:?}", e);
+                    Ok(None)
                 }
             },
         }

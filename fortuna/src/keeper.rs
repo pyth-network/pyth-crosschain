@@ -124,7 +124,7 @@ pub async fn run_keeper_threads(
             )
             .await
             {
-                tracing::info!(
+                tracing::error!(
                     "Error in watching blocks for chain: {}, {:?}",
                     &watch_blocks_chain_state.id,
                     e
@@ -163,9 +163,9 @@ pub async fn process_event(
         }
     };
 
-    let sim_res = chain_config
+    let gas_estimate_res = chain_config
         .contract
-        .simulate_reveal_with_callback(
+        .estimate_reveal_with_callback_gas(
             event.provider_address,
             event.sequence_number,
             event.user_random_number,
@@ -173,46 +173,52 @@ pub async fn process_event(
         )
         .await;
 
-    match sim_res {
-        Ok(successful) => {
-            if !successful {
-                return Ok(()); // no point in submitting the transaction if the simulation failed
-            }
-            //TODO: check gas usage before submitting the transaction
-            let res = contract
-                .reveal_with_callback(
-                    event.provider_address,
-                    event.sequence_number,
-                    event.user_random_number,
-                    provider_revelation,
-                )
-                .gas(gas_limit)
-                .send()
-                .await?
-                .await;
-
-            match res {
-                Ok(_) => {
-                    tracing::info!(
-                        "Revealed for provider: {} and sequence number: {} with res: {:?}",
-                        event.provider_address,
-                        event.sequence_number,
-                        res
-                    );
-                    Ok(())
-                }
-                Err(e) => {
-                    // TODO: find a way to handle different errors.
+    match gas_estimate_res {
+        Ok(gas_estimate_option) => match gas_estimate_option {
+            Some(gas_estimate) => {
+                if gas_estimate > gas_limit {
                     tracing::error!(
-                        "Error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                        "Gas estimate for reveal with callback is higher than the gas limit for chain: {}",
+                        &chain_config.id
+                    );
+                    return Ok(());
+                }
+
+                let res = contract
+                    .reveal_with_callback(
                         event.provider_address,
                         event.sequence_number,
-                        e
-                    );
-                    Err(e.into())
+                        event.user_random_number,
+                        provider_revelation,
+                    )
+                    .gas(gas_estimate)
+                    .send()
+                    .await?
+                    .await;
+
+                match res {
+                    Ok(_) => {
+                        tracing::info!(
+                            "Revealed for provider: {} and sequence number: {} with res: {:?}",
+                            event.provider_address,
+                            event.sequence_number,
+                            res
+                        );
+                        Ok(())
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            "Error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                            event.provider_address,
+                            event.sequence_number,
+                            e
+                        );
+                        Err(e.into())
+                    }
                 }
             }
-        }
+            None => Ok(()),
+        },
         Err(e) => {
             tracing::error!(
                 "Error while simulating reveal for provider: {} and sequence number: {} \n error: {:?}",
@@ -309,6 +315,7 @@ pub async fn watch_blocks(
         "Watching blocks to handle new events for chain: {}",
         &chain_state.id
     );
+    // TODO: if can't connect to a web socket try fetching every 10 seconds?
     let provider = Provider::<Ws>::connect(geth_rpc_wss.clone()).await?;
     let mut stream = provider.subscribe_blocks().await?;
 

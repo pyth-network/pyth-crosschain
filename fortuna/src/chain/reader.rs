@@ -4,6 +4,7 @@ use {
     ethers::types::{
         Address,
         BlockNumber as EthersBlockNumber,
+        U256,
     },
 };
 
@@ -59,13 +60,13 @@ pub trait EntropyReader: Send + Sync {
     /// Simulate a reveal with callback. Returns true if the simulation was successful.
     /// Returns false if the simulation failed. Returns an error if the simulation could not be
     /// performed.
-    async fn simulate_reveal_with_callback(
+    async fn estimate_reveal_with_callback_gas(
         &self,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<bool>;
+    ) -> Result<Option<U256>>;
 }
 
 /// An in-flight request stored in the contract.
@@ -92,7 +93,10 @@ pub mod mock {
         },
         anyhow::Result,
         axum::async_trait,
-        ethers::types::Address,
+        ethers::types::{
+            Address,
+            U256,
+        },
         std::sync::RwLock,
     };
 
@@ -180,14 +184,14 @@ pub mod mock {
             Ok(vec![])
         }
 
-        async fn simulate_reveal_with_callback(
+        async fn estimate_reveal_with_callback_gas(
             &self,
             provider: Address,
             sequence_number: u64,
             user_random_number: [u8; 32],
             provider_revelation: [u8; 32],
-        ) -> Result<bool> {
-            Ok(true)
+        ) -> Result<Option<U256>> {
+            Ok(Some(5))
         }
     }
 }
