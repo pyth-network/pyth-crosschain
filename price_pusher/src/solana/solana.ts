@@ -81,7 +81,8 @@ export class SolanaPricePusher implements IPricePusher {
       const transactionHashes = await this.pythSolanaReceiver.provider.sendAll(
         await transactionBuilder.buildVersionedTransactions({
           computeUnitPriceMicroLamports: 50000,
-        })
+        }),
+        { skipPreflight: true }
       );
       console.log(
         `Successful. Tx hash: ${
@@ -90,6 +91,7 @@ export class SolanaPricePusher implements IPricePusher {
       );
     } catch (e: any) {
       console.error("Failed pushing");
+      console.error(e);
       return;
     }
   }
