@@ -562,7 +562,7 @@ export class PythSolanaReceiver {
                 treasuryId: DEFAULT_TREASURY_ID,
               },
               0,
-              feedId
+              Array.from(feedId)
             )
             .accounts({
               encodedVaa,
@@ -585,11 +585,6 @@ export class PythSolanaReceiver {
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
         ] = getPriceFeedAccountAddress(0, feedId, this.pushOracle.programId);
-        closeInstructions.push(
-          await this.buildClosePriceUpdateInstruction(
-            getPriceFeedAccountAddress(0, feedId, this.pushOracle.programId)
-          )
-        );
       }
     }
     return {

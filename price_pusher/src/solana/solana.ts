@@ -6,6 +6,7 @@ import {
   PriceItem,
 } from "../interface";
 import { DurationInSeconds } from "../utils";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -48,12 +49,48 @@ export class SolanaPriceListener extends ChainPriceListener {
 }
 
 export class SolanaPricePusher implements IPricePusher {
-  constructor(private pythSolanaReceiver: PythSolanaReceiver) {}
+  constructor(
+    private pythSolanaReceiver: PythSolanaReceiver,
+    private priceServiceConnection: PriceServiceConnection
+  ) {}
 
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
-    console.log("successful");
+    if (priceIds.length === 0) {
+      return;
+    }
+
+    let priceFeedUpdateData;
+    try {
+      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
+        priceIds
+      );
+    } catch (e: any) {
+      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+      return;
+    }
+
+    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
+      closeUpdateAccounts: false,
+    });
+    transactionBuilder.addUpdatePriceFeed(priceFeedUpdateData);
+
+    try {
+      const transactionHashes = await this.pythSolanaReceiver.provider.sendAll(
+        await transactionBuilder.buildVersionedTransactions({
+          computeUnitPriceMicroLamports: 50000,
+        })
+      );
+      console.log(
+        `Successful. Tx hash: ${
+          transactionHashes[transactionHashes.length - 1]
+        }`
+      );
+    } catch (e: any) {
+      console.error("Failed pushing");
+      return;
+    }
   }
 }

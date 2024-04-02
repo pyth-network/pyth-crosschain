@@ -55,7 +55,7 @@ export type PythPushOracle = {
         {
           name: "feedId";
           type: {
-            defined: "FeedId";
+            array: ["u8", 32];
           };
         }
       ];
@@ -172,7 +172,7 @@ export const IDL: PythPushOracle = {
         {
           name: "feedId",
           type: {
-            defined: "FeedId",
+            array: ["u8", 32],
           },
         },
       ],

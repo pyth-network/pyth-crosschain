@@ -75,7 +75,10 @@ export default {
       wallet,
     });
 
-    const solanaPricePusher = new SolanaPricePusher(pythSolanaReceiver);
+    const solanaPricePusher = new SolanaPricePusher(
+      pythSolanaReceiver,
+      priceServiceConnection
+    );
     const solanaPriceListener = new SolanaPriceListener(
       pythSolanaReceiver,
       priceItems,
