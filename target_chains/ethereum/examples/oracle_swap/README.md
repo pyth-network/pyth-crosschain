@@ -24,7 +24,7 @@ forge install foundry-rs/forge-std@v1.8.0 --no-git --no-commit
 forge install OpenZeppelin/openzeppelin-contracts@v4.8.1 --no-git --no-commit
 ```
 
-After installing the above dependencies, we you need to install pyth-sdk-solidity.
+After installing the above dependencies, you need to install pyth-sdk-solidity.
 
 ```
 npm init -y
