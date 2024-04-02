@@ -1,9 +1,4 @@
-import {
-  AnchorProvider,
-  IdlAccounts,
-  IdlTypes,
-  Program,
-} from "@coral-xyz/anchor";
+import { AnchorProvider, IdlAccounts, Program } from "@coral-xyz/anchor";
 import {
   Connection,
   Signer,
@@ -105,6 +100,18 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * Add instructions to post price updates to the builder.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   *
+   * @example
+   * ```typescript
+   * const priceUpdateData = await priceServiceConnection.getLatestVaas([
+   *    SOL_PRICE_FEED_ID,
+   *    ETH_PRICE_FEED_ID,
+   * ]);
+   *
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
+   * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(...)
+   * ```
    */
   async addPostPriceUpdates(priceUpdateDataArray: string[]) {
     const {
@@ -159,6 +166,27 @@ export class PythTransactionBuilder extends TransactionBuilder {
     this.addInstructions(postInstructions);
   }
 
+  /**
+   * Add instructions to update price feed accounts to the builder.
+   *
+   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   *
+   * Price feed accounts are a special type of price update accounts.
+   * Instead of using ephemeral addresses, they are PDAs of the Pyth Push Oracle program derived from the feed ID.
+   *
+   * @example
+   * ```typescript
+   * const priceUpdateData = await priceServiceConnection.getLatestVaas([
+   *    SOL_PRICE_FEED_ID,
+   *    ETH_PRICE_FEED_ID,
+   * ]);
+   *
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
+   * await transactionBuilder.addUpdatePriceFeed(priceUpdateData);
+   * await transactionBuilder.addPriceConsumerInstructions(...)
+   * ...
+   * ```
+   */
   async addUpdatePriceFeed(priceUpdateDataArray: string[]) {
     const {
       postInstructions,
@@ -179,7 +207,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * Add instructions that consume price updates to the builder.
    *
    * @param getInstructions a function that given a mapping of price feed IDs to price update accounts, generates a series of instructions. Price updates get posted to ephemeral accounts and this function allows the user to indicate which accounts in their instruction need to be "replaced" with each price update account.
-   * If multiple price updates for the same price feed id are posted with the same builder, the account corresponding to the last update to get posted will be used.
+   * If multiple price updates for the same price feed ID are posted with the same builder, the account corresponding to the last update to get posted will be used.
    *
    * @example
    * ```typescript
@@ -240,8 +268,8 @@ export class PythTransactionBuilder extends TransactionBuilder {
   }
 
   /**
-   * This method is used to retrieve the address of the price update account where the price update for a given price feed id will be posted.
-   * If multiple price updates for the same price feed id will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
+   * This method is used to retrieve the address of the price update account where the price update for a given price feed ID will be posted.
+   * If multiple price updates for the same price feed ID will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
    * */
   getPriceUpdateAccount(priceFeedId: string): PublicKey {
     const priceUpdateAccount =
@@ -527,6 +555,14 @@ export class PythSolanaReceiver {
     };
   }
 
+  /**
+   * Build a series of helper instructions that update one or many price feed accounts and another series to close the encoded vaa accounts used to update the price feed accounts.
+   *
+   * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   * @returns `postInstructions`: the instructions to update the price feed accounts. If the price feed accounts don't contain a recent update, these should be called before consuming the price updates.
+   * @returns `priceFeedIdToPriceUpdateAccount`: this is a map of price feed IDs to Solana address. Given a price feed ID, you can use this map to find the account where `postInstructions` will post the price update. Note that since price feed accounts are PDAs, the address of the account can also be found with `getPriceFeedAccountAddress`.
+   * @returns `closeInstructions`: the instructions to close the encoded VAA accounts that were used to update the price feed accounts.
+   */
   async buildUpdatePriceFeedInstructions(
     priceUpdateDataArray: string[]
   ): Promise<{
@@ -636,6 +672,11 @@ export class PythSolanaReceiver {
     );
   }
 
+  /**
+   * Fetch the contents of a price update account
+   * @param priceUpdateAccount The address of the price update account
+   * @returns The contents of the deserialized price update account or `null` if the account doesn't exist
+   */
   async fetchPriceUpdateAccount(
     priceUpdateAccount: PublicKey
   ): Promise<PriceUpdateAccount | null> {
@@ -644,6 +685,12 @@ export class PythSolanaReceiver {
     );
   }
 
+  /**
+   * Fetch the contents of a price feed account
+   * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple sets of price feed accounts to be managed by the same program.
+   * @param priceFeedId The price feed ID.
+   * @returns The contents of the deserialized price feed account or `null` if the account doesn't exist
+   */
   async fetchPriceFeedAccount(
     shardId: number,
     priceFeedId: Buffer
@@ -654,11 +701,18 @@ export class PythSolanaReceiver {
   }
 }
 
+/**
+ * Derive the address of a price feed account
+ * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple sets of price feed accounts to be managed by the same program.
+ * @param priceFeedId The price feed ID.
+ * @param pushOracleProgramId The program ID of the Pyth Push Oracle program. If not provided, the default deployment will be used.
+ * @returns The address of the price feed account
+ */
 function getPriceFeedAccountAddress(
   shardId: number,
   feedId: Buffer,
   pushOracleProgramId?: PublicKey
-) {
+): PublicKey {
   if (feedId.length != 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
