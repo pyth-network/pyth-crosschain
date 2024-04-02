@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./IPyth.sol";
+import "forge-std/console2.sol";
 
 abstract contract PythMulticall {
     function pythAddress() internal virtual returns (address pyth);
@@ -10,10 +11,14 @@ abstract contract PythMulticall {
         bytes[] calldata priceUpdateData,
         bytes calldata data
     ) public payable returns (bytes memory response) {
+        console2.log(msg.sender);
         updatePythPriceFeeds(priceUpdateData);
 
+        nonPayableSample();
+
         bool success;
-        (success, response) = address(this).delegatecall(data);
+        // (success, response) = address(this).delegatecall{value: 0}(data);
+        (success, response) = address(this).{value: 0}(data);
 
         // Check if the call was successful or not.
         if (!success) {
@@ -33,6 +38,10 @@ abstract contract PythMulticall {
     function updatePythPriceFeeds(
         bytes[] calldata priceUpdateData
     ) public payable {
+        console2.log("updatePythPriceFeeds");
+        console2.log(msg.sender);
+        console2.log(msg.value);
+
         IPyth pyth = IPyth(pythAddress());
 
         // Update the prices to the latest available values and pay the required fee for it. The `priceUpdateData` data
@@ -40,5 +49,10 @@ abstract contract PythMulticall {
         // See section "How Pyth Works on EVM Chains" below for more information.
         uint fee = pyth.getUpdateFee(priceUpdateData);
         pyth.updatePriceFeeds{value: fee}(priceUpdateData);
+    }
+
+    function nonPayableSample() public {
+        console2.log("nonpayableSample");
+        console2.log(msg.sender);
     }
 }
