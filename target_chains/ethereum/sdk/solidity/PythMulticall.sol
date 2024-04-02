@@ -4,14 +4,30 @@ pragma solidity ^0.8.0;
 import "./IPyth.sol";
 
 abstract contract PythMulticall {
-    function pythAddress() private returns (address pythAddress);
+    function pythAddress() internal virtual returns (address pyth);
 
     function updateFeedsAndCall(
         bytes[] calldata priceUpdateData,
         bytes calldata data
-    ) public payable returns (bytes memory result) {
-        updatePythPriceFeeds{value: msg.value}(priceUpdateData);
-        return Address.functionDelegateCall(address(this), data);
+    ) public payable returns (bytes memory response) {
+        updatePythPriceFeeds(priceUpdateData);
+
+        bool success;
+        (success, response) = address(this).delegatecall(data);
+
+        // Check if the call was successful or not.
+        if (!success) {
+            // If there is return data, the delegate call reverted with a reason or a custom error, which we bubble up.
+            if (response.length > 0) {
+                assembly {
+                    let returndata_size := mload(response)
+                    revert(add(32, response), returndata_size)
+                }
+            } else {
+                // FIXME
+                revert("TODO");
+            }
+        }
     }
 
     function updatePythPriceFeeds(
