@@ -7,6 +7,7 @@ import "forge-std/console2.sol";
 abstract contract PythMulticall {
     function pythAddress() internal virtual returns (address pyth);
 
+    // Approach #1: this kind of sucks because it forces the payable modifier on all called functions
     function updateFeedsAndCall(
         bytes[] calldata priceUpdateData,
         bytes calldata data
@@ -14,11 +15,8 @@ abstract contract PythMulticall {
         console2.log(msg.sender);
         updatePythPriceFeeds(priceUpdateData);
 
-        nonPayableSample();
-
         bool success;
-        // (success, response) = address(this).delegatecall{value: 0}(data);
-        (success, response) = address(this).{value: 0}(data);
+        (success, response) = address(this).delegatecall(data);
 
         // Check if the call was successful or not.
         if (!success) {
@@ -35,6 +33,12 @@ abstract contract PythMulticall {
         }
     }
 
+    // Approach #2: requires more code modification but seems nicer
+    modifier withPyth(bytes[] calldata pythPrices) {
+        updatePythPriceFeeds(pythPrices);
+        _;
+    }
+
     function updatePythPriceFeeds(
         bytes[] calldata priceUpdateData
     ) public payable {
@@ -49,10 +53,5 @@ abstract contract PythMulticall {
         // See section "How Pyth Works on EVM Chains" below for more information.
         uint fee = pyth.getUpdateFee(priceUpdateData);
         pyth.updatePriceFeeds{value: fee}(priceUpdateData);
-    }
-
-    function nonPayableSample() public {
-        console2.log("nonpayableSample");
-        console2.log(msg.sender);
     }
 }

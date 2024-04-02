@@ -38,15 +38,25 @@ contract PythMulticallTest is Test {
         );
     }
 
-    function testBasic() public {
+    function testApproach1() public {
         bytes[] memory updateData = priceFeedUpdateHelper(123);
-        bytes memory call = abi.encodeCall(SampleContract.incrementCounter, ());
-
         uint fee = pyth.getUpdateFee(updateData);
         vm.deal(address(this), fee);
         console2.log("sending tx");
         console2.log(address(this));
+
+        bytes memory call = abi.encodeCall(SampleContract.approach1, ());
         multicallable.updateFeedsAndCall{value: fee}(updateData, call);
+    }
+
+    function testApproach2() public {
+        bytes[] memory updateData = priceFeedUpdateHelper(123);
+        uint fee = pyth.getUpdateFee(updateData);
+        vm.deal(address(this), fee);
+        console2.log("sending tx");
+        console2.log(address(this));
+
+        multicallable.approach2{value: fee}(updateData);
     }
 }
 
@@ -65,9 +75,14 @@ contract SampleContract is PythMulticall {
     }
 
     // FIXME: payable here kind of sucks.
-    function incrementCounter() external payable returns (int64) {
-        console2.log("incrementCounter");
-        console2.log(msg.sender);
+    function approach1() external payable returns (int64) {
+        counter += pyth.getPriceUnsafe(id).price;
+        return counter;
+    }
+
+    function approach2(
+        bytes[] calldata pythPrices
+    ) external payable withPyth(pythPrices) returns (int64) {
         counter += pyth.getPriceUnsafe(id).price;
         return counter;
     }
