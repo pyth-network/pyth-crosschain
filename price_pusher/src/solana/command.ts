@@ -6,7 +6,9 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { SolanaPriceListener, SolanaPricePusher } from "./solana";
 import { Controller } from "../controller";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import { KeyPair } from "near-api-js";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { Keypair, Connection } from "@solana/web3.js";
+import fs from "fs";
 
 export default {
   command: "solana",
@@ -62,16 +64,22 @@ export default {
       priceItems
     );
 
-    // const pythSolanaReceiver = new PythSolanaReceiver(
-    //     {connection : new Connection(endpoint),
-    //     keypair : }
-    // )
+    const wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii")))
+      )
+    );
 
-    const solanaPricePusher = new SolanaPricePusher();
+    const pythSolanaReceiver = new PythSolanaReceiver({
+      connection: new Connection(endpoint),
+      wallet,
+    });
+
+    const solanaPricePusher = new SolanaPricePusher(pythSolanaReceiver);
     const solanaPriceListener = new SolanaPriceListener(
-      "solana",
-      pollingFrequency,
-      priceItems
+      pythSolanaReceiver,
+      priceItems,
+      { pollingFrequency }
     );
 
     const controller = new Controller(

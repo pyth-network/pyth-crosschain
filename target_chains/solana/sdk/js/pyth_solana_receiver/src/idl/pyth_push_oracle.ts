@@ -61,6 +61,46 @@ export type PythPushOracle = {
       ];
     }
   ];
+  types: [
+    {
+      name: "PostUpdateParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "merklePriceUpdate";
+            type: {
+              defined: "MerklePriceUpdate";
+            };
+          },
+          {
+            name: "treasuryId";
+            type: "u8";
+          }
+        ];
+      };
+    },
+    {
+      name: "MerklePriceUpdate";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "message";
+            type: "bytes";
+          },
+          {
+            name: "proof";
+            type: {
+              vec: {
+                array: ["u8", 20];
+              };
+            };
+          }
+        ];
+      };
+    }
+  ];
   errors: [
     {
       code: 6000;
@@ -136,6 +176,46 @@ export const IDL: PythPushOracle = {
           },
         },
       ],
+    },
+  ],
+  types: [
+    {
+      name: "PostUpdateParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "merklePriceUpdate",
+            type: {
+              defined: "MerklePriceUpdate",
+            },
+          },
+          {
+            name: "treasuryId",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
+      name: "MerklePriceUpdate",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "message",
+            type: "bytes",
+          },
+          {
+            name: "proof",
+            type: {
+              vec: {
+                array: ["u8", 20],
+              },
+            },
+          },
+        ],
+      },
     },
   ],
   errors: [

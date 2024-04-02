@@ -159,6 +159,22 @@ export class PythTransactionBuilder extends TransactionBuilder {
     this.addInstructions(postInstructions);
   }
 
+  async addUpdatePriceFeed(priceUpdateDataArray: string[]) {
+    const {
+      postInstructions,
+      priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    } = await this.pythSolanaReceiver.buildUpdatePriceFeedInstructions(
+      priceUpdateDataArray
+    );
+    this.closeInstructions.push(...closeInstructions);
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToPriceUpdateAccount
+    );
+    this.addInstructions(postInstructions);
+  }
+
   /**
    * Add instructions that consume price updates to the builder.
    *
@@ -504,6 +520,78 @@ export class PythSolanaReceiver {
       }
     }
 
+    return {
+      postInstructions,
+      priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    };
+  }
+
+  async buildUpdatePriceFeedInstructions(
+    priceUpdateDataArray: string[]
+  ): Promise<{
+    postInstructions: InstructionWithEphemeralSigners[];
+    priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+    closeInstructions: InstructionWithEphemeralSigners[];
+  }> {
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
+    const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
+
+    for (const priceUpdateData of priceUpdateDataArray) {
+      const accumulatorUpdateData = parseAccumulatorUpdateData(
+        Buffer.from(priceUpdateData, "base64")
+      );
+
+      const {
+        postInstructions: postEncodedVaaInstructions,
+        encodedVaaAddress: encodedVaa,
+        closeInstructions: postEncodedVaacloseInstructions,
+      } = await this.buildPostEncodedVaaInstructions(accumulatorUpdateData.vaa);
+      postInstructions.push(...postEncodedVaaInstructions);
+      closeInstructions.push(...postEncodedVaacloseInstructions);
+
+      for (const update of accumulatorUpdateData.updates) {
+        const feedId = parsePriceFeedMessage(update.message).feedId;
+
+        postInstructions.push({
+          instruction: await this.pushOracle.methods
+            .updatePriceFeed(
+              {
+                merklePriceUpdate: update,
+                treasuryId: DEFAULT_TREASURY_ID,
+              },
+              0,
+              feedId
+            )
+            .accounts({
+              encodedVaa,
+              priceFeedAccount: getPriceFeedAccountAddress(
+                0,
+                feedId,
+                this.pushOracle.programId
+              ),
+              treasury: getTreasuryPda(
+                DEFAULT_TREASURY_ID,
+                this.receiver.programId
+              ),
+              config: getConfigPda(this.receiver.programId),
+            })
+            .instruction(),
+          signers: [],
+          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+        });
+
+        priceFeedIdToPriceUpdateAccount[
+          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+        ] = getPriceFeedAccountAddress(0, feedId, this.pushOracle.programId);
+        closeInstructions.push(
+          await this.buildClosePriceUpdateInstruction(
+            getPriceFeedAccountAddress(0, feedId, this.pushOracle.programId)
+          )
+        );
+      }
+    }
     return {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
