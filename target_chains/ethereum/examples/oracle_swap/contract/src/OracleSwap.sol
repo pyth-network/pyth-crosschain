@@ -18,7 +18,12 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 // some quantity of both the base and quote token in order to function properly (using the ERC20 transfer function to
 // the contract's address).
 contract OracleSwap {
-    event Transfer(address from, address to, uint256 amountUsd, uint256 amountWei);
+    event Transfer(
+        address from,
+        address to,
+        uint256 amountUsd,
+        uint256 amountWei
+    );
 
     IPyth pyth;
 
@@ -52,18 +57,34 @@ contract OracleSwap {
     // `pythUpdateData` is the binary pyth price update data (retrieved from Pyth's price
     // service); this data should contain a price update for both the base and quote price feeds.
     // See the frontend code for an example of how to retrieve this data and pass it to this function.
-    function swap(bool isBuy, uint256 size, bytes[] calldata pythUpdateData) external payable {
+    function swap(
+        bool isBuy,
+        uint256 size,
+        bytes[] calldata pythUpdateData
+    ) external payable {
         uint256 updateFee = pyth.getUpdateFee(pythUpdateData);
         pyth.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
-        PythStructs.Price memory currentBasePrice = pyth.getPrice(baseTokenPriceId);
-        PythStructs.Price memory currentQuotePrice = pyth.getPrice(quoteTokenPriceId);
+        PythStructs.Price memory currentBasePrice = pyth.getPrice(
+            baseTokenPriceId
+        );
+        PythStructs.Price memory currentQuotePrice = pyth.getPrice(
+            quoteTokenPriceId
+        );
 
         // Note: this code does all arithmetic with 18 decimal points. This approach should be fine for most
         // price feeds, which typically have ~8 decimals. You can check the exponent on the price feed to ensure
         // this doesn't lose precision.
-        uint256 basePrice = PythUtils.convertToUint(currentBasePrice.price, currentBasePrice.expo, 18);
-        uint256 quotePrice = PythUtils.convertToUint(currentQuotePrice.price, currentQuotePrice.expo, 18);
+        uint256 basePrice = PythUtils.convertToUint(
+            currentBasePrice.price,
+            currentBasePrice.expo,
+            18
+        );
+        uint256 quotePrice = PythUtils.convertToUint(
+            currentQuotePrice.price,
+            currentQuotePrice.expo,
+            18
+        );
 
         // This computation loses precision. The infinite-precision result is between [quoteSize, quoteSize + 1]
         // We need to round this result in favor of the contract.
