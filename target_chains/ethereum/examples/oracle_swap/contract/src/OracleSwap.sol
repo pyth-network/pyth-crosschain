@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "pyth-sdk-solidity/IPyth.sol";
-import "pyth-sdk-solidity/PythStructs.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 // Example oracle AMM powered by Pyth price feeds.
@@ -17,7 +18,7 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 // some quantity of both the base and quote token in order to function properly (using the ERC20 transfer function to
 // the contract's address).
 contract OracleSwap {
-    event Transfer(address from, address to, uint amountUsd, uint amountWei);
+    event Transfer(address from, address to, uint256 amountUsd, uint256 amountWei);
 
     IPyth pyth;
 
@@ -51,26 +52,18 @@ contract OracleSwap {
     // `pythUpdateData` is the binary pyth price update data (retrieved from Pyth's price
     // service); this data should contain a price update for both the base and quote price feeds.
     // See the frontend code for an example of how to retrieve this data and pass it to this function.
-    function swap(
-        bool isBuy,
-        uint size,
-        bytes[] calldata pythUpdateData
-    ) external payable {
-        uint updateFee = pyth.getUpdateFee(pythUpdateData);
+    function swap(bool isBuy, uint256 size, bytes[] calldata pythUpdateData) external payable {
+        uint256 updateFee = pyth.getUpdateFee(pythUpdateData);
         pyth.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
-        PythStructs.Price memory currentBasePrice = pyth.getPrice(
-            baseTokenPriceId
-        );
-        PythStructs.Price memory currentQuotePrice = pyth.getPrice(
-            quoteTokenPriceId
-        );
+        PythStructs.Price memory currentBasePrice = pyth.getPrice(baseTokenPriceId);
+        PythStructs.Price memory currentQuotePrice = pyth.getPrice(quoteTokenPriceId);
 
         // Note: this code does all arithmetic with 18 decimal points. This approach should be fine for most
         // price feeds, which typically have ~8 decimals. You can check the exponent on the price feed to ensure
         // this doesn't lose precision.
-        uint256 basePrice = convertToUint(currentBasePrice, 18);
-        uint256 quotePrice = convertToUint(currentQuotePrice, 18);
+        uint256 basePrice = PythUtils.convertToUint(currentBasePrice.price, currentBasePrice.expo, 18);
+        uint256 quotePrice = PythUtils.convertToUint(currentQuotePrice.price, currentQuotePrice.expo, 18);
 
         // This computation loses precision. The infinite-precision result is between [quoteSize, quoteSize + 1]
         // We need to round this result in favor of the contract.
@@ -87,28 +80,6 @@ contract OracleSwap {
         } else {
             baseToken.transferFrom(msg.sender, address(this), size);
             quoteToken.transfer(msg.sender, quoteSize);
-        }
-    }
-
-    // TODO: we should probably move something like this into the solidity sdk
-    function convertToUint(
-        PythStructs.Price memory price,
-        uint8 targetDecimals
-    ) private pure returns (uint256) {
-        if (price.price < 0 || price.expo > 0 || price.expo < -255) {
-            revert();
-        }
-
-        uint8 priceDecimals = uint8(uint32(-1 * price.expo));
-
-        if (targetDecimals >= priceDecimals) {
-            return
-                uint(uint64(price.price)) *
-                10 ** uint32(targetDecimals - priceDecimals);
-        } else {
-            return
-                uint(uint64(price.price)) /
-                10 ** uint32(priceDecimals - targetDecimals);
         }
     }
 
