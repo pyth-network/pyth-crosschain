@@ -191,7 +191,7 @@ pub mod mock {
             user_random_number: [u8; 32],
             provider_revelation: [u8; 32],
         ) -> Result<Option<U256>> {
-            Ok(Some(5))
+            Ok(Some(U256::from(5)))
         }
     }
 }
