@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/OracleSwap.sol";
-import "pyth-sdk-solidity/MockPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/MockPyth.sol";
 import "openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
 
 contract OracleSwapTest is Test {
@@ -84,6 +84,7 @@ contract OracleSwapTest is Test {
             -5,
             basePrice * 100000,
             10 * 100000,
+            uint64(block.timestamp),
             uint64(block.timestamp)
         );
         updateData[1] = mockPyth.createPriceFeedUpdateData(
@@ -93,6 +94,7 @@ contract OracleSwapTest is Test {
             -5,
             quotePrice * 100000,
             10 * 100000,
+            uint64(block.timestamp),
             uint64(block.timestamp)
         );
 
