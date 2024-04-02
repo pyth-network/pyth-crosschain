@@ -172,7 +172,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    *
    * Price feed accounts are a special type of price update accounts.
-   * Instead of using ephemeral addresses, they are PDAs of the Pyth Push Oracle program derived from the feed ID.
+   * Instead of using ephemeral addresses, they are PDAs of the Pyth Push Oracle program derived from the feed ID. They can only be updated with a more recent price update.
    *
    * @example
    * ```typescript
