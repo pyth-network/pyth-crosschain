@@ -476,10 +476,7 @@ mod test {
                 Accumulator,
             },
             hashers::keccak256_160::Keccak160,
-            messages::{
-                Message,
-                PriceFeedMessage,
-            },
+            messages::PriceFeedMessage,
             wire::v1::{
                 AccumulatorUpdateData,
                 Proof,

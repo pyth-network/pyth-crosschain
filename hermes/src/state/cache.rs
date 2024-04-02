@@ -311,24 +311,14 @@ mod test {
     use {
         super::*,
         crate::{
-            aggregate::{
-                wormhole_merkle::{
-                    WormholeMerkleMessageProof,
-                    WormholeMerkleState,
-                },
-                AccumulatorMessages,
-                ProofSet,
-            },
+            aggregate::wormhole_merkle::WormholeMerkleMessageProof,
             state::test::setup_state,
         },
         pyth_sdk::UnixTimestamp,
         pythnet_sdk::{
             accumulators::merkle::MerklePath,
             hashers::keccak256_160::Keccak160,
-            messages::{
-                Message,
-                PriceFeedMessage,
-            },
+            messages::PriceFeedMessage,
             wire::v1::WormholeMerkleRoot,
         },
     };
