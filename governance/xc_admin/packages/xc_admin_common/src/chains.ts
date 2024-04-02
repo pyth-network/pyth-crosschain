@@ -137,6 +137,7 @@ export const RECEIVER_CHAINS = {
   optimism_celestia_raspberry: 50061, // Gelato shared testnet
   parallel_testnet: 50062,
   polynomial_testnet: 50063,
+  linea_sepolia: 50064,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
