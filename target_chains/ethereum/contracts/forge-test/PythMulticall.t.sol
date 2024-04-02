@@ -74,7 +74,8 @@ contract SampleContract is PythMulticall {
         p = address(pyth);
     }
 
-    // FIXME: payable here kind of sucks.
+    // One problem with approach 1 is that this method must be marked payable even though it use msg.value.
+    // It needs to be payable because the multicall's delegatecall passes a nonzero msg.value to it.
     function approach1() external payable returns (int64) {
         counter += pyth.getPriceUnsafe(id).price;
         return counter;
