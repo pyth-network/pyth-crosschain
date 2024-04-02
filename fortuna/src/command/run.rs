@@ -5,10 +5,7 @@ use {
             BlockchainState,
             ChainId,
         },
-        chain::ethereum::{
-            PythContract,
-            SignablePythContract,
-        },
+        chain::ethereum::PythContract,
         command::register_provider::CommitmentMetadata,
         config::{
             Config,
@@ -26,7 +23,6 @@ use {
         Result,
     },
     axum::Router,
-    futures::future::join_all,
     std::{
         collections::HashMap,
         net::SocketAddr,
@@ -35,10 +31,7 @@ use {
     },
     tokio::{
         spawn,
-        sync::{
-            mpsc,
-            watch,
-        },
+        sync::watch,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,

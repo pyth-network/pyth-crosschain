@@ -3,21 +3,15 @@ use {
         api::{
             self,
             BlockchainState,
-            ChainId,
         },
         chain::{
-            ethereum::{
-                PythContract,
-                SignablePythContract,
-            },
+            ethereum::SignablePythContract,
             reader::{
                 BlockNumber,
-                EntropyReader,
                 RequestedWithCallbackEvent,
             },
         },
         config::EthereumConfig,
-        keeper,
     },
     anyhow::Result,
     ethers::{
@@ -48,6 +42,8 @@ const RETRY_INTERVAL: Duration = Duration::from_secs(5);
 const BACKLOG_RANGE: u64 = 1000;
 /// How many blocks to fetch events for in a single rpc call
 const BLOCK_BATCH_SIZE: u64 = 100;
+/// How much to wait before polling the next latest block
+const POLL_INTERVAL: Duration = Duration::from_secs(5);
 
 
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
@@ -199,7 +195,8 @@ pub async fn process_event(
                 match res {
                     Ok(_) => {
                         tracing::info!(
-                            "Revealed for provider: {} and sequence number: {} with res: {:?}",
+                            "Revealed on chain: {} for provider: {} and sequence number: {} with res: {:?}",
+                            &chain_config.id,
                             event.provider_address,
                             event.sequence_number,
                             res
@@ -309,18 +306,37 @@ pub async fn watch_blocks(
     chain_state: BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
-    geth_rpc_wss: String,
+    geth_rpc_wss: Option<String>,
 ) -> Result<()> {
     tracing::info!(
         "Watching blocks to handle new events for chain: {}",
         &chain_state.id
     );
-    // TODO: if can't connect to a web socket try fetching every 10 seconds?
-    let provider = Provider::<Ws>::connect(geth_rpc_wss.clone()).await?;
-    let mut stream = provider.subscribe_blocks().await?;
-
     let mut last_safe_block_processed = latest_safe_block;
-    while let Some(_) = stream.next().await {
+
+    let provider_option = match geth_rpc_wss {
+        Some(wss) => Some(Provider::<Ws>::connect(wss).await?),
+        None => {
+            tracing::info!("No wss provided for chain: {}", &chain_state.id);
+            None
+        }
+    };
+
+    let mut stream_option = match provider_option {
+        Some(ref provider) => Some(provider.subscribe_blocks().await?),
+        None => None,
+    };
+
+    loop {
+        match stream_option {
+            Some(ref mut stream) => {
+                stream.next().await;
+            }
+            None => {
+                time::sleep(POLL_INTERVAL).await;
+            }
+        }
+
         let latest_safe_block = get_latest_safe_block(&chain_state).await;
         if latest_safe_block > last_safe_block_processed {
             match tx
@@ -345,7 +361,6 @@ pub async fn watch_blocks(
             };
         }
     }
-    Ok(())
 }
 
 /// Handles events for a specific blockchain chain.
