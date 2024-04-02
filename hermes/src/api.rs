@@ -149,7 +149,8 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
         .layer(CorsLayer::permissive())
         // Non-strict mode permits escaped [] in URL parameters. 5 is the allowed depth (also the
         // default value for this parameter).
-        .layer(Extension(QsQueryConfig::new(5, false)));
+        .layer(Extension(QsQueryConfig::new(5, false)))
+        .layer(Extension(opts.benchmarks.endpoint));
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.

@@ -11,6 +11,7 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     base64::{
@@ -18,6 +19,7 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
@@ -57,6 +59,7 @@ pub struct LatestVaasQueryParams {
 pub async fn latest_vaas(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
+    Extension(benchmark_url): Extension<Option<Url>>,
 ) -> Result<Json<Vec<String>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
 
@@ -66,6 +69,7 @@ pub async fn latest_vaas(
         &*state.state,
         &price_ids,
         RequestTime::Latest,
+        benchmark_url,
     )
     .await
     .map_err(|e| {

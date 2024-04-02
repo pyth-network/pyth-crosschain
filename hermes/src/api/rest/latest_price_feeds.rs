@@ -13,9 +13,11 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
@@ -62,6 +64,7 @@ pub struct LatestPriceFeedsQueryParams {
 pub async fn latest_price_feeds(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<Vec<RpcPriceFeed>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
 
@@ -71,6 +74,7 @@ pub async fn latest_price_feeds(
         &*state.state,
         &price_ids,
         RequestTime::Latest,
+        benchmarks_url,
     )
     .await
     .map_err(|e| {

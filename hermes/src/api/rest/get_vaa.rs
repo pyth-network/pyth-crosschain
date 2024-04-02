@@ -15,6 +15,7 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     base64::{
@@ -22,6 +23,7 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde_qs::axum::QsQuery,
     utoipa::{
         IntoParams,
@@ -71,6 +73,7 @@ pub struct GetVaaResponse {
 pub async fn get_vaa(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetVaaQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<GetVaaResponse>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
@@ -80,6 +83,7 @@ pub async fn get_vaa(
         &*state.state,
         &[price_id],
         RequestTime::FirstAfter(params.publish_time),
+        benchmarks_url,
     )
     .await
     .map_err(|e| {

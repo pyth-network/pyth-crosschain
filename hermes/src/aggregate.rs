@@ -55,6 +55,7 @@ use {
             },
         },
     },
+    reqwest::Url,
     std::{
         collections::HashSet,
         time::Duration,
@@ -394,6 +395,7 @@ pub async fn get_price_feeds_with_update_data<S>(
     state: &S,
     price_ids: &[PriceIdentifier],
     request_time: RequestTime,
+    benchmarks_url: Option<Url>,
 ) -> Result<PriceFeedsWithUpdateData>
 where
     S: AggregateCache,
@@ -403,7 +405,13 @@ where
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
-                return Benchmarks::get_verified_price_feeds(state, price_ids, publish_time).await;
+                return Benchmarks::get_verified_price_feeds(
+                    state,
+                    price_ids,
+                    publish_time,
+                    benchmarks_url,
+                )
+                .await;
             }
             Err(e)
         }
@@ -595,6 +603,7 @@ mod test {
             &*state,
             &[PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
+            None,
         )
         .await
         .unwrap();
@@ -724,6 +733,7 @@ mod test {
             &*state,
             &[PriceIdentifier::new([200; 32])],
             RequestTime::Latest,
+            None,
         )
         .await
         .is_ok());
@@ -755,6 +765,7 @@ mod test {
             &*state,
             &[PriceIdentifier::new([200; 32])],
             RequestTime::Latest,
+            None,
         )
         .await
         .is_err());
@@ -797,6 +808,7 @@ mod test {
             &*state,
             &[PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
+            None,
         )
         .await
         .unwrap();
@@ -877,6 +889,7 @@ mod test {
                     PriceIdentifier::new([200; 32]),
                 ],
                 RequestTime::FirstAfter(slot as i64),
+                None,
             )
             .await
             .unwrap();
@@ -894,6 +907,7 @@ mod test {
                     PriceIdentifier::new([200; 32])
                 ],
                 RequestTime::FirstAfter(slot as i64),
+                None,
             )
             .await
             .is_err());

@@ -25,9 +25,11 @@ use {
             Path,
             State,
         },
+        Extension,
         Json,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
@@ -91,6 +93,7 @@ pub async fn timestamp_price_updates(
     State(state): State<crate::api::ApiState>,
     Path(path_params): Path<TimestampPriceUpdatesPathParams>,
     QsQuery(query_params): QsQuery<TimestampPriceUpdatesQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<PriceUpdate>, RestError> {
     let price_ids: Vec<PriceIdentifier> =
         query_params.ids.into_iter().map(|id| id.into()).collect();
@@ -101,6 +104,7 @@ pub async fn timestamp_price_updates(
         &*state.state,
         &price_ids,
         RequestTime::FirstAfter(path_params.publish_time),
+        benchmarks_url,
     )
     .await
     .map_err(|e| {

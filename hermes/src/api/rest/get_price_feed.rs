@@ -17,9 +17,11 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
@@ -63,6 +65,7 @@ pub struct GetPriceFeedQueryParams {
 pub async fn get_price_feed(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<RpcPriceFeed>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
@@ -72,6 +75,7 @@ pub async fn get_price_feed(
         &*state.state,
         &[price_id],
         RequestTime::FirstAfter(params.publish_time),
+        benchmarks_url,
     )
     .await
     .map_err(|e| {

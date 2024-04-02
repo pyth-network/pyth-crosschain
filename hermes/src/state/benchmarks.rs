@@ -14,6 +14,7 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::Deserialize,
 };
 
@@ -56,6 +57,7 @@ pub trait Benchmarks {
         &self,
         price_ids: &[PriceIdentifier],
         publish_time: UnixTimestamp,
+        benchmarks_endpoint: Option<Url>,
     ) -> Result<PriceFeedsWithUpdateData>;
 }
 
@@ -65,9 +67,9 @@ impl Benchmarks for crate::state::State {
         &self,
         price_ids: &[PriceIdentifier],
         publish_time: UnixTimestamp,
+        benchmarks_endpoint: Option<Url>,
     ) -> Result<PriceFeedsWithUpdateData> {
-        let endpoint = self
-            .benchmarks_endpoint
+        let endpoint = benchmarks_endpoint
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Benchmarks endpoint is not set"))?
             .join(&format!("/v1/updates/price/{}", publish_time))

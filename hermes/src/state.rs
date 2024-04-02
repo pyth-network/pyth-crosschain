@@ -11,7 +11,6 @@ use {
         network::wormhole::GuardianSet,
     },
     prometheus_client::registry::Registry,
-    reqwest::Url,
     std::{
         collections::{
             BTreeMap,
@@ -46,9 +45,6 @@ pub struct State {
     /// The aggregate module state.
     pub aggregate_state: RwLock<AggregateState>,
 
-    /// Benchmarks endpoint
-    pub benchmarks_endpoint: Option<Url>,
-
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
 
@@ -57,20 +53,15 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(
-        update_tx: Sender<AggregationEvent>,
-        cache_size: u64,
-        benchmarks_endpoint: Option<Url>,
-    ) -> Arc<Self> {
+    pub fn new(update_tx: Sender<AggregationEvent>, cache_size: u64) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
-            cache: Cache::new(cache_size),
-            observed_vaa_seqs: RwLock::new(Default::default()),
-            guardian_set: RwLock::new(Default::default()),
-            api_update_tx: update_tx,
-            aggregate_state: RwLock::new(AggregateState::new(&mut metrics_registry)),
-            benchmarks_endpoint,
-            metrics_registry: RwLock::new(metrics_registry),
+            cache:                Cache::new(cache_size),
+            observed_vaa_seqs:    RwLock::new(Default::default()),
+            guardian_set:         RwLock::new(Default::default()),
+            api_update_tx:        update_tx,
+            aggregate_state:      RwLock::new(AggregateState::new(&mut metrics_registry)),
+            metrics_registry:     RwLock::new(metrics_registry),
             price_feeds_metadata: RwLock::new(Default::default()),
         })
     }
@@ -86,7 +77,7 @@ pub mod test {
 
     pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::broadcast::channel(1000);
-        let state = State::new(update_tx, cache_size, None);
+        let state = State::new(update_tx, cache_size);
 
         // Add an initial guardian set with public key 0
         update_guardian_set(

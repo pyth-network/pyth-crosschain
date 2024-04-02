@@ -25,6 +25,7 @@ use {
         },
         http::HeaderMap,
         response::IntoResponse,
+        Extension,
     },
     futures::{
         stream::{
@@ -52,6 +53,7 @@ use {
         },
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::{
         Deserialize,
         Serialize,
@@ -199,6 +201,7 @@ enum ServerResponseMessage {
 pub async fn ws_route_handler(
     ws: WebSocketUpgrade,
     AxumState(state): AxumState<super::ApiState>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
     let requester_ip = headers
@@ -208,7 +211,7 @@ pub async fn ws_route_handler(
         .and_then(|value| value.parse().ok());
 
     ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
-        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip))
+        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, benchmarks_url))
 }
 
 #[tracing::instrument(skip(stream, state, subscriber_ip))]
@@ -216,6 +219,7 @@ async fn websocket_handler(
     stream: WebSocket,
     state: super::ApiState,
     subscriber_ip: Option<IpAddr>,
+    benchmarks_url: Option<Url>,
 ) {
     let ws_state = state.ws.clone();
 
@@ -247,7 +251,7 @@ async fn websocket_handler(
         sender,
     );
 
-    subscriber.run().await;
+    subscriber.run(benchmarks_url).await;
 }
 
 pub type SubscriberId = usize;
@@ -296,20 +300,20 @@ impl Subscriber {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn run(&mut self) {
+    pub async fn run(&mut self, benchmarks_url: Option<Url>) {
         while !self.closed {
-            if let Err(e) = self.handle_next().await {
+            if let Err(e) = self.handle_next(benchmarks_url.clone()).await {
                 tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
                 break;
             }
         }
     }
 
-    async fn handle_next(&mut self) -> Result<()> {
+    async fn handle_next(&mut self, benchmarks_url: Option<Url>) -> Result<()> {
         tokio::select! {
             maybe_update_feeds_event = self.notify_receiver.recv() => {
                 match maybe_update_feeds_event {
-                    Ok(event) => self.handle_price_feeds_update(event).await,
+                    Ok(event) => self.handle_price_feeds_update(event, benchmarks_url).await,
                     Err(e) => Err(anyhow!("Failed to receive update from store: {:?}", e)),
                 }
             },
@@ -343,7 +347,11 @@ impl Subscriber {
         }
     }
 
-    async fn handle_price_feeds_update(&mut self, event: AggregationEvent) -> Result<()> {
+    async fn handle_price_feeds_update(
+        &mut self,
+        event: AggregationEvent,
+        benchmarks_url: Option<Url>,
+    ) -> Result<()> {
         let price_feed_ids = self
             .price_feeds_with_config
             .keys()
@@ -354,6 +362,7 @@ impl Subscriber {
             &*self.store,
             &price_feed_ids,
             RequestTime::AtSlot(event.slot()),
+            benchmarks_url.clone(),
         )
         .await
         {
@@ -380,6 +389,7 @@ impl Subscriber {
                     &*self.store,
                     &price_feed_ids,
                     RequestTime::AtSlot(event.slot()),
+                    benchmarks_url,
                 )
                 .await?
             }

@@ -10,6 +10,7 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     derive_more::{
@@ -17,6 +18,7 @@ use {
         DerefMut,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::{
         Deserialize,
         Serialize,
@@ -59,6 +61,7 @@ pub struct GetVaaCcipResponse {
 pub async fn get_vaa_ccip(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<GetVaaCcipResponse>, RestError> {
     let price_id: PriceIdentifier = PriceIdentifier::new(
         params.data[0..32]
@@ -77,6 +80,7 @@ pub async fn get_vaa_ccip(
         &*state.state,
         &[price_id],
         RequestTime::FirstAfter(publish_time),
+        benchmarks_url,
     )
     .await
     .map_err(|e| {

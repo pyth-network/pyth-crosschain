@@ -18,6 +18,7 @@ use {
     anyhow::Result,
     axum::{
         extract::State,
+        Extension,
         Json,
     },
     base64::{
@@ -25,6 +26,7 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
@@ -76,6 +78,7 @@ fn default_true() -> bool {
 pub async fn latest_price_updates(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<LatestPriceUpdatesQueryParams>,
+    Extension(benchmarks_url): Extension<Option<Url>>,
 ) -> Result<Json<PriceUpdate>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
 
@@ -85,6 +88,7 @@ pub async fn latest_price_updates(
         &*state.state,
         &price_ids,
         RequestTime::Latest,
+        benchmarks_url,
     )
     .await
     .map_err(|e| {
