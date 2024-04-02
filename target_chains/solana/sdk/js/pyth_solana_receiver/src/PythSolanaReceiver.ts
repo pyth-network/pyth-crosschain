@@ -565,6 +565,7 @@ export class PythSolanaReceiver {
               Array.from(feedId)
             )
             .accounts({
+              pythSolanaReceiver: this.receiver.programId,
               encodedVaa,
               priceFeedAccount: getPriceFeedAccountAddress(
                 0,
@@ -661,12 +662,11 @@ function getPriceFeedAccountAddress(
   if (feedId.length != 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
-  const seedBuffer = Buffer.alloc(2 + feedId.length);
-  seedBuffer.writeUInt16BE(shardId, 0);
-  seedBuffer.copy(feedId, 2);
+  const shardBuffer = Buffer.alloc(2);
+  shardBuffer.writeUInt16BE(shardId, 0);
 
   return PublicKey.findProgramAddressSync(
-    [seedBuffer],
+    [shardBuffer, feedId],
     pushOracleProgramId ?? DEFAULT_PUSH_ORACLE_PROGRAM_ID
   )[0];
 }
