@@ -12,4 +12,4 @@ pub mod price_update;
 
 declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
-pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("3a8iuFcGaMHFTX8sagDx55nPWp14fHxzWUbn2Mr4E8NR");
+pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");

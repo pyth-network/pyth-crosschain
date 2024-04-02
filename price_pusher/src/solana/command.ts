@@ -9,6 +9,7 @@ import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Keypair, Connection } from "@solana/web3.js";
 import fs from "fs";
+import { PublicKey } from "@solana/web3.js";
 
 export default {
   command: "solana",
@@ -73,6 +74,7 @@ export default {
     const pythSolanaReceiver = new PythSolanaReceiver({
       connection: new Connection(endpoint),
       wallet,
+      pushOracleProgramId: new PublicKey(pythContractAddress),
     });
 
     const solanaPricePusher = new SolanaPricePusher(

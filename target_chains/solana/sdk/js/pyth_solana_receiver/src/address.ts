@@ -16,7 +16,7 @@ export const DEFAULT_WORMHOLE_PROGRAM_ID = new PublicKey(
 );
 
 export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
-  "3a8iuFcGaMHFTX8sagDx55nPWp14fHxzWUbn2Mr4E8NR"
+  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT"
 );
 
 /**
