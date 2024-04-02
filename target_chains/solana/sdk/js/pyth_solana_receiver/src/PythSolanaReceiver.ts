@@ -170,6 +170,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * Add instructions to update price feed accounts to the builder.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   * @param shardId the shard ID of the set of price feed accounts. This shard ID allows for multiple sets of price feed accounts to be managed by the same program.
    *
    * Price feed accounts are a special type of price update accounts.
    * Instead of using ephemeral addresses, they are PDAs of the Pyth Push Oracle program derived from the feed ID. They can only be updated with a more recent price update.
@@ -187,13 +188,14 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * ...
    * ```
    */
-  async addUpdatePriceFeed(priceUpdateDataArray: string[]) {
+  async addUpdatePriceFeed(priceUpdateDataArray: string[], shardId: number) {
     const {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
       closeInstructions,
     } = await this.pythSolanaReceiver.buildUpdatePriceFeedInstructions(
-      priceUpdateDataArray
+      priceUpdateDataArray,
+      shardId
     );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
@@ -559,12 +561,14 @@ export class PythSolanaReceiver {
    * Build a series of helper instructions that update one or many price feed accounts and another series to close the encoded vaa accounts used to update the price feed accounts.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
+   * @param shardId the shard ID of the set of price feed accounts. This shard ID allows for multiple sets of price feed accounts to be managed by the same program.
    * @returns `postInstructions`: the instructions to update the price feed accounts. If the price feed accounts don't contain a recent update, these should be called before consuming the price updates.
    * @returns `priceFeedIdToPriceUpdateAccount`: this is a map of price feed IDs to Solana address. Given a price feed ID, you can use this map to find the account where `postInstructions` will post the price update. Note that since price feed accounts are PDAs, the address of the account can also be found with `getPriceFeedAccountAddress`.
    * @returns `closeInstructions`: the instructions to close the encoded VAA accounts that were used to update the price feed accounts.
    */
   async buildUpdatePriceFeedInstructions(
-    priceUpdateDataArray: string[]
+    priceUpdateDataArray: string[],
+    shardId: number
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
@@ -597,14 +601,14 @@ export class PythSolanaReceiver {
                 merklePriceUpdate: update,
                 treasuryId: DEFAULT_TREASURY_ID,
               },
-              0,
+              shardId,
               Array.from(feedId)
             )
             .accounts({
               pythSolanaReceiver: this.receiver.programId,
               encodedVaa,
               priceFeedAccount: getPriceFeedAccountAddress(
-                0,
+                shardId,
                 feedId,
                 this.pushOracle.programId
               ),
@@ -621,7 +625,11 @@ export class PythSolanaReceiver {
 
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
-        ] = getPriceFeedAccountAddress(0, feedId, this.pushOracle.programId);
+        ] = getPriceFeedAccountAddress(
+          shardId,
+          feedId,
+          this.pushOracle.programId
+        );
       }
     }
     return {
@@ -696,7 +704,11 @@ export class PythSolanaReceiver {
     priceFeedId: Buffer
   ): Promise<PriceUpdateAccount | null> {
     return this.receiver.account.priceUpdateV2.fetchNullable(
-      getPriceFeedAccountAddress(0, priceFeedId, this.pushOracle.programId)
+      getPriceFeedAccountAddress(
+        shardId,
+        priceFeedId,
+        this.pushOracle.programId
+      )
     );
   }
 }

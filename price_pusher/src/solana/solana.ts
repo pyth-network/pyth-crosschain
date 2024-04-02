@@ -11,6 +11,7 @@ import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
+    private shardId: number,
     priceItems: PriceItem[],
     config: {
       pollingFrequency: DurationInSeconds;
@@ -23,7 +24,7 @@ export class SolanaPriceListener extends ChainPriceListener {
     try {
       const priceFeedAccount =
         await this.pythSolanaReceiver.fetchPriceFeedAccount(
-          0,
+          this.shardId,
           Buffer.from(priceId, "hex")
         );
       console.log(
@@ -51,7 +52,8 @@ export class SolanaPriceListener extends ChainPriceListener {
 export class SolanaPricePusher implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
-    private priceServiceConnection: PriceServiceConnection
+    private priceServiceConnection: PriceServiceConnection,
+    private shardId: number
   ) {}
 
   async updatePriceFeed(
@@ -75,19 +77,18 @@ export class SolanaPricePusher implements IPricePusher {
     const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
       closeUpdateAccounts: false,
     });
-    transactionBuilder.addUpdatePriceFeed(priceFeedUpdateData);
+    transactionBuilder.addUpdatePriceFeed(priceFeedUpdateData, this.shardId);
 
     try {
-      const transactionHashes = await this.pythSolanaReceiver.provider.sendAll(
+      await this.pythSolanaReceiver.provider.sendAll(
         await transactionBuilder.buildVersionedTransactions({
           computeUnitPriceMicroLamports: 50000,
         }),
         { skipPreflight: true }
       );
-      console.log(`updatePriceFeed succesful`);
+      console.log(new Date(), "updatePriceFeed successful");
     } catch (e: any) {
-      console.error("updatePriceFeed failed");
-      console.error(e);
+      console.error(new Date(), "updatePriceFeed failed", e);
       return;
     }
   }

@@ -21,8 +21,13 @@ export default {
       required: true,
     } as Options,
     "keypair-file": {
-      description: "Path to keypair file",
+      description: "Path to a keypair file",
       type: "string",
+      required: true,
+    } as Options,
+    "shard-id": {
+      description: "Shard ID",
+      type: "number",
       required: true,
     } as Options,
     ...options.priceConfigFile,
@@ -35,6 +40,7 @@ export default {
     const {
       endpoint,
       keypairFile,
+      shardId,
       priceConfigFile,
       priceServiceEndpoint,
       pythContractAddress,
@@ -79,10 +85,12 @@ export default {
 
     const solanaPricePusher = new SolanaPricePusher(
       pythSolanaReceiver,
-      priceServiceConnection
+      priceServiceConnection,
+      shardId
     );
     const solanaPriceListener = new SolanaPriceListener(
       pythSolanaReceiver,
+      shardId,
       priceItems,
       { pollingFrequency }
     );
