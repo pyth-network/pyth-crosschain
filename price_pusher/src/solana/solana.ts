@@ -84,13 +84,9 @@ export class SolanaPricePusher implements IPricePusher {
         }),
         { skipPreflight: true }
       );
-      console.log(
-        `Successful. Tx hash: ${
-          transactionHashes[transactionHashes.length - 1]
-        }`
-      );
+      console.log(`updatePriceFeed succesful`);
     } catch (e: any) {
-      console.error("Failed pushing");
+      console.error("updatePriceFeed failed");
       console.error(e);
       return;
     }
