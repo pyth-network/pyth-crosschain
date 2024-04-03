@@ -15,14 +15,10 @@ use {
         Action,
         Cli,
     },
-    pyth_solana_receiver::{
-        sdk::{
-            deserialize_accumulator_update_data,
-            get_treasury_address,
-            DEFAULT_TREASURY_ID,
-        },
-        PostUpdateAtomicParams,
-        PostUpdateParams,
+    pyth_solana_receiver::sdk::{
+        deserialize_accumulator_update_data,
+        get_treasury_address,
+        DEFAULT_TREASURY_ID,
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
@@ -177,14 +173,10 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let initialize_pyth_receiver_accounts =
-                pyth_solana_receiver::accounts::Initialize::populate(&payer.pubkey())
-                    .to_account_metas(None);
-            let initialize_pyth_receiver_instruction = Instruction {
-                program_id: pyth_solana_receiver::ID,
-                accounts:   initialize_pyth_receiver_accounts,
-                data:       pyth_solana_receiver::instruction::Initialize {
-                    initial_config: pyth_solana_receiver_sdk::config::Config {
+            let initialize_pyth_receiver_instruction =
+                pyth_solana_receiver::instruction::Initialize::populate(
+                    &payer.pubkey(),
+                    pyth_solana_receiver_sdk::config::Config {
                         governance_authority: payer.pubkey(),
                         target_governance_authority: None,
                         wormhole,
@@ -192,9 +184,7 @@ fn main() -> Result<()> {
                         single_update_fee_in_lamports: fee,
                         minimum_signatures: 5,
                     },
-                }
-                .data(),
-            };
+                );
 
             // We need to send some rent to the treasury account, otherwise it won't be able to accept incoming transfers
             let pay_treasury_rent = system_instruction::transfer(
@@ -262,29 +252,16 @@ pub fn process_post_price_update_atomic(
     let request_compute_units_instruction: Instruction =
         ComputeBudgetInstruction::set_compute_unit_limit(400_000);
 
-
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdateAtomic::populate(
+    let post_update_instruction = pyth_solana_receiver::instruction::PostUpdateAtomic::populate(
         payer.pubkey(),
         payer.pubkey(),
         price_update_keypair.pubkey(),
         *wormhole,
         header.guardian_set_index,
+        serde_wormhole::to_vec(&(header, body)).unwrap(),
+        merkle_price_update.clone(),
         DEFAULT_TREASURY_ID,
-    )
-    .to_account_metas(None);
-
-    let post_update_instruction = Instruction {
-        program_id: pyth_solana_receiver::id(),
-        accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdateAtomic {
-            params: PostUpdateAtomicParams {
-                merkle_price_update: merkle_price_update.clone(),
-                vaa:                 serde_wormhole::to_vec(&(header, body)).unwrap(),
-                treasury_id:         DEFAULT_TREASURY_ID,
-            },
-        }
-        .data(),
-    };
+    );
 
     process_transaction(
         rpc_client,
@@ -472,24 +449,13 @@ pub fn process_write_encoded_vaa_and_post_price_update(
 
     let price_update_keypair = Keypair::new();
 
-    let post_update_accounts = pyth_solana_receiver::accounts::PostUpdate::populate(
+    let post_update_instructions = pyth_solana_receiver::instruction::PostUpdate::populate(
         payer.pubkey(),
         payer.pubkey(),
         encoded_vaa_keypair.pubkey(),
         price_update_keypair.pubkey(),
-    )
-    .to_account_metas(None);
-    let post_update_instructions = Instruction {
-        program_id: pyth_solana_receiver::id(),
-        accounts:   post_update_accounts,
-        data:       pyth_solana_receiver::instruction::PostUpdate {
-            params: PostUpdateParams {
-                merkle_price_update: merkle_price_update.clone(),
-                treasury_id:         DEFAULT_TREASURY_ID,
-            },
-        }
-        .data(),
-    };
+        merkle_price_update.clone(),
+    );
 
     // 2nd transaction
     process_transaction(
