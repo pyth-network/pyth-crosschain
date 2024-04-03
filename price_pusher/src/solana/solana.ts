@@ -53,7 +53,8 @@ export class SolanaPricePusher implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private priceServiceConnection: PriceServiceConnection,
-    private shardId: number
+    private shardId: number,
+    private computeUnitPriceMicroLamports: number
   ) {}
 
   async updatePriceFeed(
@@ -82,9 +83,8 @@ export class SolanaPricePusher implements IPricePusher {
     try {
       await this.pythSolanaReceiver.provider.sendAll(
         await transactionBuilder.buildVersionedTransactions({
-          computeUnitPriceMicroLamports: 50000,
-        }),
-        { skipPreflight: true }
+          computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+        })
       );
       console.log(new Date(), "updatePriceFeed successful");
     } catch (e: any) {

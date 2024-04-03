@@ -729,7 +729,7 @@ function getPriceFeedAccountAddress(
     throw new Error("Feed ID should be 32 bytes long");
   }
   const shardBuffer = Buffer.alloc(2);
-  shardBuffer.writeUInt16BE(shardId, 0);
+  shardBuffer.writeUint16LE(shardId, 0);
 
   return PublicKey.findProgramAddressSync(
     [shardBuffer, feedId],

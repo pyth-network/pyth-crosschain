@@ -30,6 +30,11 @@ export default {
       type: "number",
       required: true,
     } as Options,
+    "compute-unit-price-micro-lamports": {
+      description: "Priority fee per compute unit",
+      type: "number",
+      default: 50000,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -41,6 +46,7 @@ export default {
       endpoint,
       keypairFile,
       shardId,
+      computeUnitPriceMicroLamports,
       priceConfigFile,
       priceServiceEndpoint,
       pythContractAddress,
@@ -86,7 +92,8 @@ export default {
     const solanaPricePusher = new SolanaPricePusher(
       pythSolanaReceiver,
       priceServiceConnection,
-      shardId
+      shardId,
+      computeUnitPriceMicroLamports
     );
     const solanaPriceListener = new SolanaPriceListener(
       pythSolanaReceiver,
