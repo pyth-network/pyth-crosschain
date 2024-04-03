@@ -57,9 +57,8 @@ pub trait EntropyReader: Send + Sync {
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
 
-    /// Simulate a reveal with callback. Returns true if the simulation was successful.
-    /// Returns false if the simulation failed. Returns an error if the simulation could not be
-    /// performed.
+    /// Simulate a reveal with callback. Returns Some(gas) if the estimation was successful.
+    /// Returns None otherwise. Returns an error if the gas could not be estimated.
     async fn estimate_reveal_with_callback_gas(
         &self,
         provider: Address,
