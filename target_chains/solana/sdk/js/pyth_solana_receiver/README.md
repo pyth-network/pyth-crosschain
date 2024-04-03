@@ -17,7 +17,7 @@ In the pure pull model, each price update gets posted to an ephemeral account th
 
 Another way of consuming price updates is via price feed accounts. Price feed accounts are a special type of price update accounts with the following properties:
 
-- They have a static address that can be derived from a feed id and a shard id (the shard id allows multiple sets of price feed accounts to exist) (the address can be derived using `getPriceFeedAccountAddress`)
+- They have a fixed address that can be derived from a feed id and a shard id (the shard id allows for multiple price feed accounts to exist for each price feed) (the address can be derived using `getPriceFeedAccountAddress`)
 - They always contain a price update for the feed id their address is derived from
 - The update they contain can only be replaced by a more recent update
 
