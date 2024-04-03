@@ -47,15 +47,15 @@ const POLL_INTERVAL: Duration = Duration::from_secs(5);
 
 
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
-async fn get_latest_safe_block(chain_config: &BlockchainState) -> BlockNumber {
+async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
     loop {
-        match chain_config
+        match chain_state
             .contract
-            .get_block_number(chain_config.confirmed_block_status)
+            .get_block_number(chain_state.confirmed_block_status)
             .await
         {
             Ok(latest_confirmed_block) => {
-                return latest_confirmed_block - chain_config.reveal_delay_blocks
+                return latest_confirmed_block - chain_state.reveal_delay_blocks
             }
             Err(e) => {
                 tracing::error!("Error while getting block number. error: {:?}", e);
