@@ -34,7 +34,7 @@ pub struct RunOptions {
 
     /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
     /// This key is required to submit transactions for entropy callback requests.
-    /// This key should not have any specific privileges.
+    /// This key should not be a registered provider.
     #[arg(long = "keeper-private-key")]
     #[arg(env = "KEEPER_PRIVATE_KEY")]
     pub keeper_private_key_file: String,
