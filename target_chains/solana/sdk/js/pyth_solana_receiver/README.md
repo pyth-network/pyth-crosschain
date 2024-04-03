@@ -11,7 +11,26 @@ The Pyth Solana Receiver allows users to consume Pyth price updates on a pull ba
 Price updates get posted into price update accounts, owned by the Receiver contract. Once an update has been posted to a price update account, it can be used by anyone by simply passing the price update account as one of the accounts in a Solana instruction.
 Price update accounts can be closed by whoever wrote them to recover the rent.
 
-## Example use
+## Price update accounts vs price feed accounts
+
+In the pure pull model, each price update gets posted to an ephemeral account that can be closed after being consumed to reclaim rent. The SDK exposes this functionality with `addPostPriceUpdates` and `addPostPartiallyVerifiedPriceUpdates`.
+
+Another way of consuming price updates is through the price feed accounts. Price feed accounts are a special type of price update accounts with the following properties:
+
+- They have a static address that can be derived from a feed id and a shard id (the shard id allows multiple sets of price feed accounts to exist) (the address can be derived using `getPriceFeedAccountAddress`)
+- They always contain a price update for the feed id their address is derived from
+- The update they contain can only be replaced by a more recent update
+
+The SDK also allows updating price feed accounts with a more recent update via `addUpdatePriceFeed`.
+
+## Push model
+
+Combining price feed accounts with a scheduler service that pushes that periodically updates the price feed account allows using such price feed account as a push oracle.
+Assuming the scheduler is running, a downstream app can consume the price updates by simply passing the price feed account as an account in a Solana instruction without needing to worry about updating the price feed account.
+
+Check out the [Price Pusher]("../../../../../../../price_pusher/") for an example of a price scheduler.
+
+## Example use (pull model)
 
 ```ts
 import { Connection, PublicKey } from "@solana/web3.js";
