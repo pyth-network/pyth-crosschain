@@ -38,6 +38,7 @@ import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { MyFirstPythApp, IDL } from "./idl/my_first_pyth_app";
 
+// Get the price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 const ETH_PRICE_FEED_ID =
@@ -93,6 +94,7 @@ import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { MyFirstPythApp, IDL } from "./idl/my_first_pyth_app";
 
+// Get the price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 const ETH_PRICE_FEED_ID =
