@@ -6,6 +6,7 @@ import evm from "./evm/command";
 import aptos from "./aptos/command";
 import sui from "./sui/command";
 import near from "./near/command";
+import solana from "./solana/command";
 
 yargs(hideBin(process.argv))
   .config("config")
@@ -15,4 +16,5 @@ yargs(hideBin(process.argv))
   .command(aptos)
   .command(sui)
   .command(near)
+  .command(solana)
   .help().argv;
