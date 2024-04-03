@@ -67,7 +67,7 @@ export type PythTransactionBuilderConfig = {
  *
  * `addPostPriceUpdates` vs `addUpdatePriceFeed`:
  * - `addPostPriceUpdates` is used to post price updates to ephemeral accounts. Use this to post a price update from the present or from the past for your program to consume.
- * - `addUpdatePriceFeed` is used to post price updates to price feed accounts, these are fixed accounts for each feed id that can only be updated with a more recent price update than the one they contain. Their addresses can be found using `getPriceFeedAccountAddress`. Use this to post a recent price update to a shared price feed account.
+ * - `addUpdatePriceFeed` is used to post price updates to price feed accounts, these are fixed accounts for each feed id that can only be updated with a more recent price update than the one they contain. Their addresses can be found using `getPriceFeedAccountAddress`. Use this to update a shared price feed account with a recent price
  *
  * @example
  * ```typescript
@@ -182,7 +182,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Add instructions to update price feed accounts to the builder.
    * Price feed accounts are a special type of price update accounts. Instead of being ephemeral accounts, they are fixed accounts for each feed id that can only be updated with a more recent price update than the one they contain.
-   * Use this function to post a recent price update to a shared price feed account.
+   * Use this function to update a shared price feed account with a recent price
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    * @param shardId the shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
