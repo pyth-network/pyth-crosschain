@@ -80,6 +80,7 @@ export type PythTransactionBuilderConfig = {
  *
  * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
  * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+ * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
  * await transactionBuilder.addPriceConsumerInstructions(...)
  *
  * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
@@ -104,6 +105,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
 
   /**
    * Add instructions to post price updates to the builder.
+   * Use this function to post fully verified price updates from the present or from the past for your program to consume.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    *
@@ -117,6 +119,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *
    * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
    * await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+   * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
    * await transactionBuilder.addPriceConsumerInstructions(...)
    * ```
    */
@@ -138,6 +141,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
 
   /**
    * Add instructions to post partially verified price updates to the builder.
+   * Use this function to post partially verified price updates from the present or from the past for your program to consume.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    *
@@ -154,6 +158,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *
    * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
    * await transactionBuilder.addPostPartiallyVerifiedPriceUpdates(priceUpdateData);
+   * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
    * await transactionBuilder.addPriceConsumerInstructions(...)
    * ...
    * ```
@@ -177,6 +182,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Add instructions to update price feed accounts to the builder.
    * Price feed accounts are a special type of price update accounts. Instead of being ephemeral accounts, they are fixed accounts for each feed id that can only be updated with a more recent price update.
+   * Use this function to post a recent price update to a shared price feed account that multiple programs can use.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
    * @param shardId the shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.

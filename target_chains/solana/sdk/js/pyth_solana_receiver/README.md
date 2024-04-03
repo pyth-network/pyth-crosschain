@@ -61,6 +61,10 @@ const myFirstPythApp = new Program<MyFirstPythApp>(
 
 const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
 await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+console.log(
+  "The SOL/USD price update will get posted to:",
+  transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58()
+);
 await transactionBuilder.addPriceConsumerInstructions(
   async (
     getPriceUpdateAccount: (priceFeedId: string) => PublicKey
