@@ -17,12 +17,18 @@ All of the commands in this section expect to be run from the `contract` directo
 ### Building
 
 You need to have [Foundry](https://getfoundry.sh/) and `node` installed to run this example.
-Once you have installed these tools, run the following commands from the [`contract`](./contract) directory:
+Once you have installed these tools, run the following commands from the [`contract`](./contract) directory to install openzeppelin and forge dependencies:
 
 ```
-forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
-forge install pyth-network/pyth-sdk-solidity@v2.2.0 --no-git --no-commit
+forge install foundry-rs/forge-std@v1.8.0 --no-git --no-commit
 forge install OpenZeppelin/openzeppelin-contracts@v4.8.1 --no-git --no-commit
+```
+
+After installing the above dependencies, you need to install pyth-sdk-solidity.
+
+```
+npm init -y
+npm install @pythnetwork/pyth-sdk-solidity
 ```
 
 ### Testing
