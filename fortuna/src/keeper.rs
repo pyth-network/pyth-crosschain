@@ -172,6 +172,11 @@ pub async fn process_event(
     match gas_estimate_res {
         Ok(gas_estimate_option) => match gas_estimate_option {
             Some(gas_estimate) => {
+                // Pad the gas estimate by 33%
+                let (gas_estimate, _) = gas_estimate
+                    .saturating_mul(U256::from(4))
+                    .div_mod(U256::from(3));
+
                 if gas_estimate > gas_limit {
                     tracing::error!(
                         "Gas estimate for reveal with callback is higher than the gas limit for chain: {}",
