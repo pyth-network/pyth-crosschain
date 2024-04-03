@@ -62,6 +62,19 @@ const EXTENDED_ENTROPY_ABI = [
     stateMutability: "pure",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+    ],
+    name: "upgradeTo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   ...EntropyAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 const EXTENDED_PYTH_ABI = [
@@ -478,6 +491,18 @@ export class EvmEntropyContract extends Storable {
     const contract = this.getContract();
     const data = contract.methods.acceptOwnership().encodeABI();
     return this.generateExecutorPayload(newOwner, this.address, data);
+  }
+
+  async generateUpgradeEntropyContractPayload(
+    newImplementation: string
+  ): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.upgradeTo(newImplementation).encodeABI();
+    return this.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data
+    );
   }
 
   // Generates a payload to upgrade the executor contract, the owner of entropy contracts
