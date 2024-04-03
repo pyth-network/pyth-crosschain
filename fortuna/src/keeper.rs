@@ -65,7 +65,8 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
     }
 }
 
-
+/// Run threads to handle events for the last `BACKLOG_RANGE` blocks. Watch for new blocks and
+/// handle any events for the new blocks.
 pub async fn run_keeper_threads(
     private_key: String,
     chain_eth_config: EthereumConfig,
@@ -89,6 +90,7 @@ pub async fn run_keeper_threads(
 
     let backlog_chain_state = chain_state.clone();
     let backlog_contract = contract.clone();
+    // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     spawn(async move {
         let from_block = latest_safe_block.saturating_sub(BACKLOG_RANGE);
         process_block_range(
@@ -110,6 +112,7 @@ pub async fn run_keeper_threads(
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
 
     let watch_blocks_chain_state = chain_state.clone();
+    // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(async move {
         loop {
             if let Err(e) = watch_blocks(
@@ -129,6 +132,7 @@ pub async fn run_keeper_threads(
             }
         }
     });
+    // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
     spawn(process_new_blocks(
         chain_state.clone(),
         rx,
@@ -137,6 +141,11 @@ pub async fn run_keeper_threads(
     ));
 }
 
+
+// Process an event for a chain. It estimates the gas for the reveal with callback and
+// submits the transaction if the gas estimate is below the gas limit.
+// It will return an Error if the gas estimation failed with a provider error or if the
+// reveal with callback failed with a provider error.
 pub async fn process_event(
     event: RequestedWithCallbackEvent,
     chain_config: &BlockchainState,
@@ -234,7 +243,8 @@ pub async fn process_event(
 }
 
 
-/// Process a range of blocks for a chain. Retry internally if there is an error.
+/// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
+/// and then try to process them one by one. If the process fails, it will retry indefinitely.
 pub async fn process_block_range(
     block_range: BlockRange,
     contract: Arc<SignablePythContract>,
@@ -307,6 +317,10 @@ pub struct BlockRange {
     pub to:   BlockNumber,
 }
 
+/// Watch for new blocks and send the range of blocks for which events have not been handled to the `tx` channel.
+/// We are subscribing to new blocks instead of events. If we miss some blocks, it will be fine as we are sending
+/// block ranges to the `tx` channel. If we have subscribed to events, we could have missed those and won't even
+/// know about it.
 pub async fn watch_blocks(
     chain_state: BlockchainState,
     latest_safe_block: BlockNumber,
@@ -368,7 +382,7 @@ pub async fn watch_blocks(
     }
 }
 
-/// Handles events for a specific blockchain chain.
+/// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
