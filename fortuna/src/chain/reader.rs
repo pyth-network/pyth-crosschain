@@ -4,6 +4,7 @@ use {
     ethers::types::{
         Address,
         BlockNumber as EthersBlockNumber,
+        U256,
     },
 };
 
@@ -32,6 +33,13 @@ impl Into<EthersBlockNumber> for BlockStatus {
     }
 }
 
+#[derive(Clone)]
+pub struct RequestedWithCallbackEvent {
+    pub sequence_number:    u64,
+    pub user_random_number: [u8; 32],
+    pub provider_address:   Address,
+}
+
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
 pub trait EntropyReader: Send + Sync {
@@ -42,6 +50,22 @@ pub trait EntropyReader: Send + Sync {
         -> Result<Option<Request>>;
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
+
+    async fn get_request_with_callback_events(
+        &self,
+        from_block: BlockNumber,
+        to_block: BlockNumber,
+    ) -> Result<Vec<RequestedWithCallbackEvent>>;
+
+    /// Simulate a reveal with callback. Returns Some(gas) if the estimation was successful.
+    /// Returns None otherwise. Returns an error if the gas could not be estimated.
+    async fn estimate_reveal_with_callback_gas(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+    ) -> Result<Option<U256>>;
 }
 
 /// An in-flight request stored in the contract.
@@ -68,7 +92,10 @@ pub mod mock {
         },
         anyhow::Result,
         axum::async_trait,
-        ethers::types::Address,
+        ethers::types::{
+            Address,
+            U256,
+        },
         std::sync::RwLock,
     };
 
@@ -146,6 +173,24 @@ pub mod mock {
             confirmed_block_status: BlockStatus,
         ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
+        }
+
+        async fn get_request_with_callback_events(
+            &self,
+            _from_block: BlockNumber,
+            _to_block: BlockNumber,
+        ) -> Result<Vec<super::RequestedWithCallbackEvent>> {
+            Ok(vec![])
+        }
+
+        async fn estimate_reveal_with_callback_gas(
+            &self,
+            provider: Address,
+            sequence_number: u64,
+            user_random_number: [u8; 32],
+            provider_revelation: [u8; 32],
+        ) -> Result<Option<U256>> {
+            Ok(Some(U256::from(5)))
         }
     }
 }

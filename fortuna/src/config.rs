@@ -18,7 +18,10 @@ use {
         Args,
         Parser,
     },
-    ethers::types::Address,
+    ethers::types::{
+        Address,
+        U256,
+    },
     std::{
         collections::HashMap,
         fs,
@@ -131,6 +134,9 @@ pub struct EthereumConfig {
     /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
     pub geth_rpc_addr: String,
 
+    /// URL of a Geth RPC wss endpoint to use for subscribing to blockchain events.
+    pub geth_rpc_wss: Option<String>,
+
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
 
@@ -148,4 +154,7 @@ pub struct EthereumConfig {
     /// For example, Finalized, Safe, Latest
     #[serde(default)]
     pub confirmed_block_status: BlockStatus,
+
+    /// The gas limit to use for entropy callback transactions.
+    pub gas_limit: U256,
 }

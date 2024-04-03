@@ -3,9 +3,13 @@ use {
         ConfigOptions,
         RandomnessOptions,
     },
+    anyhow::Result,
     clap::Args,
     ethers::types::Address,
-    std::net::SocketAddr,
+    std::{
+        fs,
+        net::SocketAddr,
+    },
 };
 
 /// Run the webservice
@@ -27,4 +31,17 @@ pub struct RunOptions {
     #[arg(long = "provider")]
     #[arg(env = "FORTUNA_PROVIDER")]
     pub provider: Address,
+
+    /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
+    /// This key is required to submit transactions for entropy callback requests.
+    /// This key should not be a registered provider.
+    #[arg(long = "keeper-private-key")]
+    #[arg(env = "KEEPER_PRIVATE_KEY")]
+    pub keeper_private_key_file: String,
+}
+
+impl RunOptions {
+    pub fn load_private_key(&self) -> Result<String> {
+        return Ok((fs::read_to_string(&self.keeper_private_key_file))?);
+    }
 }
