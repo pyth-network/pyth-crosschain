@@ -66,8 +66,8 @@ export type PythTransactionBuilderConfig = {
  * - (Optionally) Close price update and encoded vaa accounts to recover the rent (`closeUpdateAccounts` in `PythTransactionBuilderConfig`)
  *
  * `addPostPriceUpdates` vs `addUpdatePriceFeed`:
- * - `addPostPriceUpdates` is used to post price updates to ephemeral accounts.
- * - `addUpdatePriceFeed` is used to post price updates to price feed accounts, they are fixed accounts for each feed id that can only be updated with a more recent price update. Their addesses can be found using `getPriceFeedAccountAddress`
+ * - `addPostPriceUpdates` is used to post price updates to ephemeral accounts. Use this to post a price update from the present or from the past for your program to consume.
+ * - `addUpdatePriceFeed` is used to post price updates to price feed accounts, they are fixed accounts for each feed id that can only be updated with a more recent price update. Their addresses can be found using `getPriceFeedAccountAddress`. Use this to post a recent price update to a shared price feed account that multiple programs can use.
  *
  * @example
  * ```typescript
