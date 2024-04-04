@@ -186,11 +186,11 @@ export class CosmWasmChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
+      parsed.nativeToken,
       parsed.endpoint,
       parsed.gasPrice,
       parsed.prefix,
-      parsed.feeDenom,
-      parsed.nativeToken
+      parsed.feeDenom
     );
   }
 
