@@ -219,7 +219,8 @@ export class MultisigVault {
   public async proposeWormholeMultipleMessagesWithPayer(
     payloads: Buffer[],
     messagePayer: PublicKey,
-    proposalAddress?: PublicKey
+    proposalAddress?: PublicKey,
+    priorityFeeConfig: PriorityFeeConfig = {}
   ): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
@@ -267,7 +268,7 @@ export class MultisigVault {
 
     const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
       ixToSend,
-      {}
+      priorityFeeConfig
     );
     await this.sendAllTransactions(txToSend);
     return proposalAddress;
