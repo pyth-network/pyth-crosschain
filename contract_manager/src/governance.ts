@@ -33,6 +33,7 @@ import {
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { KeyValueConfig, Storable } from "./base";
+import { PriorityFeeConfig } from "@pythnetwork/solana-utils";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -343,7 +344,8 @@ export class Vault extends Storable {
    */
   public async proposeWormholeMessage(
     payloads: Buffer[],
-    proposalAddress?: PublicKey
+    proposalAddress?: PublicKey,
+    priorityFeeConfig: PriorityFeeConfig = {}
   ): Promise<WormholeMultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
@@ -356,7 +358,8 @@ export class Vault extends Storable {
       await multisigVault.proposeWormholeMultipleMessagesWithPayer(
         payloads,
         squad.wallet.publicKey,
-        proposalAddress
+        proposalAddress,
+        priorityFeeConfig
       );
     return new WormholeMultisigProposal(txAccount, squad, this.cluster);
   }
