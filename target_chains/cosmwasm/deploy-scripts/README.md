@@ -4,7 +4,7 @@
 2. If the wormhole contract is not deployed on the target chain run the following command:
 
    ```
-   npm run instantiate-wormhole -- --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain id>
+   npm run instantiate-wormhole -- --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain>
    ```
 
    You can re-build the wormhole contract using the scripts given in `wormhole-stub`.
@@ -13,7 +13,8 @@
 3. Deploy the pyth contract:
 
    ```
-   npm run instantiate-pyth --contract-version <X.Y.Z> --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge>
+   npm run instantiate-pyth --contract-version <X.Y.Z> --private-key <YOUR_PRIVATE_KEY_HEX> \
+       --deploy <stable or edge> --wormhole <WORMHOLE_CONTRACT_ADDRESS> --chain <chain>
    ```
 
 4. You can test the new contract via contract manager scripts like this:

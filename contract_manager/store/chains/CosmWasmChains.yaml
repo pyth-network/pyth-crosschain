@@ -66,3 +66,11 @@
   prefix: juno
   feeDenom: ujunox
   type: CosmWasmChain
+- endpoint: http://18.199.53.161:26657
+  id: rol_testnet
+  wormholeChainName: rol_testnet
+  mainnet: false
+  gasPrice: "0.025"
+  prefix: rol
+  feeDenom: urax
+  type: CosmWasmChain

@@ -40,3 +40,6 @@
 - chain: neutron_testnet_pion_1
   address: neutron16zwrmx3zgggmxhzau86xfycm42cr4sj888hdvzsxya3qarp6zhhqzhlkvz
   type: CosmWasmPriceFeedContract
+- chain: rol_testnet
+  address: rol1pvrwmjuusn9wh34j7y520g8gumuy9xtl3gvprlljfdpwju3x7ucszdyfs8
+  type: CosmWasmPriceFeedContract
