@@ -88,7 +88,7 @@ export class SolanaPricePusher implements IPricePusher {
         await transactionBuilder.buildVersionedTransactions({
           computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
         }),
-        { preflightCommitment: "processed" }
+        { skipPreflight: true }
       );
       console.log(new Date(), "updatePriceFeed successful");
     } catch (e: any) {
