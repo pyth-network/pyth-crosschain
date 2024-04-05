@@ -76,7 +76,7 @@ export class SolanaPricePusher implements IPricePusher {
     }
 
     const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
-      closeUpdateAccounts: false,
+      closeUpdateAccounts: true,
     });
     transactionBuilder.addUpdatePriceFeed(priceFeedUpdateData, this.shardId);
 
