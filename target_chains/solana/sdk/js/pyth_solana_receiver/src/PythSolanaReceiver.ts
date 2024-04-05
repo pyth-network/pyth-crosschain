@@ -728,14 +728,6 @@ export class PythSolanaReceiver {
     shardId: number,
     priceFeedId: Buffer | string
   ): PublicKey {
-    if (typeof priceFeedId == "string") {
-      if (priceFeedId.startsWith("0x")) {
-        priceFeedId = Buffer.from(priceFeedId.slice(2), "hex");
-      } else {
-        priceFeedId = Buffer.from(priceFeedId, "hex");
-      }
-    }
-
     return getPriceFeedAccountForProgram(
       shardId,
       priceFeedId,
@@ -753,17 +745,25 @@ export class PythSolanaReceiver {
  */
 function getPriceFeedAccountForProgram(
   shardId: number,
-  feedId: Buffer,
+  priceFeedId: Buffer | string,
   pushOracleProgramId?: PublicKey
 ): PublicKey {
-  if (feedId.length != 32) {
+  if (typeof priceFeedId == "string") {
+    if (priceFeedId.startsWith("0x")) {
+      priceFeedId = Buffer.from(priceFeedId.slice(2), "hex");
+    } else {
+      priceFeedId = Buffer.from(priceFeedId, "hex");
+    }
+  }
+
+  if (priceFeedId.length != 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
   const shardBuffer = Buffer.alloc(2);
   shardBuffer.writeUint16LE(shardId, 0);
 
   return PublicKey.findProgramAddressSync(
-    [shardBuffer, feedId],
+    [shardBuffer, priceFeedId],
     pushOracleProgramId ?? DEFAULT_PUSH_ORACLE_PROGRAM_ID
   )[0];
 }
