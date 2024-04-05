@@ -111,7 +111,7 @@ export function getSizeOfTransaction(
       [...accounts].filter((account) => !lookupTableAddresses.includes(account))
     );
     accounts = new Set([...accounts, ...programs, ...signers]);
-    numberOfAddressLookups = totalNumberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are neither signers or programs
+    numberOfAddressLookups = totalNumberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are neither signers nor programs
   }
 
   return (
