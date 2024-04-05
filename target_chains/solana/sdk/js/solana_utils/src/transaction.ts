@@ -149,7 +149,7 @@ export class TransactionBuilder {
   }[] = [];
   readonly payer: PublicKey;
   readonly connection: Connection;
-  readonly accountLookupTable: AddressLookupTableAccount | undefined;
+  readonly addressLookupTable: AddressLookupTableAccount | undefined;
 
   /** Make a new `TransactionBuilder`. It requires a `payer` to populate the `payerKey` field and a connection to populate `recentBlockhash` in the versioned transactions. */
   constructor(
@@ -159,7 +159,7 @@ export class TransactionBuilder {
   ) {
     this.payer = payer;
     this.connection = connection;
-    this.accountLookupTable = accountLookupTable;
+    this.addressLookupTable = accountLookupTable;
   }
 
   /**
@@ -174,11 +174,16 @@ export class TransactionBuilder {
         computeUnits: computeUnits ?? 0,
       });
     } else if (
-      getSizeOfTransaction([
-        ...this.transactionInstructions[this.transactionInstructions.length - 1]
-          .instructions,
-        instruction,
-      ]) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
+      getSizeOfTransaction(
+        [
+          ...this.transactionInstructions[
+            this.transactionInstructions.length - 1
+          ].instructions,
+          instruction,
+        ],
+        true,
+        this.addressLookupTable
+      ) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
     ) {
       this.transactionInstructions[
         this.transactionInstructions.length - 1
@@ -238,7 +243,9 @@ export class TransactionBuilder {
               recentBlockhash: blockhash,
               instructions: instructionsWithComputeBudget,
               payerKey: this.payer,
-            }).compileToV0Message()
+            }).compileToV0Message(
+              this.addressLookupTable ? [this.addressLookupTable] : []
+            )
           ),
           signers: signers,
         };
@@ -297,9 +304,14 @@ export class TransactionBuilder {
     payer: PublicKey,
     connection: Connection,
     instructions: InstructionWithEphemeralSigners[],
-    priorityFeeConfig: PriorityFeeConfig
+    priorityFeeConfig: PriorityFeeConfig,
+    addressLookupTable?: AddressLookupTableAccount
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const transactionBuilder = new TransactionBuilder(payer, connection);
+    const transactionBuilder = new TransactionBuilder(
+      payer,
+      connection,
+      addressLookupTable
+    );
     transactionBuilder.addInstructions(instructions);
     return transactionBuilder.buildVersionedTransactions(priorityFeeConfig);
   }
