@@ -1,5 +1,4 @@
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import { program } from "@coral-xyz/anchor/dist/cjs/native/system";
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
@@ -64,7 +63,7 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
  * - A compact array of instructions
  *
  * If the transaction is a `VersionedTransaction`, it also contains an extra byte at the beginning, indicating the version and an array of `MessageAddressTableLookup` at the end.
- * We don't support Account Lookup Tables, so that array has a size of 0.
+ * After this field there is an array of indexes into the address lookup tables that represents the accounts from the address lookup table used in the transaction.
  *
  * Each instruction has the following layout :
  * - One byte indicating the index of the program in the account addresses array
@@ -74,7 +73,7 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
 export function getSizeOfTransaction(
   instructions: TransactionInstruction[],
   versionedTransaction = true,
-  accountLookupTable?: AddressLookupTableAccount
+  addressLookupTable?: AddressLookupTableAccount
 ): number {
   const programs = new Set<string>();
   const signers = new Set<string>();
@@ -102,17 +101,17 @@ export function getSizeOfTransaction(
     )
     .reduce((a, b) => a + b, 0);
 
-  let numberOfAccountLookups = 0;
-  if (accountLookupTable) {
-    const lookupTableAddresses = accountLookupTable.state.addresses.map(
+  let numberOfAddressLookups = 0;
+  if (addressLookupTable) {
+    const lookupTableAddresses = addressLookupTable.state.addresses.map(
       (address) => address.toBase58()
     );
-    const numberOfAccounts = accounts.size;
+    const totalNumberOfAccounts = accounts.size;
     accounts = new Set(
       [...accounts].filter((account) => !lookupTableAddresses.includes(account))
     );
     accounts = new Set([...accounts, ...programs, ...signers]);
-    numberOfAccountLookups = numberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are not signers or programs
+    numberOfAddressLookups = totalNumberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are neither signers or programs
   }
 
   return (
@@ -125,9 +124,9 @@ export function getSizeOfTransaction(
     getSizeOfCompressedU16(instructions.length) +
     instruction_sizes + // array of instructions
     (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) + // transaction version and number of address lookup tables
-    (versionedTransaction && accountLookupTable ? 32 : 0) + // address lookup table address
-    (versionedTransaction && accountLookupTable ? 2 : 0) + // address lookup indexes length
-    numberOfAccountLookups // address lookup indexes
+    (versionedTransaction && addressLookupTable ? 32 : 0) + // address lookup table address (we only support 1 address lookup table)
+    (versionedTransaction && addressLookupTable ? 2 : 0) + // number of address lookup indexes
+    numberOfAddressLookups // address lookup indexes
   );
 }
 
