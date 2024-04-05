@@ -1,5 +1,7 @@
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import { program } from "@coral-xyz/anchor/dist/cjs/native/system";
 import {
+  AddressLookupTableAccount,
   ComputeBudgetProgram,
   ConfirmOptions,
   Connection,
@@ -71,13 +73,16 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
  */
 export function getSizeOfTransaction(
   instructions: TransactionInstruction[],
-  versionedTransaction = true
+  versionedTransaction = true,
+  accountLookupTable?: AddressLookupTableAccount
 ): number {
+  const programs = new Set<string>();
   const signers = new Set<string>();
-  const accounts = new Set<string>();
+  let accounts = new Set<string>();
 
   instructions.map((ix) => {
-    accounts.add(ix.programId.toBase58()),
+    programs.add(ix.programId.toBase58()),
+      accounts.add(ix.programId.toBase58()),
       ix.keys.map((key) => {
         if (key.isSigner) {
           signers.add(key.pubkey.toBase58());
@@ -97,6 +102,19 @@ export function getSizeOfTransaction(
     )
     .reduce((a, b) => a + b, 0);
 
+  let numberOfAccountLookups = 0;
+  if (accountLookupTable) {
+    const lookupTableAddresses = accountLookupTable.state.addresses.map(
+      (address) => address.toBase58()
+    );
+    const numberOfAccounts = accounts.size;
+    accounts = new Set(
+      [...accounts].filter((account) => !lookupTableAddresses.includes(account))
+    );
+    accounts = new Set([...accounts, ...programs, ...signers]);
+    numberOfAccountLookups = numberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are not signers or programs
+  }
+
   return (
     getSizeOfCompressedU16(signers.size) +
     signers.size * 64 + // array of signatures
@@ -106,7 +124,10 @@ export function getSizeOfTransaction(
     32 + // recent blockhash
     getSizeOfCompressedU16(instructions.length) +
     instruction_sizes + // array of instructions
-    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) // we don't support Account Lookup Tables
+    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) + // transaction version and number of address lookup tables
+    (versionedTransaction && accountLookupTable ? 32 : 0) + // address lookup table address
+    (versionedTransaction && accountLookupTable ? 2 : 0) + // address lookup indexes length
+    numberOfAccountLookups // address lookup indexes
   );
 }
 
@@ -129,11 +150,17 @@ export class TransactionBuilder {
   }[] = [];
   readonly payer: PublicKey;
   readonly connection: Connection;
+  readonly accountLookupTable: AddressLookupTableAccount | undefined;
 
   /** Make a new `TransactionBuilder`. It requires a `payer` to populate the `payerKey` field and a connection to populate `recentBlockhash` in the versioned transactions. */
-  constructor(payer: PublicKey, connection: Connection) {
+  constructor(
+    payer: PublicKey,
+    connection: Connection,
+    accountLookupTable?: AddressLookupTableAccount
+  ) {
     this.payer = payer;
     this.connection = connection;
+    this.accountLookupTable = accountLookupTable;
   }
 
   /**
