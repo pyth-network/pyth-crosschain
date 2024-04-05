@@ -83,7 +83,6 @@ it("Unit test for getSizeOfTransaction", async () => {
     getSizeOfTransaction(ixsToSend)
   );
 
-  console.log(getSizeOfTransaction(ixsToSend));
   const addressLookupTable: AddressLookupTableAccount =
     new AddressLookupTableAccount({
       key: PublicKey.unique(),
@@ -100,8 +99,6 @@ it("Unit test for getSizeOfTransaction", async () => {
         ],
       },
     });
-
-  console.log(addressLookupTable.state.addresses.map((key) => key.toBase58()));
 
   const versionedTransactionWithAlt = new VersionedTransaction(
     new TransactionMessage({
