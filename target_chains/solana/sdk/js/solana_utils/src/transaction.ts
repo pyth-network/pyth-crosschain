@@ -63,7 +63,7 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
  * - A compact array of instructions
  *
  * If the transaction is a `VersionedTransaction`, it also contains an extra byte at the beginning, indicating the version and an array of `MessageAddressTableLookup` at the end.
- * After this field there is an array of indexes into the address lookup tables that represents the accounts from the address lookup table used in the transaction.
+ * After this field there is an array of indexes into the address lookup table that represents the accounts from the address lookup table used in the transaction.
  *
  * Each instruction has the following layout :
  * - One byte indicating the index of the program in the account addresses array
@@ -80,14 +80,14 @@ export function getSizeOfTransaction(
   let accounts = new Set<string>();
 
   instructions.map((ix) => {
-    programs.add(ix.programId.toBase58()),
-      accounts.add(ix.programId.toBase58()),
-      ix.keys.map((key) => {
-        if (key.isSigner) {
-          signers.add(key.pubkey.toBase58());
-        }
-        accounts.add(key.pubkey.toBase58());
-      });
+    programs.add(ix.programId.toBase58());
+    accounts.add(ix.programId.toBase58());
+    ix.keys.map((key) => {
+      if (key.isSigner) {
+        signers.add(key.pubkey.toBase58());
+      }
+      accounts.add(key.pubkey.toBase58());
+    });
   });
 
   const instruction_sizes: number = instructions
