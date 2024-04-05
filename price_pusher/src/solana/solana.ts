@@ -78,13 +78,17 @@ export class SolanaPricePusher implements IPricePusher {
     const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
       closeUpdateAccounts: true,
     });
-    transactionBuilder.addUpdatePriceFeed(priceFeedUpdateData, this.shardId);
+    await transactionBuilder.addUpdatePriceFeed(
+      priceFeedUpdateData,
+      this.shardId
+    );
 
     try {
       await this.pythSolanaReceiver.provider.sendAll(
         await transactionBuilder.buildVersionedTransactions({
           computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
-        })
+        }),
+        { skipPreflight: true }
       );
       console.log(new Date(), "updatePriceFeed successful");
     } catch (e: any) {
