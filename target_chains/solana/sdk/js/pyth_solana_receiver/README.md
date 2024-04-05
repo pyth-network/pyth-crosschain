@@ -149,7 +149,7 @@ The address of the price feed accounts can be derived automatically from the fee
 
 ```typescript
 const solUsdPriceFeedAccount = pythSolanaReceiver
-  .getPriceFeedAccountAddress(SOL_PRICE_FEED_ID, 1)
+  .getPriceFeedAccountAddress(1, SOL_PRICE_FEED_ID)
   .toBase58();
 ```
 

@@ -6,6 +6,7 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
+import os from "os";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -17,11 +18,11 @@ let keypairFile = "";
 if (process.env["SOLANA_KEYPAIR"]) {
   keypairFile = process.env["SOLANA_KEYPAIR"];
 } else {
-  keypairFile = "~/.config/solana/id.json";
+  keypairFile = `${os.homedir()}/.config/solana/id.json`;
 }
 
 async function main() {
-  const connection = new Connection("https://api.mainnet-beta.solana.com");
+  const connection = new Connection("https://api.devnet.solana.com");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
@@ -49,7 +50,9 @@ async function main() {
     [...postInstructions, ...consumerInstructions, ...closeInstructions],
     { computeUnitPriceMicroLamports: 1000000 }
   ); // Put all the instructions together
-  await pythSolanaReceiver.provider.sendAll(transactions);
+  await pythSolanaReceiver.provider.sendAll(transactions, {
+    preflightCommitment: "processed",
+  });
 }
 
 // Fetch price update data from Hermes

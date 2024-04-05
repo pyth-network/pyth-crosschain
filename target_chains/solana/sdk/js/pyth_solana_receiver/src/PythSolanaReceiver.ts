@@ -725,8 +725,19 @@ export class PythSolanaReceiver {
    * @param priceFeedId The price feed ID.
    * @returns The address of the price feed account
    */
-  getPriceFeedAccountAddress(shardId: number, priceFeedId: Buffer): PublicKey {
-    return getPriceFeedAccountAddressHelper(
+  getPriceFeedAccountAddress(
+    shardId: number,
+    priceFeedId: Buffer | string
+  ): PublicKey {
+    if (typeof priceFeedId == "string") {
+      if (priceFeedId.startsWith("0x")) {
+        priceFeedId = Buffer.from(priceFeedId.slice(2), "hex");
+      } else {
+        priceFeedId = Buffer.from(priceFeedId, "hex");
+      }
+    }
+
+    return getPriceFeedAccountForProgram(
       shardId,
       priceFeedId,
       this.pushOracle.programId
@@ -741,7 +752,7 @@ export class PythSolanaReceiver {
  * @param pushOracleProgramId The program ID of the Pyth Push Oracle program. If not provided, the default deployment will be used.
  * @returns The address of the price feed account
  */
-function getPriceFeedAccountAddressHelper(
+function getPriceFeedAccountForProgram(
   shardId: number,
   feedId: Buffer,
   pushOracleProgramId?: PublicKey
