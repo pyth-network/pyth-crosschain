@@ -1,3 +1,4 @@
+pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
@@ -18,7 +19,6 @@ use {
         wire::{
             from_slice,
             v1::{
-                MerklePriceUpdate,
                 WormholeMessage,
                 WormholePayload,
             },
@@ -52,7 +52,6 @@ declare_id!(pyth_solana_receiver_sdk::ID);
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
-
 
     pub fn initialize(ctx: Context<Initialize>, initial_config: Config) -> Result<()> {
         require!(
@@ -89,7 +88,6 @@ pub mod pyth_solana_receiver {
         config.target_governance_authority = None;
         Ok(())
     }
-
 
     pub fn set_data_sources(
         ctx: Context<Governance>,
@@ -211,7 +209,6 @@ pub mod pyth_solana_receiver {
             vaa.payload().as_ref(),
             &params.merkle_price_update,
         )?;
-
 
         Ok(())
     }
@@ -353,7 +350,6 @@ pub struct PostUpdateParams {
     pub treasury_id:         u8,
 }
 
-
 fn deserialize_guardian_set_checked(
     account_info: &AccountInfo<'_>,
     wormhole: &Pubkey,
@@ -383,7 +379,6 @@ fn deserialize_guardian_set_checked(
 
     Ok(guardian_set)
 }
-
 
 struct VaaComponents {
     verification_level: VerificationLevel,
