@@ -1,7 +1,7 @@
 //! This module contains the global state of the application.
 
 use {
-    self::cache::Cache,
+    self::cache::CacheState,
     crate::{
         aggregate::{
             AggregateState,
@@ -31,7 +31,7 @@ pub mod cache;
 pub struct State {
     /// Storage is a short-lived cache of the state of all the updates that have been passed to the
     /// store.
-    pub cache: Cache,
+    pub cache: CacheState,
 
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
@@ -64,7 +64,7 @@ impl State {
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
-            cache: Cache::new(cache_size),
+            cache: CacheState::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             api_update_tx: update_tx,

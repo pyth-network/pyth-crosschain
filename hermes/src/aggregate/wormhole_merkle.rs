@@ -7,7 +7,7 @@ use {
     crate::{
         network::wormhole::VaaBytes,
         state::cache::{
-            AggregateCache,
+            Cache,
             MessageState,
         },
     },
@@ -70,14 +70,14 @@ impl From<MessageState> for RawMessageWithMerkleProof {
 }
 
 pub async fn store_wormhole_merkle_verified_message<S>(
-    store: &S,
+    state: &S,
     root: WormholeMerkleRoot,
     vaa: VaaBytes,
 ) -> Result<()>
 where
-    S: AggregateCache,
+    S: Cache,
 {
-    store
+    state
         .store_wormhole_merkle_state(WormholeMerkleState { root, vaa })
         .await?;
     Ok(())
