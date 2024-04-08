@@ -50,6 +50,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.post("/api/propose", async (req: Request, res: Response) => {
+  console.log("INSIDE /api/propose");
   try {
     const instructions: TransactionInstruction[] = req.body.instructions.map(
       (ix: any) =>

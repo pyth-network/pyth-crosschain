@@ -401,9 +401,9 @@ const Proposal = ({
           squads.connection
         )
         builder.addInstruction({ instruction, signers: [] })
-        const versionedTxs = await builder.buildVersionedTransactions(
-          DEFAULT_PRIORITY_FEE_CONFIG
-        )
+        const versionedTxs = await builder.buildVersionedTransactions({
+          computeUnitPriceMicroLamports: 150000,
+        })
         await sendTransactions(
           versionedTxs,
           squads.connection,

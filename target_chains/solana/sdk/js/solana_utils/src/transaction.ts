@@ -11,6 +11,9 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
+import bs58 from "bs58";
+
+const TX_RETRY_INTERVAL = 1000;
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
@@ -186,18 +189,20 @@ export class TransactionBuilder {
   async buildVersionedTransactions(
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
+    const blockhash = (
+      await this.connection.getLatestBlockhash({ commitment: "confirmed" })
+    ).blockhash;
 
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
-        if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
-          instructionsWithComputeBudget.push(
-            ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
-          );
-        }
+        // if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
+        instructionsWithComputeBudget.push(
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 40000 })
+        );
+        // }
         if (args.computeUnitPriceMicroLamports) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
@@ -233,6 +238,7 @@ export class TransactionBuilder {
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
             }),
+            ComputeBudgetProgram.setComputeUnitLimit({ units: 40000 }),
           ]
         : instructions;
 
@@ -295,6 +301,12 @@ export class TransactionBuilder {
   }
 }
 
+export const isVersionedTransaction = (
+  tx: Transaction | VersionedTransaction
+): tx is VersionedTransaction => {
+  return "version" in tx;
+};
+
 /**
  * Send a set of transactions to the network
  */
@@ -307,10 +319,108 @@ export async function sendTransactions(
   wallet: Wallet,
   opts?: ConfirmOptions
 ) {
-  if (opts === undefined) {
-    opts = AnchorProvider.defaultOptions();
-  }
+  const blockhashResult = await connection.getLatestBlockhash({
+    commitment: "confirmed",
+  });
 
-  const provider = new AnchorProvider(connection, wallet, opts);
-  await provider.sendAll(transactions);
+  for (let transaction of transactions) {
+    let { tx, signers } = transaction;
+
+    if (isVersionedTransaction(tx)) {
+      if (signers) {
+        tx.sign(signers);
+      }
+    } else {
+      tx.feePayer = tx.feePayer ?? wallet.publicKey;
+      tx.recentBlockhash = blockhashResult.blockhash;
+
+      if (signers) {
+        for (const signer of signers) {
+          tx.partialSign(signer);
+        }
+      }
+    }
+
+    tx = await wallet.signTransaction(tx);
+
+    let txSendAttempts = 1;
+
+    // In the following section, we wait and constantly check for the transaction to be confirmed
+    // and resend the transaction if it is not confirmed within a certain time interval
+    // thus handling tx retries on the client side rather than relying on the RPC
+    let confirmTransactionPromise = null;
+    let confirmedTx = null;
+
+    try {
+      // Send and wait confirmation (subscribe on confirmation before sending)
+      console.log(
+        `${new Date().toISOString()} Subscribing to transaction confirmation`
+      );
+
+      const txSignature = bs58.encode(
+        isVersionedTransaction(tx)
+          ? tx.signatures?.[0] || new Uint8Array()
+          : tx.signature ?? new Uint8Array()
+      );
+
+      // confirmTransaction throws error, handle it
+      confirmTransactionPromise = connection.confirmTransaction(
+        {
+          signature: txSignature,
+          blockhash: blockhashResult.blockhash,
+          lastValidBlockHeight: blockhashResult.lastValidBlockHeight,
+        },
+        "confirmed"
+      );
+
+      console.log(
+        `${new Date().toISOString()} Sending Transaction ${txSignature}`
+      );
+      await connection.sendRawTransaction(tx.serialize(), {
+        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+        skipPreflight: true,
+        // Setting max retries to 0 as we are handling retries manually
+        // Set this manually so that the default is skipped
+        maxRetries: 0,
+      });
+
+      confirmedTx = null;
+      while (!confirmedTx) {
+        confirmedTx = await Promise.race([
+          confirmTransactionPromise,
+          new Promise((resolve) =>
+            setTimeout(() => {
+              resolve(null);
+            }, TX_RETRY_INTERVAL)
+          ),
+        ]);
+        if (confirmedTx) {
+          break;
+        }
+
+        console.log(
+          `${new Date().toISOString()} Tx not confirmed after ${
+            TX_RETRY_INTERVAL * txSendAttempts++
+          }ms, resending`
+        );
+
+        await connection.sendRawTransaction(tx.serialize(), {
+          // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+          // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+          skipPreflight: true,
+          // Setting max retries to 0 as we are handling retries manually
+          // Set this manually so that the default is skipped
+          maxRetries: 0,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    if (!confirmedTx) {
+      console.log(`${new Date().toISOString()} Transaction failed`);
+      return;
+    }
+  }
 }
