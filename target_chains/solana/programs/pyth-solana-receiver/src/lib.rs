@@ -1,9 +1,16 @@
+pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
     pyth_solana_receiver_sdk::{
-        config::{Config, DataSource},
-        price_update::{PriceUpdateV2, VerificationLevel},
+        config::{
+            Config,
+            DataSource,
+        },
+        price_update::{
+            PriceUpdateV2,
+            VerificationLevel,
+        },
     },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
@@ -11,21 +18,31 @@ use {
         messages::Message,
         wire::{
             from_slice,
-            v1::{WormholeMessage, WormholePayload},
+            v1::{
+                WormholeMessage,
+                WormholePayload,
+            },
         },
     },
     solana_program::{
-        keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover,
+        keccak,
+        program_memory::sol_memcpy,
+        secp256k1_recover::secp256k1_recover,
         system_instruction,
     },
     wormhole_core_bridge_solana::{
-        sdk::{legacy::AccountVariant, VaaAccount},
+        sdk::{
+            legacy::AccountVariant,
+            VaaAccount,
+        },
         state::GuardianSet,
     },
-    wormhole_raw_vaas::{utils::quorum, GuardianSetSig, Vaa},
+    wormhole_raw_vaas::{
+        utils::quorum,
+        GuardianSetSig,
+        Vaa,
+    },
 };
-
-pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 
 pub mod error;
 pub mod sdk;
@@ -210,8 +227,8 @@ pub mod pyth_solana_receiver {
 
         let vaa_components = VaaComponents {
             verification_level: VerificationLevel::Full,
-            emitter_address: encoded_vaa.try_emitter_address()?,
-            emitter_chain: encoded_vaa.try_emitter_chain()?,
+            emitter_address:    encoded_vaa.try_emitter_address()?,
+            emitter_chain:      encoded_vaa.try_emitter_chain()?,
         };
 
         post_price_update_from_vaa(
@@ -240,9 +257,9 @@ pub const TREASURY_SEED: &str = "treasury";
 #[instruction(initial_config : Config)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:          Signer<'info>,
     #[account(init, space = Config::LEN, payer=payer, seeds = [CONFIG_SEED.as_ref()], bump)]
-    pub config: Account<'info, Config>,
+    pub config:         Account<'info, Config>,
     pub system_program: Program<'info, System>,
 }
 
@@ -252,7 +269,7 @@ pub struct Governance<'info> {
         payer.key() == config.governance_authority @
         ReceiverError::GovernanceAuthorityMismatch
     )]
-    pub payer: Signer<'info>,
+    pub payer:  Signer<'info>,
     #[account(mut, seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
 }
@@ -263,7 +280,7 @@ pub struct AcceptGovernanceAuthorityTransfer<'info> {
         payer.key() == config.target_governance_authority.ok_or(error!(ReceiverError::NonexistentGovernanceAuthorityTransferRequest))? @
         ReceiverError::TargetGovernanceAuthorityMismatch
     )]
-    pub payer: Signer<'info>,
+    pub payer:  Signer<'info>,
     #[account(mut, seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
 }
@@ -272,65 +289,65 @@ pub struct AcceptGovernanceAuthorityTransfer<'info> {
 #[instruction(params: PostUpdateParams)]
 pub struct PostUpdate<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:                Signer<'info>,
     #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
-    pub encoded_vaa: AccountInfo<'info>,
+    pub encoded_vaa:          AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
-    pub config: Account<'info, Config>,
+    pub config:               Account<'info, Config>,
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
-    pub treasury: AccountInfo<'info>,
+    pub treasury:             AccountInfo<'info>,
     /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV2::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
-    pub system_program: Program<'info, System>,
-    pub write_authority: Signer<'info>,
+    pub system_program:       Program<'info, System>,
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
 #[instruction(params: PostUpdateAtomicParams)]
 pub struct PostUpdateAtomic<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:                Signer<'info>,
     /// CHECK: We can't use AccountVariant::<GuardianSet> here because its owner is hardcoded as the "official" Wormhole program and we want to get the wormhole address from the config.
     /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
         owner = config.wormhole @ ReceiverError::WrongGuardianSetOwner)]
-    pub guardian_set: AccountInfo<'info>,
+    pub guardian_set:         AccountInfo<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
-    pub config: Account<'info, Config>,
+    pub config:               Account<'info, Config>,
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
-    pub treasury: AccountInfo<'info>,
+    pub treasury:             AccountInfo<'info>,
     /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV2::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
-    pub system_program: Program<'info, System>,
-    pub write_authority: Signer<'info>,
+    pub system_program:       Program<'info, System>,
+    pub write_authority:      Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct ReclaimRent<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:                Signer<'info>,
     #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct PostUpdateAtomicParams {
-    pub vaa: Vec<u8>,
+    pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id: u8,
+    pub treasury_id:         u8,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct PostUpdateParams {
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id: u8,
+    pub treasury_id:         u8,
 }
 
 fn deserialize_guardian_set_checked(
@@ -365,8 +382,8 @@ fn deserialize_guardian_set_checked(
 
 struct VaaComponents {
     verification_level: VerificationLevel,
-    emitter_address: [u8; 32],
-    emitter_chain: u16,
+    emitter_address:    [u8; 32],
+    emitter_chain:      u16,
 }
 
 fn post_price_update_from_vaa<'info>(
@@ -402,7 +419,7 @@ fn post_price_update_from_vaa<'info>(
 
     let valid_data_source = config.valid_data_sources.iter().any(|x| {
         *x == DataSource {
-            chain: vaa_components.emitter_chain,
+            chain:   vaa_components.emitter_chain,
             emitter: Pubkey::from(vaa_components.emitter_address),
         }
     });
