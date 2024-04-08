@@ -13,8 +13,6 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
-const TX_RETRY_INTERVAL = 1000;
-
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
  */
@@ -43,6 +41,7 @@ export type InstructionWithEphemeralSigners = {
 export type PriorityFeeConfig = {
   /** This is the priority fee in micro lamports, it gets passed down to `setComputeUnitPrice`  */
   computeUnitPriceMicroLamports?: number;
+  tightComputeBudget?: boolean;
 };
 
 /**
@@ -198,11 +197,14 @@ export class TransactionBuilder {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
-        // if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
-        instructionsWithComputeBudget.push(
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 10000 })
-        );
-        // }
+        if (
+          computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
+          args.tightComputeBudget
+        ) {
+          instructionsWithComputeBudget.push(
+            ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
+          );
+        }
         if (args.computeUnitPriceMicroLamports) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
@@ -231,22 +233,33 @@ export class TransactionBuilder {
   buildLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
-    return this.transactionInstructions.map(({ instructions, signers }) => {
-      const instructionsWithComputeBudget = args.computeUnitPriceMicroLamports
-        ? [
-            ...instructions,
+    return this.transactionInstructions.map(
+      ({ instructions, signers, computeUnits }) => {
+        const instructionsWithComputeBudget: TransactionInstruction[] = [
+          ...instructions,
+        ];
+        if (
+          computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
+          args.tightComputeBudget
+        ) {
+          instructionsWithComputeBudget.push(
+            ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
+          );
+        }
+        if (args.computeUnitPriceMicroLamports) {
+          instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
-            }),
-            ComputeBudgetProgram.setComputeUnitLimit({ units: 10000 }),
-          ]
-        : instructions;
+            })
+          );
+        }
 
-      return {
-        tx: new Transaction().add(...instructionsWithComputeBudget),
-        signers: signers,
-      };
-    });
+        return {
+          tx: new Transaction().add(...instructionsWithComputeBudget),
+          signers: signers,
+        };
+      }
+    );
   }
 
   /**
@@ -307,8 +320,10 @@ export const isVersionedTransaction = (
   return "version" in tx;
 };
 
+const TX_RETRY_INTERVAL = 500;
+
 /**
- * Send a set of transactions to the network
+ * Send a set of transactions to the network based on https://github.com/rpcpool/optimized-txs-examples
  */
 export async function sendTransactions(
   transactions: {
@@ -316,13 +331,13 @@ export async function sendTransactions(
     signers?: Signer[] | undefined;
   }[],
   connection: Connection,
-  wallet: Wallet,
-  opts?: ConfirmOptions
+  wallet: Wallet
 ) {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
   });
 
+  // Signing logic for versioned transactions is different from legacy transactions
   for (let transaction of transactions) {
     let { tx, signers } = transaction;
 
@@ -343,28 +358,20 @@ export async function sendTransactions(
 
     tx = await wallet.signTransaction(tx);
 
-    let txSendAttempts = 1;
-
     // In the following section, we wait and constantly check for the transaction to be confirmed
     // and resend the transaction if it is not confirmed within a certain time interval
     // thus handling tx retries on the client side rather than relying on the RPC
-    let confirmTransactionPromise = null;
     let confirmedTx = null;
 
     try {
-      // Send and wait confirmation (subscribe on confirmation before sending)
-      console.log(
-        `${new Date().toISOString()} Subscribing to transaction confirmation`
-      );
-
+      // Get the signature of the transaction with different logic for versioned transactions
       const txSignature = bs58.encode(
         isVersionedTransaction(tx)
           ? tx.signatures?.[0] || new Uint8Array()
           : tx.signature ?? new Uint8Array()
       );
 
-      // confirmTransaction throws error, handle it
-      confirmTransactionPromise = connection.confirmTransaction(
+      const confirmTransactionPromise = connection.confirmTransaction(
         {
           signature: txSignature,
           blockhash: blockhashResult.value.blockhash,
@@ -372,20 +379,6 @@ export async function sendTransactions(
         },
         "confirmed"
       );
-
-      console.log(
-        `${new Date().toISOString()} Sending Transaction ${txSignature}`
-      );
-      await connection.sendRawTransaction(tx.serialize(), {
-        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-        skipPreflight: true,
-        // Setting max retries to 0 as we are handling retries manually
-        // Set this manually so that the default is skipped
-        maxRetries: 0,
-        preflightCommitment: "confirmed",
-        minContextSlot: blockhashResult.context.slot,
-      });
 
       confirmedTx = null;
       while (!confirmedTx) {
@@ -400,12 +393,6 @@ export async function sendTransactions(
         if (confirmedTx) {
           break;
         }
-
-        console.log(
-          `${new Date().toISOString()} Tx not confirmed after ${
-            TX_RETRY_INTERVAL * txSendAttempts++
-          }ms, resending`
-        );
 
         await connection.sendRawTransaction(tx.serialize(), {
           // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
@@ -423,8 +410,7 @@ export async function sendTransactions(
     }
 
     if (!confirmedTx) {
-      console.log(`${new Date().toISOString()} Transaction failed`);
-      return;
+      throw new Error("Failed to land the transaction");
     }
   }
 }

@@ -400,12 +400,17 @@ const Proposal = ({
           squads.wallet.publicKey,
           squads.connection
         )
-        builder.addInstruction({ instruction, signers: [] })
-        const versionedTxs = await builder.buildLegacyTransactions({
+        builder.addInstruction({
+          instruction,
+          signers: [],
+          computeUnits: 10000,
+        })
+        const transactions = builder.buildLegacyTransactions({
           computeUnitPriceMicroLamports: 150000,
+          tightComputeBudget: true,
         })
         await sendTransactions(
-          versionedTxs,
+          transactions,
           squads.connection,
           squads.wallet as Wallet
         )
