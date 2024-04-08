@@ -339,8 +339,9 @@ export async function sendTransactions(
 
   // Signing logic for versioned transactions is different from legacy transactions
   for (const transaction of transactions) {
-    const { signers } = transaction;
+    const signers = transaction.signers;
     let tx = transaction.tx;
+
     if (isVersionedTransaction(tx)) {
       if (signers) {
         tx.sign(signers);
