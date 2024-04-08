@@ -331,7 +331,8 @@ export async function sendTransactions(
     signers?: Signer[] | undefined;
   }[],
   connection: Connection,
-  wallet: Wallet
+  wallet: Wallet,
+  maxRetries?: number
 ) {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
@@ -362,6 +363,7 @@ export async function sendTransactions(
     // and resend the transaction if it is not confirmed within a certain time interval
     // thus handling tx retries on the client side rather than relying on the RPC
     let confirmedTx = null;
+    let retryCount = 0;
 
     try {
       // Get the signature of the transaction with different logic for versioned transactions
@@ -381,7 +383,7 @@ export async function sendTransactions(
       );
 
       confirmedTx = null;
-      while (!confirmedTx) {
+      while (true) {
         confirmedTx = await Promise.race([
           confirmTransactionPromise,
           new Promise((resolve) =>
@@ -393,6 +395,16 @@ export async function sendTransactions(
         if (confirmedTx) {
           break;
         }
+        if (maxRetries && maxRetries < retryCount) {
+          break;
+        }
+        console.log(
+          "Retrying transaction ",
+          txSignature,
+          " Retry count: ",
+          retryCount
+        );
+        retryCount++;
 
         await connection.sendRawTransaction(tx.serialize(), {
           // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
