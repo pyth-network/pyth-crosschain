@@ -399,7 +399,7 @@ export async function sendTransactions(
           break;
         }
         console.log(
-          "Retrying transaction ",
+          "Retrying transaction: ",
           txSignature,
           " Retry count: ",
           retryCount
