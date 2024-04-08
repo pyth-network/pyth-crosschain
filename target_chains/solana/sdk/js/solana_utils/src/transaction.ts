@@ -1,7 +1,6 @@
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
-  ConfirmOptions,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -339,9 +338,9 @@ export async function sendTransactions(
   });
 
   // Signing logic for versioned transactions is different from legacy transactions
-  for (let transaction of transactions) {
-    let { tx, signers } = transaction;
-
+  for (const transaction of transactions) {
+    const { signers } = transaction;
+    let tx = transaction.tx;
     if (isVersionedTransaction(tx)) {
       if (signers) {
         tx.sign(signers);
@@ -383,7 +382,7 @@ export async function sendTransactions(
       );
 
       confirmedTx = null;
-      while (true) {
+      while (!confirmedTx) {
         confirmedTx = await Promise.race([
           confirmTransactionPromise,
           new Promise((resolve) =>
