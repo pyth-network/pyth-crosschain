@@ -200,7 +200,7 @@ export class TransactionBuilder {
         ];
         // if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
         instructionsWithComputeBudget.push(
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 40000 })
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 10000 })
         );
         // }
         if (args.computeUnitPriceMicroLamports) {
@@ -238,7 +238,7 @@ export class TransactionBuilder {
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
             }),
-            ComputeBudgetProgram.setComputeUnitLimit({ units: 40000 }),
+            ComputeBudgetProgram.setComputeUnitLimit({ units: 10000 }),
           ]
         : instructions;
 
@@ -319,7 +319,7 @@ export async function sendTransactions(
   wallet: Wallet,
   opts?: ConfirmOptions
 ) {
-  const blockhashResult = await connection.getLatestBlockhash({
+  const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
   });
 
@@ -332,7 +332,7 @@ export async function sendTransactions(
       }
     } else {
       tx.feePayer = tx.feePayer ?? wallet.publicKey;
-      tx.recentBlockhash = blockhashResult.blockhash;
+      tx.recentBlockhash = blockhashResult.value.blockhash;
 
       if (signers) {
         for (const signer of signers) {
@@ -367,8 +367,8 @@ export async function sendTransactions(
       confirmTransactionPromise = connection.confirmTransaction(
         {
           signature: txSignature,
-          blockhash: blockhashResult.blockhash,
-          lastValidBlockHeight: blockhashResult.lastValidBlockHeight,
+          blockhash: blockhashResult.value.blockhash,
+          lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
         },
         "confirmed"
       );
@@ -383,6 +383,8 @@ export async function sendTransactions(
         // Setting max retries to 0 as we are handling retries manually
         // Set this manually so that the default is skipped
         maxRetries: 0,
+        preflightCommitment: "confirmed",
+        minContextSlot: blockhashResult.context.slot,
       });
 
       confirmedTx = null;
@@ -412,6 +414,8 @@ export async function sendTransactions(
           // Setting max retries to 0 as we are handling retries manually
           // Set this manually so that the default is skipped
           maxRetries: 0,
+          preflightCommitment: "confirmed",
+          minContextSlot: blockhashResult.context.slot,
         });
       }
     } catch (error) {

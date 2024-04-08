@@ -401,7 +401,7 @@ const Proposal = ({
           squads.connection
         )
         builder.addInstruction({ instruction, signers: [] })
-        const versionedTxs = await builder.buildVersionedTransactions({
+        const versionedTxs = await builder.buildLegacyTransactions({
           computeUnitPriceMicroLamports: 150000,
         })
         await sendTransactions(
