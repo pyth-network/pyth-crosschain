@@ -139,6 +139,7 @@ export const RECEIVER_CHAINS = {
   polynomial_testnet: 50063,
   linea_sepolia: 50064,
   rol_testnet: 50065,
+  merlin_testnet_v2: 50066,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

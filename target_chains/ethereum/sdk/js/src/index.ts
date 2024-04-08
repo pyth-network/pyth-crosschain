@@ -93,6 +93,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   manta_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   mantle_sepolia: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
   merlin_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  merlin_testnet_v2: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   meter_testnet: "0x5a71C07a0588074443545eE0c08fb0375564c3E4",
   mode_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   movement_evm_devnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",

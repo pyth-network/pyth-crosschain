@@ -529,6 +529,11 @@
   rpcUrl: https://testnet-rpc.merlinchain.io/
   networkId: 686868
   type: EvmChain
+- id: merlin_testnet_v2
+  mainnet: false
+  rpcUrl: https://testnet-rpc-v2.merlinchain.io/
+  networkId: 5200
+  type: EvmChain
 - id: merlin
   mainnet: true
   rpcUrl: https://rpc.merlinchain.io
