@@ -23,7 +23,7 @@ use {
         state::{
             benchmarks::Benchmarks,
             cache::{
-                AggregateCache,
+                Cache,
                 MessageState,
                 MessageStateFilter,
             },
@@ -336,7 +336,7 @@ async fn get_verified_price_feeds<S>(
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
-    S: AggregateCache,
+    S: Cache,
 {
     let messages = state
         .fetch_message_states(
@@ -396,7 +396,7 @@ pub async fn get_price_feeds_with_update_data<S>(
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
-    S: AggregateCache,
+    S: Cache,
     S: Benchmarks,
 {
     match get_verified_price_feeds(state, price_ids, request_time.clone()).await {
@@ -412,7 +412,7 @@ where
 
 pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
 where
-    S: AggregateCache,
+    S: Cache,
 {
     state
         .message_state_keys()
@@ -468,10 +468,7 @@ mod test {
                 Accumulator,
             },
             hashers::keccak256_160::Keccak160,
-            messages::{
-                Message,
-                PriceFeedMessage,
-            },
+            messages::PriceFeedMessage,
             wire::v1::{
                 AccumulatorUpdateData,
                 Proof,
