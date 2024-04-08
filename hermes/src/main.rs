@@ -66,11 +66,11 @@ async fn init() -> Result<()> {
 
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown
             // signal has been observed).
-            let tasks = join_all([
-                Box::pin(spawn(network::wormhole::spawn(opts.clone(), store.clone()))),
-                Box::pin(spawn(network::pythnet::spawn(opts.clone(), store.clone()))),
-                Box::pin(spawn(metrics_server::run(opts.clone(), store.clone()))),
-                Box::pin(spawn(api::spawn(opts.clone(), store.clone(), update_tx))),
+            let tasks = join_all(vec![
+                spawn(network::wormhole::spawn(opts.clone(), store.clone())),
+                spawn(network::pythnet::spawn(opts.clone(), store.clone())),
+                spawn(metrics_server::run(opts.clone(), store.clone())),
+                spawn(api::spawn(opts.clone(), store.clone(), update_tx)),
             ])
             .await;
 
