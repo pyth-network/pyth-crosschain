@@ -23,6 +23,7 @@ use {
 mod doc_examples;
 mod metrics_middleware;
 mod rest;
+mod sse;
 pub mod types;
 mod ws;
 
@@ -83,39 +84,39 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
 
     #[derive(OpenApi)]
     #[openapi(
-        paths(
-            rest::get_price_feed,
-            rest::get_vaa,
-            rest::get_vaa_ccip,
-            rest::latest_price_feeds,
-            rest::latest_vaas,
-            rest::price_feed_ids,
-            rest::latest_price_updates,
-            rest::timestamp_price_updates,
-            rest::price_feeds_metadata,
-        ),
-        components(
-            schemas(
-                rest::GetVaaCcipInput,
-                rest::GetVaaCcipResponse,
-                rest::GetVaaResponse,
-                types::PriceIdInput,
-                types::RpcPrice,
-                types::RpcPriceFeed,
-                types::RpcPriceFeedMetadata,
-                types::RpcPriceIdentifier,
-                types::EncodingType,
-                types::PriceUpdate,
-                types::BinaryPriceUpdate,
-                types::ParsedPriceUpdate,
-                types::RpcPriceFeedMetadataV2,
-                types::PriceFeedMetadata,
-                types::AssetType
-            )
-        ),
-        tags(
-            (name = "hermes", description = "Pyth Real-Time Pricing API")
-        )
+    paths(
+    rest::get_price_feed,
+    rest::get_vaa,
+    rest::get_vaa_ccip,
+    rest::latest_price_feeds,
+    rest::latest_vaas,
+    rest::price_feed_ids,
+    rest::latest_price_updates,
+    rest::timestamp_price_updates,
+    rest::price_feeds_metadata,
+    ),
+    components(
+    schemas(
+    rest::GetVaaCcipInput,
+    rest::GetVaaCcipResponse,
+    rest::GetVaaResponse,
+    types::PriceIdInput,
+    types::RpcPrice,
+    types::RpcPriceFeed,
+    types::RpcPriceFeedMetadata,
+    types::RpcPriceIdentifier,
+    types::EncodingType,
+    types::PriceUpdate,
+    types::BinaryPriceUpdate,
+    types::ParsedPriceUpdate,
+    types::RpcPriceFeedMetadataV2,
+    types::PriceFeedMetadata,
+    types::AssetType
+    )
+    ),
+    tags(
+    (name = "hermes", description = "Pyth Real-Time Pricing API")
+    )
     )]
     struct ApiDoc;
 
@@ -131,6 +132,10 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
+        .route(
+            "/v2/updates/price/stream",
+            get(sse::price_stream_sse_handler),
+        )
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
         .route(
             "/v2/updates/price/:publish_time",
