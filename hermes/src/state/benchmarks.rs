@@ -1,6 +1,7 @@
 //! This module communicates with Pyth Benchmarks, an API for historical price feeds and their updates.
 
 use {
+    super::State,
     crate::{
         aggregate::{
             PriceFeedsWithUpdateData,
@@ -14,6 +15,7 @@ use {
         Engine as _,
     },
     pyth_sdk::PriceIdentifier,
+    reqwest::Url,
     serde::Deserialize,
 };
 
@@ -50,7 +52,23 @@ impl TryFrom<BinaryBlob> for Vec<Vec<u8>> {
     }
 }
 
-#[async_trait::async_trait]
+pub struct BenchmarksState {
+    endpoint: Option<Url>,
+}
+
+impl BenchmarksState {
+    pub fn new(url: Option<Url>) -> Self {
+        Self { endpoint: url }
+    }
+}
+
+/// Allow downcasting State into BenchmarksState for functions that depend on the `Benchmarks` service.
+impl<'a> From<&'a State> for &'a BenchmarksState {
+    fn from(state: &'a State) -> &'a BenchmarksState {
+        &state.benchmarks
+    }
+}
+
 pub trait Benchmarks {
     async fn get_verified_price_feeds(
         &self,
@@ -59,22 +77,25 @@ pub trait Benchmarks {
     ) -> Result<PriceFeedsWithUpdateData>;
 }
 
-#[async_trait::async_trait]
-impl Benchmarks for crate::state::State {
+impl<T> Benchmarks for T
+where
+    for<'a> &'a T: Into<&'a BenchmarksState>,
+    T: Sync,
+{
     async fn get_verified_price_feeds(
         &self,
         price_ids: &[PriceIdentifier],
         publish_time: UnixTimestamp,
     ) -> Result<PriceFeedsWithUpdateData> {
         let endpoint = self
-            .benchmarks_endpoint
+            .into()
+            .endpoint
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Benchmarks endpoint is not set"))?
             .join(&format!("/v1/updates/price/{}", publish_time))
             .unwrap();
 
-        let client = reqwest::Client::new();
-        let mut request = client
+        let mut request = reqwest::Client::new()
             .get(endpoint)
             .timeout(BENCHMARKS_REQUEST_TIMEOUT)
             .query(&[("encoding", "hex")])

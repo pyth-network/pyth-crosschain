@@ -1,7 +1,10 @@
 //! This module contains the global state of the application.
 
 use {
-    self::cache::CacheState,
+    self::{
+        benchmarks::BenchmarksState,
+        cache::CacheState,
+    },
     crate::{
         aggregate::{
             AggregateState,
@@ -29,9 +32,11 @@ pub mod benchmarks;
 pub mod cache;
 
 pub struct State {
-    /// Storage is a short-lived cache of the state of all the updates that have been passed to the
-    /// store.
+    /// State for the `Cache` service for short-lived storage of updates.
     pub cache: CacheState,
+
+    /// State for the `Benchmarks` service for looking up historical updates.
+    pub benchmarks: BenchmarksState,
 
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
@@ -45,9 +50,6 @@ pub struct State {
 
     /// The aggregate module state.
     pub aggregate_state: RwLock<AggregateState>,
-
-    /// Benchmarks endpoint
-    pub benchmarks_endpoint: Option<Url>,
 
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
@@ -64,13 +66,13 @@ impl State {
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
-            cache: CacheState::new(cache_size),
-            observed_vaa_seqs: RwLock::new(Default::default()),
-            guardian_set: RwLock::new(Default::default()),
-            api_update_tx: update_tx,
-            aggregate_state: RwLock::new(AggregateState::new(&mut metrics_registry)),
-            benchmarks_endpoint,
-            metrics_registry: RwLock::new(metrics_registry),
+            cache:                CacheState::new(cache_size),
+            benchmarks:           BenchmarksState::new(benchmarks_endpoint),
+            observed_vaa_seqs:    RwLock::new(Default::default()),
+            guardian_set:         RwLock::new(Default::default()),
+            api_update_tx:        update_tx,
+            aggregate_state:      RwLock::new(AggregateState::new(&mut metrics_registry)),
+            metrics_registry:     RwLock::new(metrics_registry),
             price_feeds_metadata: RwLock::new(Default::default()),
         })
     }
