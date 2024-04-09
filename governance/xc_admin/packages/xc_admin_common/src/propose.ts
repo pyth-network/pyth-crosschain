@@ -413,7 +413,7 @@ export class MultisigVault {
         }
       }
       if (retries === TIMEOUT) {
-        throw new Error("Failed to send transaction");
+        throw new Error("Too many retries");
       }
     }
   }
