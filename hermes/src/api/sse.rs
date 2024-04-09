@@ -70,15 +70,15 @@ fn default_true() -> bool {
 }
 
 #[utoipa::path(
-get,
-path = "/v2/updates/price/stream",
-responses(
-(status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
-(status = 404, description = "Price ids not found", body = String)
-),
-params(
-StreamPriceUpdatesQueryParams,
-)
+    get,
+    path = "/v2/updates/price/stream",
+    responses(
+        (status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
+        (status = 404, description = "Price ids not found", body = String)
+    ),
+    params(
+        StreamPriceUpdatesQueryParams,
+    )
 )]
 /// SSE route handler for streaming price updates.
 pub async fn price_stream_sse_handler(
@@ -97,7 +97,7 @@ pub async fn price_stream_sse_handler(
 
             let sse_stream = stream.then(move |message| {
                 let state_clone = state.clone(); // Clone again to use inside the async block
-                let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
+                let mut price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
                 async move {
                     match message {
                         Ok(event) => {
@@ -111,15 +111,26 @@ pub async fn price_stream_sse_handler(
                                 {
                                     Ok(data) => data,
                                     Err(e) => {
-                                        tracing::warn!(
-                                            "Error getting price feeds {:?} with update data: {:?}",
-                                            price_ids_clone,
-                                            e
-                                        );
+                                        // The error can only happen when a price feed was available
+                                        // and is no longer there as we check the price feed ids upon
+                                        // subscription. In this case we just remove the non-existing
+                                        // price feed from the list and will keep sending updates for
+                                        // the rest.
+
+                                        let available_price_feed_ids =
+                                            crate::aggregate::get_price_feed_ids(
+                                                &*state_clone.state,
+                                            )
+                                            .await;
+
+                                        price_ids_clone.retain(|price_feed_id| {
+                                            available_price_feed_ids.contains(price_feed_id)
+                                        });
                                         let error_message = format!(
-                                            "Error getting price feeds {:?} with update data: {:?}",
+                                            "Failed to retrieve price feeds {:?} with update data: {:?}. These feeds are no longer available, will be removed, and updates will continue for the remaining feeds.",
                                             price_ids_clone, e
                                         );
+                                        tracing::warn!(error_message);
                                         return Ok(Event::default().data(error_message));
                                     }
                                 };
