@@ -366,15 +366,15 @@ export async function sendTransactions(
     // thus handling tx retries on the client side rather than relying on the RPC
     let confirmedTx = null;
     let retryCount = 0;
-    let txSignature = "";
+
+    const txSignature = bs58.encode(
+      isVersionedTransaction(tx)
+        ? tx.signatures?.[0] || new Uint8Array()
+        : tx.signature ?? new Uint8Array()
+    );
 
     try {
       // Get the signature of the transaction with different logic for versioned transactions
-      txSignature = bs58.encode(
-        isVersionedTransaction(tx)
-          ? tx.signatures?.[0] || new Uint8Array()
-          : tx.signature ?? new Uint8Array()
-      );
 
       const confirmTransactionPromise = connection.confirmTransaction(
         {
