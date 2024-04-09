@@ -70,15 +70,13 @@ fn default_true() -> bool {
 }
 
 #[utoipa::path(
-get,
-path = "/v2/updates/price/stream",
-responses(
-(status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
-(status = 404, description = "Price ids not found", body = String)
-),
-params(
-StreamPriceUpdatesQueryParams,
-)
+    get,
+    path = "/v2/updates/price/stream",
+    responses(
+        (status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
+        (status = 404, description = "Price ids not found", body = String)
+    ),
+    params(StreamPriceUpdatesQueryParams)
 )]
 /// SSE route handler for streaming price updates.
 pub async fn price_stream_sse_handler(
