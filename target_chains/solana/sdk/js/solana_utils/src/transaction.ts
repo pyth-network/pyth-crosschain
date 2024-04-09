@@ -367,6 +367,7 @@ export async function sendTransactions(
     let confirmedTx = null;
     let retryCount = 0;
 
+    // Get the signature of the transaction with different logic for versioned transactions
     const txSignature = bs58.encode(
       isVersionedTransaction(tx)
         ? tx.signatures?.[0] || new Uint8Array()
@@ -374,8 +375,6 @@ export async function sendTransactions(
     );
 
     try {
-      // Get the signature of the transaction with different logic for versioned transactions
-
       const confirmTransactionPromise = connection.confirmTransaction(
         {
           signature: txSignature,
