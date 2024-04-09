@@ -37,6 +37,8 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
+export const TIMEOUT = 10;
+export const MAX_RETRY_PROPOSE = 70;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -394,18 +396,25 @@ export class MultisigVault {
 
     for (const [index, tx] of transactions.entries()) {
       console.log("Trying transaction: ", index, " of ", transactions.length);
-      let retry = true;
-      while (true)
+
+      let retries = 0;
+      while (retries < TIMEOUT) {
         try {
           await sendTransactions(
             [{ tx, signers: [] }],
             provider.connection,
-            this.squad.wallet as NodeWallet
+            this.squad.wallet as NodeWallet,
+            MAX_RETRY_PROPOSE
           );
           break;
         } catch (e) {
           console.log(e);
+          retries++;
         }
+      }
+      if (retries === TIMEOUT) {
+        throw new Error("Failed to send transaction");
+      }
     }
   }
 }

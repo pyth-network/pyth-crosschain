@@ -332,10 +332,12 @@ export async function sendTransactions(
   connection: Connection,
   wallet: Wallet,
   maxRetries?: number
-) {
+): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
   });
+
+  const signatures: string[] = [];
 
   // Signing logic for versioned transactions is different from legacy transactions
   for (const transaction of transactions) {
@@ -364,10 +366,11 @@ export async function sendTransactions(
     // thus handling tx retries on the client side rather than relying on the RPC
     let confirmedTx = null;
     let retryCount = 0;
+    let txSignature = "";
 
     try {
       // Get the signature of the transaction with different logic for versioned transactions
-      const txSignature = bs58.encode(
+      txSignature = bs58.encode(
         isVersionedTransaction(tx)
           ? tx.signatures?.[0] || new Uint8Array()
           : tx.signature ?? new Uint8Array()
@@ -424,5 +427,9 @@ export async function sendTransactions(
     if (!confirmedTx) {
       throw new Error("Failed to land the transaction");
     }
+
+    signatures.push(txSignature);
   }
+
+  return signatures;
 }
