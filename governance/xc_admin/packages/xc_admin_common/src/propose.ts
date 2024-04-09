@@ -38,7 +38,7 @@ export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
 export const TIMEOUT = 10;
-export const MAX_RETRY_PROPOSE = 70;
+export const MAX_RETRY_SEND = 70;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -404,7 +404,7 @@ export class MultisigVault {
             [{ tx, signers: [] }],
             provider.connection,
             this.squad.wallet as NodeWallet,
-            MAX_RETRY_PROPOSE
+            MAX_RETRY_SEND
           );
           break;
         } catch (e) {
