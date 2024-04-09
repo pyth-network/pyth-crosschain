@@ -20,12 +20,11 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import { AccountType, parseProductData } from "@pythnetwork/client";
+import { AnchorProvider } from "@project-serum/anchor";
 import {
   TransactionBuilder,
   PriorityFeeConfig,
-  sendTransactions,
 } from "@pythnetwork/solana-utils";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -147,11 +146,10 @@ export async function executeProposal(
     );
 
     signatures.push(
-      ...(await sendTransactions(
-        [{ tx: transaction }],
-        squad.connection,
-        squad.wallet as NodeWallet
-      ))
+      await new AnchorProvider(squad.connection, squad.wallet, {
+        commitment: commitment,
+        preflightCommitment: commitment,
+      }).sendAndConfirm(transaction, [], { skipPreflight: true })
     );
   }
   return signatures;
