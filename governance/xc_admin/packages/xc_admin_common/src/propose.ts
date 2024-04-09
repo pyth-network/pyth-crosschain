@@ -24,16 +24,19 @@ import SquadsMesh, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
-import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import {
+  TransactionBuilder,
+  sendTransactions,
+} from "@pythnetwork/solana-utils";
 import {
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
-export const MAX_NUMBER_OF_RETRIES = 10;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -385,52 +388,24 @@ export class MultisigVault {
 
   async sendAllTransactions(transactions: Transaction[]) {
     const provider = this.getAnchorProvider({
-      preflightCommitment: "processed",
-      commitment: "processed",
+      preflightCommitment: "confirmed",
+      commitment: "confirmed",
     });
 
-    let needToFetchBlockhash = true; // We don't fetch blockhash everytime to save time
-    let blockhash: string = "";
-    for (let [index, tx] of transactions.entries()) {
-      console.log("Trying to send transaction: " + index);
-      let numberOfRetries = 0;
-      let txHasLanded = false;
-
-      while (!txHasLanded) {
+    for (const [index, tx] of transactions.entries()) {
+      console.log("Trying transaction: ", index, " of ", transactions.length);
+      let retry = true;
+      while (true)
         try {
-          if (needToFetchBlockhash) {
-            blockhash = (await provider.connection.getLatestBlockhash())
-              .blockhash;
-            needToFetchBlockhash = false;
-          }
-          tx.feePayer = tx.feePayer || provider.wallet.publicKey;
-          tx.recentBlockhash = blockhash;
-          provider.wallet.signTransaction(tx);
-          await sendAndConfirmRawTransaction(
+          await sendTransactions(
+            [{ tx, signers: [] }],
             provider.connection,
-            tx.serialize(),
-            provider.opts
+            this.squad.wallet as NodeWallet
           );
-          txHasLanded = true;
+          break;
         } catch (e) {
-          if (numberOfRetries >= MAX_NUMBER_OF_RETRIES) {
-            // Cap the number of retries
-            throw Error("Maximum number of retries exceeded");
-          }
-          const message = (e as any).toString().split("\n")[0];
-          if (
-            message ==
-            "Error: failed to send transaction: Transaction simulation failed: Blockhash not found"
-          ) {
-            // If blockhash has expired, we need to fetch a new one
-            needToFetchBlockhash = true;
-          } else {
-            await new Promise((r) => setTimeout(r, 3000));
-          }
           console.log(e);
-          numberOfRetries += 1;
         }
-      }
     }
   }
 }

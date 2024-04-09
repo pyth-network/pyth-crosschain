@@ -1,7 +1,6 @@
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
-  ConfirmOptions,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
@@ -11,6 +10,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
+import bs58 from "bs58";
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
@@ -40,6 +40,7 @@ export type InstructionWithEphemeralSigners = {
 export type PriorityFeeConfig = {
   /** This is the priority fee in micro lamports, it gets passed down to `setComputeUnitPrice`  */
   computeUnitPriceMicroLamports?: number;
+  tightComputeBudget?: boolean;
 };
 
 /**
@@ -186,14 +187,19 @@ export class TransactionBuilder {
   async buildVersionedTransactions(
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const blockhash = (await this.connection.getLatestBlockhash()).blockhash;
+    const blockhash = (
+      await this.connection.getLatestBlockhash({ commitment: "confirmed" })
+    ).blockhash;
 
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
-        if (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length) {
+        if (
+          computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
+          args.tightComputeBudget
+        ) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
           );
@@ -226,21 +232,33 @@ export class TransactionBuilder {
   buildLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
-    return this.transactionInstructions.map(({ instructions, signers }) => {
-      const instructionsWithComputeBudget = args.computeUnitPriceMicroLamports
-        ? [
-            ...instructions,
+    return this.transactionInstructions.map(
+      ({ instructions, signers, computeUnits }) => {
+        const instructionsWithComputeBudget: TransactionInstruction[] = [
+          ...instructions,
+        ];
+        if (
+          computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
+          args.tightComputeBudget
+        ) {
+          instructionsWithComputeBudget.push(
+            ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
+          );
+        }
+        if (args.computeUnitPriceMicroLamports) {
+          instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
-            }),
-          ]
-        : instructions;
+            })
+          );
+        }
 
-      return {
-        tx: new Transaction().add(...instructionsWithComputeBudget),
-        signers: signers,
-      };
-    });
+        return {
+          tx: new Transaction().add(...instructionsWithComputeBudget),
+          signers: signers,
+        };
+      }
+    );
   }
 
   /**
@@ -295,8 +313,16 @@ export class TransactionBuilder {
   }
 }
 
+export const isVersionedTransaction = (
+  tx: Transaction | VersionedTransaction
+): tx is VersionedTransaction => {
+  return "version" in tx;
+};
+
+const TX_RETRY_INTERVAL = 500;
+
 /**
- * Send a set of transactions to the network
+ * Send a set of transactions to the network based on https://github.com/rpcpool/optimized-txs-examples
  */
 export async function sendTransactions(
   transactions: {
@@ -305,12 +331,97 @@ export async function sendTransactions(
   }[],
   connection: Connection,
   wallet: Wallet,
-  opts?: ConfirmOptions
+  maxRetries?: number
 ) {
-  if (opts === undefined) {
-    opts = AnchorProvider.defaultOptions();
-  }
+  const blockhashResult = await connection.getLatestBlockhashAndContext({
+    commitment: "confirmed",
+  });
 
-  const provider = new AnchorProvider(connection, wallet, opts);
-  await provider.sendAll(transactions);
+  // Signing logic for versioned transactions is different from legacy transactions
+  for (const transaction of transactions) {
+    const { signers } = transaction;
+    let tx = transaction.tx;
+    if (isVersionedTransaction(tx)) {
+      if (signers) {
+        tx.sign(signers);
+      }
+    } else {
+      tx.feePayer = tx.feePayer ?? wallet.publicKey;
+      tx.recentBlockhash = blockhashResult.value.blockhash;
+
+      if (signers) {
+        for (const signer of signers) {
+          tx.partialSign(signer);
+        }
+      }
+    }
+
+    tx = await wallet.signTransaction(tx);
+
+    // In the following section, we wait and constantly check for the transaction to be confirmed
+    // and resend the transaction if it is not confirmed within a certain time interval
+    // thus handling tx retries on the client side rather than relying on the RPC
+    let confirmedTx = null;
+    let retryCount = 0;
+
+    try {
+      // Get the signature of the transaction with different logic for versioned transactions
+      const txSignature = bs58.encode(
+        isVersionedTransaction(tx)
+          ? tx.signatures?.[0] || new Uint8Array()
+          : tx.signature ?? new Uint8Array()
+      );
+
+      const confirmTransactionPromise = connection.confirmTransaction(
+        {
+          signature: txSignature,
+          blockhash: blockhashResult.value.blockhash,
+          lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+        },
+        "confirmed"
+      );
+
+      confirmedTx = null;
+      while (!confirmedTx) {
+        confirmedTx = await Promise.race([
+          confirmTransactionPromise,
+          new Promise((resolve) =>
+            setTimeout(() => {
+              resolve(null);
+            }, TX_RETRY_INTERVAL)
+          ),
+        ]);
+        if (confirmedTx) {
+          break;
+        }
+        if (maxRetries && maxRetries < retryCount) {
+          break;
+        }
+        console.log(
+          "Retrying transaction: ",
+          txSignature,
+          " Retry count: ",
+          retryCount
+        );
+        retryCount++;
+
+        await connection.sendRawTransaction(tx.serialize(), {
+          // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+          // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+          skipPreflight: true,
+          // Setting max retries to 0 as we are handling retries manually
+          // Set this manually so that the default is skipped
+          maxRetries: 0,
+          preflightCommitment: "confirmed",
+          minContextSlot: blockhashResult.context.slot,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    if (!confirmedTx) {
+      throw new Error("Failed to land the transaction");
+    }
+  }
 }
