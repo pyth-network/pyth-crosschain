@@ -403,7 +403,9 @@ where
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
-                return Benchmarks::get_verified_price_feeds(state, price_ids, publish_time).await;
+                return state
+                    .get_verified_price_feeds(price_ids, publish_time)
+                    .await;
             }
             Err(e)
         }
