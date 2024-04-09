@@ -24,7 +24,11 @@ use {
             Sse,
         },
     },
-    futures::Stream,
+    futures::{
+        future::Either,
+        stream,
+        Stream,
+    },
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
@@ -83,88 +87,86 @@ pub async fn price_stream_sse_handler(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
 
-    // Assuming verify_price_ids_exist returns a Result<(), SomeErrorType>
     match verify_price_ids_exist(&state, &price_ids).await {
-        Ok(_) => {}
-        Err(_) => {}
-    }
-    // Clone the update_tx receiver to listen for new price updates
-    let update_rx: broadcast::Receiver<AggregationEvent> = state.update_tx.subscribe();
+        Ok(_) => {
+            // Clone the update_tx receiver to listen for new price updates
+            let update_rx: broadcast::Receiver<AggregationEvent> = state.update_tx.subscribe();
 
-    // Convert the broadcast receiver into a Stream
-    let stream = BroadcastStream::new(update_rx);
+            // Convert the broadcast receiver into a Stream
+            let stream = BroadcastStream::new(update_rx);
 
-    let sse_stream = stream.then(move |message| {
-        let state_clone = state.clone(); // Clone again to use inside the async block
-        let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
-        async move {
-            match message {
-                Ok(event) => {
-                    let price_feeds_with_update_data =
-                        match crate::aggregate::get_price_feeds_with_update_data(
-                            &*state_clone.state,
-                            &price_ids_clone,
-                            RequestTime::AtSlot(event.slot()),
-                        )
-                        .await
-                        {
-                            Ok(data) => data,
-                            Err(e) => {
-                                tracing::warn!(
-                                    "Error getting price feeds {:?} with update data: {:?}",
-                                    price_ids_clone,
-                                    e
-                                );
-                                let error_message = format!(
-                                    "Error getting price feeds {:?} with update data: {:?}",
-                                    price_ids_clone, e
-                                );
-                                return Ok(Event::default().data(error_message));
-                            }
-                        };
-                    let price_update_data = price_feeds_with_update_data.update_data;
-                    let encoded_data: Vec<String> = price_update_data
-                        .into_iter()
-                        .map(|data| params.encoding.encode_str(&data))
-                        .collect();
-                    let binary_price_update = BinaryPriceUpdate {
-                        encoding: params.encoding,
-                        data:     encoded_data,
-                    };
-                    let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> = if params.parsed {
-                        Some(
-                            price_feeds_with_update_data
-                                .price_feeds
+            let sse_stream = stream.then(move |message| {
+                let state_clone = state.clone(); // Clone again to use inside the async block
+                let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
+                async move {
+                    match message {
+                        Ok(event) => {
+                            let price_feeds_with_update_data =
+                                match crate::aggregate::get_price_feeds_with_update_data(
+                                    &*state_clone.state,
+                                    &price_ids_clone,
+                                    RequestTime::AtSlot(event.slot()),
+                                )
+                                .await
+                                {
+                                    Ok(data) => data,
+                                    Err(e) => {
+                                        tracing::warn!(
+                                            "Error getting price feeds {:?} with update data: {:?}",
+                                            price_ids_clone,
+                                            e
+                                        );
+                                        let error_message = format!(
+                                            "Error getting price feeds {:?} with update data: {:?}",
+                                            price_ids_clone, e
+                                        );
+                                        return Ok(Event::default().data(error_message));
+                                    }
+                                };
+                            let price_update_data = price_feeds_with_update_data.update_data;
+                            let encoded_data: Vec<String> = price_update_data
                                 .into_iter()
-                                .map(|price_feed| price_feed.into())
-                                .collect(),
-                        )
-                    } else {
-                        None
-                    };
-                    let compressed_price_update = PriceUpdate {
-                        binary: binary_price_update,
-                        parsed: parsed_price_updates,
-                    };
+                                .map(|data| params.encoding.encode_str(&data))
+                                .collect();
+                            let binary_price_update = BinaryPriceUpdate {
+                                encoding: params.encoding,
+                                data:     encoded_data,
+                            };
+                            let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> =
+                                if params.parsed {
+                                    Some(
+                                        price_feeds_with_update_data
+                                            .price_feeds
+                                            .into_iter()
+                                            .map(|price_feed| price_feed.into())
+                                            .collect(),
+                                    )
+                                } else {
+                                    None
+                                };
+                            let compressed_price_update = PriceUpdate {
+                                binary: binary_price_update,
+                                parsed: parsed_price_updates,
+                            };
 
-                    let json_string = serde_json::to_string(&compressed_price_update)
-                        .unwrap_or_else(|e| {
-                            tracing::error!("Failed to serialize to JSON: {:?}", e);
-                            let error_message = format!("Failed to serialize to JSON: {:?}", e);
-                            error_message
-                        });
-
-
-                    Ok(Event::default().data(json_string))
+                            Ok(Event::default().json_data(compressed_price_update).unwrap())
+                        }
+                        Err(e) => {
+                            let error_message = format!("Error receiving update: {:?}", e);
+                            Ok(Event::default().json_data(error_message).unwrap())
+                        }
+                    }
                 }
-                Err(e) => {
-                    tracing::error!("Error receiving update: {:?}", e);
-                    let error_str = e.to_string();
-                    Ok(Event::default().data(error_str))
-                }
-            }
+            });
+            Sse::new(Either::Left(sse_stream)).keep_alive(KeepAlive::default())
         }
-    });
+        Err(e) => {
+            // Create a stream that immediately returns an error event and then closes
+            let error_message = format!("Price IDs not found: {:?}", e);
+            let error_event = Event::default().data(error_message);
+            let error_stream = stream::once(async { Ok(error_event) });
 
-    Sse::new(sse_stream).keep_alive(KeepAlive::default())
+            Sse::new(Either::Right(error_stream)).keep_alive(KeepAlive::default())
+        }
+    }
 }

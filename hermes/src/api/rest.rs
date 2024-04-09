@@ -9,18 +9,6 @@ use {
     },
     pyth_sdk::PriceIdentifier,
 };
-
-mod get_price_feed;
-mod get_vaa;
-mod get_vaa_ccip;
-mod index;
-mod latest_price_feeds;
-mod latest_vaas;
-mod live;
-mod price_feed_ids;
-mod ready;
-mod v2;
-
 pub use {
     get_price_feed::*,
     get_vaa::*,
@@ -38,6 +26,18 @@ pub use {
     },
 };
 
+mod get_price_feed;
+mod get_vaa;
+mod get_vaa_ccip;
+mod index;
+mod latest_price_feeds;
+mod latest_vaas;
+mod live;
+mod price_feed_ids;
+mod ready;
+mod v2;
+
+#[derive(Debug)]
 pub enum RestError {
     BenchmarkPriceNotUnique,
     UpdateDataNotFound,
