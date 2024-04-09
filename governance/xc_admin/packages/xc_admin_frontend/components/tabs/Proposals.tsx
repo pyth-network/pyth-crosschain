@@ -403,7 +403,7 @@ const Proposal = ({
         builder.addInstruction({
           instruction,
           signers: [],
-          computeUnits: 10000,
+          computeUnits: 20000,
         })
         const transactions = builder.buildLegacyTransactions({
           computeUnitPriceMicroLamports: 150000,
