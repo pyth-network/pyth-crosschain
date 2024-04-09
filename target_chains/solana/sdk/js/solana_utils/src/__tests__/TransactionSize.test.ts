@@ -1,4 +1,5 @@
 import {
+  AddressLookupTableAccount,
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
@@ -80,5 +81,34 @@ it("Unit test for getSizeOfTransaction", async () => {
   );
   expect(versionedTransaction.serialize().length).toBe(
     getSizeOfTransaction(ixsToSend)
+  );
+
+  const addressLookupTable: AddressLookupTableAccount =
+    new AddressLookupTableAccount({
+      key: PublicKey.unique(),
+      state: {
+        lastExtendedSlot: 0,
+        lastExtendedSlotStartIndex: 0,
+        deactivationSlot: BigInt(0),
+        addresses: [
+          SystemProgram.programId,
+          ComputeBudgetProgram.programId,
+          ...ixsToSend[0].keys.map((key) => key.pubkey),
+          ...ixsToSend[1].keys.map((key) => key.pubkey),
+          ...ixsToSend[2].keys.map((key) => key.pubkey),
+        ],
+      },
+    });
+
+  const versionedTransactionWithAlt = new VersionedTransaction(
+    new TransactionMessage({
+      recentBlockhash: transaction.recentBlockhash,
+      payerKey: payer.publicKey,
+      instructions: ixsToSend,
+    }).compileToV0Message([addressLookupTable])
+  );
+
+  expect(versionedTransactionWithAlt.serialize().length).toBe(
+    getSizeOfTransaction(ixsToSend, true, addressLookupTable)
   );
 });

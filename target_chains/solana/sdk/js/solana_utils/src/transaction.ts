@@ -1,5 +1,6 @@
 import { Wallet } from "@coral-xyz/anchor";
 import {
+  AddressLookupTableAccount,
   ComputeBudgetProgram,
   Connection,
   PACKET_DATA_SIZE,
@@ -63,7 +64,7 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
  * - A compact array of instructions
  *
  * If the transaction is a `VersionedTransaction`, it also contains an extra byte at the beginning, indicating the version and an array of `MessageAddressTableLookup` at the end.
- * We don't support Account Lookup Tables, so that array has a size of 0.
+ * After this field there is an array of indexes into the address lookup table that represents the accounts from the address lookup table used in the transaction.
  *
  * Each instruction has the following layout :
  * - One byte indicating the index of the program in the account addresses array
@@ -72,19 +73,22 @@ export const DEFAULT_PRIORITY_FEE_CONFIG: PriorityFeeConfig = {
  */
 export function getSizeOfTransaction(
   instructions: TransactionInstruction[],
-  versionedTransaction = true
+  versionedTransaction = true,
+  addressLookupTable?: AddressLookupTableAccount
 ): number {
+  const programs = new Set<string>();
   const signers = new Set<string>();
-  const accounts = new Set<string>();
+  let accounts = new Set<string>();
 
   instructions.map((ix) => {
-    accounts.add(ix.programId.toBase58()),
-      ix.keys.map((key) => {
-        if (key.isSigner) {
-          signers.add(key.pubkey.toBase58());
-        }
-        accounts.add(key.pubkey.toBase58());
-      });
+    programs.add(ix.programId.toBase58());
+    accounts.add(ix.programId.toBase58());
+    ix.keys.map((key) => {
+      if (key.isSigner) {
+        signers.add(key.pubkey.toBase58());
+      }
+      accounts.add(key.pubkey.toBase58());
+    });
   });
 
   const instruction_sizes: number = instructions
@@ -98,6 +102,19 @@ export function getSizeOfTransaction(
     )
     .reduce((a, b) => a + b, 0);
 
+  let numberOfAddressLookups = 0;
+  if (addressLookupTable) {
+    const lookupTableAddresses = addressLookupTable.state.addresses.map(
+      (address) => address.toBase58()
+    );
+    const totalNumberOfAccounts = accounts.size;
+    accounts = new Set(
+      [...accounts].filter((account) => !lookupTableAddresses.includes(account))
+    );
+    accounts = new Set([...accounts, ...programs, ...signers]);
+    numberOfAddressLookups = totalNumberOfAccounts - accounts.size; // This number is equal to the number of accounts that are in the lookup table and are neither signers nor programs
+  }
+
   return (
     getSizeOfCompressedU16(signers.size) +
     signers.size * 64 + // array of signatures
@@ -107,7 +124,10 @@ export function getSizeOfTransaction(
     32 + // recent blockhash
     getSizeOfCompressedU16(instructions.length) +
     instruction_sizes + // array of instructions
-    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) // we don't support Account Lookup Tables
+    (versionedTransaction ? 1 + getSizeOfCompressedU16(0) : 0) + // transaction version and number of address lookup tables
+    (versionedTransaction && addressLookupTable ? 32 : 0) + // address lookup table address (we only support 1 address lookup table)
+    (versionedTransaction && addressLookupTable ? 2 : 0) + // number of address lookup indexes
+    numberOfAddressLookups // address lookup indexes
   );
 }
 
@@ -130,11 +150,17 @@ export class TransactionBuilder {
   }[] = [];
   readonly payer: PublicKey;
   readonly connection: Connection;
+  readonly addressLookupTable: AddressLookupTableAccount | undefined;
 
   /** Make a new `TransactionBuilder`. It requires a `payer` to populate the `payerKey` field and a connection to populate `recentBlockhash` in the versioned transactions. */
-  constructor(payer: PublicKey, connection: Connection) {
+  constructor(
+    payer: PublicKey,
+    connection: Connection,
+    accountLookupTable?: AddressLookupTableAccount
+  ) {
     this.payer = payer;
     this.connection = connection;
+    this.addressLookupTable = accountLookupTable;
   }
 
   /**
@@ -149,11 +175,16 @@ export class TransactionBuilder {
         computeUnits: computeUnits ?? 0,
       });
     } else if (
-      getSizeOfTransaction([
-        ...this.transactionInstructions[this.transactionInstructions.length - 1]
-          .instructions,
-        instruction,
-      ]) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
+      getSizeOfTransaction(
+        [
+          ...this.transactionInstructions[
+            this.transactionInstructions.length - 1
+          ].instructions,
+          instruction,
+        ],
+        true,
+        this.addressLookupTable
+      ) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
     ) {
       this.transactionInstructions[
         this.transactionInstructions.length - 1
@@ -218,7 +249,9 @@ export class TransactionBuilder {
               recentBlockhash: blockhash,
               instructions: instructionsWithComputeBudget,
               payerKey: this.payer,
-            }).compileToV0Message()
+            }).compileToV0Message(
+              this.addressLookupTable ? [this.addressLookupTable] : []
+            )
           ),
           signers: signers,
         };
@@ -289,9 +322,14 @@ export class TransactionBuilder {
     payer: PublicKey,
     connection: Connection,
     instructions: InstructionWithEphemeralSigners[],
-    priorityFeeConfig: PriorityFeeConfig
+    priorityFeeConfig: PriorityFeeConfig,
+    addressLookupTable?: AddressLookupTableAccount
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
-    const transactionBuilder = new TransactionBuilder(payer, connection);
+    const transactionBuilder = new TransactionBuilder(
+      payer,
+      connection,
+      addressLookupTable
+    );
     transactionBuilder.addInstructions(instructions);
     return transactionBuilder.buildVersionedTransactions(priorityFeeConfig);
   }
