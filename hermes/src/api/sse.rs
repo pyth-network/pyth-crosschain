@@ -132,6 +132,7 @@ async fn handle_aggregation_event(
     encoding: EncodingType,
     parsed: bool,
 ) -> Result<PriceUpdate> {
+    // We check for available price feed ids to ensure that the price feed ids provided exists since price feeds can be removed.
     let available_price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
 
     price_ids.retain(|price_feed_id| available_price_feed_ids.contains(price_feed_id));
