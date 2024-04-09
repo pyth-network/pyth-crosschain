@@ -370,15 +370,18 @@ export async function sendTransactions(
   connection: Connection,
   wallet: Wallet,
   maxRetries?: number
-) {
+): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
   });
 
+  const signatures: string[] = [];
+
   // Signing logic for versioned transactions is different from legacy transactions
   for (const transaction of transactions) {
-    const { signers } = transaction;
+    const signers = transaction.signers;
     let tx = transaction.tx;
+
     if (isVersionedTransaction(tx)) {
       if (signers) {
         tx.sign(signers);
@@ -402,14 +405,14 @@ export async function sendTransactions(
     let confirmedTx = null;
     let retryCount = 0;
 
-    try {
-      // Get the signature of the transaction with different logic for versioned transactions
-      const txSignature = bs58.encode(
-        isVersionedTransaction(tx)
-          ? tx.signatures?.[0] || new Uint8Array()
-          : tx.signature ?? new Uint8Array()
-      );
+    // Get the signature of the transaction with different logic for versioned transactions
+    const txSignature = bs58.encode(
+      isVersionedTransaction(tx)
+        ? tx.signatures?.[0] || new Uint8Array()
+        : tx.signature ?? new Uint8Array()
+    );
 
+    try {
       const confirmTransactionPromise = connection.confirmTransaction(
         {
           signature: txSignature,
@@ -461,5 +464,9 @@ export async function sendTransactions(
     if (!confirmedTx) {
       throw new Error("Failed to land the transaction");
     }
+
+    signatures.push(txSignature);
   }
+
+  return signatures;
 }
