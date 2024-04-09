@@ -86,7 +86,7 @@ export type PythTransactionBuilderConfig = {
  * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
  * await transactionBuilder.addPriceConsumerInstructions(...)
  *
- * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:1000000}))
+ * await pythSolanaReceiver.provider.sendAll(await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:100000}))
  * ```
  */
 export class PythTransactionBuilder extends TransactionBuilder {

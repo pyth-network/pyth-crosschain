@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair } from "@solana/web3.js";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import {
   InstructionWithEphemeralSigners,
@@ -42,13 +42,17 @@ async function main() {
   } = await pythSolanaReceiver.buildPostPriceUpdateInstructions(
     priceUpdateData
   );
+  console.log(
+    "The SOL/USD price update will get posted to:",
+    priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID].toBase58()
+  );
 
   // Put your instructions here
   const consumerInstructions: InstructionWithEphemeralSigners[] = [];
 
   const transactions = await pythSolanaReceiver.batchIntoVersionedTransactions(
     [...postInstructions, ...consumerInstructions, ...closeInstructions],
-    { computeUnitPriceMicroLamports: 1000000 }
+    { computeUnitPriceMicroLamports: 100000 }
   ); // Put all the instructions together
   await pythSolanaReceiver.provider.sendAll(transactions, {
     preflightCommitment: "processed",

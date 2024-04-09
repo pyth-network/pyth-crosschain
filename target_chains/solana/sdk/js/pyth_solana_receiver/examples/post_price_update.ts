@@ -62,7 +62,7 @@ async function main() {
   // The builder will pack the instructions into transactions automatically.
   await pythSolanaReceiver.provider.sendAll(
     await transactionBuilder.buildVersionedTransactions({
-      computeUnitPriceMicroLamports: 1000000,
+      computeUnitPriceMicroLamports: 100000,
     }),
     { preflightCommitment: "processed" }
   );
