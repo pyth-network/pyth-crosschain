@@ -426,7 +426,7 @@ where
 
 pub async fn is_ready(state: &State) -> bool {
     let metadata = state.aggregate_state.read().await;
-    let price_feeds_metadata = state.price_feeds_metadata.read().await;
+    let price_feeds_metadata = state.price_feed_meta.data.read().await;
 
     let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
         Some(latest_completed_update_time) => {
@@ -456,7 +456,7 @@ mod test {
         super::*,
         crate::{
             api::types::PriceFeedMetadata,
-            price_feeds_metadata::store_price_feeds_metadata,
+            price_feeds_metadata::PriceFeedMeta,
             state::test::setup_state,
         },
         futures::future::join_all,
@@ -809,15 +809,13 @@ mod test {
 
 
         // Add a dummy price feeds metadata
-        store_price_feeds_metadata(
-            &state,
-            &[PriceFeedMetadata {
+        state
+            .store_price_feeds_metadata(&[PriceFeedMetadata {
                 id:         PriceIdentifier::new([100; 32]),
                 attributes: Default::default(),
-            }],
-        )
-        .await
-        .unwrap();
+            }])
+            .await
+            .unwrap();
 
         // Check the state is ready
         assert!(is_ready(&state).await);

@@ -17,7 +17,7 @@ use {
             GuardianSetData,
         },
         price_feeds_metadata::{
-            store_price_feeds_metadata,
+            PriceFeedMeta,
             DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
         },
         state::State,
@@ -353,13 +353,18 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 }
 
 
-pub async fn fetch_and_store_price_feeds_metadata(
-    state: &State,
+pub async fn fetch_and_store_price_feeds_metadata<S>(
+    state: &S,
     mapping_address: &Pubkey,
     rpc_client: &RpcClient,
-) -> Result<Vec<PriceFeedMetadata>> {
+) -> Result<Vec<PriceFeedMetadata>>
+where
+    S: PriceFeedMeta,
+{
     let price_feeds_metadata = fetch_price_feeds_metadata(mapping_address, rpc_client).await?;
-    store_price_feeds_metadata(state, &price_feeds_metadata).await?;
+    state
+        .store_price_feeds_metadata(&price_feeds_metadata)
+        .await?;
     Ok(price_feeds_metadata)
 }
 
