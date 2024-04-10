@@ -25,7 +25,9 @@ class SimpleSearcher {
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
     console.log(
       `Bid status for bid ${bidStatus.id}: ${bidStatus.status} ${
-        bidStatus.status == "submitted" ? bidStatus.result : ""
+        bidStatus.status == "submitted" || bidStatus.status == "lost"
+          ? bidStatus.result
+          : ""
       }`
     );
   }
