@@ -83,7 +83,7 @@ pub async fn price_stream_sse_handler(
     State(state): State<ApiState>,
     QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError> {
-    let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
+    let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
 
     verify_price_ids_exist(&state, &price_ids).await?;
 
