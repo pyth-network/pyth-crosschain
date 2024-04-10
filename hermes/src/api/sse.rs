@@ -97,27 +97,22 @@ pub async fn price_stream_sse_handler(
         let state_clone = state.clone(); // Clone again to use inside the async block
         let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
         async move {
-            let event = match message {
-                Ok(event) => event,
-                Err(e) => {
-                    return Ok(Event::default()
-                        .event("error")
-                        .data(format!("Error receiving update: {:?}", e)))
+            match message {
+                Ok(event) => {
+                    match handle_aggregation_event(
+                        event,
+                        state_clone,
+                        price_ids_clone,
+                        params.encoding,
+                        params.parsed,
+                    )
+                    .await
+                    {
+                        Ok(price_update) => Ok(Event::default().json_data(price_update).unwrap()),
+                        Err(e) => Ok(error_event(e)),
+                    }
                 }
-            };
-            match handle_aggregation_event(
-                event,
-                state_clone,
-                price_ids_clone,
-                params.encoding,
-                params.parsed,
-            )
-            .await
-            {
-                Ok(price_update) => Ok(Event::default().json_data(price_update).unwrap()),
-                Err(e) => Ok(Event::default()
-                    .event("error")
-                    .data(format!("Error receiving update: {:?}", e))),
+                Err(e) => Ok(error_event(e)),
             }
         }
     });
@@ -169,4 +164,10 @@ async fn handle_aggregation_event(
         binary: binary_price_update,
         parsed: parsed_price_updates,
     })
+}
+
+fn error_event<E: std::fmt::Debug>(e: E) -> Event {
+    Event::default()
+        .event("error")
+        .data(format!("Error receiving update: {:?}", e))
 }
