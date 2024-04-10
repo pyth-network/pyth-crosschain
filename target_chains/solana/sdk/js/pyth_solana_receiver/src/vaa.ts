@@ -111,6 +111,7 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
         })
         .instruction(),
       signers: [],
+      computeUnits: 3000,
     },
     {
       instruction: await wormhole.methods
@@ -123,6 +124,7 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
         })
         .instruction(),
       signers: [],
+      computeUnits: 3000,
     },
   ];
 }

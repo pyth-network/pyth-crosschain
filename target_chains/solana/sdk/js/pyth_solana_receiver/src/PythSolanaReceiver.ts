@@ -30,6 +30,7 @@ import {
 import {
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
+  UPDATE_PRICE_FEED_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -464,6 +465,7 @@ export class PythSolanaReceiver {
         })
         .instruction(),
       signers: [],
+      computeUnits: 3000,
     });
 
     postInstructions.push(
@@ -634,7 +636,7 @@ export class PythSolanaReceiver {
             })
             .instruction(),
           signers: [],
-          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+          computeUnits: UPDATE_PRICE_FEED_COMPUTE_BUDGET,
         });
 
         priceFeedIdToPriceUpdateAccount[
