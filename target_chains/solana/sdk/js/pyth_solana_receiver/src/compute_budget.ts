@@ -10,5 +10,11 @@ export const POST_UPDATE_ATOMIC_COMPUTE_BUDGET = 170000;
  * A hard-coded budget for the compute units required for the `postUpdate` instruction in the Pyth Solana Receiver program.
  */
 export const POST_UPDATE_COMPUTE_BUDGET = 35000;
-
+/**
+ * A hard-coded budget for the compute units required for the `updatePriceFeed` instruction in the Pyth Push Oracle program.
+ */
 export const UPDATE_PRICE_FEED_COMPUTE_BUDGET = 190000;
+/**
+ * A hard-coded budget for the compute units required for the `writeEncodedVaa` instruction in the Wormhole program.
+ */
+export const WRITE_ENCODED_VAA_COMPUTE_BUDGET = 3000;

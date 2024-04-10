@@ -442,7 +442,7 @@ export async function sendTransactions(
           "Retrying transaction ",
           index,
           " of ",
-          transactions.length,
+          transactions.length - 1,
           " with signature: ",
           txSignature,
           " Retry count: ",
