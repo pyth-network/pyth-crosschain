@@ -15,6 +15,10 @@ export const POST_UPDATE_COMPUTE_BUDGET = 35000;
  */
 export const UPDATE_PRICE_FEED_COMPUTE_BUDGET = 190000;
 /**
+ * A hard-coded budget for the compute units required for the `initEncodedVaa` instruction in the Wormhole program.
+ */
+export const INIT_ENCODED_VAA_COMPUTE_BUDGET = 3000;
+/**
  * A hard-coded budget for the compute units required for the `writeEncodedVaa` instruction in the Wormhole program.
  */
 export const WRITE_ENCODED_VAA_COMPUTE_BUDGET = 3000;

@@ -28,6 +28,7 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
+  INIT_ENCODED_VAA_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
@@ -465,7 +466,7 @@ export class PythSolanaReceiver {
         })
         .instruction(),
       signers: [],
-      computeUnits: 3000,
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
     });
 
     postInstructions.push(
