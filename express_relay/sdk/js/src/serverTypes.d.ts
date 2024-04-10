@@ -4,13 +4,6 @@
  */
 
 export interface paths {
-  "/v1/auctions/{permission_key}": {
-    /**
-     * Query for auctions with the permission key and (optionally) chain ID specified.
-     * @description Query for auctions with the permission key and (optionally) chain ID specified.
-     */
-    get: operations["get_auctions"];
-  };
   "/v1/bids": {
     /**
      * Bid on a specific permission key for a specific chain.
@@ -57,14 +50,6 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     APIResponse: components["schemas"]["BidResult"];
-    AuctionParams: {
-      /** @example op_sepolia */
-      chain_id: string;
-      /** @example 0xdeadbeefcafe */
-      permission_key: string;
-      /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
-      tx_hash: string;
-    };
     Bid: {
       /**
        * @description Amount of bid in wei.
@@ -103,25 +88,24 @@ export interface components {
     BidStatus:
       | {
           /** @enum {string} */
-          status: "pending";
+          type: "pending";
         }
       | {
           /**
-           * @description The bid won the auction and was submitted to the chain in a transaction with the given hash
-           * @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3
+           * Format: int64
+           * @example 1
            */
+          index: number;
+          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
           result: string;
           /** @enum {string} */
-          status: "submitted";
+          type: "submitted";
         }
       | {
-          /**
-           * @description The bid lost the auction, which concluded with the transaction with the given hash
-           * @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3
-           */
+          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
           result: string;
           /** @enum {string} */
-          status: "lost";
+          type: "lost";
         };
     BidStatusWithId: {
       bid_status: components["schemas"]["BidStatus"];
@@ -287,18 +271,6 @@ export interface components {
     };
   };
   responses: {
-    AuctionParams: {
-      content: {
-        "application/json": {
-          /** @example op_sepolia */
-          chain_id: string;
-          /** @example 0xdeadbeefcafe */
-          permission_key: string;
-          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
-          tx_hash: string;
-        };
-      };
-    };
     BidResult: {
       content: {
         "application/json": {
@@ -352,37 +324,6 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
-  /**
-   * Query for auctions with the permission key and (optionally) chain ID specified.
-   * @description Query for auctions with the permission key and (optionally) chain ID specified.
-   */
-  get_auctions: {
-    parameters: {
-      query?: {
-        /** @example op_sepolia */
-        chain_id?: string | null;
-      };
-      path: {
-        /** @description Permission key to query for */
-        permission_key: string;
-      };
-    };
-    responses: {
-      /** @description Array of auctions with the permission key */
-      200: {
-        content: {
-          "application/json": components["schemas"]["AuctionParams"][];
-        };
-      };
-      400: components["responses"]["ErrorBodyResponse"];
-      /** @description Permission key was not found */
-      404: {
-        content: {
-          "application/json": components["schemas"]["ErrorBodyResponse"];
-        };
-      };
-    };
-  };
   /**
    * Bid on a specific permission key for a specific chain.
    * @description Bid on a specific permission key for a specific chain.

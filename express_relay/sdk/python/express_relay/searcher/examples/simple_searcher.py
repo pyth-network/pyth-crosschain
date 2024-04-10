@@ -77,7 +77,9 @@ class SimpleSearcher:
         result = bid_status_update.result
 
         if bid_status == BidStatus("submitted"):
-            logger.info(f"Bid {id} has been submitted in transaction {result}")
+            logger.info(
+                f"Bid {id} has been submitted in transaction {result} at index {bid_status_update.index} of the multicall"
+            )
         elif bid_status == BidStatus("lost"):
             logger.info(
                 f"Bid {id} was unsuccessful, not included in transaction {result}"
