@@ -99,7 +99,7 @@ export class SolanaPricePusher implements IPricePusher {
       await sendTransactions(
         transactions,
         this.pythSolanaReceiver.connection,
-        this.pythSolanaReceiver.wallet as any
+        this.pythSolanaReceiver.wallet
       );
       console.log(new Date(), "updatePriceFeed successful");
       this.alreadySending = false;

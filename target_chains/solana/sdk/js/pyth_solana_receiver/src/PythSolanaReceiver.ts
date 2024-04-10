@@ -34,7 +34,7 @@ import {
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
-import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
