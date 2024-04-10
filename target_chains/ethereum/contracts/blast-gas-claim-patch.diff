@@ -1,0 +1,25 @@
+diff --git a/target_chains/ethereum/contracts/contracts/pyth/Pyth.sol b/target_chains/ethereum/contracts/contracts/pyth/Pyth.sol
+index 6b08e386..aa34f117 100644
+--- a/target_chains/ethereum/contracts/contracts/pyth/Pyth.sol
++++ b/target_chains/ethereum/contracts/contracts/pyth/Pyth.sol
+@@ -12,6 +12,10 @@ import "./PythGetters.sol";
+ import "./PythSetters.sol";
+ import "./PythInternalStructs.sol";
+
++interface IBlast {
++    function configureClaimableGas() external;
++}
++
+ abstract contract Pyth is
+     PythGetters,
+     PythSetters,
+@@ -722,4 +726,9 @@ abstract contract Pyth is
+     function version() public pure returns (string memory) {
+         return "1.4.3";
+     }
++
++    function configureClaimableGas() external {
++        IBlast(0x4300000000000000000000000000000000000002)
++            .configureClaimableGas();
++    }
+ }
