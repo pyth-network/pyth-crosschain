@@ -28,11 +28,13 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
+  INIT_ENCODED_VAA_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
+  UPDATE_PRICE_FEED_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
-import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
@@ -464,6 +466,7 @@ export class PythSolanaReceiver {
         })
         .instruction(),
       signers: [],
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
     });
 
     postInstructions.push(
@@ -634,7 +637,7 @@ export class PythSolanaReceiver {
             })
             .instruction(),
           signers: [],
-          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+          computeUnits: UPDATE_PRICE_FEED_COMPUTE_BUDGET,
         });
 
         priceFeedIdToPriceUpdateAccount[

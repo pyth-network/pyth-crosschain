@@ -7,6 +7,7 @@ import {
 } from "../interface";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -54,13 +55,19 @@ export class SolanaPricePusher implements IPricePusher {
     private pythSolanaReceiver: PythSolanaReceiver,
     private priceServiceConnection: PriceServiceConnection,
     private shardId: number,
-    private computeUnitPriceMicroLamports: number
+    private computeUnitPriceMicroLamports: number,
+    private alreadySending: boolean = false
   ) {}
 
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
+    if (this.alreadySending) {
+      console.log(new Date(), "updatePriceFeed already in progress");
+      return;
+    }
+    this.alreadySending = true;
     if (priceIds.length === 0) {
       return;
     }
@@ -83,16 +90,22 @@ export class SolanaPricePusher implements IPricePusher {
       this.shardId
     );
 
+    const transactions = await transactionBuilder.buildVersionedTransactions({
+      computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+      tightComputeBudget: true,
+    });
+
     try {
-      await this.pythSolanaReceiver.provider.sendAll(
-        await transactionBuilder.buildVersionedTransactions({
-          computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
-        }),
-        { skipPreflight: true }
+      await sendTransactions(
+        transactions,
+        this.pythSolanaReceiver.connection,
+        this.pythSolanaReceiver.wallet
       );
       console.log(new Date(), "updatePriceFeed successful");
+      this.alreadySending = false;
     } catch (e: any) {
       console.error(new Date(), "updatePriceFeed failed", e);
+      this.alreadySending = false;
       return;
     }
   }

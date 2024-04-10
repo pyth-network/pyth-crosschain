@@ -2,6 +2,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
 import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
+import { WRITE_ENCODED_VAA_COMPUTE_BUDGET } from "./compute_budget";
 
 /**
  * Get the index of the guardian set that signed a VAA
@@ -111,6 +112,7 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
         })
         .instruction(),
       signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
     },
     {
       instruction: await wormhole.methods
@@ -123,6 +125,7 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
         })
         .instruction(),
       signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
     },
   ];
 }

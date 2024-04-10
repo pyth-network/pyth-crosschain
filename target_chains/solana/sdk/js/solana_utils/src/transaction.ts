@@ -378,7 +378,7 @@ export async function sendTransactions(
   const signatures: string[] = [];
 
   // Signing logic for versioned transactions is different from legacy transactions
-  for (const transaction of transactions) {
+  for (const [index, transaction] of transactions.entries()) {
     const signers = transaction.signers;
     let tx = transaction.tx;
 
@@ -439,7 +439,11 @@ export async function sendTransactions(
           break;
         }
         console.log(
-          "Retrying transaction: ",
+          "Retrying transaction ",
+          index,
+          " of ",
+          transactions.length - 1,
+          " with signature: ",
           txSignature,
           " Retry count: ",
           retryCount
