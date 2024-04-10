@@ -26,15 +26,27 @@ mod rest;
 pub mod types;
 mod ws;
 
-#[derive(Clone)]
-pub struct ApiState {
-    pub state:     Arc<State>,
+pub struct ApiState<S = State> {
+    pub state:     Arc<S>,
     pub ws:        Arc<ws::WsState>,
     pub metrics:   Arc<metrics_middleware::Metrics>,
     pub update_tx: Sender<AggregationEvent>,
 }
 
-impl ApiState {
+/// Manually implement `Clone` as the derive macro will try and slap `Clone` on
+/// `State` which should not be Clone.
+impl<S> Clone for ApiState<S> {
+    fn clone(&self) -> Self {
+        Self {
+            state:     self.state.clone(),
+            ws:        self.ws.clone(),
+            metrics:   self.metrics.clone(),
+            update_tx: self.update_tx.clone(),
+        }
+    }
+}
+
+impl ApiState<State> {
     pub fn new(
         state: Arc<State>,
         ws_whitelist: Vec<IpNet>,
