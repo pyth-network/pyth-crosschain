@@ -216,7 +216,7 @@ export interface components {
       version: "v1";
     }) & {
       /**
-       * @description Creation time of the opportunity (in nanoseconds since the Unix epoch)
+       * @description Creation time of the opportunity (in microseconds since the Unix epoch)
        * @example 1700000000000000
        */
       creation_time: number;
@@ -298,7 +298,7 @@ export interface components {
           version: "v1";
         }) & {
           /**
-           * @description Creation time of the opportunity (in nanoseconds since the Unix epoch)
+           * @description Creation time of the opportunity (in microseconds since the Unix epoch)
            * @example 1700000000000000
            */
           creation_time: number;
