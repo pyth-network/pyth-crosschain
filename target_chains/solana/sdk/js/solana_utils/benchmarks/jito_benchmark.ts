@@ -34,7 +34,7 @@ async function main() {
   const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
 
   const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
-    closeUpdateAccounts: false,
+    closeUpdateAccounts: true,
   });
   const priceUpdateData = await getPriceUpdateData();
   await transactionBuilder.addUpdatePriceFeed(priceUpdateData, 1);
