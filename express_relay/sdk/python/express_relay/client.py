@@ -325,8 +325,6 @@ class ExpressRelayClient:
                         bid_status = msg_json["status"]["bid_status"]["type"]
                         result = msg_json["status"]["bid_status"].get("result")
                         index = msg_json["status"]["bid_status"].get("index")
-                        if index:
-                            index = int(index, 16)
                         bid_status_update = BidStatusUpdate(
                             id=id,
                             bid_status=BidStatus(bid_status),
