@@ -307,7 +307,7 @@ export class TransactionBuilder {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
               fromPubkey: this.payer,
-              toPubkey: new PublicKey(TIP_ACCOUNTS[0]),
+              toPubkey: getRandomTipAccount(),
               lamports: args.jitoTipLamports,
             })
           );
