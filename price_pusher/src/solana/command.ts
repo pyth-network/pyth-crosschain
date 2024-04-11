@@ -167,6 +167,7 @@ export default {
   },
 };
 
+/* tslint:disable */
 export const onBundleResult = (c: SearcherClient) => {
   c.onBundleResult(
     () => {},
@@ -175,3 +176,4 @@ export const onBundleResult = (c: SearcherClient) => {
     }
   );
 };
+/* tslint:enable */
