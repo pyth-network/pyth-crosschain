@@ -8,3 +8,5 @@ export {
   sendTransactions,
   DEFAULT_PRIORITY_FEE_CONFIG,
 } from "./transaction";
+
+export { sendTransactionsJito } from "./jito";

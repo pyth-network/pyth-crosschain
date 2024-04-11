@@ -6,12 +6,14 @@ import {
   PACKET_DATA_SIZE,
   PublicKey,
   Signer,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import { TIP_ACCOUNTS, getRandomTipAccount } from "./jito";
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
@@ -42,6 +44,7 @@ export type PriorityFeeConfig = {
   /** This is the priority fee in micro lamports, it gets passed down to `setComputeUnitPrice`  */
   computeUnitPriceMicroLamports?: number;
   tightComputeBudget?: boolean;
+  jitoTipLamports?: number;
 };
 
 /**
@@ -223,7 +226,7 @@ export class TransactionBuilder {
     ).blockhash;
 
     return this.transactionInstructions.map(
-      ({ instructions, signers, computeUnits }) => {
+      ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
@@ -239,6 +242,18 @@ export class TransactionBuilder {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
+            })
+          );
+        }
+        if (
+          args.jitoTipLamports &&
+          index == this.transactionInstructions.length - 1
+        ) {
+          instructionsWithComputeBudget.push(
+            SystemProgram.transfer({
+              fromPubkey: this.payer,
+              toPubkey: getRandomTipAccount(),
+              lamports: args.jitoTipLamports,
             })
           );
         }
@@ -266,7 +281,7 @@ export class TransactionBuilder {
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(
-      ({ instructions, signers, computeUnits }) => {
+      ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
@@ -282,6 +297,18 @@ export class TransactionBuilder {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
+            })
+          );
+        }
+        if (
+          args.jitoTipLamports &&
+          index == this.transactionInstructions.length - 1
+        ) {
+          instructionsWithComputeBudget.push(
+            SystemProgram.transfer({
+              fromPubkey: this.payer,
+              toPubkey: getRandomTipAccount(),
+              lamports: args.jitoTipLamports,
             })
           );
         }
