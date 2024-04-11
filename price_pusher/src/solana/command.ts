@@ -167,13 +167,11 @@ export default {
   },
 };
 
-/* tslint:disable */
 export const onBundleResult = (c: SearcherClient) => {
   c.onBundleResult(
-    () => {},
+    () => undefined,
     (e) => {
       console.log("Error in bundle result: ", e);
     }
   );
 };
-/* tslint:enable */
