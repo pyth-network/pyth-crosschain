@@ -10,8 +10,8 @@ use {
             AggregateState,
             AggregationEvent,
         },
-        api::types::PriceFeedMetadata,
         network::wormhole::GuardianSet,
+        price_feeds_metadata::PriceFeedMetaState,
     },
     prometheus_client::registry::Registry,
     reqwest::Url,
@@ -38,6 +38,9 @@ pub struct State {
     /// State for the `Benchmarks` service for looking up historical updates.
     pub benchmarks: BenchmarksState,
 
+    /// State for the `PriceFeedMeta` service for looking up metadata related to Pyth price feeds.
+    pub price_feed_meta: PriceFeedMetaState,
+
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
     pub observed_vaa_seqs: RwLock<BTreeSet<u64>>,
@@ -53,9 +56,6 @@ pub struct State {
 
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
-
-    /// Price feeds metadata
-    pub price_feeds_metadata: RwLock<Vec<PriceFeedMetadata>>,
 }
 
 impl State {
@@ -66,14 +66,14 @@ impl State {
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
-            cache:                CacheState::new(cache_size),
-            benchmarks:           BenchmarksState::new(benchmarks_endpoint),
-            observed_vaa_seqs:    RwLock::new(Default::default()),
-            guardian_set:         RwLock::new(Default::default()),
-            api_update_tx:        update_tx,
-            aggregate_state:      RwLock::new(AggregateState::new(&mut metrics_registry)),
-            metrics_registry:     RwLock::new(metrics_registry),
-            price_feeds_metadata: RwLock::new(Default::default()),
+            cache:             CacheState::new(cache_size),
+            benchmarks:        BenchmarksState::new(benchmarks_endpoint),
+            price_feed_meta:   PriceFeedMetaState::new(),
+            observed_vaa_seqs: RwLock::new(Default::default()),
+            guardian_set:      RwLock::new(Default::default()),
+            api_update_tx:     update_tx,
+            aggregate_state:   RwLock::new(AggregateState::new(&mut metrics_registry)),
+            metrics_registry:  RwLock::new(metrics_registry),
         })
     }
 }

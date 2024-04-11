@@ -21,6 +21,7 @@ mod price_feed_ids;
 mod ready;
 mod v2;
 
+
 pub use {
     get_price_feed::*,
     get_vaa::*,
@@ -38,6 +39,7 @@ pub use {
     },
 };
 
+#[derive(Debug)]
 pub enum RestError {
     BenchmarkPriceNotUnique,
     UpdateDataNotFound,

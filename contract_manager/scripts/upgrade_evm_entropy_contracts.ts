@@ -9,19 +9,33 @@ import {
   makeCacheFunction,
 } from "./common";
 
-const CACHE_FILE = ".cache-upgrade-evm-executor-contract";
-const runIfNotCached = makeCacheFunction(CACHE_FILE);
+const EXECUTOR_CACHE_FILE = ".cache-upgrade-evm-executor-contract";
+const ENTROPY_CACHE_FILE = ".cache-upgrade-evm-entropy-contract";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Deploys a new ExecutorUpgradeable contract to a set of chains where Entropy is deployed and creates a governance proposal for it.\n" +
-      `Uses a cache file (${CACHE_FILE}) to avoid deploying contracts twice\n` +
+    "Deploys a new Upgradeable contract for Executor or Entropy to a set of chains where Entropy is deployed and creates a governance proposal for it.\n" +
+      `Uses a cache file to avoid deploying contracts twice\n` +
       "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output>"
   )
-  .options(COMMON_UPGRADE_OPTIONS);
+  .options({
+    ...COMMON_UPGRADE_OPTIONS,
+    "contract-type": {
+      type: "string",
+      choices: ["executor", "entropy"],
+      demandOption: true,
+    },
+  });
 
 async function main() {
   const argv = await parser.argv;
+  const cacheFile =
+    argv["contract-type"] === "executor"
+      ? EXECUTOR_CACHE_FILE
+      : ENTROPY_CACHE_FILE;
+
+  const runIfNotCached = makeCacheFunction(cacheFile);
+
   const selectedChains = getSelectedChains(argv);
 
   const vault =
@@ -29,7 +43,7 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
 
-  console.log("Using cache file", CACHE_FILE);
+  console.log("Using cache file", cacheFile);
 
   const payloads: Buffer[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
@@ -51,9 +65,11 @@ async function main() {
       console.log(
         `Deployed contract at ${address} on ${contract.chain.getId()}`
       );
-      const payload = await contract.generateUpgradeExecutorContractsPayload(
-        address
-      );
+      const payload =
+        argv["contract-type"] === "executor"
+          ? await contract.generateUpgradeExecutorContractsPayload(address)
+          : await contract.generateUpgradeEntropyContractPayload(address);
+
       console.log(payload.toString("hex"));
       payloads.push(payload);
     }
