@@ -23,6 +23,7 @@ use {
 mod doc_examples;
 mod metrics_middleware;
 mod rest;
+mod sse;
 pub mod types;
 mod ws;
 
@@ -143,6 +144,10 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
+        .route(
+            "/v2/updates/price/stream",
+            get(sse::price_stream_sse_handler),
+        )
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
         .route(
             "/v2/updates/price/:publish_time",
