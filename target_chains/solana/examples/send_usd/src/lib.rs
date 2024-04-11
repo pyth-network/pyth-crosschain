@@ -1,6 +1,16 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{native_token::LAMPORTS_PER_SOL, system_instruction};
-use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
+use {
+    anchor_lang::{
+        prelude::*,
+        solana_program::{
+            native_token::LAMPORTS_PER_SOL,
+            system_instruction,
+        },
+    },
+    pyth_solana_receiver_sdk::price_update::{
+        get_feed_id_from_hex,
+        PriceUpdateV2,
+    },
+};
 
 declare_id!("2e5gZD3suxgJgkCg4pkoogxDKszy1SAwokz8mNeZUj4M");
 
@@ -9,9 +19,10 @@ pub const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4
 
 #[program]
 pub mod my_first_pyth_app {
-    use pyth_solana_receiver_sdk::price_update::VerificationLevel;
-
-    use super::*;
+    use {
+        super::*,
+        pyth_solana_receiver_sdk::price_update::VerificationLevel,
+    };
 
     pub fn send(ctx: Context<Send>, amount_in_usd: u64) -> Result<()> {
         let price_update = &mut ctx.accounts.price_update;
@@ -19,7 +30,7 @@ pub mod my_first_pyth_app {
             &Clock::get()?,
             MAXIMUM_AGE,
             &get_feed_id_from_hex(FEED_ID)?,
-            VerificationLevel::Partial{num_signatures: 5}
+            VerificationLevel::Partial { num_signatures: 5 },
         )?;
 
         let amount_in_lamports = LAMPORTS_PER_SOL
@@ -51,10 +62,10 @@ pub mod my_first_pyth_app {
 #[instruction(amount_in_usd : u64)]
 pub struct Send<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:          Signer<'info>,
     #[account(mut)]
     /// CHECK : Just a destination
-    pub destination: AccountInfo<'info>,
-    pub price_update: Account<'info, PriceUpdateV2>,
+    pub destination:    AccountInfo<'info>,
+    pub price_update:   Account<'info, PriceUpdateV2>,
     pub system_program: Program<'info, System>,
 }
