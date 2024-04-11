@@ -1,10 +1,6 @@
 use {
     super::verify_price_ids_exist,
     crate::{
-        aggregate::{
-            RequestTime,
-            UnixTimestamp,
-        },
         api::{
             doc_examples,
             rest::RestError,
@@ -12,6 +8,12 @@ use {
                 PriceIdInput,
                 RpcPriceFeed,
             },
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            RequestTime,
+            UnixTimestamp,
         },
     },
     anyhow::Result,
@@ -60,16 +62,19 @@ pub struct GetPriceFeedQueryParams {
         GetPriceFeedQueryParams
     )
 )]
-pub async fn get_price_feed(
-    State(state): State<crate::api::ApiState>,
+pub async fn get_price_feed<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
-) -> Result<Json<RpcPriceFeed>, RestError> {
+) -> Result<Json<RpcPriceFeed>, RestError>
+where
+    S: Aggregates,
+{
     let price_id: PriceIdentifier = params.id.into();
-
     verify_price_ids_exist(&state, &[price_id]).await?;
 
-    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
-        &*state.state,
+    let state = &*state.state;
+    let price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
+        state,
         &[price_id],
         RequestTime::FirstAfter(params.publish_time),
     )

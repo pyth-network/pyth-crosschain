@@ -4,10 +4,6 @@
 
 use {
     crate::{
-        aggregate::{
-            AccumulatorMessages,
-            Update,
-        },
         api::types::PriceFeedMetadata,
         config::RunOptions,
         network::wormhole::{
@@ -20,7 +16,14 @@ use {
             PriceFeedMeta,
             DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
         },
-        state::State,
+        state::{
+            aggregate::{
+                AccumulatorMessages,
+                Aggregates,
+                Update,
+            },
+            State,
+        },
     },
     anyhow::{
         anyhow,
@@ -182,8 +185,8 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
                         if candidate.to_string() == update.value.pubkey {
                             let store = store.clone();
                             tokio::spawn(async move {
-                                if let Err(err) = crate::aggregate::store_update(
-                                    &store,
+                                if let Err(err) = Aggregates::store_update(
+                                    &*store,
                                     Update::AccumulatorMessages(accumulator_messages),
                                 )
                                 .await

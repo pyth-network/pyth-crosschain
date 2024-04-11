@@ -1,14 +1,14 @@
 //! This module communicates with Pyth Benchmarks, an API for historical price feeds and their updates.
 
 use {
-    super::State,
-    crate::{
+    super::{
         aggregate::{
             PriceFeedsWithUpdateData,
             UnixTimestamp,
         },
-        api::types::PriceUpdate,
+        State,
     },
+    crate::api::types::PriceUpdate,
     anyhow::Result,
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,
@@ -69,6 +69,7 @@ impl<'a> From<&'a State> for &'a BenchmarksState {
     }
 }
 
+#[async_trait::async_trait]
 pub trait Benchmarks {
     async fn get_verified_price_feeds(
         &self,
@@ -77,6 +78,7 @@ pub trait Benchmarks {
     ) -> Result<PriceFeedsWithUpdateData>;
 }
 
+#[async_trait::async_trait]
 impl<T> Benchmarks for T
 where
     for<'a> &'a T: Into<&'a BenchmarksState>,

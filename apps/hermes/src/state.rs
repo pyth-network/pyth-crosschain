@@ -2,14 +2,14 @@
 
 use {
     self::{
-        benchmarks::BenchmarksState,
-        cache::CacheState,
-    },
-    crate::{
         aggregate::{
             AggregateState,
             AggregationEvent,
         },
+        benchmarks::BenchmarksState,
+        cache::CacheState,
+    },
+    crate::{
         network::wormhole::GuardianSet,
         price_feeds_metadata::PriceFeedMetaState,
     },
@@ -28,6 +28,7 @@ use {
     },
 };
 
+pub mod aggregate;
 pub mod benchmarks;
 pub mod cache;
 
@@ -41,18 +42,15 @@ pub struct State {
     /// State for the `PriceFeedMeta` service for looking up metadata related to Pyth price feeds.
     pub price_feed_meta: PriceFeedMetaState,
 
+    /// State for accessing/storing Pyth price aggregates.
+    pub aggregates: AggregateState,
+
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
     pub observed_vaa_seqs: RwLock<BTreeSet<u64>>,
 
     /// Wormhole guardian sets. It is used to verify Vaas before using them.
     pub guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
-
-    /// The sender to the channel between Store and Api to notify completed updates.
-    pub api_update_tx: Sender<AggregationEvent>,
-
-    /// The aggregate module state.
-    pub aggregate_state: RwLock<AggregateState>,
 
     /// Metrics registry
     pub metrics_registry: RwLock<Registry>,
@@ -69,10 +67,9 @@ impl State {
             cache:             CacheState::new(cache_size),
             benchmarks:        BenchmarksState::new(benchmarks_endpoint),
             price_feed_meta:   PriceFeedMetaState::new(),
+            aggregates:        AggregateState::new(update_tx, &mut metrics_registry),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set:      RwLock::new(Default::default()),
-            api_update_tx:     update_tx,
-            aggregate_state:   RwLock::new(AggregateState::new(&mut metrics_registry)),
             metrics_registry:  RwLock::new(metrics_registry),
         })
     }

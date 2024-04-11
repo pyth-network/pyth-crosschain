@@ -1,7 +1,11 @@
 use {
-    crate::api::{
-        rest::RestError,
-        types::RpcPriceIdentifier,
+    crate::{
+        api::{
+            rest::RestError,
+            types::RpcPriceIdentifier,
+            ApiState,
+        },
+        state::aggregate::Aggregates,
     },
     anyhow::Result,
     axum::{
@@ -21,10 +25,14 @@ use {
         (status = 200, description = "Price feed ids retrieved successfully", body = Vec<RpcPriceIdentifier>)
     ),
 )]
-pub async fn price_feed_ids(
-    State(state): State<crate::api::ApiState>,
-) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError> {
-    let price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state)
+pub async fn price_feed_ids<S>(
+    State(state): State<ApiState<S>>,
+) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError>
+where
+    S: Aggregates,
+{
+    let state = &*state.state;
+    let price_feed_ids = Aggregates::get_price_feed_ids(state)
         .await
         .into_iter()
         .map(RpcPriceIdentifier::from)
