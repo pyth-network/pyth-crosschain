@@ -709,12 +709,12 @@ export class PythSolanaReceiver {
   /**
    * Fetch the contents of a price feed account
    * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
-   * @param priceFeedId The price feed ID.
+   * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
    * @returns The contents of the deserialized price feed account or `null` if the account doesn't exist
    */
   async fetchPriceFeedAccount(
     shardId: number,
-    priceFeedId: Buffer
+    priceFeedId: Buffer | string
   ): Promise<PriceUpdateAccount | null> {
     return this.receiver.account.priceUpdateV2.fetchNullable(
       this.getPriceFeedAccountAddress(shardId, priceFeedId)
@@ -724,7 +724,7 @@ export class PythSolanaReceiver {
   /**
    * Derive the address of a price feed account
    * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
-   * @param priceFeedId The price feed ID.
+   * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
    * @returns The address of the price feed account
    */
   getPriceFeedAccountAddress(
@@ -742,7 +742,7 @@ export class PythSolanaReceiver {
 /**
  * Derive the address of a price feed account
  * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
- * @param priceFeedId The price feed ID.
+ * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
  * @param pushOracleProgramId The program ID of the Pyth Push Oracle program. If not provided, the default deployment will be used.
  * @returns The address of the price feed account
  */
