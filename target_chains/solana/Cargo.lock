@@ -2497,6 +2497,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "my_first_pyth_app"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.6",
+ "anchor-lang",
+ "pyth-solana-receiver-sdk",
+ "solana-program",
+]
+
+[[package]]
 name = "nix"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

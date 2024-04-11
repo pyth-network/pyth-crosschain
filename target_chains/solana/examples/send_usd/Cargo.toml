@@ -1,0 +1,22 @@
+[package]
+name = "my_first_pyth_app"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "my_first_pyth_app"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+ahash = "=0.8.6"
+solana-program = { workspace = true }
+pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
