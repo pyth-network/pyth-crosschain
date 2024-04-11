@@ -178,7 +178,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       i += this.jitoBundleSize
     ) {
       await sendTransactionsJito(
-        transactions.slice(i, i + 2),
+        transactions.slice(i, i + this.jitoBundleSize),
         this.searcherClient,
         this.pythSolanaReceiver.wallet
       );
