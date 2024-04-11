@@ -92,7 +92,7 @@ export interface components {
         }
       | {
           /**
-           * Format: int64
+           * Format: int32
            * @example 1
            */
           index: number;
@@ -216,9 +216,8 @@ export interface components {
       version: "v1";
     }) & {
       /**
-       * Format: int64
-       * @description Creation time of the opportunity
-       * @example 1700000000
+       * @description Creation time of the opportunity (in nanoseconds since the Unix epoch)
+       * @example 1700000000000000
        */
       creation_time: number;
       /**
@@ -299,9 +298,8 @@ export interface components {
           version: "v1";
         }) & {
           /**
-           * Format: int64
-           * @description Creation time of the opportunity
-           * @example 1700000000
+           * @description Creation time of the opportunity (in nanoseconds since the Unix epoch)
+           * @example 1700000000000000
            */
           creation_time: number;
           /**
