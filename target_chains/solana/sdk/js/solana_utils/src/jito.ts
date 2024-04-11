@@ -1,5 +1,6 @@
 import { Wallet } from "@coral-xyz/anchor";
 import { PublicKey, Signer, VersionedTransaction } from "@solana/web3.js";
+import bs58 from "bs58";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 
@@ -26,7 +27,7 @@ export async function sendTransactionsJito(
   }[],
   searcherClient: SearcherClient,
   wallet: Wallet
-) {
+): Promise<string> {
   const signedTransactions = [];
 
   for (const transaction of transactions) {
@@ -41,6 +42,12 @@ export async function sendTransactionsJito(
     signedTransactions.push(tx);
   }
 
+  const firstTransactionSignature = bs58.encode(
+    signedTransactions[0].signatures[0]
+  );
+
   const bundle = new Bundle(signedTransactions, 2);
   await searcherClient.sendBundle(bundle);
+
+  return firstTransactionSignature;
 }
