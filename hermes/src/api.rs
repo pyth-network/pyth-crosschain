@@ -106,6 +106,7 @@ pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
             rest::latest_price_updates,
             rest::timestamp_price_updates,
             rest::price_feeds_metadata,
+            sse::price_stream_sse_handler,
         ),
         components(
             schemas(
