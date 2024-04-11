@@ -45,6 +45,7 @@ export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
   tightComputeBudget?: boolean;
   jitoTipLamports?: number;
+  jitoBundleSize?: number;
 };
 
 /**
@@ -225,6 +226,9 @@ export class TransactionBuilder {
       await this.connection.getLatestBlockhash({ commitment: "confirmed" })
     ).blockhash;
 
+    const jitoBundleSize =
+      args.jitoBundleSize || this.transactionInstructions.length;
+
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
@@ -247,7 +251,7 @@ export class TransactionBuilder {
         }
         if (
           args.jitoTipLamports &&
-          index == this.transactionInstructions.length - 1
+          index % jitoBundleSize === jitoBundleSize - 1
         ) {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
@@ -280,6 +284,9 @@ export class TransactionBuilder {
   buildLegacyTransactions(
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
+    const jitoBundleSize =
+      args.jitoBundleSize || this.transactionInstructions.length;
+
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
@@ -302,7 +309,7 @@ export class TransactionBuilder {
         }
         if (
           args.jitoTipLamports &&
-          index == this.transactionInstructions.length - 1
+          index % jitoBundleSize === jitoBundleSize - 1
         ) {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({

@@ -14,7 +14,10 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Keypair, Connection } from "@solana/web3.js";
 import fs from "fs";
 import { PublicKey } from "@solana/web3.js";
-import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import {
+  SearcherClient,
+  searcherClient,
+} from "jito-ts/dist/sdk/block-engine/searcher";
 
 export default {
   command: "solana",
@@ -56,6 +59,11 @@ export default {
       type: "number",
       optional: true,
     } as Options,
+    "jito-bundle-size": {
+      description: "Number of transactions in each bundle",
+      type: "number",
+      default: 2,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -76,6 +84,7 @@ export default {
       jitoEndpoint,
       jitoKeypairFile,
       jitoTipLamports,
+      jitoBundleSize,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -118,13 +127,18 @@ export default {
       const jitoKeypair = Keypair.fromSecretKey(
         Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii")))
       );
+
+      const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
         pythSolanaReceiver,
         priceServiceConnection,
         shardId,
         jitoTipLamports,
-        searcherClient(jitoEndpoint, jitoKeypair)
+        jitoClient,
+        jitoBundleSize
       );
+
+      onBundleResult(jitoClient);
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
@@ -151,4 +165,13 @@ export default {
 
     controller.start();
   },
+};
+
+export const onBundleResult = (c: SearcherClient) => {
+  c.onBundleResult(
+    (result) => {},
+    (e) => {
+      console.log("Error in bundle result: ", e);
+    }
+  );
 };

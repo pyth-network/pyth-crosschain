@@ -121,7 +121,8 @@ export class SolanaPricePusherJito implements IPricePusher {
     private priceServiceConnection: PriceServiceConnection,
     private shardId: number,
     private jitoTipLamports: number,
-    private searcherClient: SearcherClient
+    private searcherClient: SearcherClient,
+    private jitoBundleSize: number
   ) {}
 
   async updatePriceFeed(
@@ -139,7 +140,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     }
 
     const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
-      closeUpdateAccounts: true,
+      closeUpdateAccounts: false,
     });
     await transactionBuilder.addUpdatePriceFeed(
       priceFeedUpdateData,
@@ -149,12 +150,38 @@ export class SolanaPricePusherJito implements IPricePusher {
     const transactions = await transactionBuilder.buildVersionedTransactions({
       jitoTipLamports: this.jitoTipLamports,
       tightComputeBudget: true,
+      jitoBundleSize: this.jitoBundleSize,
     });
 
-    sendTransactionsJito(
-      transactions,
+    const firstSignature = await sendTransactionsJito(
+      transactions.slice(0, this.jitoBundleSize),
       this.searcherClient,
       this.pythSolanaReceiver.wallet
     );
+
+    const blockhashResult =
+      await this.pythSolanaReceiver.connection.getLatestBlockhashAndContext({
+        commitment: "confirmed",
+      });
+    await this.pythSolanaReceiver.connection.confirmTransaction(
+      {
+        signature: firstSignature,
+        blockhash: blockhashResult.value.blockhash,
+        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+      },
+      "confirmed"
+    );
+
+    for (
+      let i = this.jitoBundleSize;
+      i < transactions.length;
+      i += this.jitoBundleSize
+    ) {
+      await sendTransactionsJito(
+        transactions.slice(i, i + 2),
+        this.searcherClient,
+        this.pythSolanaReceiver.wallet
+      );
+    }
   }
 }
