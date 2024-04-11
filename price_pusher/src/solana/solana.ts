@@ -7,7 +7,11 @@ import {
 } from "../interface";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { sendTransactions } from "@pythnetwork/solana-utils";
+import {
+  sendTransactions,
+  sendTransactionsJito,
+} from "@pythnetwork/solana-utils";
+import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -108,5 +112,49 @@ export class SolanaPricePusher implements IPricePusher {
       this.alreadySending = false;
       return;
     }
+  }
+}
+
+export class SolanaPricePusherJito implements IPricePusher {
+  constructor(
+    private pythSolanaReceiver: PythSolanaReceiver,
+    private priceServiceConnection: PriceServiceConnection,
+    private shardId: number,
+    private jitoTipLamports: number,
+    private searcherClient: SearcherClient
+  ) {}
+
+  async updatePriceFeed(
+    priceIds: string[],
+    pubTimesToPush: number[]
+  ): Promise<void> {
+    let priceFeedUpdateData;
+    try {
+      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
+        priceIds
+      );
+    } catch (e: any) {
+      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+      return;
+    }
+
+    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
+      closeUpdateAccounts: true,
+    });
+    await transactionBuilder.addUpdatePriceFeed(
+      priceFeedUpdateData,
+      this.shardId
+    );
+
+    const transactions = await transactionBuilder.buildVersionedTransactions({
+      jitoTipLamports: this.jitoTipLamports,
+      tightComputeBudget: true,
+    });
+
+    sendTransactionsJito(
+      transactions,
+      this.searcherClient,
+      this.pythSolanaReceiver.wallet
+    );
   }
 }

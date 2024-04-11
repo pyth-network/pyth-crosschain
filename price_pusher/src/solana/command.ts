@@ -3,13 +3,18 @@ import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
-import { SolanaPriceListener, SolanaPricePusher } from "./solana";
+import {
+  SolanaPriceListener,
+  SolanaPricePusher,
+  SolanaPricePusherJito,
+} from "./solana";
 import { Controller } from "../controller";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Keypair, Connection } from "@solana/web3.js";
 import fs from "fs";
 import { PublicKey } from "@solana/web3.js";
+import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 
 export default {
   command: "solana",
@@ -35,6 +40,22 @@ export default {
       type: "number",
       default: 50000,
     } as Options,
+    "jito-endpoint": {
+      description: "Jito endpoint",
+      type: "string",
+      optional: true,
+    } as Options,
+    "jito-keypair-file": {
+      description:
+        "Path to the jito keypair file (need for grpc authentication)",
+      type: "string",
+      optional: true,
+    } as Options,
+    "jito-tip-lamports": {
+      description: "Lamports to tip the jito builder",
+      type: "number",
+      optional: true,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -52,6 +73,9 @@ export default {
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
+      jitoEndpoint,
+      jitoKeypairFile,
+      jitoTipLamports,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -89,12 +113,27 @@ export default {
       pushOracleProgramId: new PublicKey(pythContractAddress),
     });
 
-    const solanaPricePusher = new SolanaPricePusher(
-      pythSolanaReceiver,
-      priceServiceConnection,
-      shardId,
-      computeUnitPriceMicroLamports
-    );
+    let solanaPricePusher;
+    if (jitoTipLamports) {
+      const jitoKeypair = Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii")))
+      );
+      solanaPricePusher = new SolanaPricePusherJito(
+        pythSolanaReceiver,
+        priceServiceConnection,
+        shardId,
+        jitoTipLamports,
+        searcherClient(jitoEndpoint, jitoKeypair)
+      );
+    } else {
+      solanaPricePusher = new SolanaPricePusher(
+        pythSolanaReceiver,
+        priceServiceConnection,
+        shardId,
+        computeUnitPriceMicroLamports
+      );
+    }
+
     const solanaPriceListener = new SolanaPriceListener(
       pythSolanaReceiver,
       shardId,
