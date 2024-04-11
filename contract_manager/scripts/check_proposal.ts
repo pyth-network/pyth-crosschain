@@ -139,12 +139,11 @@ async function main() {
       if (instruction.governanceAction instanceof EvmExecute) {
         // TODO: it only checks for upgrade entropy contracts right now
         console.log(
-          `Verifying EVM Execute Contract on ${instruction.governanceAction.targetChainId}`
+          `Verifying EVMExecute Contract on ${instruction.governanceAction.targetChainId}`
         );
         for (const chain of Object.values(DefaultStore.chains)) {
           if (
             chain instanceof EvmChain &&
-            // chain.isMainnet() === (cluster === "mainnet-beta") &&
             chain.wormholeChainName ===
               instruction.governanceAction.targetChainId
           ) {
@@ -166,6 +165,7 @@ async function main() {
 
             const calldataHex = calldata.toString("hex");
             let newImplementationAddress: string | undefined = undefined;
+            // Method signature for upgradeTo method is 3659cfe6
             if (calldataHex.startsWith("3659cfe6000000000000000000000000")) {
               newImplementationAddress = calldataHex.replace(
                 "3659cfe6000000000000000000000000",
