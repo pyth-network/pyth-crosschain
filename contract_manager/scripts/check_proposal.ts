@@ -173,7 +173,12 @@ async function main() {
               );
             }
 
-            if (newImplementationAddress === undefined) return;
+            if (newImplementationAddress === undefined) {
+              console.log(
+                `No new implementation address found for ${chain.getId()}`
+              );
+              continue;
+            }
 
             const newImplementationContract = new EvmEntropyContract(
               chain,
