@@ -79,8 +79,8 @@ async function main() {
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet ", wallet.publicKey.toBase58());
   await vault.connect(wallet);
-  // const proposal = await vault.proposeWormholeMessage(payloads);
-  // console.log("Proposal address", proposal.address.toBase58());
+  const proposal = await vault.proposeWormholeMessage(payloads);
+  console.log("Proposal address", proposal.address.toBase58());
 }
 
 main();
