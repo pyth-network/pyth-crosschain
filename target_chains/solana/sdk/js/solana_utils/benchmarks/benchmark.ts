@@ -34,10 +34,10 @@ async function main() {
   const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
 
   const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
-    closeUpdateAccounts: true,
+    closeUpdateAccounts: false,
   });
   const priceUpdateData = await getPriceUpdateData();
-  await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+  await transactionBuilder.addUpdatePriceFeed(priceUpdateData, 1);
 
   const c = searcherClient("mainnet.block-engine.jito.wtf", jitoKeypair);
 

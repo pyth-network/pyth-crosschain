@@ -226,7 +226,7 @@ export class TransactionBuilder {
     ).blockhash;
 
     return this.transactionInstructions.map(
-      ({ instructions, signers, computeUnits }) => {
+      ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
@@ -245,7 +245,10 @@ export class TransactionBuilder {
             })
           );
         }
-        if (args.jitoTipLamports) {
+        if (
+          args.jitoTipLamports &&
+          index == this.transactionInstructions.length - 1
+        ) {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
               fromPubkey: this.payer,
@@ -278,7 +281,7 @@ export class TransactionBuilder {
     args: PriorityFeeConfig
   ): { tx: Transaction; signers: Signer[] }[] {
     return this.transactionInstructions.map(
-      ({ instructions, signers, computeUnits }) => {
+      ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
@@ -297,7 +300,7 @@ export class TransactionBuilder {
             })
           );
         }
-        if (args.jitoTipLamports) {
+        if (args.jitoTipLamports && index == 0) {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
               fromPubkey: this.payer,
