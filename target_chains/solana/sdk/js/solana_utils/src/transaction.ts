@@ -13,7 +13,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-import { TIP_ACCOUNTS } from "./jito";
+import { TIP_ACCOUNTS, getRandomTipAccount } from "./jito";
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
@@ -252,7 +252,7 @@ export class TransactionBuilder {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
               fromPubkey: this.payer,
-              toPubkey: new PublicKey(TIP_ACCOUNTS[0]),
+              toPubkey: getRandomTipAccount(),
               lamports: args.jitoTipLamports,
             })
           );
@@ -300,7 +300,10 @@ export class TransactionBuilder {
             })
           );
         }
-        if (args.jitoTipLamports && index == 0) {
+        if (
+          args.jitoTipLamports &&
+          index == this.transactionInstructions.length - 1
+        ) {
           instructionsWithComputeBudget.push(
             SystemProgram.transfer({
               fromPubkey: this.payer,

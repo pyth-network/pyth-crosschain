@@ -1,5 +1,5 @@
 import { Wallet } from "@coral-xyz/anchor";
-import { Signer, VersionedTransaction } from "@solana/web3.js";
+import { PublicKey, Signer, VersionedTransaction } from "@solana/web3.js";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 
@@ -13,6 +13,12 @@ export const TIP_ACCOUNTS = [
   "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
   "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt",
 ];
+
+export function getRandomTipAccount(): PublicKey {
+  const randomInt = Math.floor(Math.random() * TIP_ACCOUNTS.length);
+  return new PublicKey(TIP_ACCOUNTS[randomInt]);
+}
+
 export async function sendTransactionsJito(
   transactions: {
     tx: VersionedTransaction;
