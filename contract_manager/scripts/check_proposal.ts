@@ -155,13 +155,18 @@ async function main() {
             // currently executor is only being used by the entropy contract
             const contract = new EvmEntropyContract(chain, callAddress);
             const owner = await contract.getOwner();
-            console.log(
-              `Executor Address: ${executorAddress.toUpperCase()} is equal to Owner Address: ${owner
-                .replace("0x", "")
-                .toUpperCase()}`,
-              executorAddress.toUpperCase() ===
-                owner.replace("0x", "").toUpperCase()
-            );
+
+            if (
+              executorAddress.toUpperCase() !==
+              owner.replace("0x", "").toUpperCase()
+            ) {
+              console.log(
+                `Executor Address: ${executorAddress.toUpperCase()} is not equal to Owner Address: ${owner
+                  .replace("0x", "")
+                  .toUpperCase()}`
+              );
+              continue;
+            }
 
             const calldataHex = calldata.toString("hex");
             let newImplementationAddress: string | undefined = undefined;
