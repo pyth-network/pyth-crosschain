@@ -169,7 +169,7 @@ export default {
 
 export const onBundleResult = (c: SearcherClient) => {
   c.onBundleResult(
-    (result) => {},
+    () => {},
     (e) => {
       console.log("Error in bundle result: ", e);
     }
