@@ -23,10 +23,14 @@ class SimpleSearcher {
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
+    let resultDetails = "";
+    if (bidStatus.type == "submitted") {
+      resultDetails = `, transaction ${bidStatus.result}, index ${bidStatus.index} of multicall`;
+    } else if (bidStatus.type == "lost") {
+      resultDetails = `, transaction ${bidStatus.result}`;
+    }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.status} ${
-        bidStatus.status == "submitted" ? bidStatus.result : ""
-      }`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
     );
   }
 

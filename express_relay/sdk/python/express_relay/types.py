@@ -112,19 +112,29 @@ class BidStatusUpdate(BaseModel):
     Attributes:
         id: The ID of the bid.
         bid_status: The status enum, either SUBMITTED, LOST, or PENDING.
-        result: The result of the bid: a transaction hash if the status is SUBMITTED, else None.
+        result: The result of the bid: a transaction hash if the status is SUBMITTED or LOST, else None.
+        index: The index of the bid in the submitted transaction; None if the status is not SUBMITTED.
     """
 
     id: UUIDString
     bid_status: BidStatus
     result: Bytes32 | None = Field(default=None)
+    index: int | None = Field(default=None)
 
     @model_validator(mode="after")
     def check_result(self):
-        if self.bid_status == BidStatus("submitted"):
-            assert self.result is not None, "result must be a valid 32-byte hash"
-        else:
+        if self.bid_status == BidStatus("pending"):
             assert self.result is None, "result must be None"
+        else:
+            assert self.result is not None, "result must be a valid 32-byte hash"
+        return self
+
+    @model_validator(mode="after")
+    def check_index(self):
+        if self.bid_status == BidStatus("submitted"):
+            assert self.index is not None, "index must be a valid integer"
+        else:
+            assert self.index is None, "index must be None"
         return self
 
 

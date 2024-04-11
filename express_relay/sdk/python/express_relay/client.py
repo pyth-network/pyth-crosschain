@@ -322,10 +322,14 @@ class ExpressRelayClient:
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
                         id = msg_json["status"]["id"]
-                        bid_status = msg_json["status"]["bid_status"]["status"]
+                        bid_status = msg_json["status"]["bid_status"]["type"]
                         result = msg_json["status"]["bid_status"].get("result")
+                        index = msg_json["status"]["bid_status"].get("index")
                         bid_status_update = BidStatusUpdate(
-                            id=id, bid_status=BidStatus(bid_status), result=result
+                            id=id,
+                            bid_status=BidStatus(bid_status),
+                            result=result,
+                            index=index,
                         )
                         asyncio.create_task(bid_status_callback(bid_status_update))
 

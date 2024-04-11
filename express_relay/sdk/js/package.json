@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/express_relay/sdk/js",
   "author": "Douro Labs",
@@ -42,10 +42,11 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@pythnetwork/pyth-evm-js": "*",
+    "@types/node": "^20.12.7",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
-    "@pythnetwork/pyth-evm-js": "*",
     "eslint": "^8.56.0",
     "jest": "^27.5.1",
     "prettier": "^2.6.2",

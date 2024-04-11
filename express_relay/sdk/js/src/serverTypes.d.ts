@@ -10,7 +10,7 @@ export interface paths {
      * @description Bid on a specific permission key for a specific chain.
      *
      * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-     * containing the targetContract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+     * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
      */
     post: operations["bid"];
   };
@@ -58,7 +58,7 @@ export interface components {
       amount: string;
       /**
        * @description The chain id to bid on.
-       * @example sepolia
+       * @example op_sepolia
        */
       chain_id: string;
       /**
@@ -67,12 +67,12 @@ export interface components {
        */
       permission_key: string;
       /**
-       * @description Calldata for the targetContract call.
+       * @description Calldata for the contract call.
        * @example 0xdeadbeef
        */
       target_calldata: string;
       /**
-       * @description The targetContract address to call.
+       * @description The contract address to call.
        * @example 0xcA11bde05977b3631167028862bE2a173976CA11
        */
       target_contract: string;
@@ -88,20 +88,24 @@ export interface components {
     BidStatus:
       | {
           /** @enum {string} */
-          status: "pending";
+          type: "pending";
         }
       | {
           /**
-           * @description The bid won the auction and was submitted to the chain in a transaction with the given hash
-           * @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3
+           * Format: int32
+           * @example 1
            */
+          index: number;
+          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
           result: string;
           /** @enum {string} */
-          status: "submitted";
+          type: "submitted";
         }
       | {
+          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
+          result: string;
           /** @enum {string} */
-          status: "lost";
+          type: "lost";
         };
     BidStatusWithId: {
       bid_status: components["schemas"]["BidStatus"];
@@ -174,14 +178,14 @@ export interface components {
     /**
      * @description Opportunity parameters needed for on-chain execution
      * If a searcher signs the opportunity and have approved enough tokens to opportunity adapter,
-     * by calling this target targetContract with the given target targetCalldata and structures, they will
+     * by calling this target contract with the given target calldata and structures, they will
      * send the tokens specified in the sell_tokens field and receive the tokens specified in the buy_tokens field.
      */
     OpportunityParamsV1: {
       buy_tokens: components["schemas"]["TokenAmount"][];
       /**
        * @description The chain id where the opportunity will be executed.
-       * @example sepolia
+       * @example op_sepolia
        */
       chain_id: string;
       /**
@@ -191,17 +195,17 @@ export interface components {
       permission_key: string;
       sell_tokens: components["schemas"]["TokenAmount"][];
       /**
-       * @description The targetCallValue to send with the targetContract call.
+       * @description The value to send with the contract call.
        * @example 1
        */
       target_call_value: string;
       /**
-       * @description Calldata for the target targetContract call.
+       * @description Calldata for the target contract call.
        * @example 0xdeadbeef
        */
       target_calldata: string;
       /**
-       * @description The targetContract address to call for execution of the opportunity.
+       * @description The contract address to call for execution of the opportunity.
        * @example 0xcA11bde05977b3631167028862bE2a173976CA11
        */
       target_contract: string;
@@ -212,9 +216,8 @@ export interface components {
       version: "v1";
     }) & {
       /**
-       * Format: int64
-       * @description Creation time of the opportunity
-       * @example 1700000000
+       * @description Creation time of the opportunity (in microseconds since the Unix epoch)
+       * @example 1700000000000000
        */
       creation_time: number;
       /**
@@ -260,7 +263,7 @@ export interface components {
        */
       amount: string;
       /**
-       * @description Token targetContract address
+       * @description Token contract address
        * @example 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
        */
       token: string;
@@ -295,9 +298,8 @@ export interface components {
           version: "v1";
         }) & {
           /**
-           * Format: int64
-           * @description Creation time of the opportunity
-           * @example 1700000000
+           * @description Creation time of the opportunity (in microseconds since the Unix epoch)
+           * @example 1700000000000000
            */
           creation_time: number;
           /**
@@ -325,7 +327,7 @@ export interface operations {
    * @description Bid on a specific permission key for a specific chain.
    *
    * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-   * containing the targetContract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+   * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
    */
   bid: {
     requestBody: {
@@ -383,7 +385,7 @@ export interface operations {
   get_opportunities: {
     parameters: {
       query?: {
-        /** @example sepolia */
+        /** @example op_sepolia */
         chain_id?: string | null;
       };
     };
