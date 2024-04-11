@@ -137,7 +137,7 @@ async function main() {
         }
       }
       if (instruction.governanceAction instanceof EvmExecute) {
-        // TODO: it only checks for upgrade entropy contracts right now
+        // Note: it only checks for upgrade entropy contracts right now
         console.log(
           `Verifying EVMExecute Contract on ${instruction.governanceAction.targetChainId}`
         );
