@@ -63,6 +63,10 @@ pub struct StreamPriceUpdatesQueryParams {
     /// If true, include the parsed price update in the `parsed` field of each returned feed.
     #[serde(default = "default_true")]
     parsed: bool,
+
+    /// If true, allows unordered price updates to be included in the stream.
+    #[serde(default)]
+    allow_unordered: bool,
 }
 
 fn default_true() -> bool {
@@ -99,6 +103,12 @@ pub async fn price_stream_sse_handler(
         async move {
             match message {
                 Ok(event) => {
+                    // Check if the event is out-of-order and if unordered updates are not allowed
+                    if let AggregationEvent::OutOfOrder { .. } = event {
+                        if !params.allow_unordered {
+                            return Ok(Event::default().comment("Out-of-order event skipped"));
+                        }
+                    }
                     match handle_aggregation_event(
                         event,
                         state_clone,
