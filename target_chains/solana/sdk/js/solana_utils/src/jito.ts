@@ -37,17 +37,4 @@ export async function sendTransactionsJito(
 
   const bundle = new Bundle(signedTransactions, 2);
   await searcherClient.sendBundle(bundle);
-
-  onBundleResult(searcherClient);
 }
-
-export const onBundleResult = (c: SearcherClient) => {
-  c.onBundleResult(
-    (result) => {
-      console.log("received bundle result:", result);
-    },
-    (e) => {
-      throw e;
-    }
-  );
-};
