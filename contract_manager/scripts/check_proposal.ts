@@ -176,7 +176,6 @@ async function main() {
               .replace("0x", "");
 
             let newImplementationAddress: string | undefined = undefined;
-            // Method signature for upgradeTo method is 3659cfe6
             if (calldataHex.startsWith(methodSignature)) {
               newImplementationAddress = web3.eth.abi.decodeParameter(
                 "address",
@@ -186,7 +185,7 @@ async function main() {
 
             if (newImplementationAddress === undefined) {
               console.log(
-                `No new implementation address found for ${chain.getId()}`
+                `We couldn't parse the instruction for ${chain.getId()}`
               );
               continue;
             }
