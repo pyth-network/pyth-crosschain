@@ -169,13 +169,18 @@ async function main() {
             }
 
             const calldataHex = calldata.toString("hex");
+            const web3 = new Web3();
+            const methodSignature = web3.eth.abi
+              .encodeFunctionSignature("upgradeTo(address)")
+              .replace("0x", "");
+
             let newImplementationAddress: string | undefined = undefined;
             // Method signature for upgradeTo method is 3659cfe6
-            if (calldataHex.startsWith("3659cfe6000000000000000000000000")) {
-              newImplementationAddress = calldataHex.replace(
-                "3659cfe6000000000000000000000000",
-                "0x"
-              );
+            if (calldataHex.startsWith(methodSignature)) {
+              newImplementationAddress = web3.eth.abi.decodeParameter(
+                "address",
+                calldataHex.replace(methodSignature, "")
+              ) as unknown as string;
             }
 
             if (newImplementationAddress === undefined) {
