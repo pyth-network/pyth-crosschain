@@ -161,8 +161,7 @@ async fn test_update_price_feed() {
         program_simulator.get_clock().await.unwrap().slot
     );
 
-    // post another update, outdated
-    assert_eq!(
+    // post a stale update. The tx succeeds w/o updating on-chain account state.
         program_simulator
             .process_ix_with_default_compute_limit(
                 UpdatePriceFeed::populate(
@@ -177,17 +176,23 @@ async fn test_update_price_feed() {
                 None,
             )
             .await
-            .unwrap_err()
-            .unwrap(),
-        into_transaction_error(PushOracleError::UpdatesNotMonotonic)
-    );
+            .unwrap();
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0) + 1,
+        Rent::default().minimum_balance(0) + 2,
         DEFAULT_TREASURY_ID,
     )
     .await;
+
+    assert_eq!(
+        Message::PriceFeedMessage(price_feed_account.price_message),
+        feed_1_recent
+    );
+    assert_eq!(
+        price_feed_account.posted_slot,
+        program_simulator.get_clock().await.unwrap().slot
+    );
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -230,7 +235,7 @@ async fn test_update_price_feed() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0) + 2,
+        Rent::default().minimum_balance(0) + 3,
         DEFAULT_TREASURY_ID,
     )
     .await;
