@@ -3019,6 +3019,7 @@ name = "pyth-push-oracle"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "byteorder",
  "common-test-utils",
  "program-simulator",
  "pyth-solana-receiver",
