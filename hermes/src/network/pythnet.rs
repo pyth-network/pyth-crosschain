@@ -325,6 +325,19 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
         let price_feeds_state = state.clone();
         let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
+            // Run fetch and store once before the loop
+            if let Err(e) = fetch_and_store_price_feeds_metadata(
+                price_feeds_state.as_ref(),
+                &opts.pythnet.mapping_addr,
+                &rpc_client,
+            )
+            .await
+            {
+                tracing::error!(
+                    "Error in initial fetching and storing price feeds metadata: {}",
+                    e
+                );
+            }
             loop {
                 tokio::select! {
                     _ = exit.changed() => break,
