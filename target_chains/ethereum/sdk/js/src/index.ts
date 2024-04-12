@@ -95,6 +95,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   merlin_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   meter_testnet: "0x5a71C07a0588074443545eE0c08fb0375564c3E4",
   mode_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  morph_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   movement_evm_devnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   mumbai: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
   neon_devnet: "0x0708325268dF9F66270F1401206434524814508b",
