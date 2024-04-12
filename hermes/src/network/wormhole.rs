@@ -225,7 +225,10 @@ pub async fn process_message(state: Arc<State>, vaa_bytes: Vec<u8>) -> Result<()
     )?;
 
     // Finally, store the resulting VAA in Hermes.
-    store_vaa(state.clone(), vaa.sequence, vaa_bytes).await?;
+    let sequence = vaa.sequence;
+    tokio::spawn(async move {
+        store_vaa(state.clone(), sequence, vaa_bytes).await;
+    });
 
     Ok(())
 }
@@ -334,16 +337,14 @@ pub fn verify_vaa<'a>(
 }
 
 #[tracing::instrument(skip(state, vaa_bytes))]
-pub async fn store_vaa(state: Arc<State>, sequence: u64, vaa_bytes: Vec<u8>) -> Result<()> {
+pub async fn store_vaa(state: Arc<State>, sequence: u64, vaa_bytes: Vec<u8>) {
     // Check VAA hasn't already been seen, this may have been checked previously
-    // but due to async nature It's possible other threads have mutated the state
+    // but due to async nature it's possible other threads have mutated the state
     // since this VAA started processing.
     let mut observed_vaa_seqs = state.observed_vaa_seqs.write().await;
-    ensure!(
-        !observed_vaa_seqs.contains(&sequence),
-        "Previously observed VAA: {}",
-        sequence,
-    );
+    if observed_vaa_seqs.contains(&sequence) {
+        return;
+    }
 
     // Clear old cached VAA sequences.
     while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
@@ -351,5 +352,9 @@ pub async fn store_vaa(state: Arc<State>, sequence: u64, vaa_bytes: Vec<u8>) -> 
     }
 
     // Hand the VAA to the aggregate store.
-    crate::aggregate::store_update(&state, crate::aggregate::Update::Vaa(vaa_bytes)).await
+    if let Err(e) =
+        crate::aggregate::store_update(&state, crate::aggregate::Update::Vaa(vaa_bytes)).await
+    {
+        tracing::error!(error = ?e, "Failed to store VAA in aggregate store.");
+    }
 }
