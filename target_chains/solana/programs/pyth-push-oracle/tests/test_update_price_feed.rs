@@ -162,37 +162,28 @@ async fn test_update_price_feed() {
     );
 
     // post a stale update. The tx succeeds w/o updating on-chain account state.
-        program_simulator
-            .process_ix_with_default_compute_limit(
-                UpdatePriceFeed::populate(
-                    poster.pubkey(),
-                    encoded_vaa_addresses[0],
-                    DEFAULT_SHARD,
-                    feed_id,
-                    DEFAULT_TREASURY_ID,
-                    merkle_price_updates[1].clone(),
-                ),
-                &vec![&poster],
-                None,
-            )
-            .await
-            .unwrap();
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            UpdatePriceFeed::populate(
+                poster.pubkey(),
+                encoded_vaa_addresses[0],
+                DEFAULT_SHARD,
+                feed_id,
+                DEFAULT_TREASURY_ID,
+                merkle_price_updates[0].clone(),
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0) + 2,
+        Rent::default().minimum_balance(0) + 1,
         DEFAULT_TREASURY_ID,
     )
     .await;
-
-    assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
-        feed_1_recent
-    );
-    assert_eq!(
-        price_feed_account.posted_slot,
-        program_simulator.get_clock().await.unwrap().slot
-    );
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -235,7 +226,7 @@ async fn test_update_price_feed() {
 
     assert_treasury_balance(
         &mut program_simulator,
-        Rent::default().minimum_balance(0) + 3,
+        Rent::default().minimum_balance(0) + 2,
         DEFAULT_TREASURY_ID,
     )
     .await;

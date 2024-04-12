@@ -9,8 +9,13 @@ use {
         price_update::PriceUpdateV2,
         PYTH_PUSH_ORACLE_ID,
     },
-    pythnet_sdk::messages::{FeedId, Message},
-    pythnet_sdk::wire::from_slice
+    pythnet_sdk::{
+        messages::{
+            FeedId,
+            Message,
+        },
+        wire::from_slice,
+    },
 };
 
 pub mod sdk;
@@ -76,8 +81,9 @@ pub mod pyth_push_oracle {
         //
         // Note that we don't do any validity checks on the proof etc. here. If the caller passes an
         // invalid message with a newer timestamp, the validity checks will be performed by pyth_solana_receiver.
-        let message = from_slice::<byteorder::BE, Message>(params.merkle_price_update.message.as_ref())
-            .map_err(|_| PushOracleError::DeserializeMessageFailed)?;
+        let message =
+            from_slice::<byteorder::BE, Message>(params.merkle_price_update.message.as_ref())
+                .map_err(|_| PushOracleError::DeserializeMessageFailed)?;
         let next_timestamp = match message {
             Message::PriceFeedMessage(price_feed_message) => price_feed_message.publish_time,
             Message::TwapMessage(_) => {
@@ -95,8 +101,8 @@ pub mod pyth_push_oracle {
                     PriceUpdateV2::try_deserialize(&mut &price_feed_account_data[..])?;
 
                 require!(
-                price_feed_account.price_message.feed_id == feed_id,
-                PushOracleError::PriceFeedMessageMismatch
+                    price_feed_account.price_message.feed_id == feed_id,
+                    PushOracleError::PriceFeedMessageMismatch
                 );
             }
         }
