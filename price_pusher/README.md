@@ -150,7 +150,7 @@ npm run start -- near \
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
 ```
 
-[hermes]: https://github.com/pyth-network/pyth-crosschain/tree/main/hermes
+[hermes]: https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes
 
 ### Command Line Arguments
 

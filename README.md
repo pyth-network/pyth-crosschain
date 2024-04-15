@@ -16,7 +16,7 @@ contracts, SDKs, and examples.
 
 ## Hermes
 
-> [hermes](./hermes/)
+> [hermes](./apps/hermes/)
 
 Hermes is an off-chain service which constantly observes Pythnet and the
 Wormhole network watching for price updates emitted from the Pyth contract. It

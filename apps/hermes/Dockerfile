@@ -12,7 +12,7 @@ RUN rustup default nightly-2024-03-26
 
 # Build
 WORKDIR /src
-COPY hermes hermes
+COPY apps/hermes hermes
 COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
 
 
