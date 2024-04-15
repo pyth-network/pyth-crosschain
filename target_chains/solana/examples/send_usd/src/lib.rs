@@ -9,7 +9,6 @@ use {
     pyth_solana_receiver_sdk::price_update::{
         get_feed_id_from_hex,
         PriceUpdateV2,
-        VerificationLevel,
     },
 };
 
@@ -24,11 +23,10 @@ pub mod my_first_pyth_app {
 
     pub fn send(ctx: Context<Send>, amount_in_usd: u64) -> Result<()> {
         let price_update = &mut ctx.accounts.price_update;
-        let price = price_update.get_price_no_older_than_with_custom_verification_level(
+        let price = price_update.get_price_no_older_than(
             &Clock::get()?,
             MAXIMUM_AGE,
             &get_feed_id_from_hex(FEED_ID)?,
-            VerificationLevel::Partial { num_signatures: 5 },
         )?;
 
         let amount_in_lamports = LAMPORTS_PER_SOL
