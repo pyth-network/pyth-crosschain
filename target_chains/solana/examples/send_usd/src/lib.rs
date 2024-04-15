@@ -9,6 +9,7 @@ use {
     pyth_solana_receiver_sdk::price_update::{
         get_feed_id_from_hex,
         PriceUpdateV2,
+        VerificationLevel,
     },
 };
 
@@ -19,10 +20,7 @@ pub const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4
 
 #[program]
 pub mod my_first_pyth_app {
-    use {
-        super::*,
-        pyth_solana_receiver_sdk::price_update::VerificationLevel,
-    };
+    use super::*;
 
     pub fn send(ctx: Context<Send>, amount_in_usd: u64) -> Result<()> {
         let price_update = &mut ctx.accounts.price_update;
