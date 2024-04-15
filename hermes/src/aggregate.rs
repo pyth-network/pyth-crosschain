@@ -264,23 +264,22 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     // Update the aggregate state
     let mut aggregate_state = state.aggregate_state.write().await;
 
-    // Check if the update is new or out of order
-    match aggregate_state.latest_completed_slot {
+    // Send update event to subscribers. We are purposefully ignoring the result
+    // because there might be no subscribers.
+    let _ = match aggregate_state.latest_completed_slot {
         None => {
             aggregate_state.latest_completed_slot.replace(slot);
-            state.api_update_tx.send(AggregationEvent::New { slot })?;
+            state.api_update_tx.send(AggregationEvent::New { slot })
         }
         Some(latest) if slot > latest => {
             state.prune_removed_keys(message_state_keys).await;
             aggregate_state.latest_completed_slot.replace(slot);
-            state.api_update_tx.send(AggregationEvent::New { slot })?;
+            state.api_update_tx.send(AggregationEvent::New { slot })
         }
-        _ => {
-            state
-                .api_update_tx
-                .send(AggregationEvent::OutOfOrder { slot })?;
-        }
-    }
+        _ => state
+            .api_update_tx
+            .send(AggregationEvent::OutOfOrder { slot }),
+    };
 
     aggregate_state.latest_completed_slot = aggregate_state
         .latest_completed_slot
