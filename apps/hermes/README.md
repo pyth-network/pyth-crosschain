@@ -35,14 +35,14 @@ To set up and run a Hermes node, follow the steps below:
    ```
 4. **Build the project**: Navigate to the project directory and run the following command to build the project:
    ```bash
-   cd hermes
+   cd apps/hermes
    cargo build --release
    ```
    This will create a binary in the target/release directory.
 5. **Run the node**: To run Hermes for Pythnet, use the following command:
 
    ```bash
-   ./target/release/hermes run \
+   cargo build --release run -- \
      --pythnet-http-addr https://pythnet-rpc/ \
      --pythnet-ws-addr wss://pythnet-rpc/ \
      --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
