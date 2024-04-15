@@ -18,7 +18,7 @@ pub const MAXIMUM_AGE: u64 = 24 * 3600 * 365;
 pub const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
 #[program]
-pub mod my_first_pyth_app {
+pub mod send_usd {
     use super::*;
 
     pub fn send(ctx: Context<Send>, amount_in_usd: u64) -> Result<()> {

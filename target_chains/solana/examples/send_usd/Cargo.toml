@@ -1,5 +1,5 @@
 [package]
-name = "send_usd"
+name = "send-usd"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
