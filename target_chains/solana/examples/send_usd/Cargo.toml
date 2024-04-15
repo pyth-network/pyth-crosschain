@@ -17,6 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-ahash = "=0.8.6"
 solana-program = { workspace = true }
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
