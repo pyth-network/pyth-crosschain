@@ -204,6 +204,11 @@ async fn handle_aggregation_event(
         .await?;
     }
 
+    // Check if price_ids is empty after filtering and return None if it is
+    if price_ids.is_empty() {
+        return Ok(None);
+    }
+
     let price_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = price_update_data
         .into_iter()
