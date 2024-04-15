@@ -119,21 +119,10 @@ pub async fn price_stream_sse_handler(
                     )
                     .await
                     {
-                        Ok(price_update) => {
-                            // Check if there is any data to send
-                            if let Some(update) = price_update {
-                                if update.binary.data.is_empty() {
-                                    // No data to send, skip creating an event
-                                    return Ok(Event::default().comment("No data to send"));
-                                }
-                                Ok(Event::default()
-                                    .json_data(update)
-                                    .unwrap_or_else(|e| error_event(e)))
-                            } else {
-                                // No update available, possibly return a different event or handle accordingly
-                                Ok(Event::default().comment("No update available"))
-                            }
-                        }
+                        Ok(Some(update)) => Ok(Event::default()
+                            .json_data(update)
+                            .unwrap_or_else(|e| error_event(e))),
+                        Ok(None) => Ok(Event::default().comment("No update available")),
                         Err(e) => Ok(error_event(e)),
                     }
                 }
