@@ -42,7 +42,7 @@ To set up and run a Hermes node, follow the steps below:
 5. **Run the node**: To run Hermes for Pythnet, use the following command:
 
    ```bash
-   cargo build --release run -- \
+   cargo run --release -- run \
      --pythnet-http-addr https://pythnet-rpc/ \
      --pythnet-ws-addr wss://pythnet-rpc/ \
      --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
