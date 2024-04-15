@@ -2497,15 +2497,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "my_first_pyth_app"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "pyth-solana-receiver-sdk",
- "solana-program",
-]
-
-[[package]]
 name = "nix"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3731,6 +3722,15 @@ name = "semver"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
+
+[[package]]
+name = "send_usd"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "pyth-solana-receiver-sdk",
+ "solana-program",
+]
 
 [[package]]
 name = "serde"
