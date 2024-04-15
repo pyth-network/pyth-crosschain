@@ -57,11 +57,11 @@ pub struct StreamPriceUpdatesQueryParams {
     #[param(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
     ids: Vec<PriceIdInput>,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed.
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`.
     #[serde(default)]
     encoding: EncodingType,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed.
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
 
@@ -108,12 +108,6 @@ pub async fn price_stream_sse_handler(
         async move {
             match message {
                 Ok(event) => {
-                    // Check if the event is out-of-order and if unordered updates are not allowed
-                    if let AggregationEvent::OutOfOrder { .. } = event {
-                        if !params.allow_unordered {
-                            return Ok(Event::default().comment("Out-of-order event skipped"));
-                        }
-                    }
                     match handle_aggregation_event(
                         event,
                         state_clone,
@@ -121,16 +115,24 @@ pub async fn price_stream_sse_handler(
                         params.encoding,
                         params.parsed,
                         params.benchmarks_only,
+                        params.allow_unordered,
                     )
                     .await
                     {
                         Ok(price_update) => {
                             // Check if there is any data to send
-                            if price_update.binary.data.is_empty() {
-                                // No data to send, skip creating an event
-                                return Ok(Event::default().comment("No data to send"));
+                            if let Some(update) = price_update {
+                                if update.binary.data.is_empty() {
+                                    // No data to send, skip creating an event
+                                    return Ok(Event::default().comment("No data to send"));
+                                }
+                                Ok(Event::default()
+                                    .json_data(update)
+                                    .unwrap_or_else(|e| error_event(e)))
+                            } else {
+                                // No update available, possibly return a different event or handle accordingly
+                                Ok(Event::default().comment("No update available"))
                             }
-                            Ok(Event::default().json_data(price_update).unwrap())
                         }
                         Err(e) => Ok(error_event(e)),
                     }
@@ -150,7 +152,15 @@ async fn handle_aggregation_event(
     encoding: EncodingType,
     parsed: bool,
     benchmarks_only: bool,
-) -> Result<PriceUpdate> {
+    allow_unordered: bool,
+) -> Result<Option<PriceUpdate>> {
+    // Handle out-of-order events
+    if let AggregationEvent::OutOfOrder { .. } = event {
+        if !allow_unordered {
+            return Ok(None);
+        }
+    }
+
     // We check for available price feed ids to ensure that the price feed ids provided exists since price feeds can be removed.
     let available_price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
 
@@ -204,14 +214,14 @@ async fn handle_aggregation_event(
         data: encoded_data,
     };
 
-    Ok(PriceUpdate {
+    Ok(Some(PriceUpdate {
         binary: binary_price_update,
         parsed: if parsed {
             Some(parsed_price_updates)
         } else {
             None
         },
-    })
+    }))
 }
 
 fn error_event<E: std::fmt::Debug>(e: E) -> Event {

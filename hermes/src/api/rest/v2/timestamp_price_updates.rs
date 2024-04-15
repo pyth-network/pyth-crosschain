@@ -58,11 +58,11 @@ pub struct TimestampPriceUpdatesQueryParams {
     #[param(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
     ids: Vec<PriceIdInput>,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed.
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`.
     #[serde(default)]
     encoding: EncodingType,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed.
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
 }

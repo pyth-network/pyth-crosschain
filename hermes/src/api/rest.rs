@@ -35,6 +35,7 @@ pub use {
     v2::{
         latest_price_updates::*,
         price_feeds_metadata::*,
+        sse::*,
         timestamp_price_updates::*,
     },
 };
