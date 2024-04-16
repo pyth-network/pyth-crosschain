@@ -147,6 +147,29 @@ export interface components {
     ErrorBodyResponse: {
       error: string;
     };
+    OpportunityAdapterSignatureConfig: {
+      /**
+       * Format: int64
+       * @description The network chain id of the opportunity adapter contract
+       * @example 31337
+       */
+      chain_network_id: number;
+      /**
+       * @description The opportunity adapter contract address
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      contract_address: string;
+      /**
+       * @description The domain name parameter for the EIP712 domain separator.
+       * @example OpportunityAdapter
+       */
+      domain_name: string;
+      /**
+       * @description The domain version parameter for the EIP712 domain separator.
+       * @example 1
+       */
+      domain_version: string;
+    };
     OpportunityBid: {
       /**
        * @description The bid amount in wei.
@@ -225,6 +248,7 @@ export interface components {
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
+      signature_config: components["schemas"]["OpportunityAdapterSignatureConfig"];
     };
     ServerResultMessage:
       | {
@@ -307,6 +331,7 @@ export interface components {
            * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
            */
           opportunity_id: string;
+          signature_config: components["schemas"]["OpportunityAdapterSignatureConfig"];
         };
       };
     };
