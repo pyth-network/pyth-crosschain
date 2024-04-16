@@ -22,3 +22,7 @@ export const INIT_ENCODED_VAA_COMPUTE_BUDGET = 3000;
  * A hard-coded budget for the compute units required for the `writeEncodedVaa` instruction in the Wormhole program.
  */
 export const WRITE_ENCODED_VAA_COMPUTE_BUDGET = 3000;
+/**
+ * A hard-coded budget for the compute units required for the `closeEncodedVaa` instruction in the Wormhole program.
+ */
+export const CLOSE_ENCODED_VAA_COMPUTE_BUDGET = 30000;

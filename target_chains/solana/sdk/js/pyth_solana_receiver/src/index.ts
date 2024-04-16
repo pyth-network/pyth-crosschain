@@ -6,7 +6,6 @@ export {
   TransactionBuilder,
   InstructionWithEphemeralSigners,
 } from "@pythnetwork/solana-utils";
-
 export {
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,

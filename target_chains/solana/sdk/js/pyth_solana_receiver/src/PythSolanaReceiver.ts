@@ -28,6 +28,7 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
+  CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
@@ -38,6 +39,7 @@ import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
+  findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
   overrideGuardianSet,
   trimSignatures,
@@ -664,7 +666,11 @@ export class PythSolanaReceiver {
       .closeEncodedVaa()
       .accounts({ encodedVaa })
       .instruction();
-    return { instruction, signers: [] };
+    return {
+      instruction,
+      signers: [],
+      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
+    };
   }
 
   /**
@@ -738,6 +744,25 @@ export class PythSolanaReceiver {
       priceFeedId,
       this.pushOracle.programId
     );
+  }
+
+  async findOwnedEncodedVaaAccounts() {
+    return await findEncodedVaaAccountsByWriteAuthority(
+      this.receiver.provider.connection,
+      this.wallet.publicKey,
+      this.wormhole.programId
+    );
+  }
+
+  async buildCloseOwnEncodedVaasInstructions(): Promise<
+    InstructionWithEphemeralSigners[]
+  > {
+    const encodedVaas = await this.findOwnedEncodedVaaAccounts();
+    const instructions = [];
+    for (const encodedVaa of encodedVaas) {
+      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
+    }
+    return instructions;
   }
 }
 
