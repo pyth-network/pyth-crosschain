@@ -1,0 +1,31 @@
+name: Starknet contract
+on:
+  pull_request:
+    paths:
+      - target_chains/starknet/contracts/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/starknet/contracts/**
+jobs:
+  check:
+    name: Starknet Foundry tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/starknet/contracts/
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          tool-versions: target_chains/starknet/contracts/.tool-versions
+      - name: Install Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
+        with:
+          tool-versions: target_chains/starknet/contracts/.tool-versions
+      - name: Check formatting
+        run: scarb fmt --check
+      - name: Run tests
+        run: snforge test
