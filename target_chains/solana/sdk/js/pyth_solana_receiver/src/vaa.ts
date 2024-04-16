@@ -52,9 +52,15 @@ export function trimSignatures(
   return trimmedVaa;
 }
 
+export const PREVIOUS_GUARDIAN_SET_INDEX = 4;
 export const CURRENT_GUARDIAN_SET_INDEX = 4;
 export function overrideGuardianSet(vaa: Buffer): Buffer {
-  vaa.writeUint32BE(CURRENT_GUARDIAN_SET_INDEX, 1);
+  let guardianSetIndex = getGuardianSetIndex(vaa);
+
+  if (guardianSetIndex <= 3) {
+    vaa.writeUint32BE(CURRENT_GUARDIAN_SET_INDEX, 1);
+  }
+
   return vaa;
 }
 
