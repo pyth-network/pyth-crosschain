@@ -39,6 +39,7 @@ import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
   getGuardianSetIndex,
+  overrideGuardianSet,
   trimSignatures,
 } from "./vaa";
 import {
@@ -446,6 +447,7 @@ export class PythSolanaReceiver {
     encodedVaaAddress: PublicKey;
     closeInstructions: InstructionWithEphemeralSigners[];
   }> {
+    vaa = overrideGuardianSet(vaa); // Short term fix Wormhole officially server guardian set 4 vaas
     const postInstructions: InstructionWithEphemeralSigners[] = [];
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
     const encodedVaaKeypair = new Keypair();
