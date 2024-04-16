@@ -19,11 +19,6 @@ import { buildJitoTipInstruction } from "./jito";
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
  */
 export const DEFAULT_COMPUTE_BUDGET_UNITS = 200000;
-/**
- * The maximum size of a Solana transaction, leaving some room for the compute budget instructions.
- */
-export const PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET =
-  PACKET_DATA_SIZE - 52;
 
 /**
  * An instruction with some extra information that will be used to build transactions.
@@ -179,7 +174,7 @@ export class TransactionBuilder {
         computeUnits: computeUnits ?? 0,
       });
     } else {
-      const size = getSizeOfTransaction(
+      const sizeWithComputeUnits = getSizeOfTransaction(
         [
           ...this.transactionInstructions[
             this.transactionInstructions.length - 1
@@ -191,7 +186,7 @@ export class TransactionBuilder {
         true,
         this.addressLookupTable
       );
-      if (size <= PACKET_DATA_SIZE) {
+      if (sizeWithComputeUnits <= PACKET_DATA_SIZE) {
         this.transactionInstructions[
           this.transactionInstructions.length - 1
         ].instructions.push(instruction);

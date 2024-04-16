@@ -265,6 +265,12 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
+  async addClosePreviousEncodedVaasInstructions() {
+    this.addInstructions(
+      await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions()
+    );
+  }
+
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
@@ -754,7 +760,7 @@ export class PythSolanaReceiver {
     );
   }
 
-  async buildCloseOwnEncodedVaasInstructions(): Promise<
+  async buildClosePreviousEncodedVaasInstructions(): Promise<
     InstructionWithEphemeralSigners[]
   > {
     const encodedVaas = await this.findOwnedEncodedVaaAccounts();
