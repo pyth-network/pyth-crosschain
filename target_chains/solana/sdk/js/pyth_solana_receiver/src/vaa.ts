@@ -98,7 +98,7 @@ export async function buildEncodedVaaCreateInstruction(
  * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
  * This way, the packing of the instructions to post an encoded vaa is more efficient.
  */
-export const VAA_SPLIT_INDEX = 750;
+export const VAA_SPLIT_INDEX = 755;
 
 /**
  * Build a set of instructions to write a VAA to an encoded VAA account
