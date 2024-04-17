@@ -268,7 +268,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * If you have previously used the PythTransactionBuilder with closeUpdateAccounts set to false or if you posted encoded VAAs but the transaction to close them did not land on-chain, your wallet might own many encoded VAA accounts.
    * The rent cost for these accounts is 0.008 SOL per encoded VAA account. You can recover this rent calling this function when building a set of transactions.
    */
-  async addClosePreviousEncodedVaasInstructions(maxInstructions: number = 40) {
+  async addClosePreviousEncodedVaasInstructions(maxInstructions = 40) {
     this.addInstructions(
       await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions(
         maxInstructions
