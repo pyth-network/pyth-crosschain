@@ -59,7 +59,7 @@ use {
 // contract in the same repo.
 abigen!(
     PythRandom,
-    "../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
+    "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
 
 pub type SignablePythContract = PythRandom<

@@ -7,15 +7,15 @@ RUN rustup default nightly-2023-07-23
 
 # Build
 WORKDIR /src
-COPY fortuna fortuna
+COPY apps/fortuna apps/fortuna
 COPY pythnet pythnet
 COPY target_chains/ethereum/entropy_sdk/solidity/abis target_chains/ethereum/entropy_sdk/solidity/abis
 
-WORKDIR /src/fortuna
+WORKDIR /src/apps/fortuna
 
 RUN --mount=type=cache,target=/root/.cargo/registry cargo build --release
 
 
 FROM rust:${RUST_VERSION}
 # Copy artifacts from other images
-COPY --from=build /src/fortuna/target/release/fortuna /usr/local/bin/
+COPY --from=build /src/apps/fortuna/target/release/fortuna /usr/local/bin/
