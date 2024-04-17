@@ -1,107 +1,81 @@
 [
   {
+    "type": "constructor",
     "inputs": [
+      { "name": "_entropy", "type": "address", "internalType": "address" },
       {
-        "internalType": "address",
-        "name": "_entropy",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_entropyProvider",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "stateMutability": "nonpayable"
   },
+  { "type": "receive", "stateMutability": "payable" },
   {
-    "inputs": [],
-    "name": "IncorrectSender",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InsufficientFee",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
+    "type": "function",
+    "name": "_entropyCallback",
     "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
-      }
+      { "name": "sequence", "type": "uint64", "internalType": "uint64" },
+      { "name": "provider", "type": "address", "internalType": "address" },
+      { "name": "randomNumber", "type": "bytes32", "internalType": "bytes32" }
     ],
-    "name": "FlipRequest",
-    "type": "event"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isHeads",
-        "type": "bool"
-      }
-    ],
-    "name": "FlipResult",
-    "type": "event"
-  },
-  {
-    "inputs": [],
+    "type": "function",
     "name": "getFlipFee",
+    "inputs": [],
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      }
+      { "name": "fee", "type": "uint256", "internalType": "uint256" }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "userCommitment",
-        "type": "bytes32"
-      }
-    ],
+    "type": "function",
     "name": "requestFlip",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "userRandom",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "providerRandom",
-        "type": "bytes32"
+        "name": "userRandomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "name": "revealFlip",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "payable"
   },
   {
-    "stateMutability": "payable",
-    "type": "receive"
-  }
+    "type": "event",
+    "name": "FlipRequest",
+    "inputs": [
+      {
+        "name": "sequenceNumber",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FlipResult",
+    "inputs": [
+      {
+        "name": "sequenceNumber",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "isHeads",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  { "type": "error", "name": "InsufficientFee", "inputs": [] }
 ]
