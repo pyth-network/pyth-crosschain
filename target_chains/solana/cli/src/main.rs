@@ -17,10 +17,8 @@ use {
     },
     pyth_solana_receiver::sdk::{
         deserialize_accumulator_update_data,
-        get_treasury_address,
-        DEFAULT_TREASURY_ID,
-        VAA_SPLIT_INDEX,
         get_random_treasury_id,
+        VAA_SPLIT_INDEX,
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
