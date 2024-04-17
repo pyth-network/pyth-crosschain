@@ -38,7 +38,9 @@ export const getGuardianSetPda = (
  * The Pyth Solana Receiver has one treasury account for each u8 `treasuryId`.
  * This is meant to avoid write-locks on the treasury account by load-balancing the writes across multiple accounts.
  */
-export const DEFAULT_TREASURY_ID = 0;
+export function getRandomTreasuryId() {
+  return Math.floor(Math.random() * 256);
+}
 
 /**
  * Returns the address of a treasury account from the Pyth Solana Receiver program.

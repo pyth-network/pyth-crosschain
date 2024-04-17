@@ -23,6 +23,7 @@ byteorder = "1.4.3"
 wormhole-core-bridge-solana = {workspace = true}
 wormhole-raw-vaas = {version = "0.1.3", features = ["ruint", "on-chain"], default-features = false }
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
+rand = "0.8.5"
 
 [dev-dependencies]
 solana-sdk = { workspace = true }

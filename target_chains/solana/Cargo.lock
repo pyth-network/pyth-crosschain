@@ -3073,6 +3073,7 @@ dependencies = [
  "program-simulator",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
+ "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
  "solana-sdk",

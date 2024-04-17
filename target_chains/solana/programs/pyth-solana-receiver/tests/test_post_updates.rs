@@ -14,6 +14,7 @@ use {
         },
         sdk::{
             deserialize_accumulator_update_data,
+            get_random_treasury_id,
             DEFAULT_TREASURY_ID,
         },
     },
@@ -69,6 +70,7 @@ async fn test_post_update() {
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
                 merkle_price_updates[0].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -111,6 +113,7 @@ async fn test_post_update() {
                 encoded_vaa_addresses[0],
                 price_update_keypair.pubkey(),
                 merkle_price_updates[1].clone(),
+                DEFAULT_TREASURY_ID,
             ),
             &vec![&poster, &price_update_keypair],
             None,
@@ -207,6 +210,7 @@ async fn test_post_update_wrong_encoded_vaa_owner() {
                     Pubkey::new_unique(), // Random pubkey instead of the encoded VAA address
                     price_update_keypair.pubkey(),
                     merkle_price_updates[0].clone(),
+                    get_random_treasury_id()
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
@@ -247,6 +251,7 @@ async fn test_post_update_wrong_setup() {
                     encoded_vaa_addresses[0],
                     price_update_keypair.pubkey(),
                     merkle_price_updates[0].clone(),
+                    get_random_treasury_id()
                 ),
                 &vec![&poster, &price_update_keypair],
                 None,
