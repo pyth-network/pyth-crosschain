@@ -411,7 +411,7 @@ def sign_bid(
         "verifyingContract": opportunity.eip_712_domain.verifying_contract,
     }
     message_types = {
-        "Signature": [
+        "SignedParams": [
             {"name": "executionParams", "type": "ExecutionParams"},
             {"name": "signer", "type": "address"},
             {"name": "deadline", "type": "uint256"},

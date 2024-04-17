@@ -300,7 +300,7 @@ export class Client {
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const types = {
-      Signature: [
+      SignedParams: [
         { name: "executionParams", type: "ExecutionParams" },
         { name: "signer", type: "address" },
         { name: "deadline", type: "uint256" },
@@ -327,7 +327,7 @@ export class Client {
         chainId: Number(opportunity.eip712Domain.chainId),
       },
       types,
-      primaryType: "Signature",
+      primaryType: "SignedParams",
       message: {
         executionParams: {
           sellTokens: opportunity.sellTokens,
