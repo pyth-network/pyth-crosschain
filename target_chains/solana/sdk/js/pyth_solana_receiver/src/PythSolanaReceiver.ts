@@ -16,10 +16,10 @@ import {
 import {
   DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   DEFAULT_RECEIVER_PROGRAM_ID,
-  DEFAULT_TREASURY_ID,
   DEFAULT_WORMHOLE_PROGRAM_ID,
   getConfigPda,
   getGuardianSetPda,
+  getRandomTreasuryId,
   getTreasuryPda,
 } from "./address";
 import { PublicKey, Keypair } from "@solana/web3.js";
@@ -405,20 +405,18 @@ export class PythSolanaReceiver {
       const trimmedVaa = trimSignatures(accumulatorUpdateData.vaa);
 
       for (const update of accumulatorUpdateData.updates) {
+        const treasuryId = getRandomTreasuryId();
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
           instruction: await this.receiver.methods
             .postUpdateAtomic({
               vaa: trimmedVaa,
               merklePriceUpdate: update,
-              treasuryId: DEFAULT_TREASURY_ID,
+              treasuryId,
             })
             .accounts({
               priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
               guardianSet: getGuardianSetPda(
                 guardianSetIndex,
@@ -550,20 +548,18 @@ export class PythSolanaReceiver {
       closeInstructions.push(...postEncodedVaacloseInstructions);
 
       for (const update of accumulatorUpdateData.updates) {
+        const treasuryId = getRandomTreasuryId();
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
           instruction: await this.receiver.methods
             .postUpdate({
               merklePriceUpdate: update,
-              treasuryId: DEFAULT_TREASURY_ID,
+              treasuryId,
             })
             .accounts({
               encodedVaa,
               priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
             })
             .instruction(),
@@ -625,13 +621,13 @@ export class PythSolanaReceiver {
 
       for (const update of accumulatorUpdateData.updates) {
         const feedId = parsePriceFeedMessage(update.message).feedId;
-
+        const treasuryId = getRandomTreasuryId();
         postInstructions.push({
           instruction: await this.pushOracle.methods
             .updatePriceFeed(
               {
                 merklePriceUpdate: update,
-                treasuryId: DEFAULT_TREASURY_ID,
+                treasuryId,
               },
               shardId,
               Array.from(feedId)
@@ -643,10 +639,7 @@ export class PythSolanaReceiver {
                 shardId,
                 feedId
               ),
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
             })
             .instruction(),

@@ -17,8 +17,7 @@ use {
     },
     pyth_solana_receiver::sdk::{
         deserialize_accumulator_update_data,
-        get_treasury_address,
-        DEFAULT_TREASURY_ID,
+        get_random_treasury_id,
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
@@ -186,16 +185,9 @@ fn main() -> Result<()> {
                     },
                 );
 
-            // We need to send some rent to the treasury account, otherwise it won't be able to accept incoming transfers
-            let pay_treasury_rent = system_instruction::transfer(
-                &payer.pubkey(),
-                &get_treasury_address(DEFAULT_TREASURY_ID),
-                Rent::default().minimum_balance(0),
-            );
-
             process_transaction(
                 &rpc_client,
-                vec![initialize_pyth_receiver_instruction, pay_treasury_rent],
+                vec![initialize_pyth_receiver_instruction],
                 &vec![&payer],
             )?;
         }
@@ -260,7 +252,7 @@ pub fn process_post_price_update_atomic(
         header.guardian_set_index,
         serde_wormhole::to_vec(&(header, body)).unwrap(),
         merkle_price_update.clone(),
-        DEFAULT_TREASURY_ID,
+        get_random_treasury_id(),
     );
 
     process_transaction(
@@ -455,6 +447,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         encoded_vaa_keypair.pubkey(),
         price_update_keypair.pubkey(),
         merkle_price_update.clone(),
+        get_random_treasury_id(),
     );
 
     // 2nd transaction
