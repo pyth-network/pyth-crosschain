@@ -146,6 +146,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       priceFeedUpdateData,
       this.shardId
     );
+    await transactionBuilder.addClosePreviousEncodedVaasInstructions();
 
     const transactions = await transactionBuilder.buildVersionedTransactions({
       jitoTipLamports: this.jitoTipLamports,
