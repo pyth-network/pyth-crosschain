@@ -28,6 +28,7 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
+  CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
@@ -38,8 +39,8 @@ import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
+  findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
-  overrideGuardianSet,
   trimSignatures,
 } from "./vaa";
 import {
@@ -263,6 +264,18 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
+  /** Add instructions to close encoded VAA accounts from previous actions.
+   * If you have previously used the PythTransactionBuilder with closeUpdateAccounts set to false or if you posted encoded VAAs but the transaction to close them did not land on-chain, your wallet might own many encoded VAA accounts.
+   * The rent cost for these accounts is 0.008 SOL per encoded VAA account. You can recover this rent calling this function when building a set of transactions.
+   */
+  async addClosePreviousEncodedVaasInstructions(maxInstructions = 40) {
+    this.addInstructions(
+      await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions(
+        maxInstructions
+      )
+    );
+  }
+
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
@@ -447,7 +460,6 @@ export class PythSolanaReceiver {
     encodedVaaAddress: PublicKey;
     closeInstructions: InstructionWithEphemeralSigners[];
   }> {
-    vaa = overrideGuardianSet(vaa); // Short term fix Wormhole officially server guardian set 4 vaas
     const postInstructions: InstructionWithEphemeralSigners[] = [];
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
     const encodedVaaKeypair = new Keypair();
@@ -664,7 +676,25 @@ export class PythSolanaReceiver {
       .closeEncodedVaa()
       .accounts({ encodedVaa })
       .instruction();
-    return { instruction, signers: [] };
+    return {
+      instruction,
+      signers: [],
+      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
+    };
+  }
+
+  /**
+   * Build aset of instructions to close all the existing encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   */
+  async buildClosePreviousEncodedVaasInstructions(
+    maxInstructions: number
+  ): Promise<InstructionWithEphemeralSigners[]> {
+    const encodedVaas = await this.findOwnedEncodedVaaAccounts();
+    const instructions = [];
+    for (const encodedVaa of encodedVaas) {
+      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
+    }
+    return instructions.slice(0, maxInstructions);
   }
 
   /**
@@ -737,6 +767,18 @@ export class PythSolanaReceiver {
       shardId,
       priceFeedId,
       this.pushOracle.programId
+    );
+  }
+
+  /**
+   * Find all the encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   * @returns a list of the public keys of the encoded VAA accounts
+   */
+  async findOwnedEncodedVaaAccounts() {
+    return await findEncodedVaaAccountsByWriteAuthority(
+      this.receiver.provider.connection,
+      this.wallet.publicKey,
+      this.wormhole.programId
     );
   }
 }

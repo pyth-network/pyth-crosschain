@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-solana-receiver",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "@noble/hashes": "^1.4.0",
     "@pythnetwork/price-service-sdk": ">=1.6.0",
     "@pythnetwork/solana-utils": "*",
     "@solana/web3.js": "^1.90.0"

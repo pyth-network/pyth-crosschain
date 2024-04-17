@@ -6,19 +6,19 @@ import {
   PACKET_DATA_SIZE,
   PublicKey,
   Signer,
-  SystemProgram,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-import { TIP_ACCOUNTS, getRandomTipAccount } from "./jito";
+import { buildJitoTipInstruction } from "./jito";
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
  */
 export const DEFAULT_COMPUTE_BUDGET_UNITS = 200000;
+
 /**
  * The maximum size of a Solana transaction, leaving some room for the compute budget instructions.
  */
@@ -178,33 +178,36 @@ export class TransactionBuilder {
         signers: signers,
         computeUnits: computeUnits ?? 0,
       });
-    } else if (
-      getSizeOfTransaction(
+    } else {
+      const sizeWithComputeUnits = getSizeOfTransaction(
         [
           ...this.transactionInstructions[
             this.transactionInstructions.length - 1
           ].instructions,
           instruction,
+          buildJitoTipInstruction(this.payer, 1),
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 1 }),
         ],
         true,
         this.addressLookupTable
-      ) <= PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET
-    ) {
-      this.transactionInstructions[
-        this.transactionInstructions.length - 1
-      ].instructions.push(instruction);
-      this.transactionInstructions[
-        this.transactionInstructions.length - 1
-      ].signers.push(...signers);
-      this.transactionInstructions[
-        this.transactionInstructions.length - 1
-      ].computeUnits += computeUnits ?? 0;
-    } else
-      this.transactionInstructions.push({
-        instructions: [instruction],
-        signers: signers,
-        computeUnits: computeUnits ?? 0,
-      });
+      );
+      if (sizeWithComputeUnits <= PACKET_DATA_SIZE) {
+        this.transactionInstructions[
+          this.transactionInstructions.length - 1
+        ].instructions.push(instruction);
+        this.transactionInstructions[
+          this.transactionInstructions.length - 1
+        ].signers.push(...signers);
+        this.transactionInstructions[
+          this.transactionInstructions.length - 1
+        ].computeUnits += computeUnits ?? 0;
+      } else
+        this.transactionInstructions.push({
+          instructions: [instruction],
+          signers: signers,
+          computeUnits: computeUnits ?? 0,
+        });
+    }
   }
 
   /**
@@ -249,16 +252,9 @@ export class TransactionBuilder {
             })
           );
         }
-        if (
-          args.jitoTipLamports &&
-          index % jitoBundleSize === jitoBundleSize - 1
-        ) {
+        if (args.jitoTipLamports && index % jitoBundleSize === 0) {
           instructionsWithComputeBudget.push(
-            SystemProgram.transfer({
-              fromPubkey: this.payer,
-              toPubkey: getRandomTipAccount(),
-              lamports: args.jitoTipLamports,
-            })
+            buildJitoTipInstruction(this.payer, args.jitoTipLamports)
           );
         }
 
@@ -307,16 +303,9 @@ export class TransactionBuilder {
             })
           );
         }
-        if (
-          args.jitoTipLamports &&
-          index % jitoBundleSize === jitoBundleSize - 1
-        ) {
+        if (args.jitoTipLamports && index % jitoBundleSize === 0) {
           instructionsWithComputeBudget.push(
-            SystemProgram.transfer({
-              fromPubkey: this.payer,
-              toPubkey: getRandomTipAccount(),
-              lamports: args.jitoTipLamports,
-            })
+            buildJitoTipInstruction(this.payer, args.jitoTipLamports)
           );
         }
 

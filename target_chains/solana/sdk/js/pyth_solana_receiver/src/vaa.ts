@@ -1,9 +1,10 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
 import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 import { WRITE_ENCODED_VAA_COMPUTE_BUDGET } from "./compute_budget";
-
+import { sha256 } from "@noble/hashes/sha256";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 /**
  * Get the index of the guardian set that signed a VAA
  */
@@ -52,18 +53,6 @@ export function trimSignatures(
   return trimmedVaa;
 }
 
-export const PREVIOUS_GUARDIAN_SET_INDEX = 4;
-export const CURRENT_GUARDIAN_SET_INDEX = 4;
-export function overrideGuardianSet(vaa: Buffer): Buffer {
-  const guardianSetIndex = getGuardianSetIndex(vaa);
-
-  if (guardianSetIndex <= 3) {
-    vaa.writeUint32BE(CURRENT_GUARDIAN_SET_INDEX, 1);
-  }
-
-  return vaa;
-}
-
 /**
  * The start of the VAA bytes in an encoded VAA account. Before this offset, the account contains a header.
  */
@@ -97,7 +86,7 @@ export async function buildEncodedVaaCreateInstruction(
  * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
  * This way, the packing of the instructions to post an encoded vaa is more efficient.
  */
-export const VAA_SPLIT_INDEX = 792;
+export const VAA_SPLIT_INDEX = 755;
 
 /**
  * Build a set of instructions to write a VAA to an encoded VAA account
@@ -140,4 +129,34 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
       computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
     },
   ];
+}
+
+/**
+ * Find all the encoded VAA accounts that have a given write authority
+ * @returns a list of the public keys of the encoded VAA accounts
+ */
+export async function findEncodedVaaAccountsByWriteAuthority(
+  connection: Connection,
+  writeAuthority: PublicKey,
+  wormholeProgramId: PublicKey
+): Promise<PublicKey[]> {
+  const result = await connection.getProgramAccounts(wormholeProgramId, {
+    filters: [
+      {
+        memcmp: {
+          offset: 0,
+          bytes: bs58.encode(
+            Buffer.from(sha256("account:EncodedVaa").slice(0, 8))
+          ),
+        },
+      },
+      {
+        memcmp: {
+          offset: 8 + 1,
+          bytes: bs58.encode(writeAuthority.toBuffer()),
+        },
+      },
+    ],
+  });
+  return result.map((account) => new PublicKey(account.pubkey));
 }
