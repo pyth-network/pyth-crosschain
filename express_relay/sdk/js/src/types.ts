@@ -26,26 +26,21 @@ export type BidParams = {
 /**
  * Represents the configuration for signing an opportunity
  */
-export type OpportunityAdapterSignatureConfig = {
+export type EIP712Domain = {
   /**
-   * Format: int64
-   * @description The network chain id of the opportunity adapter contract
-   * @example 31337
+   * The network chain id for the EIP712 domain.
    */
-  chainId: number;
+  chainId: bigint;
   /**
-   * @description The opportunity adapter contract address
-   * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+   * The verifying contract address for the EIP712 domain.
    */
   verifyingContract: Address;
   /**
-   * @description The domain name parameter for the EIP712 domain separator.
-   * @example OpportunityAdapter
+   * The name parameter for the EIP712 domain.
    */
   name: string;
   /**
-   * @description The domain version parameter for the EIP712 domain separator.
-   * @example 1
+   * The version parameter for the EIP712 domain.
    */
   version: string;
 };
@@ -89,14 +84,14 @@ export type Opportunity = {
   /**
    * The data required to sign the opportunity
    */
-  signatureConfig: OpportunityAdapterSignatureConfig;
+  eip712Domain: EIP712Domain;
 };
 /**
  * All the parameters necessary to represent an opportunity
  */
 export type OpportunityParams = Omit<
   Opportunity,
-  "opportunityId" | "signatureConfig"
+  "opportunityId" | "eip712Domain"
 >;
 /**
  * Represents a bid for an opportunity

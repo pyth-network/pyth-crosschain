@@ -193,19 +193,19 @@ class OpportunityParams(BaseModel):
     params: Union[OpportunityParamsV1] = Field(..., discriminator="version")
 
 
-class OpportunitySignatureConfig(BaseModel):
+class EIP712Domain(BaseModel):
     """
     Attributes:
-        domain_name: The domain name parameter for the EIP712 domain separator.
-        domain_version: The domain version parameter for the EIP712 domain separator.
-        chain_network_id: The network chain id of the opportunity adapter contract.
-        contract_address: The opportunity adapter contract address.
+        name: The domain name parameter for the EIP712 domain separator.
+        version: The domain version parameter for the EIP712 domain separator.
+        chain_id: The network chain id of parameter for the EIP712 domain separator.
+        verifying_contract: The verifying contract address parameter for the EIP712 domain separator.
     """
 
-    domain_name: str
-    domain_version: str
-    chain_network_id: int
-    contract_address: Address
+    name: str
+    version: str
+    chain_id: IntString
+    verifying_contract: Address
 
 
 class Opportunity(BaseModel):
@@ -221,7 +221,7 @@ class Opportunity(BaseModel):
         version: The version of the opportunity.
         creation_time: The creation time of the opportunity.
         opportunity_id: The ID of the opportunity.
-        signature_config: The data you need to sign the opportunity.
+        eip_712_domain: The EIP712 domain data needed for signing.
     """
 
     target_calldata: HexString
@@ -234,7 +234,7 @@ class Opportunity(BaseModel):
     version: str
     creation_time: IntString
     opportunity_id: UUIDString
-    signature_config: OpportunitySignatureConfig
+    eip_712_domain: EIP712Domain
 
     supported_versions: ClassVar[list[str]] = ["v1"]
 

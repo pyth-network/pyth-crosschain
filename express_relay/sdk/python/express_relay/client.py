@@ -405,10 +405,10 @@ def sign_bid(
 
     executor = Account.from_key(private_key).address
     domain_data = {
-        "name": opportunity.signature_config.domain_name,
-        "version": opportunity.signature_config.domain_version,
-        "chainId": opportunity.signature_config.chain_network_id,
-        "verifyingContract": opportunity.signature_config.contract_address,
+        "name": opportunity.eip_712_domain.name,
+        "version": opportunity.eip_712_domain.version,
+        "chainId": opportunity.eip_712_domain.chain_id,
+        "verifyingContract": opportunity.eip_712_domain.verifying_contract,
     }
     message_types = {
         "Signature": [

@@ -11,7 +11,7 @@ import {
   BidParams,
   BidStatusUpdate,
   Opportunity,
-  OpportunityAdapterSignatureConfig,
+  EIP712Domain,
   OpportunityBid,
   OpportunityParams,
   TokenAmount,
@@ -130,14 +130,14 @@ export class Client {
     });
   }
 
-  private convertSignatureConfig(
-    signatureConfig: components["schemas"]["OpportunityAdapterSignatureConfig"]
-  ): OpportunityAdapterSignatureConfig {
+  private convertEIP712Domain(
+    eip712Domain: components["schemas"]["EIP712Domain"]
+  ): EIP712Domain {
     return {
-      name: signatureConfig.domain_name,
-      version: signatureConfig.domain_version,
-      chainId: signatureConfig.chain_network_id,
-      verifyingContract: checkAddress(signatureConfig.contract_address),
+      name: eip712Domain.name,
+      version: eip712Domain.version,
+      verifyingContract: checkAddress(eip712Domain.verifying_contract),
+      chainId: BigInt(eip712Domain.chain_id),
     };
   }
 
@@ -164,9 +164,7 @@ export class Client {
       targetCallValue: BigInt(opportunity.target_call_value),
       sellTokens: opportunity.sell_tokens.map(checkTokenQty),
       buyTokens: opportunity.buy_tokens.map(checkTokenQty),
-      signatureConfig: this.convertSignatureConfig(
-        opportunity.signature_config
-      ),
+      eip712Domain: this.convertEIP712Domain(opportunity.eip_712_domain),
     };
   }
 
@@ -324,7 +322,10 @@ export class Client {
     const account = privateKeyToAccount(privateKey);
     const signature = await signTypedData({
       privateKey,
-      domain: opportunity.signatureConfig,
+      domain: {
+        ...opportunity.eip712Domain,
+        chainId: Number(opportunity.eip712Domain.chainId),
+      },
       types,
       primaryType: "Signature",
       message: {

@@ -144,31 +144,30 @@ export interface components {
     ClientRequest: components["schemas"]["ClientMessage"] & {
       id: string;
     };
-    ErrorBodyResponse: {
-      error: string;
-    };
-    OpportunityAdapterSignatureConfig: {
+    EIP712Domain: {
       /**
-       * Format: int64
-       * @description The network chain id of the opportunity adapter contract
+       * @description The network chain id parameter for EIP712 domain.
        * @example 31337
        */
-      chain_network_id: number;
+      chain_id: string;
       /**
-       * @description The opportunity adapter contract address
-       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
-       */
-      contract_address: string;
-      /**
-       * @description The domain name parameter for the EIP712 domain separator.
+       * @description The name parameter for the EIP712 domain.
        * @example OpportunityAdapter
        */
-      domain_name: string;
+      name: string;
       /**
-       * @description The domain version parameter for the EIP712 domain separator.
+       * @description The verifying contract address parameter for the EIP712 domain.
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      verifying_contract: string;
+      /**
+       * @description The version parameter for the EIP712 domain.
        * @example 1
        */
-      domain_version: string;
+      version: string;
+    };
+    ErrorBodyResponse: {
+      error: string;
     };
     OpportunityBid: {
       /**
@@ -243,12 +242,12 @@ export interface components {
        * @example 1700000000000000
        */
       creation_time: number;
+      eip_712_domain: components["schemas"]["EIP712Domain"];
       /**
        * @description The opportunity unique id
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
-      signature_config: components["schemas"]["OpportunityAdapterSignatureConfig"];
     };
     ServerResultMessage:
       | {
@@ -326,12 +325,12 @@ export interface components {
            * @example 1700000000000000
            */
           creation_time: number;
+          eip_712_domain: components["schemas"]["EIP712Domain"];
           /**
            * @description The opportunity unique id
            * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
            */
           opportunity_id: string;
-          signature_config: components["schemas"]["OpportunityAdapterSignatureConfig"];
         };
       };
     };
