@@ -397,6 +397,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -405,7 +407,6 @@ export class PythSolanaReceiver {
       const trimmedVaa = trimSignatures(accumulatorUpdateData.vaa);
 
       for (const update of accumulatorUpdateData.updates) {
-        const treasuryId = getRandomTreasuryId();
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
           instruction: await this.receiver.methods
@@ -534,6 +535,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -548,7 +551,6 @@ export class PythSolanaReceiver {
       closeInstructions.push(...postEncodedVaacloseInstructions);
 
       for (const update of accumulatorUpdateData.updates) {
-        const treasuryId = getRandomTreasuryId();
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
           instruction: await this.receiver.methods
@@ -606,6 +608,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -621,7 +625,6 @@ export class PythSolanaReceiver {
 
       for (const update of accumulatorUpdateData.updates) {
         const feedId = parsePriceFeedMessage(update.message).feedId;
-        const treasuryId = getRandomTreasuryId();
         postInstructions.push({
           instruction: await this.pushOracle.methods
             .updatePriceFeed(
