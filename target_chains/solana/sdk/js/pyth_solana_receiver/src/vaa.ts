@@ -53,18 +53,6 @@ export function trimSignatures(
   return trimmedVaa;
 }
 
-export const PREVIOUS_GUARDIAN_SET_INDEX = 4;
-export const CURRENT_GUARDIAN_SET_INDEX = 4;
-export function overrideGuardianSet(vaa: Buffer): Buffer {
-  let guardianSetIndex = getGuardianSetIndex(vaa);
-
-  if (guardianSetIndex <= 3) {
-    vaa.writeUint32BE(CURRENT_GUARDIAN_SET_INDEX, 1);
-  }
-
-  return vaa;
-}
-
 /**
  * The start of the VAA bytes in an encoded VAA account. Before this offset, the account contains a header.
  */
