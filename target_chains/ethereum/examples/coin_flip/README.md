@@ -17,10 +17,10 @@ Next, choose a network to run the example on.
 The example has been deployed on the following networks:
 
 ```
-| Chain Name      | Address                                    | RPC                                        |
-|-----------------|--------------------------------------------|--------------------------------------------|
-| optimism-sepolia | 0x2eE67fF5d8548fF544f2c178a0FcAFe503A634Be | https://sepolia.optimism.io/                 |
-| arbitrum-sepolia | 0xCd76c50c3210C5AaA9c39D53A4f95BFd8b1a3a19 | https://sepolia-rollup.arbitrum.io/rpc            |
+| Chain Name       | Address                                    | RPC                                        |
+|------------------|--------------------------------------------|--------------------------------------------|
+| optimism-sepolia | 0x2eE67fF5d8548fF544f2c178a0FcAFe503A634Be | https://sepolia.optimism.io/               |
+| arbitrum-sepolia | 0xCd76c50c3210C5AaA9c39D53A4f95BFd8b1a3a19 | https://sepolia-rollup.arbitrum.io/rpc     |
 ```
 
 You will also need the private key of a wallet with some gas tokens for your chosen network.
