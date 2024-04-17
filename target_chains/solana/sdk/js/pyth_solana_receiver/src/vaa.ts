@@ -55,7 +55,7 @@ export function trimSignatures(
 export const PREVIOUS_GUARDIAN_SET_INDEX = 4;
 export const CURRENT_GUARDIAN_SET_INDEX = 4;
 export function overrideGuardianSet(vaa: Buffer): Buffer {
-  let guardianSetIndex = getGuardianSetIndex(vaa);
+  const guardianSetIndex = getGuardianSetIndex(vaa);
 
   if (guardianSetIndex <= 3) {
     vaa.writeUint32BE(CURRENT_GUARDIAN_SET_INDEX, 1);
