@@ -16,7 +16,7 @@ ethers      = { version = "2.0.14", features = ["ws"] }
 futures            = { version = "0.3.28" }
 hex         = "0.4.3"
 prometheus-client  = { version = "0.21.2" }
-pythnet-sdk = { path = "../pythnet/pythnet_sdk", features = ["strum"] }
+pythnet-sdk = { path = "../../pythnet/pythnet_sdk", features = ["strum"] }
 rand        = "0.8.5"
 reqwest     = { version = "0.11.22", features = ["json", "blocking"] }
 serde       = { version = "1.0.188", features = ["derive"] }

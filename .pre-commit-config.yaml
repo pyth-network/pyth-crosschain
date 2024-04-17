@@ -60,9 +60,9 @@ repos:
       - id: cargo-fmt-fortuna
         name: Cargo format for Fortuna
         language: "rust"
-        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./fortuna/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
-        files: fortuna
+        files: apps/fortuna
       # Hooks for message buffer contract
       - id: cargo-fmt-message-buffer
         name: Cargo format for message buffer contract
