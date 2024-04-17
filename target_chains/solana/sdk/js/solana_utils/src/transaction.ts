@@ -20,6 +20,12 @@ import { buildJitoTipInstruction } from "./jito";
 export const DEFAULT_COMPUTE_BUDGET_UNITS = 200000;
 
 /**
+ * The maximum size of a Solana transaction, leaving some room for the compute budget instructions.
+ */
+export const PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET =
+  PACKET_DATA_SIZE - 52;
+
+/**
  * An instruction with some extra information that will be used to build transactions.
  */
 export type InstructionWithEphemeralSigners = {
