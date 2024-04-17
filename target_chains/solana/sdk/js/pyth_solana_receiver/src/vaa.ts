@@ -143,6 +143,10 @@ export async function buildWriteEncodedVaaWithSplitInstructions(
   ];
 }
 
+/**
+ * Find all the encoded VAA accounts that have a given write authority
+ * @returns a list of the public keys of the encoded VAA accounts
+ */
 export async function findEncodedVaaAccountsByWriteAuthority(
   connection: Connection,
   writeAuthority: PublicKey,

@@ -265,6 +265,10 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
+  /** Add instructions to close encoded VAA accounts from previous actions.
+   * If you have previously used the PythTransactionBuilder with closeUpdateAccounts set to false or if you posted encoded VAAs but the transaction to close them did not land on-chain, your wallet might own many encoded VAA accounts.
+   * The rent cost for these accounts is 0.008 SOL per encoded VAA account. You can recover this rent calling this function when building a set of transactions.
+   */
   async addClosePreviousEncodedVaasInstructions() {
     this.addInstructions(
       await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions()
@@ -680,6 +684,20 @@ export class PythSolanaReceiver {
   }
 
   /**
+   * Build aset of instructions to close all the existing encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   */
+  async buildClosePreviousEncodedVaasInstructions(): Promise<
+    InstructionWithEphemeralSigners[]
+  > {
+    const encodedVaas = await this.findOwnedEncodedVaaAccounts();
+    const instructions = [];
+    for (const encodedVaa of encodedVaas) {
+      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
+    }
+    return instructions;
+  }
+
+  /**
    * Build an instruction to close a price update account, recovering the rent.
    */
   async buildClosePriceUpdateInstruction(
@@ -752,23 +770,16 @@ export class PythSolanaReceiver {
     );
   }
 
+  /**
+   * Find all the encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   * @returns a list of the public keys of the encoded VAA accounts
+   */
   async findOwnedEncodedVaaAccounts() {
     return await findEncodedVaaAccountsByWriteAuthority(
       this.receiver.provider.connection,
       this.wallet.publicKey,
       this.wormhole.programId
     );
-  }
-
-  async buildClosePreviousEncodedVaasInstructions(): Promise<
-    InstructionWithEphemeralSigners[]
-  > {
-    const encodedVaas = await this.findOwnedEncodedVaaAccounts();
-    const instructions = [];
-    for (const encodedVaa of encodedVaas) {
-      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
-    }
-    return instructions;
   }
 }
 
