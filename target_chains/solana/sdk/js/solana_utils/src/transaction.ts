@@ -6,7 +6,6 @@ import {
   PACKET_DATA_SIZE,
   PublicKey,
   Signer,
-  SystemProgram,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
