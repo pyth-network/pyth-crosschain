@@ -32,11 +32,7 @@ const BTC_PRICE_FEED_ID =
   "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
 const BOBA_PRICE_FEED_ID =
   "0xd1e9cff9b8399f9867819a3bf1aa8c2598234eecfd36ddc3a7bc7848432184b5";
-async function postPriceUpdate(
-  connection: Connection,
-  wallet: AnchorWallet
-) {
-
+async function postPriceUpdate(connection: Connection, wallet: AnchorWallet) {
   if (wallet === undefined) {
     return;
   } else {
@@ -44,7 +40,10 @@ async function postPriceUpdate(
       "https://hermes.pyth.network/",
       { priceFeedRequestConfig: { binary: true } }
     );
-    const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet: wallet as unknown as Wallet});
+    const pythSolanaReceiver = new PythSolanaReceiver({
+      connection,
+      wallet: wallet as unknown as Wallet,
+    });
 
     const priceUpdateData = await priceServiceConnection.getVaa(
       SOL_PRICE_FEED_ID,
@@ -57,12 +56,14 @@ async function postPriceUpdate(
       new AnchorProvider(connection, wallet, { commitment: "processed" })
     );
 
-    const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({closeUpdateAccounts: false});
+    const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
+      closeUpdateAccounts: false,
+    });
     await transactionBuilder.addPostPriceUpdates([priceUpdateData[0]]);
 
     await transactionBuilder.addPriceConsumerInstructions(
       async (
-        getPriceUpdateAccount: ( priceFeedId: string) => PublicKey
+        getPriceUpdateAccount: (priceFeedId: string) => PublicKey
       ): Promise<InstructionWithEphemeralSigners[]> => {
         return [
           {
@@ -82,8 +83,10 @@ async function postPriceUpdate(
     );
 
     await pythSolanaReceiver.provider.sendAll(
-      await transactionBuilder.buildVersionedTransactions({computeUnitPriceMicroLamports:50000}),
-      {skipPreflight: true}
+      await transactionBuilder.buildVersionedTransactions({
+        computeUnitPriceMicroLamports: 50000,
+      }),
+      { skipPreflight: true }
     );
   }
 }
@@ -116,9 +119,7 @@ function App() {
               <img src={logo} className="App-logo" alt="logo" />
               <WalletMultiButton />
               <WalletDisconnectButton />
-              <p>
-                Click to send a transaction to the Pyth Solana Receiver
-              </p>
+              <p>Click to send a transaction to the Pyth Solana Receiver</p>
               <Button></Button>
             </header>
           </div>

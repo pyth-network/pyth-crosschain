@@ -14,9 +14,7 @@
           "name": "destination",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "CHECK : Just a destination"
-          ]
+          "docs": ["CHECK : Just a destination"]
         },
         {
           "name": "priceUpdate",
