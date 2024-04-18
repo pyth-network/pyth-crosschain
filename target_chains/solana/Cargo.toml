@@ -5,7 +5,7 @@ members = [
     "program_simulator/",
     "pyth_solana_receiver_sdk/",
     "common_test_utils",
-    "examples/send_usd"
+    "examples/send_usd/program"
 ]
 
 [profile.release]
