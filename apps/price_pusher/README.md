@@ -87,7 +87,7 @@ npm install
 npx lerna run build --scope @pythnetwork/price-pusher --include-dependencies
 
 # Navigate to the price_pusher folder
-cd price_pusher
+cd apps/price_pusher
 
 # For EVM
 npm run start -- evm --endpoint wss://example-rpc.com \
