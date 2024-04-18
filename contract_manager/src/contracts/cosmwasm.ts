@@ -52,6 +52,7 @@ export class WormholeCosmWasmContract extends WormholeContract {
 
   async getCurrentGuardianSetIndex(): Promise<number> {
     const config = await this.getConfig();
+    console.log(config);
     return JSON.parse(config["\x00\x06config"])["guardian_set_index"];
   }
 
@@ -211,7 +212,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     })) as Record<string, string>;
     const config = {
       config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
-      contract_version: JSON.parse(allStates["\x00\x10contract_version"]),
+      contract_version: allStates["\x00\x10contract_version"]
+        ? JSON.parse(allStates["\x00\x10contract_version"])
+        : undefined,
     };
     return config;
   }

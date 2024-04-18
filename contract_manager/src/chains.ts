@@ -410,9 +410,11 @@ export class EvmChain extends Chain {
     // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
     // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
     // `0x2` to the transaction configuration parameters.
+    console.log("Sending transaction with params", txParams);
     return transactionObject.send({
-      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.getGasPrice(),
+      // gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
+      gas: gasEstimate,
+      gasPrice: Number(await this.getGasPrice()),
       ...txParams,
     });
   }

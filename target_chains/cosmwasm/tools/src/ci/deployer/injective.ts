@@ -37,7 +37,13 @@ export class InjectiveDeployer implements Deployer {
 
   private async signAndBroadcastMsg(
     msg: Msgs,
-    fee = DEFAULT_STD_FEE
+    fee: {
+      amount: {
+        amount: string;
+        denom: string;
+      }[];
+      gas: string;
+    } = DEFAULT_STD_FEE
   ): Promise<TxResponse> {
     const networkInfo = getNetworkInfo(this.network);
 
