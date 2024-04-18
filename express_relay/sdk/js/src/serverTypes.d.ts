@@ -144,6 +144,28 @@ export interface components {
     ClientRequest: components["schemas"]["ClientMessage"] & {
       id: string;
     };
+    EIP712Domain: {
+      /**
+       * @description The network chain id parameter for EIP712 domain.
+       * @example 31337
+       */
+      chain_id: string;
+      /**
+       * @description The name parameter for the EIP712 domain.
+       * @example OpportunityAdapter
+       */
+      name: string;
+      /**
+       * @description The verifying contract address parameter for the EIP712 domain.
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      verifying_contract: string;
+      /**
+       * @description The version parameter for the EIP712 domain.
+       * @example 1
+       */
+      version: string;
+    };
     ErrorBodyResponse: {
       error: string;
     };
@@ -220,6 +242,7 @@ export interface components {
        * @example 1700000000000000
        */
       creation_time: number;
+      eip_712_domain: components["schemas"]["EIP712Domain"];
       /**
        * @description The opportunity unique id
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
@@ -302,6 +325,7 @@ export interface components {
            * @example 1700000000000000
            */
           creation_time: number;
+          eip_712_domain: components["schemas"]["EIP712Domain"];
           /**
            * @description The opportunity unique id
            * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
