@@ -98,7 +98,7 @@ function Button() {
   return (
     <button
       onClick={async () => {
-          await postPriceUpdate(connection, wallet);
+        await postPriceUpdate(connection, wallet);
       }}
     >
       Send
