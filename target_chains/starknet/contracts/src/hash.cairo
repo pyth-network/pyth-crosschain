@@ -55,7 +55,7 @@ pub impl HasherImpl of HasherTrait {
 
     /// Reads all remaining data from the reader and pushes it to
     /// the hashing buffer.
-    fn push_reader(ref self: Hasher, ref reader: Reader) -> Result<(), felt252> {
+    fn push_reader(ref self: Hasher, ref reader: Reader) -> Result<(), pyth::reader::Error> {
         let mut result = Result::Ok(());
         while reader.len() > 0 {
             let mut chunk_len = 8 - self.num_last_bytes;
