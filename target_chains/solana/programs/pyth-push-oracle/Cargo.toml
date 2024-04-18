@@ -19,6 +19,7 @@ test-bpf = []
 anchor-lang = { workspace = true }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 solana-program = { workspace = true }
+byteorder = "1.4.3"
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
 pyth-solana-receiver = { path = "../pyth-solana-receiver", features = ["cpi"]}
 

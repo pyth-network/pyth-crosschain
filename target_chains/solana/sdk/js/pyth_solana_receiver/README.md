@@ -52,7 +52,7 @@ Applications can therefore store the address of a price feed account and read it
 Price feed accounts have a fixed address derived from the feed id and a shard id.
 The shard id allows different applications to use different accounts for the same feed, thereby reducing the impact of solana congestion.
 This method of using Pyth prices is a good fit for applications that always want to use the most recent price.
-Additionally, the [Price Scheduler](../../../../../../../price_pusher/) can be used to continuously write fresh updates to a price feed account, freeing applications from worrying about writing their own updates.
+Additionally, the [Price Scheduler](../../../../../../../apps/price_pusher/) can be used to continuously write fresh updates to a price feed account, freeing applications from worrying about writing their own updates.
 
 This SDK provides methods for working with both types of accounts.
 

@@ -1,16 +1,15 @@
 #!/bin/bash -e
 
 # URL of the ethereum RPC node to use. Choose this based on your target network
-RPC_URL=https://api.testnet.evm.eosnetwork.com/
+RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
 
 # The address of the Pyth contract on your network. See the list of contract addresses here https://docs.pyth.network/documentation/pythnet-price-feeds/evm
-ENTROPY_CONTRACT_ADDRESS="0xD42c7a708E74AD19401D907a14146F006c851Ee3"
+ENTROPY_CONTRACT_ADDRESS="0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440"
 PROVIDER="0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344"
 
 # Deployments
-# optimism-goerli 0x3bA217Cd7840Cc5B34FD5B7263Cebd8CD8665788
-# avalanche-fuji 0xE7E52C85907d59C45b2C56EF32B78F514F8c547a
-# eos-evm-testnet 0x413405Aee2db95cb028B60CBAd87FC0B932947f4
+# optimism-sepolia 0x2eE67fF5d8548fF544f2c178a0FcAFe503A634Be
+# arbitrum-sepolia 0xCd76c50c3210C5AaA9c39D53A4f95BFd8b1a3a19
 
 # Note the -l here uses a ledger wallet to deploy your contract. You may need to change this
 # option if you are using a different wallet.

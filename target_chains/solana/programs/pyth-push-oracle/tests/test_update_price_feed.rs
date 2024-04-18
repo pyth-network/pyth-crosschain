@@ -161,26 +161,22 @@ async fn test_update_price_feed() {
         program_simulator.get_clock().await.unwrap().slot
     );
 
-    // post another update, outdated
-    assert_eq!(
-        program_simulator
-            .process_ix_with_default_compute_limit(
-                UpdatePriceFeed::populate(
-                    poster.pubkey(),
-                    encoded_vaa_addresses[0],
-                    DEFAULT_SHARD,
-                    feed_id,
-                    DEFAULT_TREASURY_ID,
-                    merkle_price_updates[1].clone(),
-                ),
-                &vec![&poster],
-                None,
-            )
-            .await
-            .unwrap_err()
-            .unwrap(),
-        into_transaction_error(PushOracleError::UpdatesNotMonotonic)
-    );
+    // post a stale update. The tx succeeds w/o updating on-chain account state.
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            UpdatePriceFeed::populate(
+                poster.pubkey(),
+                encoded_vaa_addresses[0],
+                DEFAULT_SHARD,
+                feed_id,
+                DEFAULT_TREASURY_ID,
+                merkle_price_updates[0].clone(),
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
 
     assert_treasury_balance(
         &mut program_simulator,

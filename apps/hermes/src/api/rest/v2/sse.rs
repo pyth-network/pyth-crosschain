@@ -1,0 +1,225 @@
+use {
+    crate::{
+        aggregate::{
+            AggregationEvent,
+            RequestTime,
+        },
+        api::{
+            rest::{
+                verify_price_ids_exist,
+                RestError,
+            },
+            types::{
+                BinaryPriceUpdate,
+                EncodingType,
+                ParsedPriceUpdate,
+                PriceIdInput,
+                PriceUpdate,
+                RpcPriceIdentifier,
+            },
+            ApiState,
+        },
+    },
+    anyhow::Result,
+    axum::{
+        extract::State,
+        response::sse::{
+            Event,
+            KeepAlive,
+            Sse,
+        },
+    },
+    futures::Stream,
+    pyth_sdk::PriceIdentifier,
+    serde::Deserialize,
+    serde_qs::axum::QsQuery,
+    std::convert::Infallible,
+    tokio::sync::broadcast,
+    tokio_stream::{
+        wrappers::BroadcastStream,
+        StreamExt as _,
+    },
+    utoipa::IntoParams,
+};
+
+#[derive(Debug, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct StreamPriceUpdatesQueryParams {
+    /// Get the most recent price update for this set of price feed ids.
+    ///
+    /// This parameter can be provided multiple times to retrieve multiple price updates,
+    /// for example see the following query string:
+    ///
+    /// ```
+    /// ?ids[]=a12...&ids[]=b4c...
+    /// ```
+    #[param(rename = "ids[]")]
+    #[param(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
+    ids: Vec<PriceIdInput>,
+
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`.
+    #[serde(default)]
+    encoding: EncodingType,
+
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
+    #[serde(default = "default_true")]
+    parsed: bool,
+
+    /// If true, allows unordered price updates to be included in the stream.
+    #[serde(default)]
+    allow_unordered: bool,
+
+    /// If true, only include benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime).
+    #[serde(default)]
+    benchmarks_only: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+#[utoipa::path(
+    get,
+    path = "/v2/updates/price/stream",
+    responses(
+        (status = 200, description = "Price updates retrieved successfully", body = PriceUpdate),
+        (status = 404, description = "Price ids not found", body = String)
+    ),
+    params(StreamPriceUpdatesQueryParams)
+)]
+/// SSE route handler for streaming price updates.
+pub async fn price_stream_sse_handler(
+    State(state): State<ApiState>,
+    QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError> {
+    let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
+
+    verify_price_ids_exist(&state, &price_ids).await?;
+
+    // Clone the update_tx receiver to listen for new price updates
+    let update_rx: broadcast::Receiver<AggregationEvent> = state.update_tx.subscribe();
+
+    // Convert the broadcast receiver into a Stream
+    let stream = BroadcastStream::new(update_rx);
+
+    let sse_stream = stream.then(move |message| {
+        let state_clone = state.clone(); // Clone again to use inside the async block
+        let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
+        async move {
+            match message {
+                Ok(event) => {
+                    match handle_aggregation_event(
+                        event,
+                        state_clone,
+                        price_ids_clone,
+                        params.encoding,
+                        params.parsed,
+                        params.benchmarks_only,
+                        params.allow_unordered,
+                    )
+                    .await
+                    {
+                        Ok(Some(update)) => Ok(Event::default()
+                            .json_data(update)
+                            .unwrap_or_else(|e| error_event(e))),
+                        Ok(None) => Ok(Event::default().comment("No update available")),
+                        Err(e) => Ok(error_event(e)),
+                    }
+                }
+                Err(e) => Ok(error_event(e)),
+            }
+        }
+    });
+
+    Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
+}
+
+async fn handle_aggregation_event(
+    event: AggregationEvent,
+    state: ApiState,
+    mut price_ids: Vec<PriceIdentifier>,
+    encoding: EncodingType,
+    parsed: bool,
+    benchmarks_only: bool,
+    allow_unordered: bool,
+) -> Result<Option<PriceUpdate>> {
+    // Handle out-of-order events
+    if let AggregationEvent::OutOfOrder { .. } = event {
+        if !allow_unordered {
+            return Ok(None);
+        }
+    }
+
+    // We check for available price feed ids to ensure that the price feed ids provided exists since price feeds can be removed.
+    let available_price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
+
+    price_ids.retain(|price_feed_id| available_price_feed_ids.contains(price_feed_id));
+
+    let mut price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+        &*state.state,
+        &price_ids,
+        RequestTime::AtSlot(event.slot()),
+    )
+    .await?;
+
+    let mut parsed_price_updates: Vec<ParsedPriceUpdate> = price_feeds_with_update_data
+        .price_feeds
+        .into_iter()
+        .map(|price_feed| price_feed.into())
+        .collect();
+
+
+    if benchmarks_only {
+        // Remove those with metadata.prev_publish_time != price.publish_time from parsed_price_updates
+        parsed_price_updates.retain(|price_feed| {
+            price_feed
+                .metadata
+                .prev_publish_time
+                .map_or(false, |prev_time| {
+                    prev_time != price_feed.price.publish_time
+                })
+        });
+        // Retain price id in price_ids that are in parsed_price_updates
+        price_ids.retain(|price_id| {
+            parsed_price_updates
+                .iter()
+                .any(|price_feed| price_feed.id == RpcPriceIdentifier::from(*price_id))
+        });
+        price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+            &*state.state,
+            &price_ids,
+            RequestTime::AtSlot(event.slot()),
+        )
+        .await?;
+    }
+
+    // Check if price_ids is empty after filtering and return None if it is
+    if price_ids.is_empty() {
+        return Ok(None);
+    }
+
+    let price_update_data = price_feeds_with_update_data.update_data;
+    let encoded_data: Vec<String> = price_update_data
+        .into_iter()
+        .map(|data| encoding.encode_str(&data))
+        .collect();
+    let binary_price_update = BinaryPriceUpdate {
+        encoding,
+        data: encoded_data,
+    };
+
+    Ok(Some(PriceUpdate {
+        binary: binary_price_update,
+        parsed: if parsed {
+            Some(parsed_price_updates)
+        } else {
+            None
+        },
+    }))
+}
+
+fn error_event<E: std::fmt::Debug>(e: E) -> Event {
+    Event::default()
+        .event("error")
+        .data(format!("Error receiving update: {:?}", e))
+}

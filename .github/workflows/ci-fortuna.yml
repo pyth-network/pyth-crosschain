@@ -2,10 +2,10 @@ name: Check Fortuna
 
 on:
   pull_request:
-    paths: [fortuna/**]
+    paths: [apps/fortuna/**]
   push:
     branches: [main]
-    paths: [fortuna/**]
+    paths: [apps/fortuna/**]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,4 +17,4 @@ jobs:
           toolchain: nightly-2023-07-23
           override: true
       - name: Run executor tests
-        run: cargo test --manifest-path ./fortuna/Cargo.toml
+        run: cargo test --manifest-path ./apps/fortuna/Cargo.toml

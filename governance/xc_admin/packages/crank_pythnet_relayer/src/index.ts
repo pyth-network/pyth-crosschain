@@ -37,6 +37,8 @@ const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
 const OFFSET: number = Number(process.env.OFFSET ?? "-1");
+const SKIP_FAILED_REMOTE_INSTRUCTIONS: boolean =
+  process.env.SKIP_FAILED_REMOTE_INSTRUCTIONS == "true";
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
 
@@ -163,15 +165,24 @@ async function run() {
           }
         }
 
-        await remoteExecutor.methods
-          .executePostedVaa()
-          .accounts({
-            claimRecord: claimRecordAddress,
-            postedVaa: derivePostedVaaKey(WORMHOLE_ADDRESS[CLUSTER]!, vaa.hash),
-          })
-          .remainingAccounts(extraAccountMetas)
-          .preInstructions(preInstructions)
-          .rpc({ skipPreflight: true });
+        try {
+          await remoteExecutor.methods
+            .executePostedVaa()
+            .accounts({
+              claimRecord: claimRecordAddress,
+              postedVaa: derivePostedVaaKey(
+                WORMHOLE_ADDRESS[CLUSTER]!,
+                vaa.hash
+              ),
+            })
+            .remainingAccounts(extraAccountMetas)
+            .preInstructions(preInstructions)
+            .rpc({ skipPreflight: true });
+        } catch (e) {
+          if (SKIP_FAILED_REMOTE_INSTRUCTIONS) {
+            console.error(e);
+          } else throw e;
+        }
       }
     } else if (response.code == 5) {
       console.log(`All VAAs have been relayed`);

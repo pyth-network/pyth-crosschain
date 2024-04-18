@@ -16,10 +16,10 @@ import {
 import {
   DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   DEFAULT_RECEIVER_PROGRAM_ID,
-  DEFAULT_TREASURY_ID,
   DEFAULT_WORMHOLE_PROGRAM_ID,
   getConfigPda,
   getGuardianSetPda,
+  getRandomTreasuryId,
   getTreasuryPda,
 } from "./address";
 import { PublicKey, Keypair } from "@solana/web3.js";
@@ -28,6 +28,7 @@ import {
   parsePriceFeedMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
+  CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
@@ -38,6 +39,7 @@ import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
   buildWriteEncodedVaaWithSplitInstructions,
+  findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
   trimSignatures,
 } from "./vaa";
@@ -262,6 +264,18 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
+  /** Add instructions to close encoded VAA accounts from previous actions.
+   * If you have previously used the PythTransactionBuilder with closeUpdateAccounts set to false or if you posted encoded VAAs but the transaction to close them did not land on-chain, your wallet might own many encoded VAA accounts.
+   * The rent cost for these accounts is 0.008 SOL per encoded VAA account. You can recover this rent calling this function when building a set of transactions.
+   */
+  async addClosePreviousEncodedVaasInstructions(maxInstructions = 40) {
+    this.addInstructions(
+      await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions(
+        maxInstructions
+      )
+    );
+  }
+
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
@@ -383,6 +397,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -397,14 +413,11 @@ export class PythSolanaReceiver {
             .postUpdateAtomic({
               vaa: trimmedVaa,
               merklePriceUpdate: update,
-              treasuryId: DEFAULT_TREASURY_ID,
+              treasuryId,
             })
             .accounts({
               priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
               guardianSet: getGuardianSetPda(
                 guardianSetIndex,
@@ -522,6 +535,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -541,15 +556,12 @@ export class PythSolanaReceiver {
           instruction: await this.receiver.methods
             .postUpdate({
               merklePriceUpdate: update,
-              treasuryId: DEFAULT_TREASURY_ID,
+              treasuryId,
             })
             .accounts({
               encodedVaa,
               priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
             })
             .instruction(),
@@ -596,6 +608,8 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
+    const treasuryId = getRandomTreasuryId();
+
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
         Buffer.from(priceUpdateData, "base64")
@@ -611,13 +625,12 @@ export class PythSolanaReceiver {
 
       for (const update of accumulatorUpdateData.updates) {
         const feedId = parsePriceFeedMessage(update.message).feedId;
-
         postInstructions.push({
           instruction: await this.pushOracle.methods
             .updatePriceFeed(
               {
                 merklePriceUpdate: update,
-                treasuryId: DEFAULT_TREASURY_ID,
+                treasuryId,
               },
               shardId,
               Array.from(feedId)
@@ -629,10 +642,7 @@ export class PythSolanaReceiver {
                 shardId,
                 feedId
               ),
-              treasury: getTreasuryPda(
-                DEFAULT_TREASURY_ID,
-                this.receiver.programId
-              ),
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
             })
             .instruction(),
@@ -662,7 +672,25 @@ export class PythSolanaReceiver {
       .closeEncodedVaa()
       .accounts({ encodedVaa })
       .instruction();
-    return { instruction, signers: [] };
+    return {
+      instruction,
+      signers: [],
+      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
+    };
+  }
+
+  /**
+   * Build aset of instructions to close all the existing encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   */
+  async buildClosePreviousEncodedVaasInstructions(
+    maxInstructions: number
+  ): Promise<InstructionWithEphemeralSigners[]> {
+    const encodedVaas = await this.findOwnedEncodedVaaAccounts();
+    const instructions = [];
+    for (const encodedVaa of encodedVaas) {
+      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
+    }
+    return instructions.slice(0, maxInstructions);
   }
 
   /**
@@ -709,12 +737,12 @@ export class PythSolanaReceiver {
   /**
    * Fetch the contents of a price feed account
    * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
-   * @param priceFeedId The price feed ID.
+   * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
    * @returns The contents of the deserialized price feed account or `null` if the account doesn't exist
    */
   async fetchPriceFeedAccount(
     shardId: number,
-    priceFeedId: Buffer
+    priceFeedId: Buffer | string
   ): Promise<PriceUpdateAccount | null> {
     return this.receiver.account.priceUpdateV2.fetchNullable(
       this.getPriceFeedAccountAddress(shardId, priceFeedId)
@@ -724,7 +752,7 @@ export class PythSolanaReceiver {
   /**
    * Derive the address of a price feed account
    * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
-   * @param priceFeedId The price feed ID.
+   * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
    * @returns The address of the price feed account
    */
   getPriceFeedAccountAddress(
@@ -737,12 +765,24 @@ export class PythSolanaReceiver {
       this.pushOracle.programId
     );
   }
+
+  /**
+   * Find all the encoded VAA accounts owned by this PythSolanaReceiver's wallet
+   * @returns a list of the public keys of the encoded VAA accounts
+   */
+  async findOwnedEncodedVaaAccounts() {
+    return await findEncodedVaaAccountsByWriteAuthority(
+      this.receiver.provider.connection,
+      this.wallet.publicKey,
+      this.wormhole.programId
+    );
+  }
 }
 
 /**
  * Derive the address of a price feed account
  * @param shardId The shard ID of the set of price feed accounts. This shard ID allows for multiple price feed accounts for the same price feed id to exist.
- * @param priceFeedId The price feed ID.
+ * @param priceFeedId The price feed ID, as either a 32-byte buffer or hexadecimal string with or without a leading "0x" prefix.
  * @param pushOracleProgramId The program ID of the Pyth Push Oracle program. If not provided, the default deployment will be used.
  * @returns The address of the price feed account
  */

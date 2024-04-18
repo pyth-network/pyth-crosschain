@@ -22,9 +22,16 @@ use {
         MerklePriceUpdate,
         Proof,
     },
+    rand::Rng,
     solana_program::instruction::Instruction,
     wormhole_core_bridge_solana::state::GuardianSet,
 };
+
+/**
+ * This constant is used to efficiently pack transactions when writing an encoded Pyth VAA to the Wormhole contract.
+ * Posting a VAA requires two transactions. If you split the VAA at this index when writing it, the first transaction will be almost full.
+ */
+pub const VAA_SPLIT_INDEX: usize = 755;
 
 pub const DEFAULT_TREASURY_ID: u8 = 0;
 pub const SECONDARY_TREASURY_ID: u8 = 1;
@@ -72,9 +79,10 @@ impl accounts::PostUpdate {
         write_authority: Pubkey,
         encoded_vaa: Pubkey,
         price_update_account: Pubkey,
+        treasury_id: u8,
     ) -> Self {
         let config = get_config_address();
-        let treasury = get_treasury_address(DEFAULT_TREASURY_ID);
+        let treasury = get_treasury_address(treasury_id);
         accounts::PostUpdate {
             payer,
             encoded_vaa,
@@ -128,12 +136,14 @@ impl instruction::PostUpdate {
         encoded_vaa: Pubkey,
         price_update_account: Pubkey,
         merkle_price_update: MerklePriceUpdate,
+        treasury_id: u8,
     ) -> Instruction {
         let post_update_accounts = accounts::PostUpdate::populate(
             payer,
             write_authority,
             encoded_vaa,
             price_update_account,
+            treasury_id,
         )
         .to_account_metas(None);
         Instruction {
@@ -142,7 +152,7 @@ impl instruction::PostUpdate {
             data:       instruction::PostUpdate {
                 params: PostUpdateParams {
                     merkle_price_update,
-                    treasury_id: DEFAULT_TREASURY_ID,
+                    treasury_id,
                 },
             }
             .data(),
@@ -319,4 +329,8 @@ pub fn deserialize_accumulator_update_data(
     match accumulator_update_data.proof {
         Proof::WormholeMerkle { vaa, updates } => return Ok((vaa.as_ref().to_vec(), updates)),
     }
+}
+
+pub fn get_random_treasury_id() -> u8 {
+    rand::thread_rng().gen()
 }

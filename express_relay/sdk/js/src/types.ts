@@ -24,6 +24,27 @@ export type BidParams = {
   validUntil: bigint;
 };
 /**
+ * Represents the configuration for signing an opportunity
+ */
+export type EIP712Domain = {
+  /**
+   * The network chain id for the EIP712 domain.
+   */
+  chainId: bigint;
+  /**
+   * The verifying contract address for the EIP712 domain.
+   */
+  verifyingContract: Address;
+  /**
+   * The name parameter for the EIP712 domain.
+   */
+  name: string;
+  /**
+   * The version parameter for the EIP712 domain.
+   */
+  version: string;
+};
+/**
  * Represents a valid opportunity ready to be executed
  */
 export type Opportunity = {
@@ -60,11 +81,18 @@ export type Opportunity = {
    * Tokens to receive after the opportunity is executed
    */
   buyTokens: TokenAmount[];
+  /**
+   * The data required to sign the opportunity
+   */
+  eip712Domain: EIP712Domain;
 };
 /**
  * All the parameters necessary to represent an opportunity
  */
-export type OpportunityParams = Omit<Opportunity, "opportunityId">;
+export type OpportunityParams = Omit<
+  Opportunity,
+  "opportunityId" | "eip712Domain"
+>;
 /**
  * Represents a bid for an opportunity
  */

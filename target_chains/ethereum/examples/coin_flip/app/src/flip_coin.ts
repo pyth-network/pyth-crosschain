@@ -3,22 +3,10 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import CoinFlipAbi from "./CoinFlipAbi.json";
-import axios from "axios";
 
-const argv = yargs(hideBin(process.argv))
+const parser = yargs(hideBin(process.argv))
   .option("private-key", {
     description: "Private key (as a hexadecimal string) of the sender",
-    type: "string",
-    required: true,
-  })
-  .option("fortuna-url", {
-    description: "URL of the fortuna server for your chosen provider",
-    type: "string",
-    default: "https://fortuna-staging.dourolabs.app",
-  })
-  .option("chain-name", {
-    description:
-      "The name of your blockchain (for accessing data from fortuna)",
     type: "string",
     required: true,
   })
@@ -37,37 +25,15 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parserConfiguration({
     "parse-numbers": false,
-  })
-  .parseSync();
-
-const fortunaUrl = argv.fortunaUrl;
-const chainName = argv.chainName;
-const coinFlipContractAddress = argv.address;
-const rpc = argv.rpcUrl;
-const privateKey = argv.privateKey;
-
-async function fetchWithRetry(url: string, maxRetries: number): Promise<any> {
-  let retryCount = 0;
-
-  async function doRequest() {
-    try {
-      const response = await axios.get(url);
-      return response.data;
-    } catch (error) {
-      if (retryCount < maxRetries) {
-        retryCount++;
-        setTimeout(doRequest, 1000);
-      } else {
-        console.error("Max retry attempts reached. Exiting.");
-        throw error;
-      }
-    }
-  }
-
-  return await doRequest(); // Start the initial request
-}
+  });
 
 async function main() {
+  const argv = await parser.argv;
+
+  const coinFlipContractAddress = argv.address;
+  const rpc = argv.rpcUrl;
+  const privateKey = argv.privateKey;
+
   const provider = new HDWalletProvider({
     privateKeys: [privateKey],
     providerOrUrl: rpc,
@@ -84,38 +50,52 @@ async function main() {
 
   console.log("1. Generating user's random number...");
   const randomNumber = web3.utils.randomHex(32);
-  const commitment = web3.utils.keccak256(randomNumber);
   console.log(`   number    : ${randomNumber}`);
-  console.log(`   commitment: ${commitment}`);
 
   console.log("2. Requesting coin flip...");
   const flipFee = await coinFlipContract.methods.getFlipFee().call();
   console.log(`   fee       : ${flipFee} wei`);
 
   const receipt = await coinFlipContract.methods
-    .requestFlip(commitment)
+    .requestFlip(randomNumber)
     .send({ value: flipFee, from: provider.getAddress(0) });
 
   console.log(`   tx        : ${receipt.transactionHash}`);
   const sequenceNumber = receipt.events.FlipRequest.returnValues.sequenceNumber;
   console.log(`   sequence  : ${sequenceNumber}`);
 
-  console.log("3. Retrieving provider's random number...");
-  const url = `${fortunaUrl}/v1/chains/${chainName}/revelations/${sequenceNumber}`;
-  console.log(`   fetch url : ${url}`);
-  // Note that there is a potential race condition here: the server may not have observed the request ^
-  // before this HTTP response. Hence, we retry fetching the url a couple of times.
-  const response = await fetchWithRetry(url, 3);
-  const providerRandom = `0x${response.value.data}`;
-  console.log(`   number    : ${providerRandom}`);
+  console.log("3. Waiting for result...");
+  // Poll for new FlipResult events emitted by the CoinFlip contract. It checks if the event
+  // has the same sequenceNumber as the request. If it does,
+  // it logs the result and stops polling.
+  let fromBlock = receipt.blockNumber;
+  const intervalId = setInterval(async () => {
+    const currentBlock = await web3.eth.getBlockNumber();
 
-  console.log("4. Revealing the result of the coin flip...");
-  const receipt2 = await coinFlipContract.methods
-    .revealFlip(sequenceNumber, randomNumber, providerRandom)
-    .send({ from: provider.getAddress(0) });
-  console.log(`   tx        : ${receipt2.transactionHash}`);
-  const isHeads = receipt2.events.FlipResult.returnValues.isHeads;
-  console.log(`   result    : ${isHeads ? "heads" : "tails"}`);
+    if (fromBlock > currentBlock) {
+      return;
+    }
+
+    // Get 'FlipResult' events emitted by the CoinFlip contract for given block range.
+    const events = await coinFlipContract.getPastEvents("FlipResult", {
+      fromBlock: fromBlock,
+      toBlock: currentBlock,
+    });
+    fromBlock = currentBlock + 1;
+
+    // Find the event with the same sequence number as the request.
+    const event = events.find(
+      (event) => event.returnValues.sequenceNumber === sequenceNumber
+    );
+
+    // If the event is found, log the result and stop polling.
+    if (event !== undefined) {
+      console.log(
+        `   result    : ${event.returnValues.isHeads ? "Heads" : "Tails"}`
+      );
+      clearInterval(intervalId);
+    }
+  }, 1000);
 
   provider.engine.stop();
 }
