@@ -27,7 +27,9 @@ pub struct VM {
     pub payload: ByteArray,
 }
 
-pub mod error_codes {
+pub mod errors {
+    pub use pyth::reader::errors as reader;
+
     pub const NO_GUARDIANS_SPECIFIED: felt252 = 'no guardians specified';
     pub const TOO_MANY_GUARDIANS: felt252 = 'too many guardians';
     pub const INVALID_GUARDIAN_KEY: felt252 = 'invalid guardian key';
@@ -45,7 +47,7 @@ pub mod error_codes {
 }
 
 pub fn quorum(num_guardians: usize) -> usize {
-    assert(num_guardians < 256, error_codes::TOO_MANY_GUARDIANS);
+    assert(num_guardians < 256, errors::TOO_MANY_GUARDIANS);
     ((num_guardians * 2) / 3) + 1
 }
 
@@ -53,7 +55,7 @@ pub fn quorum(num_guardians: usize) -> usize {
 mod wormhole {
     use core::box::BoxTrait;
     use core::array::ArrayTrait;
-    use super::{VM, IWormhole, GuardianSignature, error_codes, quorum};
+    use super::{VM, IWormhole, GuardianSignature, errors, quorum};
     use pyth::reader::{Reader, ReaderImpl, ByteArray};
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
     use core::starknet::secp256k1::Secp256k1Point;
@@ -92,14 +94,14 @@ mod wormhole {
     }
 
     fn store_guardian_set(ref self: ContractState, set_index: u32, guardians: Array<felt252>) {
-        assert(guardians.len() > 0, error_codes::NO_GUARDIANS_SPECIFIED);
-        assert(guardians.len() < 256, error_codes::TOO_MANY_GUARDIANS);
+        assert(guardians.len() > 0, errors::NO_GUARDIANS_SPECIFIED);
+        assert(guardians.len() < 256, errors::TOO_MANY_GUARDIANS);
         let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
         self.guardian_sets.write(set_index, set);
         let mut i = 0;
         while i < guardians.len() {
             let key = *guardians.at(i);
-            assert(key != 0, error_codes::INVALID_GUARDIAN_KEY);
+            assert(key != 0, errors::INVALID_GUARDIAN_KEY);
             // i < 256
             self
                 .guardian_keys
@@ -121,10 +123,10 @@ mod wormhole {
             ref self: ContractState, set_index: u32, guardians: Array<felt252>
         ) {
             let execution_info = get_execution_info().unbox();
-            assert(self.owner.read() == execution_info.caller_address, error_codes::ACCESS_DENIED);
+            assert(self.owner.read() == execution_info.caller_address, errors::ACCESS_DENIED);
 
             let current_set_index = self.current_guardian_set_index.read();
-            assert(set_index == current_set_index + 1, error_codes::INVALID_GUARDIAN_SET_SEQUENCE);
+            assert(set_index == current_set_index + 1, errors::INVALID_GUARDIAN_SET_SEQUENCE);
             expire_guardian_set(
                 ref self, current_set_index, execution_info.block_info.unbox().block_timestamp
             );
@@ -137,14 +139,14 @@ mod wormhole {
             let (vm, body_hash) = parse_vm(encoded_vm)?;
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
             if guardian_set.num_guardians == 0 {
-                return Result::Err(error_codes::INVALID_GUARDIAN_SET_INDEX);
+                return Result::Err(errors::INVALID_GUARDIAN_SET_INDEX);
             }
             if vm.guardian_set_index != self.current_guardian_set_index.read()
                 && guardian_set.expiration_time < get_block_timestamp() {
-                return Result::Err(error_codes::GUARDIAN_SET_EXPIRED);
+                return Result::Err(errors::GUARDIAN_SET_EXPIRED);
             }
             if vm.signatures.len() < quorum(guardian_set.num_guardians) {
-                return Result::Err(error_codes::NO_QUORUM);
+                return Result::Err(errors::NO_QUORUM);
             }
             let mut signatures_clone = vm.signatures.clone();
             let mut last_index = Option::None;
@@ -159,7 +161,7 @@ mod wormhole {
                 match last_index {
                     Option::Some(last_index) => {
                         if *(@signature).guardian_index <= last_index {
-                            result = Result::Err(error_codes::INVALID_SIGNATURE_ORDER);
+                            result = Result::Err(errors::INVALID_SIGNATURE_ORDER);
                             break;
                         }
                     },
@@ -168,7 +170,7 @@ mod wormhole {
                 last_index = Option::Some(*(@signature).guardian_index);
 
                 if signature.guardian_index.into() >= guardian_set.num_guardians {
-                    result = Result::Err(error_codes::INVALID_GUARDIAN_INDEX);
+                    result = Result::Err(errors::INVALID_GUARDIAN_INDEX);
                     break;
                 }
 
@@ -204,7 +206,7 @@ mod wormhole {
         let mut reader = ReaderImpl::new(encoded_vm);
         let version = reader.read_u8()?;
         if version != 1 {
-            return Result::Err(error_codes::VM_VERSION_INCOMPATIBLE);
+            return Result::Err(errors::VM_VERSION_INCOMPATIBLE);
         }
         let guardian_set_index = reader.read_u32()?;
 
@@ -261,13 +263,13 @@ mod wormhole {
         body_hash: u256, signature: Signature, guardian_key: u256,
     ) -> Result<(), felt252> {
         let point: Secp256k1Point = recover_public_key(body_hash, signature)
-            .ok_or(error_codes::INVALID_SIGNATURE)?;
+            .ok_or(errors::INVALID_SIGNATURE)?;
         let address = eth_address(point)?;
         if guardian_key == 0 {
-            return Result::Err(error_codes::INVALID_GUARDIAN_KEY);
+            return Result::Err(errors::INVALID_GUARDIAN_KEY);
         }
         if address != guardian_key {
-            return Result::Err(error_codes::INVALID_SIGNATURE);
+            return Result::Err(errors::INVALID_SIGNATURE);
         }
         Result::Ok(())
     }
@@ -275,7 +277,7 @@ mod wormhole {
     fn eth_address(point: Secp256k1Point) -> Result<u256, felt252> {
         let (x, y) = match point.get_coordinates() {
             Result::Ok(v) => { v },
-            Result::Err(_) => { return Result::Err(error_codes::INVALID_SIGNATURE); },
+            Result::Err(_) => { return Result::Err(errors::INVALID_SIGNATURE); },
         };
 
         let mut hasher = HasherImpl::new();
