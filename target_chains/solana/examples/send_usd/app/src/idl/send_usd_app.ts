@@ -1,6 +1,6 @@
-export type MyFirstPythApp = {
+export type SendUSDApp = {
   version: "0.1.0";
-  name: "my_first_pyth_app";
+  name: "send_usd";
   instructions: [
     {
       name: "send";
@@ -37,9 +37,9 @@ export type MyFirstPythApp = {
   ];
 };
 
-export const IDL: MyFirstPythApp = {
+export const IDL: SendUSDApp = {
   version: "0.1.0",
-  name: "my_first_pyth_app",
+  name: "send_usd",
   instructions: [
     {
       name: "send",

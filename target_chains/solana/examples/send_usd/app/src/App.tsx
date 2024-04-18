@@ -18,7 +18,7 @@ import {
 import { Connection, PublicKey } from "@solana/web3.js";
 import * as buffer from "buffer";
 import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
-import { MyFirstPythApp, IDL } from "./idl/my_first_pyth_app";
+import { SendUSDApp, IDL } from "./idl/send_usd_app";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 window.Buffer = buffer.Buffer;
 
@@ -50,8 +50,8 @@ async function postPriceUpdate(connection: Connection, wallet?: AnchorWallet) {
       1702285724
     );
 
-    const myFirstApp = new Program<MyFirstPythApp>(
-      IDL as MyFirstPythApp,
+    const sendUsdApp = new Program<SendUSDApp>(
+      IDL as SendUSDApp,
       new PublicKey("2e5gZD3suxgJgkCg4pkoogxDKszy1SAwokz8mNeZUj4M"),
       new AnchorProvider(connection, wallet, { commitment: "processed" })
     );
@@ -67,7 +67,7 @@ async function postPriceUpdate(connection: Connection, wallet?: AnchorWallet) {
       ): Promise<InstructionWithEphemeralSigners[]> => {
         return [
           {
-            instruction: await myFirstApp.methods
+            instruction: await sendUsdApp.methods
               .send(new BN(1))
               .accounts({
                 destination: new PublicKey(
@@ -116,7 +116,7 @@ function App() {
               <img src={logo} className="App-logo" alt="logo" />
               <WalletMultiButton />
               <WalletDisconnectButton />
-              <p>Click to send a transaction to the Pyth Solana Receiver</p>
+              <p>Click to send a 1 usd to the hard-coded account</p>
               <Button />
             </header>
           </div>
