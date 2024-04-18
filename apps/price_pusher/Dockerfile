@@ -13,10 +13,10 @@ COPY --chown=1000:1000 price_service/client/js price_service/client/js
 COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
 COPY --chown=1000:1000 target_chains/solana/sdk/js target_chains/solana/sdk/js
 
-COPY --chown=1000:1000 price_pusher price_pusher
+COPY --chown=1000:1000 apps/price_pusher apps/price_pusher
 
 RUN npx lerna run build --scope="@pythnetwork/price-pusher" --include-dependencies
 
-WORKDIR /home/node/price_pusher
+WORKDIR /home/node/apps/price_pusher
 
 ENTRYPOINT [ "npm", "run", "start" ]
