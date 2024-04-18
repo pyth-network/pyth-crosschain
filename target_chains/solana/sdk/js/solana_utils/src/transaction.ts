@@ -436,66 +436,62 @@ export async function sendTransactions(
         : tx.signature ?? new Uint8Array()
     );
 
-    try {
-      const confirmTransactionPromise = connection.confirmTransaction(
-        {
-          signature: txSignature,
-          blockhash: blockhashResult.value.blockhash,
-          lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
-        },
-        "confirmed"
+    const confirmTransactionPromise = connection.confirmTransaction(
+      {
+        signature: txSignature,
+        blockhash: blockhashResult.value.blockhash,
+        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+      },
+      "confirmed"
+    );
+
+    confirmedTx = null;
+    while (!confirmedTx) {
+      confirmedTx = await Promise.race([
+        new Promise<SignatureResult>(async (resolve) => {
+          resolve((await confirmTransactionPromise).value);
+        }),
+        new Promise<null>((resolve) =>
+          setTimeout(() => {
+            resolve(null);
+          }, TX_RETRY_INTERVAL)
+        ),
+      ]);
+      if (confirmedTx) {
+        break;
+      }
+      if (maxRetries && maxRetries < retryCount) {
+        break;
+      }
+      console.log(
+        "Retrying transaction ",
+        index,
+        " of ",
+        transactions.length - 1,
+        " with signature: ",
+        txSignature,
+        " Retry count: ",
+        retryCount
       );
+      retryCount++;
 
-      confirmedTx = null;
-      while (!confirmedTx) {
-        confirmedTx = await Promise.race([
-          new Promise<SignatureResult>(async (resolve) => {
-            resolve((await confirmTransactionPromise).value);
-          }),
-          new Promise<null>((resolve) =>
-            setTimeout(() => {
-              resolve(null);
-            }, TX_RETRY_INTERVAL)
-          ),
-        ]);
-        if (confirmedTx) {
-          break;
-        }
-        if (maxRetries && maxRetries < retryCount) {
-          break;
-        }
-        console.log(
-          "Retrying transaction ",
-          index,
-          " of ",
-          transactions.length - 1,
-          " with signature: ",
-          txSignature,
-          " Retry count: ",
-          retryCount
-        );
-        retryCount++;
-
-        await connection.sendRawTransaction(tx.serialize(), {
-          // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-          // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-          skipPreflight: true,
-          // Setting max retries to 0 as we are handling retries manually
-          // Set this manually so that the default is skipped
-          maxRetries: 0,
-          preflightCommitment: "confirmed",
-          minContextSlot: blockhashResult.context.slot,
-        });
-      }
-      if (confirmedTx?.err) {
-        throw new Error(
-          `Transaction ${txSignature} has failed with error: ${JSON.stringify(
-            confirmedTx.err
-          )}`
-        );
-      }
-    } catch (error) {
-      throw error;
+      await connection.sendRawTransaction(tx.serialize(), {
+        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+        skipPreflight: true,
+        // Setting max retries to 0 as we are handling retries manually
+        // Set this manually so that the default is skipped
+        maxRetries: 0,
+        preflightCommitment: "confirmed",
+        minContextSlot: blockhashResult.context.slot,
+      });
+    }
+    if (confirmedTx?.err) {
+      throw new Error(
+        `Transaction ${txSignature} has failed with error: ${JSON.stringify(
+          confirmedTx.err
+        )}`
+      );
     }
 
     if (!confirmedTx) {
