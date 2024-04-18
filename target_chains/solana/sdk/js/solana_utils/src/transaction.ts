@@ -448,8 +448,10 @@ export async function sendTransactions(
     confirmedTx = null;
     while (!confirmedTx) {
       confirmedTx = await Promise.race([
-        new Promise<SignatureResult>(async (resolve) => {
-          resolve((await confirmTransactionPromise).value);
+        new Promise<SignatureResult>((resolve) => {
+          confirmTransactionPromise.then((result) => {
+            resolve(result.value);
+          });
         }),
         new Promise<null>((resolve) =>
           setTimeout(() => {
