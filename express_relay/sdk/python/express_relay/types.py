@@ -194,14 +194,6 @@ class OpportunityParams(BaseModel):
 
 
 class EIP712Domain(BaseModel):
-    """
-    Attributes:
-        name: The domain name parameter for the EIP712 domain separator.
-        version: The domain version parameter for the EIP712 domain separator.
-        chain_id: The network chain id of parameter for the EIP712 domain separator.
-        verifying_contract: The verifying contract address parameter for the EIP712 domain separator.
-    """
-
     name: str
     version: str
     chain_id: IntString
