@@ -1,0 +1,14 @@
+- alias: BTC/USD
+  id: e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+  time_difference: 60
+  price_deviation: 0.5
+  confidence_ratio: 1
+- alias: BNB/USD
+  id: 2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f
+  time_difference: 60
+  price_deviation: 1
+  confidence_ratio: 1
+  early_update:
+    time_difference: 30
+    price_deviation: 0.5
+    confidence_ratio: 0.1

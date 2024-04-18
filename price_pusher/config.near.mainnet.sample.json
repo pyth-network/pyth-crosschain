@@ -1,8 +1,0 @@
-{
-  "node-url": "https://rpc.mainnet.near.org",
-  "network": "mainnet",
-  "account-id": "payer.near",
-  "pyth-contract-address": "pyth-oracle.near",
-  "price-service-endpoint": "https://hermes.pyth.network",
-  "price-config-file": "./price-config.stable.sample.yaml"
-}

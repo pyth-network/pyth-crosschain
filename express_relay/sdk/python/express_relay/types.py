@@ -193,6 +193,13 @@ class OpportunityParams(BaseModel):
     params: Union[OpportunityParamsV1] = Field(..., discriminator="version")
 
 
+class EIP712Domain(BaseModel):
+    name: str
+    version: str
+    chain_id: IntString
+    verifying_contract: Address
+
+
 class Opportunity(BaseModel):
     """
     Attributes:
@@ -206,6 +213,7 @@ class Opportunity(BaseModel):
         version: The version of the opportunity.
         creation_time: The creation time of the opportunity.
         opportunity_id: The ID of the opportunity.
+        eip_712_domain: The EIP712 domain data needed for signing.
     """
 
     target_calldata: HexString
@@ -218,6 +226,7 @@ class Opportunity(BaseModel):
     version: str
     creation_time: IntString
     opportunity_id: UUIDString
+    eip_712_domain: EIP712Domain
 
     supported_versions: ClassVar[list[str]] = ["v1"]
 
