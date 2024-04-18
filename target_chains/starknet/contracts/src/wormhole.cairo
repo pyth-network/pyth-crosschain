@@ -54,7 +54,7 @@ mod wormhole {
     use core::box::BoxTrait;
     use core::array::ArrayTrait;
     use super::{VM, IWormhole, GuardianSignature, error_codes, quorum};
-    use pyth::reader::{Reader, ReaderImpl, ByteArray, UNEXPECTED_OVERFLOW};
+    use pyth::reader::{Reader, ReaderImpl, ByteArray};
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
     use core::starknet::secp256k1::Secp256k1Point;
     use core::starknet::{
@@ -63,6 +63,8 @@ mod wormhole {
     use core::keccak::cairo_keccak;
     use core::integer::u128_byte_reverse;
     use core::panic_with_felt252;
+    use pyth::hash::{Hasher, HasherImpl};
+    use pyth::util::{ONE_SHIFT_160, UNEXPECTED_OVERFLOW};
 
     #[derive(Drop, Debug, Clone, Serde, starknet::Store)]
     struct GuardianSet {
@@ -224,12 +226,12 @@ mod wormhole {
         result?;
 
         let mut reader_for_hash = reader.clone();
-        let body_hash1_le = reader_for_hash.keccak256()?;
-        let mut body_hash1_le_u64s = split_hash(body_hash1_le);
-        let body_hash2_le = cairo_keccak(ref body_hash1_le_u64s, 0, 0);
-        let body_hash2 = u256 {
-            low: u128_byte_reverse(body_hash2_le.high), high: u128_byte_reverse(body_hash2_le.low),
-        };
+        let mut hasher = HasherImpl::new();
+        hasher.push_reader(ref reader_for_hash)?;
+        let body_hash1 = hasher.finalize();
+        let mut hasher2 = HasherImpl::new();
+        hasher2.push_u256(body_hash1);
+        let body_hash2 = hasher2.finalize();
 
         let timestamp = reader.read_u32()?;
         let nonce = reader.read_u32()?;
@@ -238,7 +240,7 @@ mod wormhole {
         let sequence = reader.read_u64()?;
         let consistency_level = reader.read_u8()?;
         let payload_len = reader.len();
-        let payload = reader.read_bytes(payload_len)?;
+        let payload = reader.read_byte_array(payload_len)?;
 
         let vm = VM {
             version,
@@ -270,53 +272,16 @@ mod wormhole {
         Result::Ok(())
     }
 
-    const ONE_SHIFT_64: u256 = 0x10000000000000000;
-    const ONE_SHIFT_160: u256 = 0x10000000000000000000000000000000000000000;
-
     fn eth_address(point: Secp256k1Point) -> Result<u256, felt252> {
         let (x, y) = match point.get_coordinates() {
             Result::Ok(v) => { v },
             Result::Err(_) => { return Result::Err(error_codes::INVALID_SIGNATURE); },
         };
 
-        let mut array = array![];
-        push_reversed(ref array, x);
-        push_reversed(ref array, y);
-        let key_hash = cairo_keccak(ref array, 0, 0);
-        let reversed_key_hash = u256 {
-            low: u128_byte_reverse(key_hash.high), high: u128_byte_reverse(key_hash.low)
-        };
-        Result::Ok(reversed_key_hash % ONE_SHIFT_160)
-    }
-
-    fn split_hash(val: u256) -> Array<u64> {
-        let divisor = ONE_SHIFT_64.try_into().expect('not zero');
-        let (val, v1) = DivRem::div_rem(val, divisor);
-        let (val, v2) = DivRem::div_rem(val, divisor);
-        let (val, v3) = DivRem::div_rem(val, divisor);
-
-        array![
-            v1.try_into().expect(UNEXPECTED_OVERFLOW),
-            v2.try_into().expect(UNEXPECTED_OVERFLOW),
-            v3.try_into().expect(UNEXPECTED_OVERFLOW),
-            val.try_into().expect(UNEXPECTED_OVERFLOW),
-        ]
-    }
-
-    fn push_reversed(ref array: Array<u64>, val: u256) {
-        let divisor = ONE_SHIFT_64.try_into().expect('not zero');
-        let (val, v1) = DivRem::div_rem(val, divisor);
-        let (val, v2) = DivRem::div_rem(val, divisor);
-        let (val, v3) = DivRem::div_rem(val, divisor);
-
-        array.append(u64_byte_reverse(val.try_into().expect(UNEXPECTED_OVERFLOW)));
-        array.append(u64_byte_reverse(v3.try_into().expect(UNEXPECTED_OVERFLOW)));
-        array.append(u64_byte_reverse(v2.try_into().expect(UNEXPECTED_OVERFLOW)));
-        array.append(u64_byte_reverse(v1.try_into().expect(UNEXPECTED_OVERFLOW)));
-    }
-
-    fn u64_byte_reverse(value: u128) -> u64 {
-        let reversed = u128_byte_reverse(value) / ONE_SHIFT_64.try_into().expect('not zero');
-        reversed.try_into().expect(UNEXPECTED_OVERFLOW)
+        let mut hasher = HasherImpl::new();
+        hasher.push_u256(x);
+        hasher.push_u256(y);
+        let address = hasher.finalize() % ONE_SHIFT_160;
+        Result::Ok(address)
     }
 }
