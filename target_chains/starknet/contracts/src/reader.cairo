@@ -5,7 +5,7 @@ use core::integer::u128_byte_reverse;
 use core::fmt::{Debug, Formatter};
 use pyth::util::{UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u128};
 
-pub mod error_codes {
+pub mod errors {
     pub const EOF: felt252 = 'unexpected end of input';
 }
 
@@ -240,7 +240,7 @@ impl ReaderPrivateImpl of ReaderPrivateTrait {
                 self.num_current_bytes = 16;
             },
             Option::None => {
-                let (value, bytes) = self.array.pop_front().ok_or(error_codes::EOF)?;
+                let (value, bytes) = self.array.pop_front().ok_or(errors::EOF)?;
                 let value: u256 = value.into();
                 if bytes > 16 {
                     self.current = value.high;
