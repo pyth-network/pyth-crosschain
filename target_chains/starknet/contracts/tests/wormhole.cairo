@@ -1,6 +1,7 @@
 use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank, CheatTarget};
-use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
+use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
 use pyth::reader::{ByteArray, ByteArrayImpl, ReaderImpl};
+use pyth::util::UnwrapWithFelt252;
 use core::starknet::ContractAddress;
 use core::panic_with_felt252;
 
@@ -43,14 +44,14 @@ fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, ran
     match r {
         Result::Ok(v) => { println!("no error, output: {:?}", v); },
         Result::Err(err) => {
-            if err == 'invalid signature'
-                || err == 'invalid guardian index'
-                || err == 'invalid guardian set index'
-                || err == 'unexpected end of input'
-                || err == 'VM version incompatible' {
+            if err == ParseAndVerifyVmError::InvalidSignature
+                || err == ParseAndVerifyVmError::InvalidGuardianIndex
+                || err == ParseAndVerifyVmError::InvalidGuardianSetIndex
+                || err == ParseAndVerifyVmError::VmVersionIncompatible
+                || err == ParseAndVerifyVmError::Reader(pyth::reader::Error::UnexpectedEndOfInput) {
                 panic_with_felt252('any_expected');
             } else {
-                panic_with_felt252(err);
+                panic_with_felt252(err.into());
             }
         },
     }
@@ -62,7 +63,7 @@ fn test_submit_guardian_set_rejects_wrong_owner() {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy(owner, guardian_set1());
     start_prank(CheatTarget::One(dispatcher.contract_address), 'baddy'.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1());
+    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
 }
 
 #[test]
@@ -72,8 +73,8 @@ fn test_submit_guardian_set_rejects_wrong_index() {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1());
-    dispatcher.submit_new_guardian_set(3, guardian_set3());
+    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(3, guardian_set3()).unwrap_with_felt252();
 }
 
 #[test]
@@ -90,7 +91,7 @@ fn test_submit_guardian_set_rejects_empty() {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, array![]);
+    dispatcher.submit_new_guardian_set(1, array![]).unwrap_with_felt252();
 }
 
 fn array_left252_to_bytes31(mut input: Array<felt252>) -> Array<bytes31> {
@@ -122,9 +123,9 @@ pub fn deploy_and_init(owner: ContractAddress) -> IWormholeDispatcher {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1());
-    dispatcher.submit_new_guardian_set(2, guardian_set2());
-    dispatcher.submit_new_guardian_set(3, guardian_set3());
+    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(2, guardian_set2()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(3, guardian_set3()).unwrap_with_felt252();
     stop_prank(CheatTarget::One(dispatcher.contract_address));
 
     dispatcher

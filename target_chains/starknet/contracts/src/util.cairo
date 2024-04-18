@@ -54,3 +54,11 @@ pub fn u64_byte_reverse(value: u64) -> u64 {
     let reversed = u128_byte_reverse(value.into()) / ONE_SHIFT_64.try_into().expect('not zero');
     reversed.try_into().unwrap()
 }
+
+/// If `self` is an error, panics with a `felt252` value
+/// corresponding to the error. Otherwise, returns the success value.
+/// This differs from `Result::unwrap` which always panics with
+/// the same message and doesn't include information about the error.
+pub trait UnwrapWithFelt252<T, E> {
+    fn unwrap_with_felt252(self: Result<T, E>) -> T;
+}
