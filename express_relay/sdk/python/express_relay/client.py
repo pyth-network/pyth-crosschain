@@ -6,12 +6,9 @@ from typing import Callable, Any
 from collections.abc import Coroutine
 from uuid import UUID
 import httpx
-import web3
 import websockets
 from websockets.client import WebSocketClientProtocol
-from eth_abi import encode
 from eth_account.account import Account
-from web3.auto import w3
 from express_relay.types import (
     Opportunity,
     BidStatusUpdate,
@@ -405,42 +402,73 @@ def sign_bid(
     Returns:
         A OpportunityBid object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
-    sell_tokens = [
-        (token.token, int(token.amount)) for token in opportunity.sell_tokens
-    ]
-    buy_tokens = [(token.token, int(token.amount)) for token in opportunity.buy_tokens]
-    target_calldata = bytes.fromhex(opportunity.target_calldata.replace("0x", ""))
 
-    digest = encode(
-        [
-            "(address,uint256)[]",
-            "(address,uint256)[]",
-            "address",
-            "bytes",
-            "uint256",
-            "uint256",
-            "uint256",
+    executor = Account.from_key(private_key).address
+    domain_data = {
+        "name": opportunity.eip_712_domain.name,
+        "version": opportunity.eip_712_domain.version,
+        "chainId": opportunity.eip_712_domain.chain_id,
+        "verifyingContract": opportunity.eip_712_domain.verifying_contract,
+    }
+    message_types = {
+        "SignedParams": [
+            {"name": "executionParams", "type": "ExecutionParams"},
+            {"name": "signer", "type": "address"},
+            {"name": "deadline", "type": "uint256"},
         ],
-        [
-            sell_tokens,
-            buy_tokens,
-            opportunity.target_contract,
-            target_calldata,
-            opportunity.target_call_value,
-            bid_amount,
-            valid_until,
+        "ExecutionParams": [
+            {"name": "sellTokens", "type": "TokenAmount[]"},
+            {"name": "buyTokens", "type": "TokenAmount[]"},
+            {"name": "targetContract", "type": "address"},
+            {"name": "targetCalldata", "type": "bytes"},
+            {"name": "targetCallValue", "type": "uint256"},
+            {"name": "bidAmount", "type": "uint256"},
         ],
+        "TokenAmount": [
+            {"name": "token", "type": "address"},
+            {"name": "amount", "type": "uint256"},
+        ],
+    }
+
+    # the data to be signed
+    message_data = {
+        "executionParams": {
+            "sellTokens": [
+                {
+                    "token": token.token,
+                    "amount": int(token.amount),
+                }
+                for token in opportunity.sell_tokens
+            ],
+            "buyTokens": [
+                {
+                    "token": token.token,
+                    "amount": int(token.amount),
+                }
+                for token in opportunity.buy_tokens
+            ],
+            "targetContract": opportunity.target_contract,
+            "targetCalldata": bytes.fromhex(
+                opportunity.target_calldata.replace("0x", "")
+            ),
+            "targetCallValue": opportunity.target_call_value,
+            "bidAmount": bid_amount,
+        },
+        "signer": executor,
+        "deadline": valid_until,
+    }
+
+    signed_typed_data = Account.sign_typed_data(
+        private_key, domain_data, message_types, message_data
     )
-    msg_data = web3.Web3.solidity_keccak(["bytes"], [digest])
-    signature = w3.eth.account.signHash(msg_data, private_key=private_key)
 
     opportunity_bid = OpportunityBid(
         opportunity_id=opportunity.opportunity_id,
         permission_key=opportunity.permission_key,
         amount=bid_amount,
         valid_until=valid_until,
-        executor=Account.from_key(private_key).address,
-        signature=signature,
+        executor=executor,
+        signature=signed_typed_data,
     )
 
     return opportunity_bid
