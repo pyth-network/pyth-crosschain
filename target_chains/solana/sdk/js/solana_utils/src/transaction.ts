@@ -5,6 +5,9 @@ import {
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
+  RpcResponseAndContext,
+  SignatureResult,
+  SignatureStatus,
   Signer,
   Transaction,
   TransactionInstruction,
@@ -425,7 +428,7 @@ export async function sendTransactions(
     // In the following section, we wait and constantly check for the transaction to be confirmed
     // and resend the transaction if it is not confirmed within a certain time interval
     // thus handling tx retries on the client side rather than relying on the RPC
-    let confirmedTx = null;
+    let confirmedTx: SignatureResult | null = null;
     let retryCount = 0;
 
     // Get the signature of the transaction with different logic for versioned transactions
@@ -448,8 +451,10 @@ export async function sendTransactions(
       confirmedTx = null;
       while (!confirmedTx) {
         confirmedTx = await Promise.race([
-          confirmTransactionPromise,
-          new Promise((resolve) =>
+          new Promise<SignatureResult>(async (resolve) => {
+            resolve((await confirmTransactionPromise).value);
+          }),
+          new Promise<null>((resolve) =>
             setTimeout(() => {
               resolve(null);
             }, TX_RETRY_INTERVAL)
@@ -484,8 +489,15 @@ export async function sendTransactions(
           minContextSlot: blockhashResult.context.slot,
         });
       }
+      if (confirmedTx?.err) {
+        throw new Error(
+          `Transaction ${txSignature} has failed with error: ${JSON.stringify(
+            confirmedTx.err
+          )}`
+        );
+      }
     } catch (error) {
-      console.error(error);
+      throw error;
     }
 
     if (!confirmedTx) {
