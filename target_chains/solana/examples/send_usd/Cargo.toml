@@ -16,6 +16,6 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { workspace = true }
-solana-program = { workspace = true }
-pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
+anchor-lang = "0.28.0"
+solana-program = "1.16.20"
+pyth-solana-receiver-sdk = "0.1.0"
