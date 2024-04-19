@@ -52,7 +52,6 @@ export class WormholeCosmWasmContract extends WormholeContract {
 
   async getCurrentGuardianSetIndex(): Promise<number> {
     const config = await this.getConfig();
-    console.log(config);
     return JSON.parse(config["\x00\x06config"])["guardian_set_index"];
   }
 
