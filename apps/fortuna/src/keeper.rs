@@ -13,8 +13,12 @@ use {
         },
         config::EthereumConfig,
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     ethers::{
+        contract::ContractError,
         providers::{
             Middleware,
             Provider,
@@ -58,7 +62,11 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
                 return latest_confirmed_block - chain_state.reveal_delay_blocks
             }
             Err(e) => {
-                tracing::error!("Chain: {} - error while getting block number. error: {:?}", &chain_state.id, e);
+                tracing::error!(
+                    "Chain: {} - error while getting block number. error: {:?}",
+                    &chain_state.id,
+                    e
+                );
                 time::sleep(RETRY_INTERVAL).await;
             }
         }
@@ -195,39 +203,53 @@ pub async fn process_event(
                     return Ok(());
                 }
 
-                let res = contract
+                let contract_call = contract
                     .reveal_with_callback(
                         event.provider_address,
                         event.sequence_number,
                         event.user_random_number,
                         provider_revelation,
                     )
-                    .gas(gas_estimate)
-                    .send()
-                    .await?
-                    .await;
+                    .gas(gas_estimate);
+
+                let mut res = contract_call.send().await;
 
                 match res {
-                    Ok(_) => {
-                        tracing::info!(
-                            "Chain: {} - revealed for provider: {} and sequence number: {} with res: {:?}",
-                            &chain_config.id,
-                            event.provider_address,
-                            event.sequence_number,
-                            res
-                        );
-                        Ok(())
-                    }
-                    Err(e) => {
-                        tracing::error!(
-                            "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                            &chain_config.id,
-                            event.provider_address,
-                            event.sequence_number,
-                            e
-                        );
-                        Err(e.into())
-                    }
+                    Ok(ref mut pending_tx) => match pending_tx.await {
+                        Ok(_) => {
+                            tracing::info!(
+                                "Chain: {} - revealed for provider: {} and sequence number: {} with res: {:?}",
+                                &chain_config.id,
+                                event.provider_address,
+                                event.sequence_number,
+                                res
+                            );
+                            Ok(())
+                        }
+                        Err(e) => {
+                            tracing::error!(
+                                "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                                &chain_config.id,
+                                event.provider_address,
+                                event.sequence_number,
+                                e
+                            );
+                            Err(e.into())
+                        }
+                    },
+                    Err(e) => match e {
+                        ContractError::ProviderError { e } => Err(anyhow!(e)),
+                        _ => {
+                            tracing::error!(
+                                "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                                &chain_config.id,
+                                event.provider_address,
+                                event.sequence_number,
+                                e
+                            );
+                            Ok(())
+                        }
+                    },
                 }
             }
             None => Ok(()),
