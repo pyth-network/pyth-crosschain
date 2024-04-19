@@ -16,7 +16,6 @@ import {
   OpportunityParams,
   TokenAmount,
 } from "./types";
-import { exec } from "child_process";
 
 export * from "./types";
 
