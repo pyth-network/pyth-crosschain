@@ -5,6 +5,7 @@ import {
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
+  SignatureResult,
   Signer,
   Transaction,
   TransactionInstruction,
@@ -425,7 +426,7 @@ export async function sendTransactions(
     // In the following section, we wait and constantly check for the transaction to be confirmed
     // and resend the transaction if it is not confirmed within a certain time interval
     // thus handling tx retries on the client side rather than relying on the RPC
-    let confirmedTx = null;
+    let confirmedTx: SignatureResult | null = null;
     let retryCount = 0;
 
     // Get the signature of the transaction with different logic for versioned transactions
@@ -435,57 +436,64 @@ export async function sendTransactions(
         : tx.signature ?? new Uint8Array()
     );
 
-    try {
-      const confirmTransactionPromise = connection.confirmTransaction(
-        {
-          signature: txSignature,
-          blockhash: blockhashResult.value.blockhash,
-          lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
-        },
-        "confirmed"
-      );
+    const confirmTransactionPromise = connection.confirmTransaction(
+      {
+        signature: txSignature,
+        blockhash: blockhashResult.value.blockhash,
+        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+      },
+      "confirmed"
+    );
 
-      confirmedTx = null;
-      while (!confirmedTx) {
-        confirmedTx = await Promise.race([
-          confirmTransactionPromise,
-          new Promise((resolve) =>
-            setTimeout(() => {
-              resolve(null);
-            }, TX_RETRY_INTERVAL)
-          ),
-        ]);
-        if (confirmedTx) {
-          break;
-        }
-        if (maxRetries && maxRetries < retryCount) {
-          break;
-        }
-        console.log(
-          "Retrying transaction ",
-          index,
-          " of ",
-          transactions.length - 1,
-          " with signature: ",
-          txSignature,
-          " Retry count: ",
-          retryCount
-        );
-        retryCount++;
-
-        await connection.sendRawTransaction(tx.serialize(), {
-          // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-          // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-          skipPreflight: true,
-          // Setting max retries to 0 as we are handling retries manually
-          // Set this manually so that the default is skipped
-          maxRetries: 0,
-          preflightCommitment: "confirmed",
-          minContextSlot: blockhashResult.context.slot,
-        });
+    confirmedTx = null;
+    while (!confirmedTx) {
+      confirmedTx = await Promise.race([
+        new Promise<SignatureResult>((resolve) => {
+          confirmTransactionPromise.then((result) => {
+            resolve(result.value);
+          });
+        }),
+        new Promise<null>((resolve) =>
+          setTimeout(() => {
+            resolve(null);
+          }, TX_RETRY_INTERVAL)
+        ),
+      ]);
+      if (confirmedTx) {
+        break;
       }
-    } catch (error) {
-      console.error(error);
+      if (maxRetries && maxRetries < retryCount) {
+        break;
+      }
+      console.log(
+        "Retrying transaction ",
+        index,
+        " of ",
+        transactions.length - 1,
+        " with signature: ",
+        txSignature,
+        " Retry count: ",
+        retryCount
+      );
+      retryCount++;
+
+      await connection.sendRawTransaction(tx.serialize(), {
+        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+        skipPreflight: true,
+        // Setting max retries to 0 as we are handling retries manually
+        // Set this manually so that the default is skipped
+        maxRetries: 0,
+        preflightCommitment: "confirmed",
+        minContextSlot: blockhashResult.context.slot,
+      });
+    }
+    if (confirmedTx?.err) {
+      throw new Error(
+        `Transaction ${txSignature} has failed with error: ${JSON.stringify(
+          confirmedTx.err
+        )}`
+      );
     }
 
     if (!confirmedTx) {
