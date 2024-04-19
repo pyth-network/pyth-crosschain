@@ -553,6 +553,7 @@
   mainnet: false
   rpcUrl: https://rpc-testnet.morphl2.io
   networkId: 2710
+  type: EvmChain
 - id: iota
   mainnet: true
   rpcUrl: https://json-rpc.evm.iotaledger.net
