@@ -214,7 +214,12 @@ pub async fn process_event(
                 let pending_tx = match res {
                     Ok(pending_tx) => pending_tx,
                     Err(e) => match e {
+                        // If there is a provider error, we weren't able to send the transaction.
+                        // We will return an error. So, that the caller can decide what to do (retry).
                         ContractError::ProviderError { e } => return Err(e.into()),
+                        // For all the other errors, it is likely the case we won't be able to reveal for
+                        // ever. We will return an Ok(()) to signal that we have processed this reveal
+                        // and concluded that its Ok to not reveal.
                         _ => {
                             tracing::error!(
                             "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
