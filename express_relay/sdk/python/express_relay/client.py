@@ -411,17 +411,14 @@ def sign_bid(
         "verifyingContract": opportunity.eip_712_domain.verifying_contract,
     }
     message_types = {
-        "SignedParams": [
-            {"name": "executionParams", "type": "ExecutionParams"},
-            {"name": "signer", "type": "address"},
-            {"name": "deadline", "type": "uint256"},
-        ],
         "ExecutionParams": [
             {"name": "sellTokens", "type": "TokenAmount[]"},
             {"name": "buyTokens", "type": "TokenAmount[]"},
+            {"name": "executor", "type": "address"},
             {"name": "targetContract", "type": "address"},
             {"name": "targetCalldata", "type": "bytes"},
             {"name": "targetCallValue", "type": "uint256"},
+            {"name": "validUntil", "type": "uint256"},
             {"name": "bidAmount", "type": "uint256"},
         ],
         "TokenAmount": [
@@ -432,30 +429,26 @@ def sign_bid(
 
     # the data to be signed
     message_data = {
-        "executionParams": {
-            "sellTokens": [
-                {
-                    "token": token.token,
-                    "amount": int(token.amount),
-                }
-                for token in opportunity.sell_tokens
-            ],
-            "buyTokens": [
-                {
-                    "token": token.token,
-                    "amount": int(token.amount),
-                }
-                for token in opportunity.buy_tokens
-            ],
-            "targetContract": opportunity.target_contract,
-            "targetCalldata": bytes.fromhex(
-                opportunity.target_calldata.replace("0x", "")
-            ),
-            "targetCallValue": opportunity.target_call_value,
-            "bidAmount": bid_amount,
-        },
-        "signer": executor,
-        "deadline": valid_until,
+        "sellTokens": [
+            {
+                "token": token.token,
+                "amount": int(token.amount),
+            }
+            for token in opportunity.sell_tokens
+        ],
+        "buyTokens": [
+            {
+                "token": token.token,
+                "amount": int(token.amount),
+            }
+            for token in opportunity.buy_tokens
+        ],
+        "executor": executor,
+        "targetContract": opportunity.target_contract,
+        "targetCalldata": bytes.fromhex(opportunity.target_calldata.replace("0x", "")),
+        "targetCallValue": opportunity.target_call_value,
+        "validUntil": valid_until,
+        "bidAmount": bid_amount,
     }
 
     signed_typed_data = Account.sign_typed_data(
