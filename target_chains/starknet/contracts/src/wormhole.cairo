@@ -158,11 +158,11 @@ mod wormhole {
     ) {
         self.owner.write(owner);
         let set_index = 0;
-        store_guardian_set(ref self, set_index, initial_guardians).unwrap_with_felt252();
+        store_guardian_set(ref self, set_index, @initial_guardians).unwrap_with_felt252();
     }
 
     fn store_guardian_set(
-        ref self: ContractState, set_index: u32, guardians: Array<felt252>
+        ref self: ContractState, set_index: u32, guardians: @Array<felt252>
     ) -> Result<(), SubmitNewGuardianSetError> {
         if guardians.len() == 0 {
             return Result::Err(SubmitNewGuardianSetError::NoGuardiansSpecified.into());
@@ -170,23 +170,29 @@ mod wormhole {
         if guardians.len() >= 256 {
             return Result::Err(SubmitNewGuardianSetError::TooManyGuardians.into());
         }
-        let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
-        self.guardian_sets.write(set_index, set);
+
         let mut i = 0;
         let mut result = Result::Ok(());
         while i < guardians.len() {
-            let key = *guardians.at(i);
-            if key == 0 {
+            if *guardians.at(i) == 0 {
                 result = Result::Err(SubmitNewGuardianSetError::InvalidGuardianKey.into());
                 break;
             }
+            i += 1;
+        };
+        result?;
+
+        let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
+        self.guardian_sets.write(set_index, set);
+        i = 0;
+        while i < guardians.len() {
+            let key = *guardians.at(i);
             // i < 256
             self
                 .guardian_keys
                 .write((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)), key.into());
             i += 1;
         };
-        result?;
         self.current_guardian_set_index.write(set_index);
         Result::Ok(())
     }
@@ -210,10 +216,11 @@ mod wormhole {
             if set_index != current_set_index + 1 {
                 return Result::Err(SubmitNewGuardianSetError::InvalidGuardianSetSequence.into());
             }
+            store_guardian_set(ref self, set_index, @guardians)?;
             expire_guardian_set(
                 ref self, current_set_index, execution_info.block_info.unbox().block_timestamp
             );
-            store_guardian_set(ref self, set_index, guardians)
+            Result::Ok(())
         }
 
         fn parse_and_verify_vm(
