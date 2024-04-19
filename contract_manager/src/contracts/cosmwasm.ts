@@ -211,7 +211,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     })) as Record<string, string>;
     const config = {
       config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
-      contract_version: JSON.parse(allStates["\x00\x10contract_version"]),
+      contract_version: allStates["\x00\x10contract_version"]
+        ? JSON.parse(allStates["\x00\x10contract_version"])
+        : undefined,
     };
     return config;
   }
