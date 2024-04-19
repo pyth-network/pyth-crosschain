@@ -13,10 +13,7 @@ use {
         },
         config::EthereumConfig,
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::Result,
     ethers::{
         contract::ContractError,
         providers::{
@@ -212,44 +209,46 @@ pub async fn process_event(
                     )
                     .gas(gas_estimate);
 
-                let mut res = contract_call.send().await;
+                let res = contract_call.send().await;
 
-                match res {
-                    Ok(ref mut pending_tx) => match pending_tx.await {
-                        Ok(_) => {
-                            tracing::info!(
-                                "Chain: {} - revealed for provider: {} and sequence number: {} with res: {:?}",
-                                &chain_config.id,
-                                event.provider_address,
-                                event.sequence_number,
-                                res
-                            );
-                            Ok(())
-                        }
-                        Err(e) => {
-                            tracing::error!(
-                                "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                                &chain_config.id,
-                                event.provider_address,
-                                event.sequence_number,
-                                e
-                            );
-                            Err(e.into())
-                        }
-                    },
+                let pending_tx = match res {
+                    Ok(pending_tx) => pending_tx,
                     Err(e) => match e {
-                        ContractError::ProviderError { e } => Err(anyhow!(e)),
+                        ContractError::ProviderError { e } => return Err(e.into()),
                         _ => {
                             tracing::error!(
-                                "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                                &chain_config.id,
-                                event.provider_address,
-                                event.sequence_number,
-                                e
-                            );
-                            Ok(())
+                            "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                            &chain_config.id,
+                            event.provider_address,
+                            event.sequence_number,
+                            e
+                        );
+                            return Ok(());
                         }
                     },
+                };
+
+                match pending_tx.await {
+                    Ok(res) => {
+                        tracing::info!(
+                            "Chain: {} - revealed for provider: {} and sequence number: {} with res: {:?}",
+                            &chain_config.id,
+                            event.provider_address,
+                            event.sequence_number,
+                            res
+                        );
+                        Ok(())
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
+                            &chain_config.id,
+                            event.provider_address,
+                            event.sequence_number,
+                            e
+                        );
+                        Err(e.into())
+                    }
                 }
             }
             None => Ok(()),
@@ -359,7 +358,18 @@ pub async fn watch_blocks(
     let mut last_safe_block_processed = latest_safe_block;
 
     let provider_option = match geth_rpc_wss {
-        Some(wss) => Some(Provider::<Ws>::connect(wss).await?),
+        Some(wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
+            Ok(provider) => provider,
+            Err(e) => {
+                tracing::error!(
+                    "Chain: {} - error while connecting to wss: {}. error: {:?}",
+                    &chain_state.id,
+                    wss,
+                    e
+                );
+                return Err(e.into());
+            }
+        }),
         None => {
             tracing::info!("Chain: {} - no wss provided", &chain_state.id);
             None
