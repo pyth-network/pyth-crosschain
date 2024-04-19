@@ -97,6 +97,12 @@ impl HasherPrivateImpl of HasherPrivateTrait {
     // Adds specified number of bytes to the buffer.
     fn push_num_bytes(ref self: Hasher, value: u64, num_bytes: u8) {
         assert!(num_bytes <= 8, "num_bytes too high in Hasher::push_num_bytes");
+        if num_bytes != 8 {
+            assert!(
+                value / one_shift_left_bytes_u64(num_bytes) == 0,
+                "Hasher::push_num_bytes: value is too large"
+            );
+        }
         let num_high_bytes = min(num_bytes, 8 - self.num_last_bytes);
         let num_low_bytes = num_bytes - num_high_bytes;
         let divisor = one_shift_left_bytes_u64(num_low_bytes).try_into().expect(UNEXPECTED_ZERO);
@@ -107,6 +113,12 @@ impl HasherPrivateImpl of HasherPrivateTrait {
 
     fn push_to_last(ref self: Hasher, value: u64, num_bytes: u8) {
         assert!(num_bytes <= 8 - self.num_last_bytes, "num_bytes too high in Hasher::push_to_last");
+        if num_bytes != 8 {
+            assert!(
+                value / one_shift_left_bytes_u64(num_bytes) == 0,
+                "Hasher::push_to_last: value is too large"
+            );
+        }
         if num_bytes == 8 {
             self.last_be = value;
         } else {
