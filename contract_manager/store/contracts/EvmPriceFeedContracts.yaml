@@ -239,7 +239,7 @@
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: sei_evm_devnet
-  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmPriceFeedContract
 - chain: lightlink_pegasus_testnet
   address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"

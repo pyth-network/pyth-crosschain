@@ -476,7 +476,7 @@
   type: EvmChain
 - id: sei_evm_devnet
   mainnet: false
-  rpcUrl: https://evm-devnet.seinetwork.io
+  rpcUrl: https://evm-rpc-arctic-1.sei-apis.com
   networkId: 713715
   type: EvmChain
 - id: fantom_sonic_testnet
