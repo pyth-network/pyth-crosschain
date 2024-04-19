@@ -1,12 +1,12 @@
 {
   "name": "root",
   "workspaces": [
+    "apps/price_pusher",
     "express_relay/examples/easy_lend",
     "express_relay/sdk/js",
     "express_relay/sdk/solidity",
     "governance/xc_admin/packages/*",
     "governance/multisig_wh_message_builder",
-    "price_pusher",
     "price_service/sdk/js",
     "price_service/client/js",
     "pythnet/message_buffer",
@@ -32,6 +32,9 @@
   },
   "devDependencies": {
     "lerna": "^6.4.1"
+  },
+  "engines" : { 
+    "node" : ">=16.0.0 <19.0.0"
   },
   "version": "0.0.1"
 }

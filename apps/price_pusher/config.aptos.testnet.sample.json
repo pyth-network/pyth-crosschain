@@ -1,0 +1,7 @@
+{
+  "endpoint": "https://fullnode.testnet.aptoslabs.com/v1",
+  "pyth-contract-address": "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
+  "price-service-endpoint": "https://hermes-beta.pyth.network",
+  "mnemonic-file": "./mnemonic",
+  "price-config-file": "./price-config.beta.sample.yaml"
+}

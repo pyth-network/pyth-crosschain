@@ -1,0 +1,11 @@
+{
+  "endpoint": "https://sui-testnet-rpc.allthatnode.com",
+  "pyth-package-id": "0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302",
+  "pyth-state-id": "0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f",
+  "wormhole-package-id": "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a",
+  "wormhole-state-id": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
+  "price-feed-to-price-info-object-table-id": "0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0",
+  "price-service-endpoint": "https://hermes.pyth.network",
+  "mnemonic-file": "./mnemonic",
+  "price-config-file": "./price-config.stable.sample.yaml"
+}

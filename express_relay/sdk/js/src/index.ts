@@ -2,15 +2,8 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import {
-  Address,
-  encodeAbiParameters,
-  Hex,
-  isAddress,
-  isHex,
-  keccak256,
-} from "viem";
-import { privateKeyToAccount, sign, signatureToHex } from "viem/accounts";
+import { Address, Hex, isAddress, isHex } from "viem";
+import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 import {
   Bid,
@@ -18,6 +11,7 @@ import {
   BidParams,
   BidStatusUpdate,
   Opportunity,
+  EIP712Domain,
   OpportunityBid,
   OpportunityParams,
   TokenAmount,
@@ -136,6 +130,17 @@ export class Client {
     });
   }
 
+  private convertEIP712Domain(
+    eip712Domain: components["schemas"]["EIP712Domain"]
+  ): EIP712Domain {
+    return {
+      name: eip712Domain.name,
+      version: eip712Domain.version,
+      verifyingContract: checkAddress(eip712Domain.verifying_contract),
+      chainId: BigInt(eip712Domain.chain_id),
+    };
+  }
+
   /**
    * Converts an opportunity from the server to the client format
    * Returns undefined if the opportunity version is not supported
@@ -159,6 +164,7 @@ export class Client {
       targetCallValue: BigInt(opportunity.target_call_value),
       sellTokens: opportunity.sell_tokens.map(checkTokenQty),
       buyTokens: opportunity.buy_tokens.map(checkTokenQty),
+      eip712Domain: this.convertEIP712Domain(opportunity.eip_712_domain),
     };
   }
 
@@ -293,62 +299,54 @@ export class Client {
     bidParams: BidParams,
     privateKey: Hex
   ): Promise<OpportunityBid> {
-    const account = privateKeyToAccount(privateKey);
-    const convertTokenQty = ({ token, amount }: TokenAmount): [Hex, bigint] => [
-      token,
-      amount,
-    ];
-    const payload = encodeAbiParameters(
-      [
-        {
-          name: "repayTokens",
-          type: "tuple[]",
-          components: [
-            {
-              type: "address",
-            },
-            {
-              type: "uint256",
-            },
-          ],
-        },
-        {
-          name: "receiptTokens",
-          type: "tuple[]",
-          components: [
-            {
-              type: "address",
-            },
-            {
-              type: "uint256",
-            },
-          ],
-        },
-        { name: "contract", type: "address" },
-        { name: "calldata", type: "bytes" },
-        { name: "value", type: "uint256" },
-        { name: "bid", type: "uint256" },
-        { name: "validUntil", type: "uint256" },
+    const types = {
+      SignedParams: [
+        { name: "executionParams", type: "ExecutionParams" },
+        { name: "signer", type: "address" },
+        { name: "deadline", type: "uint256" },
       ],
-      [
-        opportunity.sellTokens.map(convertTokenQty),
-        opportunity.buyTokens.map(convertTokenQty),
-        opportunity.targetContract,
-        opportunity.targetCalldata,
-        opportunity.targetCallValue,
-        bidParams.amount,
-        bidParams.validUntil,
-      ]
-    );
+      ExecutionParams: [
+        { name: "sellTokens", type: "TokenAmount[]" },
+        { name: "buyTokens", type: "TokenAmount[]" },
+        { name: "targetContract", type: "address" },
+        { name: "targetCalldata", type: "bytes" },
+        { name: "targetCallValue", type: "uint256" },
+        { name: "bidAmount", type: "uint256" },
+      ],
+      TokenAmount: [
+        { name: "token", type: "address" },
+        { name: "amount", type: "uint256" },
+      ],
+    };
 
-    const msgHash = keccak256(payload);
+    const account = privateKeyToAccount(privateKey);
+    const signature = await signTypedData({
+      privateKey,
+      domain: {
+        ...opportunity.eip712Domain,
+        chainId: Number(opportunity.eip712Domain.chainId),
+      },
+      types,
+      primaryType: "SignedParams",
+      message: {
+        executionParams: {
+          sellTokens: opportunity.sellTokens,
+          buyTokens: opportunity.buyTokens,
+          targetContract: opportunity.targetContract,
+          targetCalldata: opportunity.targetCalldata,
+          targetCallValue: opportunity.targetCallValue,
+          bidAmount: bidParams.amount,
+        },
+        signer: account.address,
+        deadline: bidParams.validUntil,
+      },
+    });
 
-    const hash = signatureToHex(await sign({ hash: msgHash, privateKey }));
     return {
       permissionKey: opportunity.permissionKey,
       bid: bidParams,
       executor: account.address,
-      signature: hash,
+      signature,
       opportunityId: opportunity.opportunityId,
     };
   }

@@ -27,6 +27,12 @@ use {
     wormhole_core_bridge_solana::state::GuardianSet,
 };
 
+/**
+ * This constant is used to efficiently pack transactions when writing an encoded Pyth VAA to the Wormhole contract.
+ * Posting a VAA requires two transactions. If you split the VAA at this index when writing it, the first transaction will be almost full.
+ */
+pub const VAA_SPLIT_INDEX: usize = 755;
+
 pub const DEFAULT_TREASURY_ID: u8 = 0;
 pub const SECONDARY_TREASURY_ID: u8 = 1;
 

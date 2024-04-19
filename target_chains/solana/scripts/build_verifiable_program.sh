@@ -17,3 +17,5 @@ echo "The artifacts are available at $REPO_ROOT/target_chains/solana/artifacts"
 
 CHECKSUM=$(sha256sum $REPO_ROOT/target_chains/solana/artifacts/pyth_solana_receiver.so | awk '{print $1}')
 echo "sha256sum of the pyth_solana_receiver program: $CHECKSUM"
+CHECKSUM=$(sha256sum $REPO_ROOT/target_chains/solana/artifacts/pyth_push_oracle.so | awk '{print $1}')
+echo "sha256sum of the pyth_push_oracle program: $CHECKSUM"

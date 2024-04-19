@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.2.1",
+  "version": "0.4.0",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/express_relay/sdk/js",
   "author": "Douro Labs",
