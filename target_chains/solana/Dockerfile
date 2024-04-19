@@ -14,4 +14,4 @@ COPY target_chains/solana target_chains/solana
 WORKDIR /workspace/target_chains/solana
 
 CMD ["bash", "-c", \
-        "anchor build --arch sbf && cp target/deploy/*.so artifacts"]
+        "anchor build --arch sbf && cp target/deploy/*.so /artifacts"]
