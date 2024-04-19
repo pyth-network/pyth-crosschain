@@ -14,4 +14,4 @@ COPY target_chains/solana target_chains/solana
 WORKDIR /workspace/target_chains/solana
 
 CMD ["bash", "-c", \
-        "anchor build -p pyth_solana_receiver --arch sbf && cp target/sbf-solana-solana/release/pyth_solana_receiver.so /artifacts/pyth_solana_receiver.so"]
+        "anchor build --arch sbf && cp target/deploy/*.so /artifacts"]
