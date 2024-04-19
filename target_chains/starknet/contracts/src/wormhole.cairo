@@ -7,7 +7,7 @@ pub trait IWormhole<T> {
     fn submit_new_guardian_set(
         ref self: T, set_index: u32, guardians: Array<felt252>
     ) -> Result<(), SubmitNewGuardianSetError>;
-    fn parse_and_verify_vm(ref self: T, encoded_vm: ByteArray) -> Result<VM, ParseAndVerifyVmError>;
+    fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> Result<VM, ParseAndVerifyVmError>;
 }
 
 #[derive(Drop, Debug, Clone, Serde)]
@@ -224,7 +224,7 @@ mod wormhole {
         }
 
         fn parse_and_verify_vm(
-            ref self: ContractState, encoded_vm: ByteArray
+            self: @ContractState, encoded_vm: ByteArray
         ) -> Result<VM, ParseAndVerifyVmError> {
             let (vm, body_hash) = parse_vm(encoded_vm)?;
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
