@@ -110,7 +110,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   polygon_zkevm_testnet: "0xFf255f800044225f54Af4510332Aa3D67CC77635",
   polynomial_testnet: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
   saigon: "0xEbe57e8045F2F230872523bbff7374986E45C486",
-  sei_evm_devnet: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+  sei_evm_devnet: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
   scroll_sepolia: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
   sepolia: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
   shimmer_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",

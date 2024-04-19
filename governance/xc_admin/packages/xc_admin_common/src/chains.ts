@@ -125,7 +125,6 @@ export const RECEIVER_CHAINS = {
   hedera_testnet: 50048,
   filecoin_calibration: 50049, // Filecoin testnet
   lightlink_pegasus_testnet: 50050,
-  sei_evm_devnet: 50051,
   fantom_sonic_testnet: 50052,
   dela_deperp_testnet: 50053,
   injective_inevm_testnet: 50054,
@@ -141,8 +140,7 @@ export const RECEIVER_CHAINS = {
   linea_sepolia: 50064,
   rol_testnet: 50065,
   morph_testnet: 50066,
-  astar_zkatana_testnet: 50067,
-  boba_sepolia: 50068,
+  sei_evm_devnet: 50067,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
