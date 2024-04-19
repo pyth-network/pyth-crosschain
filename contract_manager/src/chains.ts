@@ -408,11 +408,10 @@ export class EvmChain extends Chain {
     const GAS_ESTIMATE_MULTIPLIER = 2;
     const gasEstimate = await transactionObject.estimateGas(txParams);
     // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
-    // To send a type 2 transaction, remove the ``gasPrice`` field and add the `type` field with the value
-    // `0x2` to the transaction configuration parameters.
+    // To send a type 2 transaction, remove the ``gasPrice`` field.
     return transactionObject.send({
       gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: await this.getGasPrice(),
+      gasPrice: Number(await this.getGasPrice()),
       ...txParams,
     });
   }
