@@ -1,4 +1,3 @@
-import { useWallet } from '@solana/wallet-adapter-react'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { useCallback, useContext, useEffect, useState } from 'react'
@@ -19,7 +18,6 @@ type ProposalType = 'priceFeed' | 'governance'
 
 const Proposals = () => {
   const router = useRouter()
-  const { connected, publicKey: signerPublicKey } = useWallet()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
@@ -179,7 +177,7 @@ const Proposals = () => {
                   </div>
                   {filteredProposals.length > 0 ? (
                     <div className="flex flex-col">
-                      {filteredProposals.map((proposal, idx) => (
+                      {filteredProposals.map((proposal, _idx) => (
                         <ProposalRow
                           key={proposal.publicKey.toBase58()}
                           proposal={proposal}

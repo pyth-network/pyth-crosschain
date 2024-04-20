@@ -156,7 +156,7 @@ const Header = () => {
           </div>
         </div>
       </header>
-      <MobileMenu headerState={headerState} setHeaderState={setHeaderState} />
+      <MobileMenu headerState={headerState} />
     </>
   )
 }

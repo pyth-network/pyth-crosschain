@@ -4,7 +4,7 @@ import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import * as Label from '@radix-ui/react-label'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
-import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import axios from 'axios'
 import { Fragment, useContext, useEffect, useState } from 'react'
@@ -15,7 +15,6 @@ import {
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
-  WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
@@ -83,8 +82,6 @@ const PermissionDepermissionKey = ({
         1
       )
       const isRemote: boolean = isRemoteCluster(cluster)
-      const multisigCluster: Cluster | 'localnet' = getMultisigCluster(cluster)
-      const wormholeAddress = WORMHOLE_ADDRESS[multisigCluster]
       const fundingAccount = isRemote
         ? mapKey(multisigAuthority)
         : multisigAuthority

@@ -10,11 +10,10 @@ import orb from '@images/burger.png'
 
 interface MenuProps {
   headerState: BurgerState
-  setHeaderState: Function
 }
 
-const MobileMenu = ({ headerState, setHeaderState }: MenuProps) => {
-  let burgerMenu = useRef(null)
+const MobileMenu = ({ headerState }: MenuProps) => {
+  const burgerMenu = useRef(null)
   const router = useRouter()
   const { cluster } = useContext(ClusterContext)
 

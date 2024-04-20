@@ -21,7 +21,6 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  WORMHOLE_ADDRESS,
   UPGRADE_MULTISIG,
   MultisigVault,
 } from 'xc_admin_common'
