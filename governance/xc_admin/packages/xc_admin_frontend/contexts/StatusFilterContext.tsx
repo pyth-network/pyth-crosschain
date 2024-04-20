@@ -1,4 +1,4 @@
-import { createContext, useMemo, useState } from 'react'
+import { ReactNode, createContext, useMemo, useState } from 'react'
 import { ProposalStatus } from '../components/tabs/Proposals/utils'
 
 export const DEFAULT_STATUS_FILTER = 'all'
@@ -13,7 +13,7 @@ export const StatusFilterContext = createContext<{
   setStatusFilter: () => {},
 })
 
-export const StatusFilterProvider = (props: any) => {
+export const StatusFilterProvider = ({ children }: { children: ReactNode }) => {
   const [statusFilter, setStatusFilter] = useState<ProposalStatusFilter>(
     DEFAULT_STATUS_FILTER
   )
@@ -26,5 +26,9 @@ export const StatusFilterProvider = (props: any) => {
     }),
     [statusFilter]
   )
-  return <StatusFilterContext.Provider {...props} value={contextValue} />
+  return (
+    <StatusFilterContext.Provider value={contextValue}>
+      {children}
+    </StatusFilterContext.Provider>
+  )
 }
