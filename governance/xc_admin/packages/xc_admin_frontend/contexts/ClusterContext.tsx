@@ -1,17 +1,17 @@
 import { PythCluster } from '@pythnetwork/client/lib/cluster'
-import { createContext, useMemo, useState } from 'react'
+import { ReactNode, createContext, useMemo, useState } from 'react'
 
-export const DEFAULT_CLUSTER: PythCluster = 'mainnet-beta'
+export const DEFAULT_CLUSTER: PythCluster = 'pythtest-conformance'
 
 export const ClusterContext = createContext<{
   cluster: PythCluster
-  setCluster: any
+  setCluster: (_cluster: PythCluster) => void
 }>({
   cluster: DEFAULT_CLUSTER,
-  setCluster: {},
+  setCluster: () => {},
 })
 
-export const ClusterProvider = (props: any) => {
+export const ClusterProvider = ({ children }: { children: ReactNode }) => {
   const [cluster, setCluster] = useState<PythCluster>(DEFAULT_CLUSTER)
   const contextValue = useMemo(
     () => ({
@@ -22,5 +22,9 @@ export const ClusterProvider = (props: any) => {
     }),
     [cluster]
   )
-  return <ClusterContext.Provider {...props} value={contextValue} />
+  return (
+    <ClusterContext.Provider value={contextValue}>
+      {children}
+    </ClusterContext.Provider>
+  )
 }

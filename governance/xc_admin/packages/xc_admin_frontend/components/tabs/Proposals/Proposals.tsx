@@ -12,9 +12,7 @@ import { ProposalRow } from './ProposalRow'
 import { getProposalStatus } from './utils'
 import { Proposal } from './Proposal'
 
-
 type ProposalType = 'priceFeed' | 'governance'
-
 
 const Proposals = () => {
   const router = useRouter()

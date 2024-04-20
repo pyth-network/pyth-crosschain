@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "paths": {
       "@images/*": ["./images/*"],
-      "xc-admin-common": ["../xc_admin_common/src"],
+      "xc-admin-common": ["../xc_admin_common/src"]
     }
   },
   "include": [
