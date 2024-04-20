@@ -2,7 +2,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../contexts/ClusterContext'
-import Arrow from '../images/icons/down.inline.svg'
+import Arrow from '@images/icons/down.inline.svg'
 
 const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
   const router = useRouter()

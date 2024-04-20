@@ -20,7 +20,7 @@ import {
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
 import { ProductRawConfig } from '../hooks/usePyth'
-import Arrow from '../images/icons/down.inline.svg'
+import Arrow from '@images/icons/down.inline.svg'
 import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 import Spinner from './common/Spinner'
 import CloseIcon from './icons/CloseIcon'

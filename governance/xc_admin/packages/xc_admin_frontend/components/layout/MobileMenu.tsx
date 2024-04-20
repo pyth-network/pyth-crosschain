@@ -6,7 +6,7 @@ import { useContext, useEffect, useRef } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
 import { BurgerState } from './Header'
 
-import orb from '../../images/burger.png'
+import orb from '@images/burger.png'
 
 interface MenuProps {
   headerState: BurgerState

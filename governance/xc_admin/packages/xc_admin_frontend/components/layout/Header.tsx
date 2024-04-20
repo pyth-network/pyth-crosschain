@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useState } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
-import Pyth from '../../images/logomark.inline.svg'
+import Pyth from '@images/logomark.inline.svg'
 import MobileMenu from './MobileMenu'
 
 const WalletMultiButtonDynamic = dynamic(

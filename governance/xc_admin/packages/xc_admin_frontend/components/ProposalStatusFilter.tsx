@@ -5,7 +5,7 @@ import {
   DEFAULT_STATUS_FILTER,
   StatusFilterContext,
 } from '../contexts/StatusFilterContext'
-import Arrow from '../images/icons/down.inline.svg'
+import Arrow from '@images/icons/down.inline.svg'
 
 const ProposalStatusFilter = () => {
   const router = useRouter()
