@@ -300,17 +300,14 @@ export class Client {
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const types = {
-      SignedParams: [
-        { name: "executionParams", type: "ExecutionParams" },
-        { name: "signer", type: "address" },
-        { name: "deadline", type: "uint256" },
-      ],
       ExecutionParams: [
         { name: "sellTokens", type: "TokenAmount[]" },
         { name: "buyTokens", type: "TokenAmount[]" },
+        { name: "executor", type: "address" },
         { name: "targetContract", type: "address" },
         { name: "targetCalldata", type: "bytes" },
         { name: "targetCallValue", type: "uint256" },
+        { name: "validUntil", type: "uint256" },
         { name: "bidAmount", type: "uint256" },
       ],
       TokenAmount: [
@@ -327,18 +324,16 @@ export class Client {
         chainId: Number(opportunity.eip712Domain.chainId),
       },
       types,
-      primaryType: "SignedParams",
+      primaryType: "ExecutionParams",
       message: {
-        executionParams: {
-          sellTokens: opportunity.sellTokens,
-          buyTokens: opportunity.buyTokens,
-          targetContract: opportunity.targetContract,
-          targetCalldata: opportunity.targetCalldata,
-          targetCallValue: opportunity.targetCallValue,
-          bidAmount: bidParams.amount,
-        },
-        signer: account.address,
-        deadline: bidParams.validUntil,
+        sellTokens: opportunity.sellTokens,
+        buyTokens: opportunity.buyTokens,
+        executor: account.address,
+        targetContract: opportunity.targetContract,
+        targetCalldata: opportunity.targetCalldata,
+        targetCallValue: opportunity.targetCallValue,
+        validUntil: bidParams.validUntil,
+        bidAmount: bidParams.amount,
       },
     });
 
