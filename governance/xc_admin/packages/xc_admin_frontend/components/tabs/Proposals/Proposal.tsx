@@ -47,6 +47,7 @@ import VerifiedIcon from '@images/icons/verified.inline.svg'
 import VotedIcon from '@images/icons/voted.inline.svg'
 import WarningIcon from '@images/icons/warning.inline.svg'
 import * as Tooltip from '@radix-ui/react-tooltip'
+import { InstructionsSummary } from './InstructionsSummary'
 
 const IconWithTooltip = ({
   icon,
@@ -485,6 +486,9 @@ export const Proposal = ({
         <h4 className="h4 font-semibold">
           Total Instructions: {instructions.length}
         </h4>
+        <hr className="border-gray-700" />
+        <h4 className="h4 text-[20px] font-semibold">Summary</h4>
+        <InstructionsSummary instructions={instructions} cluster={cluster} />
         <hr className="border-gray-700" />
         {instructions?.map((instruction, index) => (
           <Fragment key={index}>
