@@ -22,29 +22,29 @@ import {
   getManyProposalsInstructions,
   getProgramName,
 } from 'xc_admin_common'
-import { ClusterContext } from '../../contexts/ClusterContext'
-import { useMultisigContext } from '../../contexts/MultisigContext'
-import { usePythContext } from '../../contexts/PythContext'
-import { StatusFilterContext } from '../../contexts/StatusFilterContext'
-import VerifiedIcon from '../../images/icons/verified.inline.svg'
-import WarningIcon from '../../images/icons/warning.inline.svg'
-import VotedIcon from '../../images/icons/voted.inline.svg'
-import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
-import ClusterSwitch from '../ClusterSwitch'
-import CopyText from '../common/CopyText'
-import Spinner from '../common/Spinner'
-import Loadbar from '../loaders/Loadbar'
-import ProposalStatusFilter from '../ProposalStatusFilter'
+import { ClusterContext } from '../../../contexts/ClusterContext'
+import { useMultisigContext } from '../../../contexts/MultisigContext'
+import { usePythContext } from '../../../contexts/PythContext'
+import { StatusFilterContext } from '../../../contexts/StatusFilterContext'
+import VerifiedIcon from '../../../images/icons/verified.inline.svg'
+import WarningIcon from '../../../images/icons/warning.inline.svg'
+import VotedIcon from '../../../images/icons/voted.inline.svg'
+import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetter'
+import ClusterSwitch from '../../ClusterSwitch'
+import CopyText from '../../common/CopyText'
+import Spinner from '../../common/Spinner'
+import Loadbar from '../../loaders/Loadbar'
+import ProposalStatusFilter from '../../ProposalStatusFilter'
 import SquadsMesh from '@sqds/mesh'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { WormholeInstructionView } from '../InstructionViews/WormholeInstructionView'
+import { WormholeInstructionView } from '../../InstructionViews/WormholeInstructionView'
 import {
   ParsedAccountPubkeyRow,
   SignerTag,
   WritableTag,
-} from '../InstructionViews/AccountUtils'
+} from '../../InstructionViews/AccountUtils'
 
-import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
+import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
 import { getPythProgramKeyForCluster, PythCluster } from '@pythnetwork/client'
 import {
   DEFAULT_PRIORITY_FEE_CONFIG,
