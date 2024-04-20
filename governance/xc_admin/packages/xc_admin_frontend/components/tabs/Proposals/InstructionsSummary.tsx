@@ -28,6 +28,8 @@ export const InstructionsSummary = ({
           })
           acc[parsedInstruction.name] = (acc[parsedInstruction.name] ?? 0) + 1
         })
+      } else {
+        acc['unknown'] = (acc['unknown'] ?? 0) + 1
       }
     } else {
         acc[instruction.name] = (acc[instruction.name] ?? 0) + 1
