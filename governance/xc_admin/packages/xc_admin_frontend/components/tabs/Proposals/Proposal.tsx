@@ -93,7 +93,7 @@ const VotedIconWithTooltip = () => {
   return (
     <IconWithTooltip
       icon={<VotedIcon />}
-      tooltipText=" You have voted on this proposal."
+      tooltipText="You have voted on this proposal."
     />
   )
 }
@@ -132,8 +132,8 @@ export const Proposal = ({
   proposal,
   multisig,
 }: {
-  proposal: TransactionAccount | undefined
-  multisig: MultisigAccount | undefined
+  proposal?: TransactionAccount
+  multisig?: MultisigAccount
 }) => {
   const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
@@ -359,9 +359,14 @@ export const Proposal = ({
     )
   }
 
-  return proposal !== undefined &&
-    multisig !== undefined &&
-    !isMultisigLoading ? (
+  if (!proposal || !multisig || isMultisigLoading)
+    return (
+      <div className="mt-6">
+        <Loadbar theme="light" />
+      </div>
+    )
+
+  return (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
@@ -645,10 +650,6 @@ export const Proposal = ({
           </Fragment>
         ))}
       </div>
-    </div>
-  ) : (
-    <div className="mt-6">
-      <Loadbar theme="light" />
     </div>
   )
 }
