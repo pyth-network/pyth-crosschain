@@ -15,11 +15,8 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
-const ONES = '11111111111111111111111111111111'
-
 interface PythHookData {
   isLoading: boolean
-  error: any // TODO: fix any
   rawConfig: RawConfig
   connection?: Connection
 }
@@ -47,17 +44,15 @@ export type PriceRawConfig = {
   publishers: PublicKey[]
 }
 
-const usePyth = (): PythHookData => {
+export const usePyth = (): PythHookData => {
   const connectionRef = useRef<Connection>()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [rawConfig, setRawConfig] = useState<RawConfig>({ mappingAccounts: [] })
   const [urlsIndex, setUrlsIndex] = useState(0)
 
   useEffect(() => {
     setIsLoading(true)
-    setError(null)
   }, [urlsIndex, cluster])
 
   useEffect(() => {
@@ -127,7 +122,7 @@ const usePyth = (): PythHookData => {
               } else {
                 let priceAccountKey: string | undefined =
                   parsed.priceAccountKey.toBase58()
-                let priceAccounts = []
+                const priceAccounts = []
                 while (priceAccountKey) {
                   const toAdd: PriceRawConfig = priceRawConfigs[priceAccountKey]
                   priceAccounts.push(toAdd)
@@ -196,8 +191,6 @@ const usePyth = (): PythHookData => {
       } catch (e) {
         if (cancelled) return
         if (urlsIndex === urls.length - 1) {
-          // @ts-ignore
-          setError(e)
           setIsLoading(false)
           console.warn(`Failed to fetch accounts`)
         } else if (urlsIndex < urls.length - 1) {
@@ -213,10 +206,7 @@ const usePyth = (): PythHookData => {
 
   return {
     isLoading,
-    error,
     connection: connectionRef.current,
     rawConfig,
   }
 }
-
-export default usePyth

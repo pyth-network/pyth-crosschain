@@ -5,24 +5,21 @@ import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
-  getMultisigCluster,
-  getProposals,
-  MultisigInstruction,
   PRICE_FEED_MULTISIG,
   UPGRADE_MULTISIG,
+  getMultisigCluster,
+  getProposals,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 export interface MultisigHookData {
   isLoading: boolean
-  error: any // TODO: fix any
   squads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
-  allProposalsIxsParsed: MultisigInstruction[][]
   connection?: Connection
   refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
 }
@@ -39,7 +36,6 @@ export const useMultisig = (): MultisigHookData => {
   const wallet = useAnchorWallet()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [upgradeMultisigAccount, setUpgradeMultisigAccount] =
     useState<MultisigAccount>()
   const [priceFeedMultisigAccount, setPriceFeedMultisigAccount] =
@@ -50,16 +46,9 @@ export const useMultisig = (): MultisigHookData => {
   const [priceFeedMultisigProposals, setPriceFeedMultisigProposals] = useState<
     TransactionAccount[]
   >([])
-  const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
-    MultisigInstruction[][]
-  >([])
   const [squads, setSquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
-
-  useEffect(() => {
-    setError(null)
-  }, [urlsIndex, cluster])
 
   useEffect(() => {
     setUrlsIndex(0)
@@ -132,8 +121,6 @@ export const useMultisig = (): MultisigHookData => {
         if (cancelled) return
         const urls = pythClusterApiUrls(multisigCluster)
         if (urlsIndex === urls.length - 1) {
-          // @ts-ignore
-          setError(e)
           setIsLoading(false)
           console.warn(`Failed to fetch accounts`)
         } else if (urlsIndex < urls.length - 1) {
@@ -159,13 +146,11 @@ export const useMultisig = (): MultisigHookData => {
 
   return {
     isLoading,
-    error,
     squads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
-    allProposalsIxsParsed,
     refreshData,
     connection,
   }
