@@ -820,7 +820,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads) {
+    if (connected && squads && connection) {
       const provider = new AnchorProvider(
         connection,
         squads.wallet as Wallet,

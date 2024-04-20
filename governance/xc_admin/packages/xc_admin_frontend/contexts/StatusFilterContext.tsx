@@ -7,7 +7,7 @@ export type ProposalStatusFilter = 'all' | ProposalStatus
 
 export const StatusFilterContext = createContext<{
   statusFilter: ProposalStatusFilter
-  setStatusFilter: (statusFilter: ProposalStatusFilter) => void
+  setStatusFilter: (_statusFilter: ProposalStatusFilter) => void
 }>({
   statusFilter: DEFAULT_STATUS_FILTER,
   setStatusFilter: () => {},
