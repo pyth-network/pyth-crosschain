@@ -366,19 +366,6 @@ const EXECUTOR_ABI = [
     stateMutability: "view",
     type: "function",
   },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-    ],
-    name: "upgradeTo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 
 /**
