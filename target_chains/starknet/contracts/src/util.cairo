@@ -62,3 +62,67 @@ pub fn u64_byte_reverse(value: u64) -> u64 {
 pub trait UnwrapWithFelt252<T, E> {
     fn unwrap_with_felt252(self: Result<T, E>) -> T;
 }
+
+/// Reinterpret `u64` as `i64` as if it was a two's complement binary representation.
+pub fn u64_as_i64(value: u64) -> i64 {
+    if value < 0x8000000000000000 {
+        value.try_into().unwrap()
+    } else {
+        let value: i128 = value.into();
+        (value - 0x10000000000000000).try_into().unwrap()
+    }
+}
+
+/// Reinterpret `u32` as `i32` as if it was a two's complement binary representation.
+pub fn u32_as_i32(value: u32) -> i32 {
+    if value < 0x80000000 {
+        value.try_into().unwrap()
+    } else {
+        let value: i64 = value.into();
+        (value - 0x100000000).try_into().unwrap()
+    }
+}
+
+pub fn array_felt252_to_bytes31(mut input: Array<felt252>) -> Array<bytes31> {
+    let mut output = array![];
+    loop {
+        match input.pop_front() {
+            Option::Some(v) => { output.append(v.try_into().unwrap()); },
+            Option::None => { break; },
+        }
+    };
+    output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{u64_as_i64, u32_as_i32};
+
+    #[test]
+    fn test_u64_as_i64() {
+        assert!(u64_as_i64(0) == 0);
+        assert!(u64_as_i64(1) == 1);
+        assert!(u64_as_i64(2) == 2);
+        assert!(u64_as_i64(3) == 3);
+        assert!(u64_as_i64(9223372036854775806) == 9223372036854775806);
+        assert!(u64_as_i64(9223372036854775807) == 9223372036854775807);
+        assert!(u64_as_i64(9223372036854775808) == -9223372036854775808);
+        assert!(u64_as_i64(9223372036854775809) == -9223372036854775807);
+        assert!(u64_as_i64(18446744073709551614) == -2);
+        assert!(u64_as_i64(18446744073709551615) == -1);
+    }
+
+    #[test]
+    fn test_u32_as_i32() {
+        assert!(u32_as_i32(0) == 0);
+        assert!(u32_as_i32(1) == 1);
+        assert!(u32_as_i32(2) == 2);
+        assert!(u32_as_i32(3) == 3);
+        assert!(u32_as_i32(2147483646) == 2147483646);
+        assert!(u32_as_i32(2147483647) == 2147483647);
+        assert!(u32_as_i32(2147483648) == -2147483648);
+        assert!(u32_as_i32(2147483649) == -2147483647);
+        assert!(u32_as_i32(4294967294) == -2);
+        assert!(u32_as_i32(4294967295) == -1);
+    }
+}
