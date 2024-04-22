@@ -36,7 +36,8 @@
     "typescript": "4.9.4",
     "use-debounce": "^9.0.2",
     "xc_admin_common": "*",
-    "message_buffer": "*"
+    "message_buffer": "*",
+    "contract_manager": "*"
   },
   "devDependencies": {
     "@svgr/webpack": "^6.3.1",

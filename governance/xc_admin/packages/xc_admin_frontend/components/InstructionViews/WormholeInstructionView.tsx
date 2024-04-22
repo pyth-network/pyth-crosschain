@@ -22,6 +22,7 @@ import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
 import { PythCluster } from '@pythnetwork/client'
 import { lamportsToSol } from '../../utils/lamportsToSol'
+import { parseCallData } from 'contract_manager/src/contracts/evm'
 
 const GovernanceInstructionView = ({
   instruction,
@@ -408,12 +409,29 @@ export const WormholeInstructionView = ({
                 <CopyText text={'0x' + governanceAction.callAddress} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
-              <div>
-                Call Data:{' '}
-                <CopyText
-                  text={'0x' + governanceAction.calldata.toString('hex')}
-                />
-              </div>
+              {(() => {
+                const parsedData = parseCallData(
+                  governanceAction.calldata.toString('hex')
+                )
+                if (parsedData === undefined) return <></>
+                return (
+                  <>
+                    <div>Call Method: {parsedData.method}</div>{' '}
+                    <div>
+                      Call Params:{' '}
+                      {parsedData.inputs.length > 0 ? (
+                        parsedData.inputs.map(([key, value]) => (
+                          <div key={key} className="mx-4">
+                            {key}: {value as string}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="mx-4">No params</div>
+                      )}
+                    </div>{' '}
+                  </>
+                )
+              })()}
             </div>
           }
         />
