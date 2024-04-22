@@ -49,7 +49,11 @@ use {
         Digest,
         Keccak256,
     },
-    std::sync::Arc,
+    std::{
+        sync::Arc,
+        time::Duration,
+    },
+    tokio::time::Instant,
     tonic::Request,
     wormhole_sdk::{
         vaa::{
@@ -158,10 +162,16 @@ mod proto {
 pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     let mut exit = crate::EXIT.subscribe();
     loop {
+        let current_time = Instant::now();
         tokio::select! {
             _ = exit.changed() => break,
             Err(err) = run(opts.clone(), state.clone()) => {
                 tracing::error!(error = ?err, "Wormhole gRPC service failed.");
+
+                if current_time.elapsed() < Duration::from_secs(30) {
+                    tracing::error!("Wormhole listener restarting too quickly. Sleep 1s.");
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                }
             }
         }
     }
@@ -170,7 +180,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 }
 
 #[tracing::instrument(skip(opts, state))]
-async fn run(opts: RunOptions, state: Arc<State>) -> Result<()> {
+async fn run(opts: RunOptions, state: Arc<State>) -> Result<!> {
     let mut client = SpyRpcServiceClient::connect(opts.wormhole.spy_rpc_addr).await?;
     let mut stream = client
         .subscribe_signed_vaa(Request::new(SubscribeSignedVaaRequest {
@@ -190,7 +200,7 @@ async fn run(opts: RunOptions, state: Arc<State>) -> Result<()> {
         }
     }
 
-    Ok(())
+    Err(anyhow!("Wormhole gRPC stream terminated."))
 }
 
 /// Process a message received via a Wormhole gRPC connection.
