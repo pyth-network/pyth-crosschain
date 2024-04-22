@@ -20,6 +20,7 @@ use {
     },
     crate::{
         network::wormhole::VaaBytes,
+        price_feeds_metadata::PriceFeedMeta,
         state::{
             benchmarks::Benchmarks,
             cache::{
@@ -58,6 +59,13 @@ use {
     std::{
         collections::HashSet,
         time::Duration,
+    },
+    tokio::sync::{
+        broadcast::{
+            Receiver,
+            Sender,
+        },
+        RwLock,
     },
     wormhole_sdk::Vaa,
 };
@@ -102,8 +110,7 @@ impl AggregationEvent {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct AggregateState {
+pub struct AggregateStateData {
     /// The latest completed slot. This is used to check whether a completed state is new or out of
     /// order.
     pub latest_completed_slot: Option<Slot>,
@@ -119,13 +126,27 @@ pub struct AggregateState {
     pub metrics: metrics::Metrics,
 }
 
-impl AggregateState {
+impl AggregateStateData {
     pub fn new(metrics_registry: &mut Registry) -> Self {
         Self {
             latest_completed_slot:      None,
             latest_completed_update_at: None,
             latest_observed_slot:       None,
             metrics:                    metrics::Metrics::new(metrics_registry),
+        }
+    }
+}
+
+pub struct AggregateState {
+    pub data:          RwLock<AggregateStateData>,
+    pub api_update_tx: Sender<AggregationEvent>,
+}
+
+impl AggregateState {
+    pub fn new(update_tx: Sender<AggregationEvent>, metrics_registry: &mut Registry) -> Self {
+        Self {
+            data:          RwLock::new(AggregateStateData::new(metrics_registry)),
+            api_update_tx: update_tx,
         }
     }
 }
@@ -177,124 +198,220 @@ const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 /// 10 slots is almost 5 seconds.
 const READINESS_MAX_ALLOWED_SLOT_LAG: Slot = 10;
 
-/// Stores the update data in the store
-#[tracing::instrument(skip(state, update))]
-pub async fn store_update(state: &State, update: Update) -> Result<()> {
-    // The slot that the update is originating from. It should be available
-    // in all the updates.
-    let slot = match update {
-        Update::Vaa(update_vaa) => {
-            let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(
-                update_vaa.as_ref(),
-            )?;
-            match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
-                WormholePayload::Merkle(proof) => {
-                    tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
+#[async_trait::async_trait]
+pub trait Aggregates
+where
+    Self: Cache,
+    Self: Benchmarks,
+    Self: PriceFeedMeta,
+{
+    fn subscribe(&self) -> Receiver<AggregationEvent>;
+    async fn is_ready(&self) -> bool;
+    async fn store_update(&self, update: Update) -> Result<()>;
+    async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier>;
+    async fn get_price_feeds_with_update_data(
+        &self,
+        price_ids: &[PriceIdentifier],
+        request_time: RequestTime,
+    ) -> Result<PriceFeedsWithUpdateData>;
+}
 
-                    store_wormhole_merkle_verified_message(
-                        state,
-                        proof.clone(),
-                        update_vaa.to_owned(),
-                    )
-                    .await?;
+/// Allow downcasting State into CacheState for functions that depend on the `Cache` service.
+impl<'a> From<&'a State> for &'a AggregateState {
+    fn from(state: &'a State) -> &'a AggregateState {
+        &state.aggregates
+    }
+}
 
-                    state
-                        .aggregate_state
-                        .write()
-                        .await
-                        .metrics
-                        .observe(proof.slot, metrics::Event::Vaa);
-
-                    proof.slot
-                }
-            }
-        }
-        Update::AccumulatorMessages(accumulator_messages) => {
-            let slot = accumulator_messages.slot;
-            tracing::info!(slot = slot, "Storing Accumulator Messages.");
-
-            state
-                .store_accumulator_messages(accumulator_messages)
-                .await?;
-
-            state
-                .aggregate_state
-                .write()
-                .await
-                .metrics
-                .observe(slot, metrics::Event::AccumulatorMessages);
-            slot
-        }
-    };
-
-    // Update the aggregate state with the latest observed slot
-    {
-        let mut aggregate_state = state.aggregate_state.write().await;
-        aggregate_state.latest_observed_slot = aggregate_state
-            .latest_observed_slot
-            .map(|latest| latest.max(slot))
-            .or(Some(slot));
+#[async_trait::async_trait]
+impl<T> Aggregates for T
+where
+    for<'a> &'a T: Into<&'a AggregateState>,
+    T: Sync,
+    T: Send,
+    T: Cache,
+    T: Benchmarks,
+    T: PriceFeedMeta,
+{
+    fn subscribe(&self) -> Receiver<AggregationEvent> {
+        self.into().api_update_tx.subscribe()
     }
 
-    let accumulator_messages = state.fetch_accumulator_messages(slot).await?;
-    let wormhole_merkle_state = state.fetch_wormhole_merkle_state(slot).await?;
+    /// Stores the update data in the store
+    #[tracing::instrument(skip(self, update))]
+    async fn store_update(&self, update: Update) -> Result<()> {
+        // The slot that the update is originating from. It should be available
+        // in all the updates.
+        let slot = match update {
+            Update::Vaa(update_vaa) => {
+                let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(
+                    update_vaa.as_ref(),
+                )?;
+                match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
+                    WormholePayload::Merkle(proof) => {
+                        tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
 
-    let (accumulator_messages, wormhole_merkle_state) =
-        match (accumulator_messages, wormhole_merkle_state) {
-            (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
-                (accumulator_messages, wormhole_merkle_state)
+                        store_wormhole_merkle_verified_message(
+                            self,
+                            proof.clone(),
+                            update_vaa.to_owned(),
+                        )
+                        .await?;
+
+                        self.into()
+                            .data
+                            .write()
+                            .await
+                            .metrics
+                            .observe(proof.slot, metrics::Event::Vaa);
+
+                        proof.slot
+                    }
+                }
             }
-            _ => return Ok(()),
+            Update::AccumulatorMessages(accumulator_messages) => {
+                let slot = accumulator_messages.slot;
+                tracing::info!(slot = slot, "Storing Accumulator Messages.");
+
+                self.store_accumulator_messages(accumulator_messages)
+                    .await?;
+
+                self.into()
+                    .data
+                    .write()
+                    .await
+                    .metrics
+                    .observe(slot, metrics::Event::AccumulatorMessages);
+                slot
+            }
         };
 
-    tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
-
-    // Once the accumulator reaches a complete state for a specific slot
-    // we can build the message states
-    let message_states = build_message_states(accumulator_messages, wormhole_merkle_state)?;
-
-    let message_state_keys = message_states
-        .iter()
-        .map(|message_state| message_state.key())
-        .collect::<HashSet<_>>();
-
-    tracing::info!(len = message_states.len(), "Storing Message States.");
-    state.store_message_states(message_states).await?;
-
-    // Update the aggregate state
-    let mut aggregate_state = state.aggregate_state.write().await;
-
-    // Send update event to subscribers. We are purposefully ignoring the result
-    // because there might be no subscribers.
-    let _ = match aggregate_state.latest_completed_slot {
-        None => {
-            aggregate_state.latest_completed_slot.replace(slot);
-            state.api_update_tx.send(AggregationEvent::New { slot })
+        // Update the aggregate state with the latest observed slot
+        {
+            let mut aggregate_state = self.into().data.write().await;
+            aggregate_state.latest_observed_slot = aggregate_state
+                .latest_observed_slot
+                .map(|latest| latest.max(slot))
+                .or(Some(slot));
         }
-        Some(latest) if slot > latest => {
-            state.prune_removed_keys(message_state_keys).await;
-            aggregate_state.latest_completed_slot.replace(slot);
-            state.api_update_tx.send(AggregationEvent::New { slot })
+
+        let accumulator_messages = self.fetch_accumulator_messages(slot).await?;
+        let wormhole_merkle_state = self.fetch_wormhole_merkle_state(slot).await?;
+
+        let (accumulator_messages, wormhole_merkle_state) =
+            match (accumulator_messages, wormhole_merkle_state) {
+                (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
+                    (accumulator_messages, wormhole_merkle_state)
+                }
+                _ => return Ok(()),
+            };
+
+        tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
+
+        // Once the accumulator reaches a complete state for a specific slot
+        // we can build the message states
+        let message_states = build_message_states(accumulator_messages, wormhole_merkle_state)?;
+
+        let message_state_keys = message_states
+            .iter()
+            .map(|message_state| message_state.key())
+            .collect::<HashSet<_>>();
+
+        tracing::info!(len = message_states.len(), "Storing Message States.");
+        self.store_message_states(message_states).await?;
+
+        // Update the aggregate state
+        let mut aggregate_state = self.into().data.write().await;
+
+        // Check if the update is new or out of order
+        match aggregate_state.latest_completed_slot {
+            None => {
+                aggregate_state.latest_completed_slot.replace(slot);
+                self.into()
+                    .api_update_tx
+                    .send(AggregationEvent::New { slot })?;
+            }
+            Some(latest) if slot > latest => {
+                self.prune_removed_keys(message_state_keys).await;
+                aggregate_state.latest_completed_slot.replace(slot);
+                self.into()
+                    .api_update_tx
+                    .send(AggregationEvent::New { slot })?;
+            }
+            _ => {
+                self.into()
+                    .api_update_tx
+                    .send(AggregationEvent::OutOfOrder { slot })?;
+            }
         }
-        _ => state
-            .api_update_tx
-            .send(AggregationEvent::OutOfOrder { slot }),
-    };
 
-    aggregate_state.latest_completed_slot = aggregate_state
-        .latest_completed_slot
-        .map(|latest| latest.max(slot))
-        .or(Some(slot));
+        aggregate_state.latest_completed_slot = aggregate_state
+            .latest_completed_slot
+            .map(|latest| latest.max(slot))
+            .or(Some(slot));
 
-    aggregate_state
-        .latest_completed_update_at
-        .replace(Instant::now());
+        aggregate_state
+            .latest_completed_update_at
+            .replace(Instant::now());
 
-    aggregate_state
-        .metrics
-        .observe(slot, metrics::Event::CompletedUpdate);
+        aggregate_state
+            .metrics
+            .observe(slot, metrics::Event::CompletedUpdate);
 
-    Ok(())
+        Ok(())
+    }
+
+    async fn get_price_feeds_with_update_data(
+        &self,
+        price_ids: &[PriceIdentifier],
+        request_time: RequestTime,
+    ) -> Result<PriceFeedsWithUpdateData> {
+        match get_verified_price_feeds(self, price_ids, request_time.clone()).await {
+            Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
+            Err(e) => {
+                if let RequestTime::FirstAfter(publish_time) = request_time {
+                    return Benchmarks::get_verified_price_feeds(self, price_ids, publish_time)
+                        .await;
+                }
+                Err(e)
+            }
+        }
+    }
+
+    async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
+        Cache::message_state_keys(self)
+            .await
+            .iter()
+            .map(|key| PriceIdentifier::new(key.feed_id))
+            .collect()
+    }
+
+    async fn is_ready(&self) -> bool {
+        let metadata = self.into().data.read().await;
+        let price_feeds_metadata = PriceFeedMeta::retrieve_price_feeds_metadata(self)
+            .await
+            .unwrap();
+
+        let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
+            Some(latest_completed_update_time) => {
+                latest_completed_update_time.elapsed() < READINESS_STALENESS_THRESHOLD
+            }
+            None => false,
+        };
+
+        let is_not_behind = match (
+            metadata.latest_completed_slot,
+            metadata.latest_observed_slot,
+        ) {
+            (Some(latest_completed_slot), Some(latest_observed_slot)) => {
+                latest_observed_slot - latest_completed_slot <= READINESS_MAX_ALLOWED_SLOT_LAG
+            }
+            _ => false,
+        };
+
+        let is_metadata_loaded = !price_feeds_metadata.is_empty();
+        has_completed_recently && is_not_behind && is_metadata_loaded
+    }
 }
 
 #[tracing::instrument(skip(accumulator_messages, wormhole_merkle_state))]
@@ -389,73 +506,12 @@ where
     })
 }
 
-pub async fn get_price_feeds_with_update_data<S>(
-    state: &S,
-    price_ids: &[PriceIdentifier],
-    request_time: RequestTime,
-) -> Result<PriceFeedsWithUpdateData>
-where
-    S: Cache,
-    S: Benchmarks,
-{
-    match get_verified_price_feeds(state, price_ids, request_time.clone()).await {
-        Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
-        Err(e) => {
-            if let RequestTime::FirstAfter(publish_time) = request_time {
-                return state
-                    .get_verified_price_feeds(price_ids, publish_time)
-                    .await;
-            }
-            Err(e)
-        }
-    }
-}
-
-pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
-where
-    S: Cache,
-{
-    state
-        .message_state_keys()
-        .await
-        .iter()
-        .map(|key| PriceIdentifier::new(key.feed_id))
-        .collect()
-}
-
-pub async fn is_ready(state: &State) -> bool {
-    let metadata = state.aggregate_state.read().await;
-    let price_feeds_metadata = state.price_feed_meta.data.read().await;
-
-    let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
-        Some(latest_completed_update_time) => {
-            latest_completed_update_time.elapsed() < READINESS_STALENESS_THRESHOLD
-        }
-        None => false,
-    };
-
-    let is_not_behind = match (
-        metadata.latest_completed_slot,
-        metadata.latest_observed_slot,
-    ) {
-        (Some(latest_completed_slot), Some(latest_observed_slot)) => {
-            latest_observed_slot - latest_completed_slot <= READINESS_MAX_ALLOWED_SLOT_LAG
-        }
-        _ => false,
-    };
-
-    let is_metadata_loaded = !price_feeds_metadata.is_empty();
-
-    has_completed_recently && is_not_behind && is_metadata_loaded
-}
-
 #[cfg(test)]
 mod test {
     use {
         super::*,
         crate::{
             api::types::PriceFeedMetadata,
-            price_feeds_metadata::PriceFeedMeta,
             state::test::setup_state,
         },
         futures::future::join_all,
@@ -557,7 +613,7 @@ mod test {
     }
 
     pub async fn store_multiple_concurrent_valid_updates(state: Arc<State>, updates: Vec<Update>) {
-        let res = join_all(updates.into_iter().map(|u| store_update(&state, u))).await;
+        let res = join_all(updates.into_iter().map(|u| (&state).store_update(u))).await;
         // Check that all store_update calls succeeded
         assert!(res.into_iter().all(|r| r.is_ok()));
     }
@@ -583,19 +639,19 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            get_price_feed_ids(&*state).await,
+            (&*state).get_price_feed_ids().await,
             vec![PriceIdentifier::new([100; 32])].into_iter().collect()
         );
 
         // Check get_price_feeds_with_update_data retrieves the correct
         // price feed with correct update data.
-        let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &*state,
-            &[PriceIdentifier::new([100; 32])],
-            RequestTime::Latest,
-        )
-        .await
-        .unwrap();
+        let price_feeds_with_update_data = (&*state)
+            .get_price_feeds_with_update_data(
+                &[PriceIdentifier::new([100; 32])],
+                RequestTime::Latest,
+            )
+            .await
+            .unwrap();
 
         assert_eq!(
             price_feeds_with_update_data.price_feeds,
@@ -708,7 +764,7 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            get_price_feed_ids(&*state).await,
+            (&*state).get_price_feed_ids().await,
             vec![
                 PriceIdentifier::new([100; 32]),
                 PriceIdentifier::new([200; 32])
@@ -718,13 +774,13 @@ mod test {
         );
 
         // Check that price feed 2 exists
-        assert!(get_price_feeds_with_update_data(
-            &*state,
-            &[PriceIdentifier::new([200; 32])],
-            RequestTime::Latest,
-        )
-        .await
-        .is_ok());
+        assert!((&*state)
+            .get_price_feeds_with_update_data(
+                &[PriceIdentifier::new([200; 32])],
+                RequestTime::Latest,
+            )
+            .await
+            .is_ok());
 
         // Now send an update with only price feed 1 (without price feed 2)
         // and make sure that price feed 2 is not stored anymore.
@@ -745,17 +801,17 @@ mod test {
 
         // Check that price feed 2 does not exist anymore
         assert_eq!(
-            get_price_feed_ids(&*state).await,
+            (&*state).get_price_feed_ids().await,
             vec![PriceIdentifier::new([100; 32]),].into_iter().collect()
         );
 
-        assert!(get_price_feeds_with_update_data(
-            &*state,
-            &[PriceIdentifier::new([200; 32])],
-            RequestTime::Latest,
-        )
-        .await
-        .is_err());
+        assert!((&*state)
+            .get_price_feeds_with_update_data(
+                &[PriceIdentifier::new([200; 32])],
+                RequestTime::Latest,
+            )
+            .await
+            .is_err());
     }
 
     #[tokio::test]
@@ -791,13 +847,13 @@ mod test {
         MockClock::advance(Duration::from_secs(1));
 
         // Get the price feeds with update data
-        let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &*state,
-            &[PriceIdentifier::new([100; 32])],
-            RequestTime::Latest,
-        )
-        .await
-        .unwrap();
+        let price_feeds_with_update_data = (&*state)
+            .get_price_feeds_with_update_data(
+                &[PriceIdentifier::new([100; 32])],
+                RequestTime::Latest,
+            )
+            .await
+            .unwrap();
 
         // check received_at is correct
         assert_eq!(price_feeds_with_update_data.price_feeds.len(), 1);
@@ -817,13 +873,13 @@ mod test {
             .unwrap();
 
         // Check the state is ready
-        assert!(is_ready(&state).await);
+        assert!((&state).is_ready().await);
 
         // Advance the clock to make the prices stale
         MockClock::advance_system_time(READINESS_STALENESS_THRESHOLD);
         MockClock::advance(READINESS_STALENESS_THRESHOLD);
         // Check the state is not ready
-        assert!(!is_ready(&state).await);
+        assert!(!(&state).is_ready().await);
     }
 
     /// Test that the state retains the latest slots upon cache eviction.
@@ -866,16 +922,16 @@ mod test {
 
         // Check the last 100 slots are retained
         for slot in 900..1000 {
-            let price_feeds_with_update_data = get_price_feeds_with_update_data(
-                &*state,
-                &[
-                    PriceIdentifier::new([100; 32]),
-                    PriceIdentifier::new([200; 32]),
-                ],
-                RequestTime::FirstAfter(slot as i64),
-            )
-            .await
-            .unwrap();
+            let price_feeds_with_update_data = (&*state)
+                .get_price_feeds_with_update_data(
+                    &[
+                        PriceIdentifier::new([100; 32]),
+                        PriceIdentifier::new([200; 32]),
+                    ],
+                    RequestTime::FirstAfter(slot as i64),
+                )
+                .await
+                .unwrap();
             assert_eq!(price_feeds_with_update_data.price_feeds.len(), 2);
             assert_eq!(price_feeds_with_update_data.price_feeds[0].slot, Some(slot));
             assert_eq!(price_feeds_with_update_data.price_feeds[1].slot, Some(slot));
@@ -883,16 +939,16 @@ mod test {
 
         // Check nothing else is retained
         for slot in 0..900 {
-            assert!(get_price_feeds_with_update_data(
-                &*state,
-                &[
-                    PriceIdentifier::new([100; 32]),
-                    PriceIdentifier::new([200; 32])
-                ],
-                RequestTime::FirstAfter(slot as i64),
-            )
-            .await
-            .is_err());
+            assert!((&*state)
+                .get_price_feeds_with_update_data(
+                    &[
+                        PriceIdentifier::new([100; 32]),
+                        PriceIdentifier::new([200; 32])
+                    ],
+                    RequestTime::FirstAfter(slot as i64),
+                )
+                .await
+                .is_err());
         }
     }
 }

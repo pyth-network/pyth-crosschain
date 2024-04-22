@@ -7,7 +7,13 @@
 use {
     crate::{
         config::RunOptions,
-        state::State,
+        state::{
+            aggregate::{
+                Aggregates,
+                Update,
+            },
+            State,
+        },
     },
     anyhow::{
         anyhow,
@@ -100,10 +106,10 @@ pub struct BridgeConfig {
 /// GuardianSetData extracted from wormhole bridge account, due to no API.
 #[derive(borsh::BorshDeserialize)]
 pub struct GuardianSetData {
-    pub index:           u32,
-    pub keys:            Vec<[u8; 20]>,
-    pub creation_time:   u32,
-    pub expiration_time: u32,
+    pub _index:           u32,
+    pub keys:             Vec<[u8; 20]>,
+    pub _creation_time:   u32,
+    pub _expiration_time: u32,
 }
 
 /// Update the guardian set with the given ID in the state.
@@ -352,9 +358,7 @@ pub async fn store_vaa(state: Arc<State>, sequence: u64, vaa_bytes: Vec<u8>) {
     }
 
     // Hand the VAA to the aggregate store.
-    if let Err(e) =
-        crate::aggregate::store_update(&state, crate::aggregate::Update::Vaa(vaa_bytes)).await
-    {
+    if let Err(e) = Aggregates::store_update(&*state, Update::Vaa(vaa_bytes)).await {
         tracing::error!(error = ?e, "Failed to store VAA in aggregate store.");
     }
 }

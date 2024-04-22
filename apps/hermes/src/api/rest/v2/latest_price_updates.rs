@@ -1,6 +1,5 @@
 use {
     crate::{
-        aggregate::RequestTime,
         api::{
             rest::{
                 verify_price_ids_exist,
@@ -13,6 +12,11 @@ use {
                 PriceIdInput,
                 PriceUpdate,
             },
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            RequestTime,
         },
     },
     anyhow::Result,
@@ -73,28 +77,28 @@ fn default_true() -> bool {
         LatestPriceUpdatesQueryParams
     )
 )]
-pub async fn latest_price_updates(
-    State(state): State<crate::api::ApiState>,
+pub async fn latest_price_updates<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestPriceUpdatesQueryParams>,
-) -> Result<Json<PriceUpdate>, RestError> {
+) -> Result<Json<PriceUpdate>, RestError>
+where
+    S: Aggregates,
+{
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-
     verify_price_ids_exist(&state, &price_ids).await?;
 
-    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
-        &*state.state,
-        &price_ids,
-        RequestTime::Latest,
-    )
-    .await
-    .map_err(|e| {
-        tracing::warn!(
-            "Error getting price feeds {:?} with update data: {:?}",
-            price_ids,
-            e
-        );
-        RestError::UpdateDataNotFound
-    })?;
+    let state = &*state.state;
+    let price_feeds_with_update_data =
+        Aggregates::get_price_feeds_with_update_data(state, &price_ids, RequestTime::Latest)
+            .await
+            .map_err(|e| {
+                tracing::warn!(
+                    "Error getting price feeds {:?} with update data: {:?}",
+                    price_ids,
+                    e
+                );
+                RestError::UpdateDataNotFound
+            })?;
 
     let price_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = price_update_data

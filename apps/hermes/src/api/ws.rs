@@ -1,14 +1,18 @@
 use {
-    super::types::{
-        PriceIdInput,
-        RpcPriceFeed,
+    super::{
+        types::{
+            PriceIdInput,
+            RpcPriceFeed,
+        },
+        ApiState,
     },
-    crate::{
+    crate::state::{
         aggregate::{
+            Aggregates,
             AggregationEvent,
             RequestTime,
         },
-        state::State,
+        State,
     },
     anyhow::{
         anyhow,
@@ -212,11 +216,10 @@ pub async fn ws_route_handler(
 }
 
 #[tracing::instrument(skip(stream, state, subscriber_ip))]
-async fn websocket_handler(
-    stream: WebSocket,
-    state: super::ApiState,
-    subscriber_ip: Option<IpAddr>,
-) {
+async fn websocket_handler<S>(stream: WebSocket, state: ApiState<S>, subscriber_ip: Option<IpAddr>)
+where
+    S: Aggregates,
+{
     let ws_state = state.ws.clone();
 
     // Retain the recent rate limit data for the IP addresses to
@@ -235,7 +238,7 @@ async fn websocket_handler(
         })
         .inc();
 
-    let notify_receiver = state.update_tx.subscribe();
+    let notify_receiver = Aggregates::subscribe(&*state.state);
     let (sender, receiver) = stream.split();
     let mut subscriber = Subscriber::new(
         id,
@@ -254,11 +257,11 @@ pub type SubscriberId = usize;
 
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the store for updates and sends them to the client.
-pub struct Subscriber {
+pub struct Subscriber<S> {
     id:                      SubscriberId,
     ip_addr:                 Option<IpAddr>,
     closed:                  bool,
-    store:                   Arc<State>,
+    state:                   Arc<S>,
     ws_state:                Arc<WsState>,
     notify_receiver:         Receiver<AggregationEvent>,
     receiver:                SplitStream<WebSocket>,
@@ -269,11 +272,14 @@ pub struct Subscriber {
     responded_to_ping:       bool,
 }
 
-impl Subscriber {
+impl<S> Subscriber<S>
+where
+    S: Aggregates,
+{
     pub fn new(
         id: SubscriberId,
         ip_addr: Option<IpAddr>,
-        store: Arc<State>,
+        state: Arc<S>,
         ws_state: Arc<WsState>,
         notify_receiver: Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
@@ -283,7 +289,7 @@ impl Subscriber {
             id,
             ip_addr,
             closed: false,
-            store,
+            state,
             ws_state,
             notify_receiver,
             receiver,
@@ -350,8 +356,9 @@ impl Subscriber {
             .cloned()
             .collect::<Vec<_>>();
 
-        let updates = match crate::aggregate::get_price_feeds_with_update_data(
-            &*self.store,
+        let state = &*self.state;
+        let updates = match Aggregates::get_price_feeds_with_update_data(
+            state,
             &price_feed_ids,
             RequestTime::AtSlot(event.slot()),
         )
@@ -364,8 +371,7 @@ impl Subscriber {
                 // subscription. In this case we just remove the non-existing
                 // price feed from the list and will keep sending updates for
                 // the rest.
-                let available_price_feed_ids =
-                    crate::aggregate::get_price_feed_ids(&*self.store).await;
+                let available_price_feed_ids = Aggregates::get_price_feed_ids(state).await;
 
                 self.price_feeds_with_config
                     .retain(|price_feed_id, _| available_price_feed_ids.contains(price_feed_id));
@@ -376,8 +382,8 @@ impl Subscriber {
                     .cloned()
                     .collect::<Vec<_>>();
 
-                crate::aggregate::get_price_feeds_with_update_data(
-                    &*self.store,
+                Aggregates::get_price_feeds_with_update_data(
+                    state,
                     &price_feed_ids,
                     RequestTime::AtSlot(event.slot()),
                 )
@@ -545,7 +551,7 @@ impl Subscriber {
                 allow_out_of_order,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
-                let available_price_ids = crate::aggregate::get_price_feed_ids(&*self.store).await;
+                let available_price_ids = Aggregates::get_price_feed_ids(&*self.state).await;
 
                 let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
                     .iter()

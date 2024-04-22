@@ -1,11 +1,15 @@
 use {
     super::verify_price_ids_exist,
     crate::{
-        aggregate::{
+        api::{
+            rest::RestError,
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
             RequestTime,
             UnixTimestamp,
         },
-        api::rest::RestError,
     },
     anyhow::Result,
     axum::{
@@ -56,25 +60,29 @@ pub struct GetVaaCcipResponse {
         GetVaaCcipQueryParams
     )
 )]
-pub async fn get_vaa_ccip(
-    State(state): State<crate::api::ApiState>,
+pub async fn get_vaa_ccip<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,
-) -> Result<Json<GetVaaCcipResponse>, RestError> {
+) -> Result<Json<GetVaaCcipResponse>, RestError>
+where
+    S: Aggregates,
+{
     let price_id: PriceIdentifier = PriceIdentifier::new(
         params.data[0..32]
             .try_into()
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
+    verify_price_ids_exist(&state, &[price_id]).await?;
+
     let publish_time = UnixTimestamp::from_be_bytes(
         params.data[32..40]
             .try_into()
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
 
-    verify_price_ids_exist(&state, &[price_id]).await?;
-
-    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
-        &*state.state,
+    let state = &*state.state;
+    let price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
+        state,
         &[price_id],
         RequestTime::FirstAfter(publish_time),
     )
