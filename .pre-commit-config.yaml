@@ -122,5 +122,5 @@ repos:
       - id: mypy
         name: mypy
         entry: poetry -C express_relay/sdk/python/express_relay run mypy
-        files: express_relay/sdk/python/express_relay
+        files: express_relay
         language: "system"

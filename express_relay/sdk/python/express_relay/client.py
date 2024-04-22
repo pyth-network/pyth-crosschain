@@ -9,7 +9,7 @@ import httpx
 import websockets
 from websockets.client import WebSocketClientProtocol
 from eth_account.account import Account
-from express_relay.sdk.python.express_relay.express_relay_types import (
+from express_relay.express_relay_types import (
     Opportunity,
     BidStatusUpdate,
     ClientMessage,

@@ -3,7 +3,7 @@ import asyncio
 import logging
 from eth_account.account import Account
 from express_relay.client import ExpressRelayClient, sign_bid
-from express_relay.sdk.python.express_relay.express_relay_types import (
+from express_relay.express_relay_types import (
     Opportunity,
     OpportunityBid,
     Bytes32,
@@ -110,7 +110,7 @@ async def main():
         "--server-url",
         type=str,
         required=True,
-        help="Server enfdpoint to use for fetching opportunities and submitting bids",
+        help="Server endpoint to use for fetching opportunities and submitting bids",
     )
     args = parser.parse_args()
 
