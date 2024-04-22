@@ -409,33 +409,41 @@ export const WormholeInstructionView = ({
                 <CopyText text={'0x' + governanceAction.callAddress} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
-              {(() => {
-                const parsedData = parseEvmExecuteCallData(
-                  governanceAction.calldata.toString('hex')
-                )
-                if (parsedData === undefined) return <></>
-                return (
-                  <>
-                    <div>Call Method: {parsedData.method}</div>{' '}
-                    <div>
-                      Call Params:{' '}
-                      {parsedData.inputs.length > 0 ? (
-                        parsedData.inputs.map(([key, value]) => (
-                          <div key={key} className="mx-4">
-                            {key}: {value as string}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="mx-4">No params</div>
-                      )}
-                    </div>{' '}
-                  </>
-                )
-              })()}
+              <EvmExecuteCallData calldata={governanceAction.calldata} />
             </div>
           }
         />
       )}
     </div>
+  )
+}
+
+function EvmExecuteCallData({ calldata }: { calldata: Buffer }) {
+  const callDataHex = calldata.toString('hex')
+  const parsedData = parseEvmExecuteCallData(callDataHex)
+  if (parsedData === undefined)
+    return (
+      <div>
+        Call Data:
+        <CopyText text={callDataHex} />
+      </div>
+    )
+
+  return (
+    <>
+      <div>Call Method: {parsedData.method}</div>
+      <div>Call Params: </div>
+      <div className="mx-4">
+        {parsedData.inputs.length > 0 ? (
+          parsedData.inputs.map(([key, value]) => (
+            <div key={key}>
+              {key}: {value}
+            </div>
+          ))
+        ) : (
+          <div>No params</div>
+        )}
+      </div>
+    </>
   )
 }

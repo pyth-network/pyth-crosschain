@@ -1,9 +1,9 @@
 import Web3 from 'web3'
 
-// Note: Currently, the ABI only contains the functions which takes in primitives as inputs.
-// Though it is possible for evm functions to accept struct as one of the inputs.
+// Note: Currently, the ABI only contains the functions which take in primitives as inputs.
+// Though it is possible for EVM functions to accept structs as one of the inputs.
 // We don't support that right now. There is no requirement for that now or in the
-// forseeable future. Adding it now will add unnecessary complexity.
+// foreseeable future. Adding it now will add unnecessary complexity.
 // It will be added when needed.
 const ABI = [
   {
