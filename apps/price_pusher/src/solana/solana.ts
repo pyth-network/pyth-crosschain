@@ -59,19 +59,13 @@ export class SolanaPricePusher implements IPricePusher {
     private pythSolanaReceiver: PythSolanaReceiver,
     private priceServiceConnection: PriceServiceConnection,
     private shardId: number,
-    private computeUnitPriceMicroLamports: number,
-    private alreadySending: boolean = false
+    private computeUnitPriceMicroLamports: number
   ) {}
 
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
-    if (this.alreadySending) {
-      console.log(new Date(), "updatePriceFeed already in progress");
-      return;
-    }
-    this.alreadySending = true;
     if (priceIds.length === 0) {
       return;
     }
@@ -106,10 +100,8 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.wallet
       );
       console.log(new Date(), "updatePriceFeed successful");
-      this.alreadySending = false;
     } catch (e: any) {
       console.error(new Date(), "updatePriceFeed failed", e);
-      this.alreadySending = false;
       return;
     }
   }
