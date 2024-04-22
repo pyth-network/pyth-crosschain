@@ -22,7 +22,7 @@ import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
 import { PythCluster } from '@pythnetwork/client'
 import { lamportsToSol } from '../../utils/lamportsToSol'
-import { parseCallData } from 'contract_manager'
+import { parseEvmExecuteCallData } from '../../utils/parseEvmExecuteCallData'
 
 const GovernanceInstructionView = ({
   instruction,
@@ -410,7 +410,7 @@ export const WormholeInstructionView = ({
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
               {(() => {
-                const parsedData = parseCallData(
+                const parsedData = parseEvmExecuteCallData(
                   governanceAction.calldata.toString('hex')
                 )
                 if (parsedData === undefined) return <></>
