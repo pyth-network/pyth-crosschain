@@ -1,7 +1,7 @@
 use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank, CheatTarget};
 use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
 use pyth::reader::{ByteArray, ByteArrayImpl, ReaderImpl};
-use pyth::util::UnwrapWithFelt252;
+use pyth::util::{UnwrapWithFelt252, array_felt252_to_bytes31};
 use core::starknet::ContractAddress;
 use core::panic_with_felt252;
 
@@ -92,17 +92,6 @@ fn test_submit_guardian_set_rejects_empty() {
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
     dispatcher.submit_new_guardian_set(1, array![]).unwrap_with_felt252();
-}
-
-fn array_left252_to_bytes31(mut input: Array<felt252>) -> Array<bytes31> {
-    let mut output = array![];
-    loop {
-        match input.pop_front() {
-            Option::Some(v) => { output.append(v.try_into().unwrap()); },
-            Option::None => { break; },
-        }
-    };
-    output
 }
 
 fn deploy(owner: ContractAddress, guardians: Array<felt252>) -> IWormholeDispatcher {
@@ -300,5 +289,5 @@ fn good_vm1() -> ByteArray {
         52685537088250779930155363779405986390839624071318818148325576008719597568,
         14615204155786886573933667335033405822686404253588533,
     ];
-    ByteArrayImpl::new(array_left252_to_bytes31(bytes), 22)
+    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 22)
 }
