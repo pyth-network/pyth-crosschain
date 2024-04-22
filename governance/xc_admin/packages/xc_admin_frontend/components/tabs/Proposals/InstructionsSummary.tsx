@@ -32,19 +32,18 @@ export const InstructionsSummary = ({
         acc['unknown'] = (acc['unknown'] ?? 0) + 1
       }
     } else {
-        acc[instruction.name] = (acc[instruction.name] ?? 0) + 1
+      acc[instruction.name] = (acc[instruction.name] ?? 0) + 1
     }
     return acc
   }, {} as Record<string, number>)
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {Object.entries(instructionsCount).map(([name, count]) => {
         return (
           <div key={name}>
             {name}: {count}
           </div>
-          
         )
       })}
     </div>
