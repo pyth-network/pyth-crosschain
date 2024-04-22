@@ -117,7 +117,7 @@ export default {
     );
 
     const pythSolanaReceiver = new PythSolanaReceiver({
-      connection: new Connection(endpoint),
+      connection: new Connection(endpoint, "processed"),
       wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
     });
