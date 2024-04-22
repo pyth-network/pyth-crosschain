@@ -4,10 +4,6 @@
 
 use {
     crate::{
-        aggregate::{
-            AccumulatorMessages,
-            Update,
-        },
         api::types::PriceFeedMetadata,
         config::RunOptions,
         network::wormhole::{
@@ -20,7 +16,14 @@ use {
             PriceFeedMeta,
             DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
         },
-        state::State,
+        state::{
+            aggregate::{
+                AccumulatorMessages,
+                Aggregates,
+                Update,
+            },
+            State,
+        },
     },
     anyhow::{
         anyhow,
@@ -136,7 +139,7 @@ async fn fetch_bridge_data(
     }
 }
 
-pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
+pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<!> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {
@@ -157,59 +160,54 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
         .program_subscribe(&system_program::id(), Some(config))
         .await?;
 
-    loop {
-        match notif.next().await {
-            Some(update) => {
-                let account: Account = match update.value.account.decode() {
-                    Some(account) => account,
-                    None => {
-                        tracing::error!(?update, "Failed to decode account from update.");
-                        continue;
-                    }
-                };
-
-                let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
-                match accumulator_messages {
-                    Ok(accumulator_messages) => {
-                        let (candidate, _) = Pubkey::find_program_address(
-                            &[
-                                b"AccumulatorState",
-                                &accumulator_messages.ring_index().to_be_bytes(),
-                            ],
-                            &system_program::id(),
-                        );
-
-                        if candidate.to_string() == update.value.pubkey {
-                            let store = store.clone();
-                            tokio::spawn(async move {
-                                if let Err(err) = crate::aggregate::store_update(
-                                    &store,
-                                    Update::AccumulatorMessages(accumulator_messages),
-                                )
-                                .await
-                                {
-                                    tracing::error!(error = ?err, "Failed to store accumulator messages.");
-                                }
-                            });
-                        } else {
-                            tracing::error!(
-                                ?candidate,
-                                ?update.value.pubkey,
-                                "Failed to verify message public keys.",
-                            );
-                        }
-                    }
-
-                    Err(err) => {
-                        tracing::error!(error = ?err, "Failed to parse AccumulatorMessages.");
-                    }
-                };
-            }
+    while let Some(update) = notif.next().await {
+        let account: Account = match update.value.account.decode() {
+            Some(account) => account,
             None => {
-                return Err(anyhow!("Pythnet network listener terminated"));
+                tracing::error!(?update, "Failed to decode account from update.");
+                continue;
             }
-        }
+        };
+
+        let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
+        match accumulator_messages {
+            Ok(accumulator_messages) => {
+                let (candidate, _) = Pubkey::find_program_address(
+                    &[
+                        b"AccumulatorState",
+                        &accumulator_messages.ring_index().to_be_bytes(),
+                    ],
+                    &system_program::id(),
+                );
+
+                if candidate.to_string() == update.value.pubkey {
+                    let store = store.clone();
+                    tokio::spawn(async move {
+                        if let Err(err) = Aggregates::store_update(
+                            &*store,
+                            Update::AccumulatorMessages(accumulator_messages),
+                        )
+                        .await
+                        {
+                            tracing::error!(error = ?err, "Failed to store accumulator messages.");
+                        }
+                    });
+                } else {
+                    tracing::error!(
+                        ?candidate,
+                        ?update.value.pubkey,
+                        "Failed to verify message public keys.",
+                    );
+                }
+            }
+
+            Err(err) => {
+                tracing::error!(error = ?err, "Failed to parse AccumulatorMessages.");
+            }
+        };
     }
+
+    Err(anyhow!("Pythnet network listener connection terminated"))
 }
 
 /// Fetch existing GuardianSet accounts from Wormhole.

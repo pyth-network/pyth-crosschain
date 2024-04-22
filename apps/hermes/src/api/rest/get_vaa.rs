@@ -1,15 +1,16 @@
 use {
     super::verify_price_ids_exist,
     crate::{
-        aggregate::{
-            get_price_feeds_with_update_data,
-            RequestTime,
-            UnixTimestamp,
-        },
         api::{
             doc_examples,
             rest::RestError,
             types::PriceIdInput,
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            RequestTime,
+            UnixTimestamp,
         },
     },
     anyhow::Result,
@@ -68,16 +69,19 @@ pub struct GetVaaResponse {
         GetVaaQueryParams
     )
 )]
-pub async fn get_vaa(
-    State(state): State<crate::api::ApiState>,
+pub async fn get_vaa<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetVaaQueryParams>,
-) -> Result<Json<GetVaaResponse>, RestError> {
+) -> Result<Json<GetVaaResponse>, RestError>
+where
+    S: Aggregates,
+{
     let price_id: PriceIdentifier = params.id.into();
-
     verify_price_ids_exist(&state, &[price_id]).await?;
 
-    let price_feeds_with_update_data = get_price_feeds_with_update_data(
-        &*state.state,
+    let state = &*state.state;
+    let price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
+        state,
         &[price_id],
         RequestTime::FirstAfter(params.publish_time),
     )

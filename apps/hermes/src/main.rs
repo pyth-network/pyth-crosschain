@@ -17,7 +17,6 @@ use {
     },
 };
 
-mod aggregate;
 mod api;
 mod config;
 mod metrics_server;
@@ -54,7 +53,7 @@ async fn init() -> Result<()> {
             let (update_tx, _) = tokio::sync::broadcast::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let store = State::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
+            let state = State::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {
@@ -67,10 +66,10 @@ async fn init() -> Result<()> {
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown
             // signal has been observed).
             let tasks = join_all(vec![
-                spawn(network::wormhole::spawn(opts.clone(), store.clone())),
-                spawn(network::pythnet::spawn(opts.clone(), store.clone())),
-                spawn(metrics_server::run(opts.clone(), store.clone())),
-                spawn(api::spawn(opts.clone(), store.clone(), update_tx)),
+                spawn(network::wormhole::spawn(opts.clone(), state.clone())),
+                spawn(network::pythnet::spawn(opts.clone(), state.clone())),
+                spawn(metrics_server::run(opts.clone(), state.clone())),
+                spawn(api::spawn(opts.clone(), state.clone())),
             ])
             .await;
 

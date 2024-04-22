@@ -1,9 +1,5 @@
 use {
     crate::{
-        aggregate::{
-            RequestTime,
-            UnixTimestamp,
-        },
         api::{
             doc_examples,
             rest::{
@@ -17,6 +13,12 @@ use {
                 PriceIdInput,
                 PriceUpdate,
             },
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            RequestTime,
+            UnixTimestamp,
         },
     },
     anyhow::Result,
@@ -87,18 +89,22 @@ fn default_true() -> bool {
         TimestampPriceUpdatesQueryParams
     )
 )]
-pub async fn timestamp_price_updates(
-    State(state): State<crate::api::ApiState>,
+pub async fn timestamp_price_updates<S>(
+    State(state): State<ApiState<S>>,
     Path(path_params): Path<TimestampPriceUpdatesPathParams>,
     QsQuery(query_params): QsQuery<TimestampPriceUpdatesQueryParams>,
-) -> Result<Json<PriceUpdate>, RestError> {
+) -> Result<Json<PriceUpdate>, RestError>
+where
+    S: Aggregates,
+{
     let price_ids: Vec<PriceIdentifier> =
         query_params.ids.into_iter().map(|id| id.into()).collect();
 
     verify_price_ids_exist(&state, &price_ids).await?;
 
-    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
-        &*state.state,
+    let state = &*state.state;
+    let price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
+        state,
         &price_ids,
         RequestTime::FirstAfter(path_params.publish_time),
     )

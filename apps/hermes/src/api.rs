@@ -1,6 +1,5 @@
 use {
     crate::{
-        aggregate::AggregationEvent,
         config::RunOptions,
         state::State,
     },
@@ -14,7 +13,6 @@ use {
     ipnet::IpNet,
     serde_qs::axum::QsQueryConfig,
     std::sync::Arc,
-    tokio::sync::broadcast::Sender,
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
@@ -27,10 +25,9 @@ pub mod types;
 mod ws;
 
 pub struct ApiState<S = State> {
-    pub state:     Arc<S>,
-    pub ws:        Arc<ws::WsState>,
-    pub metrics:   Arc<metrics_middleware::Metrics>,
-    pub update_tx: Sender<AggregationEvent>,
+    pub state:   Arc<S>,
+    pub ws:      Arc<ws::WsState>,
+    pub metrics: Arc<metrics_middleware::Metrics>,
 }
 
 /// Manually implement `Clone` as the derive macro will try and slap `Clone` on
@@ -38,10 +35,9 @@ pub struct ApiState<S = State> {
 impl<S> Clone for ApiState<S> {
     fn clone(&self) -> Self {
         Self {
-            state:     self.state.clone(),
-            ws:        self.ws.clone(),
-            metrics:   self.metrics.clone(),
-            update_tx: self.update_tx.clone(),
+            state:   self.state.clone(),
+            ws:      self.ws.clone(),
+            metrics: self.metrics.clone(),
         }
     }
 }
@@ -51,7 +47,6 @@ impl ApiState<State> {
         state: Arc<State>,
         ws_whitelist: Vec<IpNet>,
         requester_ip_header_name: String,
-        update_tx: Sender<AggregationEvent>,
     ) -> Self {
         Self {
             metrics: Arc::new(metrics_middleware::Metrics::new(state.clone())),
@@ -61,24 +56,18 @@ impl ApiState<State> {
                 state.clone(),
             )),
             state,
-            update_tx,
         }
     }
 }
 
-#[tracing::instrument(skip(opts, state, update_tx))]
-pub async fn spawn(
-    opts: RunOptions,
-    state: Arc<State>,
-    update_tx: Sender<AggregationEvent>,
-) -> Result<()> {
+#[tracing::instrument(skip(opts, state))]
+pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     let state = {
         let opts = opts.clone();
         ApiState::new(
             state,
             opts.rpc.ws_whitelist,
             opts.rpc.requester_ip_header_name,
-            update_tx,
         )
     };
 
