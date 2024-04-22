@@ -18,7 +18,7 @@ class UnsupportedOpportunityVersionException(Exception):
 
 def check_hex_string(s: str):
     """
-    Validates that a string is a valid hex string.
+    Validates that a string is a valid hex string.test
 
     Args:
         s: The string to validate as a hex string. Can be '0x'-prefixed.
