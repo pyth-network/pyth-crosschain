@@ -110,7 +110,7 @@ async def main():
         "--server-url",
         type=str,
         required=True,
-        help="Server endpoint to use for fetching opportunities and submitting bids",
+        help="Server enfdpoint to use for fetching opportunities and submitting bids",
     )
     args = parser.parse_args()
 
