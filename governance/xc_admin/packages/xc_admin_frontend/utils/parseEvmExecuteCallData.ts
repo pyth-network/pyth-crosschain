@@ -50,7 +50,7 @@ type Input = {
 export function parseEvmExecuteCallData(callData: string):
   | {
       method: string
-      inputs: [string, unknown][]
+      inputs: [string, string][]
     }
   | undefined {
   for (const abi of ABI) {
@@ -74,7 +74,10 @@ export function parseEvmExecuteCallData(callData: string):
     )
     return {
       method: abi.name,
-      inputs: inputs.map((input) => [input.name, decodedParams[input.name]]),
+      inputs: inputs.map((input) => [
+        input.name,
+        decodedParams[input.name] as string,
+      ]),
     }
   }
 
