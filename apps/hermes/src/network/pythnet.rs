@@ -291,7 +291,8 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
                             tracing::error!("Pythnet listener restarting too quickly. Sleep 1s.");
                             tokio::time::sleep(Duration::from_secs(1)).await;
                         }
-                    }
+                    },
+                    else => {}
                 }
             }
             tracing::info!("Shutting down Pythnet listener...");

@@ -162,7 +162,8 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
             _ = exit.changed() => break,
             Err(err) = run(opts.clone(), state.clone()) => {
                 tracing::error!(error = ?err, "Wormhole gRPC service failed.");
-            }
+            },
+            else => {}
         }
     }
     tracing::info!("Shutting down Wormhole gRPC service...");
