@@ -4,7 +4,9 @@ import {
   ExecutePostedVaa,
   MultisigInstruction,
   MultisigParser,
+  PythGovernanceActionImpl,
   WormholeMultisigInstruction,
+  SetDataSources,
 } from 'xc_admin_common'
 
 export const InstructionsSummary = ({
@@ -28,6 +30,11 @@ export const InstructionsSummary = ({
           })
           acc[parsedInstruction.name] = (acc[parsedInstruction.name] ?? 0) + 1
         })
+      } else if (governanceAction instanceof PythGovernanceActionImpl) {
+        acc[governanceAction.action] = (acc[governanceAction.action] ?? 0) + 1
+      } else if (governanceAction instanceof SetDataSources) {
+        acc[governanceAction.actionName] =
+          (acc[governanceAction.actionName] ?? 0) + 1
       } else {
         acc['unknown'] = (acc['unknown'] ?? 0) + 1
       }
