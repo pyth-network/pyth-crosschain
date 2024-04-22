@@ -36,8 +36,11 @@ export const ProposalRow = ({
         handleClickIndividualProposal(proposal.publicKey.toBase58())
       }
     >
-      <div className="flex justify-between p-4">
-        <div className="flex">
+      <div className="flex gap-4 p-4">
+        <div className=''>
+          {proposal.transactionIndex}
+        </div>
+        <div className="flex flex-grow">
           <span className="mr-2 hidden sm:block">
             {proposal.publicKey.toBase58()}
           </span>
