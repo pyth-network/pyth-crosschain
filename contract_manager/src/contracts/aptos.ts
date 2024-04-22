@@ -18,6 +18,24 @@ type GuardianSet = {
 };
 
 export class WormholeAptosContract extends WormholeContract {
+  static type = "AptosWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return WormholeAptosContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: WormholeAptosContract.type,
+    };
+  }
+
   constructor(public chain: AptosChain, public address: string) {
     super();
   }

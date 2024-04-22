@@ -11,6 +11,7 @@ import {
   CosmWasmPriceFeedContract,
   EvmEntropyContract,
   EvmPriceFeedContract,
+  EvmWormholeContract,
   SuiPriceFeedContract,
 } from "./contracts";
 import { Token } from "./token";
@@ -23,6 +24,7 @@ export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
+  public wormhole_contracts: Record<string, EvmWormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
 
@@ -81,6 +83,7 @@ export class Store {
     const contractsByType: Record<string, Storable[]> = {};
     const contracts: Storable[] = Object.values(this.contracts);
     contracts.push(...Object.values(this.entropy_contracts));
+    contracts.push(...Object.values(this.wormhole_contracts));
     for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -118,6 +121,7 @@ export class Store {
       [EvmPriceFeedContract.type]: EvmPriceFeedContract,
       [AptosPriceFeedContract.type]: AptosPriceFeedContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
+      [EvmWormholeContract.type]: EvmWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
@@ -132,13 +136,16 @@ export class Store {
         );
         if (
           this.contracts[chainContract.getId()] ||
-          this.entropy_contracts[chainContract.getId()]
+          this.entropy_contracts[chainContract.getId()] ||
+          this.wormhole_contracts[chainContract.getId()]
         )
           throw new Error(
             `Multiple contracts with id ${chainContract.getId()} found`
           );
         if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof EvmWormholeContract) {
+          this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else {
           this.contracts[chainContract.getId()] = chainContract;
         }

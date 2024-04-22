@@ -391,6 +391,36 @@ export async function getCodeDigestWithoutAddress(
 }
 
 export class EvmWormholeContract extends WormholeContract {
+  static type = "EvmWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getChain(): EvmChain {
+    return this.chain;
+  }
+
+  getType(): string {
+    return EvmWormholeContract.type;
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.version().call();
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmWormholeContract {
+    if (parsed.type !== EvmWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmWormholeContract(chain, parsed.address);
+  }
+
   constructor(public chain: EvmChain, public address: string) {
     super();
   }
@@ -435,6 +465,14 @@ export class EvmWormholeContract extends WormholeContract {
       { from: address }
     );
     return { id: result.transactionHash, info: result };
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmWormholeContract.type,
+    };
   }
 }
 

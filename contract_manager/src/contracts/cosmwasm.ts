@@ -39,6 +39,24 @@ export interface DeploymentConfig {
 }
 
 export class WormholeCosmWasmContract extends WormholeContract {
+  static type = "CosmWasmWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return WormholeCosmWasmContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: WormholeCosmWasmContract.type,
+    };
+  }
+
   constructor(public chain: CosmWasmChain, public address: string) {
     super();
   }
