@@ -22,7 +22,7 @@ import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
 import { PythCluster } from '@pythnetwork/client'
 import { lamportsToSol } from '../../utils/lamportsToSol'
-import { parseCallData } from 'contract_manager/src/contracts/evm'
+import { parseCallData } from 'contract_manager'
 
 const GovernanceInstructionView = ({
   instruction,
