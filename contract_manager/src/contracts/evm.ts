@@ -390,7 +390,7 @@ export async function getCodeDigestWithoutAddress(
   return Web3.utils.keccak256(strippedCode);
 }
 
-export class WormholeEvmContract extends WormholeContract {
+export class EvmWormholeContract extends WormholeContract {
   constructor(public chain: EvmChain, public address: string) {
     super();
   }
@@ -640,13 +640,13 @@ export class EvmExecutorContract {
     return `${this.chain.getId()}_${this.address}`;
   }
 
-  async getWormholeContract(): Promise<WormholeEvmContract> {
+  async getWormholeContract(): Promise<EvmWormholeContract> {
     const web3 = new Web3(this.chain.getRpcUrl());
     //Unfortunately, there is no public method to get the wormhole address
     //Found 251 by using `forge build --extra-output storageLayout` and finding the slot for the wormhole variable.
     let address = await web3.eth.getStorageAt(this.address, 251);
     address = "0x" + address.slice(26);
-    return new WormholeEvmContract(this.chain, address);
+    return new EvmWormholeContract(this.chain, address);
   }
 
   getContract() {
@@ -811,10 +811,10 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   /**
    * Returns the wormhole contract which is being used for VAA verification
    */
-  async getWormholeContract(): Promise<WormholeEvmContract> {
+  async getWormholeContract(): Promise<EvmWormholeContract> {
     const pythContract = this.getContract();
     const address = await pythContract.methods.wormhole().call();
-    return new WormholeEvmContract(this.chain, address);
+    return new EvmWormholeContract(this.chain, address);
   }
 
   async getBaseUpdateFee() {

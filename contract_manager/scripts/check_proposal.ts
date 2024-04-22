@@ -23,7 +23,7 @@ import {
   EvmEntropyContract,
   EvmPriceFeedContract,
   getCodeDigestWithoutAddress,
-  WormholeEvmContract,
+  EvmWormholeContract,
 } from "../src/contracts/evm";
 import Web3 from "web3";
 
@@ -73,7 +73,7 @@ async function main() {
               instruction.governanceAction.targetChainId
           ) {
             const address = instruction.governanceAction.address;
-            const contract = new WormholeEvmContract(chain, address);
+            const contract = new EvmWormholeContract(chain, address);
             const currentIndex = await contract.getCurrentGuardianSetIndex();
             const guardianSet = await contract.getGuardianSet();
 

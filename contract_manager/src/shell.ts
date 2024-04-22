@@ -9,7 +9,7 @@ repl.evalCode(
     "import { SuiChain, CosmWasmChain, AptosChain, EvmChain } from './src/chains';" +
     "import { SuiPriceFeedContract } from './src/contracts/sui';" +
     "import { WormholeCosmWasmContract, CosmWasmPriceFeedContract } from './src/contracts/cosmwasm';" +
-    "import { WormholeEvmContract, EvmPriceFeedContract } from './src/contracts/evm';" +
+    "import { EvmWormholeContract, EvmPriceFeedContract } from './src/contracts/evm';" +
     "import { WormholeAptosContract, AptosPriceFeedContract } from './src/contracts/aptos';" +
     "import { DefaultStore } from './src/store';" +
     "import { toPrivateKey } from './src/base';" +
