@@ -13,7 +13,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@images/*": ["./images/*"],
+      "xc-admin-common": ["../xc_admin_common/src"]
+    }
   },
   "include": [
     "next-env.d.ts",

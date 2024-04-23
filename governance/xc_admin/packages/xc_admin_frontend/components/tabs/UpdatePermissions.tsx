@@ -21,14 +21,13 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  WORMHOLE_ADDRESS,
   UPGRADE_MULTISIG,
   MultisigVault,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
-import CopyIcon from '../../images/icons/copy.inline.svg'
+import CopyIcon from '@images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
@@ -336,7 +335,7 @@ const UpdatePermissions = () => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads) {
+    if (connected && squads && connection) {
       const provider = new AnchorProvider(
         connection,
         squads.wallet as Wallet,
