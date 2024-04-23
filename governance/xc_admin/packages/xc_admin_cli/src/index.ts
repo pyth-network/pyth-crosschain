@@ -105,7 +105,7 @@ const multisigCommand = (name: string, description: string) =>
     )
     .option(
       "-u, --rpc-url-override <string>",
-      "RPC URL to override the default for the cluster. Make sure this is an RPC URL of the cluster where the multisig lives. For Pythnet proposals it should be a Solana Mainnet RPC URL. "
+      "RPC URL to override the default for the cluster. Make sure this is an RPC URL of the cluster where the multisig lives. For Pythnet proposals it should be a Solana Mainnet RPC URL."
     );
 
 program
