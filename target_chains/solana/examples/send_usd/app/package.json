@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "send_usd",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
