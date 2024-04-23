@@ -22,6 +22,6 @@ pub struct Options {
     /// Pyth mapping account address.
     #[arg(long = "mapping-address")]
     #[arg(default_value = DEFAULT_PYTHNET_MAPPING_ADDR)]
-    #[arg(env = "MAPPING_ADDRESS")]
+    #[arg(env = "PYTHNET_MAPPING_ADDRESS")]
     pub mapping_addr: Pubkey,
 }
