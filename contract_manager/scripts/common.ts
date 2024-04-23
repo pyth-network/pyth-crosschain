@@ -190,10 +190,7 @@ export function getSelectedChains(argv: {
  */
 export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
-    if (
-      contract instanceof EvmEntropyContract &&
-      contract.getChain().getId() === chain.getId()
-    ) {
+    if (contract.getChain().getId() === chain.getId()) {
       return contract;
     }
   }
