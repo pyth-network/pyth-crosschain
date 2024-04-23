@@ -25,7 +25,13 @@ jobs:
         uses: foundry-rs/setup-snfoundry@v3
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
+      - name: Install Starkli
+        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
+      - name: Install Katana
+        run: curl -L https://install.dojoengine.org | bash && PATH="$PATH:$HOME/.config/.dojo/bin" dojoup -v $(awk '/dojo/{print $2}' .tool-versions)
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests
         run: snforge test
+      - name: Test local deployment script
+        run: bash -c 'PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/local_deploy'
