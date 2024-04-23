@@ -8,11 +8,14 @@ import {
 } from "./chains";
 import {
   AptosPriceFeedContract,
+  AptosWormholeContract,
   CosmWasmPriceFeedContract,
+  CosmWasmWormholeContract,
   EvmEntropyContract,
   EvmPriceFeedContract,
   EvmWormholeContract,
   SuiPriceFeedContract,
+  WormholeContract,
 } from "./contracts";
 import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
@@ -24,7 +27,7 @@ export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
-  public wormhole_contracts: Record<string, EvmWormholeContract> = {};
+  public wormhole_contracts: Record<string, WormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
 
@@ -117,9 +120,11 @@ export class Store {
   loadAllContracts() {
     const allContractClasses = {
       [CosmWasmPriceFeedContract.type]: CosmWasmPriceFeedContract,
+      [CosmWasmWormholeContract.type]: CosmWasmWormholeContract,
       [SuiPriceFeedContract.type]: SuiPriceFeedContract,
       [EvmPriceFeedContract.type]: EvmPriceFeedContract,
       [AptosPriceFeedContract.type]: AptosPriceFeedContract,
+      [AptosWormholeContract.type]: AptosWormholeContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
       [EvmWormholeContract.type]: EvmWormholeContract,
     };
@@ -144,7 +149,7 @@ export class Store {
           );
         if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
-        } else if (chainContract instanceof EvmWormholeContract) {
+        } else if (chainContract instanceof WormholeContract) {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else {
           this.contracts[chainContract.getId()] = chainContract;

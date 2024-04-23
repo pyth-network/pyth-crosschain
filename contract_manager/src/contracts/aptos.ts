@@ -36,6 +36,20 @@ export class AptosWormholeContract extends WormholeContract {
     };
   }
 
+  static fromJson(
+    chain: Chain,
+    parsed: {
+      type: string;
+      address: string;
+    }
+  ): AptosWormholeContract {
+    if (parsed.type !== AptosWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof AptosChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new AptosWormholeContract(chain, parsed.address);
+  }
+
   constructor(public chain: AptosChain, public address: string) {
     super();
   }

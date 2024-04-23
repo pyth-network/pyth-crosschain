@@ -57,6 +57,17 @@ export class CosmWasmWormholeContract extends WormholeContract {
     };
   }
 
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): CosmWasmWormholeContract {
+    if (parsed.type !== CosmWasmWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof CosmWasmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new CosmWasmWormholeContract(chain, parsed.address);
+  }
+
   constructor(public chain: CosmWasmChain, public address: string) {
     super();
   }
