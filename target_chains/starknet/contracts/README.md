@@ -17,4 +17,4 @@ Run `snforge test` in this directory to run the contract unit tests and integrat
 
 1. Install Starkli (a cli tool for Starknet) by following [the installation instructions](https://github.com/xJonathanLEI/starkli).
 2. Install Katana by following [the installation instructions](https://book.starknet.io/ch02-04-katana.html).
-3. Run the setup script.
+3. Run the `deploy/local_deploy` setup script.
