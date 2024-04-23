@@ -26,12 +26,6 @@ require("@solana/wallet-adapter-react-ui/styles.css");
 
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
-const ETH_PRICE_FEED_ID =
-  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
-const BTC_PRICE_FEED_ID =
-  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
-const BOBA_PRICE_FEED_ID =
-  "0xd1e9cff9b8399f9867819a3bf1aa8c2598234eecfd36ddc3a7bc7848432184b5";
 async function postPriceUpdate(connection: Connection, wallet?: AnchorWallet) {
   if (wallet === undefined) {
     return;
