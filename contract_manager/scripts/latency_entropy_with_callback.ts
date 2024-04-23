@@ -18,7 +18,7 @@ const parser = yargs(hideBin(process.argv))
     chain: {
       type: "string",
       demandOption: true,
-      desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
+      desc: "test latency for the contract on this chain",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   });
