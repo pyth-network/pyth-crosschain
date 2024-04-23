@@ -92,7 +92,7 @@ async function postPriceUpdate(connection: Connection, wallet?: AnchorWallet) {
 }
 
 function Button() {
-  const connection = new Connection("http://devnet.xyz.pyth.network");
+  const connection = new Connection("https://api.devnet.solana.com");
   const wallet = useAnchorWallet();
 
   return (
