@@ -26,7 +26,7 @@ jobs:
       - name: Install Starkli
         run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v 0.2.8
       - name: Install Katana
-        run: curl -L https://install.dojoengine.org | bash && cat /home/runner/.bashrc && dojoup -v 0.6.0
+        run: curl -L https://install.dojoengine.org | bash && PATH="$PATH:$HOME/.config/.dojo/bin" dojoup -v 0.6.0
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests
