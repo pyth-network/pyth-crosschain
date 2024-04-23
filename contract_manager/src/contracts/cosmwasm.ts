@@ -38,7 +38,7 @@ export interface DeploymentConfig {
   fee: { amount: string; denom: string };
 }
 
-export class WormholeCosmWasmContract extends WormholeContract {
+export class CosmWasmWormholeContract extends WormholeContract {
   static type = "CosmWasmWormholeContract";
 
   getId(): string {
@@ -46,14 +46,14 @@ export class WormholeCosmWasmContract extends WormholeContract {
   }
 
   getType(): string {
-    return WormholeCosmWasmContract.type;
+    return CosmWasmWormholeContract.type;
   }
 
   toJson() {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: WormholeCosmWasmContract.type,
+      type: CosmWasmWormholeContract.type,
     };
   }
 
@@ -328,10 +328,10 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     return { id: result.txHash, info: result };
   }
 
-  async getWormholeContract(): Promise<WormholeCosmWasmContract> {
+  async getWormholeContract(): Promise<CosmWasmWormholeContract> {
     const config = await this.getConfig();
     const wormholeAddress = config.config_v1.wormhole_contract;
-    return new WormholeCosmWasmContract(this.chain, wormholeAddress);
+    return new CosmWasmWormholeContract(this.chain, wormholeAddress);
   }
 
   async getUpdateFee(msgs: string[]): Promise<Coin> {

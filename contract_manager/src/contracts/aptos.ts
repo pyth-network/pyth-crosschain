@@ -17,7 +17,7 @@ type GuardianSet = {
   index: { number: string };
 };
 
-export class WormholeAptosContract extends WormholeContract {
+export class AptosWormholeContract extends WormholeContract {
   static type = "AptosWormholeContract";
 
   getId(): string {
@@ -25,14 +25,14 @@ export class WormholeAptosContract extends WormholeContract {
   }
 
   getType(): string {
-    return WormholeAptosContract.type;
+    return AptosWormholeContract.type;
   }
 
   toJson() {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: WormholeAptosContract.type,
+      type: AptosWormholeContract.type,
     };
   }
 
@@ -142,8 +142,8 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
 
-  public getWormholeContract(): WormholeAptosContract {
-    return new WormholeAptosContract(this.chain, this.wormholeStateId);
+  public getWormholeContract(): AptosWormholeContract {
+    return new AptosWormholeContract(this.chain, this.wormholeStateId);
   }
 
   async executeUpdatePriceFeed(
