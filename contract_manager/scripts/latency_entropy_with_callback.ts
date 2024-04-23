@@ -37,7 +37,7 @@ async function main() {
     provider,
     privateKey
   );
-  console.log("Request tx hash  : ", requestResponse.transactionHash);
+  console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
   // Read the sequence number for the request from the transaction events.
   const sequenceNumber =
     requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber;
@@ -71,6 +71,11 @@ async function main() {
       console.log(`Random number    : ${event.returnValues.randomNumber}`);
       const endTime = Date.now();
       console.log(`Fortuna Latency  : ${endTime - startTime}ms`);
+      console.log(
+        `Revealed after   : ${
+          currentBlock - requestResponse.blockNumber
+        } blocks`
+      );
       break;
     }
 
