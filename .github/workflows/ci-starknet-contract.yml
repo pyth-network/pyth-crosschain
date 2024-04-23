@@ -4,8 +4,6 @@ on:
     paths:
       - target_chains/starknet/contracts/**
   push:
-    branches:
-      - main
     paths:
       - target_chains/starknet/contracts/**
 jobs:
@@ -25,7 +23,13 @@ jobs:
         uses: foundry-rs/setup-snfoundry@v3
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
+      - name: Install Starkli
+        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v 0.2.8
+      - name: Install Katana
+        run: curl -L https://install.dojoengine.org | bash && dojoup -v 0.6.0
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests
         run: snforge test
+      - name: Test local deployment script
+        run: target_chains/starknet/contracts/deploy/local_deploy
