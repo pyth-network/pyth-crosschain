@@ -608,11 +608,12 @@ export class EvmEntropyContract extends Storable {
         userCommitment
       );
     } else {
+      const useBlockHash = false;
       transactionObject = contract.methods.request(
         provider,
         userCommitment,
-        false
-      ); // false for useBlockHash
+        useBlockHash
+      );
     }
 
     return this.chain.estiamteAndSendTransaction(transactionObject, {
