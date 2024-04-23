@@ -19,9 +19,9 @@ pub struct Options {
     #[arg(env = "PYTHNET_HTTP_ADDR")]
     pub http_addr: String,
 
-    /// Pyth mapping account address.
-    #[arg(long = "mapping-address")]
+    /// Pyth mapping account address on Pythnet.
+    #[arg(long = "pythnet-mapping-addr")]
     #[arg(default_value = DEFAULT_PYTHNET_MAPPING_ADDR)]
-    #[arg(env = "PYTHNET_MAPPING_ADDRESS")]
+    #[arg(env = "PYTHNET_MAPPING_ADDR")]
     pub mapping_addr: Pubkey,
 }
