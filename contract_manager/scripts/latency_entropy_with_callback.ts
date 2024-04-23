@@ -6,8 +6,8 @@ import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Requests and reveals a random number from an entropy contract while measuing the\n" +
-      "latency between request submission and request fulfillment by the Fortuna keeper service.\n" +
+    "Requests a random number from an entropy contract and measures the\n" +
+      "latency between request submission and fulfillment by the Fortuna keeper service.\n" +
       "Usage: $0 --contract <entropy_contract_id> --private-key <private-key>"
   )
   .options({
