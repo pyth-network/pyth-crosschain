@@ -550,6 +550,8 @@ export const Proposal = ({
                                 ? instruction.args[key]
                                 : instruction.args[key] instanceof Uint8Array
                                 ? instruction.args[key].toString('hex')
+                                : typeof instruction.args[key] === 'bigint'
+                                ? instruction.args[key].toString()
                                 : JSON.stringify(instruction.args[key])}
                             </div>
                           )}
