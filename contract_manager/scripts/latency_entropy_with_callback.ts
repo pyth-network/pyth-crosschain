@@ -32,10 +32,11 @@ async function main() {
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
   const privateKey = toPrivateKey(argv.privateKey);
-  const requestResponse = await contract.requestRandomnessWithCallback(
+  const requestResponse = await contract.requestRandomness(
     userRandomNumber,
     provider,
-    privateKey
+    privateKey,
+    true // with callback
   );
   console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
   // Read the sequence number for the request from the transaction events.

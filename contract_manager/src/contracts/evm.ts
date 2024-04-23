@@ -589,41 +589,32 @@ export class EvmEntropyContract extends Storable {
     return web3.utils.randomHex(32);
   }
 
-  async requestRandomnessWithCallback(
-    userRandomNumber: string,
-    provider: string,
-    senderPrivateKey: PrivateKey
-  ) {
-    const web3 = new Web3(this.chain.getRpcUrl());
-    const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
-    const fee = await contract.methods.getFee(provider).call();
-    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
-    const transactionObject = contract.methods.requestWithCallback(
-      provider,
-      userRandomNumber
-    );
-    return this.chain.estiamteAndSendTransaction(transactionObject, {
-      from: address,
-      value: fee,
-    });
-  }
-
   async requestRandomness(
     userRandomNumber: string,
     provider: string,
-    senderPrivateKey: PrivateKey
+    senderPrivateKey: PrivateKey,
+    withCallback?: boolean
   ) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const userCommitment = web3.utils.keccak256(userRandomNumber);
     const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
     const fee = await contract.methods.getFee(provider).call();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
-    const useBlockHash = false;
-    const transactionObject = contract.methods.request(
-      provider,
-      userCommitment,
-      useBlockHash
-    );
+
+    let transactionObject;
+    if (withCallback) {
+      transactionObject = contract.methods.requestWithCallback(
+        provider,
+        userCommitment
+      );
+    } else {
+      transactionObject = contract.methods.request(
+        provider,
+        userCommitment,
+        false
+      ); // false for useBlockHash
+    }
+
     return this.chain.estiamteAndSendTransaction(transactionObject, {
       from: address,
       value: fee,
