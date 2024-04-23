@@ -65,6 +65,7 @@ export const RECEIVER_CHAINS = {
   blast: 60046,
   merlin: 60047,
   parallel: 60048,
+  iota: 60049,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -140,6 +141,8 @@ export const RECEIVER_CHAINS = {
   rol_testnet: 50065,
   morph_testnet: 50066,
   sei_evm_devnet: 50067,
+  boba_sepolia: 50068,
+  astar_zkyoto_testnet: 50069,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

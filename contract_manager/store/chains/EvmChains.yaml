@@ -317,6 +317,11 @@
   rpcUrl: https://goerli.boba.network
   networkId: 2888
   type: EvmChain
+- id: boba_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.boba.network
+  networkId: 28882
+  type: EvmChain
 - id: manta
   mainnet: true
   rpcUrl: https://pacific-rpc.manta.network/http
@@ -366,6 +371,11 @@
   mainnet: false
   rpcUrl: https://rpc.zkatana.gelato.digital
   networkId: 1261120
+  type: EvmChain
+- id: astar_zkyoto_testnet
+  mainnet: false
+  rpcUrl: https://rpc.startale.com/zkyoto
+  networkId: 6038361
   type: EvmChain
 - id: astar_zkevm
   mainnet: true
@@ -543,4 +553,9 @@
   mainnet: false
   rpcUrl: https://rpc-testnet.morphl2.io
   networkId: 2710
+  type: EvmChain
+- id: iota
+  mainnet: true
+  rpcUrl: https://json-rpc.evm.iotaledger.net
+  networkId: 8822
   type: EvmChain
