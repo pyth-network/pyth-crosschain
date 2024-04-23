@@ -30,19 +30,20 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
       const type = StakeInstruction.decodeInstructionType(instruction);
       switch (type) {
         case "Deactivate":
-          const decoded = StakeInstruction.decodeDeactivate(instruction);
+          const decodedDeactivate =
+            StakeInstruction.decodeDeactivate(instruction);
           return new SolanaStakingMultisigInstruction(
             "Deactivate",
             {},
             {
               named: {
                 stakePubkey: {
-                  pubkey: decoded.stakePubkey,
+                  pubkey: decodedDeactivate.stakePubkey,
                   isSigner: false,
                   isWritable: true,
                 },
                 authorizedPubkey: {
-                  pubkey: decoded.authorizedPubkey,
+                  pubkey: decodedDeactivate.authorizedPubkey,
                   isSigner: true,
                   isWritable: false,
                 },
@@ -54,6 +55,31 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
         case "Authorize":
         case "AuthorizeWithSeed":
         case "Delegate":
+          const decodedDelegate = StakeInstruction.decodeDelegate(instruction);
+          return new SolanaStakingMultisigInstruction(
+            "Delegate",
+            {},
+            {
+              named: {
+                stakePubkey: {
+                  pubkey: decodedDelegate.stakePubkey,
+                  isSigner: false,
+                  isWritable: true,
+                },
+                votePubkey: {
+                  pubkey: decodedDelegate.votePubkey,
+                  isSigner: false,
+                  isWritable: false,
+                },
+                authorizedPubkey: {
+                  pubkey: decodedDelegate.authorizedPubkey,
+                  isSigner: true,
+                  isWritable: false,
+                },
+              },
+              remaining: [],
+            }
+          );
         case "Initialize":
         case "Merge":
         case "Split":
