@@ -1,34 +1,34 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, toPrivateKey } from "../src";
-import { COMMON_DEPLOY_OPTIONS } from "./common";
+import { toPrivateKey } from "../src";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  findEntropyContract,
+  findEvmChain,
+} from "./common";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Requests a random number from an entropy contract and measures the\n" +
       "latency between request submission and fulfillment by the Fortuna keeper service.\n" +
-      "Usage: $0 --contract <entropy_contract_id> --private-key <private-key>"
+      "Usage: $0 --chain-id <chain-id> --private-key <private-key>"
   )
   .options({
-    contract: {
+    chain: {
       type: "string",
       demandOption: true,
-      desc: "Contract to test latency for",
+      desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   });
 
 async function main() {
   const argv = await parser.argv;
-  const contract = DefaultStore.entropy_contracts[argv.contract];
-  if (!contract) {
-    throw new Error(
-      `Contract ${argv.contract} not found. Contracts found: ${Object.keys(
-        DefaultStore.entropy_contracts
-      )}`
-    );
-  }
+
+  const chain = findEvmChain(argv.chain);
+  const contract = findEntropyContract(chain);
+
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
   const privateKey = toPrivateKey(argv.privateKey);

@@ -1,4 +1,4 @@
-import { DefaultStore, EvmChain, PrivateKey } from "../src";
+import { DefaultStore, EvmChain, EvmEntropyContract, PrivateKey } from "../src";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import Web3 from "web3";
@@ -180,4 +180,38 @@ export function getSelectedChains(argv: {
       throw new Error("All chains must be either mainnet or testnet");
   }
   return selectedChains;
+}
+
+/**
+ * Finds the entropy contract for a given EVM chain.
+ * @param chain The EVM chain to find the entropy contract for.
+ * @returns The entropy contract for the given EVM chain.
+ * @throws an error if the entropy contract is not found for the given EVM chain.
+ */
+export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
+  for (const contract of Object.values(DefaultStore.entropy_contracts)) {
+    if (
+      contract instanceof EvmEntropyContract &&
+      contract.getChain().getId() === chain.getId()
+    ) {
+      return contract;
+    }
+  }
+  throw new Error(`Entropy contract not found for chain ${chain.getId()}`);
+}
+
+/**
+ * Finds an EVM chain by its name.
+ * @param chainName The name of the chain to find.
+ * @returns The EVM chain instance.
+ * @throws an error if the chain is not found or is not an EVM chain.
+ */
+export function findEvmChain(chainName: string): EvmChain {
+  const chain = DefaultStore.chains[chainName];
+  if (!chain) {
+    throw new Error(`Chain ${chainName} not found`);
+  } else if (!(chain instanceof EvmChain)) {
+    throw new Error(`Chain ${chainName} is not an EVM chain`);
+  }
+  return chain;
 }
