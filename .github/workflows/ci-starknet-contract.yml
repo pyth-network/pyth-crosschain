@@ -24,9 +24,9 @@ jobs:
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
-        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v 0.2.8
+        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
       - name: Install Katana
-        run: curl -L https://install.dojoengine.org | bash && PATH="$PATH:$HOME/.config/.dojo/bin" dojoup -v 0.6.0
+        run: curl -L https://install.dojoengine.org | bash && PATH="$PATH:$HOME/.config/.dojo/bin" dojoup -v $(awk '/dojo/{print $2}' .tool-versions)
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests

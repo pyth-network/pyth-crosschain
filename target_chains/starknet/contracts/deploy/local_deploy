@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Deploys Wormhole and Pyth contracts to a local Katana node.
+
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -11,7 +13,6 @@ export STARKNET_RPC=http://0.0.0.0:5050
 sleep="sleep 0.3"
 
 cd "$(dirname "$0")/.."
-
 scarb build
 wormhole_hash=$(starkli declare target/dev/pyth_wormhole.contract_class.json)
 
