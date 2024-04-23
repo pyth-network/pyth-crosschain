@@ -33,4 +33,3 @@ jobs:
         run: snforge test
       - name: Test local deployment script
         run: target_chains/starknet/contracts/deploy/local_deploy
-
