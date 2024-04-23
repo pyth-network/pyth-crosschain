@@ -98,15 +98,12 @@ async function deployWormholeReceiverContracts(
     [receiverSetupAddr, initData]
   );
 
-  const evmWormholeContract = new EvmWormholeContract(
-    chain,
-    wormholeReceiverAddr
-  );
+  const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
 
   if (config.type === "stable") {
     console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
     // TODO: Add a way to pass gas configs to this
-    await evmWormholeContract.syncMainnetGuardianSets(config.privateKey);
+    await wormholeContract.syncMainnetGuardianSets(config.privateKey);
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
