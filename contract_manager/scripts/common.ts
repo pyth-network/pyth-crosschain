@@ -184,9 +184,9 @@ export function getSelectedChains(argv: {
 
 /**
  * Finds the entropy contract for a given EVM chain.
- * @param chain The EVM chain to find the entropy contract for.
+ * @param {EvmChain} chain The EVM chain to find the entropy contract for.
  * @returns The entropy contract for the given EVM chain.
- * @throws an error if the entropy contract is not found for the given EVM chain.
+ * @throws {Error} an error if the entropy contract is not found for the given EVM chain.
  */
 export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
@@ -199,9 +199,9 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
 
 /**
  * Finds an EVM chain by its name.
- * @param chainName The name of the chain to find.
+ * @param {string} chainName The name of the chain to find.
  * @returns The EVM chain instance.
- * @throws an error if the chain is not found or is not an EVM chain.
+ * @throws {Error} an error if the chain is not found or is not an EVM chain.
  */
 export function findEvmChain(chainName: string): EvmChain {
   const chain = DefaultStore.chains[chainName];
