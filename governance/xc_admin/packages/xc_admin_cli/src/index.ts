@@ -159,7 +159,11 @@ multisigCommand(
       })
       .instruction();
 
-    await vault.proposeInstructions([proposalInstruction], targetCluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -183,7 +187,11 @@ multisigCommand(
     })
     .instruction();
 
-  await vault.proposeInstructions([proposalInstruction], targetCluster);
+  await vault.proposeInstructions(
+    [proposalInstruction],
+    targetCluster,
+    DEFAULT_PRIORITY_FEE_CONFIG
+  );
 });
 
 multisigCommand(
@@ -214,7 +222,11 @@ multisigCommand(
       })
       .instruction();
 
-    await vault.proposeInstructions([proposalInstruction], targetCluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -255,7 +267,11 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
       ],
     };
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -291,7 +307,11 @@ multisigCommand(
       ],
     };
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -320,7 +340,11 @@ multisigCommand(
       []
     );
 
-    await vault.proposeInstructions(instructions, cluster);
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -374,7 +398,11 @@ multisigCommand(
         priceAccount,
       })
       .instruction();
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 program
@@ -465,7 +493,11 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
         BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
       );
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("propose-sol-transfer", "Propose sol transfer")
@@ -484,7 +516,11 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
       lamports: amount * LAMPORTS_PER_SOL,
     });
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
@@ -558,7 +594,11 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
       }
     }
 
-    vault.proposeInstructions(proposalInstructions, options.cluster);
+    vault.proposeInstructions(
+      proposalInstructions,
+      options.cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 /**
