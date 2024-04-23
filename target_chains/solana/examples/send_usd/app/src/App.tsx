@@ -45,10 +45,7 @@ async function postPriceUpdate(connection: Connection, wallet?: AnchorWallet) {
       wallet: wallet as Wallet,
     });
 
-    const priceUpdateData = await priceServiceConnection.getVaa(
-      SOL_PRICE_FEED_ID,
-      1702285724
-    );
+    const priceUpdateData = await priceServiceConnection.getLatestVaas([SOL_PRICE_FEED_ID])
 
     const sendUsdApp = new Program<SendUSDApp>(
       IDL as SendUSDApp,
