@@ -1,11 +1,22 @@
 import Web3 from 'web3'
+import { StateMutabilityType, AbiType } from 'web3-utils'
 
 // Note: Currently, the ABI only contains the functions which take in primitives as inputs.
 // Though it is possible for EVM functions to accept structs as one of the inputs.
 // We don't support that right now. There is no requirement for that now or in the
 // foreseeable future. Adding it now will add unnecessary complexity.
 // It will be added when needed.
-const ABI = [
+const ABI: {
+  inputs: {
+    internalType: string
+    name: string
+    type: string
+  }[]
+  name: string
+  outputs: never[]
+  stateMutability: StateMutabilityType
+  type: AbiType
+}[] = [
   {
     inputs: [],
     name: 'acceptOwnership',
