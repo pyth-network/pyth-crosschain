@@ -32,4 +32,4 @@ jobs:
       - name: Run tests
         run: snforge test
       - name: Test local deployment script
-        run: deploy/local_deploy
+        run: . ~/.config/.starkli/env && PATH="$PATH:$HOME/.config/.dojo/bin" deploy/local_deploy
