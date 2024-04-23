@@ -325,7 +325,7 @@ multisigCommand(
 
 multisigCommand(
   "delegate-stake",
-  "Delegate the stake to the given vote account"
+  "Delegate a stake account to the given vote account"
 )
   .requiredOption("-s, --stake-account <pubkey>", "stake account to delegate")
   .requiredOption("-d, --vote-account <pubkey>", "vote account to delegate to")
@@ -339,14 +339,14 @@ multisigCommand(
     const stakeAccount: PublicKey = new PublicKey(options.stakeAccount);
     const voteAccount: PublicKey = new PublicKey(options.voteAccount);
 
-    const instruction = StakeProgram.delegate({
+    const instructions = StakeProgram.delegate({
       stakePubkey: stakeAccount,
       authorizedPubkey,
       votePubkey: voteAccount,
-    }).instructions[0];
+    }).instructions;
 
     await vault.proposeInstructions(
-      [instruction],
+      instructions,
       cluster,
       DEFAULT_PRIORITY_FEE_CONFIG
     );
