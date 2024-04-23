@@ -1,3 +1,5 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -15,6 +17,11 @@ const nextConfig = {
       test: /\.inline\.svg$/,
       loader: require.resolve('@svgr/webpack'),
     })
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@images': path.resolve(__dirname, 'images/'),
+    }
 
     return config
   },

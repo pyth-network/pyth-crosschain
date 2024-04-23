@@ -1,6 +1,6 @@
 use {
     super::State,
-    crate::aggregate::{
+    crate::state::aggregate::{
         wormhole_merkle::WormholeMerkleState,
         AccumulatorMessages,
         ProofSet,
@@ -132,16 +132,10 @@ impl<'a> From<&'a State> for &'a CacheState {
     }
 }
 
+#[async_trait::async_trait]
 pub trait Cache {
-    async fn message_state_keys(&self) -> Vec<MessageStateKey>;
     async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
     async fn prune_removed_keys(&self, current_keys: HashSet<MessageStateKey>);
-    async fn fetch_message_states(
-        &self,
-        ids: Vec<FeedId>,
-        request_time: RequestTime,
-        filter: MessageStateFilter,
-    ) -> Result<Vec<MessageState>>;
     async fn store_accumulator_messages(
         &self,
         accumulator_messages: AccumulatorMessages,
@@ -152,8 +146,16 @@ pub trait Cache {
         wormhole_merkle_state: WormholeMerkleState,
     ) -> Result<()>;
     async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>>;
+    async fn message_state_keys(&self) -> Vec<MessageStateKey>;
+    async fn fetch_message_states(
+        &self,
+        ids: Vec<FeedId>,
+        request_time: RequestTime,
+        filter: MessageStateFilter,
+    ) -> Result<Vec<MessageState>>;
 }
 
+#[async_trait::async_trait]
 impl<T> Cache for T
 where
     for<'a> &'a T: Into<&'a CacheState>,
@@ -322,9 +324,9 @@ async fn retrieve_message_state(
 mod test {
     use {
         super::*,
-        crate::{
+        crate::state::{
             aggregate::wormhole_merkle::WormholeMerkleMessageProof,
-            state::test::setup_state,
+            test::setup_state,
         },
         pyth_sdk::UnixTimestamp,
         pythnet_sdk::{

@@ -39,11 +39,6 @@
   rpcUrl: https://evm-t3.cronos.org
   networkId: 338
   type: EvmChain
-- id: zksync_goerli
-  mainnet: false
-  rpcUrl: https://zksync2-testnet.zksync.dev
-  networkId: 280
-  type: EvmChain
 - id: canto_testnet
   mainnet: false
   rpcUrl: https://canto-testnet.plexnode.wtf
@@ -51,7 +46,7 @@
   type: EvmChain
 - id: polygon_zkevm_testnet
   mainnet: false
-  rpcUrl: https://rpc.public.zkevm-test.net/
+  rpcUrl: https://rpc.public.zkevm-test.net
   networkId: 1442
   type: EvmChain
 - id: polygon_blackberry
@@ -82,7 +77,7 @@
   type: EvmChain
 - id: neon
   mainnet: true
-  rpcUrl: https://neon-proxy-mainnet.solana.p2p.org
+  rpcUrl: https://neon-evm.drpc.org
   networkId: 245022934
   type: EvmChain
 - id: fantom
@@ -173,11 +168,6 @@
   mainnet: true
   rpcUrl: https://evm.confluxrpc.org
   networkId: 1030
-  type: EvmChain
-- id: optimism_goerli
-  mainnet: false
-  rpcUrl: https://rpc.ankr.com/optimism_testnet
-  networkId: 420
   type: EvmChain
 - id: celo
   mainnet: true
@@ -289,7 +279,7 @@
   type: EvmChain
 - id: horizen_eon
   mainnet: true
-  rpcUrl: https://eon-rpc.horizenlabs.io/ethv1
+  rpcUrl: https://rpc.ankr.com/horizen_eon
   networkId: 7332
   type: EvmChain
 - id: horizen_gobi
@@ -327,6 +317,11 @@
   rpcUrl: https://goerli.boba.network
   networkId: 2888
   type: EvmChain
+- id: boba_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.boba.network
+  networkId: 28882
+  type: EvmChain
 - id: manta
   mainnet: true
   rpcUrl: https://pacific-rpc.manta.network/http
@@ -334,7 +329,7 @@
   type: EvmChain
 - id: manta_testnet
   mainnet: false
-  rpcUrl: https://pacific-rpc.testnet.manta.network/http
+  rpcUrl: https://manta-pacific-testnet.drpc.org
   networkId: 3441005
   type: EvmChain
 - id: manta_sepolia
@@ -377,6 +372,11 @@
   rpcUrl: https://rpc.zkatana.gelato.digital
   networkId: 1261120
   type: EvmChain
+- id: astar_zkyoto_testnet
+  mainnet: false
+  rpcUrl: https://rpc.startale.com/zkyoto
+  networkId: 6038361
+  type: EvmChain
 - id: astar_zkevm
   mainnet: true
   rpcUrl: https://rpc.startale.com/astar-zkevm
@@ -393,14 +393,14 @@
   networkId: 1116
   type: EvmChain
   nativeToken: CORE
-- id: tomochain
+- id: viction
   mainnet: true
-  rpcUrl: https://rpc.tomochain.com
+  rpcUrl: https://viction.blockpi.network/v1/rpc/public
   networkId: 88
   type: EvmChain
-- id: tomochain_testnet
+- id: viction_testnet
   mainnet: false
-  rpcUrl: https://rpc.testnet.tomochain.com
+  rpcUrl: https://rpc-testnet.viction.xyz
   networkId: 89
   type: EvmChain
 - id: mode_testnet
@@ -486,7 +486,7 @@
   type: EvmChain
 - id: sei_evm_devnet
   mainnet: false
-  rpcUrl: https://evm-devnet.seinetwork.io
+  rpcUrl: https://evm-rpc-arctic-1.sei-apis.com
   networkId: 713715
   type: EvmChain
 - id: fantom_sonic_testnet
@@ -553,4 +553,9 @@
   mainnet: false
   rpcUrl: https://rpc-testnet.morphl2.io
   networkId: 2710
+  type: EvmChain
+- id: iota
+  mainnet: true
+  rpcUrl: https://json-rpc.evm.iotaledger.net
+  networkId: 8822
   type: EvmChain

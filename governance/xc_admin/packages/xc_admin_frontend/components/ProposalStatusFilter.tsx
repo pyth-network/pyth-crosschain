@@ -3,9 +3,10 @@ import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect } from 'react'
 import {
   DEFAULT_STATUS_FILTER,
+  type ProposalStatusFilter,
   StatusFilterContext,
 } from '../contexts/StatusFilterContext'
-import Arrow from '../images/icons/down.inline.svg'
+import Arrow from '@images/icons/down.inline.svg'
 
 const ProposalStatusFilter = () => {
   const router = useRouter()
@@ -31,11 +32,11 @@ const ProposalStatusFilter = () => {
 
   useEffect(() => {
     router.query && router.query.status
-      ? setStatusFilter(router.query.status as string)
+      ? setStatusFilter(router.query.status as ProposalStatusFilter)
       : setStatusFilter(DEFAULT_STATUS_FILTER)
   }, [setStatusFilter, router])
 
-  const statuses = [
+  const statuses: ProposalStatusFilter[] = [
     'all',
     'active',
     'executed',

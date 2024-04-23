@@ -1,6 +1,6 @@
 use {
     super::doc_examples,
-    crate::aggregate::{
+    crate::state::aggregate::{
         PriceFeedUpdate,
         PriceFeedsWithUpdateData,
         Slot,

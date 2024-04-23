@@ -1,0 +1,13 @@
+{
+  "endpoint": "https://api.mainnet-beta.solana.com",
+  "keypair-file": "./id.json",
+  "shard-id": 1,
+  "jito-endpoint": "mainnet.block-engine.jito.wtf",
+  "jito-keypair-file": "./jito.json",
+  "jito-tip-lamports": "100000",
+  "jito-bundle-size": "5",
+  "price-config-file": "./price-config.yaml",
+  "price-service-endpoint": "https://hermes.pyth.network/",
+  "pyth-contract-address": "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
+  "pushing-frequency": "30"
+}

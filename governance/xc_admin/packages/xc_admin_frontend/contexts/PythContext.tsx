@@ -5,16 +5,15 @@ import React, {
   useMemo,
   useState,
 } from 'react'
-import usePyth from '../hooks/usePyth'
+import { usePyth } from '../hooks/usePyth'
 import { RawConfig } from '../hooks/usePyth'
+import { Connection } from '@solana/web3.js'
 
-// TODO: fix any
 type AccountKeyToSymbol = { [key: string]: string }
 interface PythContextProps {
   rawConfig: RawConfig
   dataIsLoading: boolean
-  error: any
-  connection: any
+  connection?: Connection
   priceAccountKeyToSymbolMapping: AccountKeyToSymbol
   productAccountKeyToSymbolMapping: AccountKeyToSymbol
   publisherKeyToNameMapping: Record<string, Record<string, string>>
@@ -24,8 +23,6 @@ interface PythContextProps {
 const PythContext = createContext<PythContextProps>({
   rawConfig: { mappingAccounts: [] },
   dataIsLoading: true,
-  error: null,
-  connection: null,
   priceAccountKeyToSymbolMapping: {},
   productAccountKeyToSymbolMapping: {},
   publisherKeyToNameMapping: {},
@@ -44,7 +41,7 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
 }) => {
-  const { isLoading, error, connection, rawConfig } = usePyth()
+  const { isLoading, connection, rawConfig } = usePyth()
   const [
     productAccountKeyToSymbolMapping,
     setProductAccountKeyToSymbolMapping,
@@ -72,7 +69,6 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     () => ({
       rawConfig,
       dataIsLoading: isLoading,
-      error,
       connection,
       priceAccountKeyToSymbolMapping,
       productAccountKeyToSymbolMapping,
@@ -82,7 +78,6 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     [
       rawConfig,
       isLoading,
-      error,
       connection,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,

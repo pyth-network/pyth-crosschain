@@ -1,5 +1,6 @@
 use {
     super::ApiState,
+    crate::state::aggregate::Aggregates,
     axum::{
         http::StatusCode,
         response::{
@@ -93,11 +94,15 @@ impl IntoResponse for RestError {
 }
 
 /// Verify that the price ids exist in the aggregate state.
-pub async fn verify_price_ids_exist(
-    state: &ApiState,
+pub async fn verify_price_ids_exist<S>(
+    state: &ApiState<S>,
     price_ids: &[PriceIdentifier],
-) -> Result<(), RestError> {
-    let all_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
+) -> Result<(), RestError>
+where
+    S: Aggregates,
+{
+    let state = &*state.state;
+    let all_ids = Aggregates::get_price_feed_ids(state).await;
     let missing_ids = price_ids
         .iter()
         .filter(|id| !all_ids.contains(id))

@@ -1,11 +1,15 @@
 use {
     super::verify_price_ids_exist,
     crate::{
-        aggregate::RequestTime,
         api::{
             doc_examples,
             rest::RestError,
             types::PriceIdInput,
+            ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            RequestTime,
         },
     },
     anyhow::Result,
@@ -54,28 +58,28 @@ pub struct LatestVaasQueryParams {
         (status = 200, description = "VAAs retrieved successfully", body = Vec<String>, example=json!([doc_examples::vaa_example()]))
     ),
 )]
-pub async fn latest_vaas(
-    State(state): State<crate::api::ApiState>,
+pub async fn latest_vaas<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
-) -> Result<Json<Vec<String>>, RestError> {
+) -> Result<Json<Vec<String>>, RestError>
+where
+    S: Aggregates,
+{
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-
     verify_price_ids_exist(&state, &price_ids).await?;
 
-    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
-        &*state.state,
-        &price_ids,
-        RequestTime::Latest,
-    )
-    .await
-    .map_err(|e| {
-        tracing::warn!(
-            "Error getting price feeds {:?} with update data: {:?}",
-            price_ids,
-            e
-        );
-        RestError::UpdateDataNotFound
-    })?;
+    let state = &*state.state;
+    let price_feeds_with_update_data =
+        Aggregates::get_price_feeds_with_update_data(state, &price_ids, RequestTime::Latest)
+            .await
+            .map_err(|e| {
+                tracing::warn!(
+                    "Error getting price feeds {:?} with update data: {:?}",
+                    price_ids,
+                    e
+                );
+                RestError::UpdateDataNotFound
+            })?;
 
     Ok(Json(
         price_feeds_with_update_data

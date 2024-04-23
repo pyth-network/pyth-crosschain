@@ -2,7 +2,7 @@ import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import messageBuffer from 'message_buffer/idl/message_buffer.json'
 import { MessageBuffer } from 'message_buffer/idl/message_buffer'
 import axios from 'axios'
@@ -18,7 +18,6 @@ import {
   MESSAGE_BUFFER_PROGRAM_ID,
   MESSAGE_BUFFER_BUFFER_SIZE,
   PRICE_FEED_MULTISIG,
-  WORMHOLE_ADDRESS,
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
   getMaximumNumberOfPublishers,
@@ -44,8 +43,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     useState(false)
   const { cluster } = useContext(ClusterContext)
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
-  const multisigCluster: Cluster | 'localnet' = getMultisigCluster(cluster) // Move to multisig context
-  const wormholeAddress = WORMHOLE_ADDRESS[multisigCluster] // Move to multisig context
   const { isLoading: isMultisigLoading, squads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
@@ -370,7 +367,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           }
 
           // create add publisher instruction if there are any publishers
-          for (let publisherKey of newChanges.priceAccounts[0].publishers) {
+          for (const publisherKey of newChanges.priceAccounts[0].publishers) {
             instructions.push(
               await pythProgramClient.methods
                 .addPublisher(new PublicKey(publisherKey))
@@ -525,7 +522,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
           // add instructions to remove publishers
 
-          for (let publisherKey of publisherKeysToRemove) {
+          for (const publisherKey of publisherKeysToRemove) {
             instructions.push(
               await pythProgramClient.methods
                 .delPublisher(new PublicKey(publisherKey))
@@ -538,7 +535,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           }
 
           // add instructions to add new publishers
-          for (let publisherKey of publisherKeysToAdd) {
+          for (const publisherKey of publisherKeysToAdd) {
             instructions.push(
               await pythProgramClient.methods
                 .addPublisher(new PublicKey(publisherKey))
@@ -823,7 +820,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads) {
+    if (connected && squads && connection) {
       const provider = new AnchorProvider(
         connection,
         squads.wallet as Wallet,

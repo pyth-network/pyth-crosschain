@@ -53,7 +53,7 @@ export const RECEIVER_CHAINS = {
   zetachain: 60034,
   astar_zkevm: 60035,
   coredao: 60036,
-  tomochain: 60037,
+  viction: 60037,
   stacks: 60038,
   mode: 60039,
   bttc: 60040,
@@ -65,6 +65,7 @@ export const RECEIVER_CHAINS = {
   blast: 60046,
   merlin: 60047,
   parallel: 60048,
+  iota: 60049,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -111,7 +112,7 @@ export const RECEIVER_CHAINS = {
   zetachain_testnet: 50035,
   astar_zkevm_testnet: 50036,
   coredao_testnet: 50037,
-  tomochain_testnet: 50038,
+  viction_testnet: 50038,
   stacks_testnet: 50039,
   mode_testnet: 50040,
   bttc_testnet: 50041,
@@ -124,7 +125,6 @@ export const RECEIVER_CHAINS = {
   hedera_testnet: 50048,
   filecoin_calibration: 50049, // Filecoin testnet
   lightlink_pegasus_testnet: 50050,
-  sei_evm_devnet: 50051,
   fantom_sonic_testnet: 50052,
   dela_deperp_testnet: 50053,
   injective_inevm_testnet: 50054,
@@ -140,6 +140,9 @@ export const RECEIVER_CHAINS = {
   linea_sepolia: 50064,
   rol_testnet: 50065,
   morph_testnet: 50066,
+  sei_evm_devnet: 50067,
+  boba_sepolia: 50068,
+  astar_zkyoto_testnet: 50069,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

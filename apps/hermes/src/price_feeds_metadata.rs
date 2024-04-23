@@ -31,6 +31,7 @@ impl<'a> From<&'a State> for &'a PriceFeedMetaState {
     }
 }
 
+#[async_trait::async_trait]
 pub trait PriceFeedMeta {
     async fn retrieve_price_feeds_metadata(&self) -> Result<Vec<PriceFeedMetadata>>;
     async fn store_price_feeds_metadata(
@@ -44,6 +45,7 @@ pub trait PriceFeedMeta {
     ) -> Result<Vec<PriceFeedMetadata>>;
 }
 
+#[async_trait::async_trait]
 impl<T> PriceFeedMeta for T
 where
     for<'a> &'a T: Into<&'a PriceFeedMetaState>,

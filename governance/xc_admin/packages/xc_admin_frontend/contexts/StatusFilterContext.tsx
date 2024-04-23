@@ -1,27 +1,34 @@
-import { createContext, useMemo, useState } from 'react'
+import { ReactNode, createContext, useMemo, useState } from 'react'
+import { ProposalStatus } from '../components/tabs/Proposals/utils'
 
 export const DEFAULT_STATUS_FILTER = 'all'
 
+export type ProposalStatusFilter = 'all' | ProposalStatus
+
 export const StatusFilterContext = createContext<{
-  statusFilter: string
-  setStatusFilter: any
+  statusFilter: ProposalStatusFilter
+  setStatusFilter: (_statusFilter: ProposalStatusFilter) => void
 }>({
   statusFilter: DEFAULT_STATUS_FILTER,
-  setStatusFilter: {},
+  setStatusFilter: () => {},
 })
 
-export const StatusFilterProvider = (props: any) => {
-  const [statusFilter, setStatusFilter] = useState<string>(
+export const StatusFilterProvider = ({ children }: { children: ReactNode }) => {
+  const [statusFilter, setStatusFilter] = useState<ProposalStatusFilter>(
     DEFAULT_STATUS_FILTER
   )
   const contextValue = useMemo(
     () => ({
       statusFilter,
-      setStatusFilter: (statusFilter: string) => {
+      setStatusFilter: (statusFilter: ProposalStatusFilter) => {
         setStatusFilter(statusFilter)
       },
     }),
     [statusFilter]
   )
-  return <StatusFilterContext.Provider {...props} value={contextValue} />
+  return (
+    <StatusFilterContext.Provider value={contextValue}>
+      {children}
+    </StatusFilterContext.Provider>
+  )
 }

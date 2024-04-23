@@ -10,7 +10,7 @@ By default, Pyth does not automatically update the on-chain price every time the
 instead, anyone can permissionlessly update the on-chain price prior to using it.
 For more information please refer to [this document](https://docs.pyth.network/documentation/how-pyth-works).
 
-Protocols integrating with can update the on-chain Pyth prices in two different ways.
+Protocols integrating with Pyth can update the on-chain Pyth prices in two different ways.
 The first approach is on-demand updates: package a Pyth price update together with each transaction that depends on it.
 On-demand updates minimize latency and are more gas efficient, as prices are only updated on-chain when they are needed.
 
@@ -144,6 +144,33 @@ npm run start -- near \
   [--private-key-path ./payer.testnet.json] \
   [--pushing-frequency 10] \
   [--polling-frequency 5]
+
+# For Solana, using Jito (recommended)
+npm run start -- solana \
+  --endpoint https://api.mainnet-beta.solana.com \
+  --keypair-file ./id.json \
+  --shard-id 1 \
+  --jito-endpoint mainnet.block-engine.jito.wtf \
+  --jito-keypair-file ./jito.json \
+  --jito-tip-lamports 100000 \
+  --jito-bundle-size 5 \
+  --price-config-file ./price-config.yaml \
+  --price-service-endpoint https://hermes.pyth.network/ \
+  --pyth-contract-address pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT \
+  --pushing-frequency 30 \
+  [--polling-frequency 5]
+
+# For Solana, using Solana RPC
+npm run start -- solana \
+  --endpoint https://api.devnet.solana.com \
+  --keypair-file ./id.json \
+  --shard-id 1 \
+  --price-config-file ./price-config.yaml \
+  --price-service-endpoint https://hermes.pyth.network/ \
+  --pyth-contract-address pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT \
+  --pushing-frequency 30 \
+  [--polling-frequency 5]
+
 
 
 # Or, run the price pusher docker image instead of building from the source

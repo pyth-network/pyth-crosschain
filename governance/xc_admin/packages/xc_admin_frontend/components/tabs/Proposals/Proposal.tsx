@@ -1,4 +1,4 @@
-import * as Tooltip from '@radix-ui/react-tooltip'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   AccountMeta,
@@ -7,147 +7,47 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js'
+import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useRouter } from 'next/router'
-import { Fragment, useCallback, useContext, useEffect, useState } from 'react'
+import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  AnchorMultisigInstruction,
   ExecutePostedVaa,
-  getMultisigCluster,
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
-  AnchorMultisigInstruction,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
+  getMultisigCluster,
   getProgramName,
 } from 'xc_admin_common'
-import { ClusterContext } from '../../contexts/ClusterContext'
-import { useMultisigContext } from '../../contexts/MultisigContext'
-import { usePythContext } from '../../contexts/PythContext'
-import { StatusFilterContext } from '../../contexts/StatusFilterContext'
-import VerifiedIcon from '../../images/icons/verified.inline.svg'
-import WarningIcon from '../../images/icons/warning.inline.svg'
-import VotedIcon from '../../images/icons/voted.inline.svg'
-import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
-import ClusterSwitch from '../ClusterSwitch'
-import CopyText from '../common/CopyText'
-import Spinner from '../common/Spinner'
-import Loadbar from '../loaders/Loadbar'
-import ProposalStatusFilter from '../ProposalStatusFilter'
-import SquadsMesh from '@sqds/mesh'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { WormholeInstructionView } from '../InstructionViews/WormholeInstructionView'
+import { ClusterContext } from '../../../contexts/ClusterContext'
+import { useMultisigContext } from '../../../contexts/MultisigContext'
+import { usePythContext } from '../../../contexts/PythContext'
+import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetter'
 import {
   ParsedAccountPubkeyRow,
   SignerTag,
   WritableTag,
-} from '../InstructionViews/AccountUtils'
+} from '../../InstructionViews/AccountUtils'
+import { WormholeInstructionView } from '../../InstructionViews/WormholeInstructionView'
+import CopyText from '../../common/CopyText'
+import Spinner from '../../common/Spinner'
+import Loadbar from '../../loaders/Loadbar'
 
-import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
-import { getPythProgramKeyForCluster, PythCluster } from '@pythnetwork/client'
-import {
-  DEFAULT_PRIORITY_FEE_CONFIG,
-  TransactionBuilder,
-  sendTransactions,
-} from '@pythnetwork/solana-utils'
 import { Wallet } from '@coral-xyz/anchor'
-const ProposalRow = ({
-  proposal,
-  multisig,
-}: {
-  proposal: TransactionAccount
-  multisig: MultisigAccount | undefined
-}) => {
-  const status = getProposalStatus(proposal, multisig)
+import { PythCluster, getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
+import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
+import { StatusTag } from './StatusTag'
+import { getProposalStatus } from './utils'
 
-  const router = useRouter()
-
-  const handleClickIndividualProposal = useCallback(
-    (proposalPubkey: string) => {
-      router.query.proposal = proposalPubkey
-      router.push(
-        {
-          pathname: router.pathname,
-          query: router.query,
-        },
-        undefined,
-        { scroll: true }
-      )
-    },
-    [router]
-  )
-  return (
-    <div
-      className="my-2 max-h-[58px] cursor-pointer bg-[#1E1B2F] hover:bg-darkGray2"
-      onClick={() =>
-        handleClickIndividualProposal(proposal.publicKey.toBase58())
-      }
-    >
-      <div className="flex justify-between p-4">
-        <div className="flex">
-          <span className="mr-2 hidden sm:block">
-            {proposal.publicKey.toBase58()}
-          </span>
-          <span className="mr-2 sm:hidden">
-            {proposal.publicKey.toBase58().slice(0, 6) +
-              '...' +
-              proposal.publicKey.toBase58().slice(-6)}
-          </span>{' '}
-        </div>
-        <div className="flex space-x-2">
-          {proposal.approved.length > 0 && status === 'active' && (
-            <div>
-              <StatusTag
-                proposalStatus="executed"
-                text={`Approved: ${proposal.approved.length}`}
-              />
-            </div>
-          )}
-          {proposal.rejected.length > 0 && status === 'active' && (
-            <div>
-              <StatusTag
-                proposalStatus="rejected"
-                text={`Rejected: ${proposal.rejected.length}`}
-              />
-            </div>
-          )}
-          <div>
-            <StatusTag proposalStatus={status} />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const StatusTag = ({
-  proposalStatus,
-  text,
-}: {
-  proposalStatus: string
-  text?: string
-}) => {
-  return (
-    <div
-      className={`flex items-center justify-center rounded-full ${
-        proposalStatus === 'active'
-          ? 'bg-[#3C3299]'
-          : proposalStatus === 'executed'
-          ? 'bg-[#1B730E]'
-          : proposalStatus === 'cancelled'
-          ? 'bg-[#C4428F]'
-          : proposalStatus === 'rejected'
-          ? 'bg-[#CF6E42]'
-          : proposalStatus === 'expired'
-          ? 'bg-[#A52A2A]'
-          : 'bg-pythPurple'
-      } py-1 px-2 text-xs`}
-    >
-      {text || proposalStatus}
-    </div>
-  )
-}
+import VerifiedIcon from '@images/icons/verified.inline.svg'
+import VotedIcon from '@images/icons/voted.inline.svg'
+import WarningIcon from '@images/icons/warning.inline.svg'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { InstructionsSummary } from './InstructionsSummary'
 
 const IconWithTooltip = ({
   icon,
@@ -194,24 +94,9 @@ const VotedIconWithTooltip = () => {
   return (
     <IconWithTooltip
       icon={<VotedIcon />}
-      tooltipText=" You have voted on this proposal."
+      tooltipText="You have voted on this proposal."
     />
   )
-}
-
-const getProposalStatus = (
-  proposal: TransactionAccount | undefined,
-  multisig: MultisigAccount | undefined
-): string => {
-  if (multisig && proposal) {
-    const onChainStatus = Object.keys(proposal.status)[0]
-    return proposal.transactionIndex <= multisig.msChangeIndex &&
-      (onChainStatus == 'active' || onChainStatus == 'draft')
-      ? 'expired'
-      : onChainStatus
-  } else {
-    return 'unkwown'
-  }
 }
 
 const AccountList = ({
@@ -244,14 +129,12 @@ const AccountList = ({
   )
 }
 
-type ProposalType = 'priceFeed' | 'governance'
-
-const Proposal = ({
+export const Proposal = ({
   proposal,
   multisig,
 }: {
-  proposal: TransactionAccount | undefined
-  multisig: MultisigAccount | undefined
+  proposal?: TransactionAccount
+  multisig?: MultisigAccount
 }) => {
   const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
@@ -477,9 +360,14 @@ const Proposal = ({
     )
   }
 
-  return proposal !== undefined &&
-    multisig !== undefined &&
-    !isMultisigLoading ? (
+  if (!proposal || !multisig || isMultisigLoading)
+    return (
+      <div className="mt-6">
+        <Loadbar theme="light" />
+      </div>
+    )
+
+  return (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
@@ -599,6 +487,9 @@ const Proposal = ({
           Total Instructions: {instructions.length}
         </h4>
         <hr className="border-gray-700" />
+        <h4 className="h4 text-[20px] font-semibold">Summary</h4>
+        <InstructionsSummary instructions={instructions} cluster={cluster} />
+        <hr className="border-gray-700" />
         {instructions?.map((instruction, index) => (
           <Fragment key={index}>
             <h4 className="h4 text-[20px] font-semibold">
@@ -659,6 +550,8 @@ const Proposal = ({
                                 ? instruction.args[key]
                                 : instruction.args[key] instanceof Uint8Array
                                 ? instruction.args[key].toString('hex')
+                                : typeof instruction.args[key] === 'bigint'
+                                ? instruction.args[key].toString()
                                 : JSON.stringify(instruction.args[key])}
                             </div>
                           )}
@@ -764,213 +657,5 @@ const Proposal = ({
         ))}
       </div>
     </div>
-  ) : (
-    <div className="mt-6">
-      <Loadbar theme="light" />
-    </div>
   )
 }
-
-const Proposals = () => {
-  const router = useRouter()
-  const { connected, publicKey: signerPublicKey } = useWallet()
-  const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
-  const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
-  const { cluster } = useContext(ClusterContext)
-  const { statusFilter } = useContext(StatusFilterContext)
-
-  const {
-    upgradeMultisigAccount,
-    priceFeedMultisigAccount,
-    priceFeedMultisigProposals,
-    upgradeMultisigProposals,
-    isLoading: isMultisigLoading,
-    refreshData,
-  } = useMultisigContext()
-
-  const [proposalType, setProposalType] = useState<ProposalType>('priceFeed')
-
-  const multisigAccount =
-    proposalType === 'priceFeed'
-      ? priceFeedMultisigAccount
-      : upgradeMultisigAccount
-  const multisigProposals =
-    proposalType === 'priceFeed'
-      ? priceFeedMultisigProposals
-      : upgradeMultisigProposals
-  const [filteredProposals, setFilteredProposals] = useState<
-    TransactionAccount[]
-  >([])
-
-  const handleClickBackToProposals = () => {
-    delete router.query.proposal
-    router.push(
-      {
-        pathname: router.pathname,
-        query: router.query,
-      },
-      undefined,
-      { scroll: false }
-    )
-  }
-
-  useEffect(() => {
-    if (router.query.proposal) {
-      setCurrentProposalPubkey(router.query.proposal as string)
-    } else {
-      setCurrentProposalPubkey(undefined)
-    }
-  }, [router.query.proposal])
-
-  const switchProposalType = useCallback(() => {
-    if (proposalType === 'priceFeed') {
-      setProposalType('governance')
-    } else {
-      setProposalType('priceFeed')
-    }
-  }, [proposalType])
-
-  useEffect(() => {
-    if (currentProposalPubkey) {
-      const currProposal = multisigProposals.find(
-        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
-      )
-      setCurrentProposal(currProposal)
-      if (currProposal === undefined) {
-        const otherProposals =
-          proposalType !== 'priceFeed'
-            ? priceFeedMultisigProposals
-            : upgradeMultisigProposals
-        if (
-          otherProposals.findIndex(
-            (proposal) =>
-              proposal.publicKey.toBase58() === currentProposalPubkey
-          ) !== -1
-        ) {
-          switchProposalType()
-        }
-      }
-    }
-  }, [
-    switchProposalType,
-    priceFeedMultisigProposals,
-    proposalType,
-    upgradeMultisigProposals,
-    currentProposalPubkey,
-    multisigProposals,
-    cluster,
-  ])
-
-  useEffect(() => {
-    // filter price feed multisig proposals by status
-    if (statusFilter === 'all') {
-      setFilteredProposals(multisigProposals)
-    } else {
-      setFilteredProposals(
-        multisigProposals.filter(
-          (proposal) =>
-            getProposalStatus(proposal, multisigAccount) === statusFilter
-        )
-      )
-    }
-  }, [statusFilter, multisigAccount, multisigProposals])
-
-  return (
-    <div className="relative">
-      <div className="container flex flex-col items-center justify-between lg:flex-row">
-        <div className="mb-4 w-full text-left lg:mb-0">
-          <h1 className="h1 mb-4">
-            {proposalType === 'priceFeed' ? 'Price Feed ' : 'Governance '}{' '}
-            {router.query.proposal === undefined ? 'Proposals' : 'Proposal'}
-          </h1>
-        </div>
-      </div>
-      <div className="container min-h-[50vh]">
-        {router.query.proposal === undefined ? (
-          <>
-            <div className="flex flex-col justify-between md:flex-row">
-              <div className="mb-4 flex items-center md:mb-0">
-                <ClusterSwitch />
-              </div>
-              <div className="flex space-x-2">
-                {refreshData && (
-                  <button
-                    disabled={isMultisigLoading}
-                    className="sub-action-btn text-base"
-                    onClick={() => {
-                      const { fetchData } = refreshData()
-                      fetchData()
-                    }}
-                  >
-                    Refresh
-                  </button>
-                )}
-                <button
-                  disabled={isMultisigLoading}
-                  className="action-btn text-base"
-                  onClick={switchProposalType}
-                >
-                  Show
-                  {proposalType !== 'priceFeed'
-                    ? ' Price Feed '
-                    : ' Governance '}
-                  Proposals
-                </button>
-              </div>
-            </div>
-            <div className="relative mt-6">
-              {isMultisigLoading ? (
-                <div className="mt-3">
-                  <Loadbar theme="light" />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between pb-4">
-                    <h4 className="h4">
-                      Total Proposals: {filteredProposals.length}
-                    </h4>
-                    <ProposalStatusFilter />
-                  </div>
-                  {filteredProposals.length > 0 ? (
-                    <div className="flex flex-col">
-                      {filteredProposals.map((proposal, idx) => (
-                        <ProposalRow
-                          key={proposal.publicKey.toBase58()}
-                          proposal={proposal}
-                          multisig={multisigAccount}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-4">
-                      No proposals found. If you&apos;re a member of the
-                      multisig, you can create a proposal.
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </>
-        ) : !isMultisigLoading && currentProposal !== undefined ? (
-          <>
-            <div
-              className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
-              onClick={handleClickBackToProposals}
-            >
-              &#8592; back to proposals
-            </div>
-            <div className="relative mt-6">
-              <Proposal proposal={currentProposal} multisig={multisigAccount} />
-            </div>
-          </>
-        ) : (
-          <div className="mt-3">
-            <Loadbar theme="light" />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export default Proposals

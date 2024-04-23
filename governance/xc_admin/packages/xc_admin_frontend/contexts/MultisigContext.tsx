@@ -1,17 +1,12 @@
-import SquadsMesh from '@sqds/mesh'
-import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
-import { MultisigInstruction } from 'xc_admin_common'
-import { useMultisig, MultisigHookData } from '../hooks/useMultisig'
+import { MultisigHookData, useMultisig } from '../hooks/useMultisig'
 
 const MultisigContext = createContext<MultisigHookData>({
   upgradeMultisigAccount: undefined,
   priceFeedMultisigAccount: undefined,
   upgradeMultisigProposals: [],
   priceFeedMultisigProposals: [],
-  allProposalsIxsParsed: [],
   isLoading: true,
-  error: null,
   squads: undefined,
   refreshData: undefined,
   connection: undefined,
@@ -28,13 +23,11 @@ export const MultisigContextProvider: React.FC<
 > = ({ children }) => {
   const {
     isLoading,
-    error,
     squads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
-    allProposalsIxsParsed,
     refreshData,
     connection,
   } = useMultisig()
@@ -45,9 +38,7 @@ export const MultisigContextProvider: React.FC<
       priceFeedMultisigAccount,
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
-      allProposalsIxsParsed,
       isLoading,
-      error,
       squads,
       refreshData,
       connection,
@@ -55,12 +46,10 @@ export const MultisigContextProvider: React.FC<
     [
       squads,
       isLoading,
-      error,
       upgradeMultisigAccount,
       priceFeedMultisigAccount,
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
-      allProposalsIxsParsed,
       refreshData,
       connection,
     ]

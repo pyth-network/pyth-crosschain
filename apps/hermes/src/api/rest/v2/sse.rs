@@ -1,9 +1,5 @@
 use {
     crate::{
-        aggregate::{
-            AggregationEvent,
-            RequestTime,
-        },
         api::{
             rest::{
                 verify_price_ids_exist,
@@ -18,6 +14,11 @@ use {
                 RpcPriceIdentifier,
             },
             ApiState,
+        },
+        state::aggregate::{
+            Aggregates,
+            AggregationEvent,
+            RequestTime,
         },
     },
     anyhow::Result,
@@ -88,16 +89,22 @@ fn default_true() -> bool {
     params(StreamPriceUpdatesQueryParams)
 )]
 /// SSE route handler for streaming price updates.
-pub async fn price_stream_sse_handler(
-    State(state): State<ApiState>,
+pub async fn price_stream_sse_handler<S>(
+    State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
-) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError> {
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError>
+where
+    S: Aggregates,
+    S: Sync,
+    S: Send,
+    S: 'static,
+{
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
 
     verify_price_ids_exist(&state, &price_ids).await?;
 
     // Clone the update_tx receiver to listen for new price updates
-    let update_rx: broadcast::Receiver<AggregationEvent> = state.update_tx.subscribe();
+    let update_rx: broadcast::Receiver<AggregationEvent> = Aggregates::subscribe(&*state.state);
 
     // Convert the broadcast receiver into a Stream
     let stream = BroadcastStream::new(update_rx);
@@ -134,15 +141,18 @@ pub async fn price_stream_sse_handler(
     Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
 }
 
-async fn handle_aggregation_event(
+async fn handle_aggregation_event<S>(
     event: AggregationEvent,
-    state: ApiState,
+    state: ApiState<S>,
     mut price_ids: Vec<PriceIdentifier>,
     encoding: EncodingType,
     parsed: bool,
     benchmarks_only: bool,
     allow_unordered: bool,
-) -> Result<Option<PriceUpdate>> {
+) -> Result<Option<PriceUpdate>>
+where
+    S: Aggregates,
+{
     // Handle out-of-order events
     if let AggregationEvent::OutOfOrder { .. } = event {
         if !allow_unordered {
@@ -151,11 +161,11 @@ async fn handle_aggregation_event(
     }
 
     // We check for available price feed ids to ensure that the price feed ids provided exists since price feeds can be removed.
-    let available_price_feed_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
+    let available_price_feed_ids = Aggregates::get_price_feed_ids(&*state.state).await;
 
     price_ids.retain(|price_feed_id| available_price_feed_ids.contains(price_feed_id));
 
-    let mut price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+    let mut price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
         &*state.state,
         &price_ids,
         RequestTime::AtSlot(event.slot()),
@@ -185,7 +195,7 @@ async fn handle_aggregation_event(
                 .iter()
                 .any(|price_feed| price_feed.id == RpcPriceIdentifier::from(*price_id))
         });
-        price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+        price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(
             &*state.state,
             &price_ids,
             RequestTime::AtSlot(event.slot()),
