@@ -31,10 +31,5 @@ jobs:
         run: scarb fmt --check
       - name: Run tests
         run: snforge test
-      - uses: JarvusInnovations/background-action@v1
-        name: Run Katana
-        with:
-          run: PATH="$PATH:$HOME/.config/.dojo/bin" katana
-          wait-on: http://127.0.0.1:5050
       - name: Test local deployment script
-        run: . ~/.config/.starkli/env && deploy/local_deploy
+        run: PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/local_deploy
