@@ -92,7 +92,7 @@ export interface components {
         }
       | {
           /** @enum {string} */
-          type: "final_simulation_failed";
+          type: "simulation_failed";
         }
       | {
           /**
