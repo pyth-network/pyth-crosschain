@@ -30,7 +30,10 @@ class SimpleSearcher {
       resultDetails = `, transaction ${bidStatus.result}`;
     }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type.replaceAll(
+        "_",
+        " "
+      )}${resultDetails}`
     );
   }
 
