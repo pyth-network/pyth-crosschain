@@ -1,12 +1,13 @@
 {
-  "name": "contract_manager",
+  "name": "@pythnetwork/contract-manager",
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "store/**/*"
   ],
   "scripts": {
     "build": "tsc",
@@ -19,6 +20,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",

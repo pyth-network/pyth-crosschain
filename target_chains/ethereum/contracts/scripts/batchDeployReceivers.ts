@@ -10,7 +10,7 @@ import {
   EvmChain,
   loadHotWallet,
   EvmWormholeContract,
-} from "contract_manager";
+} from "@pythnetwork/contract-manager";
 import Web3 from "web3";
 import { CHAINS } from "xc_admin_common";
 import * as fs from "fs";

@@ -8,7 +8,7 @@ import {
   AptosChain,
   DefaultStore,
   getDefaultDeploymentConfig,
-} from "contract_manager";
+} from "@pythnetwork/contract-manager";
 
 const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
   .filter(([chain, config]) => {
