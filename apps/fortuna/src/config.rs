@@ -223,7 +223,7 @@ impl ProviderChainConfig {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Commitment {
-    seed:                                [u8; 32],
-    chain_length:                        u64,
-    original_commitment_sequence_number: u64,
+    pub seed:                                [u8; 32],
+    pub chain_length:                        u64,
+    pub original_commitment_sequence_number: u64,
 }

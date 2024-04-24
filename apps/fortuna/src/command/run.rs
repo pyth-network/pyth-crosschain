@@ -28,7 +28,6 @@ use {
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
-        vec,
     },
     tokio::{
         spawn,
@@ -122,9 +121,7 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    // TODO: use this provider_config to create hash chains
-    // TODO: in other PR
-    // let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
+    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
@@ -132,6 +129,27 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
+        let provider_config = provider_config.get_chain_config(chain_id)?;
+        let provider_commitments = &provider_config.commitments;
+
+        let mut offsets= provider_commitments
+            .iter()
+            .map(|x| x.original_commitment_sequence_number.try_into().map_err(|_| anyhow!("Error converting u64 offset to usize for {}", chain_id)))
+            .collect::<Result<Vec<usize>>>()?;
+        let mut hash_chains=  provider_commitments
+            .iter()
+            .map(|x| {
+                PebbleHashChain::from_config(
+                    &secret,
+                    &chain_id,
+                    &opts.provider,
+                    &chain_config.contract_addr,
+                    &x.seed,
+                    x.chain_length,
+                )
+            })
+            .collect::<Result<Vec<PebbleHashChain>>>()?;
+
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
 
         // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
@@ -144,19 +162,25 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let metadata =
             bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
-        let hash_chain = PebbleHashChain::from_config(
+        // push latest hash chains
+        offsets.push(
+            provider_info
+                .original_commitment_sequence_number
+                .try_into()?,
+        );
+
+        hash_chains.push(PebbleHashChain::from_config(
             &secret,
             &chain_id,
             &opts.provider,
             &chain_config.contract_addr,
             &metadata.seed,
             metadata.chain_length,
-        )?;
+        )?);
+        // Hashchains requires offsets to be in order
         let chain_state = HashChainState {
-            offsets:     vec![provider_info
-                .original_commitment_sequence_number
-                .try_into()?],
-            hash_chains: vec![hash_chain],
+            offsets,
+            hash_chains,
         };
 
         if chain_state.reveal(provider_info.original_commitment_sequence_number)?
