@@ -390,7 +390,37 @@ export async function getCodeDigestWithoutAddress(
   return Web3.utils.keccak256(strippedCode);
 }
 
-export class WormholeEvmContract extends WormholeContract {
+export class EvmWormholeContract extends WormholeContract {
+  static type = "EvmWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getChain(): EvmChain {
+    return this.chain;
+  }
+
+  getType(): string {
+    return EvmWormholeContract.type;
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.version().call();
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmWormholeContract {
+    if (parsed.type !== EvmWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmWormholeContract(chain, parsed.address);
+  }
+
   constructor(public chain: EvmChain, public address: string) {
     super();
   }
@@ -435,6 +465,14 @@ export class WormholeEvmContract extends WormholeContract {
       { from: address }
     );
     return { id: result.transactionHash, info: result };
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmWormholeContract.type,
+    };
   }
 }
 
@@ -651,13 +689,13 @@ export class EvmExecutorContract {
     return `${this.chain.getId()}_${this.address}`;
   }
 
-  async getWormholeContract(): Promise<WormholeEvmContract> {
+  async getWormholeContract(): Promise<EvmWormholeContract> {
     const web3 = new Web3(this.chain.getRpcUrl());
     //Unfortunately, there is no public method to get the wormhole address
     //Found 251 by using `forge build --extra-output storageLayout` and finding the slot for the wormhole variable.
     let address = await web3.eth.getStorageAt(this.address, 251);
     address = "0x" + address.slice(26);
-    return new WormholeEvmContract(this.chain, address);
+    return new EvmWormholeContract(this.chain, address);
   }
 
   getContract() {
@@ -822,10 +860,10 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   /**
    * Returns the wormhole contract which is being used for VAA verification
    */
-  async getWormholeContract(): Promise<WormholeEvmContract> {
+  async getWormholeContract(): Promise<EvmWormholeContract> {
     const pythContract = this.getContract();
     const address = await pythContract.methods.wormhole().call();
-    return new WormholeEvmContract(this.chain, address);
+    return new EvmWormholeContract(this.chain, address);
   }
 
   async getBaseUpdateFee() {

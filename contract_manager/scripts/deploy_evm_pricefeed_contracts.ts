@@ -9,7 +9,7 @@ import {
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
-  WormholeEvmContract,
+  EvmWormholeContract,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
@@ -98,15 +98,12 @@ async function deployWormholeReceiverContracts(
     [receiverSetupAddr, initData]
   );
 
-  const wormholeEvmContract = new WormholeEvmContract(
-    chain,
-    wormholeReceiverAddr
-  );
+  const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
 
   if (config.type === "stable") {
     console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
     // TODO: Add a way to pass gas configs to this
-    await wormholeEvmContract.syncMainnetGuardianSets(config.privateKey);
+    await wormholeContract.syncMainnetGuardianSets(config.privateKey);
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 

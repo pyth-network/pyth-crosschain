@@ -17,7 +17,39 @@ type GuardianSet = {
   index: { number: string };
 };
 
-export class WormholeAptosContract extends WormholeContract {
+export class AptosWormholeContract extends WormholeContract {
+  static type = "AptosWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return AptosWormholeContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: AptosWormholeContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: {
+      type: string;
+      address: string;
+    }
+  ): AptosWormholeContract {
+    if (parsed.type !== AptosWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof AptosChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new AptosWormholeContract(chain, parsed.address);
+  }
+
   constructor(public chain: AptosChain, public address: string) {
     super();
   }
@@ -124,8 +156,8 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
 
-  public getWormholeContract(): WormholeAptosContract {
-    return new WormholeAptosContract(this.chain, this.wormholeStateId);
+  public getWormholeContract(): AptosWormholeContract {
+    return new AptosWormholeContract(this.chain, this.wormholeStateId);
   }
 
   async executeUpdatePriceFeed(
