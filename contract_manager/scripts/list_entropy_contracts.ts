@@ -20,7 +20,7 @@ const KEEPER_ADDRESS = {
 
 async function main() {
   const argv = await parser.argv;
-  const entries: unknown[] = [];
+  const entries = [];
   const keeperAddress = KEEPER_ADDRESS[argv.testnet ? "testnet" : "mainnet"];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
