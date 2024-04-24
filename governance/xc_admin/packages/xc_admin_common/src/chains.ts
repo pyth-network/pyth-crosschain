@@ -66,6 +66,7 @@ export const RECEIVER_CHAINS = {
   merlin: 60047,
   parallel: 60048,
   iota: 60049,
+  flow_previewnet: 60050,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
