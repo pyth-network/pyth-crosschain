@@ -164,6 +164,7 @@ pub struct EthereumConfig {
 #[group(id = "ProviderConfig")]
 pub struct ProviderConfigOptions {
     /// Path to a configuration file containing provider configuration for the list of supported blockchains
+    /// The commitments should be in sorted in ascending order by there original_committed_sequence_number.
     #[arg(long = "provider-config")]
     #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
     #[arg(default_value = "provider-config.yaml")]
@@ -185,16 +186,39 @@ impl ProviderConfig {
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
-        self.chains
-            .get(chain_id)
-            .map(|x| x.clone())
-            .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
+        let provider_chain_config = self.chains.get(chain_id).map(|x| x.clone()).ok_or(anyhow!(
+            "Could not find chain id {} in the configuration",
+            &chain_id
+        ))?;
+
+        if provider_chain_config.check() {
+            return Ok(provider_chain_config);
+        }
+
+        Err(anyhow!(
+            "Provider config is not valid. The commitments are not in order for {}.",
+            &chain_id
+        ))
     }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ProviderChainConfig {
-    commitments: Vec<Commitment>,
+    pub commitments: Vec<Commitment>,
+}
+
+impl ProviderChainConfig {
+    pub fn check(&self) -> bool {
+        let commitments = &self.commitments;
+        for i in 0..commitments.len() - 1 {
+            if commitments[i].original_commitment_sequence_number
+                > commitments[i + 1].original_commitment_sequence_number
+            {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
