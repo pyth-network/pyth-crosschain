@@ -156,25 +156,28 @@ export class SolanaPricePusherJito implements IPricePusher {
       await this.pythSolanaReceiver.connection.getLatestBlockhashAndContext({
         commitment: "confirmed",
       });
-    await this.pythSolanaReceiver.connection.confirmTransaction(
-      {
-        signature: firstSignature,
-        blockhash: blockhashResult.value.blockhash,
-        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
-      },
-      "confirmed"
-    );
 
-    for (
-      let i = this.jitoBundleSize;
-      i < transactions.length;
-      i += this.jitoBundleSize
-    ) {
-      await sendTransactionsJito(
-        transactions.slice(i, i + this.jitoBundleSize),
-        this.searcherClient,
-        this.pythSolanaReceiver.wallet
+    if (transactions.length > this.jitoBundleSize) {
+      await this.pythSolanaReceiver.connection.confirmTransaction(
+        {
+          signature: firstSignature,
+          blockhash: blockhashResult.value.blockhash,
+          lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+        },
+        "confirmed"
       );
+
+      for (
+        let i = this.jitoBundleSize;
+        i < transactions.length;
+        i += this.jitoBundleSize
+      ) {
+        await sendTransactionsJito(
+          transactions.slice(i, i + this.jitoBundleSize),
+          this.searcherClient,
+          this.pythSolanaReceiver.wallet
+        );
+      }
     }
   }
 }
