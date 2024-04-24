@@ -9,6 +9,7 @@ use {
         command::register_provider::CommitmentMetadata,
         config::{
             Config,
+            ProviderConfig,
             RunOptions,
         },
         keeper,
@@ -121,6 +122,9 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
+    // TODO: use this provider_config to create hash chains
+    // TODO: in other PR
+    // let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);

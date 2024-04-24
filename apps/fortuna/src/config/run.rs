@@ -1,6 +1,7 @@
 use {
     crate::config::{
         ConfigOptions,
+        ProviderConfigOptions,
         RandomnessOptions,
     },
     anyhow::Result,
@@ -17,6 +18,9 @@ use {
 pub struct RunOptions {
     #[command(flatten)]
     pub config: ConfigOptions,
+
+    #[command(flatten)]
+    pub provider_config: ProviderConfigOptions,
 
     #[command(flatten)]
     pub randomness: RandomnessOptions,

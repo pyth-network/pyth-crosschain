@@ -158,3 +158,48 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: U256,
 }
+
+#[derive(Args, Clone, Debug)]
+#[command(next_help_heading = "Provider Config Options")]
+#[group(id = "ProviderConfig")]
+pub struct ProviderConfigOptions {
+    /// Path to a configuration file containing provider configuration for the list of supported blockchains
+    #[arg(long = "provider-config")]
+    #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
+    #[arg(default_value = "provider-config.yaml")]
+    pub provider_config: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderConfig {
+    pub chains: HashMap<ChainId, ProviderChainConfig>,
+}
+
+impl ProviderConfig {
+    pub fn load(path: &str) -> Result<ProviderConfig> {
+        // Open and read the YAML file
+        // TODO: the default serde deserialization doesn't enforce unique keys
+        let yaml_content = fs::read_to_string(path)?;
+        let config: ProviderConfig = serde_yaml::from_str(&yaml_content)?;
+        Ok(config)
+    }
+
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
+        self.chains
+            .get(chain_id)
+            .map(|x| x.clone())
+            .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderChainConfig {
+    commitments: Vec<Commitment>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Commitment {
+    seed:                                [u8; 32],
+    chain_length:                        u64,
+    original_commitment_sequence_number: u64,
+}
