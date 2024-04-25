@@ -43,3 +43,6 @@
 - chain: rol_testnet
   address: rol1pvrwmjuusn9wh34j7y520g8gumuy9xtl3gvprlljfdpwju3x7ucszdyfs8
   type: CosmWasmPriceFeedContract
+- chain: xion_testnet
+  address: xion1w39ctwxxhxxc2kxarycjxj9rndn65gf8daek7ggarwh3rq3zl0lqqllnmt
+  type: CosmWasmPriceFeedContract

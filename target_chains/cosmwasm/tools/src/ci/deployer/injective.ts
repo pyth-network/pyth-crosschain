@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { Bech32, toHex } from "@cosmjs/encoding";
+import { toHex, fromBech32 } from "@cosmjs/encoding";
 import { ethers } from "ethers";
 import assert from "assert";
 import { getNetworkInfo, Network } from "@injectivelabs/networks";
@@ -59,7 +59,7 @@ export class InjectiveDeployer implements Deployer {
     const sig = await this.wallet.sign(Buffer.from(signBytes));
 
     /** Append Signatures */
-    txRaw.setSignaturesList([sig]);
+    txRaw.signatures = txRaw.signatures.concat(sig);
 
     const txService = new TxGrpcClient(networkInfo.grpc);
     const txResponse = await txService.broadcast(txRaw);
@@ -216,7 +216,7 @@ export class InjectiveDeployer implements Deployer {
 // Injective addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
 function convert_injective_address_to_hex(human_addr: string) {
-  return "0x" + toHex(ethers.utils.zeroPad(Bech32.decode(human_addr).data, 32));
+  return "0x" + toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32));
 }
 
 // enter key of what to extract

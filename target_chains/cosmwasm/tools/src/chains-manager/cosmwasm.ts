@@ -98,7 +98,7 @@ export class CosmwasmExecutor implements ChainExecutor {
       const txResponse = await cosmwasmClient.signAndBroadcast(
         address,
         [encodedMsgObject],
-        1.5
+        2
       );
 
       if (txResponse.code !== 0) {
@@ -154,7 +154,7 @@ export class CosmwasmExecutor implements ChainExecutor {
         value: {
           sender: accAddress,
           admin: accAddress,
-          codeId: Long.fromNumber(codeId),
+          codeId: BigInt(codeId),
           label,
           msg: Buffer.from(JSON.stringify(instMsg)),
           funds: [],
@@ -213,7 +213,7 @@ export class CosmwasmExecutor implements ChainExecutor {
       value: {
         sender: await this.getAddress(),
         contract: contractAddr,
-        codeId: Long.fromNumber(newCodeId),
+        codeId: BigInt(newCodeId),
         msg: Buffer.from(JSON.stringify(migrateMsg)),
       },
     };

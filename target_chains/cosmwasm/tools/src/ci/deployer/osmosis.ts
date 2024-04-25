@@ -1,5 +1,4 @@
 import { getSigningOsmosisClient, cosmwasm, estimateOsmoFee } from "osmojs";
-import { getOfflineSignerProto as getOfflineSigner } from "cosmjs-utils";
 import { chains } from "chain-registry";
 import { Chain } from "@chain-registry/types";
 import { readFileSync } from "fs";
@@ -9,7 +8,7 @@ import assert from "assert";
 
 import { ContractInfo, Deployer } from ".";
 import { convert_terra_address_to_hex, extractFromRawLog } from "./terra";
-import { EncodeObject } from "@cosmjs/proto-signing";
+import { EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import Long from "long";
 
 export type OsmosisHost = {
@@ -26,11 +25,7 @@ export class OsmosisDeployer implements Deployer {
   }
 
   private async getAccountAddress(): Promise<string> {
-    const signer = await getOfflineSigner({
-      mnemonic: this.mnemonic,
-      chain: this.chain,
-    });
-
+    const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);
     const accountData = await signer.getAccounts();
     return accountData[0].address;
   }
@@ -38,14 +33,11 @@ export class OsmosisDeployer implements Deployer {
   private async signAndBroadcast(
     msg: EncodeObject
   ): Promise<DeliverTxResponse> {
-    const signer = await getOfflineSigner({
-      mnemonic: this.mnemonic,
-      chain: this.chain,
-    });
+    const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);
 
     const client = await getSigningOsmosisClient({
       rpcEndpoint: this.endpoint,
-      signer,
+      signer: signer,
       defaultTypes: wasmTypes,
     });
 
@@ -69,7 +61,7 @@ export class OsmosisDeployer implements Deployer {
     const rs = await client.signAndBroadcast(address, [msg], fee);
 
     if (rs.code !== 0) {
-      console.error(`Transaction failed: ${rs.rawLog}`);
+      console.error(`Transaction failed: ${rs.events}`);
     } else {
       console.log(
         `Broadcasted transaction hash: ${JSON.stringify(rs.transactionHash)}`
@@ -210,7 +202,7 @@ export class OsmosisDeployer implements Deployer {
     const { codeId, creator, admin } = contractInfo;
 
     return {
-      codeId: codeId.toNumber(),
+      codeId: Number(codeId),
       address: address,
       creator: creator,
       admin: admin,
