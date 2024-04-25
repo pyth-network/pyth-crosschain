@@ -6,8 +6,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*",
-    "store/**/*"
+    "lib/**/*"
   ],
   "scripts": {
     "build": "tsc",
@@ -20,9 +19,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
