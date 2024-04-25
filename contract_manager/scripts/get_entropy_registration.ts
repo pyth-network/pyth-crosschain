@@ -2,23 +2,9 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src";
 
-interface CommitmentMetadata {
-  seed: Uint8Array; // u8; 32
-  chainLength: bigint; // u64
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  const buffer = Buffer.from(hex, "hex");
-  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-}
-
-function deserializeCommitmentMetadata(data: Uint8Array): CommitmentMetadata {
-  const seed = data.slice(0, 32);
-  const chainLengthArray = data.slice(32, 40);
-  const chainLength = new DataView(chainLengthArray.buffer).getBigInt64(
-    0,
-    true
-  );
+function deserializeCommitmentMetadata(data: Buffer) {
+  const seed = Uint8Array.from(data.subarray(0, 32));
+  const chainLength = data.readBigInt64LE(32);
 
   return {
     seed,
@@ -56,8 +42,10 @@ async function main() {
       ""
     );
 
-    const binaryData = hexToBytes(commitmentMetadata);
-    const metadata = deserializeCommitmentMetadata(binaryData);
+    // const binaryData = hexToBytes(commitmentMetadata);
+    const metadata = deserializeCommitmentMetadata(
+      Buffer.from(commitmentMetadata, "hex")
+    );
     console.log("=".repeat(100));
     console.log(`Fetched info for ${contract.getId()}`);
 
