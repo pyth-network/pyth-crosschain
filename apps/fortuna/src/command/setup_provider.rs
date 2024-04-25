@@ -68,7 +68,6 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             let metadata =
                 bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
-
             let hash_chain = PebbleHashChain::from_config(
                 &secret,
                 &chain_id,
