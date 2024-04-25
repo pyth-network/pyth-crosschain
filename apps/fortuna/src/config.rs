@@ -196,7 +196,7 @@ impl ProviderConfig {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ProviderChainConfig {
-    pub commitments: Vec<Commitment>,
+    commitments: Vec<Commitment>,
 }
 
 impl ProviderChainConfig {
