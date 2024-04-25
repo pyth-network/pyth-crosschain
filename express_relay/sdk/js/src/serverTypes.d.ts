@@ -91,6 +91,10 @@ export interface components {
           type: "pending";
         }
       | {
+          /** @enum {string} */
+          type: "simulation_failed";
+        }
+      | {
           /**
            * Format: int32
            * @example 1
@@ -188,7 +192,7 @@ export interface components {
       /** @example 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12 */
       signature: string;
       /**
-       * @description How long the bid will be valid for.
+       * @description The latest unix timestamp in seconds until which the bid is valid
        * @example 1000000000000000000
        */
       valid_until: string;

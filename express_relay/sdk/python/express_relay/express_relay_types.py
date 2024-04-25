@@ -105,13 +105,14 @@ class BidStatus(Enum):
     SUBMITTED = "submitted"
     LOST = "lost"
     PENDING = "pending"
+    SIMULATION_FAILED = "simulation_failed"
 
 
 class BidStatusUpdate(BaseModel):
     """
     Attributes:
         id: The ID of the bid.
-        bid_status: The status enum, either SUBMITTED, LOST, or PENDING.
+        bid_status: The current status of the bid.
         result: The result of the bid: a transaction hash if the status is SUBMITTED or LOST, else None.
         index: The index of the bid in the submitted transaction; None if the status is not SUBMITTED.
     """
@@ -123,7 +124,10 @@ class BidStatusUpdate(BaseModel):
 
     @model_validator(mode="after")
     def check_result(self):
-        if self.bid_status == BidStatus("pending"):
+        if self.bid_status in [
+            BidStatus("pending"),
+            BidStatus("simulation_failed"),
+        ]:
             assert self.result is None, "result must be None"
         else:
             assert self.result is not None, "result must be a valid 32-byte hash"
