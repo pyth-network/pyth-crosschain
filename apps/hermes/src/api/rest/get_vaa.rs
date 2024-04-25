@@ -69,6 +69,7 @@ pub struct GetVaaResponse {
         GetVaaQueryParams
     )
 )]
+#[deprecated]
 pub async fn get_vaa<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetVaaQueryParams>,

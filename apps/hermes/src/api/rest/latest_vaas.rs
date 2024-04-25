@@ -58,6 +58,7 @@ pub struct LatestVaasQueryParams {
         (status = 200, description = "VAAs retrieved successfully", body = Vec<String>, example=json!([doc_examples::vaa_example()]))
     ),
 )]
+#[deprecated]
 pub async fn latest_vaas<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,

@@ -63,6 +63,7 @@ pub struct LatestPriceFeedsQueryParams {
         LatestPriceFeedsQueryParams
     )
 )]
+#[deprecated]
 pub async fn latest_price_feeds<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,

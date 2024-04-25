@@ -60,6 +60,7 @@ pub struct GetVaaCcipResponse {
         GetVaaCcipQueryParams
     )
 )]
+#[deprecated]
 pub async fn get_vaa_ccip<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,

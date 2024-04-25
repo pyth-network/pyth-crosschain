@@ -62,6 +62,7 @@ pub struct GetPriceFeedQueryParams {
         GetPriceFeedQueryParams
     )
 )]
+#[deprecated]
 pub async fn get_price_feed<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
