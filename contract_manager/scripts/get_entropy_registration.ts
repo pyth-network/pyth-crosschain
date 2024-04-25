@@ -32,7 +32,7 @@ const parser = yargs(hideBin(process.argv))
     testnet: {
       type: "boolean",
       default: false,
-      desc: "Fetch testnet contract fees instead of mainnet",
+      desc: "Fetch the provider registration data for the testnet contracts.",
     },
   });
 
