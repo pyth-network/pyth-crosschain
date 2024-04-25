@@ -179,7 +179,6 @@ pub struct ProviderConfig {
 impl ProviderConfig {
     pub fn load(path: &str) -> Result<ProviderConfig> {
         // Open and read the YAML file
-        // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;
         let config: ProviderConfig = serde_yaml::from_str(&yaml_content)?;
         Ok(config)
@@ -198,7 +197,7 @@ impl ProviderConfig {
         }
 
         Err(anyhow!(
-            "Provider config is not valid. The commitments are not in order for {}.",
+            "{}: error loading provider config. The commitments are not in order",
             &chain_id
         ))
     }
