@@ -97,7 +97,7 @@ pub struct RandomnessOptions {
     /// The length of the hash chain to generate.
     #[arg(long = "chain-length")]
     #[arg(env = "FORTUNA_CHAIN_LENGTH")]
-    #[arg(default_value = "10000")]
+    #[arg(default_value = "100000")]
     pub chain_length: u64,
 }
 
