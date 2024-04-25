@@ -1,0 +1,5 @@
+chains:
+  lightlink-pegasus:
+    commitments:
+      - metadata: db7dd9c5ea58d07815b5ac8fef6629e9a7d4ed6a25ffb8a5ee79e69b749ead301027000000000000
+        original_commitment_sequence_number: 104
