@@ -16,8 +16,8 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 function deserializeCommitmentMetadata(data: Uint8Array): CommitmentMetadata {
-  const seed = data.slice(1, 33);
-  const chainLengthArray = data.slice(33, 41);
+  const seed = data.slice(0, 32);
+  const chainLengthArray = data.slice(32, 40);
   const chainLength = new DataView(chainLengthArray.buffer).getBigInt64(
     0,
     true
@@ -46,7 +46,10 @@ async function main() {
     try {
       const provider = await contract.getDefaultProvider();
       const providerInfo = await contract.getProviderInfo(provider);
-      const commitmentMetadata = providerInfo.commitmentMetadata;
+      const commitmentMetadata = providerInfo.commitmentMetadata.replace(
+        "0x",
+        ""
+      );
 
       const binaryData = hexToBytes(commitmentMetadata);
       const metadata = deserializeCommitmentMetadata(binaryData);
@@ -56,6 +59,7 @@ async function main() {
       console.log(`chain             : ${contract.getChain().getId()}`);
       console.log(`contract          : ${contract.address}`);
       console.log(`provider          : ${provider}`);
+      console.log(`commitment data   : ${commitmentMetadata}`);
       console.log(`chainLength       : ${metadata.chainLength}`);
       console.log(`seed              : [${metadata.seed}]`);
       console.log(
