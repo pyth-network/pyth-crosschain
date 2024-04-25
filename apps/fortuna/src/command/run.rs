@@ -130,8 +130,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
-        let provider_config = provider_config.get_chain_config(chain_id)?;
-        let provider_commitments = &provider_config.commitments;
+        let provider_chain_config = provider_config.get_chain_config(chain_id)?;
+        let provider_commitments = &provider_chain_config.commitments;
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
         let latest_metadata =
             bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
