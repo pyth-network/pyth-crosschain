@@ -112,7 +112,7 @@ class BidStatusUpdate(BaseModel):
     """
     Attributes:
         id: The ID of the bid.
-        bid_status: The status enum, either SUBMITTED, LOST, PENDING, SIMULATION_FAILED.
+        bid_status: The current status of the bid.
         result: The result of the bid: a transaction hash if the status is SUBMITTED or LOST, else None.
         index: The index of the bid in the submitted transaction; None if the status is not SUBMITTED.
     """
