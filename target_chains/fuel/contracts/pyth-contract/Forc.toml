@@ -1,0 +1,10 @@
+[project]
+authors = ["Fuel Labs <contact@fuel.sh>"]
+entry = "main.sw"
+license = "Apache-2.0"
+name = "pyth-contract"
+
+[dependencies]
+ownership = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.18.0" }
+pyth_interface = { path = "../pyth-interface" }
+src5 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.3.3" }
