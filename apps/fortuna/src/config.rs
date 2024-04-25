@@ -184,13 +184,10 @@ impl ProviderConfig {
         Ok(config)
     }
 
-    /// Gets the provider chain config from the Hashmap. It will check that the commitments are in order.
-    /// If not, it will return an Err. Else, the config will be returned.
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
-        self.chains.get(chain_id).map(|x| x.clone()).ok_or(anyhow!(
-            "Could not find chain id {} in the configuration",
-            &chain_id
-        ))
+    /// Get the provider chain config. The method returns an Option for ProviderChainConfig.
+    /// We may not have past any commitments for a chain. For example, for a new chain
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Option<ProviderChainConfig> {
+        self.chains.get(chain_id).map(|x| x.clone())
     }
 }
 
