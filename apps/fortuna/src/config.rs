@@ -187,17 +187,8 @@ impl ProviderConfig {
     /// Gets the provider chain config from the Hashmap. It will check that the commitments are in order.
     /// If not, it will return an Err. Else, the config will be returned.
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
-        let provider_chain_config = self.chains.get(chain_id).map(|x| x.clone()).ok_or(anyhow!(
+        self.chains.get(chain_id).map(|x| x.clone()).ok_or(anyhow!(
             "Could not find chain id {} in the configuration",
-            &chain_id
-        ))?;
-
-        if provider_chain_config.check() {
-            return Ok(provider_chain_config);
-        }
-
-        Err(anyhow!(
-            "{}: error loading provider config. The commitments are not in order",
             &chain_id
         ))
     }
@@ -209,16 +200,13 @@ pub struct ProviderChainConfig {
 }
 
 impl ProviderChainConfig {
-    pub fn check(&self) -> bool {
-        let commitments = &self.commitments;
-        for i in 0..commitments.len() - 1 {
-            if commitments[i].original_commitment_sequence_number
-                > commitments[i + 1].original_commitment_sequence_number
-            {
-                return false;
-            }
-        }
-        true
+    pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
+        let mut sorted_commitments = self.commitments.clone();
+        sorted_commitments.sort_by(|c1, c2| {
+            c1.original_commitment_sequence_number
+                .cmp(&c2.original_commitment_sequence_number)
+        });
+        sorted_commitments
     }
 }
 
