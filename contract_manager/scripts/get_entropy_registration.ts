@@ -41,31 +41,35 @@ async function main() {
 
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
+    let provider;
+    let providerInfo;
     try {
-      const provider = await contract.getDefaultProvider();
-      const providerInfo = await contract.getProviderInfo(provider);
-      const commitmentMetadata = providerInfo.commitmentMetadata.replace(
-        "0x",
-        ""
-      );
-
-      const binaryData = hexToBytes(commitmentMetadata);
-      const metadata = deserializeCommitmentMetadata(binaryData);
-      console.log("=".repeat(100));
-      console.log(`Fetched info for ${contract.getId()}`);
-
-      console.log(`chain             : ${contract.getChain().getId()}`);
-      console.log(`contract          : ${contract.address}`);
-      console.log(`provider          : ${provider}`);
-      console.log(`commitment data   : ${commitmentMetadata}`);
-      console.log(`chainLength       : ${metadata.chainLength}`);
-      console.log(`seed              : [${metadata.seed}]`);
-      console.log(
-        `original seq no   : ${providerInfo.originalCommitmentSequenceNumber}`
-      );
+      provider = await contract.getDefaultProvider();
+      providerInfo = await contract.getProviderInfo(provider);
     } catch (e) {
       console.error(`Error fetching info for ${contract.getId()}`, e);
+      continue;
     }
+
+    const commitmentMetadata = providerInfo.commitmentMetadata.replace(
+      "0x",
+      ""
+    );
+
+    const binaryData = hexToBytes(commitmentMetadata);
+    const metadata = deserializeCommitmentMetadata(binaryData);
+    console.log("=".repeat(100));
+    console.log(`Fetched info for ${contract.getId()}`);
+
+    console.log(`chain             : ${contract.getChain().getId()}`);
+    console.log(`contract          : ${contract.address}`);
+    console.log(`provider          : ${provider}`);
+    console.log(`commitment data   : ${commitmentMetadata}`);
+    console.log(`chainLength       : ${metadata.chainLength}`);
+    console.log(`seed              : [${metadata.seed}]`);
+    console.log(
+      `original seq no   : ${providerInfo.originalCommitmentSequenceNumber}`
+    );
   }
 }
 
