@@ -68,35 +68,31 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             let metadata =
                 bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
-            if metadata.chain_length != opts.randomness.chain_length {
-                tracing::info!("{}: chain length doesn't match", chain_id);
+
+            let hash_chain = PebbleHashChain::from_config(
+                &secret,
+                &chain_id,
+                &provider_address,
+                &chain_config.contract_addr,
+                &metadata.seed,
+                opts.randomness.chain_length,
+            )?;
+            let chain_state = HashChainState {
+                offsets:     vec![provider_info
+                    .original_commitment_sequence_number
+                    .try_into()?],
+                hash_chains: vec![hash_chain],
+            };
+
+
+            if chain_state.reveal(provider_info.original_commitment_sequence_number)?
+                != provider_info.original_commitment
+            {
+                tracing::info!(
+                    "{}: the root of the generated hash chain does not match the commitment",
+                    &chain_id
+                );
                 register = true;
-            } else {
-                let hash_chain = PebbleHashChain::from_config(
-                    &secret,
-                    &chain_id,
-                    &provider_address,
-                    &chain_config.contract_addr,
-                    &metadata.seed,
-                    metadata.chain_length,
-                )?;
-                let chain_state = HashChainState {
-                    offsets:     vec![provider_info
-                        .original_commitment_sequence_number
-                        .try_into()?],
-                    hash_chains: vec![hash_chain],
-                };
-
-
-                if chain_state.reveal(provider_info.original_commitment_sequence_number)?
-                    != provider_info.original_commitment
-                {
-                    tracing::info!(
-                        "{}: the root of the generated hash chain does not match the commitment",
-                        &chain_id
-                    );
-                    register = true;
-                }
             }
         }
 
