@@ -9,7 +9,7 @@ import {
   DefaultStore,
   EvmChain,
   loadHotWallet,
-  WormholeEvmContract,
+  EvmWormholeContract,
 } from "contract_manager";
 import Web3 from "web3";
 import { CHAINS } from "xc_admin_common";
@@ -111,7 +111,7 @@ async function main() {
           receiverInfo.bytecode,
           [setupAddress, initData]
         );
-        const contract = new WormholeEvmContract(chain, receiverAddress);
+        const contract = new EvmWormholeContract(chain, receiverAddress);
         console.log("receiverAddress", receiverAddress);
         await contract.syncMainnetGuardianSets(privateKey);
         console.log("synced");

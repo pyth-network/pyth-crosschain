@@ -74,7 +74,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 &provider_address,
                 &chain_config.contract_addr,
                 &metadata.seed,
-                metadata.chain_length,
+                opts.randomness.chain_length,
             )?;
             let chain_state = HashChainState {
                 offsets:     vec![provider_info

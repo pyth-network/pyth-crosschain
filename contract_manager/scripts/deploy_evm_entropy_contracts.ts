@@ -10,7 +10,7 @@ import {
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
-  WormholeEvmContract,
+  EvmWormholeContract,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
@@ -200,7 +200,7 @@ async function main() {
     saveContract: argv.saveContract,
     wormholeAddr,
   };
-  const wormholeContract = new WormholeEvmContract(
+  const wormholeContract = new EvmWormholeContract(
     chain,
     deploymentConfig.wormholeAddr
   );

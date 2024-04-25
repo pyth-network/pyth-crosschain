@@ -559,3 +559,8 @@
   rpcUrl: https://json-rpc.evm.iotaledger.net
   networkId: 8822
   type: EvmChain
+- id: flow_previewnet
+  mainnet: true
+  rpcUrl: https://previewnet.evm.nodes.onflow.org
+  networkId: 646
+  type: EvmChain

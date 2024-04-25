@@ -76,18 +76,16 @@ class SimpleSearcher:
         bid_status = bid_status_update.bid_status
         result = bid_status_update.result
 
+        result_details = ""
         if bid_status == BidStatus("submitted"):
-            logger.info(
-                f"Bid {id} has been submitted in transaction {result} at index {bid_status_update.index} of the multicall"
+            result_details = (
+                f", transaction {result}, index {bid_status_update.index} of multicall"
             )
         elif bid_status == BidStatus("lost"):
-            logger.info(
-                f"Bid {id} was unsuccessful, not included in transaction {result}"
-            )
-        elif bid_status == BidStatus("pending"):
-            logger.info(f"Bid {id} is pending")
-        else:
-            logger.error(f"Unrecognized status {bid_status} for bid {id}")
+            result_details = f", transaction {result}"
+        logger.error(
+            f"Bid status for bid {id}: {bid_status.value.replace('_', ' ')}{result_details}"
+        )
 
 
 async def main():

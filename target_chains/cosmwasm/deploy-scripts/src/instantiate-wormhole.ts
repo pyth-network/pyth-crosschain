@@ -6,7 +6,7 @@ import {
   CosmWasmPriceFeedContract,
   DefaultStore,
   toPrivateKey,
-  WormholeCosmWasmContract,
+  CosmWasmWormholeContract,
 } from "contract_manager";
 import { CHAINS } from "xc_admin_common";
 import { DeploymentType } from "./helper";
@@ -75,7 +75,7 @@ async function run() {
   });
   console.log(`Contract admin set to ${instantiateContractRes.contractAddr}`);
 
-  const contract = new WormholeCosmWasmContract(
+  const contract = new CosmWasmWormholeContract(
     chain,
     instantiateContractRes.contractAddr
   );

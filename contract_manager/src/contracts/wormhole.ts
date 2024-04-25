@@ -1,6 +1,6 @@
-import { PrivateKey, TxResult } from "../base";
+import { PrivateKey, Storable, TxResult } from "../base";
 
-export abstract class WormholeContract {
+export abstract class WormholeContract extends Storable {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
 
   /**
