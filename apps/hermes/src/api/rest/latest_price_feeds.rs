@@ -50,6 +50,8 @@ pub struct LatestPriceFeedsQueryParams {
     binary: bool,
 }
 
+/// **Deprecated: use /v2/updates/price/latest instead**
+///
 /// Get the latest price updates by price feed id.
 ///
 /// Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.

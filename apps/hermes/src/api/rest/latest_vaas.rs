@@ -43,6 +43,8 @@ pub struct LatestVaasQueryParams {
 }
 
 
+/// **Deprecated: use /v2/updates/price/latest instead**
+///
 /// Get VAAs for a set of price feed ids.
 ///
 /// Given a collection of price feed ids, retrieve the latest VAA for each. The returned VAA(s) can

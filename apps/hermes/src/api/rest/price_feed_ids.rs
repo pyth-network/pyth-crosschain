@@ -14,6 +14,8 @@ use {
     },
 };
 
+/// **Deprecated: use /v2/price_feeds instead**
+///
 /// Get the set of price feed IDs.
 ///
 /// This endpoint fetches all of the price feed IDs for which price updates can be retrieved.
