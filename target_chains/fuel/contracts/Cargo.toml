@@ -1,0 +1,27 @@
+[package]
+name = "pyth_sdk"
+description = "A cargo-generate template for Rust + Sway integration testing."
+version = "0.1.0"
+edition = "2021"
+authors = ["Fuel Labs <contact@fuel.sh>"]
+license = "Apache-2.0"
+
+[dependencies]
+rand = "0.8.5"
+base64 = "0.22"
+fuels = { version = "0.55", features = ["fuel-core-lib"] }
+tokio = { version = "1.12", features = ["rt", "macros"] }
+hex = "0.4.3"
+reqwest = "0.11.27"
+serde_json = "1.0.114"
+serde = "1.0.197"
+dotenv = "0.15.0"
+
+[[bin]]
+name = "deploy_pyth"
+path = "scripts/deploy_pyth.rs"
+
+[[test]]
+harness = true
+name = "integration_tests"
+path = "tests/harness.rs"
