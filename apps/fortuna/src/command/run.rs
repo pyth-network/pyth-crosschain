@@ -24,6 +24,7 @@ use {
         Result,
     },
     axum::Router,
+    hex,
     std::{
         collections::HashMap,
         net::SocketAddr,
@@ -131,53 +132,56 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
         let provider_config = provider_config.get_chain_config(chain_id)?;
         let provider_commitments = &provider_config.commitments;
+        let provider_info = contract.get_provider_info(opts.provider).call().await?;
+        let latest_metadata =
+            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
-        let mut offsets= provider_commitments
-            .iter()
-            .map(|x| x.original_commitment_sequence_number.try_into().map_err(|_| anyhow!("Error converting u64 offset to usize for {}", chain_id)))
-            .collect::<Result<Vec<usize>>>()?;
-        let mut hash_chains=  provider_commitments
+        // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
+        // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
+        // later when a user request comes in for that chain.
+
+        // Reconstruct the hash chain for old registrations
+        let mut offsets = provider_commitments
             .iter()
             .map(|x| {
+                x.original_commitment_sequence_number
+                    .try_into()
+                    .map_err(|_| anyhow!("{}: error converting u64 offset to usize", chain_id))
+            })
+            .collect::<Result<Vec<usize>>>()?;
+
+        let mut hash_chains = provider_commitments
+            .iter()
+            .map(|x| {
+                let metadata =
+                    bincode::deserialize::<CommitmentMetadata>(hex::decode(&x.metadata)?.as_ref())?;
                 PebbleHashChain::from_config(
                     &secret,
                     &chain_id,
                     &opts.provider,
                     &chain_config.contract_addr,
-                    &x.seed,
-                    x.chain_length,
+                    &metadata.seed,
+                    metadata.chain_length,
                 )
             })
             .collect::<Result<Vec<PebbleHashChain>>>()?;
 
-        let provider_info = contract.get_provider_info(opts.provider).call().await?;
-
-        // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
-        // TODO: we should instantiate the state here with multiple hash chains.
-        // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
-        // are for the most recent chain).
-        // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
-        // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
-        // later when a user request comes in for that chain.
-        let metadata =
-            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
-
-        // push latest hash chains
+        // Reconstruct the hash chain for latest registration
         offsets.push(
             provider_info
                 .original_commitment_sequence_number
                 .try_into()?,
         );
-
         hash_chains.push(PebbleHashChain::from_config(
             &secret,
             &chain_id,
             &opts.provider,
             &chain_config.contract_addr,
-            &metadata.seed,
-            metadata.chain_length,
+            &latest_metadata.seed,
+            latest_metadata.chain_length,
         )?);
-        // Hashchains requires offsets to be in order
+
+        // Hash chains requires offsets to be in order
         let chain_state = HashChainState {
             offsets,
             hash_chains,

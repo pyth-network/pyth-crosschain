@@ -185,6 +185,8 @@ impl ProviderConfig {
         Ok(config)
     }
 
+    /// Gets the provider chain config from the Hashmap. It will check that the commitments are in order.
+    /// If not, it will return an Err. Else, the config will be returned.
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
         let provider_chain_config = self.chains.get(chain_id).map(|x| x.clone()).ok_or(anyhow!(
             "Could not find chain id {} in the configuration",
@@ -223,7 +225,6 @@ impl ProviderChainConfig {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Commitment {
-    pub seed:                                [u8; 32],
-    pub chain_length:                        u64,
+    pub metadata:                            String,
     pub original_commitment_sequence_number: u64,
 }
