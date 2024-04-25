@@ -164,7 +164,7 @@ pub struct EthereumConfig {
 #[group(id = "ProviderConfig")]
 pub struct ProviderConfigOptions {
     /// Path to a configuration file containing provider configuration for the list of supported blockchains
-    /// The commitments should be in sorted in ascending order by there original_committed_sequence_number.
+    /// The commitments should be sorted in ascending order by their original_committed_sequence_number.
     #[arg(long = "provider-config")]
     #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
     #[arg(default_value = "provider-config.yaml")]
