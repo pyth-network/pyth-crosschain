@@ -24,7 +24,6 @@ use {
         Result,
     },
     axum::Router,
-    hex,
     std::{
         collections::HashMap,
         net::SocketAddr,
@@ -153,15 +152,13 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let mut hash_chains = provider_commitments
             .iter()
             .map(|x| {
-                let metadata =
-                    bincode::deserialize::<CommitmentMetadata>(hex::decode(&x.metadata)?.as_ref())?;
                 PebbleHashChain::from_config(
                     &secret,
                     &chain_id,
                     &opts.provider,
                     &chain_config.contract_addr,
-                    &metadata.seed,
-                    metadata.chain_length,
+                    &x.seed,
+                    x.chain_length,
                 )
             })
             .collect::<Result<Vec<PebbleHashChain>>>()?;
