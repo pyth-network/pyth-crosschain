@@ -8,11 +8,8 @@ interface CommitmentMetadata {
 }
 
 function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0, j = 0; i < hex.length; i += 2, j++) {
-    bytes[j] = parseInt(hex.substring(i, i + 2), 16);
-  }
-  return bytes;
+  const buffer = Buffer.from(hex, "hex");
+  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 }
 
 function deserializeCommitmentMetadata(data: Uint8Array): CommitmentMetadata {
