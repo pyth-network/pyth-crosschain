@@ -28,18 +28,24 @@ require("@solana/wallet-adapter-react-ui/styles.css");
 
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
-const SEND_USD_PROGRAM_ID: PublicKey = new PublicKey("2e5gZD3suxgJgkCg4pkoogxDKszy1SAwokz8mNeZUj4M");
+const SEND_USD_PROGRAM_ID: PublicKey = new PublicKey(
+  "2e5gZD3suxgJgkCg4pkoogxDKszy1SAwokz8mNeZUj4M"
+);
 const HERMES_URL = "https://hermes.pyth.network/";
 const DEVNET_RPC_URL = "https://api.devnet.solana.com";
 
-async function postPriceUpdate(connection: Connection, wallet: AnchorWallet| undefined, destination: PublicKey | undefined, amount: number | undefined) {
+async function postPriceUpdate(
+  connection: Connection,
+  wallet: AnchorWallet | undefined,
+  destination: PublicKey | undefined,
+  amount: number | undefined
+) {
   if (!(wallet && destination && amount)) {
     return;
   } else {
-    const priceServiceConnection = new PriceServiceConnection(
-      HERMES_URL,
-      { priceFeedRequestConfig: { binary: true } }
-    );
+    const priceServiceConnection = new PriceServiceConnection(HERMES_URL, {
+      priceFeedRequestConfig: { binary: true },
+    });
     const pythSolanaReceiver = new PythSolanaReceiver({
       connection,
       wallet: wallet as Wallet,
@@ -88,14 +94,22 @@ async function postPriceUpdate(connection: Connection, wallet: AnchorWallet| und
   }
 }
 
-function Button(props : {destination: PublicKey | undefined, amount: number | undefined}) {
+function Button(props: {
+  destination: PublicKey | undefined;
+  amount: number | undefined;
+}) {
   const connectionContext = useConnection();
   const wallet = useAnchorWallet();
 
   return (
     <button
       onClick={async () => {
-        await postPriceUpdate(connectionContext.connection, wallet, props.destination, props.amount);
+        await postPriceUpdate(
+          connectionContext.connection,
+          wallet,
+          props.destination,
+          props.amount
+        );
       }}
     >
       Send
@@ -104,23 +118,23 @@ function Button(props : {destination: PublicKey | undefined, amount: number | un
 }
 
 function App() {
-  const [destination, setDestination] = useState<PublicKey>()
-  const [amount, setAmount] = useState<number>()
+  const [destination, setDestination] = useState<PublicKey>();
+  const [amount, setAmount] = useState<number>();
 
   const handleSetDestination = (event: any) => {
     try {
-      setDestination(new PublicKey(event.target.value))
+      setDestination(new PublicKey(event.target.value));
     } catch (e) {
-      setDestination(undefined)
+      setDestination(undefined);
     }
-  }
+  };
   const handleSetAmount = (event: any) => {
     try {
-      setAmount(parseInt(event.target.value))
+      setAmount(parseInt(event.target.value));
     } catch (e) {
-      setAmount(undefined)
+      setAmount(undefined);
     }
-  }
+  };
 
   return (
     <ConnectionProvider endpoint={DEVNET_RPC_URL}>
@@ -132,22 +146,24 @@ function App() {
               <WalletMultiButton />
               <WalletDisconnectButton />
               <p>Click to send the amount of USD in SOL</p>
-              <p style={{ fontSize: '16px' }}>Destination (paste a Solana public key)</p>
+              <p style={{ fontSize: "16px" }}>
+                Destination (paste a Solana public key)
+              </p>
               <input
                 type="text"
-                value={destination ? destination.toString() : ''}
+                value={destination ? destination.toString() : ""}
                 onChange={handleSetDestination}
-                style={{ width: '100%', height: '40px', fontSize: '16px' }}
+                style={{ width: "100%", height: "40px", fontSize: "16px" }}
               />
-              <p style={{ fontSize: '16px' }}>Amount (USD)</p>
+              <p style={{ fontSize: "16px" }}>Amount (USD)</p>
               <input
                 type="text"
-                value={amount ? amount.toString() : ''}
+                value={amount ? amount.toString() : ""}
                 onChange={handleSetAmount}
-                style={{ width: '100%', height: '40px', fontSize: '16px' }}
+                style={{ width: "100%", height: "40px", fontSize: "16px" }}
               />
 
-              <Button destination={destination} amount={amount}  />
+              <Button destination={destination} amount={amount} />
             </header>
           </div>
         </WalletModalProvider>
