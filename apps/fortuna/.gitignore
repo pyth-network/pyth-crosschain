@@ -1,4 +1,4 @@
 /target
-config.yaml
+*config.yaml
 *secret*
 *private-key*

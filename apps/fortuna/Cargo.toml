@@ -1,6 +1,6 @@
 [package]
 name    = "fortuna"
-version = "4.0.1"
+version = "5.0.0"
 edition = "2021"
 
 [dependencies]
@@ -14,7 +14,7 @@ clap        = { version = "4.4.6", features = ["derive", "cargo", "env"] }
 ethabi      = "18.0.0"
 ethers      = { version = "2.0.14", features = ["ws"] }
 futures            = { version = "0.3.28" }
-hex         = "0.4.3"
+hex = "0.4.3"
 prometheus-client  = { version = "0.21.2" }
 pythnet-sdk = { path = "../../pythnet/pythnet_sdk", features = ["strum"] }
 rand        = "0.8.5"

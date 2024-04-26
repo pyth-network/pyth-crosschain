@@ -8,7 +8,9 @@ use {
         chain::ethereum::PythContract,
         command::register_provider::CommitmentMetadata,
         config::{
+            Commitment,
             Config,
+            ProviderConfig,
             RunOptions,
         },
         keeper,
@@ -27,7 +29,6 @@ use {
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
-        vec,
     },
     tokio::{
         spawn,
@@ -121,6 +122,11 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
+    let provider_config = opts
+        .provider_config
+        .provider_config
+        .as_ref()
+        .map(|path| ProviderConfig::load(&path).expect("Failed to load provider config"));
     let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
@@ -128,31 +134,50 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
-        let provider_info = contract.get_provider_info(opts.provider).call().await?;
+        let provider_chain_config = provider_config
+            .as_ref()
+            .and_then(|c| c.get_chain_config(chain_id));
+        let mut provider_commitments = provider_chain_config
+            .as_ref()
+            .map(|c| c.get_sorted_commitments())
+            .unwrap_or_else(|| Vec::new());
+        println!("{} {:?}", chain_id, provider_commitments);
 
-        // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
-        // TODO: we should instantiate the state here with multiple hash chains.
-        // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
-        // are for the most recent chain).
+        let provider_info = contract.get_provider_info(opts.provider).call().await?;
+        let latest_metadata =
+            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
+
+        provider_commitments.push(Commitment {
+            seed:                                latest_metadata.seed,
+            chain_length:                        latest_metadata.chain_length,
+            original_commitment_sequence_number: provider_info.original_commitment_sequence_number,
+        });
+
         // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
         // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
         // later when a user request comes in for that chain.
-        let metadata =
-            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
 
-        let hash_chain = PebbleHashChain::from_config(
-            &secret,
-            &chain_id,
-            &opts.provider,
-            &chain_config.contract_addr,
-            &metadata.seed,
-            metadata.chain_length,
-        )?;
+        let mut offsets = Vec::<usize>::new();
+        let mut hash_chains = Vec::<PebbleHashChain>::new();
+
+        for commitment in &provider_commitments {
+            let offset = commitment.original_commitment_sequence_number.try_into()?;
+            offsets.push(offset);
+
+            let pebble_hash_chain = PebbleHashChain::from_config(
+                &secret,
+                &chain_id,
+                &opts.provider,
+                &chain_config.contract_addr,
+                &commitment.seed,
+                commitment.chain_length,
+            )?;
+            hash_chains.push(pebble_hash_chain);
+        }
+
         let chain_state = HashChainState {
-            offsets:     vec![provider_info
-                .original_commitment_sequence_number
-                .try_into()?],
-            hash_chains: vec![hash_chain],
+            offsets,
+            hash_chains,
         };
 
         if chain_state.reveal(provider_info.original_commitment_sequence_number)?

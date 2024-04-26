@@ -97,7 +97,7 @@ pub struct RandomnessOptions {
     /// The length of the hash chain to generate.
     #[arg(long = "chain-length")]
     #[arg(env = "FORTUNA_CHAIN_LENGTH")]
-    #[arg(default_value = "10000")]
+    #[arg(default_value = "100000")]
     pub chain_length: u64,
 }
 
@@ -157,4 +157,58 @@ pub struct EthereumConfig {
 
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: U256,
+}
+
+#[derive(Args, Clone, Debug)]
+#[command(next_help_heading = "Provider Config Options")]
+#[group(id = "ProviderConfig")]
+pub struct ProviderConfigOptions {
+    #[arg(long = "provider-config")]
+    #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
+    pub provider_config: Option<String>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderConfig {
+    pub chains: HashMap<ChainId, ProviderChainConfig>,
+}
+
+impl ProviderConfig {
+    pub fn load(path: &str) -> Result<ProviderConfig> {
+        // Open and read the YAML file
+        let yaml_content = fs::read_to_string(path)?;
+        let config: ProviderConfig = serde_yaml::from_str(&yaml_content)?;
+        Ok(config)
+    }
+
+    /// Get the provider chain config. The method returns an Option for ProviderChainConfig.
+    /// We may not have past any commitments for a chain. For example, for a new chain
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Option<ProviderChainConfig> {
+        self.chains.get(chain_id).map(|x| x.clone())
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderChainConfig {
+    commitments: Vec<Commitment>,
+}
+
+impl ProviderChainConfig {
+    /// Returns a clone of the commitments in the sorted order.
+    /// `HashChainState`  requires offsets to be in order.
+    pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
+        let mut sorted_commitments = self.commitments.clone();
+        sorted_commitments.sort_by(|c1, c2| {
+            c1.original_commitment_sequence_number
+                .cmp(&c2.original_commitment_sequence_number)
+        });
+        sorted_commitments
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Commitment {
+    pub seed:                                [u8; 32],
+    pub chain_length:                        u64,
+    pub original_commitment_sequence_number: u64,
 }
