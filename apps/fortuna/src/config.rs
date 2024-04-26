@@ -165,8 +165,7 @@ pub struct EthereumConfig {
 pub struct ProviderConfigOptions {
     #[arg(long = "provider-config")]
     #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
-    #[arg(default_value = "provider-config.yaml")]
-    pub provider_config: String,
+    pub provider_config: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
