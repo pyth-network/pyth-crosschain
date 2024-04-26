@@ -42,6 +42,12 @@ pub struct RunOptions {
     #[arg(long = "keeper-private-key")]
     #[arg(env = "KEEPER_PRIVATE_KEY")]
     pub keeper_private_key_file: String,
+
+    /// Whether to run the keeper.
+    #[arg(long = "run-keeper")]
+    #[arg(env = "RUN_KEEPER")]
+    #[arg(default_value = "false")]
+    pub run_keeper: bool,
 }
 
 impl RunOptions {

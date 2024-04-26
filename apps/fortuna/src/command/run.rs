@@ -141,7 +141,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .as_ref()
             .map(|c| c.get_sorted_commitments())
             .unwrap_or_else(|| Vec::new());
-        println!("{} {:?}", chain_id, provider_commitments);
 
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
         let latest_metadata =
@@ -212,7 +211,10 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         Ok::<(), Error>(())
     });
-    spawn(run_keeper(chains.clone(), config, private_key));
+
+    if opts.run_keeper {
+        spawn(run_keeper(chains.clone(), config, private_key));
+    }
 
     run_api(opts.addr.clone(), chains, rx_exit).await?;
 
