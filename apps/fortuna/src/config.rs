@@ -163,8 +163,6 @@ pub struct EthereumConfig {
 #[command(next_help_heading = "Provider Config Options")]
 #[group(id = "ProviderConfig")]
 pub struct ProviderConfigOptions {
-    /// Path to a configuration file containing provider configuration for the list of supported blockchains
-    /// The commitments should be sorted in ascending order by their original_committed_sequence_number.
     #[arg(long = "provider-config")]
     #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
     #[arg(default_value = "provider-config.yaml")]
@@ -198,6 +196,7 @@ pub struct ProviderChainConfig {
 
 impl ProviderChainConfig {
     /// Returns a clone of the commitments in the sorted order.
+    /// `HashChainState`  requires offsets to be in order.
     pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
         let mut sorted_commitments = self.commitments.clone();
         sorted_commitments.sort_by(|c1, c2| {

@@ -169,7 +169,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             hash_chains.push(pebble_hash_chain);
         }
 
-        // Hash chains requires offsets to be in order
         let chain_state = HashChainState {
             offsets,
             hash_chains,
