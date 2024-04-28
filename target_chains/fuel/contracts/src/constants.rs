@@ -1,6 +1,8 @@
 use crate::pyth_utils::{Price, PriceFeed};
 use fuels::types::Bits256;
 
+pub const MAGIC: u32 = 0x5054474d;
+
 pub const BETA_5_URL: &str = "beta-5.fuel.network";
 pub const BETA_5_PYTH_CONTRACT_ID: &str =
     "0xe69daeb9fcf4c536c0fe402403b4b9e9822cc8b1f296e5d754be12cc384554c5";

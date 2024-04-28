@@ -9,6 +9,7 @@ use ::data_structures::{
         PriceFeed,
         PriceFeedId,
     },
+    governance_payload::UpgradeContractPayload,
     wormhole_light::{
         GuardianSet,
         WormholeProvider,
@@ -284,7 +285,7 @@ abi PythInfo {
     fn single_update_fee() -> u64;
 
     #[storage(read)]
-    fn valid_data_source(data_source: DataSource) -> bool;
+    fn is_valid_data_source(data_source: DataSource) -> bool;
 
     #[storage(read)]
     fn valid_data_sources() -> Vec<DataSource>;

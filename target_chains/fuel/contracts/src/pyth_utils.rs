@@ -17,6 +17,7 @@ use rand::Rng;
 use reqwest;
 use serde_json;
 use std::path::PathBuf;
+use sha3::{Digest, Keccak256};
 
 abigen!(Contract(
     name = "PythOracleContract",
@@ -85,6 +86,82 @@ pub fn test_accumulator_update_data_bytes() -> Vec<Bytes> {
             .decode(TEST_ACCUMULATOR_UPDATE_DATA)
             .unwrap(),
     )]
+}
+
+pub fn create_set_fee_payload(new_fee: u64, exponent: u32) -> Vec<u8> {
+    let base = new_fee / 10u64.pow(exponent);
+    let base_bytes = base.to_be_bytes();
+    let exponent_bytes = exponent.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&base_bytes);
+    payload.extend_from_slice(&exponent_bytes);
+    payload
+}
+
+pub fn create_governance_instruction_payload(
+    magic: u32,
+    module: GovernanceModule,
+    action: GovernanceAction,
+    target_chain_id: u16,
+    payload: Vec<u8>,
+) -> Vec<u8> {
+    let mut buffer = Vec::new();
+    buffer.extend_from_slice(&magic.to_be_bytes());
+    let module_number = match module {
+        GovernanceModule::Executor => 0,
+        GovernanceModule::Target => 1,
+        GovernanceModule::EvmExecutor => 2,
+        GovernanceModule::StacksTarget => 3,
+        GovernanceModule::Invalid => u8::MAX, // Typically 255 for invalid
+    };
+    buffer.push(module_number);
+    let action_number = match action {
+        GovernanceAction::UpgradeContract => 0,
+        GovernanceAction::AuthorizeGovernanceDataSourceTransfer => 1,
+        GovernanceAction::SetDataSources => 2,
+        GovernanceAction::SetFee => 3,
+        GovernanceAction::SetValidPeriod => 4,
+        GovernanceAction::RequestGovernanceDataSourceTransfer => 5,
+        GovernanceAction::SetWormholeAddress => 6,
+        GovernanceAction::Invalid => u8::MAX, // Typically 255 for invalid
+    };
+    buffer.push(action_number);
+    buffer.extend_from_slice(&target_chain_id.to_be_bytes());
+    buffer.extend_from_slice(&payload);
+    buffer
+}
+
+pub fn create_wormhole_vm_payload(
+    version: u8,
+    guardian_set_index: u32,
+    timestamp: u32,
+    nonce: u32,
+    emitter_chain_id: u16,
+    emitter_address: [u8; 32], // Assuming b256 is a 32-byte array
+    sequence: u64,
+    consistency_level: u8,
+    payload: Vec<u8>,
+) -> Vec<u8> {
+    let mut encoded_payload = Vec::new();
+    encoded_payload.push(version);
+    encoded_payload.extend_from_slice(&guardian_set_index.to_be_bytes());
+
+    let mut body = Vec::new();
+    body.extend_from_slice(&timestamp.to_be_bytes());
+    body.extend_from_slice(&nonce.to_be_bytes());
+    body.extend_from_slice(&emitter_chain_id.to_be_bytes());
+    body.extend_from_slice(&emitter_address);
+    body.extend_from_slice(&sequence.to_be_bytes());
+    body.push(consistency_level);
+    body.extend_from_slice(&payload);
+
+    // Compute hash of the body
+    let mut hasher = Keccak256::new();
+    hasher.update(&body);
+    let hash = hasher.finalize();
+    encoded_payload.extend_from_slice(&hash);
+    encoded_payload.extend_from_slice(&body);
+    encoded_payload
 }
 
 impl Pyth {

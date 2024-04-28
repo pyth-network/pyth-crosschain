@@ -40,13 +40,13 @@ pub(crate) async fn single_update_fee(
     contract.methods().single_update_fee().call().await.unwrap()
 }
 
-pub(crate) async fn valid_data_source(
+pub(crate) async fn is_valid_data_source(
     contract: &PythOracleContract<WalletUnlocked>,
     data_source: &DataSource,
 ) -> FuelCallResponse<bool> {
     contract
         .methods()
-        .valid_data_source(data_source.clone())
+        .is_valid_data_source(data_source.clone())
         .call()
         .await
         .unwrap()

@@ -1,6 +1,6 @@
 use crate::utils::interface::{
     pyth_core::valid_time_period,
-    pyth_info::{owner, single_update_fee, valid_data_source, valid_data_sources},
+    pyth_info::{is_valid_data_source, owner, single_update_fee, valid_data_sources},
     pyth_init::constructor,
     wormhole_guardians::{
         current_guardian_set_index, current_wormhole_provider, governance_action_is_consumed,
@@ -29,7 +29,7 @@ mod success {
 
         // Initial values
         assert!(
-            !valid_data_source(&deployer.instance, &default_data_sources()[0])
+            !is_valid_data_source(&deployer.instance, &default_data_sources()[0])
                 .await
                 .value
         );
@@ -79,7 +79,7 @@ mod success {
 
         // Final values
         assert!(
-            valid_data_source(&deployer.instance, &default_data_sources()[0])
+            is_valid_data_source(&deployer.instance, &default_data_sources()[0])
                 .await
                 .value
         );

@@ -19,7 +19,7 @@ impl DataSource {
     }
 
     #[storage(read)]
-    pub fn is_valid(
+    pub fn is_valid_data_source(
         self,
         is_valid_data_source: StorageKey<StorageMap<DataSource, bool>>,
 ) -> bool {
@@ -27,5 +27,9 @@ impl DataSource {
             Some(bool) => bool,
             None => false,
         }
+    }
+
+    pub fn is_valid_governance_data_source(self, chain_id: u16, emitter_address: b256) -> bool {
+        self.chain_id == chain_id && self.emitter_address == emitter_address
     }
 }

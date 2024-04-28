@@ -19,3 +19,34 @@ pub struct NewGuardianSetEvent {
 pub struct UpdatedPriceFeedsEvent {
     updated_price_feeds: Vec<PriceFeedId>,
 }
+
+pub struct ContractUpgradedEvent {
+    old_implementation: Identity,
+    new_implementation: Identity,
+}
+
+pub struct GovernanceDataSourceSetEvent {
+    old_data_source: DataSource,
+    new_data_source: DataSource,
+    initial_sequence: u64,
+}
+
+pub struct DataSourcesSetEvent {
+    old_data_sources: Vec<DataSource>,
+    new_data_sources: Vec<DataSource>,
+}
+
+pub struct FeeSetEvent {
+    old_fee: u64,
+    new_fee: u64,
+}
+
+pub struct ValidPeriodSetEvent {
+    old_valid_period: u64,
+    new_valid_period: u64,
+}
+
+pub struct WormholeAddressSetEvent {
+    old_wormhole_address: b256,
+    new_wormhole_address: b256,
+}

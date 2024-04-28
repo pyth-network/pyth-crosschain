@@ -582,7 +582,7 @@ impl WormholeVM {
         );
         require(
             DataSource::new(vm.emitter_chain_id, vm.emitter_address)
-                .is_valid(is_valid_data_source),
+                .is_valid_data_source(is_valid_data_source),
             WormholeError::InvalidUpdateDataSource,
         );
         vm
