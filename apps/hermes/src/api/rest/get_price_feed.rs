@@ -49,6 +49,8 @@ pub struct GetPriceFeedQueryParams {
     binary: bool,
 }
 
+/// **Deprecated: use /v2/updates/price/{publish_time} instead**
+///
 /// Get a price update for a price feed with a specific timestamp
 ///
 /// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
@@ -62,6 +64,7 @@ pub struct GetPriceFeedQueryParams {
         GetPriceFeedQueryParams
     )
 )]
+#[deprecated]
 pub async fn get_price_feed<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,

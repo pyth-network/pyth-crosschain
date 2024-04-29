@@ -46,6 +46,8 @@ pub struct GetVaaCcipResponse {
     data: String, // TODO: Use a typed wrapper for the hex output with leading 0x.
 }
 
+/// **Deprecated: use /v2/updates/price/{publish_time} instead**
+///
 /// Get a VAA for a price feed using CCIP
 ///
 /// This endpoint accepts a single argument which is a hex-encoded byte string of the following form:
@@ -60,6 +62,7 @@ pub struct GetVaaCcipResponse {
         GetVaaCcipQueryParams
     )
 )]
+#[deprecated]
 pub async fn get_vaa_ccip<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,

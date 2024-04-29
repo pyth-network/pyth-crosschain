@@ -43,6 +43,8 @@ pub struct LatestVaasQueryParams {
 }
 
 
+/// **Deprecated: use /v2/updates/price/latest instead**
+///
 /// Get VAAs for a set of price feed ids.
 ///
 /// Given a collection of price feed ids, retrieve the latest VAA for each. The returned VAA(s) can
@@ -58,6 +60,7 @@ pub struct LatestVaasQueryParams {
         (status = 200, description = "VAAs retrieved successfully", body = Vec<String>, example=json!([doc_examples::vaa_example()]))
     ),
 )]
+#[deprecated]
 pub async fn latest_vaas<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
