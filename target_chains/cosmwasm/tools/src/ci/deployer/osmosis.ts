@@ -37,7 +37,7 @@ export class OsmosisDeployer implements Deployer {
 
     const client = await getSigningOsmosisClient({
       rpcEndpoint: this.endpoint,
-      signer: signer,
+      signer,
       defaultTypes: wasmTypes,
     });
 
