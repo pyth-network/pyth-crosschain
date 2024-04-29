@@ -1,4 +1,4 @@
-use pyth::reader::ByteArray;
+use super::byte_array::ByteArray;
 use core::starknet::secp256_trait::Signature;
 use pyth::util::UnwrapWithFelt252;
 
@@ -114,7 +114,8 @@ mod wormhole {
     use super::{
         VM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError
     };
-    use pyth::reader::{Reader, ReaderImpl, ByteArray};
+    use pyth::reader::{Reader, ReaderImpl};
+    use pyth::byte_array::ByteArray;
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
     use core::starknet::secp256k1::Secp256k1Point;
     use core::starknet::{

@@ -1,6 +1,7 @@
 use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank, CheatTarget};
 use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
-use pyth::reader::{ByteArray, ByteArrayImpl, ReaderImpl};
+use pyth::reader::ReaderImpl;
+use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{UnwrapWithFelt252, array_felt252_to_bytes31};
 use core::starknet::ContractAddress;
 use core::panic_with_felt252;
