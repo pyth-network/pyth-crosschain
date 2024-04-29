@@ -1,5 +1,6 @@
 use super::hash::{Hasher, HasherImpl};
-use super::reader::{Reader, ReaderImpl, ByteArray};
+use super::reader::{Reader, ReaderImpl};
+use super::byte_array::ByteArray;
 use super::util::ONE_SHIFT_96;
 use core::cmp::{min, max};
 
