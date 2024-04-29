@@ -5,7 +5,10 @@
 use {
     crate::{
         config::RunOptions,
-        state::State as AppState,
+        state::{
+            metrics::Metrics,
+            State as AppState,
+        },
     },
     anyhow::Result,
     axum::{
@@ -15,7 +18,6 @@ use {
         routing::get,
         Router,
     },
-    prometheus_client::encoding::text::encode,
     std::sync::Arc,
 };
 
@@ -43,13 +45,7 @@ pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
 }
 
 pub async fn metrics(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let registry = state.metrics_registry.read().await;
-    let mut buffer = String::new();
-
-    // Should not fail if the metrics are valid and there is memory available
-    // to write to the buffer.
-    encode(&mut buffer, &registry).unwrap();
-
+    let buffer = Metrics::encode(&*state).await;
     (
         [(
             header::CONTENT_TYPE,

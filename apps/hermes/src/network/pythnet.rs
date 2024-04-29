@@ -7,7 +7,6 @@ use {
         api::types::PriceFeedMetadata,
         config::RunOptions,
         network::wormhole::{
-            update_guardian_set,
             BridgeData,
             GuardianSet,
             GuardianSetData,
@@ -22,6 +21,7 @@ use {
                 Aggregates,
                 Update,
             },
+            wormhole::Wormhole,
             State,
         },
     },
@@ -215,11 +215,14 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<!> {
 /// This method performs the necessary work to pull down the bridge state and associated guardian
 /// sets from a deployed Wormhole contract. Note that we only fetch the last two accounts due to
 /// the fact that during a Wormhole upgrade, there will only be messages produces from those two.
-async fn fetch_existing_guardian_sets(
-    state: Arc<State>,
+async fn fetch_existing_guardian_sets<S>(
+    state: Arc<S>,
     pythnet_http_endpoint: String,
     wormhole_contract_addr: Pubkey,
-) -> Result<()> {
+) -> Result<()>
+where
+    S: Wormhole,
+{
     let client = RpcClient::new(pythnet_http_endpoint.to_string());
     let bridge = fetch_bridge_data(&client, &wormhole_contract_addr).await?;
 
@@ -233,7 +236,7 @@ async fn fetch_existing_guardian_sets(
         "Retrieved Current GuardianSet.",
     );
 
-    update_guardian_set(&state, bridge.guardian_set_index, current).await;
+    Wormhole::update_guardian_set(&*state, bridge.guardian_set_index, current).await;
 
     // If there are more than one guardian set, we want to fetch the previous one as well as it
     // may still be in transition phase if a guardian upgrade has just occurred.
@@ -251,7 +254,7 @@ async fn fetch_existing_guardian_sets(
             "Retrieved Previous GuardianSet.",
         );
 
-        update_guardian_set(&state, bridge.guardian_set_index - 1, previous).await;
+        Wormhole::update_guardian_set(&*state, bridge.guardian_set_index - 1, previous).await;
     }
 
     Ok(())

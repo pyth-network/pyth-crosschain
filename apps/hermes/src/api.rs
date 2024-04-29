@@ -27,7 +27,7 @@ mod ws;
 pub struct ApiState<S = State> {
     pub state:   Arc<S>,
     pub ws:      Arc<ws::WsState>,
-    pub metrics: Arc<metrics_middleware::Metrics>,
+    pub metrics: Arc<metrics_middleware::ApiMetrics>,
 }
 
 /// Manually implement `Clone` as the derive macro will try and slap `Clone` on
@@ -49,7 +49,7 @@ impl ApiState<State> {
         requester_ip_header_name: String,
     ) -> Self {
         Self {
-            metrics: Arc::new(metrics_middleware::Metrics::new(state.clone())),
+            metrics: Arc::new(metrics_middleware::ApiMetrics::new(state.clone())),
             ws: Arc::new(ws::WsState::new(
                 ws_whitelist,
                 requester_ip_header_name,

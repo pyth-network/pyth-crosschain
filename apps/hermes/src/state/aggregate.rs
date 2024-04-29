@@ -122,7 +122,7 @@ pub struct AggregateStateData {
     /// probes.
     pub latest_observed_slot: Option<Slot>,
 
-    /// Metrics
+    /// Aggregate Specific Metrics
     pub metrics: metrics::Metrics,
 }
 
