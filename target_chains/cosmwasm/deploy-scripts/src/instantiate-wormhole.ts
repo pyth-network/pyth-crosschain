@@ -7,7 +7,7 @@ import {
   DefaultStore,
   toPrivateKey,
   CosmWasmWormholeContract,
-} from "contract_manager";
+} from "@pythnetwork/contract-manager";
 import { CHAINS } from "xc_admin_common";
 import { DeploymentType } from "./helper";
 

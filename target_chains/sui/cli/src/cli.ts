@@ -5,7 +5,7 @@ import {
   getDefaultDeploymentConfig,
   SuiChain,
   SuiPriceFeedContract,
-} from "contract_manager";
+} from "@pythnetwork/contract-manager";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy";
