@@ -119,7 +119,7 @@ export class CosmwasmQuerier implements ChainQuerier {
 
     return {
       ...contractInfo,
-      codeId: contractInfo.codeId.toNumber(),
+      codeId: Number(contractInfo.codeId),
       adminAddr: contractInfo.admin,
     };
   }

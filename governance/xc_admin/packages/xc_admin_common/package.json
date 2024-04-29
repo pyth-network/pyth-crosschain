@@ -19,19 +19,26 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest"
   },
+  "//": [
+    "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",
+    "wormhole-sdk can be built with the correct version of the package in nextjs (xc_admin_frontend).",
+    "Otherwise, the nextjs build will fail due to using a different version of the package."
+  ],
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.22",
+    "@certusone/wormhole-sdk": "^0.10.15",
     "@coral-xyz/anchor": "^0.29.0",
+    "@injectivelabs/sdk-ts": "^1.10.72",
+    "@injectivelabs/token-metadata": "~1.10.42",
     "@pythnetwork/client": "^2.17.0",
+    "@pythnetwork/pyth-solana-receiver": "*",
+    "@pythnetwork/solana-utils": "*",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "bigint-buffer": "^1.1.5",
     "ethers": "^5.7.2",
     "lodash": "^4.17.21",
-    "typescript": "^4.9.4",
-    "@pythnetwork/solana-utils": "*",
-    "@pythnetwork/pyth-solana-receiver": "*"
+    "typescript": "^4.9.4"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

@@ -118,7 +118,7 @@ export class InjectiveExecutor implements ChainExecutor {
     const sig = await this.wallet.sign(Buffer.from(signBytes));
 
     /** Append Signatures */
-    txRaw.setSignaturesList([sig]);
+    txRaw.signatures = txRaw.signatures.concat(sig);
 
     const txResponse = await txService.broadcast(txRaw);
 

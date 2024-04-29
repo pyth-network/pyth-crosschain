@@ -74,3 +74,11 @@
   prefix: rol
   feeDenom: urax
   type: CosmWasmChain
+- endpoint: https://testnet-burnt-rpc.lavenderfive.com
+  id: xion_testnet
+  wormholeChainName: xion_testnet
+  mainnet: false
+  gasPrice: "0.025"
+  prefix: xion
+  feeDenom: uxion
+  type: CosmWasmChain
