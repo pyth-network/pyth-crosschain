@@ -39,7 +39,7 @@ const priceIds = [
 
 // Get the latest values of the price feeds as json objects.
 // If you set `binary: true` above, then this method also returns signed price updates for the on-chain Pyth contract.
-const currentPrices = await connection.getLatestPriceFeeds(priceIds);
+const currentPrices = await connection.getLatestVaas(priceIds);
 
 // You can also call this function to get price updates for the on-chain contract directly.
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
