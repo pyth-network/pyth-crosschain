@@ -212,7 +212,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    if opts.run_keeper {
+    if let Some(private_key) = private_key {
         spawn(run_keeper(chains.clone(), config, private_key));
     }
 
