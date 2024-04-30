@@ -46,7 +46,7 @@ pub struct RunOptions {
 }
 
 impl RunOptions {
-    pub fn load_private_key(&self) -> Result<Option<String>> {
+    pub fn load_keeper_private_key(&self) -> Result<Option<String>> {
         if let Some(ref keeper_private_key_file) = self.keeper_private_key_file {
             return Ok(Some(fs::read_to_string(keeper_private_key_file)?));
         }

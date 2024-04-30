@@ -127,7 +127,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         .provider_config
         .as_ref()
         .map(|path| ProviderConfig::load(&path).expect("Failed to load provider config"));
-    let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
@@ -212,8 +211,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    if let Some(private_key) = private_key {
-        spawn(run_keeper(chains.clone(), config, private_key));
+    if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
+        spawn(run_keeper(chains.clone(), config, keeper_private_key));
     }
 
     run_api(opts.addr.clone(), chains, rx_exit).await?;
