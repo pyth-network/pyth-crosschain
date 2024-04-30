@@ -51,10 +51,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             }
           );
-
-        case "Authorize":
-        case "AuthorizeWithSeed":
-        case "Delegate":
+          case "Delegate":
           const decodedDelegate = StakeInstruction.decodeDelegate(instruction);
           return new SolanaStakingMultisigInstruction(
             "Delegate",
@@ -80,6 +77,8 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             }
           );
+        case "Authorize":
+        case "AuthorizeWithSeed":
         case "Initialize":
         case "Merge":
         case "Split":

@@ -75,7 +75,7 @@ async function loadVaultFromOptions(options: any): Promise<MultisigVault> {
   const vault: PublicKey = new PublicKey(options.vault);
 
   const squad = SquadsMesh.endpoint(
-    options.rpcUrlOverride || getPythClusterApiUrl(multisigCluster),
+    options.rpcUrlOverride ?? getPythClusterApiUrl(multisigCluster),
     wallet
   );
 
