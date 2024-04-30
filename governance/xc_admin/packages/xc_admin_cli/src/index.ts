@@ -44,6 +44,7 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 
 import { LedgerNodeWallet } from "./ledger";
+import { DEFAULT_PRIORITY_FEE_CONFIG } from "@pythnetwork/solana-utils";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -74,7 +75,7 @@ async function loadVaultFromOptions(options: any): Promise<MultisigVault> {
   const vault: PublicKey = new PublicKey(options.vault);
 
   const squad = SquadsMesh.endpoint(
-    getPythClusterApiUrl(multisigCluster),
+    options.rpcUrlOverride ?? getPythClusterApiUrl(multisigCluster),
     wallet
   );
 
@@ -101,6 +102,10 @@ const multisigCommand = (name: string, description: string) =>
     .option(
       "-ldc, --ledger-derivation-change <number>",
       "ledger derivation change to use"
+    )
+    .option(
+      "-u, --rpc-url-override <string>",
+      "RPC URL to override the default for the cluster. Make sure this is an RPC URL of the cluster where the multisig lives. For Pythnet proposals it should be a Solana Mainnet RPC URL."
     );
 
 program
@@ -154,7 +159,11 @@ multisigCommand(
       })
       .instruction();
 
-    await vault.proposeInstructions([proposalInstruction], targetCluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -178,7 +187,11 @@ multisigCommand(
     })
     .instruction();
 
-  await vault.proposeInstructions([proposalInstruction], targetCluster);
+  await vault.proposeInstructions(
+    [proposalInstruction],
+    targetCluster,
+    DEFAULT_PRIORITY_FEE_CONFIG
+  );
 });
 
 multisigCommand(
@@ -209,7 +222,11 @@ multisigCommand(
       })
       .instruction();
 
-    await vault.proposeInstructions([proposalInstruction], targetCluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -250,7 +267,11 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
       ],
     };
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -286,7 +307,11 @@ multisigCommand(
       ],
     };
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -315,7 +340,40 @@ multisigCommand(
       []
     );
 
-    await vault.proposeInstructions(instructions, cluster);
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
+
+multisigCommand(
+  "delegate-stake",
+  "Delegate a stake account to the given vote account"
+)
+  .requiredOption("-s, --stake-account <pubkey>", "stake account to delegate")
+  .requiredOption("-d, --vote-account <pubkey>", "vote account to delegate to")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
+      cluster
+    );
+
+    const stakeAccount: PublicKey = new PublicKey(options.stakeAccount);
+    const voteAccount: PublicKey = new PublicKey(options.voteAccount);
+
+    const instructions = StakeProgram.delegate({
+      stakePubkey: stakeAccount,
+      authorizedPubkey,
+      votePubkey: voteAccount,
+    }).instructions;
+
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand(
@@ -340,7 +398,11 @@ multisigCommand(
         priceAccount,
       })
       .instruction();
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 program
@@ -431,7 +493,11 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
         BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
       );
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("propose-sol-transfer", "Propose sol transfer")
@@ -450,7 +516,11 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
       lamports: amount * LAMPORTS_PER_SOL,
     });
 
-    await vault.proposeInstructions([proposalInstruction], cluster);
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
@@ -524,7 +594,11 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
       }
     }
 
-    vault.proposeInstructions(proposalInstructions, options.cluster);
+    vault.proposeInstructions(
+      proposalInstructions,
+      options.cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 /**
