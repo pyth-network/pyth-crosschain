@@ -13,7 +13,7 @@ name = "pyth_solana_receiver_sdk"
 
 
 [dependencies]
-anchor-lang = "*"
+anchor-lang = ">=0.27.0"
 hex = "*"
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0"}
-solana-program = "*"
+solana-program = ">=1.14.16"
