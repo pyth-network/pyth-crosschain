@@ -1,4 +1,11 @@
-import { DefaultStore, EvmChain, EvmEntropyContract, PrivateKey } from "../src";
+import {
+  DefaultStore,
+  EvmChain,
+  EvmEntropyContract,
+  EvmWormholeContract,
+  getDefaultDeploymentConfig,
+  PrivateKey,
+} from "../src";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import Web3 from "web3";
@@ -211,4 +218,114 @@ export function findEvmChain(chainName: string): EvmChain {
     throw new Error(`Chain ${chainName} is not an EVM chain`);
   }
   return chain;
+}
+
+/**
+ * Finds the wormhole contract for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
+ * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
+ */
+export function findWormholeContract(
+  chain: EvmChain
+): EvmWormholeContract | undefined {
+  for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
+    if (
+      contract instanceof EvmWormholeContract &&
+      contract.getChain().getId() === chain.getId()
+    ) {
+      return contract;
+    }
+  }
+}
+
+interface GetWormholeReceiverContractsConfig {
+  type: "stable" | "beta";
+  privateKey: PrivateKey;
+}
+/**
+ * Deploys the wormhole receiver contract for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the wormhole receiver contract for.
+ * @returns {EvmWormholeContract} The wormhole contract for the given EVM chain.
+ */
+export async function deployWormholeContract(
+  chain: EvmChain,
+  config: GetWormholeReceiverContractsConfig & DeployConfig,
+  cacheFile: string
+): Promise<EvmWormholeContract> {
+  const contract = findWormholeContract(chain);
+  if (contract) return contract;
+
+  const receiverSetupAddr = await deployIfNotCached(
+    cacheFile,
+    chain,
+    config,
+    "ReceiverSetup",
+    []
+  );
+
+  const receiverImplAddr = await deployIfNotCached(
+    cacheFile,
+    chain,
+    config,
+    "ReceiverImplementation",
+    []
+  );
+
+  // Craft the init data for the proxy contract
+  const setupContract = getWeb3Contract(
+    config.jsonOutputDir,
+    "ReceiverSetup",
+    receiverSetupAddr
+  );
+
+  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
+
+  const initData = setupContract.methods
+    .setup(
+      receiverImplAddr,
+      wormholeConfig.initialGuardianSet.map((addr: string) => "0x" + addr),
+      chain.getWormholeChainId(),
+      wormholeConfig.governanceChainId,
+      "0x" + wormholeConfig.governanceContract
+    )
+    .encodeABI();
+
+  const wormholeReceiverAddr = await deployIfNotCached(
+    cacheFile,
+    chain,
+    config,
+    "WormholeReceiver",
+    [receiverSetupAddr, initData]
+  );
+
+  const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
+
+  if (config.type === "stable") {
+    console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
+    // TODO: Add a way to pass gas configs to this
+    await wormholeContract.syncMainnetGuardianSets(config.privateKey);
+    console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
+  }
+
+  return wormholeContract;
+}
+
+/**
+ * Returns the wormhole contract for a given EVM chain.
+ * If there was no wormhole contract deployed for the given chain, it will deploy the wormhole contract and save it to the default store.
+ * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
+ * @returns {EvmWormholeContract} The wormhole contract for the given EVM chain.
+ */
+export async function getWormholeContract(
+  chain: EvmChain,
+  config: GetWormholeReceiverContractsConfig & DeployConfig,
+  cacheFile: string
+): Promise<EvmWormholeContract> {
+  const wormholeContract = findWormholeContract(chain);
+  if (wormholeContract) return wormholeContract;
+
+  const newContract = await deployWormholeContract(chain, config, cacheFile);
+  DefaultStore.wormhole_contracts[newContract.getId()] = newContract;
+  DefaultStore.saveAllContracts();
+  return newContract;
 }

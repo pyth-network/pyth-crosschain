@@ -9,12 +9,12 @@ import {
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
-  EvmWormholeContract,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
+  getWormholeContract,
 } from "./common";
 
 type DeploymentConfig = {
@@ -50,65 +50,6 @@ const parser = yargs(hideBin(process.argv))
       desc: "Single update fee in wei for the price feed",
     },
   });
-
-async function deployWormholeReceiverContracts(
-  chain: EvmChain,
-  config: DeploymentConfig
-): Promise<string> {
-  const receiverSetupAddr = await deployIfNotCached(
-    CACHE_FILE,
-    chain,
-    config,
-    "ReceiverSetup",
-    []
-  );
-
-  const receiverImplAddr = await deployIfNotCached(
-    CACHE_FILE,
-    chain,
-    config,
-    "ReceiverImplementation",
-    []
-  );
-
-  // Craft the init data for the proxy contract
-  const setupContract = getWeb3Contract(
-    config.jsonOutputDir,
-    "ReceiverSetup",
-    receiverSetupAddr
-  );
-
-  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
-
-  const initData = setupContract.methods
-    .setup(
-      receiverImplAddr,
-      wormholeConfig.initialGuardianSet.map((addr: string) => "0x" + addr),
-      chain.getWormholeChainId(),
-      wormholeConfig.governanceChainId,
-      "0x" + wormholeConfig.governanceContract
-    )
-    .encodeABI();
-
-  const wormholeReceiverAddr = await deployIfNotCached(
-    CACHE_FILE,
-    chain,
-    config,
-    "WormholeReceiver",
-    [receiverSetupAddr, initData]
-  );
-
-  const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
-
-  if (config.type === "stable") {
-    console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
-    // TODO: Add a way to pass gas configs to this
-    await wormholeContract.syncMainnetGuardianSets(config.privateKey);
-    console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
-  }
-
-  return wormholeReceiverAddr;
-}
 
 async function deployPriceFeedContracts(
   chain: EvmChain,
@@ -183,14 +124,16 @@ async function main() {
 
     console.log(`Deploying price feed contracts on ${chain.getId()}...`);
 
-    const wormholeAddr = await deployWormholeReceiverContracts(
+    const wormholeContract = await getWormholeContract(
       chain,
-      deploymentConfig
+      deploymentConfig,
+      CACHE_FILE
     );
+
     const priceFeedAddr = await deployPriceFeedContracts(
       chain,
       deploymentConfig,
-      wormholeAddr
+      wormholeContract.address
     );
 
     if (deploymentConfig.saveContract) {

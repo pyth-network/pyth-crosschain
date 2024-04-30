@@ -5,17 +5,16 @@ import { DefaultStore } from "../src/store";
 import {
   DeploymentType,
   EvmEntropyContract,
-  EvmPriceFeedContract,
   getDefaultDeploymentConfig,
   PrivateKey,
   toDeploymentType,
   toPrivateKey,
-  EvmWormholeContract,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
+  getWormholeContract,
 } from "./common";
 import Web3 from "web3";
 
@@ -25,7 +24,6 @@ type DeploymentConfig = {
   gasPriceMultiplier: number;
   privateKey: PrivateKey;
   jsonOutputDir: string;
-  wormholeAddr: string;
   saveContract: boolean;
 };
 
@@ -51,7 +49,8 @@ const parser = yargs(hideBin(process.argv))
 
 async function deployExecutorContracts(
   chain: EvmChain,
-  config: DeploymentConfig
+  config: DeploymentConfig,
+  wormholeAddr: string
 ): Promise<string> {
   const executorImplAddr = await deployIfNotCached(
     CACHE_FILE,
@@ -72,7 +71,7 @@ async function deployExecutorContracts(
 
   const executorInitData = executorImplContract.methods
     .initialize(
-      config.wormholeAddr,
+      wormholeAddr,
       0, // lastExecutedSequence,
       chain.getWormholeChainId(),
       governanceDataSource.emitterChain,
@@ -161,19 +160,6 @@ async function topupProviderIfNecessary(
   }
 }
 
-async function findWormholeAddress(
-  chain: EvmChain
-): Promise<string | undefined> {
-  for (const contract of Object.values(DefaultStore.contracts)) {
-    if (
-      contract instanceof EvmPriceFeedContract &&
-      contract.getChain().getId() === chain.getId()
-    ) {
-      return (await contract.getWormholeContract()).address;
-    }
-  }
-}
-
 async function main() {
   const argv = await parser.argv;
 
@@ -185,12 +171,6 @@ async function main() {
     throw new Error(`Chain ${chainName} is not an EVM chain`);
   }
 
-  const wormholeAddr = await findWormholeAddress(chain);
-  if (!wormholeAddr) {
-    // TODO: deploy wormhole if necessary and maintain a wormhole store
-    throw new Error(`Wormhole contract not found for chain ${chain.getId()}`);
-  }
-
   const deploymentConfig: DeploymentConfig = {
     type: toDeploymentType(argv.deploymentType),
     gasMultiplier: argv.gasMultiplier,
@@ -198,18 +178,14 @@ async function main() {
     privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
     saveContract: argv.saveContract,
-    wormholeAddr,
   };
-  const wormholeContract = new EvmWormholeContract(
+
+  const wormholeContract = await getWormholeContract(
     chain,
-    deploymentConfig.wormholeAddr
+    deploymentConfig,
+    CACHE_FILE
   );
-  const wormholeChainId = await wormholeContract.getChainId();
-  if (chain.getWormholeChainId() != wormholeChainId) {
-    throw new Error(
-      `Wormhole chain id mismatch. Expected ${chain.getWormholeChainId()} but got ${wormholeChainId}`
-    );
-  }
+
   await topupProviderIfNecessary(chain, deploymentConfig);
 
   console.log(
@@ -218,7 +194,11 @@ async function main() {
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
-  const executorAddr = await deployExecutorContracts(chain, deploymentConfig);
+  const executorAddr = await deployExecutorContracts(
+    chain,
+    deploymentConfig,
+    wormholeContract.address
+  );
   const entropyAddr = await deployEntropyContracts(
     chain,
     deploymentConfig,
