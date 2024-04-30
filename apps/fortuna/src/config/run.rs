@@ -43,7 +43,8 @@ pub struct RunOptions {
     #[arg(env = "KEEPER_PRIVATE_KEY")]
     pub keeper_private_key_file: String,
 
-    /// Whether to run the keeper.
+    /// When true, a keeper will run alongside the Fortuna API service. The keeper listens to
+    /// request events from the Entropy contract and sends transactions to fulfill them.
     #[arg(long = "run-keeper")]
     #[arg(env = "RUN_KEEPER")]
     #[arg(default_value = "false")]
