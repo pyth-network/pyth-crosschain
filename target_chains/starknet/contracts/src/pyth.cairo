@@ -336,7 +336,9 @@ mod pyth {
 
             let update_type: Option<UpdateType> = reader.read_u8().map_err()?.try_into();
             match update_type {
-                Option::Some(_) => {},
+                Option::Some(v) => match v {
+                    UpdateType::WormholeMerkle => {}
+                },
                 Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
             };
 
@@ -360,7 +362,9 @@ mod pyth {
 
             let update_type: Option<UpdateType> = payload_reader.read_u8().map_err()?.try_into();
             match update_type {
-                Option::Some(_) => {},
+                Option::Some(v) => match v {
+                    UpdateType::WormholeMerkle => {}
+                },
                 Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
             };
 
@@ -403,7 +407,9 @@ mod pyth {
         let mut message_reader = ReaderImpl::new(message);
         let message_type: Option<MessageType> = message_reader.read_u8().map_err()?.try_into();
         match message_type {
-            Option::Some(_) => {},
+            Option::Some(v) => match v {
+                MessageType::PriceFeed => {}
+            },
             Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
         };
 
