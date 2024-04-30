@@ -252,9 +252,6 @@ export async function deployWormholeContract(
   config: GetWormholeReceiverContractsConfig & DeployConfig,
   cacheFile: string
 ): Promise<EvmWormholeContract> {
-  const contract = findWormholeContract(chain);
-  if (contract) return contract;
-
   const receiverSetupAddr = await deployIfNotCached(
     cacheFile,
     chain,
