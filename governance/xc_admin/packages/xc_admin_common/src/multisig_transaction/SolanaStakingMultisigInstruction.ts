@@ -51,7 +51,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             }
           );
-          case "Delegate":
+        case "Delegate":
           const decodedDelegate = StakeInstruction.decodeDelegate(instruction);
           return new SolanaStakingMultisigInstruction(
             "Delegate",
