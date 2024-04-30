@@ -36,16 +36,20 @@ pub struct RunOptions {
     #[arg(env = "FORTUNA_PROVIDER")]
     pub provider: Address,
 
-    /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
+    /// If provided, the keeper will run alongside the Fortuna API service.
+    /// It should be a path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
     /// This key is required to submit transactions for entropy callback requests.
     /// This key should not be a registered provider.
     #[arg(long = "keeper-private-key")]
     #[arg(env = "KEEPER_PRIVATE_KEY")]
-    pub keeper_private_key_file: String,
+    pub keeper_private_key_file: Option<String>,
 }
 
 impl RunOptions {
-    pub fn load_private_key(&self) -> Result<String> {
-        return Ok((fs::read_to_string(&self.keeper_private_key_file))?);
+    pub fn load_keeper_private_key(&self) -> Result<Option<String>> {
+        if let Some(ref keeper_private_key_file) = self.keeper_private_key_file {
+            return Ok(Some(fs::read_to_string(keeper_private_key_file)?));
+        }
+        return Ok(None);
     }
 }
