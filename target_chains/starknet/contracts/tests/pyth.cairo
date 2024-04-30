@@ -61,13 +61,20 @@ fn update_price_feeds_works() {
     assert!(event == PythEvent::PriceFeedUpdate(expected));
 
     let last_price = pyth
-        .latest_price_info(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43);
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
     assert!(last_price.price == 7192002930010);
     assert!(last_price.conf == 3596501465);
     assert!(last_price.expo == -8);
     assert!(last_price.publish_time == 1712589206);
-    assert!(last_price.ema_price == 7181868900000);
-    assert!(last_price.ema_conf == 4096812700);
+
+    let last_ema_price = pyth
+        .get_ema_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_ema_price.price == 7181868900000);
+    assert!(last_ema_price.conf == 4096812700);
+    assert!(last_ema_price.expo == -8);
+    assert!(last_ema_price.publish_time == 1712589206);
 }
 
 fn deploy(

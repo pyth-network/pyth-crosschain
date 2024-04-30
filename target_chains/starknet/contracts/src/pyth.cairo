@@ -7,10 +7,34 @@ pub use pyth::{Event, PriceFeedUpdateEvent};
 
 #[starknet::interface]
 pub trait IPyth<T> {
-    fn latest_price_info(self: @T, price_id: u256) -> PriceInfo;
+    fn get_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
+    fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn set_data_sources(ref self: T, sources: Array<DataSource>) -> Result<(), SetDataSourcesError>;
     fn update_price_feeds(ref self: T, data: ByteArray) -> Result<(), UpdatePriceFeedsError>;
 }
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GetPriceUnsafeError {
+    PriceFeedNotFound,
+}
+
+pub impl GetPriceUnsafeErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GetPriceUnsafeError> {
+    fn unwrap_with_felt252(self: Result<T, GetPriceUnsafeError>) -> T {
+        match self {
+            Result::Ok(v) => v,
+            Result::Err(err) => core::panic_with_felt252(err.into()),
+        }
+    }
+}
+
+impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
+    fn into(self: GetPriceUnsafeError) -> felt252 {
+        match self {
+            GetPriceUnsafeError::PriceFeedNotFound => 'price feed not found',
+        }
+    }
+}
+
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum SetDataSourcesError {
@@ -78,6 +102,14 @@ struct PriceInfo {
     pub ema_conf: u64,
 }
 
+#[derive(Drop, Clone, Serde)]
+struct Price {
+    pub price: i64,
+    pub conf: u64,
+    pub expo: i32,
+    pub publish_time: u64,
+}
+
 #[starknet::contract]
 mod pyth {
     use pyth::reader::ReaderTrait;
@@ -86,7 +118,10 @@ mod pyth {
     use core::panic_with_felt252;
     use core::starknet::{ContractAddress, get_caller_address};
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
-    use super::{DataSource, UpdatePriceFeedsError, PriceInfo, SetDataSourcesError};
+    use super::{
+        DataSource, UpdatePriceFeedsError, PriceInfo, SetDataSourcesError, Price,
+        GetPriceUnsafeError
+    };
     use pyth::merkle_tree::{read_and_verify_proof, MerkleVerificationError};
     use pyth::hash::{Hasher, HasherImpl};
     use core::fmt::{Debug, Formatter};
@@ -239,8 +274,36 @@ mod pyth {
 
     #[abi(embed_v0)]
     impl PythImpl of super::IPyth<ContractState> {
-        fn latest_price_info(self: @ContractState, price_id: u256) -> PriceInfo {
-            self.latest_price_info.read(price_id)
+        fn get_price_unsafe(
+            self: @ContractState, price_id: u256
+        ) -> Result<Price, GetPriceUnsafeError> {
+            let info = self.latest_price_info.read(price_id);
+            if info.publish_time == 0 {
+                return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
+            }
+            let price = Price {
+                price: info.price,
+                conf: info.conf,
+                expo: info.expo,
+                publish_time: info.publish_time,
+            };
+            Result::Ok(price)
+        }
+
+        fn get_ema_price_unsafe(
+            self: @ContractState, price_id: u256
+        ) -> Result<Price, GetPriceUnsafeError> {
+            let info = self.latest_price_info.read(price_id);
+            if info.publish_time == 0 {
+                return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
+            }
+            let price = Price {
+                price: info.ema_price,
+                conf: info.ema_conf,
+                expo: info.expo,
+                publish_time: info.publish_time,
+            };
+            Result::Ok(price)
         }
 
         fn set_data_sources(
