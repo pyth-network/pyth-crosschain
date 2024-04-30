@@ -22,6 +22,8 @@ wormhole_hash=$(starkli declare target/dev/pyth_wormhole.contract_class.json)
 # prefunded katana account
 owner=0x6162896d1d7ab204c7ccac6dd5f8e9e7c25ecd5ae4fcb4ad32e57786bb46e03
 
+fee_token_address=0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+
 # deploying wormhole with mainnet guardians
 
 ${sleep}
@@ -117,6 +119,8 @@ ${sleep}
 pyth_address=$(starkli deploy "${pyth_hash}" \
     "${owner}" \
     "${wormhole_address}" \
+    "${fee_token_address}" \
+    1000 0 `# fee amount` \
     1 `# num_data_sources` \
     26 `# emitter_chain_id` \
     58051393581875729396504816158954007153 299086580781278228892874716333010393740 `# emitter_address` \

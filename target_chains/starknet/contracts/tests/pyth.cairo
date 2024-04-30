@@ -35,6 +35,8 @@ fn update_price_feeds_works() {
     let pyth = deploy(
         owner,
         wormhole.contract_address,
+        0x42.try_into().unwrap(),
+        1000,
         array![
             DataSource {
                 emitter_chain_id: 26,
@@ -78,10 +80,15 @@ fn update_price_feeds_works() {
 }
 
 fn deploy(
-    owner: ContractAddress, wormhole_address: ContractAddress, data_sources: Array<DataSource>
+    owner: ContractAddress,
+    wormhole_address: ContractAddress,
+    fee_contract_address: ContractAddress,
+    single_update_fee: u256,
+    data_sources: Array<DataSource>
 ) -> IPythDispatcher {
     let mut args = array![];
-    (owner, wormhole_address, data_sources).serialize(ref args);
+    (owner, wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
+    data_sources.serialize(ref args);
     let contract = declare("pyth");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
