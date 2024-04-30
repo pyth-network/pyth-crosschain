@@ -66,6 +66,7 @@ pub enum UpdatePriceFeedsError {
     Wormhole: super::wormhole::ParseAndVerifyVmError,
     InvalidUpdateData,
     InvalidUpdateDataSource,
+    InsufficientFee,
 }
 
 pub impl UpdatePriceFeedsErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, UpdatePriceFeedsError> {
@@ -84,6 +85,7 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
             UpdatePriceFeedsError::Wormhole(err) => err.into(),
             UpdatePriceFeedsError::InvalidUpdateData => 'invalid update data',
             UpdatePriceFeedsError::InvalidUpdateDataSource => 'invalid update data source',
+            UpdatePriceFeedsError::InsufficientFee => 'insufficient fee',
         }
     }
 }
@@ -128,6 +130,7 @@ mod pyth {
     use pyth::hash::{Hasher, HasherImpl};
     use core::fmt::{Debug, Formatter};
     use pyth::util::{u64_as_i64, u32_as_i32};
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
 
     // Stands for PNAU (Pyth Network Accumulator Update)
     const ACCUMULATOR_MAGIC: u32 = 0x504e4155;
@@ -392,6 +395,20 @@ mod pyth {
 
             let num_updates = reader.read_u8().map_err()?;
 
+            let total_fee = get_total_fee(ref self, num_updates);
+            let fee_contract = IERC20CamelDispatcher {
+                contract_address: self.fee_contract_address.read()
+            };
+            let execution_info = get_execution_info().unbox();
+            let caller = execution_info.caller_address;
+            let contract = execution_info.contract_address;
+            if fee_contract.allowance(caller, contract) < total_fee {
+                return Result::Err(UpdatePriceFeedsError::InsufficientFee);
+            }
+            if !fee_contract.transferFrom(caller, contract, total_fee) {
+                return Result::Err(UpdatePriceFeedsError::InsufficientFee);
+            }
+
             let mut i = 0;
             let mut result = Result::Ok(());
             while i < num_updates {
@@ -467,5 +484,9 @@ mod pyth {
             };
             self.emit(event);
         }
+    }
+
+    fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+        self.single_update_fee.read() * num_updates.into()
     }
 }

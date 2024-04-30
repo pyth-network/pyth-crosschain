@@ -8,6 +8,7 @@ use pyth::pyth::{
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_felt252_to_bytes31, UnwrapWithFelt252};
 use core::starknet::ContractAddress;
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
 fn decode_event(event: @Event) -> PythEvent {
     if *event.keys.at(0) == event_name_hash('PriceFeedUpdate') {
@@ -31,11 +32,13 @@ fn decode_event(event: @Event) -> PythEvent {
 #[test]
 fn update_price_feeds_works() {
     let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_and_init(owner);
+    let fee_contract = deploy_fee_contract(user);
     let pyth = deploy(
         owner,
         wormhole.contract_address,
-        0x42.try_into().unwrap(),
+        fee_contract.contract_address,
         1000,
         array![
             DataSource {
@@ -45,9 +48,15 @@ fn update_price_feeds_works() {
         ]
     );
 
+    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
+    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
     pyth.update_price_feeds(good_update1()).unwrap_with_felt252();
+    stop_prank(CheatTarget::One(pyth.contract_address));
 
     spy.fetch_events();
     assert!(spy.events.len() == 1);
@@ -98,6 +107,22 @@ fn deploy(
         },
     };
     IPythDispatcher { contract_address }
+}
+
+fn deploy_fee_contract(recipient: ContractAddress) -> IERC20CamelDispatcher {
+    let mut args = array![];
+    let name: core::byte_array::ByteArray = "eth";
+    let symbol: core::byte_array::ByteArray = "eth";
+    (name, symbol, 100000_u256, recipient).serialize(ref args);
+    let contract = declare("ERC20");
+    let contract_address = match contract.deploy(@args) {
+        Result::Ok(v) => { v },
+        Result::Err(err) => {
+            panic(err.panic_data);
+            0.try_into().unwrap()
+        },
+    };
+    IERC20CamelDispatcher { contract_address }
 }
 
 // A random update pulled from Hermes.
