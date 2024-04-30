@@ -66,6 +66,7 @@ pub enum UpdatePriceFeedsError {
     Wormhole: super::wormhole::ParseAndVerifyVmError,
     InvalidUpdateData,
     InvalidUpdateDataSource,
+    InsufficientFeeAllowance,
 }
 
 pub impl UpdatePriceFeedsErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, UpdatePriceFeedsError> {
@@ -84,6 +85,7 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
             UpdatePriceFeedsError::Wormhole(err) => err.into(),
             UpdatePriceFeedsError::InvalidUpdateData => 'invalid update data',
             UpdatePriceFeedsError::InvalidUpdateDataSource => 'invalid update data source',
+            UpdatePriceFeedsError::InsufficientFeeAllowance => 'insufficient fee allowance',
         }
     }
 }
@@ -128,6 +130,7 @@ mod pyth {
     use pyth::hash::{Hasher, HasherImpl};
     use core::fmt::{Debug, Formatter};
     use pyth::util::{u64_as_i64, u32_as_i32};
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
 
     // Stands for PNAU (Pyth Network Accumulator Update)
     const ACCUMULATOR_MAGIC: u32 = 0x504e4155;
@@ -232,6 +235,22 @@ mod pyth {
         latest_price_info: LegacyMap<u256, PriceInfo>,
     }
 
+    /// Initializes the Pyth contract.
+    ///
+    /// `owner` is the address that will be allowed to call governance methods (it's a placeholder
+    /// until we implement governance properly).
+    ///
+    /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
+    ///
+    /// `fee_contract_address` is the address of the ERC20 token used to pay fees to Pyth
+    /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
+    /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
+    /// available. Any other ERC20-compatible token can also be used.
+    /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
+    ///
+    /// `single_update_fee` is the number of tokens of `fee_contract_address` charged for a single price update.
+    ///
+    /// `data_sources` is the list of Wormhole data sources accepted by this contract.
     #[constructor]
     fn constructor(
         ref self: ContractState,
@@ -392,6 +411,20 @@ mod pyth {
 
             let num_updates = reader.read_u8().map_err()?;
 
+            let total_fee = get_total_fee(ref self, num_updates);
+            let fee_contract = IERC20CamelDispatcher {
+                contract_address: self.fee_contract_address.read()
+            };
+            let execution_info = get_execution_info().unbox();
+            let caller = execution_info.caller_address;
+            let contract = execution_info.contract_address;
+            if fee_contract.allowance(caller, contract) < total_fee {
+                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
+            }
+            if !fee_contract.transferFrom(caller, contract, total_fee) {
+                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
+            }
+
             let mut i = 0;
             let mut result = Result::Ok(());
             while i < num_updates {
@@ -467,5 +500,9 @@ mod pyth {
             };
             self.emit(event);
         }
+    }
+
+    fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+        self.single_update_fee.read() * num_updates.into()
     }
 }
