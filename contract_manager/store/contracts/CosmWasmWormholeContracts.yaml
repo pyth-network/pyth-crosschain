@@ -43,3 +43,6 @@
 - chain: injective
   address: inj17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9l2q74d
   type: CosmWasmWormholeContract
+- chain: xion_testnet
+  address: xion14ycw3tx0hpz3aawmzm6cufs6hx94d64ht5qawd0ej9ug9j2ffzsqmpecys
+  type: CosmWasmWormholeContract
