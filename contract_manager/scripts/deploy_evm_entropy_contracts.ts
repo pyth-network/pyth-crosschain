@@ -14,7 +14,7 @@ import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
-  getWormholeContract,
+  getOrDeployWormholeContract,
 } from "./common";
 import Web3 from "web3";
 
@@ -180,7 +180,7 @@ async function main() {
     saveContract: argv.saveContract,
   };
 
-  const wormholeContract = await getWormholeContract(
+  const wormholeContract = await getOrDeployWormholeContract(
     chain,
     deploymentConfig,
     CACHE_FILE

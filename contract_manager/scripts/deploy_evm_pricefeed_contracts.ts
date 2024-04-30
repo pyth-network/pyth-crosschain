@@ -14,7 +14,7 @@ import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
-  getWormholeContract,
+  getOrDeployWormholeContract,
 } from "./common";
 
 type DeploymentConfig = {
@@ -124,7 +124,7 @@ async function main() {
 
     console.log(`Deploying price feed contracts on ${chain.getId()}...`);
 
-    const wormholeContract = await getWormholeContract(
+    const wormholeContract = await getOrDeployWormholeContract(
       chain,
       deploymentConfig,
       CACHE_FILE

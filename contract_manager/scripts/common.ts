@@ -313,7 +313,7 @@ export async function deployWormholeContract(
  * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
  * @returns {EvmWormholeContract} The wormhole contract for the given EVM chain.
  */
-export async function getWormholeContract(
+export async function getOrDeployWormholeContract(
   chain: EvmChain,
   config: DeployWormholeReceiverContractsConfig & DeployConfig,
   cacheFile: string
