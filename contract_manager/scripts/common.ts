@@ -238,7 +238,7 @@ export function findWormholeContract(
   }
 }
 
-interface GetWormholeReceiverContractsConfig {
+interface DeployWormholeReceiverContractsConfig {
   type: "stable" | "beta";
   privateKey: PrivateKey;
 }
@@ -249,7 +249,7 @@ interface GetWormholeReceiverContractsConfig {
  */
 export async function deployWormholeContract(
   chain: EvmChain,
-  config: GetWormholeReceiverContractsConfig & DeployConfig,
+  config: DeployWormholeReceiverContractsConfig & DeployConfig,
   cacheFile: string
 ): Promise<EvmWormholeContract> {
   const receiverSetupAddr = await deployIfNotCached(
@@ -315,7 +315,7 @@ export async function deployWormholeContract(
  */
 export async function getWormholeContract(
   chain: EvmChain,
-  config: GetWormholeReceiverContractsConfig & DeployConfig,
+  config: DeployWormholeReceiverContractsConfig & DeployConfig,
   cacheFile: string
 ): Promise<EvmWormholeContract> {
   const wormholeContract = findWormholeContract(chain);
