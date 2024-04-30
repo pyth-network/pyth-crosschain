@@ -53,7 +53,7 @@ abi PythCore {
     /// # Reverts
     ///
     /// * When the EMA price is not available.
-    /// * When the the EMA price wasn't updated recently enough.
+    /// * When the EMA price wasn't updated recently enough.
     #[storage(read)]
     fn ema_price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price;
 
