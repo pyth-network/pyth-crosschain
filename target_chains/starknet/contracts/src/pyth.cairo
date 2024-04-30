@@ -66,7 +66,7 @@ pub enum UpdatePriceFeedsError {
     Wormhole: super::wormhole::ParseAndVerifyVmError,
     InvalidUpdateData,
     InvalidUpdateDataSource,
-    InsufficientFee,
+    InsufficientFeeAllowance,
 }
 
 pub impl UpdatePriceFeedsErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, UpdatePriceFeedsError> {
@@ -85,7 +85,7 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
             UpdatePriceFeedsError::Wormhole(err) => err.into(),
             UpdatePriceFeedsError::InvalidUpdateData => 'invalid update data',
             UpdatePriceFeedsError::InvalidUpdateDataSource => 'invalid update data source',
-            UpdatePriceFeedsError::InsufficientFee => 'insufficient fee',
+            UpdatePriceFeedsError::InsufficientFeeAllowance => 'insufficient fee allowance',
         }
     }
 }
@@ -235,6 +235,22 @@ mod pyth {
         latest_price_info: LegacyMap<u256, PriceInfo>,
     }
 
+    /// Initializes the Pyth contract.
+    ///
+    /// `owner` is the address that will be allowed to call governance methods (it's a placeholder
+    /// until we implement governance properly).
+    ///
+    /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
+    ///
+    /// `fee_contract_address` is the address of the ERC20 token used to pay fees to Pyth
+    /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
+    /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
+    /// available. Any other ERC20-compatible token can also be used.
+    /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
+    ///
+    /// `single_update_fee` is the number of tokens of `fee_contract_address` charged for a single price update.
+    ///
+    /// `data_sources` is the list of Wormhole data sources accepted by this contract.
     #[constructor]
     fn constructor(
         ref self: ContractState,
@@ -403,10 +419,10 @@ mod pyth {
             let caller = execution_info.caller_address;
             let contract = execution_info.contract_address;
             if fee_contract.allowance(caller, contract) < total_fee {
-                return Result::Err(UpdatePriceFeedsError::InsufficientFee);
+                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
             }
             if !fee_contract.transferFrom(caller, contract, total_fee) {
-                return Result::Err(UpdatePriceFeedsError::InsufficientFee);
+                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
             }
 
             let mut i = 0;
