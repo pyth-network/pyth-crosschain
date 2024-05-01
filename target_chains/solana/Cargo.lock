@@ -1030,7 +1030,7 @@ dependencies = [
  "pyth-sdk",
  "pyth-sdk-solana",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.1.0",
+ "pyth-solana-receiver-sdk 0.2.0",
  "pythnet-sdk 2.1.0",
  "rand 0.8.5",
  "serde_wormhole",
@@ -3023,7 +3023,7 @@ dependencies = [
  "common-test-utils",
  "program-simulator",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.1.0",
+ "pyth-solana-receiver-sdk 0.2.0",
  "pythnet-sdk 2.1.0",
  "serde_wormhole",
  "solana-program",
@@ -3071,7 +3071,7 @@ dependencies = [
  "byteorder",
  "common-test-utils",
  "program-simulator",
- "pyth-solana-receiver-sdk 0.1.0",
+ "pyth-solana-receiver-sdk 0.2.0",
  "pythnet-sdk 2.1.0",
  "rand 0.8.5",
  "serde_wormhole",
@@ -3094,7 +3094,7 @@ dependencies = [
  "clap 3.2.23",
  "hex",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.1.0",
+ "pyth-solana-receiver-sdk 0.2.0",
  "pythnet-sdk 2.1.0",
  "serde_wormhole",
  "shellexpand",
@@ -3108,22 +3108,22 @@ dependencies = [
 [[package]]
 name = "pyth-solana-receiver-sdk"
 version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "hex",
- "pythnet-sdk 2.1.0",
- "solana-program",
-]
-
-[[package]]
-name = "pyth-solana-receiver-sdk"
-version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "937c8595148fb2a9a90439daf6a371a5b3c9fcd9b636f26d36ae31d6846d4339"
 dependencies = [
  "anchor-lang",
  "hex",
  "pythnet-sdk 2.0.0",
+ "solana-program",
+]
+
+[[package]]
+name = "pyth-solana-receiver-sdk"
+version = "0.2.0"
+dependencies = [
+ "anchor-lang",
+ "hex",
+ "pythnet-sdk 2.1.0",
  "solana-program",
 ]
 
@@ -3762,7 +3762,7 @@ name = "send-usd"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "pyth-solana-receiver-sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-solana-receiver-sdk 0.1.0",
  "solana-program",
 ]
 
