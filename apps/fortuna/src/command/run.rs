@@ -143,7 +143,14 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
         let latest_metadata =
-            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
+            bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)
+                .map_err(|e| {
+                    anyhow!(
+                        "Chain: {} - Failed to deserialize commitment metadata: {}",
+                        &chain_id,
+                        e
+                    )
+                })?;
 
         provider_commitments.push(Commitment {
             seed:                                latest_metadata.seed,

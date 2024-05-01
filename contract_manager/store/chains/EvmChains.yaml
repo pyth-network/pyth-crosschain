@@ -450,7 +450,7 @@
   type: EvmChain
 - id: blast_s2_testnet
   mainnet: false
-  rpcUrl: https://blast-sepolia.blockpi.network/v1/rpc/public
+  rpcUrl: https://sepolia.blast.io
   networkId: 168587773
   type: EvmChain
 - id: hedera_testnet
