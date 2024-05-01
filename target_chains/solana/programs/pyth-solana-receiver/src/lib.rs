@@ -444,7 +444,7 @@ fn post_price_update_from_vaa<'info>(
         Message::PriceFeedMessage(price_feed_message) => {
             price_update_account.write_authority = write_authority.key();
             price_update_account.verification_level = vaa_components.verification_level;
-            price_update_account.price_message = price_feed_message;
+            price_update_account.price_message = price_feed_message.into();
             price_update_account.posted_slot = Clock::get()?.slot;
         }
         Message::TwapMessage(_) => {

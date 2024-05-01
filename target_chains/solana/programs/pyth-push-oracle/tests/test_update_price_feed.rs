@@ -106,10 +106,7 @@ async fn test_update_price_feed() {
         price_feed_account.verification_level,
         VerificationLevel::Full
     );
-    assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
-        feed_1_old
-    );
+    assert_eq!(Message::from(price_feed_account.price_message), feed_1_old);
     assert_eq!(
         price_feed_account.posted_slot,
         program_simulator.get_clock().await.unwrap().slot
@@ -153,7 +150,7 @@ async fn test_update_price_feed() {
         VerificationLevel::Full
     );
     assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
+        Message::from(price_feed_account.price_message),
         feed_1_recent
     );
     assert_eq!(
@@ -199,7 +196,7 @@ async fn test_update_price_feed() {
         VerificationLevel::Full
     );
     assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
+        Message::from(price_feed_account.price_message),
         feed_1_recent
     );
     assert_eq!(
@@ -245,7 +242,7 @@ async fn test_update_price_feed() {
         VerificationLevel::Full
     );
     assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
+        Message::from(price_feed_account.price_message),
         feed_1_recent
     );
     assert_eq!(
@@ -266,10 +263,7 @@ async fn test_update_price_feed() {
         price_feed_account.verification_level,
         VerificationLevel::Full
     );
-    assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
-        feed_1_old
-    );
+    assert_eq!(Message::from(price_feed_account.price_message), feed_1_old);
     assert_eq!(
         price_feed_account.posted_slot,
         program_simulator.get_clock().await.unwrap().slot
@@ -310,7 +304,7 @@ async fn test_update_price_feed() {
         VerificationLevel::Full
     );
     assert_eq!(
-        Message::PriceFeedMessage(price_feed_account.price_message),
+        Message::from(price_feed_account.price_message),
         feed_1_recent
     );
     assert_eq!(

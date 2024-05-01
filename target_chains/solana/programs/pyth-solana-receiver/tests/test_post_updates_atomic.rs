@@ -99,10 +99,7 @@ async fn test_post_update_atomic() {
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 5 }
     );
-    assert_eq!(
-        Message::PriceFeedMessage(price_update_account.price_message),
-        feed_1
-    );
+    assert_eq!(Message::from(price_update_account.price_message), feed_1);
     assert_eq!(
         price_update_account.posted_slot,
         program_simulator.get_clock().await.unwrap().slot
@@ -145,10 +142,7 @@ async fn test_post_update_atomic() {
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 5 }
     );
-    assert_eq!(
-        Message::PriceFeedMessage(price_update_account.price_message),
-        feed_2
-    );
+    assert_eq!(Message::from(price_update_account.price_message), feed_2);
     assert_eq!(
         price_update_account.posted_slot,
         program_simulator.get_clock().await.unwrap().slot
@@ -195,10 +189,7 @@ async fn test_post_update_atomic() {
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 5 }
     );
-    assert_eq!(
-        Message::PriceFeedMessage(price_update_account.price_message),
-        feed_1
-    );
+    assert_eq!(Message::from(price_update_account.price_message), feed_1);
     assert_eq!(
         price_update_account.posted_slot,
         program_simulator.get_clock().await.unwrap().slot

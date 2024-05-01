@@ -9,11 +9,53 @@ use {
     },
     pythnet_sdk::messages::{
         FeedId,
+        Message,
         PriceFeedMessage,
     },
     solana_program::pubkey::Pubkey,
 };
 
+#[derive(AnchorSerialize, AnchorDeserialize, BorshSchema, Debug, Clone, Copy)]
+pub struct AnchorPriceFeedMessage {
+    pub feed_id:           FeedId,
+    pub price:             i64,
+    pub conf:              u64,
+    pub exponent:          i32,
+    pub publish_time:      i64,
+    pub prev_publish_time: i64,
+    pub ema_price:         i64,
+    pub ema_conf:          u64,
+}
+
+impl From<PriceFeedMessage> for AnchorPriceFeedMessage {
+    fn from(price_feed_message: PriceFeedMessage) -> Self {
+        Self {
+            feed_id:           price_feed_message.feed_id,
+            price:             price_feed_message.price,
+            conf:              price_feed_message.conf,
+            exponent:          price_feed_message.exponent,
+            publish_time:      price_feed_message.publish_time,
+            prev_publish_time: price_feed_message.prev_publish_time,
+            ema_price:         price_feed_message.ema_price,
+            ema_conf:          price_feed_message.ema_conf,
+        }
+    }
+}
+
+impl From<AnchorPriceFeedMessage> for Message {
+    fn from(value: AnchorPriceFeedMessage) -> Self {
+        Message::PriceFeedMessage(PriceFeedMessage {
+            feed_id:           value.feed_id,
+            price:             value.price,
+            conf:              value.conf,
+            exponent:          value.exponent,
+            publish_time:      value.publish_time,
+            prev_publish_time: value.prev_publish_time,
+            ema_price:         value.ema_price,
+            ema_conf:          value.ema_conf,
+        })
+    }
+}
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
 /// Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.
@@ -59,7 +101,7 @@ impl VerificationLevel {
 pub struct PriceUpdateV2 {
     pub write_authority:    Pubkey,
     pub verification_level: VerificationLevel,
-    pub price_message:      PriceFeedMessage,
+    pub price_message:      AnchorPriceFeedMessage,
     pub posted_slot:        u64,
 }
 
@@ -218,13 +260,13 @@ pub mod tests {
         crate::{
             error::GetPriceError,
             price_update::{
+                AnchorPriceFeedMessage,
                 Price,
                 PriceUpdateV2,
                 VerificationLevel,
             },
         },
         anchor_lang::Discriminator,
-        pythnet_sdk::messages::PriceFeedMessage,
         solana_program::{
             borsh0_10,
             clock::Clock,
@@ -298,7 +340,7 @@ pub mod tests {
         let price_update_unverified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 0 },
-            price_message:      PriceFeedMessage {
+            price_message:      AnchorPriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -314,7 +356,7 @@ pub mod tests {
         let price_update_partially_verified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 5 },
-            price_message:      PriceFeedMessage {
+            price_message:      AnchorPriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -330,7 +372,7 @@ pub mod tests {
         let price_update_fully_verified = PriceUpdateV2 {
             write_authority:    Pubkey::new_unique(),
             verification_level: VerificationLevel::Full,
-            price_message:      PriceFeedMessage {
+            price_message:      AnchorPriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
