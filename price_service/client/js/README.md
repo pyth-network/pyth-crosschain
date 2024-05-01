@@ -42,7 +42,7 @@ const priceIds = [
 const currentPrices = await connection.getLatestPriceFeeds(priceIds);
 
 // You can also call this function to get price updates for the on-chain contract directly.
-const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
+const priceUpdateData = await connection.getLatestVaas(priceIds);
 ```
 
 `PriceServiceConnection` also allows subscribing to real-time price updates over a websocket connection:
