@@ -19,7 +19,7 @@ jobs:
           default: true
           profile: minimal
 
-      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN} --dry-run
+      - run: cargo +stable-x86_64-unknown-linux-gnu publish --token ${CARGO_REGISTRY_TOKEN} --dry-run
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         working-directory: "target_chains/solana/pyth_solana_receiver_sdk"
