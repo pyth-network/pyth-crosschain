@@ -1031,7 +1031,7 @@ dependencies = [
  "pyth-sdk-solana",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk 0.1.0",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3024,7 +3024,7 @@ dependencies = [
  "program-simulator",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk 0.1.0",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0",
  "serde_wormhole",
  "solana-program",
  "solana-sdk",
@@ -3072,7 +3072,7 @@ dependencies = [
  "common-test-utils",
  "program-simulator",
  "pyth-solana-receiver-sdk 0.1.0",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3095,7 +3095,7 @@ dependencies = [
  "hex",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk 0.1.0",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0",
  "serde_wormhole",
  "shellexpand",
  "solana-client",
@@ -3111,7 +3111,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "hex",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0",
  "solana-program",
 ]
 
@@ -3123,31 +3123,8 @@ checksum = "937c8595148fb2a9a90439daf6a371a5b3c9fcd9b636f26d36ae31d6846d4339"
 dependencies = [
  "anchor-lang",
  "hex",
- "pythnet-sdk 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pythnet-sdk 2.0.0",
  "solana-program",
-]
-
-[[package]]
-name = "pythnet-sdk"
-version = "2.0.0"
-dependencies = [
- "anchor-lang",
- "bincode",
- "borsh 0.10.3",
- "bytemuck",
- "byteorder",
- "fast-math",
- "hex",
- "libsecp256k1 0.7.1",
- "rand 0.8.5",
- "rustc_version",
- "serde",
- "serde_wormhole",
- "sha3 0.10.6",
- "slow_primes",
- "solana-program",
- "thiserror",
- "wormhole-vaas-serde",
 ]
 
 [[package]]
@@ -3167,6 +3144,29 @@ dependencies = [
  "sha3 0.10.6",
  "slow_primes",
  "thiserror",
+]
+
+[[package]]
+name = "pythnet-sdk"
+version = "2.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "borsh 0.10.3",
+ "bytemuck",
+ "byteorder",
+ "fast-math",
+ "hex",
+ "libsecp256k1 0.7.1",
+ "rand 0.8.5",
+ "rustc_version",
+ "serde",
+ "serde_wormhole",
+ "sha3 0.10.6",
+ "slow_primes",
+ "solana-program",
+ "thiserror",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]
