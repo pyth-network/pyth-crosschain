@@ -502,7 +502,7 @@
 - id: idex_xchain_testnet
   mainnet: false
   rpcUrl: https://xchain-testnet-rpc.idex.io
-  networkId: 671276500
+  networkId: 64002
   type: EvmChain
 - id: injective_inevm_testnet
   mainnet: false
@@ -563,4 +563,9 @@
   mainnet: true
   rpcUrl: https://previewnet.evm.nodes.onflow.org
   networkId: 646
+  type: EvmChain
+- id: olive_testnet
+  mainnet: false
+  rpcUrl: https://olive-network-testnet.rpc.caldera.xyz/http
+  networkId: 8101902
   type: EvmChain
