@@ -1,6 +1,7 @@
 name: Publish Pyth SDK for the Solana Receiver to crates.io
 
 on:
+  pull_request:
   push:
     tags:
       - pyth-solana-receiver-sdk-v*
@@ -11,8 +12,14 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          profile: minimal
 
-      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
+      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN} --dry-run
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         working-directory: "target_chains/solana/pyth_solana_receiver_sdk"
