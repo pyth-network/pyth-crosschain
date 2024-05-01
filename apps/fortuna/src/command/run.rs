@@ -146,7 +146,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)
                 .map_err(|e| {
                     anyhow!(
-                        "Failed to deserialize commitment metadata for chain id {}: {}",
+                        "Chain: {} - Failed to deserialize commitment metadata: {}",
                         &chain_id,
                         e
                     )

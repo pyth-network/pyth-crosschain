@@ -72,7 +72,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)
                     .map_err(|e| {
                         anyhow!(
-                            "Failed to deserialize commitment metadata for chain id {}: {}",
+                            "Chain: {} - Failed to deserialize commitment metadata: {}",
                             &chain_id,
                             e
                         )
@@ -116,7 +116,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 uri,
             })
             .await
-            .map_err(|e| anyhow!("{}: failed to register provider: {}", &chain_id, e))?;
+            .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
             tracing::info!("{}: registered", &chain_id);
         } else {
             if provider_info.fee_in_wei != opts.fee {
