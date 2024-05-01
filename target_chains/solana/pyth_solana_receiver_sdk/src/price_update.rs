@@ -1,3 +1,7 @@
+pub use pythnet_sdk::messages::{
+    FeedId,
+    PriceFeedMessage,
+};
 use {
     crate::{
         check,
@@ -6,10 +10,6 @@ use {
     anchor_lang::prelude::{
         borsh::BorshSchema,
         *,
-    },
-    pythnet_sdk::messages::{
-        FeedId,
-        PriceFeedMessage,
     },
     solana_program::pubkey::Pubkey,
 };
