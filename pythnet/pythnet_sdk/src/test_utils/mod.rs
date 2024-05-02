@@ -4,7 +4,10 @@ use {
             merkle::MerkleTree,
             Accumulator,
         },
-        hashers::keccak256_160::Keccak160,
+        hashers::{
+            keccak256::Keccak256,
+            keccak256_160::Keccak160,
+        },
         messages::{
             FeedId,
             Message,
@@ -27,6 +30,7 @@ use {
     byteorder::BigEndian,
     libsecp256k1::{
         Message as libsecp256k1Message,
+        PublicKey,
         RecoveryId,
         SecretKey,
         Signature,
@@ -94,6 +98,26 @@ pub fn dummy_guardians() -> Vec<SecretKey> {
         result.push(SecretKey::parse(&secret_key_bytes).unwrap());
     }
     result
+}
+
+pub fn dummy_guardians_addresses() -> Vec<[u8; 20]> {
+    let guardians = dummy_guardians();
+    guardians
+        .iter()
+        .map(|x| {
+            let mut result: [u8; 20] = [0u8; 20];
+            println!("{:?}", x);
+            // print x Buffer.from([...]).toString("hex")
+            println!("{:?}", x.serialize());
+
+            let pubkey = &PublicKey::from_secret_key(x).serialize()[1..];
+            println!("{:?}", &[&pubkey]);
+
+            result.copy_from_slice(&Keccak256::hashv(&[&pubkey])[12..]);
+            println!("{:?}", result);
+            result
+        })
+        .collect()
 }
 
 pub fn create_dummy_feed_id(value: i64) -> FeedId {

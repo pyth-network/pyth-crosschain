@@ -69,7 +69,7 @@ impl GovernanceInstruction {
         ]);
         index += 2;
 
-        let (_, payload) = encoded_instruction.split_at(encoded_instruction.len() - index);
+        let (_, payload) = encoded_instruction.split_at(index);
 
         GovernanceInstruction::new(
             magic,

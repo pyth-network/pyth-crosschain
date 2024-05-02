@@ -1,7 +1,7 @@
 use fuels::{
     accounts::wallet::WalletUnlocked, programs::call_response::FuelCallResponse, types::Bits256,
 };
-use pyth_sdk::pyth_utils::{GuardianSet, PythOracleContract, WormholeProvider};
+use pyth_sdk::pyth_utils::{GuardianSet, PythOracleContract, DataSource};
 
 pub(crate) async fn current_guardian_set_index(
     contract: &PythOracleContract<WalletUnlocked>,
@@ -16,7 +16,7 @@ pub(crate) async fn current_guardian_set_index(
 
 pub(crate) async fn current_wormhole_provider(
     contract: &PythOracleContract<WalletUnlocked>,
-) -> FuelCallResponse<WormholeProvider> {
+) -> FuelCallResponse<DataSource> {
     contract
         .methods()
         .current_wormhole_provider()

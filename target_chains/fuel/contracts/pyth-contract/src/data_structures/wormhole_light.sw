@@ -6,7 +6,6 @@ use pyth_interface::data_structures::{
     data_source::DataSource,
     wormhole_light::{
         GuardianSet,
-        WormholeProvider,
     },
 };
 use std::{
@@ -142,15 +141,6 @@ impl GuardianSetUpgrade {
             new_guardian_set,
             new_guardian_set_index,
         )
-    }
-}
-
-impl WormholeProvider {
-    pub fn new(governance_chain_id: u16, governance_contract: b256) -> Self {
-        WormholeProvider {
-            governance_chain_id,
-            governance_contract,
-        }
     }
 }
 

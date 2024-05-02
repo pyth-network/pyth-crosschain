@@ -15,7 +15,11 @@ use std::{
         ZERO_B256,
     },
     context::msg_amount,
-    hash::Hash,
+    hash::{
+        Hash,
+        keccak256,
+        sha256,
+    },
     storage::{
         storage_map::StorageMap,
         storage_vec::*,
@@ -47,7 +51,6 @@ use pyth_interface::{
         governance_payload::{UpgradeContractPayload, AuthorizeGovernanceDataSourceTransferPayload, SetDataSourcesPayload, SetFeePayload, SetValidPeriodPayload, SetWormholeAddressPayload},
         wormhole_light::{
             GuardianSet,
-            WormholeProvider,
         },
         governance_instruction::{GovernanceInstruction, GovernanceModule, GovernanceAction},
     },
@@ -94,6 +97,8 @@ storage {
     /// with a lower or equal sequence number will be discarded. This prevents double-execution,
     /// and also makes sure that messages are executed in the right order.
     last_executed_governance_sequence: u64 = 0,
+    /// Chain ID of the contract
+    chain_id: u16 = 0,
     ///   |                    |
     /// --+-- WORMHOLE STATE --+--
     ///   |                    |
@@ -104,9 +109,9 @@ storage {
     /// Current active guardian set index
     wormhole_guardian_set_index: u32 = 0,
     /// Using Ethereum's Wormhole governance
-    wormhole_provider: WormholeProvider = WormholeProvider {
-        governance_chain_id: 0u16,
-        governance_contract: ZERO_B256,
+    wormhole_provider: DataSource = DataSource {
+        chain_id: 0u16,
+        emitter_address: ZERO_B256,
     },
     ///   |                    |
     /// --+-- GOVERNANCE STATE --+--
@@ -462,7 +467,7 @@ fn set_last_executed_governance_sequence(sequence: u64) {
 
 #[storage(read)]
 fn chain_id() -> u16 {
-    storage.wormhole_provider.read().governance_chain_id
+    storage.chain_id.read()
 }
 
 #[storage(read)]
@@ -471,12 +476,26 @@ fn current_implementation() -> Identity {
 }
 
 impl PythInit for Contract {
+    // change the constructor to accept a
+    // - list of addresses for the wormhole guardian set
+    // - also takes in guardian set index
+    // - store the index in the contract storage
+    // - store the guardian set in the contract storage
+
+    // the rest of the existing tests will fail
+    // pass in the list of guardians for the existing tests
+
+    // use guardian set index 0 for dummy guardians
     #[storage(read, write)]
     fn constructor(
         data_sources: Vec<DataSource>,
+        governance_data_source: DataSource,
+        wormhole_governance_data_source: DataSource,
         single_update_fee: u64,
         valid_time_period_seconds: u64,
-        wormhole_guardian_set_upgrade: Bytes,
+        wormhole_guardian_set_addresses: Vec<b256>,
+        wormhole_guardian_set_index: u32,
+        chain_id: u16,
     ) {
         initialize_ownership(DEPLOYER);
         only_owner();
@@ -497,26 +516,34 @@ impl PythInit for Contract {
             .write(valid_time_period_seconds);
         storage.single_update_fee.write(single_update_fee);
 
-        let vm = WormholeVM::parse_initial_wormhole_vm(wormhole_guardian_set_upgrade);
-        let upgrade = GuardianSetUpgrade::parse_encoded_upgrade(0, vm.payload);
+        let guardian_length: u8 = wormhole_guardian_set_addresses.len().try_as_u8().unwrap();
+        let mut new_guardian_set = StorageGuardianSet::new(
+            0,
+            StorageKey {
+                slot: sha256(("guardian_set_keys", wormhole_guardian_set_index)),
+                offset: 0,
+                field_id: ZERO_B256,
+            },
+        );
+        let mut i: u8 = 0;
+        while i < guardian_length {
+            let key: b256 = wormhole_guardian_set_addresses.get(i.as_u64()).unwrap();
+            new_guardian_set.keys.push(key);
+            i += 1;
+        }
 
-        storage
-            .wormhole_consumed_governance_actions
-            .insert(vm.governance_action_hash, true);
-        storage
-            .wormhole_guardian_sets
-            .insert(upgrade.new_guardian_set_index, upgrade.new_guardian_set);
-        storage
-            .wormhole_guardian_set_index
-            .write(upgrade.new_guardian_set_index);
-        storage
-            .wormhole_provider
-            .write(WormholeProvider::new(vm.emitter_chain_id, vm.emitter_address));
+        storage.wormhole_guardian_set_index.write(wormhole_guardian_set_index);
+        storage.wormhole_guardian_sets.insert(wormhole_guardian_set_index, new_guardian_set);
+
+        storage.governance_data_source.write(governance_data_source);
+        storage.wormhole_provider.write(wormhole_governance_data_source);
+
+        storage.chain_id.write(chain_id);
 
         renounce_ownership();
 
         log(ConstructedEvent {
-            guardian_set_index: upgrade.new_guardian_set_index,
+            guardian_set_index: wormhole_guardian_set_index,
         })
     }
 }
@@ -574,7 +601,7 @@ impl WormholeGuardians for Contract {
     }
 
     #[storage(read)]
-    fn current_wormhole_provider() -> WormholeProvider {
+    fn current_wormhole_provider() -> DataSource {
         current_wormhole_provider()
     }
 
@@ -607,7 +634,7 @@ fn current_guardian_set_index() -> u32 {
 }
 
 #[storage(read)]
-fn current_wormhole_provider() -> WormholeProvider {
+fn current_wormhole_provider() -> DataSource {
     storage.wormhole_provider.read()
 }
 
@@ -634,12 +661,12 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
     let current_wormhole_provider = current_wormhole_provider();
     require(
         vm.emitter_chain_id == current_wormhole_provider
-            .governance_chain_id,
+            .chain_id,
         WormholeError::InvalidGovernanceChain,
     );
     require(
         vm.emitter_address == current_wormhole_provider
-            .governance_contract,
+            .emitter_address,
         WormholeError::InvalidGovernanceContract,
     );
     require(
@@ -802,12 +829,12 @@ fn set_valid_period(payload: SetValidPeriodPayload) {
 
 #[storage(read, write)]
 fn set_wormhole_address(payload: SetWormholeAddressPayload, encoded_vm: Bytes) {
-    let old_wormhole_address = current_wormhole_provider().governance_contract;
-    let old_wormhole_chain_id = current_wormhole_provider().governance_chain_id;
+    let old_wormhole_address = current_wormhole_provider().emitter_address;
+    let old_wormhole_chain_id = current_wormhole_provider().chain_id;
     // Set the new wormhole address
-    let new_wormhole_provider = WormholeProvider {
-        governance_chain_id: old_wormhole_chain_id,
-        governance_contract: payload.new_wormhole_address,
+    let new_wormhole_provider = DataSource {
+        chain_id: old_wormhole_chain_id,
+        emitter_address: payload.new_wormhole_address,
     };
     storage.wormhole_provider.write(new_wormhole_provider);
 

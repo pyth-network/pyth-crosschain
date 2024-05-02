@@ -1,72 +1,83 @@
-use crate::utils::interface::pyth_init::constructor;
-use crate::utils::setup::setup_environment;
-use fuels::types::Bytes;
-use pyth_sdk::{
-    constants::{DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD},
-    pyth_utils::{default_data_sources, guardian_set_upgrade_3_vaa},
+use {
+    crate::utils::{interface::pyth_init::constructor, setup::setup_environment},
+    fuels::types::{Bits256, Bytes},
+    pyth_sdk::{
+        constants::{
+            DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID,
+            GOVERNANCE_DATA_SOURCE, WORMHOLE_GOVERNANCE_DATA_SOURCE,
+        },
+        pyth_utils::default_data_sources,
+    },
+    pythnet_sdk::test_utils::{create_vaa_from_payload, dummy_guardians_addresses},
 };
-use pythnet_sdk::test_utils::create_vaa_from_payload;
 
 mod success {
 
-    use pyth_sdk::{
-        constants::MAGIC,
-        pyth_utils::{
-            create_governance_instruction_payload, create_set_fee_payload,
-            create_wormhole_vm_payload, GovernanceAction, GovernanceModule,
+    use {
+        super::*,
+        crate::utils::interface::{
+            pyth_governance::execute_governance_instruction, pyth_info::single_update_fee,
+        },
+        pyth_sdk::{
+            constants::MAGIC,
+            pyth_utils::{
+                create_governance_instruction_payload, create_set_fee_payload, GovernanceAction,
+                GovernanceModule,
+            },
         },
     };
-
-    use crate::utils::interface::{
-        pyth_governance::execute_governance_instruction, pyth_info::single_update_fee,
-    };
-
-    use super::*;
 
     #[tokio::test]
     async fn executes_governance_instruction() {
         let (_oracle_contract_id, deployer) = setup_environment().await.unwrap();
+        let dummy_guardians_addresses: Vec<[u8; 20]> = dummy_guardians_addresses();
+        let bits256_guardians: Vec<Bits256> = dummy_guardians_addresses
+            .iter()
+            .map(|address| {
+                let mut full_address = [0u8; 32]; // Create a 32-byte array filled with zeros
+                full_address[12..].copy_from_slice(address); // Copy the 20-byte address into the rightmost part
+                Bits256(full_address) // Create Bits256 from the 32-byte array
+            })
+            .collect();
 
         constructor(
             &deployer.instance,
             default_data_sources(),
+            GOVERNANCE_DATA_SOURCE,
+            WORMHOLE_GOVERNANCE_DATA_SOURCE,
             DEFAULT_SINGLE_UPDATE_FEE,
             DEFAULT_VALID_TIME_PERIOD,
-            guardian_set_upgrade_3_vaa(),
+            bits256_guardians,
+            0,
+            DUMMY_CHAIN_ID,
         )
         .await;
 
-        let set_fee_payload = create_set_fee_payload(128, 8);
+        let set_fee_payload = create_set_fee_payload(100, 1);
         let governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::SetFee,
-            0,
+            1,
             set_fee_payload,
         );
-        let wormhole_vm_payload = create_wormhole_vm_payload(
-            1,
-            0,
-            0,
-            0,
-            0,
-            [0; 32],
-            1,
-            0,
-            governance_instruction_payload,
-        );
-        let vaa = create_vaa_from_payload(
-            wormhole_vm_payload.as_slice(),
-            wormhole_sdk::Address([1u8; 32]),
-            wormhole_sdk::Chain::Any,
-            1,
-        );
-        let vaa_hex = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
+        println!("{:?}", governance_instruction_payload);
 
-        execute_governance_instruction(&deployer.instance, Bytes(vaa_hex.into())).await;
+        let vaa = create_vaa_from_payload(
+            &governance_instruction_payload,
+            wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
+            wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
+            DUMMY_CHAIN_ID.into(),
+        );
+
+        execute_governance_instruction(
+            &deployer.instance,
+            Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
+        )
+        .await;
 
         let fee = single_update_fee(&deployer.instance).await.value;
 
-        assert_eq!(fee, 128);
+        assert_eq!(fee, 100);
     }
 }

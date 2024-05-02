@@ -2981,6 +2981,7 @@ dependencies = [
  "dotenv",
  "fuels",
  "hex",
+ "libsecp256k1",
  "pythnet-sdk",
  "rand",
  "reqwest",
@@ -2995,7 +2996,6 @@ dependencies = [
 [[package]]
 name = "pythnet-sdk"
 version = "2.0.0"
-source = "git+https://github.com/pyth-network/pyth-crosschain#cf90bff2364e02ef29d97550e30422dc8e9ce524"
 dependencies = [
  "bincode",
  "borsh",
