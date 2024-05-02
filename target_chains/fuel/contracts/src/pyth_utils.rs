@@ -87,19 +87,24 @@ pub fn test_accumulator_update_data_bytes() -> Vec<Bytes> {
     )]
 }
 
+pub fn create_authorize_governance_data_source_transfer_payload(payload: AuthorizeGovernanceDataSourceTransferPayload) -> Vec<u8> {
+    payload.claim_vaa.0
+}
+
 pub fn create_set_fee_payload(new_fee: u64, exponent: u64) -> Vec<u8> {
     let base = new_fee / 10u64.pow(exponent.try_into().unwrap());
-    println!("Base: {}, Exponent: {}", base, exponent);
     let base_bytes = base.to_be_bytes();
     let exponent_bytes = exponent.to_be_bytes();
-    println!(
-        "Base bytes: {:?}, Exponent bytes: {:?}",
-        base_bytes, exponent_bytes
-    );
     let mut payload = Vec::new();
     payload.extend_from_slice(&base_bytes);
     payload.extend_from_slice(&exponent_bytes);
-    println!("Set fee payload: {:?}", payload);
+    payload
+}
+
+pub fn create_set_valid_period_payload(new_valid_period: u64) -> Vec<u8> {
+    let valid_period_bytes = new_valid_period.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&valid_period_bytes);
     payload
 }
 

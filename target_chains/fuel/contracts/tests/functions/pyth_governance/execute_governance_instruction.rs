@@ -16,13 +16,14 @@ mod success {
     use {
         super::*,
         crate::utils::interface::{
-            pyth_governance::execute_governance_instruction, pyth_info::single_update_fee,
+            pyth_core::valid_time_period, pyth_governance::execute_governance_instruction,
+            pyth_info::single_update_fee,
         },
         pyth_sdk::{
             constants::MAGIC,
             pyth_utils::{
-                create_governance_instruction_payload, create_set_fee_payload, GovernanceAction,
-                GovernanceModule,
+                create_governance_instruction_payload, create_set_fee_payload,
+                create_set_valid_period_payload, GovernanceAction, GovernanceModule,
             },
         },
     };
@@ -53,21 +54,21 @@ mod success {
         )
         .await;
 
+        // Test SetFee
         let set_fee_payload = create_set_fee_payload(100, 1);
-        let governance_instruction_payload = create_governance_instruction_payload(
+        let mut governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::SetFee,
             1,
             set_fee_payload,
         );
-        println!("{:?}", governance_instruction_payload);
 
-        let vaa = create_vaa_from_payload(
+        let mut vaa = create_vaa_from_payload(
             &governance_instruction_payload,
             wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
             wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
-            DUMMY_CHAIN_ID.into(),
+            1,
         );
 
         execute_governance_instruction(
@@ -79,5 +80,32 @@ mod success {
         let fee = single_update_fee(&deployer.instance).await.value;
 
         assert_eq!(fee, 100);
+
+        // Test SetValidPeriod
+        let set_valid_period_payload = create_set_valid_period_payload(100);
+        governance_instruction_payload = create_governance_instruction_payload(
+            MAGIC,
+            GovernanceModule::Target,
+            GovernanceAction::SetValidPeriod,
+            1,
+            set_valid_period_payload,
+        );
+
+        vaa = create_vaa_from_payload(
+            &governance_instruction_payload,
+            wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
+            wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
+            2,
+        );
+
+        execute_governance_instruction(
+            &deployer.instance,
+            Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
+        )
+        .await;
+
+        let valid_period = valid_time_period(&deployer.instance).await.value;
+
+        assert_eq!(valid_period, 100);
     }
 }

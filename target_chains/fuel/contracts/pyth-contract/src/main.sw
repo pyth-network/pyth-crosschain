@@ -704,32 +704,23 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
     })
 }
 
-/// Authorize upgrades.
-#[storage(write)]
-fn authorize_upgrade(new_implementation: Identity) {
-    storage.current_implementation.write(new_implementation);
-}
-
 /// Upgrades the contract to a new implementation.
-#[storage(read, write)]
-fn upgrade_upgradeable_contract(payload: UpgradeContractPayload) {
-    let old_implementation = current_implementation();
+// #[storage(read, write)]
+// fn upgrade_upgradeable_contract(payload: UpgradeContractPayload) {
+//     let old_implementation = current_implementation();
 
-    // should we allow only owner to upgrade the contract?
+//     // TODO: Implement the actual upgrade logic here
 
-    // Perform the upgrade
-    authorize_upgrade(payload.new_implementation);
+//     require(
+//         pyth_upgradeable_magic() == 0x97a6f304,
+//         PythError::InvalidGovernanceMessage,
+//     );
 
-    require(
-        pyth_upgradeable_magic() == 0x97a6f304,
-        PythError::InvalidGovernanceMessage,
-    );
-
-    log(ContractUpgradedEvent {
-        old_implementation,
-        new_implementation: current_implementation(),
-    });
-}
+//     log(ContractUpgradedEvent {
+//         old_implementation,
+//         new_implementation: current_implementation(),
+//     });
+// }
 
 /// Transfer the governance data source to a new value with sanity checks to ensure the new governance data source can manage the contract.
 #[storage(read, write)]

@@ -7,6 +7,7 @@ use {
         hashers::{
             keccak256::Keccak256,
             keccak256_160::Keccak160,
+            Hasher,
         },
         messages::{
             FeedId,
@@ -106,15 +107,8 @@ pub fn dummy_guardians_addresses() -> Vec<[u8; 20]> {
         .iter()
         .map(|x| {
             let mut result: [u8; 20] = [0u8; 20];
-            println!("{:?}", x);
-            // print x Buffer.from([...]).toString("hex")
-            println!("{:?}", x.serialize());
-
             let pubkey = &PublicKey::from_secret_key(x).serialize()[1..];
-            println!("{:?}", &[&pubkey]);
-
             result.copy_from_slice(&Keccak256::hashv(&[&pubkey])[12..]);
-            println!("{:?}", result);
             result
         })
         .collect()
@@ -294,7 +288,6 @@ pub fn create_vaa_from_payload(
         signatures: wormhole_signatures_subset,
         ..Default::default()
     };
-
 
     (header, body).into()
 }
