@@ -12,7 +12,7 @@ import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { InferredOptionType } from "yargs";
 
-export interface DeployConfig {
+export interface BaseDeployConfig {
   gasMultiplier: number;
   gasPriceMultiplier: number;
   jsonOutputDir: string;
@@ -26,7 +26,7 @@ export interface DeployConfig {
 export async function deployIfNotCached(
   cacheFile: string,
   chain: EvmChain,
-  config: DeployConfig,
+  config: BaseDeployConfig,
   artifactName: string,
   deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
   cacheKey?: string
@@ -238,7 +238,8 @@ export function findWormholeContract(
   }
 }
 
-export interface DeployWormholeReceiverContractsConfig extends DeployConfig {
+export interface DeployWormholeReceiverContractsConfig
+  extends BaseDeployConfig {
   saveContract: boolean;
   type: "stable" | "beta";
 }

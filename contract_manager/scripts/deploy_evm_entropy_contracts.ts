@@ -14,11 +14,11 @@ import {
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
-  DeployConfig,
+  BaseDeployConfig,
 } from "./common";
 import Web3 from "web3";
 
-interface DeploymentConfig extends DeployConfig {
+interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
   saveContract: boolean;
 }

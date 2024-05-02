@@ -14,10 +14,10 @@ import {
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
-  DeployConfig,
+  BaseDeployConfig,
 } from "./common";
 
-interface DeploymentConfig extends DeployConfig {
+interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
   validTimePeriodSeconds: number;
   singleUpdateFeeInWei: number;
