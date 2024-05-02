@@ -32,6 +32,7 @@ async fn main() -> Result<()> {
             .with_thread_ids(true)
             .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
             .with_ansi(std::io::stderr().is_terminal())
+            .json()
             .finish(),
     )?;
 
