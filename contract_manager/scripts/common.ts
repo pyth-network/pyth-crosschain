@@ -245,6 +245,8 @@ export interface DeployWormholeReceiverContractsConfig extends DeployConfig {
 /**
  * Deploys the wormhole receiver contract for a given EVM chain.
  * @param {EvmChain} chain The EVM chain to find the wormhole receiver contract for.
+ * @param {DeployWormholeReceiverContractsConfig} config The deployment configuration.
+ * @param {string} cacheFile The path to the cache file.
  * @returns {EvmWormholeContract} The wormhole contract for the given EVM chain.
  */
 export async function deployWormholeContract(
@@ -317,6 +319,8 @@ export async function deployWormholeContract(
  * Returns the wormhole contract for a given EVM chain.
  * If there was no wormhole contract deployed for the given chain, it will deploy the wormhole contract and save it to the default store.
  * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
+ * @param {DeployWormholeReceiverContractsConfig} config The deployment configuration.
+ * @param {string} cacheFile The path to the cache file.
  * @returns {EvmWormholeContract} The wormhole contract for the given EVM chain.
  */
 export async function getOrDeployWormholeContract(
