@@ -63,16 +63,9 @@ pub impl HasherImpl of HasherTrait {
                 // reader.len() < 8
                 chunk_len = reader.len().try_into().expect(UNEXPECTED_OVERFLOW);
             }
-            match reader.read_num_bytes(chunk_len) {
-                Result::Ok(value) => {
-                    // chunk_len <= 8 so value must fit in u64.
-                    self.push_to_last(value.try_into().expect(UNEXPECTED_OVERFLOW), chunk_len);
-                },
-                Result::Err(err) => {
-                    result = Result::Err(err);
-                    break;
-                },
-            }
+            let value = reader.read_num_bytes(chunk_len);
+            // chunk_len <= 8 so value must fit in u64.
+            self.push_to_last(value.try_into().expect(UNEXPECTED_OVERFLOW), chunk_len);
         };
         result
     }

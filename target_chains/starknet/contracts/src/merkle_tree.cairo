@@ -46,20 +46,13 @@ pub fn read_and_verify_proof(
     let mut message_reader = ReaderImpl::new(message.clone());
     let mut current_hash = leaf_hash(message_reader.clone()).map_err()?;
 
-    let proof_size = reader.read_u8().map_err()?;
+    let proof_size = reader.read_u8();
     let mut i = 0;
 
     let mut result = Result::Ok(());
     while i < proof_size {
-        match reader.read_u160().map_err() {
-            Result::Ok(sibling_digest) => {
-                current_hash = node_hash(current_hash, sibling_digest);
-            },
-            Result::Err(err) => {
-                result = Result::Err(err);
-                break;
-            },
-        }
+        let sibling_digest = reader.read_u160();
+        current_hash = node_hash(current_hash, sibling_digest);
         i += 1;
     };
     result?;

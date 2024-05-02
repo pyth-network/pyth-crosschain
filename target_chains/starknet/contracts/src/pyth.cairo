@@ -357,21 +357,21 @@ mod pyth {
             ref self: ContractState, data: ByteArray
         ) -> Result<(), UpdatePriceFeedsError> {
             let mut reader = ReaderImpl::new(data);
-            let x = reader.read_u32().map_err()?;
+            let x = reader.read_u32();
             if x != ACCUMULATOR_MAGIC {
                 return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
             }
-            if reader.read_u8().map_err()? != MAJOR_VERSION {
+            if reader.read_u8() != MAJOR_VERSION {
                 return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
             }
-            if reader.read_u8().map_err()? < MINIMUM_ALLOWED_MINOR_VERSION {
+            if reader.read_u8() < MINIMUM_ALLOWED_MINOR_VERSION {
                 return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
             }
 
-            let trailing_header_size = reader.read_u8().map_err()?;
-            reader.skip(trailing_header_size).map_err()?;
+            let trailing_header_size = reader.read_u8();
+            reader.skip(trailing_header_size);
 
-            let update_type: Option<UpdateType> = reader.read_u8().map_err()?.try_into();
+            let update_type: Option<UpdateType> = reader.read_u8().try_into();
             match update_type {
                 Option::Some(v) => match v {
                     UpdateType::WormholeMerkle => {}
@@ -379,8 +379,8 @@ mod pyth {
                 Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
             };
 
-            let wh_proof_size = reader.read_u16().map_err()?;
-            let wh_proof = reader.read_byte_array(wh_proof_size.into()).map_err()?;
+            let wh_proof_size = reader.read_u16();
+            let wh_proof = reader.read_byte_array(wh_proof_size.into());
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(wh_proof).map_err()?;
 
@@ -392,12 +392,12 @@ mod pyth {
             }
 
             let mut payload_reader = ReaderImpl::new(vm.payload);
-            let x = payload_reader.read_u32().map_err()?;
+            let x = payload_reader.read_u32();
             if x != ACCUMULATOR_WORMHOLE_MAGIC {
                 return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
             }
 
-            let update_type: Option<UpdateType> = payload_reader.read_u8().map_err()?.try_into();
+            let update_type: Option<UpdateType> = payload_reader.read_u8().try_into();
             match update_type {
                 Option::Some(v) => match v {
                     UpdateType::WormholeMerkle => {}
@@ -405,11 +405,11 @@ mod pyth {
                 Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
             };
 
-            let _slot = payload_reader.read_u64().map_err()?;
-            let _ring_size = payload_reader.read_u32().map_err()?;
-            let root_digest = payload_reader.read_u160().map_err()?;
+            let _slot = payload_reader.read_u64();
+            let _ring_size = payload_reader.read_u32();
+            let root_digest = payload_reader.read_u160();
 
-            let num_updates = reader.read_u8().map_err()?;
+            let num_updates = reader.read_u8();
 
             let total_fee = get_total_fee(ref self, num_updates);
             let fee_contract = IERC20CamelDispatcher {
@@ -451,12 +451,12 @@ mod pyth {
     fn read_and_verify_message(
         ref reader: Reader, root_digest: u256
     ) -> Result<PriceFeedMessage, UpdatePriceFeedsError> {
-        let message_size = reader.read_u16().map_err()?;
-        let message = reader.read_byte_array(message_size.into()).map_err()?;
+        let message_size = reader.read_u16();
+        let message = reader.read_byte_array(message_size.into());
         read_and_verify_proof(root_digest, @message, ref reader).map_err()?;
 
         let mut message_reader = ReaderImpl::new(message);
-        let message_type: Option<MessageType> = message_reader.read_u8().map_err()?.try_into();
+        let message_type: Option<MessageType> = message_reader.read_u8().try_into();
         match message_type {
             Option::Some(v) => match v {
                 MessageType::PriceFeed => {}
@@ -464,14 +464,14 @@ mod pyth {
             Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
         };
 
-        let price_id = message_reader.read_u256().map_err()?;
-        let price = u64_as_i64(message_reader.read_u64().map_err()?);
-        let conf = message_reader.read_u64().map_err()?;
-        let expo = u32_as_i32(message_reader.read_u32().map_err()?);
-        let publish_time = message_reader.read_u64().map_err()?;
-        let prev_publish_time = message_reader.read_u64().map_err()?;
-        let ema_price = u64_as_i64(message_reader.read_u64().map_err()?);
-        let ema_conf = message_reader.read_u64().map_err()?;
+        let price_id = message_reader.read_u256();
+        let price = u64_as_i64(message_reader.read_u64());
+        let conf = message_reader.read_u64();
+        let expo = u32_as_i32(message_reader.read_u32());
+        let publish_time = message_reader.read_u64();
+        let prev_publish_time = message_reader.read_u64();
+        let ema_price = u64_as_i64(message_reader.read_u64());
+        let ema_conf = message_reader.read_u64();
 
         let message = PriceFeedMessage {
             price_id, price, conf, expo, publish_time, prev_publish_time, ema_price, ema_conf,
