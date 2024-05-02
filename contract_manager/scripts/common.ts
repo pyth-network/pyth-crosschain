@@ -12,7 +12,7 @@ import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { InferredOptionType } from "yargs";
 
-interface DeployConfig {
+export interface DeployConfig {
   gasMultiplier: number;
   gasPriceMultiplier: number;
   jsonOutputDir: string;
@@ -238,9 +238,9 @@ export function findWormholeContract(
   }
 }
 
-interface DeployWormholeReceiverContractsConfig {
+export interface DeployWormholeReceiverContractsConfig extends DeployConfig {
+  saveContract: boolean;
   type: "stable" | "beta";
-  privateKey: PrivateKey;
 }
 /**
  * Deploys the wormhole receiver contract for a given EVM chain.
@@ -249,7 +249,7 @@ interface DeployWormholeReceiverContractsConfig {
  */
 export async function deployWormholeContract(
   chain: EvmChain,
-  config: DeployWormholeReceiverContractsConfig & DeployConfig,
+  config: DeployWormholeReceiverContractsConfig,
   cacheFile: string
 ): Promise<EvmWormholeContract> {
   const receiverSetupAddr = await deployIfNotCached(
@@ -304,6 +304,12 @@ export async function deployWormholeContract(
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
+  if (config.saveContract) {
+    DefaultStore.wormhole_contracts[wormholeContract.getId()] =
+      wormholeContract;
+    DefaultStore.saveAllContracts();
+  }
+
   return wormholeContract;
 }
 
@@ -315,14 +321,11 @@ export async function deployWormholeContract(
  */
 export async function getOrDeployWormholeContract(
   chain: EvmChain,
-  config: DeployWormholeReceiverContractsConfig & DeployConfig,
+  config: DeployWormholeReceiverContractsConfig,
   cacheFile: string
 ): Promise<EvmWormholeContract> {
-  const wormholeContract = findWormholeContract(chain);
-  if (wormholeContract) return wormholeContract;
-
-  const newContract = await deployWormholeContract(chain, config, cacheFile);
-  DefaultStore.wormhole_contracts[newContract.getId()] = newContract;
-  DefaultStore.saveAllContracts();
-  return newContract;
+  return (
+    findWormholeContract(chain) ??
+    (await deployWormholeContract(chain, config, cacheFile))
+  );
 }

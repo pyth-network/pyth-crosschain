@@ -6,7 +6,6 @@ import {
   DeploymentType,
   EvmEntropyContract,
   getDefaultDeploymentConfig,
-  PrivateKey,
   toDeploymentType,
   toPrivateKey,
 } from "../src";
@@ -15,17 +14,14 @@ import {
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
+  DeployConfig,
 } from "./common";
 import Web3 from "web3";
 
-type DeploymentConfig = {
+interface DeploymentConfig extends DeployConfig {
   type: DeploymentType;
-  gasMultiplier: number;
-  gasPriceMultiplier: number;
-  privateKey: PrivateKey;
-  jsonOutputDir: string;
   saveContract: boolean;
-};
+}
 
 const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
 const ENTROPY_DEFAULT_PROVIDER = {

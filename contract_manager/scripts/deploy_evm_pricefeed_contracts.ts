@@ -6,7 +6,6 @@ import {
   DeploymentType,
   EvmPriceFeedContract,
   getDefaultDeploymentConfig,
-  PrivateKey,
   toDeploymentType,
   toPrivateKey,
 } from "../src";
@@ -15,18 +14,15 @@ import {
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
+  DeployConfig,
 } from "./common";
 
-type DeploymentConfig = {
+interface DeploymentConfig extends DeployConfig {
   type: DeploymentType;
   validTimePeriodSeconds: number;
   singleUpdateFeeInWei: number;
-  gasMultiplier: number;
-  gasPriceMultiplier: number;
-  privateKey: PrivateKey;
-  jsonOutputDir: string;
   saveContract: boolean;
-};
+}
 
 const CACHE_FILE = ".cache-deploy-evm";
 
