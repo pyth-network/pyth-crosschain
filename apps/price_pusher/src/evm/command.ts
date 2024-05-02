@@ -52,6 +52,20 @@ export default {
       required: false,
       default: 5,
     } as Options,
+    "gas-limit": {
+      description: "Gas limit for the transaction",
+      type: "number",
+      required: false,
+    } as Options,
+    "update-fee-multiplier": {
+      description:
+        "Multiplier for the fee to update the price. It is useful in networks " +
+        "such as Hedera where setting on-chain getUpdateFee as the transaction value " +
+        "won't work. Default to 1",
+      type: "number",
+      required: false,
+      default: 1,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -73,6 +87,8 @@ export default {
       txSpeed,
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
+      gasLimit,
+      updateFeeMultiplier,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -119,6 +135,8 @@ export default {
       pythContractFactory,
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
+      updateFeeMultiplier,
+      gasLimit,
       gasStation
     );
 
