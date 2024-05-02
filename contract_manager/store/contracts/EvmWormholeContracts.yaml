@@ -295,3 +295,9 @@
 - chain: linea_goerli
   address: "0xfA25E653b44586dBbe27eE9d252192F0e4956683"
   type: EvmWormholeContract
+- chain: taiko_hekla
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: olive_testnet
+  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
+  type: EvmWormholeContract

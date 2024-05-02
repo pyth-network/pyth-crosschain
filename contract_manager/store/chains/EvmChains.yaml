@@ -569,3 +569,8 @@
   rpcUrl: https://olive-network-testnet.rpc.caldera.xyz/http
   networkId: 8101902
   type: EvmChain
+- id: taiko_hekla
+  mainnet: false
+  rpcUrl: https://rpc.hekla.taiko.xyz/
+  networkId: 167009
+  type: EvmChain
