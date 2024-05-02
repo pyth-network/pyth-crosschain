@@ -95,9 +95,7 @@ pub async fn price_stream_sse_handler<S>(
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError>
 where
     S: Aggregates,
-    S: Sync,
-    S: Send,
-    S: 'static,
+    S: Send + Sync + 'static,
 {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
 

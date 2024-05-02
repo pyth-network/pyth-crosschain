@@ -13,7 +13,9 @@ use {
             RequestTime,
         },
         metrics::Metrics,
-        State,
+        Benchmarks,
+        Cache,
+        PriceFeedMeta,
     },
     anyhow::{
         anyhow,
@@ -124,9 +126,7 @@ impl WsMetrics {
     pub fn new<S>(state: Arc<S>) -> Self
     where
         S: Metrics,
-        S: Send,
-        S: Sync,
-        S: 'static,
+        S: Send + Sync + 'static,
     {
         let new = Self {
             interactions: Family::default(),
@@ -161,7 +161,11 @@ pub struct WsState {
 }
 
 impl WsState {
-    pub fn new(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<State>) -> Self {
+    pub fn new<S>(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<S>) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
         Self {
             subscriber_counter: AtomicUsize::new(0),
             rate_limiter: RateLimiter::dashmap(Quota::per_second(nonzero!(
@@ -211,11 +215,18 @@ enum ServerResponseMessage {
     Err { error: String },
 }
 
-pub async fn ws_route_handler(
+pub async fn ws_route_handler<S>(
     ws: WebSocketUpgrade,
-    AxumState(state): AxumState<super::ApiState>,
+    AxumState(state): AxumState<ApiState<S>>,
     headers: HeaderMap,
-) -> impl IntoResponse {
+) -> impl IntoResponse
+where
+    S: Aggregates,
+    S: Benchmarks,
+    S: Cache,
+    S: PriceFeedMeta,
+    S: Send + Sync + 'static,
+{
     let requester_ip = headers
         .get(state.ws.requester_ip_header_name.as_str())
         .and_then(|value| value.to_str().ok())
@@ -230,6 +241,7 @@ pub async fn ws_route_handler(
 async fn websocket_handler<S>(stream: WebSocket, state: ApiState<S>, subscriber_ip: Option<IpAddr>)
 where
     S: Aggregates,
+    S: Send,
 {
     let ws_state = state.ws.clone();
 

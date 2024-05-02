@@ -9,7 +9,6 @@ use {
     },
     futures::future::join_all,
     lazy_static::lazy_static,
-    state::State,
     std::io::IsTerminal,
     tokio::{
         spawn,
@@ -21,7 +20,6 @@ mod api;
 mod config;
 mod metrics_server;
 mod network;
-mod price_feeds_metadata;
 mod serde;
 mod state;
 
@@ -53,7 +51,7 @@ async fn init() -> Result<()> {
             let (update_tx, _) = tokio::sync::broadcast::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let state = State::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
+            let state = state::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {
