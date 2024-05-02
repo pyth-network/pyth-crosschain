@@ -29,9 +29,9 @@ fn test_parse_and_verify_vm_works() {
     assert!(vm.payload.len() == 37);
 
     let mut reader = ReaderImpl::new(vm.payload);
-    assert!(reader.read_u8().unwrap() == 65);
-    assert!(reader.read_u8().unwrap() == 85);
-    assert!(reader.read_u8().unwrap() == 87);
+    assert!(reader.read_u8() == 65);
+    assert!(reader.read_u8() == 85);
+    assert!(reader.read_u8() == 87);
 }
 
 #[test]
