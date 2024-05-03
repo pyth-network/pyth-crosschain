@@ -74,10 +74,8 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
     }
 }
 
-/// Run threads to handle events for the last `BACKLOG_RANGE` blocks. Watch for new blocks and
+/// Run threads to handle events for the last `BACKLOG_RANGE` blocks, watch for new blocks and
 /// handle any events for the new blocks.
-// `tracing::instrument` creates a new span for the method `run_keeper_threads`.
-// The span is created with the name "keeper" and the field "chain_id" is set to the chain_state.id.
 #[tracing::instrument(name="keeper", skip_all, fields(chain_id=chain_state.id))]
 pub async fn run_keeper_threads(
     private_key: String,
@@ -109,7 +107,6 @@ pub async fn run_keeper_threads(
     );
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
-
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(
         watch_blocks_wrapper(
@@ -133,10 +130,10 @@ pub async fn run_keeper_threads(
 }
 
 
-// Process an event for a chain. It estimates the gas for the reveal with callback and
-// submits the transaction if the gas estimate is below the gas limit.
-// It will return an Error if the gas estimation failed with a provider error or if the
-// reveal with callback failed with a provider error.
+/// Process an event for a chain. It estimates the gas for the reveal with callback and
+/// submits the transaction if the gas estimate is below the gas limit.
+/// It will return an Error if the gas estimation failed with a provider error or if the
+/// reveal with callback failed with a provider error.
 pub async fn process_event(
     event: RequestedWithCallbackEvent,
     chain_config: &BlockchainState,
@@ -150,8 +147,8 @@ pub async fn process_event(
         Ok(result) => result,
         Err(e) => {
             tracing::error!(
-                "Error while revealing for sequence number: {} with error: {:?}",
-                event.sequence_number,
+                sequence_number = &event.sequence_number,
+                "Error while revealing with error: {:?}",
                 e
             );
             return Ok(());
@@ -179,8 +176,8 @@ pub async fn process_event(
 
                 if gas_estimate > gas_limit {
                     tracing::error!(
-                        "Gas estimate for reveal with callback is higher than the gas limit for sequence number: {}",
-                        event.sequence_number
+                        sequence_number = &event.sequence_number,
+                        "Gas estimate for reveal with callback is higher than the gas limit"
                     );
                     return Ok(());
                 }
@@ -207,8 +204,8 @@ pub async fn process_event(
                         // and concluded that its Ok to not reveal.
                         _ => {
                             tracing::error!(
-                                "Error while revealing for sequence number: {} with error: {:?}",
-                                event.sequence_number,
+                                sequence_number = &event.sequence_number,
+                                "Error while revealing with error: {:?}",
                                 e
                             );
                             return Ok(());
@@ -219,16 +216,16 @@ pub async fn process_event(
                 match pending_tx.await {
                     Ok(res) => {
                         tracing::info!(
-                            "Revealed for sequence number: {} with res: {:?}",
-                            event.sequence_number,
+                            sequence_number = &event.sequence_number,
+                            "Revealed with res: {:?}",
                             res
                         );
                         Ok(())
                     }
                     Err(e) => {
                         tracing::error!(
-                            "Error while revealing for sequence number: {} with error: {:?}",
-                            event.sequence_number,
+                            sequence_number = &event.sequence_number,
+                            "Error while revealing with error: {:?}",
                             e
                         );
                         Err(e.into())
@@ -237,16 +234,16 @@ pub async fn process_event(
             }
             None => {
                 tracing::info!(
-                    "Not processing event for sequence number: {}",
-                    event.sequence_number
+                    sequence_number = &event.sequence_number,
+                    "Not processing event"
                 );
                 Ok(())
             }
         },
         Err(e) => {
             tracing::error!(
-                "Error while simulating reveal for sequence number: {} \n error: {:?}",
-                event.sequence_number,
+                sequence_number = &event.sequence_number,
+                "Error while simulating reveal with error: {:?}",
                 e
             );
             Err(e)
@@ -255,7 +252,7 @@ pub async fn process_event(
 }
 
 
-/// Process a range of blocks for a chain in batches. It calls the `process_block_batch` method for each batch.
+/// Process a range of blocks in batches. It calls the `process_block_batch` method for each batch.
 #[tracing::instrument(skip_all, fields(range_from_block=block_range.from, range_to_block=block_range.to))]
 pub async fn process_block_range(
     block_range: BlockRange,
@@ -273,6 +270,7 @@ pub async fn process_block_range(
         if to_block > last_block {
             to_block = last_block;
         }
+
         process_block_batch(
             BlockRange {
                 from: current_block,
@@ -284,11 +282,12 @@ pub async fn process_block_range(
         )
         .in_current_span()
         .await;
+
         current_block = to_block + 1;
     }
 }
 
-/// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
+/// Process a batch of blocks for a chain. It will fetch events for the blocks for the provided batch
 /// and then try to process them one by one. If the process fails, it will retry indefinitely.
 #[tracing::instrument(name="batch", skip_all, fields(batch_from_block=block_range.from, batch_to_block=block_range.to))]
 pub async fn process_block_batch(
@@ -338,7 +337,8 @@ pub async fn process_block_batch(
     }
 }
 
-
+/// Wrapper for the `watch_blocks` method. If there was an error while watching, it will retry after a delay.
+/// It retries indefinitely.
 #[tracing::instrument(name="watch_blocks", skip_all, fields(initial_safe_block=latest_safe_block))]
 pub async fn watch_blocks_wrapper(
     chain_state: BlockchainState,
@@ -455,6 +455,7 @@ pub async fn process_new_blocks(
     }
 }
 
+/// Processes the last `BACKLOG_RANGE` blocks for a chain.
 #[tracing::instrument(skip_all)]
 pub async fn process_backlog(
     backlog_range: BlockRange,
