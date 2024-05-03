@@ -106,9 +106,13 @@ pub fn create_set_valid_period_payload(new_valid_period: u64) -> Vec<u8> {
     payload
 }
 
-pub fn create_set_wormhole_address_payload(new_wormhole_address: [u8; 32]) -> Vec<u8> {
+pub fn create_set_data_sources_payload(data_sources: Vec<DataSource>) -> Vec<u8> {
     let mut payload = Vec::new();
-    payload.extend_from_slice(&new_wormhole_address);
+    payload.push(data_sources.len() as u8);
+    for data_source in data_sources {
+        payload.extend_from_slice(&data_source.chain_id.to_be_bytes());
+        payload.extend_from_slice(&data_source.emitter_address.0);
+    }
     payload
 }
 

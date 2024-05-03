@@ -19,7 +19,7 @@ mod success {
         crate::utils::interface::{
             pyth_core::valid_time_period,
             pyth_governance::{execute_governance_instruction, governance_data_source},
-            pyth_info::single_update_fee,
+            pyth_info::{single_update_fee, valid_data_sources},
             wormhole_guardians::current_wormhole_provider,
         },
         pyth_sdk::{
@@ -27,9 +27,9 @@ mod success {
             pyth_utils::{
                 create_authorize_governance_data_source_transfer_payload,
                 create_governance_instruction_payload,
-                create_request_governance_data_source_transfer_payload, create_set_fee_payload,
-                create_set_valid_period_payload, create_set_wormhole_address_payload,
-                GovernanceAction, GovernanceModule,
+                create_request_governance_data_source_transfer_payload,
+                create_set_data_sources_payload, create_set_fee_payload,
+                create_set_valid_period_payload, DataSource, GovernanceAction, GovernanceModule,
             },
         },
     };
@@ -114,45 +114,41 @@ mod success {
 
         assert_eq!(valid_period, 100);
 
-        // let mut current_wormhole_address = current_wormhole_provider(&deployer.instance)
-        //     .await
-        //     .value
-        //     .emitter_address;
+        // Test SetDataSources
+        let test_data_sources = vec![
+            DataSource {
+                chain_id: 2,
+                emitter_address: Bits256([1u8; 32]),
+            },
+            DataSource {
+                chain_id: 27,
+                emitter_address: Bits256([2u8; 32]),
+            },
+        ];
+        let set_data_sources_payload = create_set_data_sources_payload(test_data_sources.clone());
+        governance_instruction_payload = create_governance_instruction_payload(
+            MAGIC,
+            GovernanceModule::Target,
+            GovernanceAction::SetDataSources,
+            1,
+            set_data_sources_payload,
+        );
+        vaa = create_vaa_from_payload(
+            &governance_instruction_payload,
+            wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
+            wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
+            3,
+        );
 
-        // // Test SetWormholeAddress
-        // assert_eq!(
-        //     current_wormhole_address,
-        //     WORMHOLE_GOVERNANCE_DATA_SOURCE.emitter_address
-        // );
+        execute_governance_instruction(
+            &deployer.instance,
+            Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
+        )
+        .await;
 
-        // let set_wormhole_address_payload = create_set_wormhole_address_payload([1u8; 32]);
-        // governance_instruction_payload = create_governance_instruction_payload(
-        //     MAGIC,
-        //     GovernanceModule::Target,
-        //     GovernanceAction::SetWormholeAddress,
-        //     1,
-        //     set_wormhole_address_payload,
-        // );
+        let new_data_sources = valid_data_sources(&deployer.instance).await.value;
 
-        // vaa = create_vaa_from_payload(
-        //     &governance_instruction_payload,
-        //     wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
-        //     wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
-        //     3,
-        // );
-
-        // execute_governance_instruction(
-        //     &deployer.instance,
-        //     Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
-        // )
-        // .await;
-
-        // current_wormhole_address = current_wormhole_provider(&deployer.instance)
-        //     .await
-        //     .value
-        //     .emitter_address;
-
-        // assert_eq!(current_wormhole_address, Bits256([1u8; 32]));
+        assert_eq!(new_data_sources, test_data_sources);
 
         // Test AuthorizeGovernanceDataSourceTransfer
         let new_emitter_address = Bits256([3u8; 32]);
@@ -172,7 +168,7 @@ mod success {
             &governance_instruction_payload,
             wormhole_sdk::Address(new_emitter_address.0),
             wormhole_sdk::Chain::from(new_emitter_chain),
-            3,
+            4,
         );
 
         // Authorize the transfer
@@ -189,7 +185,7 @@ mod success {
             &governance_instruction_payload,
             wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
             wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
-            4,
+            5,
         );
 
         let old_governance_data_source = governance_data_source(&deployer.instance).await;
