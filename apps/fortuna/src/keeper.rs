@@ -252,7 +252,7 @@ pub async fn process_event(
 }
 
 
-/// Process a range of blocks in batches. It calls the `process_block_batch` method for each batch.
+/// Process a range of blocks in batches. It calls the `process_single_block_batch` method for each batch.
 #[tracing::instrument(skip_all, fields(range_from_block=block_range.from, range_to_block=block_range.to))]
 pub async fn process_block_range(
     block_range: BlockRange,
@@ -271,7 +271,7 @@ pub async fn process_block_range(
             to_block = last_block;
         }
 
-        process_block_batch(
+        process_single_block_batch(
             BlockRange {
                 from: current_block,
                 to:   to_block,
@@ -287,10 +287,10 @@ pub async fn process_block_range(
     }
 }
 
-/// Process a batch of blocks for a chain. It will fetch events for the blocks for the provided batch
+/// Process a batch of blocks for a chain. It will fetch events for all the blocks in a single call for the provided batch
 /// and then try to process them one by one. If the process fails, it will retry indefinitely.
 #[tracing::instrument(name="batch", skip_all, fields(batch_from_block=block_range.from, batch_to_block=block_range.to))]
-pub async fn process_block_batch(
+pub async fn process_single_block_batch(
     block_range: BlockRange,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
@@ -455,7 +455,7 @@ pub async fn process_new_blocks(
     }
 }
 
-/// Processes the last `BACKLOG_RANGE` blocks for a chain.
+/// Processes the backlog_range for a chain.
 #[tracing::instrument(skip_all)]
 pub async fn process_backlog(
     backlog_range: BlockRange,
