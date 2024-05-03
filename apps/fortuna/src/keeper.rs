@@ -149,13 +149,15 @@ pub async fn run_keeper_threads(
     // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
     let keeper_span_clone = tracing::Span::current();
     spawn(async move {
+        let _enter = keeper_span_clone.enter();
+        let span = tracing::info_span!("process_new_blocks");
         process_new_blocks(
             chain_state.clone(),
             rx,
             Arc::clone(&contract),
             chain_eth_config.gas_limit,
         )
-        .instrument(keeper_span_clone)
+        .instrument(span)
         .await
     });
 }
@@ -439,10 +441,6 @@ pub async fn watch_blocks(
 }
 
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
-//
-// `tracing::instrument` creates a new span for the method `process_new_blocks`.
-// The span is created with the name same as the method name and with no fields.
-#[tracing::instrument(skip_all)]
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
