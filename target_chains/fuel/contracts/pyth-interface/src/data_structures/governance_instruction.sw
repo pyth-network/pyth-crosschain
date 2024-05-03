@@ -25,6 +25,5 @@ pub enum GovernanceAction {
     SetFee: (), // 3
     SetValidPeriod: (), // 4
     RequestGovernanceDataSourceTransfer: (), // 5
-    SetWormholeAddress: (), // 6
     Invalid: (),
 }
