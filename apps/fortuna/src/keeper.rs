@@ -75,16 +75,15 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
 
 /// Run threads to handle events for the last `BACKLOG_RANGE` blocks. Watch for new blocks and
 /// handle any events for the new blocks.
+#[tracing::instrument(name="keeper", skip_all, fields(chain_id=chain_state.id))]
 pub async fn run_keeper_threads(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
 ) {
-    let keeper_span = tracing::info_span!("keeper", chain_id = chain_state.id.clone());
-    let _enter = keeper_span.enter();
     tracing::info!("starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-    keeper_span.in_scope(|| tracing::info!("latest safe block: {}", &latest_safe_block));
+    tracing::info!("latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
         SignablePythContract::from_config(&chain_eth_config, &private_key)
@@ -94,10 +93,9 @@ pub async fn run_keeper_threads(
 
     let backlog_chain_state = chain_state.clone();
     let backlog_contract = contract.clone();
-    let keeper_span_clone = keeper_span.clone();
+    let keeper_span_clone = tracing::Span::current();
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     spawn(async move {
-        // TODO: introduce loop here? for retrying after an hour or so? every 10 mins for last 1000 blocks run this backlog again?
         let _enter = keeper_span_clone.enter();
         let from_block = latest_safe_block.saturating_sub(BACKLOG_RANGE);
         let span = tracing::info_span!(
@@ -106,7 +104,7 @@ pub async fn run_keeper_threads(
             backlog_to_block = latest_safe_block
         );
         let _backlog_enter = span.enter();
-        tracing::info!("Processing backlog",);
+        tracing::info!("Processing backlog");
 
         process_block_range(
             BlockRange {
@@ -125,7 +123,7 @@ pub async fn run_keeper_threads(
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
 
     let watch_blocks_chain_state = chain_state.clone();
-    let keeper_span_clone = keeper_span.clone();
+    let keeper_span_clone = tracing::Span::current();
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(async move {
         let _enter = keeper_span_clone.enter();
@@ -147,7 +145,7 @@ pub async fn run_keeper_threads(
         }
     });
     // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
-    let keeper_span_clone = keeper_span.clone();
+    let keeper_span_clone = tracing::Span::current();
     spawn(async move {
         process_new_blocks(
             chain_state.clone(),
@@ -331,7 +329,8 @@ pub async fn process_block_range(
                     }
                 }
                 tracing::info!(
-                    "Processed blocks from block: {} to block: {}",
+                    "Processed {} events from block: {} to block: {}",
+                    &events.len(),
                     &current_block,
                     &to_block
                 );
