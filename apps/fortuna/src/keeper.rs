@@ -89,77 +89,42 @@ pub async fn run_keeper_threads(
             .expect("Chain config should be valid"),
     );
 
-    let backlog_chain_state = chain_state.clone();
-    let backlog_contract = contract.clone();
-    let keeper_span_clone = tracing::Span::current();
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
-    spawn(async move {
-        let _enter = keeper_span_clone.enter();
-        let from_block = latest_safe_block.saturating_sub(BACKLOG_RANGE);
-        // We create a span here to wrap the process_block_range calls in this thread in one span - named "process_backlog".
-        let span = tracing::info_span!(
-            "process_backlog",
-            backlog_from_block = from_block,
-            backlog_to_block = latest_safe_block
-        );
-        let _backlog_enter = span.enter();
-        tracing::info!("Processing backlog");
-
-        process_block_range(
+    spawn(
+        process_backlog(
             BlockRange {
-                from: from_block,
+                from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
                 to:   latest_safe_block,
             },
-            backlog_contract,
+            contract.clone(),
             chain_eth_config.gas_limit,
-            backlog_chain_state.clone(),
+            chain_state.clone(),
         )
-        // This is important! process_block_range is being called in the context of the "process_backlog" span.
-        // We need to add in_current_span to a future otherwise the span might won't work as expected.
-        .in_current_span()
-        .await;
-        span.in_scope(|| tracing::info!("Backlog processed"));
-    });
+        .in_current_span(),
+    );
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
 
-    let watch_blocks_chain_state = chain_state.clone();
-    let keeper_span_clone = tracing::Span::current();
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(async move {
-        // We created this span to wrap all the watch_blocks calls made here in this thread in one span - named "watch_blocks".
-        let _enter = keeper_span_clone.enter();
-        let span = tracing::info_span!("watch_blocks", initial_safe_block = latest_safe_block);
-        let _watch_blocks_enter = span.enter();
-        loop {
-            if let Err(e) = watch_blocks(
-                watch_blocks_chain_state.clone(),
-                latest_safe_block,
-                tx.clone(),
-                chain_eth_config.geth_rpc_wss.clone(),
-            )
-            .in_current_span()
-            .await
-            {
-                span.in_scope(|| tracing::error!("watching blocks. error: {:?}", e));
-                time::sleep(RETRY_INTERVAL).await;
-            }
-        }
-    });
+    spawn(
+        watch_blocks_loop(
+            chain_state.clone(),
+            latest_safe_block,
+            tx,
+            chain_eth_config.geth_rpc_wss.clone(),
+        )
+        .in_current_span(),
+    );
     // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
-    let keeper_span_clone = tracing::Span::current();
-    spawn(async move {
-        let _enter = keeper_span_clone.enter();
-        let span = tracing::info_span!("process_new_blocks");
+    spawn(
         process_new_blocks(
             chain_state.clone(),
             rx,
             Arc::clone(&contract),
             chain_eth_config.gas_limit,
         )
-        .instrument(span)
-        .await
-    });
+        .in_current_span(),
+    );
 }
 
 
@@ -365,9 +330,33 @@ pub async fn process_block_range(
     }
 }
 
+#[derive(Debug)]
 pub struct BlockRange {
     pub from: BlockNumber,
     pub to:   BlockNumber,
+}
+
+#[tracing::instrument(name="watch_blocks", skip_all, fields(initial_safe_block=latest_safe_block))]
+pub async fn watch_blocks_loop(
+    chain_state: BlockchainState,
+    latest_safe_block: BlockNumber,
+    tx: mpsc::Sender<BlockRange>,
+    geth_rpc_wss: Option<String>,
+) {
+    loop {
+        if let Err(e) = watch_blocks(
+            chain_state.clone(),
+            latest_safe_block,
+            tx.clone(),
+            geth_rpc_wss.clone(),
+        )
+        .in_current_span()
+        .await
+        {
+            tracing::error!("watching blocks. error: {:?}", e);
+            time::sleep(RETRY_INTERVAL).await;
+        }
+    }
 }
 
 /// Watch for new blocks and send the range of blocks for which events have not been handled to the `tx` channel.
@@ -441,6 +430,7 @@ pub async fn watch_blocks(
 }
 
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
+#[tracing::instrument(skip_all)]
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
@@ -460,4 +450,20 @@ pub async fn process_new_blocks(
             .await;
         }
     }
+}
+
+#[tracing::instrument(skip_all, fields(backlog_from_block=backlog_range.from, backlog_to_block=backlog_range.to))]
+pub async fn process_backlog(
+    backlog_range: BlockRange,
+    contract: Arc<SignablePythContract>,
+    gas_limit: U256,
+    chain_state: BlockchainState,
+) {
+    tracing::info!("Processing backlog");
+    process_block_range(backlog_range, contract, gas_limit, chain_state)
+        // This is important! process_block_range is being called in the context of the "process_backlog" span.
+        // We need to add in_current_span to a future otherwise the span might won't work as expected.
+        .in_current_span()
+        .await;
+    tracing::info!("Backlog processed");
 }
