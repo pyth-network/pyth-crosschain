@@ -465,8 +465,6 @@ pub async fn process_backlog(
 ) {
     tracing::info!("Processing backlog");
     process_block_range(backlog_range, contract, gas_limit, chain_state)
-        // This is important! process_block_range is being called in the context of the "process_backlog" span.
-        // We need to add in_current_span to a future otherwise the span might won't work as expected.
         .in_current_span()
         .await;
     tracing::info!("Backlog processed");
