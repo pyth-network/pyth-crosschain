@@ -54,8 +54,8 @@ impl VerificationLevel {
 /// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this price update.
 /// - `price_message`: The actual price update.
 /// - `posted_slot`: The slot at which this price update was posted.
-#[account]
 #[derive(BorshSchema)]
+#[account]
 pub struct PriceUpdateV2 {
     pub write_authority:    Pubkey,
     pub verification_level: VerificationLevel,
