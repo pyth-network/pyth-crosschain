@@ -39,6 +39,11 @@ use {
     },
 };
 
+#[derive(Debug)]
+pub struct BlockRange {
+    pub from: BlockNumber,
+    pub to:   BlockNumber,
+}
 
 /// How much to wait before retrying in case of an RPC error
 const RETRY_INTERVAL: Duration = Duration::from_secs(5);
@@ -250,11 +255,7 @@ pub async fn process_event(
 }
 
 
-/// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
-/// and then try to process them one by one. If the process fails, it will retry indefinitely.
-//
-// `tracing::instrument` creates a new span for the method `process_block_range`.
-// The span is created with the name same as the method name and with no fields.
+/// Process a range of blocks for a chain in batches. It calls the `process_block_batch` method for each batch.
 #[tracing::instrument(skip_all, fields(range_from_block=block_range.from, range_to_block=block_range.to))]
 pub async fn process_block_range(
     block_range: BlockRange,
@@ -272,55 +273,62 @@ pub async fn process_block_range(
         if to_block > last_block {
             to_block = last_block;
         }
+        process_block_batch(
+            BlockRange {
+                from: current_block,
+                to:   to_block,
+            },
+            contract.clone(),
+            gas_limit,
+            chain_state.clone(),
+        )
+        .in_current_span()
+        .await;
+        current_block = to_block + 1;
+    }
+}
+
+/// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
+/// and then try to process them one by one. If the process fails, it will retry indefinitely.
+#[tracing::instrument(name="batch", skip_all, fields(batch_from_block=block_range.from, batch_to_block=block_range.to))]
+pub async fn process_block_batch(
+    block_range: BlockRange,
+    contract: Arc<SignablePythContract>,
+    gas_limit: U256,
+    chain_state: api::BlockchainState,
+) {
+    loop {
         let events_res = chain_state
             .contract
-            .get_request_with_callback_events(current_block, to_block)
+            .get_request_with_callback_events(block_range.from, block_range.to)
             .await;
 
         match events_res {
             Ok(events) => {
-                tracing::info!(
-                    "Processing {} events from block: {} to block: {}",
-                    &events.len(),
-                    &current_block,
-                    &to_block
-                );
+                tracing::info!(num_of_events = &events.len(), "Processing",);
                 for event in &events {
-                    tracing::info!(
-                        "Processing event for sequence number: {}",
-                        &event.sequence_number
-                    );
+                    tracing::info!(sequence_number = &event.sequence_number, "Processing event",);
                     while let Err(e) =
                         process_event(event.clone(), &chain_state, &contract, gas_limit)
                             .in_current_span()
                             .await
                     {
                         tracing::error!(
-                            "Error while processing event for sequence number: {}. Waiting for {} seconds before retry. error: {:?}",
-                            &event.sequence_number,
+                            sequence_number = &event.sequence_number,
+                            "Error while processing event. Waiting for {} seconds before retry. error: {:?}",
                             RETRY_INTERVAL.as_secs(),
                             e
                         );
                         time::sleep(RETRY_INTERVAL).await;
                     }
-                    tracing::info!(
-                        "Processed event for sequence number: {}",
-                        &event.sequence_number
-                    );
+                    tracing::info!(sequence_number = &event.sequence_number, "Processed event",);
                 }
-                tracing::info!(
-                    "Processed {} events from block: {} to block: {}",
-                    &events.len(),
-                    &current_block,
-                    &to_block
-                );
-                current_block = to_block + 1;
+                tracing::info!(num_of_events = &events.len(), "Processed",);
+                break;
             }
             Err(e) => {
                 tracing::error!(
-                    "Error while getting events from block: {} to block: {}. Waiting for {} seconds before retry.  error: {:?}",
-                    &current_block,
-                    &to_block,
+                    "Error while getting events. Waiting for {} seconds before retry. error: {:?}",
                     RETRY_INTERVAL.as_secs(),
                     e
                 );
@@ -330,11 +338,6 @@ pub async fn process_block_range(
     }
 }
 
-#[derive(Debug)]
-pub struct BlockRange {
-    pub from: BlockNumber,
-    pub to:   BlockNumber,
-}
 
 #[tracing::instrument(name="watch_blocks", skip_all, fields(initial_safe_block=latest_safe_block))]
 pub async fn watch_blocks_wrapper(
