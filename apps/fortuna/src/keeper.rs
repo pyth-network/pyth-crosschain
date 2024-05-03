@@ -71,6 +71,8 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
 
 /// Run threads to handle events for the last `BACKLOG_RANGE` blocks. Watch for new blocks and
 /// handle any events for the new blocks.
+// `tracing::instrument` creates a new span for the method `run_keeper_threads`.
+// The span is created with the name "keeper" and the field "chain_id" is set to the chain_state.id.
 #[tracing::instrument(name="keeper", skip_all, fields(chain_id=chain_state.id))]
 pub async fn run_keeper_threads(
     private_key: String,
@@ -94,6 +96,7 @@ pub async fn run_keeper_threads(
     spawn(async move {
         let _enter = keeper_span_clone.enter();
         let from_block = latest_safe_block.saturating_sub(BACKLOG_RANGE);
+        // We create a span here to wrap the process_block_range calls in this thread in one span - named "process_backlog".
         let span = tracing::info_span!(
             "process_backlog",
             backlog_from_block = from_block,
@@ -111,6 +114,8 @@ pub async fn run_keeper_threads(
             chain_eth_config.gas_limit,
             backlog_chain_state.clone(),
         )
+        // This is important! process_block_range is being called in the context of the "process_backlog" span.
+        // We need to add in_current_span to a future otherwise the span might won't work as expected.
         .in_current_span()
         .await;
         span.in_scope(|| tracing::info!("Backlog processed"));
@@ -122,6 +127,7 @@ pub async fn run_keeper_threads(
     let keeper_span_clone = tracing::Span::current();
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(async move {
+        // We created this span to wrap all the watch_blocks calls made here in this thread in one span - named "watch_blocks".
         let _enter = keeper_span_clone.enter();
         let span = tracing::info_span!("watch_blocks", initial_safe_block = latest_safe_block);
         let _watch_blocks_enter = span.enter();
@@ -279,6 +285,9 @@ pub async fn process_event(
 
 /// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
 /// and then try to process them one by one. If the process fails, it will retry indefinitely.
+//
+// `tracing::instrument` creates a new span for the method `process_block_range`.
+// The span is created with the name same as the method name and with no fields.
 #[tracing::instrument(skip_all)]
 pub async fn process_block_range(
     block_range: BlockRange,
@@ -430,6 +439,9 @@ pub async fn watch_blocks(
 }
 
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
+//
+// `tracing::instrument` creates a new span for the method `process_new_blocks`.
+// The span is created with the name same as the method name and with no fields.
 #[tracing::instrument(skip_all)]
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
