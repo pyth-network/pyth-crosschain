@@ -16,7 +16,9 @@ use fuels::{
 use rand::Rng;
 use reqwest;
 use serde_json;
+use serde_wormhole::RawMessage;
 use std::path::PathBuf;
+use wormhole_sdk::Vaa;
 
 abigen!(Contract(
     name = "PythOracleContract",
@@ -87,10 +89,6 @@ pub fn test_accumulator_update_data_bytes() -> Vec<Bytes> {
     )]
 }
 
-pub fn create_authorize_governance_data_source_transfer_payload(payload: AuthorizeGovernanceDataSourceTransferPayload) -> Vec<u8> {
-    payload.claim_vaa.0
-}
-
 pub fn create_set_fee_payload(new_fee: u64, exponent: u64) -> Vec<u8> {
     let base = new_fee / 10u64.pow(exponent.try_into().unwrap());
     let base_bytes = base.to_be_bytes();
@@ -105,6 +103,27 @@ pub fn create_set_valid_period_payload(new_valid_period: u64) -> Vec<u8> {
     let valid_period_bytes = new_valid_period.to_be_bytes();
     let mut payload = Vec::new();
     payload.extend_from_slice(&valid_period_bytes);
+    payload
+}
+
+pub fn create_set_wormhole_address_payload(new_wormhole_address: [u8; 32]) -> Vec<u8> {
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&new_wormhole_address);
+    payload
+}
+
+pub fn create_authorize_governance_data_source_transfer_payload(
+    claim_vaa: Vaa<Box<RawMessage>>,
+) -> Vec<u8> {
+    serde_wormhole::to_vec(&claim_vaa).unwrap()
+}
+
+pub fn create_request_governance_data_source_transfer_payload(
+    governance_data_source_index: u32,
+) -> Vec<u8> {
+    let index_bytes = governance_data_source_index.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&index_bytes);
     payload
 }
 

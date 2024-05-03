@@ -92,7 +92,7 @@ impl GovernanceInstruction {
         uc
     }
 
-    /// Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
+    /// Parse an AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
     pub fn parse_authorize_governance_data_source_transfer_payload(encoded_payload: Bytes) -> AuthorizeGovernanceDataSourceTransferPayload {
         AuthorizeGovernanceDataSourceTransferPayload {
             claim_vaa: encoded_payload,
@@ -197,9 +197,9 @@ impl GovernanceInstruction {
 
     pub fn parse_set_wormhole_address_payload(encoded_payload: Bytes) -> SetWormholeAddressPayload {
         let mut index = 0;
-        let (slice, _) = encoded_payload.split_at(20);
+        let (slice, _) = encoded_payload.split_at(32);
         let wormhole_address: b256 = slice.into();
-        index += 20;
+        index += 32;
         require(index == encoded_payload.len(), PythError::InvalidGovernanceMessage);
         let swa = SetWormholeAddressPayload {
             new_wormhole_address: wormhole_address,

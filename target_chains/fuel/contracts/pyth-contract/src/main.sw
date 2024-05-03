@@ -829,8 +829,20 @@ fn set_wormhole_address(payload: SetWormholeAddressPayload, encoded_vm: Bytes) {
     };
     storage.wormhole_provider.write(new_wormhole_provider);
 
-    // verify_governance_vm also verifies that the governance data source is valid
-    let vm = verify_governance_vm(encoded_vm);
+    let vm = WormholeVM::parse_and_verify_wormhole_vm(
+        current_guardian_set_index(),
+        encoded_vm,
+        storage
+            .wormhole_guardian_sets,
+    );
+
+    require(
+        storage
+            .governance_data_source
+            .read()
+            .is_valid_governance_data_source(vm.emitter_chain_id, vm.emitter_address),
+        PythError::InvalidGovernanceDataSource,
+    );
 
     require(
         vm.sequence == last_executed_governance_sequence(),
@@ -868,11 +880,19 @@ fn pyth_upgradeable_magic() -> u32 {
 
 
 abi PythGovernance {
+    #[storage(read)]
+    fn governance_data_source() -> DataSource;
+
     #[storage(read, write)]
     fn execute_governance_instruction(encoded_vm: Bytes);
 }
 
 impl PythGovernance for Contract {
+    #[storage(read)]
+    fn governance_data_source() -> DataSource {
+        governance_data_source()
+    }
+
     #[storage(read, write)]
     fn execute_governance_instruction(encoded_vm: Bytes) {
         let vm = verify_governance_vm(encoded_vm);

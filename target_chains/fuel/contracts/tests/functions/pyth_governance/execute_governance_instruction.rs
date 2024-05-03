@@ -1,3 +1,4 @@
+use pyth_sdk::pyth_utils::PythError;
 use {
     crate::utils::{interface::pyth_init::constructor, setup::setup_environment},
     fuels::types::{Bits256, Bytes},
@@ -16,14 +17,19 @@ mod success {
     use {
         super::*,
         crate::utils::interface::{
-            pyth_core::valid_time_period, pyth_governance::execute_governance_instruction,
+            pyth_core::valid_time_period,
+            pyth_governance::{execute_governance_instruction, governance_data_source},
             pyth_info::single_update_fee,
+            wormhole_guardians::current_wormhole_provider,
         },
         pyth_sdk::{
             constants::MAGIC,
             pyth_utils::{
-                create_governance_instruction_payload, create_set_fee_payload,
-                create_set_valid_period_payload, GovernanceAction, GovernanceModule,
+                create_authorize_governance_data_source_transfer_payload,
+                create_governance_instruction_payload,
+                create_request_governance_data_source_transfer_payload, create_set_fee_payload,
+                create_set_valid_period_payload, create_set_wormhole_address_payload,
+                GovernanceAction, GovernanceModule,
             },
         },
     };
@@ -107,5 +113,105 @@ mod success {
         let valid_period = valid_time_period(&deployer.instance).await.value;
 
         assert_eq!(valid_period, 100);
+
+        // let mut current_wormhole_address = current_wormhole_provider(&deployer.instance)
+        //     .await
+        //     .value
+        //     .emitter_address;
+
+        // // Test SetWormholeAddress
+        // assert_eq!(
+        //     current_wormhole_address,
+        //     WORMHOLE_GOVERNANCE_DATA_SOURCE.emitter_address
+        // );
+
+        // let set_wormhole_address_payload = create_set_wormhole_address_payload([1u8; 32]);
+        // governance_instruction_payload = create_governance_instruction_payload(
+        //     MAGIC,
+        //     GovernanceModule::Target,
+        //     GovernanceAction::SetWormholeAddress,
+        //     1,
+        //     set_wormhole_address_payload,
+        // );
+
+        // vaa = create_vaa_from_payload(
+        //     &governance_instruction_payload,
+        //     wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
+        //     wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
+        //     3,
+        // );
+
+        // execute_governance_instruction(
+        //     &deployer.instance,
+        //     Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
+        // )
+        // .await;
+
+        // current_wormhole_address = current_wormhole_provider(&deployer.instance)
+        //     .await
+        //     .value
+        //     .emitter_address;
+
+        // assert_eq!(current_wormhole_address, Bits256([1u8; 32]));
+
+        // Test AuthorizeGovernanceDataSourceTransfer
+        let new_emitter_address = Bits256([3u8; 32]);
+        let new_emitter_chain = 2;
+
+        // Simulate creating a RequestGovernanceDataSourceTransfer VAA
+        let request_governance_data_source_transfer_payload =
+            create_request_governance_data_source_transfer_payload(1);
+        governance_instruction_payload = create_governance_instruction_payload(
+            MAGIC,
+            GovernanceModule::Target,
+            GovernanceAction::RequestGovernanceDataSourceTransfer,
+            1,
+            request_governance_data_source_transfer_payload,
+        );
+        vaa = create_vaa_from_payload(
+            &governance_instruction_payload,
+            wormhole_sdk::Address(new_emitter_address.0),
+            wormhole_sdk::Chain::from(new_emitter_chain),
+            3,
+        );
+
+        // Authorize the transfer
+        let authorize_governance_data_source_transfer_payload =
+            create_authorize_governance_data_source_transfer_payload(vaa);
+        governance_instruction_payload = create_governance_instruction_payload(
+            MAGIC,
+            GovernanceModule::Target,
+            GovernanceAction::AuthorizeGovernanceDataSourceTransfer,
+            1,
+            authorize_governance_data_source_transfer_payload,
+        );
+        vaa = create_vaa_from_payload(
+            &governance_instruction_payload,
+            wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
+            wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
+            4,
+        );
+
+        let old_governance_data_source = governance_data_source(&deployer.instance).await;
+        let receipt = execute_governance_instruction(
+            &deployer.instance,
+            Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
+        )
+        .await;
+
+        let new_governance_data_source = governance_data_source(&deployer.instance).await;
+        assert_ne!(
+            old_governance_data_source.value.emitter_address,
+            new_governance_data_source.value.emitter_address
+        );
+        assert_ne!(
+            old_governance_data_source.value.chain_id,
+            new_governance_data_source.value.chain_id
+        );
+        assert_eq!(
+            new_governance_data_source.value.emitter_address,
+            new_emitter_address
+        );
+        assert_eq!(new_governance_data_source.value.chain_id, new_emitter_chain);
     }
 }
