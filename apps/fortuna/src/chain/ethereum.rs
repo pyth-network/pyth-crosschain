@@ -277,7 +277,11 @@ impl EntropyReader for PythContract {
             Err(e) => match e {
                 ContractError::ProviderError { e } => Err(anyhow!(e)),
                 _ => {
-                    tracing::info!("Gas estimation for reveal with callback failed: {:?}", e);
+                    tracing::info!(
+                        "Gas estimation for sequence number {} failed: {:?}",
+                        sequence_number,
+                        e
+                    );
                     Ok(None)
                 }
             },

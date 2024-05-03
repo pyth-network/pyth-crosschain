@@ -33,7 +33,10 @@ use {
             Duration,
         },
     },
-    tracing,
+    tracing::{
+        self,
+        Instrument,
+    },
 };
 
 
@@ -77,15 +80,11 @@ pub async fn run_keeper_threads(
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
 ) {
-    tracing::info!("Chain: {} - starting keeper", &chain_state.id);
-
-    let latest_safe_block = get_latest_safe_block(&chain_state).await;
-
-    tracing::info!(
-        "Chain: {} - latest safe block: {}",
-        &chain_state.id,
-        &latest_safe_block
-    );
+    let keeper_span = tracing::info_span!("keeper", chain_id = chain_state.id.clone());
+    let _enter = keeper_span.enter();
+    tracing::info!("starting keeper");
+    let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+    keeper_span.in_scope(|| tracing::info!("latest safe block: {}", &latest_safe_block));
 
     let contract = Arc::new(
         SignablePythContract::from_config(&chain_eth_config, &private_key)
@@ -95,9 +94,20 @@ pub async fn run_keeper_threads(
 
     let backlog_chain_state = chain_state.clone();
     let backlog_contract = contract.clone();
+    let keeper_span_clone = keeper_span.clone();
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     spawn(async move {
+        // TODO: introduce loop here? for retrying after an hour or so? every 10 mins for last 1000 blocks run this backlog again?
+        let _enter = keeper_span_clone.enter();
         let from_block = latest_safe_block.saturating_sub(BACKLOG_RANGE);
+        let span = tracing::info_span!(
+            "process_backlog",
+            backlog_from_block = from_block,
+            backlog_to_block = latest_safe_block
+        );
+        let _backlog_enter = span.enter();
+        tracing::info!("Processing backlog",);
+
         process_block_range(
             BlockRange {
                 from: from_block,
@@ -107,18 +117,20 @@ pub async fn run_keeper_threads(
             chain_eth_config.gas_limit,
             backlog_chain_state.clone(),
         )
+        .in_current_span()
         .await;
-        tracing::info!(
-            "Chain: {} - backlog processing completed",
-            &backlog_chain_state.id
-        );
+        span.in_scope(|| tracing::info!("Backlog processed"));
     });
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
 
     let watch_blocks_chain_state = chain_state.clone();
+    let keeper_span_clone = keeper_span.clone();
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(async move {
+        let _enter = keeper_span_clone.enter();
+        let span = tracing::info_span!("watch_blocks", initial_safe_block = latest_safe_block);
+        let _watch_blocks_enter = span.enter();
         loop {
             if let Err(e) = watch_blocks(
                 watch_blocks_chain_state.clone(),
@@ -126,24 +138,26 @@ pub async fn run_keeper_threads(
                 tx.clone(),
                 chain_eth_config.geth_rpc_wss.clone(),
             )
+            .in_current_span()
             .await
             {
-                tracing::error!(
-                    "Chain: {} - error in watching blocks. error: {:?}",
-                    &watch_blocks_chain_state.id,
-                    e
-                );
+                span.in_scope(|| tracing::error!("watching blocks. error: {:?}", e));
                 time::sleep(RETRY_INTERVAL).await;
             }
         }
     });
     // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
-    spawn(process_new_blocks(
-        chain_state.clone(),
-        rx,
-        Arc::clone(&contract),
-        chain_eth_config.gas_limit,
-    ));
+    let keeper_span_clone = keeper_span.clone();
+    spawn(async move {
+        process_new_blocks(
+            chain_state.clone(),
+            rx,
+            Arc::clone(&contract),
+            chain_eth_config.gas_limit,
+        )
+        .instrument(keeper_span_clone)
+        .await
+    });
 }
 
 
@@ -164,9 +178,7 @@ pub async fn process_event(
         Ok(result) => result,
         Err(e) => {
             tracing::error!(
-                "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                &chain_config.id,
-                event.provider_address,
+                "Error while revealing for sequence number: {} with error: {:?}",
                 event.sequence_number,
                 e
             );
@@ -182,6 +194,7 @@ pub async fn process_event(
             event.user_random_number,
             provider_revelation,
         )
+        .in_current_span()
         .await;
 
     match gas_estimate_res {
@@ -194,8 +207,8 @@ pub async fn process_event(
 
                 if gas_estimate > gas_limit {
                     tracing::error!(
-                        "Chain: {} - gas estimate for reveal with callback is higher than the gas limit",
-                        &chain_config.id
+                        "Gas estimate for reveal with callback is higher than the gas limit for sequence number: {}",
+                        event.sequence_number
                     );
                     return Ok(());
                 }
@@ -222,12 +235,10 @@ pub async fn process_event(
                         // and concluded that its Ok to not reveal.
                         _ => {
                             tracing::error!(
-                            "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                            &chain_config.id,
-                            event.provider_address,
-                            event.sequence_number,
-                            e
-                        );
+                                "Error while revealing for sequence number: {} with error: {:?}",
+                                event.sequence_number,
+                                e
+                            );
                             return Ok(());
                         }
                     },
@@ -236,9 +247,7 @@ pub async fn process_event(
                 match pending_tx.await {
                     Ok(res) => {
                         tracing::info!(
-                            "Chain: {} - revealed for provider: {} and sequence number: {} with res: {:?}",
-                            &chain_config.id,
-                            event.provider_address,
+                            "Revealed for sequence number: {} with res: {:?}",
                             event.sequence_number,
                             res
                         );
@@ -246,9 +255,7 @@ pub async fn process_event(
                     }
                     Err(e) => {
                         tracing::error!(
-                            "Chain: {} - error while revealing for provider: {} and sequence number: {} with error: {:?}",
-                            &chain_config.id,
-                            event.provider_address,
+                            "Error while revealing for sequence number: {} with error: {:?}",
                             event.sequence_number,
                             e
                         );
@@ -256,13 +263,17 @@ pub async fn process_event(
                     }
                 }
             }
-            None => Ok(()),
+            None => {
+                tracing::info!(
+                    "Not processing event for sequence number: {}",
+                    event.sequence_number
+                );
+                Ok(())
+            }
         },
         Err(e) => {
             tracing::error!(
-                "Chain: {} - error while simulating reveal for provider: {} and sequence number: {} \n error: {:?}",
-                &chain_config.id,
-                event.provider_address,
+                "Error while simulating reveal for sequence number: {} \n error: {:?}",
                 event.sequence_number,
                 e
             );
@@ -274,19 +285,13 @@ pub async fn process_event(
 
 /// Process a range of blocks for a chain. It will fetch events for the blocks in the provided range
 /// and then try to process them one by one. If the process fails, it will retry indefinitely.
+#[tracing::instrument(skip_all)]
 pub async fn process_block_range(
     block_range: BlockRange,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
     chain_state: api::BlockchainState,
 ) {
-    tracing::info!(
-        "Chain: {} - processing blocks from: {} to: {}",
-        &chain_state.id,
-        block_range.from,
-        block_range.to
-    );
-
     let BlockRange {
         from: first_block,
         to: last_block,
@@ -304,13 +309,20 @@ pub async fn process_block_range(
 
         match events_res {
             Ok(events) => {
-                for event in events {
+                tracing::info!(
+                    "Processing {} events from block: {} to block: {}",
+                    &events.len(),
+                    &current_block,
+                    &to_block
+                );
+                for event in &events {
                     while let Err(e) =
-                        process_event(event.clone(), &chain_state, &contract, gas_limit).await
+                        process_event(event.clone(), &chain_state, &contract, gas_limit)
+                            .in_current_span()
+                            .await
                     {
                         tracing::error!(
-                            "Chain: {} - error while processing event for sequence number: {}. Waiting for {} seconds before retry. error: {:?}",
-                            &chain_state.id,
+                            "Error while processing event for sequence number: {}. Waiting for {} seconds before retry. error: {:?}",
                             &event.sequence_number,
                             RETRY_INTERVAL.as_secs(),
                             e
@@ -319,8 +331,7 @@ pub async fn process_block_range(
                     }
                 }
                 tracing::info!(
-                    "Chain: {} - backlog processed from block: {} to block: {}",
-                    &chain_state.id,
+                    "Processed blocks from block: {} to block: {}",
                     &current_block,
                     &to_block
                 );
@@ -328,8 +339,7 @@ pub async fn process_block_range(
             }
             Err(e) => {
                 tracing::error!(
-                    "Chain: {} - error while getting events from block: {} to block: {}. Waiting for {} seconds before retry.  error: {:?}",
-                    &chain_state.id,
+                    "Error while getting events from block: {} to block: {}. Waiting for {} seconds before retry.  error: {:?}",
                     &current_block,
                     &to_block,
                     RETRY_INTERVAL.as_secs(),
@@ -356,27 +366,19 @@ pub async fn watch_blocks(
     tx: mpsc::Sender<BlockRange>,
     geth_rpc_wss: Option<String>,
 ) -> Result<()> {
-    tracing::info!(
-        "Chain: {} - watching blocks to handle new events",
-        &chain_state.id
-    );
+    tracing::info!("Watching blocks to handle new events");
     let mut last_safe_block_processed = latest_safe_block;
 
     let provider_option = match geth_rpc_wss {
         Some(wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
             Ok(provider) => provider,
             Err(e) => {
-                tracing::error!(
-                    "Chain: {} - error while connecting to wss: {}. error: {:?}",
-                    &chain_state.id,
-                    wss,
-                    e
-                );
+                tracing::error!("Error while connecting to wss: {}. error: {:?}", wss, e);
                 return Err(e.into());
             }
         }),
         None => {
-            tracing::info!("Chain: {} - no wss provided", &chain_state.id);
+            tracing::info!("No wss provided");
             None
         }
     };
@@ -396,7 +398,7 @@ pub async fn watch_blocks(
             }
         }
 
-        let latest_safe_block = get_latest_safe_block(&chain_state).await;
+        let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
         if latest_safe_block > last_safe_block_processed {
             match tx
                 .send(BlockRange {
@@ -407,8 +409,7 @@ pub async fn watch_blocks(
             {
                 Ok(_) => {
                     tracing::info!(
-                        "Chain: {} - block range sent to handle events from: {} to: {}",
-                        &chain_state.id,
+                        "Block range sent to handle events from: {} to: {}",
                         &last_safe_block_processed + 1,
                         &latest_safe_block
                     );
@@ -416,8 +417,7 @@ pub async fn watch_blocks(
                 }
                 Err(e) => {
                     tracing::error!(
-                        "Chain: {} - error while sending block range to handle events. These will be handled in next call. error: {:?}",
-                        &chain_state.id,
+                        "Error while sending block range to handle events. These will be handled in next call. error: {:?}",
                         e
                     );
                 }
@@ -427,17 +427,15 @@ pub async fn watch_blocks(
 }
 
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
+#[tracing::instrument(skip_all)]
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
 ) {
+    tracing::info!("Waiting for new block ranges to process");
     loop {
-        tracing::info!(
-            "Chain: {} - waiting for new block ranges to process",
-            &chain_state.id
-        );
         if let Some(block_range) = rx.recv().await {
             process_block_range(
                 block_range,
@@ -445,6 +443,7 @@ pub async fn process_new_blocks(
                 gas_limit,
                 chain_state.clone(),
             )
+            .in_current_span()
             .await;
         }
     }
