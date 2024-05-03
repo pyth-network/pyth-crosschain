@@ -382,7 +382,7 @@ mod pyth {
             let wh_proof_size = reader.read_u16();
             let wh_proof = reader.read_byte_array(wh_proof_size.into());
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
-            let vm = wormhole.parse_and_verify_vm(wh_proof).map_err()?;
+            let vm = wormhole.parse_and_verify_vm(wh_proof);
 
             let source = DataSource {
                 emitter_chain_id: vm.emitter_chain_id, emitter_address: vm.emitter_address

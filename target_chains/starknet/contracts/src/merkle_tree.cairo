@@ -27,7 +27,7 @@ impl ResultReaderToMerkleVerification<T> of ResultReaderToMerkleVerificationTrai
 fn leaf_hash(mut reader: Reader) -> Result<u256, super::reader::Error> {
     let mut hasher = HasherImpl::new();
     hasher.push_u8(MERKLE_LEAF_PREFIX);
-    hasher.push_reader(ref reader)?;
+    hasher.push_reader(ref reader);
     let hash = hasher.finalize() / ONE_SHIFT_96;
     Result::Ok(hash)
 }
