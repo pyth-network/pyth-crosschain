@@ -310,6 +310,10 @@ pub async fn process_block_range(
                     &to_block
                 );
                 for event in &events {
+                    tracing::info!(
+                        "Processing event for sequence number: {}",
+                        &event.sequence_number
+                    );
                     while let Err(e) =
                         process_event(event.clone(), &chain_state, &contract, gas_limit)
                             .in_current_span()
@@ -323,6 +327,10 @@ pub async fn process_block_range(
                         );
                         time::sleep(RETRY_INTERVAL).await;
                     }
+                    tracing::info!(
+                        "Processed event for sequence number: {}",
+                        &event.sequence_number
+                    );
                 }
                 tracing::info!(
                     "Processed {} events from block: {} to block: {}",
