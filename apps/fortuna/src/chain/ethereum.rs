@@ -278,8 +278,8 @@ impl EntropyReader for PythContract {
                 ContractError::ProviderError { e } => Err(anyhow!(e)),
                 _ => {
                     tracing::info!(
-                        "Gas estimation for sequence number {} failed: {:?}",
-                        sequence_number,
+                        sequence_number = sequence_number,
+                        "Gas estimation failed. error: {:?}",
                         e
                     );
                     Ok(None)
