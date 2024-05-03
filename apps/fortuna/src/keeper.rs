@@ -255,7 +255,7 @@ pub async fn process_event(
 //
 // `tracing::instrument` creates a new span for the method `process_block_range`.
 // The span is created with the name same as the method name and with no fields.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, fields(range_from_block=block_range.from, range_to_block=block_range.to))]
 pub async fn process_block_range(
     block_range: BlockRange,
     contract: Arc<SignablePythContract>,
@@ -452,7 +452,7 @@ pub async fn process_new_blocks(
     }
 }
 
-#[tracing::instrument(skip_all, fields(backlog_from_block=backlog_range.from, backlog_to_block=backlog_range.to))]
+#[tracing::instrument(skip_all)]
 pub async fn process_backlog(
     backlog_range: BlockRange,
     contract: Arc<SignablePythContract>,
