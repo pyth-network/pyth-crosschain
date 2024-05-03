@@ -107,7 +107,7 @@ pub async fn run_keeper_threads(
 
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(
-        watch_blocks_loop(
+        watch_blocks_wrapper(
             chain_state.clone(),
             latest_safe_block,
             tx,
@@ -337,7 +337,7 @@ pub struct BlockRange {
 }
 
 #[tracing::instrument(name="watch_blocks", skip_all, fields(initial_safe_block=latest_safe_block))]
-pub async fn watch_blocks_loop(
+pub async fn watch_blocks_wrapper(
     chain_state: BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
