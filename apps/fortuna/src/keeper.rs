@@ -412,9 +412,9 @@ pub async fn watch_blocks(
             {
                 Ok(_) => {
                     tracing::info!(
-                        "Block range sent to handle events from: {} to: {}",
-                        &last_safe_block_processed + 1,
-                        &latest_safe_block
+                        from_block = &last_safe_block_processed + 1,
+                        to_block = &latest_safe_block,
+                        "Block range sent to handle events",
                     );
                     last_safe_block_processed = latest_safe_block;
                 }
