@@ -155,7 +155,6 @@ pub fn create_governance_instruction_payload(
         GovernanceAction::SetFee => 3,
         GovernanceAction::SetValidPeriod => 4,
         GovernanceAction::RequestGovernanceDataSourceTransfer => 5,
-        GovernanceAction::SetWormholeAddress => 6,
         GovernanceAction::Invalid => u8::MAX, // Typically 255 for invalid
     };
     buffer.push(action_number);
