@@ -818,61 +818,6 @@ fn set_valid_period(payload: SetValidPeriodPayload) {
     });
 }
 
-#[storage(read, write)]
-fn set_wormhole_address(payload: SetWormholeAddressPayload, encoded_vm: Bytes) {
-    let old_wormhole_address = current_wormhole_provider().emitter_address;
-    let old_wormhole_chain_id = current_wormhole_provider().chain_id;
-    // Set the new wormhole address
-    let new_wormhole_provider = DataSource {
-        chain_id: old_wormhole_chain_id,
-        emitter_address: payload.new_wormhole_address,
-    };
-    storage.wormhole_provider.write(new_wormhole_provider);
-
-    let vm = WormholeVM::parse_and_verify_wormhole_vm(
-        current_guardian_set_index(),
-        encoded_vm,
-        storage
-            .wormhole_guardian_sets,
-    );
-
-    require(
-        storage
-            .governance_data_source
-            .read()
-            .is_valid_governance_data_source(vm.emitter_chain_id, vm.emitter_address),
-        PythError::InvalidGovernanceDataSource,
-    );
-
-    require(
-        vm.sequence == last_executed_governance_sequence(),
-        PythError::InvalidWormholeAddressToSet,
-    );
-
-    let gi = GovernanceInstruction::parse_governance_instruction(vm.payload);
-
-    require(
-        match gi.action {
-        GovernanceAction::SetWormholeAddress => true,
-        _ => false,
-        }, PythError::InvalidWormholeAddressToSet,
-    );
-
-    // Sanity check that the new wormhole contract parses the payload correctly
-    let new_payload = GovernanceInstruction::parse_set_wormhole_address_payload(gi.payload);
-
-    require(
-        new_payload.new_wormhole_address == payload.new_wormhole_address,
-        PythError::InvalidWormholeAddressToSet,
-    );
-
-    // Emit an event with the old and new wormhole addresses
-    log(WormholeAddressSetEvent {
-        old_wormhole_address: old_wormhole_address,
-        new_wormhole_address: payload.new_wormhole_address,
-    });
-}
-
 /// Returns a magic number for the contract.
 fn pyth_upgradeable_magic() -> u32 {
     0x97a6f304
@@ -938,12 +883,6 @@ impl PythGovernance for Contract {
                 // The `revert` function only accepts u64, so as
                 // a workaround we use require.
                 require(false, PythError::InvalidGovernanceMessage);
-            },
-            GovernanceAction::SetWormholeAddress => {
-                require(gi.target_chain_id != 0, PythError::InvalidGovernanceTarget);
-                let swa = GovernanceInstruction::parse_set_wormhole_address_payload(gi.payload);
-                log(swa);
-                set_wormhole_address(swa, encoded_vm);
             },
             _ => {
                 // The `revert` function only accepts u64, so as

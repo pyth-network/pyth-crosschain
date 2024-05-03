@@ -54,7 +54,6 @@ impl GovernanceInstruction {
             3 => GovernanceAction::SetFee,
             4 => GovernanceAction::SetValidPeriod,
             5 => GovernanceAction::RequestGovernanceDataSourceTransfer,
-            6 => GovernanceAction::SetWormholeAddress,
             _ => GovernanceAction::Invalid,
         };
         require(match governance_action {
@@ -193,17 +192,5 @@ impl GovernanceInstruction {
             new_valid_period: valid_time_period_seconds,
         };
         svp
-    }
-
-    pub fn parse_set_wormhole_address_payload(encoded_payload: Bytes) -> SetWormholeAddressPayload {
-        let mut index = 0;
-        let (slice, _) = encoded_payload.split_at(32);
-        let wormhole_address: b256 = slice.into();
-        index += 32;
-        require(index == encoded_payload.len(), PythError::InvalidGovernanceMessage);
-        let swa = SetWormholeAddressPayload {
-            new_wormhole_address: wormhole_address,
-        };
-        swa
     }
 }
