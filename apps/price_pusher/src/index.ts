@@ -9,6 +9,9 @@ import near from "./near/command";
 import solana from "./solana/command";
 
 yargs(hideBin(process.argv))
+  .parserConfiguration({
+    "parse-numbers": false,
+  })
   .config("config")
   .global("config")
   .command(evm)
