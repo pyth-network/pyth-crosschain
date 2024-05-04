@@ -497,6 +497,7 @@ export class SuiPricePusher implements IPricePusher {
             "quorum of validators because of locked objects. Retried a conflicting transaction"
           )
         ) {
+          /*
           Object.values((e as any).data).forEach((lockedObjects: any) => {
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
@@ -504,6 +505,7 @@ export class SuiPricePusher implements IPricePusher {
           });
           // retry merging without the locked coins
           i--;
+           */
           continue;
         }
         throw e;
