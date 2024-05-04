@@ -1,11 +1,17 @@
+#[cfg(feature = "solana-program")]
+use anchor_lang::{
+    AnchorDeserialize,
+    AnchorSerialize,
+};
+#[cfg(not(feature = "solana-program"))]
+use borsh::{
+    BorshDeserialize,
+    BorshSerialize,
+};
 #[cfg(feature = "quickcheck")]
 use quickcheck::Arbitrary;
 use {
-    borsh::{
-        BorshDeserialize,
-        BorshSchema,
-        BorshSerialize,
-    },
+    borsh::BorshSchema,
     serde::{
         Deserialize,
         Serialize,
@@ -40,6 +46,7 @@ use {
         Deserialize
     ))
 )]
+
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
@@ -75,17 +82,13 @@ impl Arbitrary for Message {
 pub type FeedId = [u8; 32];
 
 #[repr(C)]
-#[derive(
-    Debug,
-    Copy,
-    Clone,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    BorshDeserialize,
-    BorshSerialize,
-    BorshSchema,
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
+#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    not(feature = "solana-program"),
+    derive(BorshSerialize, BorshDeserialize)
 )]
+
 pub struct PriceFeedMessage {
     pub feed_id:           FeedId,
     pub price:             i64,

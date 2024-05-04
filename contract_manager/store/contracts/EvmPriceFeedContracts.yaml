@@ -254,7 +254,7 @@
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
 - chain: idex_xchain_testnet
-  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: injective_inevm_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
@@ -315,4 +315,10 @@
   type: EvmPriceFeedContract
 - chain: flow_previewnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: taiko_hekla
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: olive_testnet
+  address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
   type: EvmPriceFeedContract

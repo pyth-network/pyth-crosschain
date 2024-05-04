@@ -450,7 +450,7 @@
   type: EvmChain
 - id: blast_s2_testnet
   mainnet: false
-  rpcUrl: https://blast-sepolia.blockpi.network/v1/rpc/public
+  rpcUrl: https://sepolia.blast.io
   networkId: 168587773
   type: EvmChain
 - id: hedera_testnet
@@ -502,7 +502,7 @@
 - id: idex_xchain_testnet
   mainnet: false
   rpcUrl: https://xchain-testnet-rpc.idex.io
-  networkId: 671276500
+  networkId: 64002
   type: EvmChain
 - id: injective_inevm_testnet
   mainnet: false
@@ -563,4 +563,14 @@
   mainnet: true
   rpcUrl: https://previewnet.evm.nodes.onflow.org
   networkId: 646
+  type: EvmChain
+- id: olive_testnet
+  mainnet: false
+  rpcUrl: https://olive-network-testnet.rpc.caldera.xyz/http
+  networkId: 8101902
+  type: EvmChain
+- id: taiko_hekla
+  mainnet: false
+  rpcUrl: https://rpc.hekla.taiko.xyz/
+  networkId: 167009
   type: EvmChain

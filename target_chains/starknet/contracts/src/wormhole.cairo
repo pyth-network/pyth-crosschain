@@ -1,4 +1,4 @@
-use pyth::reader::ByteArray;
+use super::byte_array::ByteArray;
 use core::starknet::secp256_trait::Signature;
 use pyth::util::UnwrapWithFelt252;
 
@@ -114,7 +114,8 @@ mod wormhole {
     use super::{
         VM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError
     };
-    use pyth::reader::{Reader, ReaderImpl, ByteArray};
+    use pyth::reader::{Reader, ReaderImpl};
+    use pyth::byte_array::ByteArray;
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
     use core::starknet::secp256k1::Secp256k1Point;
     use core::starknet::{
@@ -281,10 +282,10 @@ mod wormhole {
     }
 
     fn parse_signature(ref reader: Reader) -> Result<GuardianSignature, ParseAndVerifyVmError> {
-        let guardian_index = reader.read_u8().map_err()?;
-        let r = reader.read_u256().map_err()?;
-        let s = reader.read_u256().map_err()?;
-        let recovery_id = reader.read_u8().map_err()?;
+        let guardian_index = reader.read_u8();
+        let r = reader.read_u256();
+        let s = reader.read_u256();
+        let recovery_id = reader.read_u8();
         let y_parity = (recovery_id % 2) > 0;
         let signature = GuardianSignature {
             guardian_index, signature: Signature { r, s, y_parity }
@@ -294,13 +295,13 @@ mod wormhole {
 
     fn parse_vm(encoded_vm: ByteArray) -> Result<(VM, u256), ParseAndVerifyVmError> {
         let mut reader = ReaderImpl::new(encoded_vm);
-        let version = reader.read_u8().map_err()?;
+        let version = reader.read_u8();
         if version != 1 {
             return Result::Err(ParseAndVerifyVmError::VmVersionIncompatible);
         }
-        let guardian_set_index = reader.read_u32().map_err()?;
+        let guardian_set_index = reader.read_u32();
 
-        let sig_count = reader.read_u8().map_err()?;
+        let sig_count = reader.read_u8();
         let mut i = 0;
         let mut signatures = array![];
 
@@ -325,14 +326,14 @@ mod wormhole {
         hasher2.push_u256(body_hash1);
         let body_hash2 = hasher2.finalize();
 
-        let timestamp = reader.read_u32().map_err()?;
-        let nonce = reader.read_u32().map_err()?;
-        let emitter_chain_id = reader.read_u16().map_err()?;
-        let emitter_address = reader.read_u256().map_err()?;
-        let sequence = reader.read_u64().map_err()?;
-        let consistency_level = reader.read_u8().map_err()?;
+        let timestamp = reader.read_u32();
+        let nonce = reader.read_u32();
+        let emitter_chain_id = reader.read_u16();
+        let emitter_address = reader.read_u256();
+        let sequence = reader.read_u64();
+        let consistency_level = reader.read_u8();
         let payload_len = reader.len();
-        let payload = reader.read_byte_array(payload_len).map_err()?;
+        let payload = reader.read_byte_array(payload_len);
 
         let vm = VM {
             version,

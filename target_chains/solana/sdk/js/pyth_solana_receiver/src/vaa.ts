@@ -79,7 +79,7 @@ export async function buildEncodedVaaCreateInstruction(
 }
 
 /**
- * Writing the VAA to to an encoded VAA account is done in 2 instructions.
+ * Writing the VAA to an encoded VAA account is done in 2 instructions.
  *
  * The first one writes the first `VAA_SPLIT_INDEX` bytes and the second one writes the rest.
  *

@@ -11,7 +11,7 @@ contract EntropyStructs {
         // and instead is stored to help providers track where they are in the hash chain.
         bytes32 originalCommitment;
         uint64 originalCommitmentSequenceNumber;
-        // Metadata for the current commitment. Providers may optionally use this field to to help
+        // Metadata for the current commitment. Providers may optionally use this field to help
         // manage rotations (i.e., to pick the sequence number from the correct hash chain).
         bytes commitmentMetadata;
         // Optional URI where clients can retrieve revelations for the provider.

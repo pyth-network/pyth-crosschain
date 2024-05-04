@@ -61,3 +61,6 @@
 - chain: sei_evm_devnet
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
   type: EvmEntropyContract
+- chain: taiko_hekla
+  address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
+  type: EvmEntropyContract

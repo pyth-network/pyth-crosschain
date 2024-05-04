@@ -133,7 +133,7 @@ module pyth::batch_price_attestation {
         // the attester.
 
         // If status is trading, use the current price.
-        // If not, use the the last known trading price.
+        // If not, use the last known trading price.
         let current_price = pyth::price::new(price, conf, expo, publish_time);
         if (status != price_status::new_trading()) {
             current_price = pyth::price::new(prev_price, prev_conf, expo, prev_publish_time);

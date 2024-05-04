@@ -130,6 +130,8 @@ export class EvmPricePusher implements IPricePusher {
     pythContractFactory: PythContractFactory,
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
+    private updateFeeMultiplier: number,
+    private gasLimit?: number,
     customGasStation?: CustomGasStation
   ) {
     this.customGasStation = customGasStation;
@@ -168,6 +170,7 @@ export class EvmPricePusher implements IPricePusher {
       updateFee = await this.pythContract.methods
         .getUpdateFee(priceFeedUpdateData)
         .call();
+      updateFee = Number(updateFee) * (this.updateFeeMultiplier || 1);
       console.log(`Update fee: ${updateFee}`);
     } catch (e: any) {
       console.error(
@@ -217,7 +220,12 @@ export class EvmPricePusher implements IPricePusher {
         priceIdsWith0x,
         pubTimesToPush
       )
-      .send({ value: updateFee, gasPrice, nonce: txNonce })
+      .send({
+        value: updateFee,
+        gasPrice,
+        nonce: txNonce,
+        gasLimit: this.gasLimit,
+      })
       .on("transactionHash", (hash: string) => {
         console.log(`Successful. Tx hash: ${hash}`);
       })

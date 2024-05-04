@@ -50,6 +50,8 @@ pub struct LatestPriceFeedsQueryParams {
     binary: bool,
 }
 
+/// **Deprecated: use /v2/updates/price/latest instead**
+///
 /// Get the latest price updates by price feed id.
 ///
 /// Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
@@ -63,6 +65,7 @@ pub struct LatestPriceFeedsQueryParams {
         LatestPriceFeedsQueryParams
     )
 )]
+#[deprecated]
 pub async fn latest_price_feeds<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,

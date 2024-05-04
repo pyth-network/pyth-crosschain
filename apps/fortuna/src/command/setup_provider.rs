@@ -16,7 +16,10 @@ use {
             PebbleHashChain,
         },
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     ethers::{
         abi::Bytes as AbiBytes,
         signers::{
@@ -66,7 +69,14 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
             register = true;
         } else {
             let metadata =
-                bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)?;
+                bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)
+                    .map_err(|e| {
+                        anyhow!(
+                            "Chain: {} - Failed to deserialize commitment metadata: {}",
+                            &chain_id,
+                            e
+                        )
+                    })?;
 
             let hash_chain = PebbleHashChain::from_config(
                 &secret,
@@ -105,7 +115,8 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 fee: opts.fee,
                 uri,
             })
-            .await?;
+            .await
+            .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
             tracing::info!("{}: registered", &chain_id);
         } else {
             if provider_info.fee_in_wei != opts.fee {

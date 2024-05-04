@@ -15,7 +15,7 @@
     "@pythnetwork/client": "^2.17.0",
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
-    "contract_manager": "*",
+    "@pythnetwork/contract-manager": "*",
     "prettier": "^2.8.7",
     "typescript": "^5.0.4",
     "xc_admin_common": "*"
