@@ -488,11 +488,16 @@ export class SuiPricePusher implements IPricePusher {
           options: { showEffects: true },
         });
       } catch (e) {
+        console.log("Merge transaction failed with error:");
+        console.log(e);
+        console.log((e as any).data);
+        console.log(JSON.stringify(e));
         if (
           String(e).includes(
             "quorum of validators because of locked objects. Retried a conflicting transaction"
           )
         ) {
+          /*
           Object.values((e as any).data).forEach((lockedObjects: any) => {
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
@@ -500,6 +505,7 @@ export class SuiPricePusher implements IPricePusher {
           });
           // retry merging without the locked coins
           i--;
+           */
           continue;
         }
         throw e;
