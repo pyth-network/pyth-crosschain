@@ -488,6 +488,10 @@ export class SuiPricePusher implements IPricePusher {
           options: { showEffects: true },
         });
       } catch (e) {
+        console.log("Merge transaction failed with error:");
+        console.log(e);
+        console.log((e as any).data);
+        console.log(JSON.stringify(e));
         if (
           String(e).includes(
             "quorum of validators because of locked objects. Retried a conflicting transaction"
