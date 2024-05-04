@@ -162,7 +162,8 @@ export class SuiPricePusher implements IPricePusher {
     endpoint: string,
     keypair: Ed25519Keypair,
     gasBudget: number,
-    numGasObjects: number
+    numGasObjects: number,
+    ignoreGasObjects: string[]
   ): Promise<SuiPricePusher> {
     if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
       throw new Error(
@@ -183,7 +184,8 @@ export class SuiPricePusher implements IPricePusher {
     const gasPool = await SuiPricePusher.initializeGasPool(
       keypair,
       provider,
-      numGasObjects
+      numGasObjects,
+      ignoreGasObjects
     );
 
     const pythClient = new SuiPythClient(
@@ -318,17 +320,26 @@ export class SuiPricePusher implements IPricePusher {
 
   // This function will smash all coins owned by the signer into one, and then
   // split them equally into numGasObjects.
+  // ignoreGasObjects is a list of gas objects that will be ignored during the
+  // merging -- use this to store any locked objects on initialization.
   private static async initializeGasPool(
     signer: Ed25519Keypair,
     provider: SuiClient,
-    numGasObjects: number
+    numGasObjects: number,
+    ignoreGasObjects: string[]
   ): Promise<SuiObjectRef[]> {
     const signerAddress = await signer.toSuiAddress();
+
+    if (ignoreGasObjects.length > 0) {
+      console.log("Ignoring some gas objects for coin merging:");
+      console.log(ignoreGasObjects);
+    }
 
     const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
       signer,
       provider,
-      signerAddress
+      signerAddress,
+      ignoreGasObjects
     );
     const coinResult = await provider.getObject({
       id: consolidatedCoin.objectId,
@@ -458,7 +469,8 @@ export class SuiPricePusher implements IPricePusher {
   private static async mergeGasCoinsIntoOne(
     signer: Ed25519Keypair,
     provider: SuiClient,
-    owner: SuiAddress
+    owner: SuiAddress,
+    initialLockedAddresses: string[]
   ): Promise<SuiObjectRef> {
     const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin
@@ -472,6 +484,7 @@ export class SuiPricePusher implements IPricePusher {
     );
     let finalCoin;
     const lockedAddresses: Set<string> = new Set();
+    initialLockedAddresses.forEach((value) => lockedAddresses.add(value));
     for (let i = 0; i < gasCoinsChunks.length; i++) {
       const mergeTx = new TransactionBlock();
       let coins = gasCoinsChunks[i];
@@ -497,7 +510,6 @@ export class SuiPricePusher implements IPricePusher {
             "quorum of validators because of locked objects. Retried a conflicting transaction"
           )
         ) {
-          /*
           Object.values((e as any).data).forEach((lockedObjects: any) => {
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
@@ -505,7 +517,6 @@ export class SuiPricePusher implements IPricePusher {
           });
           // retry merging without the locked coins
           i--;
-           */
           continue;
         }
         throw e;

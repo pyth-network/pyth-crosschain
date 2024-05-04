@@ -44,6 +44,13 @@ export default {
       required: true,
       default: 30,
     } as Options,
+    "ignore-gas-objects": {
+      description:
+        "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
+      type: "array",
+      required: false,
+      default: [],
+    } as Options,
     "gas-budget": {
       description: "Gas budget for each price update",
       type: "number",
@@ -73,6 +80,7 @@ export default {
       pythStateId,
       wormholeStateId,
       numGasObjects,
+      ignoreGasObjects,
       gasBudget,
       accountIndex,
     } = argv;
@@ -126,7 +134,8 @@ export default {
       endpoint,
       keypair,
       gasBudget,
-      numGasObjects
+      numGasObjects,
+      ignoreGasObjects
     );
 
     const controller = new Controller(
