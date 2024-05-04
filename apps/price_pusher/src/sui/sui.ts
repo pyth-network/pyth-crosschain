@@ -163,7 +163,7 @@ export class SuiPricePusher implements IPricePusher {
     keypair: Ed25519Keypair,
     gasBudget: number,
     numGasObjects: number,
-    ignoreGasObjects: string[],
+    ignoreGasObjects: string[]
   ): Promise<SuiPricePusher> {
     if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
       throw new Error(
@@ -185,7 +185,7 @@ export class SuiPricePusher implements IPricePusher {
       keypair,
       provider,
       numGasObjects,
-      ignoreGasObjects,
+      ignoreGasObjects
     );
 
     const pythClient = new SuiPythClient(
@@ -326,12 +326,12 @@ export class SuiPricePusher implements IPricePusher {
     signer: Ed25519Keypair,
     provider: SuiClient,
     numGasObjects: number,
-    ignoreGasObjects: string[],
+    ignoreGasObjects: string[]
   ): Promise<SuiObjectRef[]> {
     const signerAddress = await signer.toSuiAddress();
 
     if (ignoreGasObjects.length > 0) {
-      console.log("Ignoring some gas objects for coin merging:")
+      console.log("Ignoring some gas objects for coin merging:");
       console.log(ignoreGasObjects);
     }
 
@@ -470,7 +470,7 @@ export class SuiPricePusher implements IPricePusher {
     signer: Ed25519Keypair,
     provider: SuiClient,
     owner: SuiAddress,
-    initialLockedAddresses: string[],
+    initialLockedAddresses: string[]
   ): Promise<SuiObjectRef> {
     const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin

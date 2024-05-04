@@ -45,7 +45,8 @@ export default {
       default: 30,
     } as Options,
     "ignore-gas-objects": {
-      description: "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
+      description:
+        "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
       type: "array",
       required: false,
       default: [],
