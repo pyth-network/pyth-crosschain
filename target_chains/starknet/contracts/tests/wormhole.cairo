@@ -11,7 +11,7 @@ fn test_parse_and_verify_vm_works() {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy_and_init(owner);
 
-    let vm = dispatcher.parse_and_verify_vm(good_vm1()).unwrap();
+    let vm = dispatcher.parse_and_verify_vm(good_vm1());
     assert!(vm.version == 1);
     assert!(vm.guardian_set_index == 3);
     assert!(vm.signatures.len() == 13);
@@ -36,26 +36,13 @@ fn test_parse_and_verify_vm_works() {
 
 #[test]
 #[fuzzer(runs: 100, seed: 0)]
-#[should_panic(expected: ('any_expected',))]
+#[should_panic]
 fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, random2: usize) {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy_and_init(owner);
 
-    let r = dispatcher.parse_and_verify_vm(corrupted_vm(pos, random1, random2));
-    match r {
-        Result::Ok(v) => { println!("no error, output: {:?}", v); },
-        Result::Err(err) => {
-            if err == ParseAndVerifyVmError::InvalidSignature
-                || err == ParseAndVerifyVmError::InvalidGuardianIndex
-                || err == ParseAndVerifyVmError::InvalidGuardianSetIndex
-                || err == ParseAndVerifyVmError::VmVersionIncompatible
-                || err == ParseAndVerifyVmError::Reader(pyth::reader::Error::UnexpectedEndOfInput) {
-                panic_with_felt252('any_expected');
-            } else {
-                panic_with_felt252(err.into());
-            }
-        },
-    }
+    let vm = dispatcher.parse_and_verify_vm(corrupted_vm(pos, random1, random2));
+    println!("no error, output: {:?}", vm);
 }
 
 #[test]
@@ -64,7 +51,7 @@ fn test_submit_guardian_set_rejects_wrong_owner() {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy(owner, guardian_set1());
     start_prank(CheatTarget::One(dispatcher.contract_address), 'baddy'.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(1, guardian_set1());
 }
 
 #[test]
@@ -74,8 +61,8 @@ fn test_submit_guardian_set_rejects_wrong_index() {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
-    dispatcher.submit_new_guardian_set(3, guardian_set3()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(1, guardian_set1());
+    dispatcher.submit_new_guardian_set(3, guardian_set3());
 }
 
 #[test]
@@ -92,7 +79,7 @@ fn test_submit_guardian_set_rejects_empty() {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, array![]).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(1, array![]);
 }
 
 fn deploy(owner: ContractAddress, guardians: Array<felt252>) -> IWormholeDispatcher {
@@ -113,9 +100,9 @@ pub fn deploy_and_init(owner: ContractAddress) -> IWormholeDispatcher {
     let dispatcher = deploy(owner, guardian_set1());
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1()).unwrap_with_felt252();
-    dispatcher.submit_new_guardian_set(2, guardian_set2()).unwrap_with_felt252();
-    dispatcher.submit_new_guardian_set(3, guardian_set3()).unwrap_with_felt252();
+    dispatcher.submit_new_guardian_set(1, guardian_set1());
+    dispatcher.submit_new_guardian_set(2, guardian_set2());
+    dispatcher.submit_new_guardian_set(3, guardian_set3());
     stop_prank(CheatTarget::One(dispatcher.contract_address));
 
     dispatcher

@@ -55,8 +55,7 @@ pub impl HasherImpl of HasherTrait {
 
     /// Reads all remaining data from the reader and pushes it to
     /// the hashing buffer.
-    fn push_reader(ref self: Hasher, ref reader: Reader) -> Result<(), pyth::reader::Error> {
-        let mut result = Result::Ok(());
+    fn push_reader(ref self: Hasher, ref reader: Reader) {
         while reader.len() > 0 {
             let mut chunk_len = 8 - self.num_last_bytes;
             if reader.len() < chunk_len.into() {
@@ -66,8 +65,7 @@ pub impl HasherImpl of HasherTrait {
             let value = reader.read_num_bytes(chunk_len);
             // chunk_len <= 8 so value must fit in u64.
             self.push_to_last(value.try_into().expect(UNEXPECTED_OVERFLOW), chunk_len);
-        };
-        result
+        }
     }
 
     /// Returns the keccak256 hash of the buffer. The output hash is interpreted
