@@ -33,6 +33,9 @@ wormhole_address=$(starkli deploy "${wormhole_hash}" \
     "${owner}" \
     1 `# num_guardians` \
     0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5 \
+    1 `# chain_id` \
+    1 `# governance_chain_id` \
+    4 0 `# governance_contract` \
 )
 
 ${sleep}

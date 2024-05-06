@@ -49,7 +49,9 @@ fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, ran
 #[should_panic(expected: ('access denied',))]
 fn test_submit_guardian_set_rejects_wrong_owner() {
     let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy(owner, guardian_set1());
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
     start_prank(CheatTarget::One(dispatcher.contract_address), 'baddy'.try_into().unwrap());
     dispatcher.submit_new_guardian_set(1, guardian_set1());
 }
@@ -58,7 +60,9 @@ fn test_submit_guardian_set_rejects_wrong_owner() {
 #[should_panic(expected: ('invalid guardian set sequence',))]
 fn test_submit_guardian_set_rejects_wrong_index() {
     let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy(owner, guardian_set1());
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
     dispatcher.submit_new_guardian_set(1, guardian_set1());
@@ -69,22 +73,42 @@ fn test_submit_guardian_set_rejects_wrong_index() {
 #[should_panic(expected: ('no guardians specified',))]
 fn test_deploy_rejects_empty() {
     let owner = 'owner'.try_into().unwrap();
-    deploy(owner, array![]);
+    deploy(owner, array![], CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 }
 
 #[test]
 #[should_panic(expected: ('no guardians specified',))]
 fn test_submit_guardian_set_rejects_empty() {
     let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy(owner, guardian_set1());
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
     dispatcher.submit_new_guardian_set(1, array![]);
 }
 
-fn deploy(owner: ContractAddress, guardians: Array<felt252>) -> IWormholeDispatcher {
+#[test]
+#[should_panic(expected: ('todo: parse vm',))]
+fn test_guardian_set_upgrade() {
+    let owner = 'owner'.try_into().unwrap();
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
+
+    dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
+}
+
+fn deploy(
+    owner: ContractAddress,
+    guardians: Array<felt252>,
+    chain_id: u16,
+    governance_chain_id: u16,
+    governance_contract: u256,
+) -> IWormholeDispatcher {
     let mut args = array![];
-    (owner, guardians).serialize(ref args);
+    (owner, guardians, chain_id, governance_chain_id).serialize(ref args);
+    (governance_contract,).serialize(ref args);
     let contract = declare("wormhole");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
@@ -97,7 +121,9 @@ fn deploy(owner: ContractAddress, guardians: Array<felt252>) -> IWormholeDispatc
 }
 
 pub fn deploy_and_init(owner: ContractAddress) -> IWormholeDispatcher {
-    let dispatcher = deploy(owner, guardian_set1());
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
 
     start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
     dispatcher.submit_new_guardian_set(1, guardian_set1());
@@ -168,6 +194,10 @@ fn corrupted_bytes(input: bytes31, index: usize, random1: usize, random2: usize)
 fn corrupted_byte(value: u8, random: usize) -> u8 {
     let v: u16 = value.into() + 1 + (random % 255).try_into().unwrap();
     (v % 256).try_into().unwrap()
+}
+
+fn guardian_set0() -> Array<felt252> {
+    array![0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5]
 }
 
 // Below are actual guardian keys from
@@ -278,4 +308,34 @@ fn good_vm1() -> ByteArray {
         14615204155786886573933667335033405822686404253588533,
     ];
     ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 22)
+}
+
+const CHAIN_ID: u16 = 1;
+const GOVERNANCE_CHAIN_ID: u16 = 1;
+const GOVERNANCE_CONTRACT: u256 = 4;
+
+// Below are actual guardian set upgrade VAAS from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+fn governance_upgrade_vm1() -> ByteArray {
+    let bytes = array![
+        1766847064779994277746302277072294871108550301449637470263976489521154979,
+        374953657095152923031303770743522269007103499920836805761143506434463979495,
+        373725794026553362537846905304981854320892126869150736450761801254169477120,
+        4835703278458516786446336,
+        1131377253,
+        3533694129556775410652111826415980944262631656421498398215501759245151417,
+        145493015216602589471695207668173527044214450021182755196032581352392984224,
+        267497573836069714380350521200881787609530659298168186016481773490244091266,
+        443348533394886521835330696538264729103669807313401311199245411889706258110,
+        200303433165499832354845293203843028338419687800279845786613090211434473108,
+        37282816539161742972709083946551920068062204748477644719930149699874385462,
+        111200938271608595261384934914291476246753101189480743698823215749338358345,
+        5785682963869019134199015821749288033381872318410562688180948003975909269,
+        372447340016996751453958019806457886428852701283870538393820846119845147788,
+        33251468085387571623103303511315696691298281336333243761063342581452341650,
+        323161992096034641767541451811925056802673576212351940217752194462561980347,
+        55852237138651071644815135002358067220635692701051811455610533875912981641,
+        190413173566657072516608762222993749133,
+    ];
+    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 16)
 }
