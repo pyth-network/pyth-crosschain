@@ -6,6 +6,7 @@ use pyth::util::UnwrapWithFelt252;
 pub trait IWormhole<T> {
     fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<felt252>);
     fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VM;
+    fn submit_new_guardian_set2(ref self: T, encoded_vm: ByteArray);
 }
 
 #[derive(Drop, Debug, Clone, Serde)]
@@ -26,6 +27,35 @@ pub struct VM {
     pub sequence: u64,
     pub consistency_level: u8,
     pub payload: ByteArray,
+    pub hash: u256,
+}
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GovernanceError {
+    NotCurrentGuardianSet,
+    WrongChain,
+    WrongContract,
+    ActionAlreadyConsumed,
+}
+
+pub impl GovernanceErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GovernanceError> {
+    fn unwrap_with_felt252(self: Result<T, GovernanceError>) -> T {
+        match self {
+            Result::Ok(v) => v,
+            Result::Err(err) => core::panic_with_felt252(err.into()),
+        }
+    }
+}
+
+impl GovernanceErrorIntoFelt252 of Into<GovernanceError, felt252> {
+    fn into(self: GovernanceError) -> felt252 {
+        match self {
+            GovernanceError::NotCurrentGuardianSet => 'not signed by current guard.set',
+            GovernanceError::WrongChain => 'wrong governance chain',
+            GovernanceError::WrongContract => 'wrong governance contract',
+            GovernanceError::ActionAlreadyConsumed => 'gov. action already consumed',
+        }
+    }
 }
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
@@ -110,7 +140,8 @@ mod wormhole {
     use core::box::BoxTrait;
     use core::array::ArrayTrait;
     use super::{
-        VM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError
+        VM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
+        GovernanceError
     };
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::ByteArray;
@@ -135,7 +166,11 @@ mod wormhole {
     #[storage]
     struct Storage {
         owner: ContractAddress,
+        chain_id: u16,
+        governance_chain_id: u16,
+        governance_contract: u256,
         current_guardian_set_index: u32,
+        consumed_governance_actions: LegacyMap<u256, bool>,
         guardian_sets: LegacyMap<u32, GuardianSet>,
         // (guardian_set_index, guardian_index) => guardian_address
         guardian_keys: LegacyMap<(u32, u8), u256>,
@@ -143,9 +178,17 @@ mod wormhole {
 
     #[constructor]
     fn constructor(
-        ref self: ContractState, owner: ContractAddress, initial_guardians: Array<felt252>
+        ref self: ContractState,
+        owner: ContractAddress,
+        initial_guardians: Array<felt252>,
+        chain_id: u16,
+        governance_chain_id: u16,
+        governance_contract: u256,
     ) {
         self.owner.write(owner);
+        self.chain_id.write(chain_id);
+        self.governance_chain_id.write(governance_chain_id);
+        self.governance_contract.write(governance_contract);
         let set_index = 0;
         store_guardian_set(ref self, set_index, @initial_guardians);
     }
@@ -206,7 +249,7 @@ mod wormhole {
         }
 
         fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteArray) -> VM {
-            let (vm, body_hash) = parse_vm(encoded_vm);
+            let vm = parse_vm(encoded_vm);
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
             if guardian_set.num_guardians == 0 {
                 panic_with_felt252(ParseAndVerifyVmError::InvalidGuardianSetIndex.into());
@@ -245,9 +288,16 @@ mod wormhole {
                     .guardian_keys
                     .read((vm.guardian_set_index, signature.guardian_index));
 
-                verify_signature(body_hash, signature.signature, guardian_key);
+                verify_signature(vm.hash, signature.signature, guardian_key);
             };
             vm
+        }
+
+        fn submit_new_guardian_set2(ref self: ContractState, encoded_vm: ByteArray) {
+            let vm = self.parse_and_verify_vm(encoded_vm);
+            self.verify_governance_vm(@vm);
+            self.consumed_governance_actions.write(vm.hash, true);
+            panic_with_felt252('todo: parse vm')
         }
     }
 
@@ -260,7 +310,7 @@ mod wormhole {
         GuardianSignature { guardian_index, signature: Signature { r, s, y_parity } }
     }
 
-    fn parse_vm(encoded_vm: ByteArray) -> (VM, u256) {
+    fn parse_vm(encoded_vm: ByteArray) -> VM {
         let mut reader = ReaderImpl::new(encoded_vm);
         let version = reader.read_u8();
         if version != 1 {
@@ -294,7 +344,7 @@ mod wormhole {
         let payload_len = reader.len();
         let payload = reader.read_byte_array(payload_len);
 
-        let vm = VM {
+        VM {
             version,
             guardian_set_index,
             signatures,
@@ -305,8 +355,8 @@ mod wormhole {
             sequence,
             consistency_level,
             payload,
-        };
-        (vm, body_hash2)
+            hash: body_hash2,
+        }
     }
 
     fn verify_signature(body_hash: u256, signature: Signature, guardian_key: u256,) {
@@ -326,5 +376,23 @@ mod wormhole {
         hasher.push_u256(x);
         hasher.push_u256(y);
         hasher.finalize() % ONE_SHIFT_160
+    }
+
+    #[generate_trait]
+    impl PrivateImpl of PrivateImplTrait {
+        fn verify_governance_vm(self: @ContractState, vm: @VM) {
+            if self.current_guardian_set_index.read() != *vm.guardian_set_index {
+                panic_with_felt252(GovernanceError::NotCurrentGuardianSet.into());
+            }
+            if self.governance_chain_id.read() != *vm.emitter_chain_id {
+                panic_with_felt252(GovernanceError::WrongChain.into());
+            }
+            if self.governance_contract.read() != *vm.emitter_address {
+                panic_with_felt252(GovernanceError::WrongContract.into());
+            }
+            if self.consumed_governance_actions.read(*vm.hash) {
+                panic_with_felt252(GovernanceError::ActionAlreadyConsumed.into());
+            }
+        }
     }
 }
