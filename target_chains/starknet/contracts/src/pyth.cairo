@@ -453,7 +453,7 @@ mod pyth {
     ) -> Result<PriceFeedMessage, UpdatePriceFeedsError> {
         let message_size = reader.read_u16();
         let message = reader.read_byte_array(message_size.into());
-        read_and_verify_proof(root_digest, @message, ref reader).map_err()?;
+        read_and_verify_proof(root_digest, @message, ref reader);
 
         let mut message_reader = ReaderImpl::new(message);
         let message_type: Option<MessageType> = message_reader.read_u8().try_into();
