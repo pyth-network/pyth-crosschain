@@ -5,7 +5,7 @@ use pyth::util::UnwrapWithFelt252;
 #[starknet::interface]
 pub trait IWormhole<T> {
     fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<felt252>);
-    fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VM;
+    fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
     fn submit_new_guardian_set2(ref self: T, encoded_vm: ByteArray);
 }
 
@@ -16,7 +16,7 @@ pub struct GuardianSignature {
 }
 
 #[derive(Drop, Debug, Clone, Serde)]
-pub struct VM {
+pub struct VerifiedVM {
     pub version: u8,
     pub guardian_set_index: u32,
     pub signatures: Array<GuardianSignature>,
@@ -140,8 +140,8 @@ mod wormhole {
     use core::box::BoxTrait;
     use core::array::ArrayTrait;
     use super::{
-        VM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
-        GovernanceError
+        VerifiedVM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError,
+        SubmitNewGuardianSetError, GovernanceError
     };
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::ByteArray;
@@ -248,7 +248,7 @@ mod wormhole {
             );
         }
 
-        fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteArray) -> VM {
+        fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteArray) -> VerifiedVM {
             let vm = parse_vm(encoded_vm);
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
             if guardian_set.num_guardians == 0 {
@@ -310,7 +310,7 @@ mod wormhole {
         GuardianSignature { guardian_index, signature: Signature { r, s, y_parity } }
     }
 
-    fn parse_vm(encoded_vm: ByteArray) -> VM {
+    fn parse_vm(encoded_vm: ByteArray) -> VerifiedVM {
         let mut reader = ReaderImpl::new(encoded_vm);
         let version = reader.read_u8();
         if version != 1 {
@@ -344,7 +344,7 @@ mod wormhole {
         let payload_len = reader.len();
         let payload = reader.read_byte_array(payload_len);
 
-        VM {
+        VerifiedVM {
             version,
             guardian_set_index,
             signatures,
@@ -380,7 +380,7 @@ mod wormhole {
 
     #[generate_trait]
     impl PrivateImpl of PrivateImplTrait {
-        fn verify_governance_vm(self: @ContractState, vm: @VM) {
+        fn verify_governance_vm(self: @ContractState, vm: @VerifiedVM) {
             if self.current_guardian_set_index.read() != *vm.guardian_set_index {
                 panic_with_felt252(GovernanceError::NotCurrentGuardianSet.into());
             }
