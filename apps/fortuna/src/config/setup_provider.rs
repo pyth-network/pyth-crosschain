@@ -1,13 +1,13 @@
 use {
     crate::config::{
         ConfigOptions,
+        ProviderConfigOptions,
         RandomnessOptions,
     },
     anyhow::Result,
     clap::Args,
     std::fs,
 };
-use crate::config::ProviderConfigOptions;
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Setup Provider Options")]
