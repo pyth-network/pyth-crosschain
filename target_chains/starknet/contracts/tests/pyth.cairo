@@ -55,7 +55,7 @@ fn update_price_feeds_works() {
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
     start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
-    pyth.update_price_feeds(good_update1()).unwrap_with_felt252();
+    pyth.update_price_feeds(good_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
 
     spy.fetch_events();
