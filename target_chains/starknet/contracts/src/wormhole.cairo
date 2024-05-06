@@ -7,13 +7,12 @@ mod governance;
 
 #[starknet::interface]
 pub trait IWormhole<T> {
-    fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<EthAddress>);
     fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
 
     // We don't need to implement other governance actions for now.
     // Instead of upgrading the Wormhole contract, we can switch to another Wormhole address
     // in the Pyth contract.
-    fn submit_new_guardian_set2(ref self: T, encoded_vm: ByteArray);
+    fn submit_new_guardian_set(ref self: T, encoded_vm: ByteArray);
 }
 
 #[derive(Drop, Debug, Clone, Serde)]
@@ -152,7 +151,6 @@ mod wormhole {
 
     #[storage]
     struct Storage {
-        owner: ContractAddress,
         chain_id: u16,
         governance_chain_id: u16,
         governance_contract: u256,
@@ -166,13 +164,11 @@ mod wormhole {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        owner: ContractAddress,
         initial_guardians: Array<EthAddress>,
         chain_id: u16,
         governance_chain_id: u16,
         governance_contract: u256,
     ) {
-        self.owner.write(owner);
         self.chain_id.write(chain_id);
         self.governance_chain_id.write(governance_chain_id);
         self.governance_contract.write(governance_contract);
@@ -218,23 +214,6 @@ mod wormhole {
 
     #[abi(embed_v0)]
     impl WormholeImpl of IWormhole<ContractState> {
-        fn submit_new_guardian_set(
-            ref self: ContractState, set_index: u32, guardians: Array<EthAddress>
-        ) {
-            let execution_info = get_execution_info().unbox();
-            if self.owner.read() != execution_info.caller_address {
-                panic_with_felt252(SubmitNewGuardianSetError::AccessDenied.into());
-            }
-            let current_set_index = self.current_guardian_set_index.read();
-            if set_index != current_set_index + 1 {
-                panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianSetSequence.into());
-            }
-            store_guardian_set(ref self, set_index, @guardians);
-            expire_guardian_set(
-                ref self, current_set_index, execution_info.block_info.unbox().block_timestamp
-            );
-        }
-
         fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteArray) -> VerifiedVM {
             let vm = parse_vm(encoded_vm);
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
@@ -283,7 +262,7 @@ mod wormhole {
             vm
         }
 
-        fn submit_new_guardian_set2(ref self: ContractState, encoded_vm: ByteArray) {
+        fn submit_new_guardian_set(ref self: ContractState, encoded_vm: ByteArray) {
             let vm = self.parse_and_verify_vm(encoded_vm);
             self.verify_governance_vm(@vm);
             let mut reader = ReaderImpl::new(vm.payload);

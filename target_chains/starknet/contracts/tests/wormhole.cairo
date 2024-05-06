@@ -8,8 +8,7 @@ use core::panic_with_felt252;
 
 #[test]
 fn test_parse_and_verify_vm_works() {
-    let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy_and_init(owner);
+    let dispatcher = deploy_and_init();
 
     let vm = dispatcher.parse_and_verify_vm(good_vm1());
     assert!(vm.version == 1);
@@ -38,8 +37,7 @@ fn test_parse_and_verify_vm_works() {
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, random2: usize) {
-    let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy_and_init(owner);
+    let dispatcher = deploy_and_init();
 
     let input = corrupted_vm(good_vm1(), pos, random1, random2);
     let vm = dispatcher.parse_and_verify_vm(input);
@@ -47,85 +45,134 @@ fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, ran
 }
 
 #[test]
-#[should_panic(expected: ('access denied',))]
-fn test_submit_guardian_set_rejects_wrong_owner() {
-    let owner = 'owner'.try_into().unwrap();
+#[should_panic(expected: ('wrong governance contract',))]
+fn test_submit_guardian_set_rejects_invalid_emitter() {
     let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
+        CHAIN_ID,
+        GOVERNANCE_CHAIN_ID,
+        GOVERNANCE_CONTRACT
     );
-    start_prank(CheatTarget::One(dispatcher.contract_address), 'baddy'.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1());
+
+    dispatcher
+        .submit_new_guardian_set(
+            ByteArrayImpl::new(
+                array_try_into(
+                    array![
+                        1766847064779993780836504669527478016540696065743262550388106844126893447,
+                        69151420679589009790918040295649622139220704596068812939049771907133879935,
+                        104495383778385781169925874245014135708035627262536525919103632893328490496,
+                        6044629098073145873860096,
+                        1131377253,
+                        210626190275159008588167432483938910866205453014421218013934467097,
+                    ]
+                ),
+                28
+            )
+        );
 }
 
 #[test]
 #[should_panic(expected: ('invalid guardian set index',))]
-fn test_submit_guardian_set_rejects_wrong_index() {
-    let owner = 'owner'.try_into().unwrap();
+fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
+    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm1());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm3());
+}
+
+#[test]
+#[should_panic(expected: ('invalid guardian set sequence',))]
+fn test_submit_guardian_set_rejects_wrong_index_in_payload() {
     let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
+        CHAIN_ID,
+        GOVERNANCE_CHAIN_ID,
+        GOVERNANCE_CONTRACT
     );
 
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm3());
+    dispatcher
+        .submit_new_guardian_set(
+            ByteArrayImpl::new(
+                array_try_into(
+                    array![
+                        1766847064779992086486657352557640859156186269544082638392748527776826036,
+                        194277059768327503957595402526511955581212349039595919400671200491321209820,
+                        434496814532575177274556800095069791478767471500230428914335519265903345664,
+                        4835703278458516699153920,
+                        1131377253,
+                        210626190275159756877005745906233031152839803751327281851396470809,
+                    ]
+                ),
+                28
+            )
+        );
 }
 
 #[test]
 #[should_panic(expected: ('no guardians specified',))]
 fn test_deploy_rejects_empty() {
-    let owner = 'owner'.try_into().unwrap();
-    deploy(owner, array![], CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    deploy(array![], CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 }
 
 #[test]
 #[should_panic(expected: ('no guardians specified',))]
 fn test_submit_guardian_set_rejects_empty() {
-    let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
+        CHAIN_ID,
+        GOVERNANCE_CHAIN_ID,
+        GOVERNANCE_CONTRACT
     );
 
-    start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, array![]);
+    dispatcher
+        .submit_new_guardian_set(
+            ByteArrayImpl::new(
+                array_try_into(
+                    array![
+                        1766847064779991325832211120621568385196129637393266719212748612567366167,
+                        101913621687013458268034923649142123047718029322567283658602535951581008800,
+                        334673952516423004763530105323893104621683276518933872430791864882642812928,
+                        4835703278458516699153920,
+                        1131377253,
+                        144116287587483904,
+                    ]
+                ),
+                8
+            )
+        );
 }
 
 #[test]
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_submit_guardian_set_rejects_corrupted(pos: usize, random1: usize, random2: usize) {
-    let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
-    );
+    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 
     let vm = corrupted_vm(governance_upgrade_vm1(), pos, random1, random2);
-    dispatcher.submit_new_guardian_set2(vm);
+    dispatcher.submit_new_guardian_set(vm);
 }
 
 #[test]
 #[should_panic(expected: ('wrong governance chain',))]
 fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, random2: usize) {
-    let owner = 'owner'.try_into().unwrap();
-    let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
-    );
+    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm2());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm3());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm1());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm2());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm3());
 
-    dispatcher.submit_new_guardian_set2(good_vm1());
+    dispatcher.submit_new_guardian_set(good_vm1());
 }
 
 fn deploy(
-    owner: ContractAddress,
     guardians: Array<EthAddress>,
     chain_id: u16,
     governance_chain_id: u16,
     governance_contract: u256,
 ) -> IWormholeDispatcher {
     let mut args = array![];
-    (owner, guardians, chain_id, governance_chain_id).serialize(ref args);
-    (governance_contract,).serialize(ref args);
+    (guardians, chain_id, governance_chain_id, governance_contract).serialize(ref args);
     let contract = declare("wormhole");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
@@ -137,15 +184,13 @@ fn deploy(
     IWormholeDispatcher { contract_address }
 }
 
-pub fn deploy_and_init(owner: ContractAddress) -> IWormholeDispatcher {
-    let dispatcher = deploy(
-        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
-    );
+pub fn deploy_and_init() -> IWormholeDispatcher {
+    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm2());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm3());
-    dispatcher.submit_new_guardian_set2(governance_upgrade_vm4());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm1());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm2());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm3());
+    dispatcher.submit_new_guardian_set(governance_upgrade_vm4());
 
     dispatcher
 }
@@ -213,84 +258,6 @@ fn corrupted_byte(value: u8, random: usize) -> u8 {
 
 fn guardian_set0() -> Array<EthAddress> {
     array_try_into(array![0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5])
-}
-
-// Below are actual guardian keys from
-// https://github.com/wormhole-foundation/wormhole-networks/tree/master/mainnetv2/guardianset
-fn guardian_set1() -> Array<EthAddress> {
-    array_try_into(
-        array![
-            0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5,
-            0xfF6CB952589BDE862c25Ef4392132fb9D4A42157,
-            0x114De8460193bdf3A2fCf81f86a09765F4762fD1,
-            0x107A0086b32d7A0977926A205131d8731D39cbEB,
-            0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2,
-            0x11b39756C042441BE6D8650b69b54EbE715E2343,
-            0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd,
-            0xeB5F7389Fa26941519f0863349C223b73a6DDEE7,
-            0x74a3bf913953D695260D88BC1aA25A4eeE363ef0,
-            0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e,
-            0xAF45Ced136b9D9e24903464AE889F5C8a723FC14,
-            0xf93124b7c738843CBB89E864c862c38cddCccF95,
-            0xD2CC37A4dc036a8D232b48f62cDD4731412f4890,
-            0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811,
-            0x71AA1BE1D36CaFE3867910F99C09e347899C19C3,
-            0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf,
-            0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8,
-            0x5E1487F35515d02A92753504a8D75471b9f49EdB,
-            0x6FbEBc898F403E4773E95feB15E80C9A99c8348d,
-        ]
-    )
-}
-fn guardian_set2() -> Array<EthAddress> {
-    array_try_into(
-        array![
-            0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5,
-            0xfF6CB952589BDE862c25Ef4392132fb9D4A42157,
-            0x114De8460193bdf3A2fCf81f86a09765F4762fD1,
-            0x107A0086b32d7A0977926A205131d8731D39cbEB,
-            0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2,
-            0x11b39756C042441BE6D8650b69b54EbE715E2343,
-            0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd,
-            0x66B9590e1c41e0B226937bf9217D1d67Fd4E91F5,
-            0x74a3bf913953D695260D88BC1aA25A4eeE363ef0,
-            0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e,
-            0xAF45Ced136b9D9e24903464AE889F5C8a723FC14,
-            0xf93124b7c738843CBB89E864c862c38cddCccF95,
-            0xD2CC37A4dc036a8D232b48f62cDD4731412f4890,
-            0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811,
-            0x71AA1BE1D36CaFE3867910F99C09e347899C19C3,
-            0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf,
-            0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8,
-            0x5E1487F35515d02A92753504a8D75471b9f49EdB,
-            0x6FbEBc898F403E4773E95feB15E80C9A99c8348d,
-        ]
-    )
-}
-fn guardian_set3() -> Array<EthAddress> {
-    array_try_into(
-        array![
-            0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5,
-            0xfF6CB952589BDE862c25Ef4392132fb9D4A42157,
-            0x114De8460193bdf3A2fCf81f86a09765F4762fD1,
-            0x107A0086b32d7A0977926A205131d8731D39cbEB,
-            0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2,
-            0x11b39756C042441BE6D8650b69b54EbE715E2343,
-            0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd,
-            0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20,
-            0x74a3bf913953D695260D88BC1aA25A4eeE363ef0,
-            0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e,
-            0xAF45Ced136b9D9e24903464AE889F5C8a723FC14,
-            0xf93124b7c738843CBB89E864c862c38cddCccF95,
-            0xD2CC37A4dc036a8D232b48f62cDD4731412f4890,
-            0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811,
-            0x71AA1BE1D36CaFE3867910F99C09e347899C19C3,
-            0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf,
-            0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8,
-            0x5E1487F35515d02A92753504a8D75471b9f49EdB,
-            0x6FbEBc898F403E4773E95feB15E80C9A99c8348d,
-        ]
-    )
 }
 
 // A random VAA pulled from Hermes.
