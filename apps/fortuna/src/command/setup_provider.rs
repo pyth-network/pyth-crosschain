@@ -8,6 +8,7 @@ use {
         },
         config::{
             Config,
+            ProviderConfig,
             RegisterProviderOptions,
             SetupProviderOptions,
         },
@@ -39,11 +40,13 @@ use {
 /// 5. Update provider uri if there is a mismatch with the uri set on contract.
 pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
+    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let private_key = opts.load_private_key()?;
     let secret = opts.randomness.load_secret()?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
 
     for (chain_id, chain_config) in &config.chains {
+        let provider_fee = provider_config.get_chain_config(chain_id)?.fee;
         // Initialize a Provider to interface with the EVM contract.
         let contract =
             Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
@@ -112,16 +115,21 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
                 chain_id: chain_id.clone(),
                 private_key: private_key.clone(),
                 randomness: opts.randomness.clone(),
-                fee: opts.fee,
+                fee: provider_fee,
                 uri,
             })
             .await
             .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
             tracing::info!("{}: registered", &chain_id);
         } else {
-            if provider_info.fee_in_wei != opts.fee {
+            if provider_info.fee_in_wei != provider_fee {
                 tracing::info!("{}: updating provider fee", chain_id);
-                if let Some(r) = contract.set_provider_fee(opts.fee).send().await?.await? {
+                if let Some(r) = contract
+                    .set_provider_fee(provider_fee)
+                    .send()
+                    .await?
+                    .await?
+                {
                     tracing::info!("{0}: updated provider fee: {1:?}", chain_id, r);
                 }
             }

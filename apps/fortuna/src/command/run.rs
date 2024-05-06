@@ -122,25 +122,15 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let provider_config = opts
-        .provider_config
-        .provider_config
-        .as_ref()
-        .map(|path| ProviderConfig::load(&path).expect("Failed to load provider config"));
+    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
         let contract = Arc::new(PythContract::from_config(&chain_config)?);
-        let provider_chain_config = provider_config
-            .as_ref()
-            .and_then(|c| c.get_chain_config(chain_id));
-        let mut provider_commitments = provider_chain_config
-            .as_ref()
-            .map(|c| c.get_sorted_commitments())
-            .unwrap_or_else(|| Vec::new());
-
+        let provider_chain_config = provider_config.get_chain_config(chain_id)?;
+        let mut provider_commitments = provider_chain_config.get_sorted_commitments();
         let provider_info = contract.get_provider_info(opts.provider).call().await?;
         let latest_metadata =
             bincode::deserialize::<CommitmentMetadata>(&provider_info.commitment_metadata)

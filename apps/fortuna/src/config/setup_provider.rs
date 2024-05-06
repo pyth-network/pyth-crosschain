@@ -7,6 +7,7 @@ use {
     clap::Args,
     std::fs,
 };
+use crate::config::ProviderConfigOptions;
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Setup Provider Options")]
@@ -14,6 +15,9 @@ use {
 pub struct SetupProviderOptions {
     #[command(flatten)]
     pub config: ConfigOptions,
+
+    #[command(flatten)]
+    pub provider_config: ProviderConfigOptions,
 
     /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
     /// This key is required to submit transactions (such as registering with the contract).
@@ -23,11 +27,6 @@ pub struct SetupProviderOptions {
 
     #[command(flatten)]
     pub randomness: RandomnessOptions,
-
-    /// The fee to charge (in wei) for each requested random number
-    #[arg(long = "pyth-contract-fee")]
-    #[arg(default_value = "100")]
-    pub fee: u128,
 
     /// The base URI for fortuna.
     /// e.g., https://fortuna-staging.dourolabs.app
