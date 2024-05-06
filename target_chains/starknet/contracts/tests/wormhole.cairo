@@ -41,7 +41,8 @@ fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, ran
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy_and_init(owner);
 
-    let vm = dispatcher.parse_and_verify_vm(corrupted_vm(pos, random1, random2));
+    let input = corrupted_vm(good_vm1(), pos, random1, random2);
+    let vm = dispatcher.parse_and_verify_vm(input);
     println!("no error, output: {:?}", vm);
 }
 
@@ -57,16 +58,15 @@ fn test_submit_guardian_set_rejects_wrong_owner() {
 }
 
 #[test]
-#[should_panic(expected: ('invalid guardian set sequence',))]
+#[should_panic(expected: ('invalid guardian set index',))]
 fn test_submit_guardian_set_rejects_wrong_index() {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy(
         owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
     );
 
-    start_prank(CheatTarget::One(dispatcher.contract_address), owner.try_into().unwrap());
-    dispatcher.submit_new_guardian_set(1, guardian_set1());
-    dispatcher.submit_new_guardian_set(3, guardian_set3());
+    dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
+    dispatcher.submit_new_guardian_set2(governance_upgrade_vm3());
 }
 
 #[test]
@@ -89,13 +89,31 @@ fn test_submit_guardian_set_rejects_empty() {
 }
 
 #[test]
-fn test_guardian_set_upgrade() {
+#[fuzzer(runs: 100, seed: 0)]
+#[should_panic]
+fn test_submit_guardian_set_rejects_corrupted(pos: usize, random1: usize, random2: usize) {
+    let owner = 'owner'.try_into().unwrap();
+    let dispatcher = deploy(
+        owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
+    );
+
+    let vm = corrupted_vm(governance_upgrade_vm1(), pos, random1, random2);
+    dispatcher.submit_new_guardian_set2(vm);
+}
+
+#[test]
+#[should_panic(expected: ('wrong governance chain',))]
+fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, random2: usize) {
     let owner = 'owner'.try_into().unwrap();
     let dispatcher = deploy(
         owner, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT
     );
 
     dispatcher.submit_new_guardian_set2(governance_upgrade_vm1());
+    dispatcher.submit_new_guardian_set2(governance_upgrade_vm2());
+    dispatcher.submit_new_guardian_set2(governance_upgrade_vm3());
+
+    dispatcher.submit_new_guardian_set2(good_vm1());
 }
 
 fn deploy(
@@ -132,10 +150,9 @@ pub fn deploy_and_init(owner: ContractAddress) -> IWormholeDispatcher {
     dispatcher
 }
 
-fn corrupted_vm(pos: usize, random1: usize, random2: usize) -> ByteArray {
+fn corrupted_vm(mut real_data: ByteArray, pos: usize, random1: usize, random2: usize) -> ByteArray {
     let mut new_data = array![];
 
-    let mut real_data = good_vm1();
     // Make sure we select a position not on the last item because
     // we didn't implement corrupting an incomplete bytes31.
     let pos = pos % (real_data.len() - 31);
