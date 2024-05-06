@@ -54,6 +54,7 @@ use {
     },
     std::sync::Arc,
 };
+use crate::chain::client::MyMiddleware;
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
@@ -68,7 +69,7 @@ pub type SignablePythContract = PythRandom<
         LegacyTxTransformer,
     >,
 >;
-pub type PythContract = PythRandom<Provider<Http>>;
+pub type PythContract = PythRandom<MyMiddleware<Provider<Http>>>;
 
 /// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
@@ -185,7 +186,7 @@ impl SignablePythContract {
 
 impl PythContract {
     pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        let provider = MyMiddleware(Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?);
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
@@ -262,7 +263,7 @@ impl EntropyReader for PythContract {
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
     ) -> Result<Option<U256>> {
-        let result: Result<U256, ContractError<Provider<Http>>> = self
+        let result: Result<U256, ContractError<MyMiddleware<Provider<Http>>>> = self
             .reveal_with_callback(
                 provider,
                 sequence_number,
