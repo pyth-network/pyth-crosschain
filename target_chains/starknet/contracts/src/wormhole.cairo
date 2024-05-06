@@ -38,15 +38,6 @@ pub enum GovernanceError {
     ActionAlreadyConsumed,
 }
 
-pub impl GovernanceErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GovernanceError> {
-    fn unwrap_with_felt252(self: Result<T, GovernanceError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
 impl GovernanceErrorIntoFelt252 of Into<GovernanceError, felt252> {
     fn into(self: GovernanceError) -> felt252 {
         match self {
@@ -66,17 +57,6 @@ pub enum SubmitNewGuardianSetError {
     // guardian set index must increase in steps of 1
     InvalidGuardianSetSequence,
     AccessDenied,
-}
-
-pub impl SubmitNewGuardianSetErrorUnwrapWithFelt252<
-    T
-> of UnwrapWithFelt252<T, SubmitNewGuardianSetError> {
-    fn unwrap_with_felt252(self: Result<T, SubmitNewGuardianSetError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
 }
 
 impl SubmitNewGuardianSetErrorIntoFelt252 of Into<SubmitNewGuardianSetError, felt252> {
@@ -103,16 +83,6 @@ pub enum ParseAndVerifyVmError {
     InvalidSignatureOrder,
     InvalidGuardianIndex,
 }
-
-pub impl ParseAndVerifyVmErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, ParseAndVerifyVmError> {
-    fn unwrap_with_felt252(self: Result<T, ParseAndVerifyVmError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
 
 impl ErrorIntoFelt252 of Into<ParseAndVerifyVmError, felt252> {
     fn into(self: ParseAndVerifyVmError) -> felt252 {

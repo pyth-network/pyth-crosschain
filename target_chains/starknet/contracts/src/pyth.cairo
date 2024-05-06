@@ -19,15 +19,6 @@ pub enum GetPriceUnsafeError {
     PriceFeedNotFound,
 }
 
-pub impl GetPriceUnsafeErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GetPriceUnsafeError> {
-    fn unwrap_with_felt252(self: Result<T, GetPriceUnsafeError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
 impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
     fn into(self: GetPriceUnsafeError) -> felt252 {
         match self {
@@ -39,15 +30,6 @@ impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceActionError {
     AccessDenied,
-}
-
-pub impl GovernanceActionErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GovernanceActionError> {
-    fn unwrap_with_felt252(self: Result<T, GovernanceActionError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
 }
 
 impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
@@ -65,15 +47,6 @@ pub enum UpdatePriceFeedsError {
     InvalidUpdateData,
     InvalidUpdateDataSource,
     InsufficientFeeAllowance,
-}
-
-pub impl UpdatePriceFeedsErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, UpdatePriceFeedsError> {
-    fn unwrap_with_felt252(self: Result<T, UpdatePriceFeedsError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
 }
 
 impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
