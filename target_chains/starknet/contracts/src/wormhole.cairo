@@ -2,6 +2,8 @@ use super::byte_array::ByteArray;
 use core::starknet::secp256_trait::Signature;
 use pyth::util::UnwrapWithFelt252;
 
+mod governance;
+
 #[starknet::interface]
 pub trait IWormhole<T> {
     fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<felt252>);
@@ -32,6 +34,10 @@ pub struct VerifiedVM {
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceError {
+    InvalidModule,
+    InvalidAction,
+    InvalidChainId,
+    TrailingData,
     NotCurrentGuardianSet,
     WrongChain,
     WrongContract,
@@ -50,6 +56,10 @@ pub impl GovernanceErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GovernanceE
 impl GovernanceErrorIntoFelt252 of Into<GovernanceError, felt252> {
     fn into(self: GovernanceError) -> felt252 {
         match self {
+            GovernanceError::InvalidModule => 'invalid module',
+            GovernanceError::InvalidAction => 'invalid action',
+            GovernanceError::InvalidChainId => 'invalid chain ID',
+            GovernanceError::TrailingData => 'trailing data',
             GovernanceError::NotCurrentGuardianSet => 'not signed by current guard.set',
             GovernanceError::WrongChain => 'wrong governance chain',
             GovernanceError::WrongContract => 'wrong governance contract',
@@ -143,6 +153,7 @@ mod wormhole {
         VerifiedVM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError,
         SubmitNewGuardianSetError, GovernanceError
     };
+    use super::governance;
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::ByteArray;
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
@@ -296,8 +307,23 @@ mod wormhole {
         fn submit_new_guardian_set2(ref self: ContractState, encoded_vm: ByteArray) {
             let vm = self.parse_and_verify_vm(encoded_vm);
             self.verify_governance_vm(@vm);
+            let mut reader = ReaderImpl::new(vm.payload);
+            let header = governance::parse_header(ref reader);
+            if header.action != governance::Action::GuardianSetUpgrade {
+                panic_with_felt252(GovernanceError::InvalidAction.into());
+            }
+            if header.chain_id != 0 && header.chain_id != self.chain_id.read() {
+                panic_with_felt252(GovernanceError::InvalidChainId.into());
+            }
+            let new_set = governance::parse_new_guardian_set(ref reader);
+            let current_set_index = self.current_guardian_set_index.read();
+            if new_set.set_index != current_set_index + 1 {
+                panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianSetSequence.into());
+            }
+            store_guardian_set(ref self, new_set.set_index, @new_set.keys);
+            expire_guardian_set(ref self, current_set_index, get_block_timestamp());
+
             self.consumed_governance_actions.write(vm.hash, true);
-            panic_with_felt252('todo: parse vm')
         }
     }
 
