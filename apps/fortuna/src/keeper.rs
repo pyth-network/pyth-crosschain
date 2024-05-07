@@ -482,15 +482,10 @@ pub async fn process_backlog(
     chain_state: BlockchainState,
 ) {
     tracing::info!("Processing backlog");
-    process_block_range(
-        backlog_range,
-        contract.clone(),
-        gas_limit,
-        chain_state.clone(),
-    )
-    .in_current_span()
-    .await;
-    tracing::info!("Processed backlog");
+    process_block_range(backlog_range, contract, gas_limit, chain_state)
+        .in_current_span()
+        .await;
+    tracing::info!("Backlog processed");
 }
 
 /// Retry past blocks. It first retries the range `latest_safe_block - BACKLOG_RANGE` to `latest_safe_block` and
