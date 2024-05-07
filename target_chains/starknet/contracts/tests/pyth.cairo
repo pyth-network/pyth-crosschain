@@ -6,7 +6,7 @@ use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
-use pyth::util::{array_felt252_to_bytes31, UnwrapWithFelt252};
+use pyth::util::{array_try_into, UnwrapWithFelt252};
 use core::starknet::ContractAddress;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
@@ -170,5 +170,5 @@ fn good_update1() -> ByteArray {
         226866843267230707879834616967256711063296411939069440476882347301771901839,
         95752383404870925303422787,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 11)
+    ByteArrayImpl::new(array_try_into(bytes), 11)
 }
