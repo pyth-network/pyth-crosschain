@@ -105,6 +105,15 @@ pub trait UnwrapWithFelt252<T, E> {
     fn unwrap_with_felt252(self: Result<T, E>) -> T;
 }
 
+pub impl UnwrapWithFelt252Impl<T, E, +Into<E, felt252>> of UnwrapWithFelt252<T, E> {
+    fn unwrap_with_felt252(self: Result<T, E>) -> T {
+        match self {
+            Result::Ok(v) => v,
+            Result::Err(err) => core::panic_with_felt252(err.into()),
+        }
+    }
+}
+
 /// Reinterpret `u64` as `i64` as if it was a two's complement binary representation.
 pub fn u64_as_i64(value: u64) -> i64 {
     if value < 0x8000000000000000 {
