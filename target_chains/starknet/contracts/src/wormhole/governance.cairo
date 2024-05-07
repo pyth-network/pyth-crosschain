@@ -2,6 +2,7 @@ use pyth::reader::{Reader, ReaderImpl};
 use pyth::util::UNEXPECTED_OVERFLOW;
 use super::GovernanceError;
 use core::panic_with_felt252;
+use core::starknet::EthAddress;
 
 // "Core" (left padded)
 const MODULE: u256 = 0x00000000000000000000000000000000000000000000000000000000436f7265;
@@ -40,7 +41,7 @@ pub struct Header {
 #[derive(Drop, Debug, Clone)]
 pub struct NewGuardianSet {
     pub set_index: u32,
-    pub keys: Array<felt252>,
+    pub keys: Array<EthAddress>,
 }
 
 pub fn parse_header(ref reader: Reader) -> Header {
