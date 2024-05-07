@@ -73,7 +73,7 @@ pub impl ByteArrayImpl of ByteArrayTrait {
 #[cfg(test)]
 mod tests {
     use super::{ByteArray, ByteArrayImpl};
-    use pyth::util::array_felt252_to_bytes31;
+    use pyth::util::array_try_into;
 
     #[test]
     fn empty_byte_array() {
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn byte_array_3_zeros() {
-        let mut array = ByteArrayImpl::new(array_felt252_to_bytes31(array![0]), 3);
+        let mut array = ByteArrayImpl::new(array_try_into(array![0]), 3);
         assert!(array.len() == 3);
         assert!(array.pop_front() == Option::Some((0.try_into().unwrap(), 3)));
         assert!(array.len() == 0);
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn byte_array_3_bytes() {
-        let mut array = ByteArrayImpl::new(array_felt252_to_bytes31(array![0x010203]), 3);
+        let mut array = ByteArrayImpl::new(array_try_into(array![0x010203]), 3);
         assert!(array.len() == 3);
         assert!(array.pop_front() == Option::Some((0x010203.try_into().unwrap(), 3)));
         assert!(array.len() == 0);
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn byte_array_single_full() {
         let value_31_bytes = 0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
-        let mut array = ByteArrayImpl::new(array_felt252_to_bytes31(array![value_31_bytes]), 31);
+        let mut array = ByteArrayImpl::new(array_try_into(array![value_31_bytes]), 31);
         assert!(array.len() == 31);
         assert!(array.pop_front() == Option::Some((value_31_bytes.try_into().unwrap(), 31)));
         assert!(array.len() == 0);
@@ -115,7 +115,7 @@ mod tests {
         let value_31_bytes = 0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
         let value2_31_bytes = 0x2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f;
         let mut array = ByteArrayImpl::new(
-            array_felt252_to_bytes31(array![value_31_bytes, value2_31_bytes]), 31
+            array_try_into(array![value_31_bytes, value2_31_bytes]), 31
         );
         assert!(array.len() == 62);
         assert!(array.pop_front() == Option::Some((value_31_bytes.try_into().unwrap(), 31)));
@@ -131,7 +131,7 @@ mod tests {
         let value2_31_bytes = 0x2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f;
         let value3_5_bytes = 0x4142434445;
         let mut array = ByteArrayImpl::new(
-            array_felt252_to_bytes31(array![value_31_bytes, value2_31_bytes, value3_5_bytes]), 5
+            array_try_into(array![value_31_bytes, value2_31_bytes, value3_5_bytes]), 5
         );
         assert!(array.len() == 67);
         assert!(array.pop_front() == Option::Some((value_31_bytes.try_into().unwrap(), 31)));
@@ -151,18 +151,18 @@ mod tests {
     #[test]
     #[should_panic]
     fn byte_array_last_too_large() {
-        ByteArrayImpl::new(array_felt252_to_bytes31(array![1, 2, 3]), 35);
+        ByteArrayImpl::new(array_try_into(array![1, 2, 3]), 35);
     }
 
     #[test]
     #[should_panic]
     fn byte_array_last_zero_invalid() {
-        ByteArrayImpl::new(array_felt252_to_bytes31(array![1, 2, 0]), 0);
+        ByteArrayImpl::new(array_try_into(array![1, 2, 0]), 0);
     }
 
     #[test]
     #[should_panic]
     fn byte_array_last_too_many_bytes() {
-        ByteArrayImpl::new(array_felt252_to_bytes31(array![1, 2, 0x010203]), 2);
+        ByteArrayImpl::new(array_try_into(array![1, 2, 0x010203]), 2);
     }
 }

@@ -2,7 +2,7 @@ use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank, CheatTar
 use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
 use pyth::reader::ReaderImpl;
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
-use pyth::util::{UnwrapWithFelt252, array_felt252_to_bytes31};
+use pyth::util::{UnwrapWithFelt252, array_try_into};
 use core::starknet::ContractAddress;
 use core::panic_with_felt252;
 
@@ -322,7 +322,7 @@ fn good_vm1() -> ByteArray {
         52685537088250779930155363779405986390839624071318818148325576008719597568,
         14615204155786886573933667335033405822686404253588533,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 22)
+    ByteArrayImpl::new(array_try_into(bytes), 22)
 }
 
 const CHAIN_ID: u16 = 1;
@@ -352,7 +352,7 @@ fn governance_upgrade_vm1() -> ByteArray {
         55852237138651071644815135002358067220635692701051811455610533875912981641,
         190413173566657072516608762222993749133,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 16)
+    ByteArrayImpl::new(array_try_into(bytes), 16)
 }
 
 fn governance_upgrade_vm2() -> ByteArray {
@@ -402,7 +402,7 @@ fn governance_upgrade_vm2() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 2)
+    ByteArrayImpl::new(array_try_into(bytes), 2)
 }
 
 fn governance_upgrade_vm3() -> ByteArray {
@@ -452,7 +452,7 @@ fn governance_upgrade_vm3() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 2)
+    ByteArrayImpl::new(array_try_into(bytes), 2)
 }
 
 fn governance_upgrade_vm4() -> ByteArray {
@@ -502,5 +502,5 @@ fn governance_upgrade_vm4() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 2)
+    ByteArrayImpl::new(array_try_into(bytes), 2)
 }

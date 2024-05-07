@@ -134,7 +134,7 @@ pub fn u32_as_i32(value: u32) -> i32 {
     }
 }
 
-pub fn array_felt252_to_bytes31(mut input: Array<felt252>) -> Array<bytes31> {
+pub fn array_try_into<T, U, +TryInto<T, U>, +Drop<T>, +Drop<U>>(mut input: Array<T>) -> Array<U> {
     let mut output = array![];
     loop {
         match input.pop_front() {
