@@ -383,7 +383,7 @@ pub async fn watch_blocks(
     tracing::info!("Watching blocks to handle new events");
 
     let provider_option = match geth_rpc_wss {
-        Some(ref wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
+        Some(wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
             Ok(provider) => provider,
             Err(e) => {
                 tracing::error!("Error while connecting to wss: {}. error: {:?}", wss, e);
