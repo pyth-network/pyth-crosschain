@@ -470,9 +470,8 @@ pub async fn process_new_blocks(
     }
 }
 
-/// Re-process blocks. It waits for 10 minutes before re-processing the blocks.
-/// It re-processes the blocks from_block to latest_safe_block-BLOCK_BATCH_SIZE.
-/// It lags behind the latest_safe_block as we don't want to re-process the same blocks
+/// Re-process blocks. It reprocesses the blocks every 10 minutes till the latest_safe_block - BLOCK_BATCH_SIZE.
+/// A lag has been added when reprocessing as we don't want to re-process the same blocks
 /// as the watch_blocks at the same time.
 #[tracing::instrument(skip_all)]
 pub async fn re_process_blocks(
@@ -486,8 +485,11 @@ pub async fn re_process_blocks(
         // We don't want to process the same blocks as the watch_blocks at the same time.
         // If we process them at the same time, the events might be missed by the both.
         // We will lag the to_block by `BLOCK_BATCH_SIZE`.
-        let to_block =
-            get_latest_safe_block(&chain_state).in_current_span().await - BLOCK_BATCH_SIZE;
+        let to_block = get_latest_safe_block(&chain_state)
+            .in_current_span()
+            .await
+            .saturating_sub(BLOCK_BATCH_SIZE);
+
         if to_block > from_block {
             tracing::info!(
                 from_block = &from_block,
