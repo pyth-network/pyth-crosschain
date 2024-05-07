@@ -103,8 +103,11 @@ pub async fn run_keeper_threads(
 
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     spawn(
-        retry_past_blocks(
-            latest_safe_block,
+        process_backlog(
+            BlockRange {
+                from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
+                to:   latest_safe_block,
+            },
             contract.clone(),
             chain_eth_config.gas_limit,
             chain_state.clone(),
@@ -468,6 +471,26 @@ pub async fn process_new_blocks(
             .await;
         }
     }
+}
+
+/// Processes the backlog_range for a chain.
+#[tracing::instrument(skip_all)]
+pub async fn process_backlog(
+    backlog_range: BlockRange,
+    contract: Arc<SignablePythContract>,
+    gas_limit: U256,
+    chain_state: BlockchainState,
+) {
+    tracing::info!("Processing backlog");
+    process_block_range(
+        backlog_range,
+        contract.clone(),
+        gas_limit,
+        chain_state.clone(),
+    )
+    .in_current_span()
+    .await;
+    tracing::info!("Processed backlog");
 }
 
 /// Retry past blocks. It first retries the range `latest_safe_block - BACKLOG_RANGE` to `latest_safe_block` and
