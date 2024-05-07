@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Error};
 use {
     crate::{
         api::{
@@ -14,7 +13,11 @@ use {
         },
         config::EthereumConfig,
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Error,
+        Result,
+    },
     ethers::{
         contract::ContractError,
         providers::{
