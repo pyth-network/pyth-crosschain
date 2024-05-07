@@ -53,7 +53,9 @@ const RETRY_INTERVAL: Duration = Duration::from_secs(5);
 /// How many blocks to look back for events that might be missed when starting the keeper
 const BACKLOG_RANGE: u64 = 1000;
 /// How much to wait before retrying a past blocks
-const RETRY_BLOCKS_INTERVAL: Duration = Duration::from_secs(600);
+const RE_PROCESS_BLOCKS_INTERVAL: Duration = Duration::from_secs(600);
+/// How much blocks to lag behind the latest safe block when re-processing blocks
+const RE_PROCESS_BLOCKS_LAG: u64 = 20;
 /// How many blocks to fetch events for in a single rpc call
 const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
@@ -470,7 +472,7 @@ pub async fn process_new_blocks(
     }
 }
 
-/// Re-process blocks. It reprocesses the blocks every 10 minutes till the latest_safe_block - BLOCK_BATCH_SIZE.
+/// Re-process blocks. It reprocesses the blocks every 10 minutes till the latest_safe_block - RE_PROCESS_BLOCKS_LAG.
 /// A lag has been added when reprocessing as we don't want to re-process the same blocks
 /// as the watch_blocks at the same time.
 #[tracing::instrument(skip_all)]
@@ -484,11 +486,11 @@ pub async fn re_process_blocks(
     loop {
         // We don't want to process the same blocks as the watch_blocks at the same time.
         // If we process them at the same time, the events might be missed by the both.
-        // We will lag the to_block by `BLOCK_BATCH_SIZE`.
+        // We will lag the to_block by `RE_PROCESS_BLOCKS_LAG`.
         let to_block = get_latest_safe_block(&chain_state)
             .in_current_span()
             .await
-            .saturating_sub(BLOCK_BATCH_SIZE);
+            .saturating_sub(RE_PROCESS_BLOCKS_LAG);
 
         if to_block > from_block {
             tracing::info!(
@@ -518,6 +520,6 @@ pub async fn re_process_blocks(
         }
 
         tracing::info!("Waiting for 10 minutes before re-processing blocks");
-        time::sleep(RETRY_BLOCKS_INTERVAL).await;
+        time::sleep(RE_PROCESS_BLOCKS_INTERVAL).await;
     }
 }
