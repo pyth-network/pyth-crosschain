@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Error};
 use {
     crate::{
         api::{
@@ -64,10 +65,14 @@ async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
             .await
         {
             Ok(latest_confirmed_block) => {
-                return latest_confirmed_block - chain_state.reveal_delay_blocks
+                tracing::info!(
+                    "Fetched latest safe block {}",
+                    latest_confirmed_block - chain_state.reveal_delay_blocks
+                );
+                return latest_confirmed_block - chain_state.reveal_delay_blocks;
             }
             Err(e) => {
-                tracing::error!("error while getting block number. error: {:?}", e);
+                tracing::error!("Error while getting block number. error: {:?}", e);
                 time::sleep(RETRY_INTERVAL).await;
             }
         }
@@ -346,10 +351,11 @@ pub async fn watch_blocks_wrapper(
     tx: mpsc::Sender<BlockRange>,
     geth_rpc_wss: Option<String>,
 ) {
+    let mut last_safe_block_processed = latest_safe_block;
     loop {
         if let Err(e) = watch_blocks(
             chain_state.clone(),
-            latest_safe_block,
+            last_safe_block_processed.borrow_mut(),
             tx.clone(),
             geth_rpc_wss.clone(),
         )
@@ -368,15 +374,14 @@ pub async fn watch_blocks_wrapper(
 /// know about it.
 pub async fn watch_blocks(
     chain_state: BlockchainState,
-    latest_safe_block: BlockNumber,
+    last_safe_block_processed: &mut BlockNumber,
     tx: mpsc::Sender<BlockRange>,
     geth_rpc_wss: Option<String>,
 ) -> Result<()> {
     tracing::info!("Watching blocks to handle new events");
-    let mut last_safe_block_processed = latest_safe_block;
 
     let provider_option = match geth_rpc_wss {
-        Some(wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
+        Some(ref wss) => Some(match Provider::<Ws>::connect(wss.clone()).await {
             Ok(provider) => provider,
             Err(e) => {
                 tracing::error!("Error while connecting to wss: {}. error: {:?}", wss, e);
@@ -390,14 +395,23 @@ pub async fn watch_blocks(
     };
 
     let mut stream_option = match provider_option {
-        Some(ref provider) => Some(provider.subscribe_blocks().await?),
+        Some(ref provider) => Some(match provider.subscribe_blocks().await {
+            Ok(client) => client,
+            Err(e) => {
+                tracing::error!("Error while subscribing to blocks. error {:?}", e);
+                return Err(e.into());
+            }
+        }),
         None => None,
     };
 
     loop {
         match stream_option {
             Some(ref mut stream) => {
-                stream.next().await;
+                if let None = stream.next().await {
+                    tracing::error!("Error blocks subscription stream ended");
+                    return Err(anyhow!("Error blocks subscription stream ended"));
+                }
             }
             None => {
                 time::sleep(POLL_INTERVAL).await;
@@ -405,27 +419,27 @@ pub async fn watch_blocks(
         }
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-        if latest_safe_block > last_safe_block_processed {
+        if latest_safe_block > *last_safe_block_processed {
             match tx
                 .send(BlockRange {
-                    from: last_safe_block_processed + 1,
+                    from: *last_safe_block_processed + 1,
                     to:   latest_safe_block,
                 })
                 .await
             {
                 Ok(_) => {
                     tracing::info!(
-                        from_block = &last_safe_block_processed + 1,
+                        from_block = *last_safe_block_processed + 1,
                         to_block = &latest_safe_block,
                         "Block range sent to handle events",
                     );
-                    last_safe_block_processed = latest_safe_block;
+                    *last_safe_block_processed = latest_safe_block;
                 }
                 Err(e) => {
                     tracing::error!(
-                        "Error while sending block range to handle events. These will be handled in next call. error: {:?}",
-                        e
-                    );
+                            "Error while sending block range to handle events. These will be handled in next call. error: {:?}",
+                            e
+                        );
                 }
             };
         }
