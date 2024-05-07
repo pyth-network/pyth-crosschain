@@ -15,7 +15,6 @@ use {
     },
     anyhow::{
         anyhow,
-        Error,
         Result,
     },
     ethers::{
@@ -358,7 +357,7 @@ pub async fn watch_blocks_wrapper(
     loop {
         if let Err(e) = watch_blocks(
             chain_state.clone(),
-            last_safe_block_processed.borrow_mut(),
+            &mut last_safe_block_processed,
             tx.clone(),
             geth_rpc_wss.clone(),
         )
