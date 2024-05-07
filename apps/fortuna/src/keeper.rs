@@ -481,36 +481,43 @@ pub async fn retry_past_blocks(
 ) {
     // initialize with backlog range
     let mut from_block = latest_safe_block - BACKLOG_RANGE;
-    let mut latest_safe_block = latest_safe_block;
+    let mut to_block = latest_safe_block;
     loop {
-        tracing::info!(
-            from_block = &from_block,
-            to_block = &latest_safe_block,
-            "Retrying past blocks"
-        );
+        // As we are adding a lag to latest_safe_block by subtracting BLOCK_BATCH_SIZE,
+        // we need to check the following condition
+        if to_block > from_block {
+            tracing::info!(
+                from_block = &from_block,
+                to_block = &to_block,
+                "Retrying past blocks"
+            );
 
-        process_block_range(
-            BlockRange {
-                from: from_block,
-                to:   latest_safe_block,
-            },
-            contract.clone(),
-            gas_limit,
-            chain_state.clone(),
-        )
-        .in_current_span()
-        .await;
+            process_block_range(
+                BlockRange {
+                    from: from_block,
+                    to:   to_block,
+                },
+                contract.clone(),
+                gas_limit,
+                chain_state.clone(),
+            )
+            .in_current_span()
+            .await;
 
-        tracing::info!(
-            from_block = &from_block,
-            to_block = &latest_safe_block,
-            "Retried past blocks"
-        );
+            tracing::info!(
+                from_block = &from_block,
+                to_block = &to_block,
+                "Retried past blocks"
+            );
 
-        from_block = latest_safe_block + 1;
+            from_block = to_block + 1;
 
-        tracing::info!("Waiting for 10 minutes before retrying again");
+            tracing::info!("Waiting for 10 minutes before retrying again");
+        }
         time::sleep(RETRY_PAST_BLOCKS_INTERVAL).await;
-        latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+        // We don't want to process the same blocks as the watch_blocks at the same time.
+        // If we process them at the same time, the events might be missed by the both.
+        // We will lag the range by `BLOCK_BATCH_SIZE`.
+        to_block = get_latest_safe_block(&chain_state).in_current_span().await - BLOCK_BATCH_SIZE;
     }
 }
