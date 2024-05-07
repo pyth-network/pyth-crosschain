@@ -8,6 +8,10 @@ mod governance;
 pub trait IWormhole<T> {
     fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<felt252>);
     fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
+
+    // We don't need to implement other governance actions for now.
+    // Instead of upgrading the Wormhole contract, we can switch to another Wormhole address
+    // in the Pyth contract.
     fn submit_new_guardian_set2(ref self: T, encoded_vm: ByteArray);
 }
 
