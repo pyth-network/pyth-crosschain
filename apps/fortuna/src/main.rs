@@ -1,5 +1,6 @@
 #![allow(clippy::just_underscores_and_digits)]
 #![feature(slice_flatten)]
+#![feature(integer_atomics)]
 
 use {
     anyhow::Result,
@@ -12,6 +13,7 @@ pub mod chain;
 pub mod command;
 pub mod config;
 pub mod keeper;
+pub mod metrics;
 pub mod state;
 
 // Server TODO list:

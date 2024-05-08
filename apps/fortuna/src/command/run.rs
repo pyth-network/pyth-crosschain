@@ -14,6 +14,10 @@ use {
             RunOptions,
         },
         keeper,
+        metrics::{
+            self,
+            ProviderLabel,
+        },
         state::{
             HashChainState,
             PebbleHashChain,
@@ -25,14 +29,17 @@ use {
         Result,
     },
     axum::Router,
+    ethers::types::Address,
     std::{
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
+        time::Duration,
     },
     tokio::{
         spawn,
         sync::watch,
+        time,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
@@ -42,6 +49,7 @@ use {
 pub async fn run_api(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
+    metrics_registry: Arc<metrics::Metrics>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -63,10 +71,9 @@ pub async fn run_api(
     )]
     struct ApiDoc;
 
-    let metrics_registry = api::Metrics::new();
     let api_state = api::ApiState {
         chains:  Arc::new(chains),
-        metrics: Arc::new(metrics_registry),
+        metrics: metrics_registry,
     };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
@@ -218,11 +225,68 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
+    let metrics_registry = Arc::new(metrics::Metrics::new());
+
     if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
-        spawn(run_keeper(chains.clone(), config, keeper_private_key));
+        spawn(run_keeper(
+            chains.clone(),
+            config.clone(),
+            keeper_private_key,
+        ));
     }
 
-    run_api(opts.addr.clone(), chains, rx_exit).await?;
+    spawn(track_hashchain(
+        config.clone(),
+        opts.provider.clone(),
+        metrics_registry.clone(),
+    ));
+
+    run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
 
     Ok(())
+}
+
+
+pub async fn track_hashchain(
+    config: Config,
+    provider_address: Address,
+    metrics_registry: Arc<metrics::Metrics>,
+) {
+    loop {
+        println!("fetching balance");
+        for (chain_id, chain_config) in &config.chains {
+            let contract = match PythContract::from_config(chain_config) {
+                Ok(r) => r,
+                Err(_e) => continue,
+            };
+
+            let provider_info = match contract.get_provider_info(provider_address).call().await {
+                Ok(info) => info,
+                Err(_e) => {
+                    time::sleep(Duration::from_secs(5)).await;
+                    continue;
+                }
+            };
+            let current_sequence_number = provider_info.sequence_number;
+            let end_sequence_number = provider_info.end_sequence_number;
+
+            metrics_registry
+                .current_sequence_number
+                .get_or_create(&ProviderLabel {
+                    chain_id: chain_id.clone(),
+                    address:  provider_address.to_string(),
+                })
+                // TODO: comment on i64 to u64 conversion
+                .set(current_sequence_number as i64);
+            metrics_registry
+                .end_sequence_number
+                .get_or_create(&ProviderLabel {
+                    chain_id: chain_id.clone(),
+                    address:  provider_address.to_string(),
+                })
+                .set(end_sequence_number as i64);
+        }
+
+        time::sleep(Duration::from_secs(10)).await;
+    }
 }

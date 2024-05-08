@@ -1,8 +1,10 @@
 use {
-    crate::api::{
-        ChainId,
-        Label,
-        RestError,
+    crate::{
+        api::{
+            ChainId,
+            RestError,
+        },
+        metrics::RequestLabel,
     },
     anyhow::Result,
     axum::{
@@ -46,7 +48,7 @@ pub async fn revelation(
     state
         .metrics
         .request_counter
-        .get_or_create(&Label {
+        .get_or_create(&RequestLabel {
             value: "/v1/chains/{chain_id}/revelations/{sequence}".to_string(),
         })
         .inc();
