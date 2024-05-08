@@ -256,7 +256,6 @@ pub async fn track_hashchain(
     metrics_registry: Arc<metrics::Metrics>,
 ) {
     loop {
-        println!("fetching balance");
         for (chain_id, chain_config) in &config.chains {
             let contract = match PythContract::from_config(chain_config) {
                 Ok(r) => r,
