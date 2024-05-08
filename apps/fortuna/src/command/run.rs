@@ -29,7 +29,18 @@ use {
         Result,
     },
     axum::Router,
-    ethers::types::Address,
+    ethers::{
+        middleware::Middleware,
+        providers::{
+            Http,
+            Provider,
+        },
+        signers::{
+            LocalWallet,
+            Signer,
+        },
+        types::Address,
+    },
     std::{
         collections::HashMap,
         net::SocketAddr,
@@ -230,10 +241,18 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let metrics_registry = Arc::new(metrics::Metrics::new());
 
     if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
+        let keeper_address = keeper_private_key.parse::<LocalWallet>()?.address();
+
         spawn(run_keeper(
             chains.clone(),
             config.clone(),
             keeper_private_key,
+            metrics_registry.clone(),
+        ));
+
+        spawn(track_balance(
+            config.clone(),
+            keeper_address,
             metrics_registry.clone(),
         ));
     }
@@ -243,10 +262,39 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         opts.provider.clone(),
         metrics_registry.clone(),
     ));
-
     run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
 
     Ok(())
+}
+
+pub async fn track_balance(
+    config: Config,
+    keeper_address: Address,
+    metrics_registry: Arc<metrics::Metrics>,
+) {
+    loop {
+        for (chain_id, chain_config) in &config.chains {
+            let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
+                Ok(r) => r,
+                Err(_e) => continue,
+            };
+
+            let balance = match provider.get_balance(keeper_address, None).await {
+                Ok(r) => r.as_u128(),
+                Err(_e) => continue,
+            };
+            let balance = balance as f64 / 1e18;
+
+            metrics_registry
+                .balance
+                .get_or_create(&ProviderLabel {
+                    chain_id: chain_id.clone(),
+                    address:  keeper_address.to_string(),
+                })
+                // comment on why is this ok
+                .set(balance);
+        }
+    }
 }
 
 

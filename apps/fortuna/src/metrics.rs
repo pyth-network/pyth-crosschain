@@ -9,6 +9,7 @@ use {
         },
         registry::Registry,
     },
+    std::sync::atomic::AtomicU64,
     tokio::sync::RwLock,
 };
 
@@ -36,10 +37,7 @@ pub struct Metrics {
 
     pub current_sequence_number: Family<ProviderLabel, Gauge>,
     pub end_sequence_number:     Family<ProviderLabel, Gauge>,
-    // pub balance:           Family<Label, Gauge>,
-    // pub balance_threshold: Family<Label, Gauge>,
-    //
-    // pub rpc: Family<Label, Counter>,
+    pub balance:                 Family<ProviderLabel, Gauge<f64, AtomicU64>>,
     //
     pub requests:                Family<ProviderLabel, Counter>,
     pub requests_processed:      Family<ProviderLabel, Counter>,
@@ -48,6 +46,10 @@ pub struct Metrics {
     // why?
     // - it is not a value that increases or decreases over time. Not a counter or a gauge
     // - it can't fit in a histogram too. logging and then collecting it is better.
+    // NOTE: rpc is not part of metrics.
+    // why?
+    // - which metric type should we use to track it?
+    // - let's just use fetched latest safe block from logs
 }
 
 impl Metrics {
@@ -108,6 +110,15 @@ impl Metrics {
             reveals.clone(),
         );
 
+        let balance = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "balance",
+            // And the metric help text.
+            "Balance of the keeper",
+            balance.clone(),
+        );
+
         Metrics {
             registry: RwLock::new(metrics_registry),
             request_counter: http_requests,
@@ -116,6 +127,7 @@ impl Metrics {
             requests,
             requests_processed,
             reveals,
+            balance,
         }
     }
 }
