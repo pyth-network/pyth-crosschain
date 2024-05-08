@@ -1,12 +1,13 @@
 use super::byte_array::ByteArray;
 use core::starknet::secp256_trait::Signature;
+use core::starknet::EthAddress;
 use pyth::util::UnwrapWithFelt252;
 
 mod governance;
 
 #[starknet::interface]
 pub trait IWormhole<T> {
-    fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<felt252>);
+    fn submit_new_guardian_set(ref self: T, set_index: u32, guardians: Array<EthAddress>);
     fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
 
     // We don't need to implement other governance actions for now.
@@ -133,9 +134,10 @@ mod wormhole {
     use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
     use core::starknet::secp256k1::Secp256k1Point;
     use core::starknet::{
-        ContractAddress, get_execution_info, get_caller_address, get_block_timestamp
+        ContractAddress, get_execution_info, get_caller_address, get_block_timestamp, EthAddress,
     };
     use core::keccak::cairo_keccak;
+    use core::starknet::eth_signature::is_eth_signature_valid;
     use core::integer::u128_byte_reverse;
     use core::panic_with_felt252;
     use pyth::hash::{Hasher, HasherImpl};
@@ -158,14 +160,14 @@ mod wormhole {
         consumed_governance_actions: LegacyMap<u256, bool>,
         guardian_sets: LegacyMap<u32, GuardianSet>,
         // (guardian_set_index, guardian_index) => guardian_address
-        guardian_keys: LegacyMap<(u32, u8), u256>,
+        guardian_keys: LegacyMap<(u32, u8), EthAddress>,
     }
 
     #[constructor]
     fn constructor(
         ref self: ContractState,
         owner: ContractAddress,
-        initial_guardians: Array<felt252>,
+        initial_guardians: Array<EthAddress>,
         chain_id: u16,
         governance_chain_id: u16,
         governance_contract: u256,
@@ -178,7 +180,7 @@ mod wormhole {
         store_guardian_set(ref self, set_index, @initial_guardians);
     }
 
-    fn store_guardian_set(ref self: ContractState, set_index: u32, guardians: @Array<felt252>) {
+    fn store_guardian_set(ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>) {
         if guardians.len() == 0 {
             panic_with_felt252(SubmitNewGuardianSetError::NoGuardiansSpecified.into());
         }
@@ -188,7 +190,7 @@ mod wormhole {
 
         let mut i = 0;
         while i < guardians.len() {
-            if *guardians.at(i) == 0 {
+            if (*guardians.at(i)).into() == 0 {
                 panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianKey.into());
             }
             i += 1;
@@ -217,7 +219,7 @@ mod wormhole {
     #[abi(embed_v0)]
     impl WormholeImpl of IWormhole<ContractState> {
         fn submit_new_guardian_set(
-            ref self: ContractState, set_index: u32, guardians: Array<felt252>
+            ref self: ContractState, set_index: u32, guardians: Array<EthAddress>
         ) {
             let execution_info = get_execution_info().unbox();
             if self.owner.read() != execution_info.caller_address {
@@ -271,9 +273,12 @@ mod wormhole {
 
                 let guardian_key = self
                     .guardian_keys
-                    .read((vm.guardian_set_index, signature.guardian_index));
+                    .read((vm.guardian_set_index, signature.guardian_index))
+                    .try_into()
+                    .expect(UNEXPECTED_OVERFLOW);
 
-                verify_signature(vm.hash, signature.signature, guardian_key);
+                is_eth_signature_valid(vm.hash, signature.signature, guardian_key)
+                    .unwrap_with_felt252();
             };
             vm
         }
@@ -357,25 +362,6 @@ mod wormhole {
             payload,
             hash: body_hash2,
         }
-    }
-
-    fn verify_signature(body_hash: u256, signature: Signature, guardian_key: u256,) {
-        let point: Secp256k1Point = recover_public_key(body_hash, signature)
-            .expect(ParseAndVerifyVmError::InvalidSignature.into());
-        let address = eth_address(point);
-        assert(guardian_key != 0, SubmitNewGuardianSetError::InvalidGuardianKey.into());
-        if address != guardian_key {
-            panic_with_felt252(ParseAndVerifyVmError::InvalidSignature.into());
-        }
-    }
-
-    fn eth_address(point: Secp256k1Point) -> u256 {
-        let (x, y) = point.get_coordinates().expect(ParseAndVerifyVmError::InvalidSignature.into());
-
-        let mut hasher = HasherImpl::new();
-        hasher.push_u256(x);
-        hasher.push_u256(y);
-        hasher.finalize() % ONE_SHIFT_160
     }
 
     #[generate_trait]
