@@ -238,6 +238,18 @@ pub async fn process_event(
                                 "Revealed with res: {:?}",
                                 res
                             );
+
+                           if let Some(gas_used) = res.gas_used {
+                               let gas_used = gas_used.as_u128() as f64 / 1e18;
+                               metrics
+                                   .total_gas_spent
+                                   .get_or_create(&ProviderLabel {
+                                       chain_id: chain_config.id.clone(),
+                                       address: chain_config.provider_address.to_string(),
+                                   })
+                                   .inc_by(gas_used);
+                           }
+
                             metrics
                                 .reveals
                                 .get_or_create(&ProviderLabel {

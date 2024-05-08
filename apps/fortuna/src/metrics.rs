@@ -39,14 +39,10 @@ pub struct Metrics {
     pub end_sequence_number:     Family<ProviderLabel, Gauge>,
     pub balance:                 Family<ProviderLabel, Gauge<f64, AtomicU64>>,
     pub collected_fee:           Family<ProviderLabel, Gauge<f64, AtomicU64>>,
-    //
+    pub total_gas_spent:         Family<ProviderLabel, Gauge<f64, AtomicU64>>,
     pub requests:                Family<ProviderLabel, Counter>,
     pub requests_processed:      Family<ProviderLabel, Counter>,
     pub reveals:                 Family<ProviderLabel, Counter>,
-    // NOTE: gas_spending is not part of metrics.
-    // why?
-    // - it is not a value that increases or decreases over time. Not a counter or a gauge
-    // - it can't fit in a histogram too. logging and then collecting it is better.
     // NOTE: rpc is not part of metrics.
     // why?
     // - which metric type should we use to track it?
@@ -129,6 +125,15 @@ impl Metrics {
             collected_fee.clone(),
         );
 
+        let total_gas_spent = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "total_gas_spent",
+            // And the metric help text.
+            "Total gas spent revealing requests",
+            total_gas_spent.clone(),
+        );
+
         Metrics {
             registry: RwLock::new(metrics_registry),
             request_counter: http_requests,
@@ -139,6 +144,7 @@ impl Metrics {
             reveals,
             balance,
             collected_fee,
+            total_gas_spent,
         }
     }
 }
