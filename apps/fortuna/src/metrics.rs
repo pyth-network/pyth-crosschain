@@ -5,13 +5,10 @@ use {
         metrics::{
             counter::Counter,
             family::Family,
-            gauge::{
-                Gauge,
-            },
+            gauge::Gauge,
         },
         registry::Registry,
     },
-    std::sync::atomic::AtomicU64,
     tokio::sync::RwLock,
 };
 
@@ -44,9 +41,13 @@ pub struct Metrics {
     //
     // pub rpc: Family<Label, Counter>,
     //
-    // pub gas_spending: Family<Label, Gauge>,
     // pub requests:     Family<Label, Counter>,
     // pub reveal:       Family<Label, Counter>,
+
+    // NOTE: gas_spending is not part of metrics.
+    // why?
+    // - it is not a value that increases or decreases over time. Not a counter or a gauge
+    // - it can't fit in a histogram too. logging and then collecting it is better.
 }
 
 impl Metrics {

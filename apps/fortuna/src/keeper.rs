@@ -221,14 +221,28 @@ pub async fn process_event(
                 };
 
                 match pending_tx.await {
-                    Ok(res) => {
-                        tracing::info!(
-                            sequence_number = &event.sequence_number,
-                            "Revealed with res: {:?}",
-                            res
-                        );
-                        Ok(())
-                    }
+                    Ok(res) => match res {
+                        Some(res) => {
+                            tracing::info!(
+                                sequence_number = &event.sequence_number,
+                                transaction_hash = &res.transaction_hash.to_string(),
+                                gas_used = ?res.gas_used,
+                                "Revealed with res: {:?}",
+                                res
+                            );
+                            Ok(())
+                        }
+                        None => {
+                            tracing::error!(
+                                sequence_number = &event.sequence_number,
+                                "Can't verify the reveal"
+                            );
+                            // It is better to return an error in this scenario
+                            // For the caller to retry
+                            Err(anyhow!("Can't verify the reveal"))
+                        }
+                    },
+
                     Err(e) => {
                         tracing::error!(
                             sequence_number = &event.sequence_number,
