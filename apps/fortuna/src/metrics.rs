@@ -41,9 +41,9 @@ pub struct Metrics {
     //
     // pub rpc: Family<Label, Counter>,
     //
-    // pub requests:     Family<Label, Counter>,
-    // pub reveal:       Family<Label, Counter>,
-
+    pub requests:                Family<ProviderLabel, Counter>,
+    pub requests_processed:      Family<ProviderLabel, Counter>,
+    pub reveals:                 Family<ProviderLabel, Counter>,
     // NOTE: gas_spending is not part of metrics.
     // why?
     // - it is not a value that increases or decreases over time. Not a counter or a gauge
@@ -81,11 +81,41 @@ impl Metrics {
             end_sequence_number.clone(),
         );
 
+        let requests = Family::<ProviderLabel, Counter>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "requests",
+            // And the metric help text.
+            "Number of requests received",
+            requests.clone(),
+        );
+
+        let requests_processed = Family::<ProviderLabel, Counter>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "requests_processed",
+            // And the metric help text.
+            "Number of requests processed",
+            requests_processed.clone(),
+        );
+
+        let reveals = Family::<ProviderLabel, Counter>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "reveal",
+            // And the metric help text.
+            "Number of reveals",
+            reveals.clone(),
+        );
+
         Metrics {
             registry: RwLock::new(metrics_registry),
             request_counter: http_requests,
             current_sequence_number,
             end_sequence_number,
+            requests,
+            requests_processed,
+            reveals,
         }
     }
 }

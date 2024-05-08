@@ -12,6 +12,10 @@ use {
             },
         },
         config::EthereumConfig,
+        metrics::{
+            Metrics,
+            ProviderLabel,
+        },
     },
     anyhow::{
         anyhow,
@@ -88,6 +92,7 @@ pub async fn run_keeper_threads(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
+    metrics: Arc<Metrics>,
 ) {
     tracing::info!("starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
@@ -109,6 +114,7 @@ pub async fn run_keeper_threads(
             contract.clone(),
             chain_eth_config.gas_limit,
             chain_state.clone(),
+            metrics.clone(),
         )
         .in_current_span(),
     );
@@ -131,6 +137,7 @@ pub async fn run_keeper_threads(
             rx,
             Arc::clone(&contract),
             chain_eth_config.gas_limit,
+            metrics.clone(),
         )
         .in_current_span(),
     );
@@ -146,6 +153,7 @@ pub async fn process_event(
     chain_config: &BlockchainState,
     contract: &Arc<SignablePythContract>,
     gas_limit: U256,
+    metrics: Arc<Metrics>,
 ) -> Result<()> {
     if chain_config.provider_address != event.provider_address {
         return Ok(());
@@ -230,6 +238,13 @@ pub async fn process_event(
                                 "Revealed with res: {:?}",
                                 res
                             );
+                            metrics
+                                .reveals
+                                .get_or_create(&ProviderLabel {
+                                    chain_id: chain_config.id.clone(),
+                                    address:  chain_config.provider_address.to_string(),
+                                })
+                                .inc();
                             Ok(())
                         }
                         None => {
@@ -280,6 +295,7 @@ pub async fn process_block_range(
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
     chain_state: api::BlockchainState,
+    metrics: Arc<Metrics>,
 ) {
     let BlockRange {
         from: first_block,
@@ -300,6 +316,7 @@ pub async fn process_block_range(
             contract.clone(),
             gas_limit,
             chain_state.clone(),
+            metrics.clone(),
         )
         .in_current_span()
         .await;
@@ -316,6 +333,7 @@ pub async fn process_single_block_batch(
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
     chain_state: api::BlockchainState,
+    metrics: Arc<Metrics>,
 ) {
     loop {
         let events_res = chain_state
@@ -327,11 +345,23 @@ pub async fn process_single_block_batch(
             Ok(events) => {
                 tracing::info!(num_of_events = &events.len(), "Processing",);
                 for event in &events {
+                    metrics
+                        .requests
+                        .get_or_create(&ProviderLabel {
+                            chain_id: chain_state.id.clone(),
+                            address:  chain_state.provider_address.to_string(),
+                        })
+                        .inc();
                     tracing::info!(sequence_number = &event.sequence_number, "Processing event",);
-                    while let Err(e) =
-                        process_event(event.clone(), &chain_state, &contract, gas_limit)
-                            .in_current_span()
-                            .await
+                    while let Err(e) = process_event(
+                        event.clone(),
+                        &chain_state,
+                        &contract,
+                        gas_limit,
+                        metrics.clone(),
+                    )
+                    .in_current_span()
+                    .await
                     {
                         tracing::error!(
                             sequence_number = &event.sequence_number,
@@ -342,6 +372,13 @@ pub async fn process_single_block_batch(
                         time::sleep(RETRY_INTERVAL).await;
                     }
                     tracing::info!(sequence_number = &event.sequence_number, "Processed event",);
+                    metrics
+                        .requests_processed
+                        .get_or_create(&ProviderLabel {
+                            chain_id: chain_state.id.clone(),
+                            address:  chain_state.provider_address.to_string(),
+                        })
+                        .inc();
                 }
                 tracing::info!(num_of_events = &events.len(), "Processed",);
                 break;
@@ -469,6 +506,7 @@ pub async fn process_new_blocks(
     mut rx: mpsc::Receiver<BlockRange>,
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
+    metrics: Arc<Metrics>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
     loop {
@@ -478,6 +516,7 @@ pub async fn process_new_blocks(
                 Arc::clone(&contract),
                 gas_limit,
                 chain_state.clone(),
+                metrics.clone(),
             )
             .in_current_span()
             .await;
@@ -492,9 +531,10 @@ pub async fn process_backlog(
     contract: Arc<SignablePythContract>,
     gas_limit: U256,
     chain_state: BlockchainState,
+    metrics: Arc<Metrics>,
 ) {
     tracing::info!("Processing backlog");
-    process_block_range(backlog_range, contract, gas_limit, chain_state)
+    process_block_range(backlog_range, contract, gas_limit, chain_state, metrics)
         .in_current_span()
         .await;
     tracing::info!("Backlog processed");

@@ -108,6 +108,7 @@ pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
     private_key: String,
+    metrics_registry: Arc<metrics::Metrics>,
 ) -> Result<()> {
     let mut handles = Vec::new();
     for (chain_id, chain_config) in chains {
@@ -121,6 +122,7 @@ pub async fn run_keeper(
             private_key,
             chain_eth_config,
             chain_config.clone(),
+            metrics_registry.clone(),
         )));
     }
 
@@ -232,6 +234,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             chains.clone(),
             config.clone(),
             keeper_private_key,
+            metrics_registry.clone(),
         ));
     }
 
