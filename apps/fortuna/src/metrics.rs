@@ -38,6 +38,7 @@ pub struct Metrics {
     pub current_sequence_number: Family<ProviderLabel, Gauge>,
     pub end_sequence_number:     Family<ProviderLabel, Gauge>,
     pub balance:                 Family<ProviderLabel, Gauge<f64, AtomicU64>>,
+    pub collected_fee:           Family<ProviderLabel, Gauge<f64, AtomicU64>>,
     //
     pub requests:                Family<ProviderLabel, Counter>,
     pub requests_processed:      Family<ProviderLabel, Counter>,
@@ -119,6 +120,15 @@ impl Metrics {
             balance.clone(),
         );
 
+        let collected_fee = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        metrics_registry.register(
+            // With the metric name.
+            "collected_fee",
+            // And the metric help text.
+            "Collected fee on the contract",
+            collected_fee.clone(),
+        );
+
         Metrics {
             registry: RwLock::new(metrics_registry),
             request_counter: http_requests,
@@ -128,6 +138,7 @@ impl Metrics {
             requests_processed,
             reveals,
             balance,
+            collected_fee,
         }
     }
 }

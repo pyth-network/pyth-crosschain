@@ -262,6 +262,11 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         opts.provider.clone(),
         metrics_registry.clone(),
     ));
+    spawn(track_collected_fee(
+        config.clone(),
+        opts.provider.clone(),
+        metrics_registry.clone(),
+    ));
     run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
 
     Ok(())
@@ -293,6 +298,38 @@ pub async fn track_balance(
                 })
                 // comment on why is this ok
                 .set(balance);
+        }
+    }
+}
+
+pub async fn track_collected_fee(
+    config: Config,
+    provider_address: Address,
+    metrics_registry: Arc<metrics::Metrics>,
+) {
+    loop {
+        for (chain_id, chain_config) in &config.chains {
+            let contract = match PythContract::from_config(chain_config) {
+                Ok(r) => r,
+                Err(_e) => continue,
+            };
+
+            let provider_info = match contract.get_provider_info(provider_address).call().await {
+                Ok(info) => info,
+                Err(_e) => {
+                    time::sleep(Duration::from_secs(5)).await;
+                    continue;
+                }
+            };
+            let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
+
+            metrics_registry
+                .collected_fee
+                .get_or_create(&ProviderLabel {
+                    chain_id: chain_id.clone(),
+                    address:  provider_address.to_string(),
+                })
+                .set(collected_fee);
         }
     }
 }
