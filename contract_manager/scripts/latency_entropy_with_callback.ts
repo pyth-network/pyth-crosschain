@@ -1,6 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { toPrivateKey } from "../src";
+import {
+  DefaultStore,
+  EvmEntropyContract,
+  PrivateKey,
+  toPrivateKey,
+} from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
   findEntropyContract,
@@ -12,26 +17,29 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Requests a random number from an entropy contract and measures the\n" +
       "latency between request submission and fulfillment by the Fortuna keeper service.\n" +
-      "Usage: $0 --chain-id <chain-id> --private-key <private-key>"
+      "Usage: $0 --private-key <private-key> --chain <chain-id> | --all-chains <testnet|mainnet>"
   )
   .options({
     chain: {
       type: "string",
-      demandOption: true,
       desc: "test latency for the contract on this chain",
+      conflicts: "all-chains",
+    },
+    "all-chains": {
+      type: "string",
+      conflicts: "chain",
+      choices: ["testnet", "mainnet"],
+      desc: "test latency for all entropy contracts deployed either on mainnet or testnet",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   });
 
-async function main() {
-  const argv = await parser.argv;
-
-  const chain = findEvmChain(argv.chain);
-  const contract = findEntropyContract(chain);
-
+async function testLatency(
+  contract: EvmEntropyContract,
+  privateKey: PrivateKey
+) {
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
-  const privateKey = toPrivateKey(argv.privateKey);
   const requestResponse = await contract.requestRandomness(
     userRandomNumber,
     provider,
@@ -81,6 +89,29 @@ async function main() {
     }
 
     await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+}
+
+async function main() {
+  const argv = await parser.argv;
+  if (!argv.chain && !argv["all-chains"]) {
+    throw new Error("Must specify either --chain or --all-chains");
+  }
+  const privateKey = toPrivateKey(argv.privateKey);
+  if (argv["all-chains"]) {
+    for (const contract of Object.values(DefaultStore.entropy_contracts)) {
+      if (
+        contract.getChain().isMainnet() ===
+        (argv["all-chains"] === "mainnet")
+      ) {
+        console.log(`Testing latency for ${contract.getId()}...`);
+        await testLatency(contract, privateKey);
+      }
+    }
+  } else if (argv.chain) {
+    const chain = findEvmChain(argv.chain);
+    const contract = findEntropyContract(chain);
+    await testLatency(contract, privateKey);
   }
 }
 
