@@ -487,7 +487,9 @@ impl PythInit for Contract {
         wormhole_guardian_set_index: u32,
         chain_id: u16,
     ) {
+        // This function sets the passed identity as the initial owner. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L127-L138
         initialize_ownership(DEPLOYER);
+        // This function ensures that the sender is the owner. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L59-L65
         only_owner();
 
         require(data_sources.len > 0, PythError::InvalidDataSourcesLength);
@@ -530,6 +532,7 @@ impl PythInit for Contract {
 
         storage.chain_id.write(chain_id);
 
+        // This function revokes ownership of the current owner and disallows any new owners. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L89-L99
         renounce_ownership();
 
         log(ConstructedEvent {
