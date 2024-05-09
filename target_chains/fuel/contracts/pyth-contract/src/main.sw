@@ -109,7 +109,7 @@ storage {
     /// Current active guardian set index
     wormhole_guardian_set_index: u32 = 0,
     /// Using Ethereum's Wormhole governance
-    wormhole_provider: DataSource = DataSource {
+    wormhole_governance_data_source: DataSource = DataSource {
         chain_id: 0u16,
         emitter_address: ZERO_B256,
     },
@@ -476,16 +476,6 @@ fn current_implementation() -> Identity {
 }
 
 impl PythInit for Contract {
-    // change the constructor to accept a
-    // - list of addresses for the wormhole guardian set
-    // - also takes in guardian set index
-    // - store the index in the contract storage
-    // - store the guardian set in the contract storage
-
-    // the rest of the existing tests will fail
-    // pass in the list of guardians for the existing tests
-
-    // use guardian set index 0 for dummy guardians
     #[storage(read, write)]
     fn constructor(
         data_sources: Vec<DataSource>,
@@ -536,7 +526,7 @@ impl PythInit for Contract {
         storage.wormhole_guardian_sets.insert(wormhole_guardian_set_index, new_guardian_set);
 
         storage.governance_data_source.write(governance_data_source);
-        storage.wormhole_provider.write(wormhole_governance_data_source);
+        storage.wormhole_governance_data_source.write(wormhole_governance_data_source);
 
         storage.chain_id.write(chain_id);
 
@@ -635,7 +625,7 @@ fn current_guardian_set_index() -> u32 {
 
 #[storage(read)]
 fn current_wormhole_provider() -> DataSource {
-    storage.wormhole_provider.read()
+    storage.wormhole_governance_data_source.read()
 }
 
 #[storage(read)]
@@ -703,24 +693,6 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
         new_guardian_set_index: upgrade.new_guardian_set_index,
     })
 }
-
-/// Upgrades the contract to a new implementation.
-// #[storage(read, write)]
-// fn upgrade_upgradeable_contract(payload: UpgradeContractPayload) {
-//     let old_implementation = current_implementation();
-
-//     // TODO: Implement the actual upgrade logic here
-
-//     require(
-//         pyth_upgradeable_magic() == 0x97a6f304,
-//         PythError::InvalidGovernanceMessage,
-//     );
-
-//     log(ContractUpgradedEvent {
-//         old_implementation,
-//         new_implementation: current_implementation(),
-//     });
-// }
 
 /// Transfer the governance data source to a new value with sanity checks to ensure the new governance data source can manage the contract.
 #[storage(read, write)]
@@ -818,12 +790,6 @@ fn set_valid_period(payload: SetValidPeriodPayload) {
     });
 }
 
-/// Returns a magic number for the contract.
-fn pyth_upgradeable_magic() -> u32 {
-    0x97a6f304
-}
-
-
 abi PythGovernance {
     #[storage(read)]
     fn governance_data_source() -> DataSource;
@@ -853,10 +819,9 @@ impl PythGovernance for Contract {
         match gi.action {
             GovernanceAction::UpgradeContract => {
                 require(gi.target_chain_id != 0, PythError::InvalidGovernanceTarget);
-                let uc: UpgradeContractPayload = GovernanceInstruction::parse_upgrade_contract_payload(gi.payload);
-                log(uc);
                 // TODO: implement upgrade_upgradeable_contract(uc) when Fuel releases the upgrade standard library;
-                // upgrade_upgradeable_contract(uc);
+                log("Upgrade functionality not implemented");
+                revert(0u64);
             },
             GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
                 let agdst = GovernanceInstruction::parse_authorize_governance_data_source_transfer_payload(gi.payload);

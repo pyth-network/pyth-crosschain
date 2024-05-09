@@ -1,4 +1,3 @@
-use pyth_sdk::pyth_utils::PythError;
 use {
     crate::utils::{interface::pyth_init::constructor, setup::setup_environment},
     fuels::types::{Bits256, Bytes},
@@ -20,7 +19,6 @@ mod success {
             pyth_core::valid_time_period,
             pyth_governance::{execute_governance_instruction, governance_data_source},
             pyth_info::{single_update_fee, valid_data_sources},
-            wormhole_guardians::current_wormhole_provider,
         },
         pyth_sdk::{
             constants::MAGIC,
@@ -189,7 +187,7 @@ mod success {
         );
 
         let old_governance_data_source = governance_data_source(&deployer.instance).await;
-        let receipt = execute_governance_instruction(
+        execute_governance_instruction(
             &deployer.instance,
             Bytes(serde_wormhole::to_vec(&vaa).unwrap()),
         )

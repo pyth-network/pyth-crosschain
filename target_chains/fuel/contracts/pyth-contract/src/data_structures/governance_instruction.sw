@@ -43,12 +43,11 @@ impl GovernanceInstruction {
             GovernanceModule::Target => true,
             _ => false,
         }, PythError::InvalidGovernanceTarget);
-        // addtionally skip minor_version(2 bytes) as unused
         index += 1;
 
         let action_number = encoded_instruction.get(index).unwrap();
         let governance_action = match action_number {
-            0 => GovernanceAction::UpgradeContract,
+            0 => GovernanceAction::UpgradeContract, // Not implemented
             1 => GovernanceAction::AuthorizeGovernanceDataSourceTransfer,
             2 => GovernanceAction::SetDataSources,
             3 => GovernanceAction::SetFee,
@@ -77,18 +76,6 @@ impl GovernanceInstruction {
             target_chain_id,
             payload,
         )
-    }
-
-    /// Parse a UpgradeContractPayload (action 1) with minimal validation
-    pub fn parse_upgrade_contract_payload(encoded_payload: Bytes) -> UpgradeContractPayload {
-        let mut index = 0;
-        let b256_encoded_payload: b256 = encoded_payload.into();
-        index += 20;
-        require(index == encoded_payload.len(), PythError::InvalidGovernanceMessage);
-        let uc = UpgradeContractPayload {
-            new_implementation: Identity::Address(Address::from(b256_encoded_payload)),
-        };
-        uc
     }
 
     /// Parse an AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
