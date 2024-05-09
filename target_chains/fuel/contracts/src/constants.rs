@@ -1,5 +1,26 @@
-use crate::pyth_utils::{Price, PriceFeed};
+use crate::pyth_utils::{DataSource, Price, PriceFeed};
 use fuels::types::Bits256;
+
+pub const MAGIC: u32 = 0x5054474d;
+
+pub const GOVERNANCE_DATA_SOURCE: DataSource = DataSource {
+    chain_id: 1,
+    emitter_address: Bits256([
+        0x56, 0x35, 0x97, 0x9a, 0x22, 0x1c, 0x34, 0x93, 0x1e, 0x32, 0x62, 0x0b, 0x92, 0x93, 0xa4, 0x63,
+        0x06, 0x55, 0x55, 0xea, 0x71, 0xfe, 0x97, 0xcd, 0x62, 0x37, 0xad, 0xe8, 0x75, 0xb1, 0x2e, 0x9e
+    ]),
+};
+
+// only used for updating guardian set
+pub const WORMHOLE_GOVERNANCE_DATA_SOURCE: DataSource = DataSource {
+    chain_id: 1,
+    emitter_address: Bits256([
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 4,
+    ]),
+};
+
+pub const DUMMY_CHAIN_ID: u16 = 1;
 
 pub const BETA_5_URL: &str = "beta-5.fuel.network";
 pub const BETA_5_PYTH_CONTRACT_ID: &str =

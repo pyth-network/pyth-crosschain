@@ -2,13 +2,13 @@ use fuels::{
     prelude::{Address, Provider, WalletUnlocked},
     types::Bits256,
 };
-use pyth_sdk::{constants::BETA_5_URL, pyth_utils::guardian_set_upgrade_4_vaa};
+use pyth_sdk::{constants::BETA_5_URL, pyth_utils::guardian_set_upgrade_4_addresses};
 use pyth_sdk::{
     constants::{
-        BTC_USD_PRICE_FEED_ID, DEFAULT_VALID_TIME_PERIOD, ETH_USD_PRICE_FEED_ID,
+        BTC_USD_PRICE_FEED_ID, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID, ETH_USD_PRICE_FEED_ID,
         USDC_USD_PRICE_FEED_ID,
     },
-    pyth_utils::{update_data_bytes, Pyth},
+    pyth_utils::{update_data_bytes, DataSource, Pyth},
 };
 
 #[tokio::main]
@@ -26,8 +26,31 @@ async fn main() {
 
     let pyth = Pyth::deploy(admin).await.unwrap();
 
+    let governance_data_source: DataSource = DataSource {
+        chain_id: 1,
+        emitter_address: Bits256::from_hex_str(
+            "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+        )
+        .unwrap(),
+    };
+
+    let wormhole_governance_data_source: DataSource = DataSource {
+        chain_id: 1,
+        emitter_address: Bits256([
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 4,
+        ]),
+    };
+
     let _ = pyth
-        .constructor(DEFAULT_VALID_TIME_PERIOD, guardian_set_upgrade_4_vaa())
+        .constructor(
+            governance_data_source,
+            wormhole_governance_data_source,
+            DEFAULT_VALID_TIME_PERIOD,
+            guardian_set_upgrade_4_addresses(),
+            4,
+            DUMMY_CHAIN_ID,
+        )
         .await
         .unwrap();
 
