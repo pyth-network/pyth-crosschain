@@ -33,7 +33,7 @@ fn decode_event(event: @Event) -> PythEvent {
 fn update_price_feeds_works() {
     let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_and_init(owner);
+    let wormhole = super::wormhole::deploy_and_init();
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy(
         owner,
