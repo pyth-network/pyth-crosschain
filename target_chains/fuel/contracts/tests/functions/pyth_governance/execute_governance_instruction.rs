@@ -28,12 +28,12 @@ mod success {
                 create_request_governance_data_source_transfer_payload,
                 create_set_data_sources_payload, create_set_fee_payload,
                 create_set_valid_period_payload, DataSource, GovernanceAction, GovernanceModule,
+                Pyth,
             },
         },
     };
 
-    #[tokio::test]
-    async fn executes_governance_instruction() {
+    async fn setup_governance_test_environment() -> (Pyth, Vec<Bits256>) {
         let (_oracle_contract_id, deployer) = setup_environment().await.unwrap();
         let dummy_guardians_addresses: Vec<[u8; 20]> = dummy_guardians_addresses();
         let bits256_guardians: Vec<Bits256> = dummy_guardians_addresses
@@ -52,15 +52,21 @@ mod success {
             WORMHOLE_GOVERNANCE_DATA_SOURCE,
             DEFAULT_SINGLE_UPDATE_FEE,
             DEFAULT_VALID_TIME_PERIOD,
-            bits256_guardians,
+            bits256_guardians.clone(),
             0,
             DUMMY_CHAIN_ID,
         )
         .await;
 
-        // Test SetFee
+        (deployer, bits256_guardians)
+    }
+
+    #[tokio::test]
+    async fn test_set_fee() {
+        let (deployer, _bits256_guardians) = setup_governance_test_environment().await;
+        // Test SetFee logic here
         let set_fee_payload = create_set_fee_payload(100, 1);
-        let mut governance_instruction_payload = create_governance_instruction_payload(
+        let governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::SetFee,
@@ -68,7 +74,7 @@ mod success {
             set_fee_payload,
         );
 
-        let mut vaa = create_vaa_from_payload(
+        let vaa = create_vaa_from_payload(
             &governance_instruction_payload,
             wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
             wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
@@ -84,10 +90,14 @@ mod success {
         let fee = single_update_fee(&deployer.instance).await.value;
 
         assert_eq!(fee, 100);
+    }
 
-        // Test SetValidPeriod
+    #[tokio::test]
+    async fn test_set_valid_period() {
+        let (deployer, _bits256_guardians) = setup_governance_test_environment().await;
+        // Test SetValidPeriod logic here
         let set_valid_period_payload = create_set_valid_period_payload(100);
-        governance_instruction_payload = create_governance_instruction_payload(
+        let governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::SetValidPeriod,
@@ -95,7 +105,7 @@ mod success {
             set_valid_period_payload,
         );
 
-        vaa = create_vaa_from_payload(
+        let vaa = create_vaa_from_payload(
             &governance_instruction_payload,
             wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
             wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
@@ -111,7 +121,11 @@ mod success {
         let valid_period = valid_time_period(&deployer.instance).await.value;
 
         assert_eq!(valid_period, 100);
+    }
 
+    #[tokio::test]
+    async fn test_set_data_sources() {
+        let (deployer, _bits256_guardians) = setup_governance_test_environment().await;
         // Test SetDataSources
         let test_data_sources = vec![
             DataSource {
@@ -124,14 +138,14 @@ mod success {
             },
         ];
         let set_data_sources_payload = create_set_data_sources_payload(test_data_sources.clone());
-        governance_instruction_payload = create_governance_instruction_payload(
+        let governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::SetDataSources,
             1,
             set_data_sources_payload,
         );
-        vaa = create_vaa_from_payload(
+        let vaa = create_vaa_from_payload(
             &governance_instruction_payload,
             wormhole_sdk::Address(GOVERNANCE_DATA_SOURCE.emitter_address.0),
             wormhole_sdk::Chain::from(GOVERNANCE_DATA_SOURCE.chain_id),
@@ -147,7 +161,11 @@ mod success {
         let new_data_sources = valid_data_sources(&deployer.instance).await.value;
 
         assert_eq!(new_data_sources, test_data_sources);
+    }
 
+    #[tokio::test]
+    async fn test_authorize_governance_data_source_transfer() {
+        let (deployer, _bits256_guardians) = setup_governance_test_environment().await;
         // Test AuthorizeGovernanceDataSourceTransfer
         let new_emitter_address = Bits256([3u8; 32]);
         let new_emitter_chain = 2;
@@ -155,14 +173,14 @@ mod success {
         // Simulate creating a RequestGovernanceDataSourceTransfer VAA
         let request_governance_data_source_transfer_payload =
             create_request_governance_data_source_transfer_payload(1);
-        governance_instruction_payload = create_governance_instruction_payload(
+        let mut governance_instruction_payload = create_governance_instruction_payload(
             MAGIC,
             GovernanceModule::Target,
             GovernanceAction::RequestGovernanceDataSourceTransfer,
             1,
             request_governance_data_source_transfer_payload,
         );
-        vaa = create_vaa_from_payload(
+        let mut vaa = create_vaa_from_payload(
             &governance_instruction_payload,
             wormhole_sdk::Address(new_emitter_address.0),
             wormhole_sdk::Chain::from(new_emitter_chain),
