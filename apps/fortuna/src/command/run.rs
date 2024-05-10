@@ -57,6 +57,8 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
+let TRACK_DURATION = Duration::from_secs(10);
+
 pub async fn run_api(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
@@ -272,6 +274,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     Ok(())
 }
 
+/// tracks the balance of the given address for each chain in the given config periodically
 pub async fn track_balance(
     config: Config,
     address: Address,
@@ -303,9 +306,12 @@ pub async fn track_balance(
                 // comment on why is this ok
                 .set(balance);
         }
+
+        time::sleep(TRACK_DURATION).await;
     }
 }
 
+/// tracks the collected fees of the given address for each chain in the given config periodically
 pub async fn track_collected_fee(
     config: Config,
     provider_address: Address,
@@ -338,10 +344,13 @@ pub async fn track_collected_fee(
                 })
                 .set(collected_fee);
         }
+
+        time::sleep(TRACK_DURATION).await;
     }
 }
 
-
+/// tracks the current sequence number and end sequence number of the given provider address for 
+/// each chain in the given config periodically
 pub async fn track_hashchain(
     config: Config,
     provider_address: Address,
@@ -383,6 +392,6 @@ pub async fn track_hashchain(
                 .set(end_sequence_number as i64);
         }
 
-        time::sleep(Duration::from_secs(10)).await;
+        time::sleep(TRACK_DURATION).await;
     }
 }
