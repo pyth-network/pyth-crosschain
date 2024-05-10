@@ -26,7 +26,7 @@ pub struct AccountLabel {
 pub struct Metrics {
     pub registry: RwLock<Registry>,
 
-    pub request_counter: Family<RequestLabel, Counter>,
+    pub http_requests: Family<RequestLabel, Counter>,
 
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
@@ -99,7 +99,7 @@ impl Metrics {
 
         Metrics {
             registry: RwLock::new(metrics_registry),
-            request_counter: http_requests,
+            http_requests,
             current_sequence_number,
             end_sequence_number,
             requests,
