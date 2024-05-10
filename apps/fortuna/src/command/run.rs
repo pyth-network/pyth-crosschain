@@ -293,7 +293,7 @@ pub async fn track_balance(
                 Ok(r) => r.as_u128(),
                 Err(_e) => continue,
             };
-            // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
+            // The f64 conversion is made to be able to serve metrics within the constraints of Prometheus.
             // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
             let balance = balance as f64 / 1e18;
 
@@ -303,7 +303,6 @@ pub async fn track_balance(
                     chain_id: chain_id.clone(),
                     address:  address.to_string(),
                 })
-                // comment on why is this ok
                 .set(balance);
         }
 
