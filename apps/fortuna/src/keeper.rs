@@ -28,8 +28,8 @@ use {
             Provider,
             Ws,
         },
-        types::U256,
         signers::Signer,
+        types::U256,
     },
     futures::StreamExt,
     std::sync::Arc,
@@ -246,7 +246,13 @@ pub async fn process_event(
                                     .total_gas_spent
                                     .get_or_create(&AccountLabel {
                                         chain_id: chain_config.id.clone(),
-                                        address:  contract.client().inner().inner().signer().address().to_string(),
+                                        address:  contract
+                                            .client()
+                                            .inner()
+                                            .inner()
+                                            .signer()
+                                            .address()
+                                            .to_string(),
                                     })
                                     .inc_by(gas_used);
                             }

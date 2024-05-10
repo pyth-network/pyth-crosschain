@@ -349,7 +349,7 @@ pub async fn track_collected_fee(
     }
 }
 
-/// tracks the current sequence number and end sequence number of the given provider address for 
+/// tracks the current sequence number and end sequence number of the given provider address for
 /// each chain in the given config periodically
 pub async fn track_hashchain(
     config: Config,
