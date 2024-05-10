@@ -55,7 +55,7 @@ const BACKLOG_RANGE: u64 = 1000;
 /// How many blocks to fetch events for in a single rpc call
 const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
-const POLL_INTERVAL: Duration = Duration::from_secs(5);
+const POLL_INTERVAL: Duration = Duration::from_secs(2);
 
 
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
