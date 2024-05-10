@@ -44,81 +44,55 @@ impl Metrics {
 
         let http_requests = Family::<RequestLabel, Counter>::default();
         metrics_registry.register(
-            // With the metric name.
             "http_requests",
-            // And the metric help text.
             "Number of HTTP requests received",
             http_requests.clone(),
         );
 
         let current_sequence_number = Family::<AccountLabel, Gauge>::default();
         metrics_registry.register(
-            // With the metric name.
             "current_sequence_number",
-            // And the metric help text.
             "The sequence number for a new request.",
             current_sequence_number.clone(),
         );
 
         let end_sequence_number = Family::<AccountLabel, Gauge>::default();
         metrics_registry.register(
-            // With the metric name.
             "end_sequence_number",
-            // And the metric help text.
             "The sequence number for the end request.",
             end_sequence_number.clone(),
         );
 
         let requests = Family::<AccountLabel, Counter>::default();
         metrics_registry.register(
-            // With the metric name.
             "requests",
-            // And the metric help text.
             "Number of requests received through events",
             requests.clone(),
         );
 
         let requests_processed = Family::<AccountLabel, Counter>::default();
         metrics_registry.register(
-            // With the metric name.
             "requests_processed",
-            // And the metric help text.
             "Number of requests processed",
             requests_processed.clone(),
         );
 
         let reveals = Family::<AccountLabel, Counter>::default();
-        metrics_registry.register(
-            // With the metric name.
-            "reveal",
-            // And the metric help text.
-            "Number of reveals",
-            reveals.clone(),
-        );
+        metrics_registry.register("reveal", "Number of reveals", reveals.clone());
 
         let balance = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
-        metrics_registry.register(
-            // With the metric name.
-            "balance",
-            // And the metric help text.
-            "Balance of the keeper",
-            balance.clone(),
-        );
+        metrics_registry.register("balance", "Balance of the keeper", balance.clone());
 
         let collected_fee = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         metrics_registry.register(
-            // With the metric name.
             "collected_fee",
-            // And the metric help text.
             "Collected fee on the contract",
             collected_fee.clone(),
         );
 
         let total_gas_spent = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         metrics_registry.register(
-            // With the metric name.
             "total_gas_spent",
-            // And the metric help text.
             "Total gas spent revealing requests",
             total_gas_spent.clone(),
         );
