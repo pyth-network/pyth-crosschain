@@ -25,7 +25,7 @@ pub struct RpcLabel {
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct ProviderLabel {
+pub struct AccountLabel {
     pub chain_id: String,
     pub address:  String,
 }
@@ -35,18 +35,14 @@ pub struct Metrics {
 
     pub request_counter: Family<RequestLabel, Counter>,
 
-    pub current_sequence_number: Family<ProviderLabel, Gauge>,
-    pub end_sequence_number:     Family<ProviderLabel, Gauge>,
-    pub balance:                 Family<ProviderLabel, Gauge<f64, AtomicU64>>,
-    pub collected_fee:           Family<ProviderLabel, Gauge<f64, AtomicU64>>,
-    pub total_gas_spent:         Family<ProviderLabel, Gauge<f64, AtomicU64>>,
-    pub requests:                Family<ProviderLabel, Counter>,
-    pub requests_processed:      Family<ProviderLabel, Counter>,
-    pub reveals:                 Family<ProviderLabel, Counter>,
-    // NOTE: rpc is not part of metrics.
-    // why?
-    // - which metric type should we use to track it?
-    // - let's just use fetched latest safe block from logs
+    pub current_sequence_number: Family<AccountLabel, Gauge>,
+    pub end_sequence_number:     Family<AccountLabel, Gauge>,
+    pub balance:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub collected_fee:           Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub total_gas_spent:         Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub requests:                Family<AccountLabel, Counter>,
+    pub requests_processed:      Family<AccountLabel, Counter>,
+    pub reveals:                 Family<AccountLabel, Counter>,
 }
 
 impl Metrics {
@@ -62,7 +58,7 @@ impl Metrics {
             http_requests.clone(),
         );
 
-        let current_sequence_number = Family::<ProviderLabel, Gauge>::default();
+        let current_sequence_number = Family::<AccountLabel, Gauge>::default();
         metrics_registry.register(
             // With the metric name.
             "current_sequence_number",
@@ -71,25 +67,25 @@ impl Metrics {
             current_sequence_number.clone(),
         );
 
-        let end_sequence_number = Family::<ProviderLabel, Gauge>::default();
+        let end_sequence_number = Family::<AccountLabel, Gauge>::default();
         metrics_registry.register(
             // With the metric name.
             "end_sequence_number",
             // And the metric help text.
-            "The sequence number for the last request.",
+            "The sequence number for the end request.",
             end_sequence_number.clone(),
         );
 
-        let requests = Family::<ProviderLabel, Counter>::default();
+        let requests = Family::<AccountLabel, Counter>::default();
         metrics_registry.register(
             // With the metric name.
             "requests",
             // And the metric help text.
-            "Number of requests received",
+            "Number of requests received through events",
             requests.clone(),
         );
 
-        let requests_processed = Family::<ProviderLabel, Counter>::default();
+        let requests_processed = Family::<AccountLabel, Counter>::default();
         metrics_registry.register(
             // With the metric name.
             "requests_processed",
@@ -98,7 +94,7 @@ impl Metrics {
             requests_processed.clone(),
         );
 
-        let reveals = Family::<ProviderLabel, Counter>::default();
+        let reveals = Family::<AccountLabel, Counter>::default();
         metrics_registry.register(
             // With the metric name.
             "reveal",
@@ -107,7 +103,7 @@ impl Metrics {
             reveals.clone(),
         );
 
-        let balance = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        let balance = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         metrics_registry.register(
             // With the metric name.
             "balance",
@@ -116,7 +112,7 @@ impl Metrics {
             balance.clone(),
         );
 
-        let collected_fee = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        let collected_fee = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         metrics_registry.register(
             // With the metric name.
             "collected_fee",
@@ -125,7 +121,7 @@ impl Metrics {
             collected_fee.clone(),
         );
 
-        let total_gas_spent = Family::<ProviderLabel, Gauge<f64, AtomicU64>>::default();
+        let total_gas_spent = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         metrics_registry.register(
             // With the metric name.
             "total_gas_spent",

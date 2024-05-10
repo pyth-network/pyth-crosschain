@@ -16,7 +16,7 @@ use {
         keeper,
         metrics::{
             self,
-            ProviderLabel,
+            AccountLabel,
         },
         state::{
             HashChainState,
@@ -274,7 +274,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
 pub async fn track_balance(
     config: Config,
-    keeper_address: Address,
+    address: Address,
     metrics_registry: Arc<metrics::Metrics>,
 ) {
     loop {
@@ -284,17 +284,21 @@ pub async fn track_balance(
                 Err(_e) => continue,
             };
 
-            let balance = match provider.get_balance(keeper_address, None).await {
+            let balance = match provider.get_balance(address, None).await {
+                // This conversion to u128 is fine as the total balance will never cross the limits
+                // of u128 practically.
                 Ok(r) => r.as_u128(),
                 Err(_e) => continue,
             };
+            // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
+            // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
             let balance = balance as f64 / 1e18;
 
             metrics_registry
                 .balance
-                .get_or_create(&ProviderLabel {
+                .get_or_create(&AccountLabel {
                     chain_id: chain_id.clone(),
-                    address:  keeper_address.to_string(),
+                    address:  address.to_string(),
                 })
                 // comment on why is this ok
                 .set(balance);
@@ -321,11 +325,14 @@ pub async fn track_collected_fee(
                     continue;
                 }
             };
+
+            // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
+            // The fee is in wei, so we need to divide by 1e18 to convert it to eth.
             let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
 
             metrics_registry
                 .collected_fee
-                .get_or_create(&ProviderLabel {
+                .get_or_create(&AccountLabel {
                     chain_id: chain_id.clone(),
                     address:  provider_address.to_string(),
                 })
@@ -359,15 +366,17 @@ pub async fn track_hashchain(
 
             metrics_registry
                 .current_sequence_number
-                .get_or_create(&ProviderLabel {
+                .get_or_create(&AccountLabel {
                     chain_id: chain_id.clone(),
                     address:  provider_address.to_string(),
                 })
-                // TODO: comment on i64 to u64 conversion
+                // sequence_number type on chain is u64 but practically it will take
+                // a long time for it to cross the limits of i64.
+                // currently prometheus only supports i64 for Gauge types
                 .set(current_sequence_number as i64);
             metrics_registry
                 .end_sequence_number
-                .get_or_create(&ProviderLabel {
+                .get_or_create(&AccountLabel {
                     chain_id: chain_id.clone(),
                     address:  provider_address.to_string(),
                 })

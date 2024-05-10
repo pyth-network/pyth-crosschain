@@ -13,8 +13,8 @@ use {
         },
         config::EthereumConfig,
         metrics::{
+            AccountLabel,
             Metrics,
-            ProviderLabel,
         },
     },
     anyhow::{
@@ -29,6 +29,7 @@ use {
             Ws,
         },
         types::U256,
+        signers::Signer,
     },
     futures::StreamExt,
     std::sync::Arc,
@@ -239,20 +240,20 @@ pub async fn process_event(
                                 res
                             );
 
-                           if let Some(gas_used) = res.gas_used {
-                               let gas_used = gas_used.as_u128() as f64 / 1e18;
-                               metrics
-                                   .total_gas_spent
-                                   .get_or_create(&ProviderLabel {
-                                       chain_id: chain_config.id.clone(),
-                                       address: chain_config.provider_address.to_string(),
-                                   })
-                                   .inc_by(gas_used);
-                           }
+                            if let Some(gas_used) = res.gas_used {
+                                let gas_used = gas_used.as_u128() as f64 / 1e18;
+                                metrics
+                                    .total_gas_spent
+                                    .get_or_create(&AccountLabel {
+                                        chain_id: chain_config.id.clone(),
+                                        address:  contract.client().inner().inner().signer().address().to_string(),
+                                    })
+                                    .inc_by(gas_used);
+                            }
 
                             metrics
                                 .reveals
-                                .get_or_create(&ProviderLabel {
+                                .get_or_create(&AccountLabel {
                                     chain_id: chain_config.id.clone(),
                                     address:  chain_config.provider_address.to_string(),
                                 })
@@ -359,7 +360,7 @@ pub async fn process_single_block_batch(
                 for event in &events {
                     metrics
                         .requests
-                        .get_or_create(&ProviderLabel {
+                        .get_or_create(&AccountLabel {
                             chain_id: chain_state.id.clone(),
                             address:  chain_state.provider_address.to_string(),
                         })
@@ -386,7 +387,7 @@ pub async fn process_single_block_batch(
                     tracing::info!(sequence_number = &event.sequence_number, "Processed event",);
                     metrics
                         .requests_processed
-                        .get_or_create(&ProviderLabel {
+                        .get_or_create(&AccountLabel {
                             chain_id: chain_state.id.clone(),
                             address:  chain_state.provider_address.to_string(),
                         })
