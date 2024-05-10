@@ -1,5 +1,4 @@
 use {
-    crate::api::ChainId,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -16,12 +15,6 @@ use {
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
     pub value: String,
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct RpcLabel {
-    pub chain_id: ChainId,
-    pub uri:      String,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
