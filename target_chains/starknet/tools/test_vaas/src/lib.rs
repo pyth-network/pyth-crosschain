@@ -1,4 +1,8 @@
+use alloy_primitives::FixedBytes;
+use byteorder::{WriteBytesExt, BE};
+use libsecp256k1::{sign, Message, PublicKey, SecretKey};
 use primitive_types::U256;
+use wormhole_vaas::{keccak256, GuardianSetSig, Vaa, VaaBody, VaaHeader, Writeable};
 
 /// A data format compatible with `pyth::byte_array::ByteArray`.
 struct CairoByteArrayData {
@@ -56,3 +60,78 @@ pub fn print_as_array_and_last(data: &[u8]) {
     println!("];");
     println!("let last = {};", data.num_last_bytes);
 }
+
+pub struct GuardianSet {
+    pub set_index: u32,
+    pub secrets: Vec<SecretKey>,
+}
+
+impl GuardianSet {
+    pub fn sign_vaa(&self, indexes: &[usize], body: VaaBody) -> Vaa {
+        const VERSION: u8 = 1;
+
+        let mut data = Vec::new();
+        body.write(&mut data).unwrap();
+        let double_hash = keccak256(keccak256(&data));
+        let message = Message::parse_slice(&*double_hash).unwrap();
+
+        let mut signatures = Vec::new();
+        for &index in indexes {
+            let (signature, recovery_key) = sign(&message, &self.secrets[index]);
+            let mut signature_bytes = signature.serialize().to_vec();
+            signature_bytes.push(recovery_key.serialize());
+            signatures.push(GuardianSetSig {
+                guardian_set_index: index.try_into().unwrap(),
+                signature: FixedBytes::from_slice(&signature_bytes),
+            });
+        }
+        Vaa {
+            header: VaaHeader {
+                version: VERSION,
+                guardian_set_index: self.set_index,
+                signatures,
+            },
+            body,
+        }
+    }
+}
+
+pub fn eth_address(public_key: &PublicKey) -> EthAddress {
+    let hash = keccak256(&public_key.serialize()[1..]);
+    EthAddress(hash[hash.len() - 20..].to_vec())
+}
+
+pub struct GuardianSetUpgrade {
+    pub chain_id: u16,
+    pub set_index: u32,
+    pub guardians: Vec<EthAddress>,
+}
+
+pub fn u256_to_be(value: U256) -> [u8; 32] {
+    let mut buf = [0; 32];
+    value.to_big_endian(&mut buf);
+    buf
+}
+
+impl GuardianSetUpgrade {
+    pub fn serialize(&self) -> Vec<u8> {
+        let mut payload = Vec::new();
+        payload.extend_from_slice(&u256_to_be(0x436f7265.into())); // module
+        payload.push(2); // action
+        payload.write_u16::<BE>(self.chain_id).unwrap();
+        payload.write_u32::<BE>(self.set_index).unwrap();
+        payload.push(self.guardians.len().try_into().unwrap());
+        for guardian in &self.guardians {
+            payload.extend_from_slice(&guardian.0);
+        }
+        payload
+    }
+}
+
+pub fn serialize_vaa(vaa: Vaa) -> Vec<u8> {
+    let mut vaa_bytes = Vec::new();
+    vaa.write(&mut vaa_bytes).unwrap();
+    vaa_bytes
+}
+
+pub struct EthAddress(pub Vec<u8>);

@@ -23,3 +23,7 @@ jobs:
         run: cargo clippy --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --all-targets -- --deny warnings
       - name: Run wormhole_mainnet_upgrades binary
         run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin wormhole_mainnet_upgrades
+      - name: Run generate_keypair binary
+        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_keypair
+      - name: Run generate_wormhole_vaas binary
+        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_wormhole_vaas
