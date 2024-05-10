@@ -1,6 +1,5 @@
 #![allow(clippy::just_underscores_and_digits)]
 #![feature(slice_flatten)]
-#![feature(integer_atomics)]
 
 use {
     anyhow::Result,
