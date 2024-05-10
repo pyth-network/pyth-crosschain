@@ -1,0 +1,8 @@
+[package]
+name = "test_vaas"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hex = "0.4.3"
+primitive-types = "0.12.2"
