@@ -57,7 +57,7 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-const TRACK_DURATION: Duration = Duration::from_secs(10);
+const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
@@ -306,7 +306,7 @@ pub async fn track_balance(
                 .set(balance);
         }
 
-        time::sleep(TRACK_DURATION).await;
+        time::sleep(TRACK_INTERVAL).await;
     }
 }
 
@@ -344,7 +344,7 @@ pub async fn track_collected_fee(
                 .set(collected_fee);
         }
 
-        time::sleep(TRACK_DURATION).await;
+        time::sleep(TRACK_INTERVAL).await;
     }
 }
 
@@ -391,6 +391,6 @@ pub async fn track_hashchain(
                 .set(end_sequence_number as i64);
         }
 
-        time::sleep(TRACK_DURATION).await;
+        time::sleep(TRACK_INTERVAL).await;
     }
 }
