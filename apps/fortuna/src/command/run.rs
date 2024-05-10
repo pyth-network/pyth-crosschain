@@ -57,7 +57,7 @@ use {
     utoipa_swagger_ui::SwaggerUi,
 };
 
-let TRACK_DURATION = Duration::from_secs(10);
+const TRACK_DURATION: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
