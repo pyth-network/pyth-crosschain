@@ -1,6 +1,7 @@
 import {
   parseAccumulatorUpdateData,
   parsePriceFeedMessage,
+  sliceAccumulatorUpdateData,
 } from "../AccumulatorUpdateData";
 
 // This is just a sample update data from hermes
@@ -9,7 +10,11 @@ const TEST_ACCUMULATOR_UPDATE_DATA =
 describe("Test parse accumulator update", () => {
   test("Happy path", async () => {
     const { vaa, updates } = parseAccumulatorUpdateData(
-      Buffer.from(TEST_ACCUMULATOR_UPDATE_DATA, "base64")
+      sliceAccumulatorUpdateData(
+        Buffer.from(TEST_ACCUMULATOR_UPDATE_DATA, "base64"),
+        0,
+        1
+      )
     );
 
     const priceMessage = parsePriceFeedMessage(updates[0].message);
