@@ -65,7 +65,7 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
 }
 
 /**
- * An AccumulatorUpdateData contains a VAA and a list of updates. This functions returns a new serialized AccumulatorUpdateData with only the price updates in the range [start, end).
+ * An AccumulatorUpdateData contains a VAA and a list of updates. This function returns a new serialized AccumulatorUpdateData with only the updates in the range [start, end).
  */
 export function sliceAccumulatorUpdateData(
   data: Buffer,
