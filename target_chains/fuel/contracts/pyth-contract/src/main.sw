@@ -535,6 +535,8 @@ impl PythInit for Contract {
         storage.chain_id.write(chain_id);
         storage.last_executed_governance_sequence.write(0);
 
+        storage.current_implementation.write(Identity::Address(Address::from(ZERO_B256)));
+
         // This function revokes ownership of the current owner and disallows any new owners. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L89-L99
         renounce_ownership();
 
