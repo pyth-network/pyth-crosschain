@@ -13,11 +13,7 @@ use {
             ProviderConfig,
             RunOptions,
         },
-        keeper,
-        metrics::{
-            self,
-            AccountLabel,
-        },
+        keeper::{self,},
         state::{
             HashChainState,
             PebbleHashChain,
@@ -29,24 +25,11 @@ use {
         Result,
     },
     axum::Router,
-    ethers::{
-        middleware::Middleware,
-        providers::{
-            Http,
-            Provider,
-        },
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-        types::Address,
-    },
     prometheus_client::registry::Registry,
     std::{
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
-        time::Duration,
     },
     tokio::{
         spawn,
@@ -54,14 +37,11 @@ use {
             watch,
             RwLock,
         },
-        time,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
-
-const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
@@ -122,7 +102,7 @@ pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
     config: Config,
     private_key: String,
-    metrics_registry: Arc<metrics::Metrics>,
+    metrics_registry: Arc<RwLock<Registry>>,
 ) -> Result<()> {
     let mut handles = Vec::new();
     for (chain_id, chain_config) in chains {
@@ -241,160 +221,18 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    let registry = Arc::new(RwLock::new(Registry::default()));
-
-
-    let metrics_registry = Arc::new(metrics::Metrics::new());
+    let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
     if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
-        let keeper_address = keeper_private_key.parse::<LocalWallet>()?.address();
-
         spawn(run_keeper(
             chains.clone(),
             config.clone(),
             keeper_private_key,
             metrics_registry.clone(),
         ));
-
-        spawn(track_balance(
-            config.clone(),
-            keeper_address,
-            metrics_registry.clone(),
-        ));
     }
 
-    spawn(track_hashchain(
-        config.clone(),
-        opts.provider.clone(),
-        metrics_registry.clone(),
-    ));
-    spawn(track_collected_fee(
-        config.clone(),
-        opts.provider.clone(),
-        metrics_registry.clone(),
-    ));
-    run_api(opts.addr.clone(), chains, registry.clone(), rx_exit).await?;
+    run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
 
     Ok(())
-}
-
-/// tracks the balance of the given address for each chain in the given config periodically
-pub async fn track_balance(
-    config: Config,
-    address: Address,
-    metrics_registry: Arc<metrics::Metrics>,
-) {
-    loop {
-        for (chain_id, chain_config) in &config.chains {
-            let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-                Ok(r) => r,
-                Err(_e) => continue,
-            };
-
-            let balance = match provider.get_balance(address, None).await {
-                // This conversion to u128 is fine as the total balance will never cross the limits
-                // of u128 practically.
-                Ok(r) => r.as_u128(),
-                Err(_e) => continue,
-            };
-            // The f64 conversion is made to be able to serve metrics within the constraints of Prometheus.
-            // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
-            let balance = balance as f64 / 1e18;
-
-            metrics_registry
-                .balance
-                .get_or_create(&AccountLabel {
-                    chain_id: chain_id.clone(),
-                    address:  address.to_string(),
-                })
-                .set(balance);
-        }
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
-}
-
-/// tracks the collected fees of the given address for each chain in the given config periodically
-pub async fn track_collected_fee(
-    config: Config,
-    provider_address: Address,
-    metrics_registry: Arc<metrics::Metrics>,
-) {
-    loop {
-        for (chain_id, chain_config) in &config.chains {
-            let contract = match PythContract::from_config(chain_config) {
-                Ok(r) => r,
-                Err(_e) => continue,
-            };
-
-            let provider_info = match contract.get_provider_info(provider_address).call().await {
-                Ok(info) => info,
-                Err(_e) => {
-                    time::sleep(Duration::from_secs(5)).await;
-                    continue;
-                }
-            };
-
-            // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
-            // The fee is in wei, so we need to divide by 1e18 to convert it to eth.
-            let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
-
-            metrics_registry
-                .collected_fee
-                .get_or_create(&AccountLabel {
-                    chain_id: chain_id.clone(),
-                    address:  provider_address.to_string(),
-                })
-                .set(collected_fee);
-        }
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
-}
-
-/// tracks the current sequence number and end sequence number of the given provider address for
-/// each chain in the given config periodically
-pub async fn track_hashchain(
-    config: Config,
-    provider_address: Address,
-    metrics_registry: Arc<metrics::Metrics>,
-) {
-    loop {
-        for (chain_id, chain_config) in &config.chains {
-            let contract = match PythContract::from_config(chain_config) {
-                Ok(r) => r,
-                Err(_e) => continue,
-            };
-
-            let provider_info = match contract.get_provider_info(provider_address).call().await {
-                Ok(info) => info,
-                Err(_e) => {
-                    time::sleep(Duration::from_secs(5)).await;
-                    continue;
-                }
-            };
-            let current_sequence_number = provider_info.sequence_number;
-            let end_sequence_number = provider_info.end_sequence_number;
-
-            metrics_registry
-                .current_sequence_number
-                .get_or_create(&AccountLabel {
-                    chain_id: chain_id.clone(),
-                    address:  provider_address.to_string(),
-                })
-                // sequence_number type on chain is u64 but practically it will take
-                // a long time for it to cross the limits of i64.
-                // currently prometheus only supports i64 for Gauge types
-                .set(current_sequence_number as i64);
-            metrics_registry
-                .end_sequence_number
-                .get_or_create(&AccountLabel {
-                    chain_id: chain_id.clone(),
-                    address:  provider_address.to_string(),
-                })
-                .set(end_sequence_number as i64);
-        }
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
 }
