@@ -33,20 +33,9 @@ fn decode_event(event: @Event) -> PythEvent {
 fn update_price_feeds_works() {
     let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_and_init();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy(
-        owner,
-        wormhole.contract_address,
-        fee_contract.contract_address,
-        1000,
-        array![
-            DataSource {
-                emitter_chain_id: 26,
-                emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-            }
-        ]
-    );
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
     fee_contract.approve(pyth.contract_address, 10000);
@@ -88,16 +77,66 @@ fn update_price_feeds_works() {
     assert!(last_ema_price.publish_time == 1712589206);
 }
 
+#[test]
+#[should_panic(expected: ('todo',))]
+fn test_governance_instruction() {
+    let owner = 'owner'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract('fee_minter'.try_into().unwrap());
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth
+        .execute_governance_instruction(
+            ByteArrayImpl::new(
+                array_try_into(
+                    array![
+                        1766847064779996587365624568667043246291590523274145657502751050464410443,
+                        182147492092754791035110789954683447734750444021289139488583154515468770101,
+                        260016405939643347307460729490551925646487038190069904485177441375406260224,
+                        49565958604199796163020368,
+                        8072278384728444780182694421117884443886221966887092232,
+                    ]
+                ),
+                23
+            )
+        );
+}
+
+fn deploy_default(
+    owner: ContractAddress, wormhole_address: ContractAddress, fee_contract_address: ContractAddress
+) -> IPythDispatcher {
+    deploy(
+        owner,
+        wormhole_address,
+        fee_contract_address,
+        1000,
+        array![
+            DataSource {
+                emitter_chain_id: 26,
+                emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+            }
+        ],
+        1,
+        41,
+        0,
+    )
+}
+
+
 fn deploy(
     owner: ContractAddress,
     wormhole_address: ContractAddress,
     fee_contract_address: ContractAddress,
     single_update_fee: u256,
-    data_sources: Array<DataSource>
+    data_sources: Array<DataSource>,
+    governance_emitter_chain_id: u16,
+    governance_emitter_address: u256,
+    governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
     (owner, wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
-    data_sources.serialize(ref args);
+    (data_sources, governance_emitter_chain_id).serialize(ref args);
+    (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
