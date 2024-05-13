@@ -41,6 +41,7 @@ use {
         },
         types::Address,
     },
+    prometheus_client::registry::Registry,
     std::{
         collections::HashMap,
         net::SocketAddr,
@@ -49,7 +50,10 @@ use {
     },
     tokio::{
         spawn,
-        sync::watch,
+        sync::{
+            watch,
+            RwLock,
+        },
         time,
     },
     tower_http::cors::CorsLayer,
@@ -62,7 +66,7 @@ const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 pub async fn run_api(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
-    metrics_registry: Arc<metrics::Metrics>,
+    metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -84,10 +88,7 @@ pub async fn run_api(
     )]
     struct ApiDoc;
 
-    let api_state = api::ApiState {
-        chains:  Arc::new(chains),
-        metrics: metrics_registry,
-    };
+    let api_state = api::ApiState::new(chains, metrics_registry).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -240,6 +241,9 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
+    let registry = Arc::new(RwLock::new(Registry::default()));
+
+
     let metrics_registry = Arc::new(metrics::Metrics::new());
 
     if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
@@ -269,7 +273,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         opts.provider.clone(),
         metrics_registry.clone(),
     ));
-    run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
+    run_api(opts.addr.clone(), chains, registry.clone(), rx_exit).await?;
 
     Ok(())
 }

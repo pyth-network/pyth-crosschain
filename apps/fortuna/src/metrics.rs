@@ -13,11 +13,6 @@ use {
 };
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct RequestLabel {
-    pub value: String,
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct AccountLabel {
     pub chain_id: String,
     pub address:  String,
@@ -25,8 +20,6 @@ pub struct AccountLabel {
 
 pub struct Metrics {
     pub registry: RwLock<Registry>,
-
-    pub http_requests: Family<RequestLabel, Counter>,
 
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
@@ -41,13 +34,6 @@ pub struct Metrics {
 impl Metrics {
     pub fn new() -> Self {
         let mut metrics_registry = Registry::default();
-
-        let http_requests = Family::<RequestLabel, Counter>::default();
-        metrics_registry.register(
-            "http_requests",
-            "Number of HTTP requests received",
-            http_requests.clone(),
-        );
 
         let current_sequence_number = Family::<AccountLabel, Gauge>::default();
         metrics_registry.register(
@@ -99,7 +85,6 @@ impl Metrics {
 
         Metrics {
             registry: RwLock::new(metrics_registry),
-            http_requests,
             current_sequence_number,
             end_sequence_number,
             requests,

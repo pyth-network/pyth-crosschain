@@ -1,10 +1,8 @@
 use {
-    crate::{
-        api::{
-            ChainId,
-            RestError,
-        },
-        metrics::RequestLabel,
+    crate::api::{
+        ChainId,
+        RequestLabel,
+        RestError,
     },
     anyhow::Result,
     axum::{
