@@ -31,6 +31,7 @@ use {
         signers::Signer,
         types::{
             Address,
+            BlockNumber as EthereumBlockNumber,
             U256,
         },
     },
@@ -44,9 +45,15 @@ use {
         },
         registry::Registry,
     },
-    std::sync::{
-        atomic::AtomicU64,
-        Arc,
+    std::{
+        sync::{
+            atomic::AtomicU64,
+            Arc,
+        },
+        time::{
+            SystemTime,
+            UNIX_EPOCH,
+        },
     },
     tokio::{
         spawn,
@@ -82,6 +89,11 @@ pub struct AccountLabel {
     pub address:  String,
 }
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub struct ChainLabel {
+    pub chain_id: String,
+}
+
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
@@ -91,6 +103,7 @@ pub struct KeeperMetrics {
     pub requests:                Family<AccountLabel, Counter>,
     pub requests_processed:      Family<AccountLabel, Counter>,
     pub reveals:                 Family<AccountLabel, Counter>,
+    pub block_timestamp_lag:     Family<ChainLabel, Gauge>,
 }
 
 impl KeeperMetrics {
@@ -145,6 +158,13 @@ impl KeeperMetrics {
             total_gas_spent.clone(),
         );
 
+        let block_timestamp_lag = Family::<ChainLabel, Gauge>::default();
+        writable_registry.register(
+            "block_timestamp_lag",
+            "The difference between server timestamp and latest block timestamp",
+            block_timestamp_lag.clone(),
+        );
+
         KeeperMetrics {
             current_sequence_number,
             end_sequence_number,
@@ -154,6 +174,7 @@ impl KeeperMetrics {
             balance,
             collected_fee,
             total_gas_spent,
+            block_timestamp_lag,
         }
     }
 }
@@ -265,6 +286,16 @@ pub async fn run_keeper_threads(
             chain_state.id.clone(),
             chain_eth_config.clone(),
             chain_state.provider_address.clone(),
+            keeper_metrics.clone(),
+        )
+        .in_current_span(),
+    );
+
+    // spawn a thread to track latest block lag
+    spawn(
+        track_block_timestamp_lag(
+            chain_state.id.clone(),
+            chain_eth_config.clone(),
             keeper_metrics.clone(),
         )
         .in_current_span(),
@@ -784,6 +815,48 @@ pub async fn track_provider(
                 address:  provider_address.to_string(),
             })
             .set(end_sequence_number as i64);
+
+        time::sleep(TRACK_INTERVAL).await;
+    }
+}
+
+pub async fn track_block_timestamp_lag(
+    chain_id: String,
+    chain_config: EthereumConfig,
+    metrics_registry: Arc<KeeperMetrics>,
+) {
+    loop {
+        let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
+            Ok(r) => r,
+            Err(_e) => {
+                time::sleep(RETRY_INTERVAL).await;
+                continue;
+            }
+        };
+
+        match provider.get_block(EthereumBlockNumber::Latest).await {
+            Ok(b) => {
+                if let Some(block) = b {
+                    let block_timestamp = block.timestamp;
+                    let server_timestamp = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+                    let lag = server_timestamp - block_timestamp.as_u64();
+
+                    metrics_registry
+                        .block_timestamp_lag
+                        .get_or_create(&ChainLabel {
+                            chain_id: chain_id.clone(),
+                        })
+                        .set(lag as i64);
+                }
+            }
+            Err(_e) => {
+                time::sleep(RETRY_INTERVAL).await;
+                continue;
+            }
+        };
 
         time::sleep(TRACK_INTERVAL).await;
     }
