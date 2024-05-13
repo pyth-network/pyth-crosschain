@@ -1,0 +1,25 @@
+name: Check Starknet Tools
+
+on:
+  pull_request:
+    paths: [target_chains/starknet/tools/**]
+  push:
+    branches: [main]
+    paths: [target_chains/starknet/tools/**]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.78.0
+          components: rustfmt, clippy
+          override: true
+      - name: Check formatting
+        run: cargo fmt --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml -- --check
+      - name: Run clippy
+        run: cargo clippy --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --all-targets -- --deny warnings
+      - name: Run wormhole_mainnet_upgrades binary
+        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin wormhole_mainnet_upgrades
