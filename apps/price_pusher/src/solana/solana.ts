@@ -139,13 +139,13 @@ export class SolanaPricePusherJito implements IPricePusher {
         closeUpdateAccounts: true,
       });
       await transactionBuilder.addUpdatePriceFeed(
-        [
-          sliceAccumulatorUpdateData(
-            Buffer.from(priceFeedUpdateData[0], "base64"),
+        priceFeedUpdateData.map((x) => {
+          return sliceAccumulatorUpdateData(
+            Buffer.from(x, "base64"),
             i,
             i + UPDATES_PER_JITO_BUNDLE
-          ).toString("base64"),
-        ],
+          ).toString("base64");
+        }),
         this.shardId
       );
 
