@@ -1,5 +1,7 @@
 use {
+    super::traced_client::TracedClient,
     crate::{
+        api::ChainId,
         chain::reader::{
             self,
             BlockNumber,
@@ -34,7 +36,6 @@ use {
         },
         prelude::TransactionRequest,
         providers::{
-            Http,
             Middleware,
             Provider,
         },
@@ -48,11 +49,13 @@ use {
             U256,
         },
     },
+    prometheus_client::registry::Registry,
     sha3::{
         Digest,
         Keccak256,
     },
     std::sync::Arc,
+    tokio::sync::RwLock,
 };
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
@@ -64,11 +67,11 @@ abigen!(
 
 pub type SignablePythContract = PythRandom<
     TransformerMiddleware<
-        NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
+        NonceManagerMiddleware<SignerMiddleware<Provider<TracedClient>, LocalWallet>>,
         LegacyTxTransformer,
     >,
 >;
-pub type PythContract = PythRandom<Provider<Http>>;
+pub type PythContract = PythRandom<Provider<TracedClient>>;
 
 /// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
 #[derive(Clone, Debug)]
@@ -90,10 +93,14 @@ impl Transformer for LegacyTxTransformer {
 
 impl SignablePythContract {
     pub async fn from_config(
+        chain_id: ChainId,
         chain_config: &EthereumConfig,
         private_key: &str,
+        metrics_registry: Arc<RwLock<Registry>>,
     ) -> Result<SignablePythContract> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        let provider =
+            TracedClient::new_provider(chain_id, &chain_config.geth_rpc_addr, metrics_registry)
+                .await?;
         let chain_id = provider.get_chainid().await?;
 
         let transformer = LegacyTxTransformer {
@@ -184,8 +191,14 @@ impl SignablePythContract {
 }
 
 impl PythContract {
-    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+    pub async fn from_config(
+        chain_id: ChainId,
+        chain_config: &EthereumConfig,
+        metrics_registry: Arc<RwLock<Registry>>,
+    ) -> Result<PythContract> {
+        let provider =
+            TracedClient::new_provider(chain_id, &chain_config.geth_rpc_addr, metrics_registry)
+                .await?;
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
@@ -262,7 +275,7 @@ impl EntropyReader for PythContract {
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
     ) -> Result<Option<U256>> {
-        let result: Result<U256, ContractError<Provider<Http>>> = self
+        let result: Result<U256, ContractError<Provider<TracedClient>>> = self
             .reveal_with_callback(
                 provider,
                 sequence_number,

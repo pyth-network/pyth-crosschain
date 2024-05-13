@@ -132,10 +132,15 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         .map(|path| ProviderConfig::load(&path).expect("Failed to load provider config"));
     let secret = opts.randomness.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
+    let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
-        let contract = Arc::new(PythContract::from_config(&chain_config)?);
+        let contract = Arc::new(
+            PythContract::from_config(chain_id.clone(), &chain_config, metrics_registry.clone())
+                .await
+                .unwrap(),
+        );
         let provider_chain_config = provider_config
             .as_ref()
             .and_then(|c| c.get_chain_config(chain_id));
@@ -220,8 +225,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         Ok::<(), Error>(())
     });
-
-    let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
     if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
         spawn(run_keeper(

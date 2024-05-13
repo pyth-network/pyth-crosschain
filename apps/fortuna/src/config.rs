@@ -62,15 +62,14 @@ pub enum Options {
     /// Set up the provider for all the provided chains.
     /// It registers, re-registers, or updates provider config on chain.
     SetupProvider(SetupProviderOptions),
+    // / Request a random number from the contract.
+    // RequestRandomness(RequestRandomnessOptions),
 
-    /// Request a random number from the contract.
-    RequestRandomness(RequestRandomnessOptions),
+    // / Generate a random number by running the entire protocol end-to-end
+    // Generate(GenerateOptions),
 
-    /// Generate a random number by running the entire protocol end-to-end
-    Generate(GenerateOptions),
-
-    /// Get the status of a pending request for a random number.
-    GetRequest(GetRequestOptions),
+    // / Get the status of a pending request for a random number.
+    // GetRequest(GetRequestOptions),
 }
 
 #[derive(Args, Clone, Debug)]

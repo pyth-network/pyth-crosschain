@@ -2,9 +2,9 @@ use {
     crate::{
         api::get_register_uri,
         chain::ethereum::SignablePythContract,
-        command::{
-            register_provider,
-            register_provider::CommitmentMetadata,
+        command::register_provider::{
+            self,
+            CommitmentMetadata,
         },
         config::{
             Config,
@@ -28,7 +28,9 @@ use {
         },
         types::Bytes,
     },
+    prometheus_client::registry::Registry,
     std::sync::Arc,
+    tokio::sync::RwLock,
 };
 
 /// Setup provider for all the chains.
@@ -45,8 +47,15 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
     for (chain_id, chain_config) in &config.chains {
         // Initialize a Provider to interface with the EVM contract.
-        let contract =
-            Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
+        let contract = Arc::new(
+            SignablePythContract::from_config(
+                chain_id.clone(),
+                &chain_config,
+                &private_key,
+                Arc::new(RwLock::new(Registry::default())),
+            )
+            .await?,
+        );
 
         tracing::info!("{}: fetching provider info", chain_id);
         let provider_info = contract.get_provider_info(provider_address).call().await?;
@@ -107,7 +116,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 
         if register {
             tracing::info!("{}: registering", &chain_id);
-            register_provider(&RegisterProviderOptions {
+            register_provider::register_provider(&RegisterProviderOptions {
                 config: opts.config.clone(),
                 chain_id: chain_id.clone(),
                 private_key: private_key.clone(),

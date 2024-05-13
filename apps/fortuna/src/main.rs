@@ -36,11 +36,11 @@ async fn main() -> Result<()> {
     )?;
 
     match config::Options::parse() {
-        config::Options::GetRequest(opts) => command::get_request(&opts).await,
-        config::Options::Generate(opts) => command::generate(&opts).await,
+        // config::Options::GetRequest(opts) => command::get_request(&opts).await,
+        // config::Options::Generate(opts) => command::generate(&opts).await,
         config::Options::Run(opts) => command::run(&opts).await,
         config::Options::RegisterProvider(opts) => command::register_provider(&opts).await,
         config::Options::SetupProvider(opts) => command::setup_provider(&opts).await,
-        config::Options::RequestRandomness(opts) => command::request_randomness(&opts).await,
+        // config::Options::RequestRandomness(opts) => command::request_randomness(&opts).await,
     }
 }

@@ -16,7 +16,9 @@ use {
         },
         types::U256,
     },
+    prometheus_client::registry::Registry,
     std::sync::Arc,
+    tokio::sync::RwLock,
 };
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -31,8 +33,15 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
     let chain_config = Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?;
 
     // Initialize a Provider to interface with the EVM contract.
-    let contract =
-        Arc::new(SignablePythContract::from_config(&chain_config, &opts.private_key).await?);
+    let contract = Arc::new(
+        SignablePythContract::from_config(
+            opts.chain_id.clone(),
+            &chain_config,
+            &opts.private_key,
+            Arc::new(RwLock::new(Registry::default())),
+        )
+        .await?,
+    );
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
     let secret = opts.randomness.load_secret()?;

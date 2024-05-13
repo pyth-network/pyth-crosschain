@@ -3,6 +3,7 @@ use {
         api::{
             self,
             BlockchainState,
+            ChainId,
         },
         chain::{
             ethereum::{
@@ -13,6 +14,7 @@ use {
                 BlockNumber,
                 RequestedWithCallbackEvent,
             },
+            traced_client::TracedClient,
         },
         config::EthereumConfig,
     },
@@ -23,7 +25,6 @@ use {
     ethers::{
         contract::ContractError,
         providers::{
-            Http,
             Middleware,
             Provider,
             Ws,
@@ -95,6 +96,7 @@ pub struct ChainLabel {
 }
 
 pub struct KeeperMetrics {
+    pub metrics_registry:        Arc<RwLock<Registry>>,
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
     pub balance:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
@@ -165,7 +167,10 @@ impl KeeperMetrics {
             block_timestamp_lag.clone(),
         );
 
+        drop(writable_registry);
+
         KeeperMetrics {
+            metrics_registry: registry,
             current_sequence_number,
             end_sequence_number,
             requests,
@@ -225,9 +230,14 @@ pub async fn run_keeper_threads(
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
-        SignablePythContract::from_config(&chain_eth_config, &private_key)
-            .await
-            .expect("Chain config should be valid"),
+        SignablePythContract::from_config(
+            chain_state.id.clone(),
+            &chain_eth_config,
+            &private_key,
+            metrics.clone(),
+        )
+        .await
+        .expect("Chain config should be valid"),
     );
     let keeper_address = contract.client().inner().inner().signer().address();
 
@@ -720,20 +730,20 @@ pub async fn process_backlog(
 
 /// tracks the balance of the given address on the given chain periodically
 pub async fn track_balance(
-    chain_id: String,
+    chain_id: ChainId,
     chain_config: EthereumConfig,
     address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
+    metrics: Arc<KeeperMetrics>,
 ) {
-    loop {
-        let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
+    let provider = TracedClient::new_provider(
+        chain_id.clone(),
+        &chain_config.geth_rpc_addr,
+        metrics.metrics_registry.clone(),
+    )
+    .await
+    .unwrap();
 
+    loop {
         let balance = match provider.get_balance(address, None).await {
             // This conversion to u128 is fine as the total balance will never cross the limits
             // of u128 practically.
@@ -747,7 +757,7 @@ pub async fn track_balance(
         // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
         let balance = balance as f64 / 1e18;
 
-        metrics_registry
+        metrics
             .balance
             .get_or_create(&AccountLabel {
                 chain_id: chain_id.clone(),
@@ -764,17 +774,16 @@ pub async fn track_provider(
     chain_id: String,
     chain_config: EthereumConfig,
     provider_address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
+    metrics: Arc<KeeperMetrics>,
 ) {
+    let contract = PythContract::from_config(
+        chain_id.clone(),
+        &chain_config,
+        metrics.metrics_registry.clone(),
+    )
+    .await
+    .unwrap();
     loop {
-        let contract = match PythContract::from_config(&chain_config) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
-
         let provider_info = match contract.get_provider_info(provider_address).call().await {
             Ok(info) => info,
             Err(_e) => {
@@ -790,7 +799,7 @@ pub async fn track_provider(
         let current_sequence_number = provider_info.sequence_number;
         let end_sequence_number = provider_info.end_sequence_number;
 
-        metrics_registry
+        metrics
             .collected_fee
             .get_or_create(&AccountLabel {
                 chain_id: chain_id.clone(),
@@ -798,7 +807,7 @@ pub async fn track_provider(
             })
             .set(collected_fee);
 
-        metrics_registry
+        metrics
             .current_sequence_number
             .get_or_create(&AccountLabel {
                 chain_id: chain_id.clone(),
@@ -808,7 +817,7 @@ pub async fn track_provider(
             // a long time for it to cross the limits of i64.
             // currently prometheus only supports i64 for Gauge types
             .set(current_sequence_number as i64);
-        metrics_registry
+        metrics
             .end_sequence_number
             .get_or_create(&AccountLabel {
                 chain_id: chain_id.clone(),
@@ -823,17 +832,17 @@ pub async fn track_provider(
 pub async fn track_block_timestamp_lag(
     chain_id: String,
     chain_config: EthereumConfig,
-    metrics_registry: Arc<KeeperMetrics>,
+    metrics: Arc<KeeperMetrics>,
 ) {
-    loop {
-        let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
+    let provider = TracedClient::new_provider(
+        chain_id.clone(),
+        &chain_config.geth_rpc_addr,
+        metrics.metrics_registry.clone(),
+    )
+    .await
+    .unwrap();
 
+    loop {
         match provider.get_block(EthereumBlockNumber::Latest).await {
             Ok(b) => {
                 if let Some(block) = b {
@@ -844,7 +853,7 @@ pub async fn track_block_timestamp_lag(
                         .as_secs();
                     let lag = server_timestamp - block_timestamp.as_u64();
 
-                    metrics_registry
+                    metrics
                         .block_timestamp_lag
                         .get_or_create(&ChainLabel {
                             chain_id: chain_id.clone(),
