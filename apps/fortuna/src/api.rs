@@ -36,6 +36,7 @@ use {
 };
 pub use {
     chain_ids::*,
+    health::*,
     index::*,
     live::*,
     metrics::*,
@@ -44,6 +45,7 @@ pub use {
 };
 
 mod chain_ids;
+mod health;
 mod index;
 mod live;
 mod metrics;
@@ -184,6 +186,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
         )
+        .route("/health", get(health))
         .with_state(state)
 }
 
