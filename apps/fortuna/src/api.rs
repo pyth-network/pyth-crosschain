@@ -58,13 +58,14 @@ pub struct RequestLabel {
 }
 
 pub struct ApiMetrics {
-    pub metrics_registry: Arc<RwLock<Registry>>,
-    pub http_requests:    Family<RequestLabel, Counter>,
+    pub http_requests: Family<RequestLabel, Counter>,
 }
 
 #[derive(Clone)]
 pub struct ApiState {
     pub chains: Arc<HashMap<ChainId, BlockchainState>>,
+
+    pub metrics_registry: Arc<RwLock<Registry>>,
 
     /// Prometheus metrics
     pub metrics: Arc<ApiMetrics>,
@@ -77,19 +78,19 @@ impl ApiState {
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
-            metrics_registry,
         };
 
         let http_requests = metrics.http_requests.clone();
-        metrics.metrics_registry.write().await.register(
+        metrics_registry.write().await.register(
             "http_requests",
             "Number of HTTP requests received",
             http_requests,
         );
 
         ApiState {
-            chains:  Arc::new(chains),
+            chains: Arc::new(chains),
             metrics: Arc::new(metrics),
+            metrics_registry,
         }
     }
 }
