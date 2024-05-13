@@ -12,7 +12,6 @@ pub mod chain;
 pub mod command;
 pub mod config;
 pub mod keeper;
-pub mod metrics;
 pub mod state;
 
 // Server TODO list:
