@@ -61,7 +61,6 @@ pub async fn health(
         })
         .collect::<Vec<_>>();
 
-    // tokio await on threads
     let _ = futures::future::join_all(threads).await;
 
     let rpcs_health = rpcs_health.read().unwrap().clone();
