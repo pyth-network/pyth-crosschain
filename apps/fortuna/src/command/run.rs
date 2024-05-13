@@ -13,7 +13,7 @@ use {
             ProviderConfig,
             RunOptions,
         },
-        keeper::{self,},
+        keeper,
         state::{
             HashChainState,
             PebbleHashChain,
