@@ -26,12 +26,11 @@ pub struct RpcHealth {
     latest_block_number: Option<u64>,
 }
 
-/// Get the list of supported chain ids
 #[utoipa::path(
 get,
 path = "/health",
 responses(
-(status = 200, description = "Successfully retrieved the list of chain ids", body = RpcHealthResponse),
+(status = 200, description = "Successfully retrieved the health of rpcs", body = RpcHealthResponse),
 )
 )]
 pub async fn health(
