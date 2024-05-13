@@ -687,7 +687,7 @@ pub async fn process_backlog(
 }
 
 
-/// tracks the balance of the given address for each chain in the given config periodically
+/// tracks the balance of the given address on the given chain periodically
 pub async fn track_balance(
     chain_id: String,
     chain_config: EthereumConfig,
@@ -697,14 +697,20 @@ pub async fn track_balance(
     loop {
         let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
             Ok(r) => r,
-            Err(_e) => continue,
+            Err(_e) => {
+                time::sleep(RETRY_INTERVAL).await;
+                continue;
+            }
         };
 
         let balance = match provider.get_balance(address, None).await {
             // This conversion to u128 is fine as the total balance will never cross the limits
             // of u128 practically.
             Ok(r) => r.as_u128(),
-            Err(_e) => continue,
+            Err(_e) => {
+                time::sleep(RETRY_INTERVAL).await;
+                continue;
+            }
         };
         // The f64 conversion is made to be able to serve metrics within the constraints of Prometheus.
         // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
@@ -722,7 +728,7 @@ pub async fn track_balance(
     }
 }
 
-/// tracks the collected fees and the hashchain data of the given provider address for each chain in the given config periodically
+/// tracks the collected fees and the hashchain data of the given provider address on the given chain periodically
 pub async fn track_provider(
     chain_id: String,
     chain_config: EthereumConfig,
@@ -732,19 +738,22 @@ pub async fn track_provider(
     loop {
         let contract = match PythContract::from_config(&chain_config) {
             Ok(r) => r,
-            Err(_e) => continue,
+            Err(_e) => {
+                time::sleep(RETRY_INTERVAL).await;
+                continue;
+            }
         };
 
         let provider_info = match contract.get_provider_info(provider_address).call().await {
             Ok(info) => info,
             Err(_e) => {
-                time::sleep(Duration::from_secs(5)).await;
+                time::sleep(RETRY_INTERVAL).await;
                 continue;
             }
         };
 
         // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
-        // The fee is in wei, so we need to divide by 1e18 to convert it to eth.
+        // The fee is in wei, so we divide by 1e18 to convert it to eth.
         let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
 
         let current_sequence_number = provider_info.sequence_number;
