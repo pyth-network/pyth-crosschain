@@ -613,7 +613,7 @@ mod test {
     }
 
     pub async fn store_multiple_concurrent_valid_updates(state: Arc<State>, updates: Vec<Update>) {
-        let res = join_all(updates.into_iter().map(|u| (&state).store_update(u))).await;
+        let res = join_all(updates.into_iter().map(|u| state.store_update(u))).await;
         // Check that all store_update calls succeeded
         assert!(res.into_iter().all(|r| r.is_ok()));
     }
@@ -639,13 +639,13 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            (&*state).get_price_feed_ids().await,
+            (*state).get_price_feed_ids().await,
             vec![PriceIdentifier::new([100; 32])].into_iter().collect()
         );
 
         // Check get_price_feeds_with_update_data retrieves the correct
         // price feed with correct update data.
-        let price_feeds_with_update_data = (&*state)
+        let price_feeds_with_update_data = (*state)
             .get_price_feeds_with_update_data(
                 &[PriceIdentifier::new([100; 32])],
                 RequestTime::Latest,
@@ -764,7 +764,7 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            (&*state).get_price_feed_ids().await,
+            (*state).get_price_feed_ids().await,
             vec![
                 PriceIdentifier::new([100; 32]),
                 PriceIdentifier::new([200; 32])
@@ -774,7 +774,7 @@ mod test {
         );
 
         // Check that price feed 2 exists
-        assert!((&*state)
+        assert!((*state)
             .get_price_feeds_with_update_data(
                 &[PriceIdentifier::new([200; 32])],
                 RequestTime::Latest,
@@ -801,11 +801,11 @@ mod test {
 
         // Check that price feed 2 does not exist anymore
         assert_eq!(
-            (&*state).get_price_feed_ids().await,
+            (*state).get_price_feed_ids().await,
             vec![PriceIdentifier::new([100; 32]),].into_iter().collect()
         );
 
-        assert!((&*state)
+        assert!((*state)
             .get_price_feeds_with_update_data(
                 &[PriceIdentifier::new([200; 32])],
                 RequestTime::Latest,
@@ -847,7 +847,7 @@ mod test {
         MockClock::advance(Duration::from_secs(1));
 
         // Get the price feeds with update data
-        let price_feeds_with_update_data = (&*state)
+        let price_feeds_with_update_data = (*state)
             .get_price_feeds_with_update_data(
                 &[PriceIdentifier::new([100; 32])],
                 RequestTime::Latest,
@@ -873,13 +873,13 @@ mod test {
             .unwrap();
 
         // Check the state is ready
-        assert!((&state).is_ready().await);
+        assert!(state.is_ready().await);
 
         // Advance the clock to make the prices stale
         MockClock::advance_system_time(READINESS_STALENESS_THRESHOLD);
         MockClock::advance(READINESS_STALENESS_THRESHOLD);
         // Check the state is not ready
-        assert!(!(&state).is_ready().await);
+        assert!(!state.is_ready().await);
     }
 
     /// Test that the state retains the latest slots upon cache eviction.
@@ -922,7 +922,7 @@ mod test {
 
         // Check the last 100 slots are retained
         for slot in 900..1000 {
-            let price_feeds_with_update_data = (&*state)
+            let price_feeds_with_update_data = (*state)
                 .get_price_feeds_with_update_data(
                     &[
                         PriceIdentifier::new([100; 32]),
@@ -939,7 +939,7 @@ mod test {
 
         // Check nothing else is retained
         for slot in 0..900 {
-            assert!((&*state)
+            assert!((*state)
                 .get_price_feeds_with_update_data(
                     &[
                         PriceIdentifier::new([100; 32]),

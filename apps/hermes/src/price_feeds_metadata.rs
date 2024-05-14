@@ -16,6 +16,12 @@ pub struct PriceFeedMetaState {
     pub data: RwLock<Vec<PriceFeedMetadata>>,
 }
 
+impl Default for PriceFeedMetaState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PriceFeedMetaState {
     pub fn new() -> Self {
         Self {

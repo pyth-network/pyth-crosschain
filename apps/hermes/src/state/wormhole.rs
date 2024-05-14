@@ -61,6 +61,12 @@ pub struct WormholeState {
     guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
 }
 
+impl Default for WormholeState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WormholeState {
     pub fn new() -> Self {
         Self {

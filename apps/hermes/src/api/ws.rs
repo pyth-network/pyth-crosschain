@@ -355,7 +355,7 @@ where
             _ = self.exit.changed() => {
                 self.sender.close().await?;
                 self.closed = true;
-                return Err(anyhow!("Application is shutting down. Closing connection."));
+                Err(anyhow!("Application is shutting down. Closing connection."))
             }
         }
     }
