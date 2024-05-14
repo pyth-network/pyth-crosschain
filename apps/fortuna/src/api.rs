@@ -52,20 +52,45 @@ mod revelation;
 
 pub type ChainId = String;
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub struct RequestLabel {
+    pub value: String,
+}
+
+pub struct ApiMetrics {
+    pub http_requests: Family<RequestLabel, Counter>,
+}
+
 #[derive(Clone)]
 pub struct ApiState {
     pub chains: Arc<HashMap<ChainId, BlockchainState>>,
 
+    pub metrics_registry: Arc<RwLock<Registry>>,
+
     /// Prometheus metrics
-    pub metrics: Arc<Metrics>,
+    pub metrics: Arc<ApiMetrics>,
 }
 
 impl ApiState {
-    pub fn new(chains: &[(ChainId, BlockchainState)]) -> ApiState {
-        let map: HashMap<ChainId, BlockchainState> = chains.into_iter().cloned().collect();
+    pub async fn new(
+        chains: HashMap<ChainId, BlockchainState>,
+        metrics_registry: Arc<RwLock<Registry>>,
+    ) -> ApiState {
+        let metrics = ApiMetrics {
+            http_requests: Family::default(),
+        };
+
+        let http_requests = metrics.http_requests.clone();
+        metrics_registry.write().await.register(
+            "http_requests",
+            "Number of HTTP requests received",
+            http_requests,
+        );
+
         ApiState {
-            chains:  Arc::new(map),
-            metrics: Arc::new(Metrics::new()),
+            chains: Arc::new(chains),
+            metrics: Arc::new(metrics),
+            metrics_registry,
         }
     }
 }
@@ -87,38 +112,6 @@ pub struct BlockchainState {
     /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,
-}
-
-pub struct Metrics {
-    pub registry:        RwLock<Registry>,
-    // TODO: track useful metrics. this counter is just a placeholder to get things set up.
-    pub request_counter: Family<Label, Counter>,
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct Label {
-    value: String,
-}
-
-impl Metrics {
-    pub fn new() -> Self {
-        let mut metrics_registry = Registry::default();
-        let http_requests = Family::<Label, Counter>::default();
-
-        // Register the metric family with the registry.
-        metrics_registry.register(
-            // With the metric name.
-            "http_requests",
-            // And the metric help text.
-            "Number of HTTP requests received",
-            http_requests.clone(),
-        );
-
-        Metrics {
-            registry:        RwLock::new(metrics_registry),
-            request_counter: http_requests,
-        }
-    }
 }
 
 pub enum RestError {
@@ -225,7 +218,12 @@ mod test {
         },
         ethers::prelude::Address,
         lazy_static::lazy_static,
-        std::sync::Arc,
+        prometheus_client::registry::Registry,
+        std::{
+            collections::HashMap,
+            sync::Arc,
+        },
+        tokio::sync::RwLock,
     };
 
     const PROVIDER: Address = Address::zero();
@@ -243,7 +241,7 @@ mod test {
         ));
     }
 
-    fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
+    async fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
@@ -254,6 +252,8 @@ mod test {
             reveal_delay_blocks:    1,
             confirmed_block_status: BlockStatus::Latest,
         };
+
+        let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
@@ -266,10 +266,11 @@ mod test {
             confirmed_block_status: BlockStatus::Latest,
         };
 
-        let api_state = ApiState::new(&[
-            ("ethereum".into(), eth_state),
-            ("avalanche".into(), avax_state),
-        ]);
+        let mut chains = HashMap::new();
+        chains.insert("ethereum".into(), eth_state);
+        chains.insert("avalanche".into(), avax_state);
+
+        let api_state = ApiState::new(chains, metrics_registry).await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)
@@ -287,7 +288,7 @@ mod test {
 
     #[tokio::test]
     async fn test_revelation() {
-        let (server, eth_contract, avax_contract) = test_server();
+        let (server, eth_contract, avax_contract) = test_server().await;
 
         // Can't access a revelation if it hasn't been requested
         get_and_assert_status(
@@ -416,7 +417,7 @@ mod test {
 
     #[tokio::test]
     async fn test_revelation_confirmation_delay() {
-        let (server, eth_contract, avax_contract) = test_server();
+        let (server, eth_contract, avax_contract) = test_server().await;
 
         eth_contract.insert(PROVIDER, 0, 10, false);
         eth_contract.insert(PROVIDER, 1, 11, false);

@@ -1,7 +1,7 @@
 use {
     crate::api::{
         ChainId,
-        Label,
+        RequestLabel,
         RestError,
     },
     anyhow::Result,
@@ -45,8 +45,8 @@ pub async fn revelation(
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
-        .request_counter
-        .get_or_create(&Label {
+        .http_requests
+        .get_or_create(&RequestLabel {
             value: "/v1/chains/{chain_id}/revelations/{sequence}".to_string(),
         })
         .inc();
