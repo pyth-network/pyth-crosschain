@@ -92,6 +92,35 @@ export class SuiAuthorizeUpgradeContract extends PythGovernanceActionImpl {
   }
 }
 
+export class StarknetUpgradeContract extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
+
+  constructor(targetChainId: ChainName, readonly hash: string) {
+    super(targetChainId, "UpgradeContract");
+  }
+
+  static decode(data: Buffer): StarknetUpgradeContract | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeContract",
+      this.layout
+    );
+    if (!decoded) return undefined;
+
+    return new StarknetUpgradeContract(
+      decoded[0].targetChainId,
+      decoded[1].hash
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(StarknetUpgradeContract.layout, {
+      hash: this.hash,
+    });
+  }
+}
+
 export class EvmUpgradeContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(20, "address")]);
