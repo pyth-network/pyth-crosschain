@@ -183,7 +183,7 @@ async function run() {
             .postInstructions([
               ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 }),
             ])
-            .rpc({ skipPreflight: false });
+            .rpc({ skipPreflight: true });
         } catch (e) {
           if (SKIP_FAILED_REMOTE_INSTRUCTIONS) {
             console.error(e);
