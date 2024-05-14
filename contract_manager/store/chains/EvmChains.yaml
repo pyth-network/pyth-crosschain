@@ -574,3 +574,13 @@
   rpcUrl: https://rpc.hekla.taiko.xyz/
   networkId: 167009
   type: EvmChain
+- id: orange_testnet
+  mainnet: false
+  rpcUrl: https://subnets.avax.network/orangetest/testnet/rpc
+  networkId: 987
+  type: EvmChain
+- id: polygon_amoy
+  mainnet: false
+  rpcUrl: https://polygon-amoy-bor-rpc.publicnode.com
+  networkId: 80002
+  type: EvmChain
