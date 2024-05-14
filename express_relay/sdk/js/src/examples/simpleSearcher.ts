@@ -95,7 +95,7 @@ const argv = yargs(hideBin(process.argv))
   .option("bid", {
     description: "Bid amount in wei",
     type: "string",
-    default: "5",
+    default: "100",
   })
   .option("private-key", {
     description:
