@@ -241,28 +241,7 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // spawn a thread to track keeper balance
-    spawn(
-        track_balance(
-            chain_state.id.clone(),
-            chain_eth_config.clone(),
-            keeper_address.clone(),
-            keeper_metrics.clone(),
-        )
-        .in_current_span(),
-    );
-
-    // spawn a thread to track provider info
-    spawn(
-        track_provider(
-            chain_state.id.clone(),
-            chain_eth_config.clone(),
-            chain_state.provider_address.clone(),
-            keeper_metrics.clone(),
-        )
-        .in_current_span(),
-    );
-
+    // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
         async move {
             let chain_id = chain_state.id.clone();
@@ -713,7 +692,7 @@ pub async fn process_backlog(
 }
 
 
-/// tracks the balance of the given address on the given chain periodically
+/// tracks the balance of the given address on the given chain
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
     chain_id: String,
@@ -754,7 +733,7 @@ pub async fn track_balance(
         .set(balance);
 }
 
-/// tracks the collected fees and the hashchain data of the given provider address on the given chain periodically
+/// tracks the collected fees and the hashchain data of the given provider address on the given chain
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
     chain_id: String,
