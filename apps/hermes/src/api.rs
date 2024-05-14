@@ -1,7 +1,12 @@
 use {
     crate::{
         config::RunOptions,
-        state::State,
+        state::{
+            Aggregates,
+            Benchmarks,
+            Cache,
+            Metrics,
+        },
     },
     anyhow::Result,
     axum::{
@@ -24,7 +29,7 @@ mod rest;
 pub mod types;
 mod ws;
 
-pub struct ApiState<S = State> {
+pub struct ApiState<S> {
     pub state:   Arc<S>,
     pub ws:      Arc<ws::WsState>,
     pub metrics: Arc<metrics_middleware::ApiMetrics>,
@@ -42,12 +47,12 @@ impl<S> Clone for ApiState<S> {
     }
 }
 
-impl ApiState<State> {
-    pub fn new(
-        state: Arc<State>,
-        ws_whitelist: Vec<IpNet>,
-        requester_ip_header_name: String,
-    ) -> Self {
+impl<S> ApiState<S> {
+    pub fn new(state: Arc<S>, ws_whitelist: Vec<IpNet>, requester_ip_header_name: String) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
         Self {
             metrics: Arc::new(metrics_middleware::ApiMetrics::new(state.clone())),
             ws: Arc::new(ws::WsState::new(
@@ -61,7 +66,14 @@ impl ApiState<State> {
 }
 
 #[tracing::instrument(skip(opts, state))]
-pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
+pub async fn spawn<S>(opts: RunOptions, state: Arc<S>) -> Result<()>
+where
+    S: Aggregates,
+    S: Benchmarks,
+    S: Cache,
+    S: Metrics,
+    S: Send + Sync + 'static,
+{
     let state = {
         let opts = opts.clone();
         ApiState::new(
@@ -79,7 +91,14 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 #[tracing::instrument(skip(opts, state))]
-pub async fn run(opts: RunOptions, state: ApiState) -> Result<()> {
+pub async fn run<S>(opts: RunOptions, state: ApiState<S>) -> Result<()>
+where
+    S: Aggregates,
+    S: Benchmarks,
+    S: Cache,
+    S: Metrics,
+    S: Send + Sync + 'static,
+{
     tracing::info!(endpoint = %opts.rpc.listen_addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]

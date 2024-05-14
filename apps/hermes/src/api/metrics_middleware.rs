@@ -31,9 +31,7 @@ impl ApiMetrics {
     pub fn new<S>(state: Arc<S>) -> Self
     where
         S: Metrics,
-        S: Send,
-        S: Sync,
-        S: 'static,
+        S: Send + Sync + 'static,
     {
         let new = Self {
             requests:  Family::default(),
@@ -81,8 +79,8 @@ pub struct Labels {
     pub status: u16,
 }
 
-pub async fn track_metrics<B>(
-    State(api_state): State<ApiState>,
+pub async fn track_metrics<B, S>(
+    State(api_state): State<ApiState<S>>,
     req: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {

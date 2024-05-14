@@ -20,7 +20,6 @@ use {
     },
     crate::{
         network::wormhole::VaaBytes,
-        price_feeds_metadata::PriceFeedMeta,
         state::{
             benchmarks::Benchmarks,
             cache::{
@@ -28,6 +27,7 @@ use {
                 MessageState,
                 MessageStateFilter,
             },
+            price_feeds_metadata::PriceFeedMeta,
             State,
         },
     },
@@ -612,7 +612,11 @@ mod test {
         }
     }
 
-    pub async fn store_multiple_concurrent_valid_updates(state: Arc<State>, updates: Vec<Update>) {
+    pub async fn store_multiple_concurrent_valid_updates<S>(state: Arc<S>, updates: Vec<Update>)
+    where
+        S: Aggregates,
+        S: Send + Sync + 'static,
+    {
         let res = join_all(updates.into_iter().map(|u| state.store_update(u))).await;
         // Check that all store_update calls succeeded
         assert!(res.into_iter().all(|r| r.is_ok()));

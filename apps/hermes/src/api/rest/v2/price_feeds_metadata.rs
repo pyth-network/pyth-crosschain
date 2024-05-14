@@ -8,7 +8,7 @@ use {
             },
             ApiState,
         },
-        price_feeds_metadata::PriceFeedMeta,
+        state::price_feeds_metadata::PriceFeedMeta,
     },
     anyhow::Result,
     axum::{

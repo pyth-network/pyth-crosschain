@@ -9,9 +9,9 @@ use {
         benchmarks::BenchmarksState,
         cache::CacheState,
         metrics::MetricsState,
+        price_feeds_metadata::PriceFeedMetaState,
         wormhole::WormholeState,
     },
-    crate::price_feeds_metadata::PriceFeedMetaState,
     prometheus_client::registry::Registry,
     reqwest::Url,
     std::sync::Arc,
@@ -22,9 +22,25 @@ pub mod aggregate;
 pub mod benchmarks;
 pub mod cache;
 pub mod metrics;
+pub mod price_feeds_metadata;
 pub mod wormhole;
 
-pub struct State {
+// Expose State interfaces and types for other modules.
+pub use {
+    aggregate::Aggregates,
+    benchmarks::Benchmarks,
+    cache::Cache,
+    metrics::Metrics,
+    price_feeds_metadata::PriceFeedMeta,
+    wormhole::Wormhole,
+};
+
+/// State contains all relevant shared application state.
+///
+/// This type is intentionally not exposed, forcing modules to interface with the
+/// various API's using the provided traits. This is done to enforce separation of
+/// concerns and to avoid direct manipulation of state.
+struct State {
     /// State for the `Cache` service for short-lived storage of updates.
     pub cache: CacheState,
 
@@ -44,36 +60,40 @@ pub struct State {
     pub metrics: MetricsState,
 }
 
-impl State {
-    pub fn new(
-        update_tx: Sender<AggregationEvent>,
-        cache_size: u64,
-        benchmarks_endpoint: Option<Url>,
-    ) -> Arc<Self> {
-        let mut metrics_registry = Registry::default();
-        Arc::new(Self {
-            cache:           CacheState::new(cache_size),
-            benchmarks:      BenchmarksState::new(benchmarks_endpoint),
-            price_feed_meta: PriceFeedMetaState::new(),
-            aggregates:      AggregateState::new(update_tx, &mut metrics_registry),
-            wormhole:        WormholeState::new(),
-            metrics:         MetricsState::new(metrics_registry),
-        })
-    }
+pub fn new(
+    update_tx: Sender<AggregationEvent>,
+    cache_size: u64,
+    benchmarks_endpoint: Option<Url>,
+) -> Arc<impl Metrics + Wormhole> {
+    let mut metrics_registry = Registry::default();
+    Arc::new(State {
+        cache:           CacheState::new(cache_size),
+        benchmarks:      BenchmarksState::new(benchmarks_endpoint),
+        price_feed_meta: PriceFeedMetaState::new(),
+        aggregates:      AggregateState::new(update_tx, &mut metrics_registry),
+        wormhole:        WormholeState::new(),
+        metrics:         MetricsState::new(metrics_registry),
+    })
 }
 
 #[cfg(test)]
 pub mod test {
     use {
-        self::wormhole::Wormhole,
-        super::*,
+        super::{
+            aggregate::AggregationEvent,
+            Aggregates,
+            Wormhole,
+        },
         crate::network::wormhole::GuardianSet,
+        std::sync::Arc,
         tokio::sync::broadcast::Receiver,
     };
 
-    pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
+    pub async fn setup_state(
+        cache_size: u64,
+    ) -> (Arc<impl Aggregates>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::broadcast::channel(1000);
-        let state = State::new(update_tx, cache_size, None);
+        let state = super::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0
         Wormhole::update_guardian_set(

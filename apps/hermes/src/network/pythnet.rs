@@ -11,18 +11,17 @@ use {
             GuardianSet,
             GuardianSetData,
         },
-        price_feeds_metadata::{
-            PriceFeedMeta,
-            DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
-        },
         state::{
             aggregate::{
                 AccumulatorMessages,
                 Aggregates,
                 Update,
             },
+            price_feeds_metadata::{
+                PriceFeedMeta,
+                DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
+            },
             wormhole::Wormhole,
-            State,
         },
     },
     anyhow::{
@@ -139,7 +138,12 @@ async fn fetch_bridge_data(
     }
 }
 
-pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<!> {
+pub async fn run<S>(store: Arc<S>, pythnet_ws_endpoint: String) -> Result<!>
+where
+    S: Aggregates,
+    S: Wormhole,
+    S: Send + Sync + 'static,
+{
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {
@@ -222,6 +226,7 @@ async fn fetch_existing_guardian_sets<S>(
 ) -> Result<()>
 where
     S: Wormhole,
+    S: Send + Sync + 'static,
 {
     let client = RpcClient::new(pythnet_http_endpoint.to_string());
     let bridge = fetch_bridge_data(&client, &wormhole_contract_addr).await?;
@@ -261,7 +266,11 @@ where
 }
 
 #[tracing::instrument(skip(opts, state))]
-pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
+pub async fn spawn<S>(opts: RunOptions, state: Arc<S>) -> Result<()>
+where
+    S: Wormhole,
+    S: Send + Sync + 'static,
+{
     tracing::info!(endpoint = opts.pythnet.ws_addr, "Started Pythnet Listener.");
 
     // Create RpcClient instance here

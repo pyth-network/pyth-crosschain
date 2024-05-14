@@ -7,10 +7,7 @@
 use {
     crate::{
         config::RunOptions,
-        state::{
-            wormhole::Wormhole,
-            State,
-        },
+        state::wormhole::Wormhole,
     },
     anyhow::{
         anyhow,
@@ -118,7 +115,11 @@ mod proto {
 
 // Launches the Wormhole gRPC service.
 #[tracing::instrument(skip(opts, state))]
-pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
+pub async fn spawn<S>(opts: RunOptions, state: Arc<S>) -> Result<()>
+where
+    S: Wormhole,
+    S: Send + Sync + 'static,
+{
     let mut exit = crate::EXIT.subscribe();
     loop {
         let current_time = Instant::now();
@@ -142,9 +143,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 async fn run<S>(opts: RunOptions, state: Arc<S>) -> Result<!>
 where
     S: Wormhole,
-    S: Sync,
-    S: Send,
-    S: 'static,
+    S: Send + Sync + 'static,
 {
     let mut client = SpyRpcServiceClient::connect(opts.wormhole.spy_rpc_addr).await?;
     let mut stream = client
