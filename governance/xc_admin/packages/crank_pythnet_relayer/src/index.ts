@@ -11,6 +11,7 @@ import {
 import {
   AccountMeta,
   Commitment,
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -177,6 +178,11 @@ async function run() {
             })
             .remainingAccounts(extraAccountMetas)
             .preInstructions(preInstructions)
+            // Use a high compute unit limit to avoid running out of compute units
+            // as some operations can use a lot of compute units.
+            .postInstructions([
+              ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 }),
+            ])
             .rpc({ skipPreflight: true });
         } catch (e) {
           if (SKIP_FAILED_REMOTE_INSTRUCTIONS) {
