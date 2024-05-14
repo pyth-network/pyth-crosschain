@@ -14,12 +14,22 @@ impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceActionError {
     AccessDenied,
+    Wormhole: pyth::wormhole::ParseAndVerifyVmError,
+    InvalidGovernanceDataSource,
+    OldGovernanceMessage,
+    InvalidGovernanceTarget,
+    InvalidGovernanceMessage,
 }
 
 impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
     fn into(self: GovernanceActionError) -> felt252 {
         match self {
             GovernanceActionError::AccessDenied => 'access denied',
+            GovernanceActionError::Wormhole(err) => err.into(),
+            GovernanceActionError::InvalidGovernanceDataSource => 'invalid governance data source',
+            GovernanceActionError::OldGovernanceMessage => 'old governance message',
+            GovernanceActionError::InvalidGovernanceTarget => 'invalid governance target',
+            GovernanceActionError::InvalidGovernanceMessage => 'invalid governance message',
         }
     }
 }

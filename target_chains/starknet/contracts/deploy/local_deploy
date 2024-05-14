@@ -72,6 +72,9 @@ pyth_address=$(starkli deploy "${pyth_hash}" \
     1 `# num_data_sources` \
     26 `# emitter_chain_id` \
     58051393581875729396504816158954007153 299086580781278228892874716333010393740 `# emitter_address` \
+    1 `# governance_emitter_chain_id` \
+    41 0 `# governance_emitter_address` \
+    0 `# governance_initial_sequence` \
 )
 
 ${sleep}

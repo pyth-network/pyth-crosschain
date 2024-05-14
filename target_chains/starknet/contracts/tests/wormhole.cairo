@@ -8,7 +8,7 @@ use core::panic_with_felt252;
 
 #[test]
 fn test_parse_and_verify_vm_works() {
-    let dispatcher = deploy_and_init();
+    let dispatcher = deploy_with_mainnet_guardians();
 
     let vm = dispatcher.parse_and_verify_vm(good_vm1());
     assert!(vm.version == 1);
@@ -37,7 +37,7 @@ fn test_parse_and_verify_vm_works() {
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, random2: usize) {
-    let dispatcher = deploy_and_init();
+    let dispatcher = deploy_with_mainnet_guardians();
 
     let input = corrupted_vm(good_vm1(), pos, random1, random2);
     let vm = dispatcher.parse_and_verify_vm(input);
@@ -47,12 +47,7 @@ fn test_parse_and_verify_vm_rejects_corrupted_vm(pos: usize, random1: usize, ran
 #[test]
 #[should_panic(expected: ('wrong governance contract',))]
 fn test_submit_guardian_set_rejects_invalid_emitter() {
-    let dispatcher = deploy(
-        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
-        CHAIN_ID,
-        GOVERNANCE_CHAIN_ID,
-        GOVERNANCE_CONTRACT
-    );
+    let dispatcher = deploy_with_test_guardian();
 
     dispatcher
         .submit_new_guardian_set(
@@ -84,12 +79,7 @@ fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
 #[test]
 #[should_panic(expected: ('invalid guardian set sequence',))]
 fn test_submit_guardian_set_rejects_wrong_index_in_payload() {
-    let dispatcher = deploy(
-        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
-        CHAIN_ID,
-        GOVERNANCE_CHAIN_ID,
-        GOVERNANCE_CONTRACT
-    );
+    let dispatcher = deploy_with_test_guardian();
 
     dispatcher
         .submit_new_guardian_set(
@@ -118,12 +108,7 @@ fn test_deploy_rejects_empty() {
 #[test]
 #[should_panic(expected: ('no guardians specified',))]
 fn test_submit_guardian_set_rejects_empty() {
-    let dispatcher = deploy(
-        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
-        CHAIN_ID,
-        GOVERNANCE_CHAIN_ID,
-        GOVERNANCE_CONTRACT
-    );
+    let dispatcher = deploy_with_test_guardian();
 
     dispatcher
         .submit_new_guardian_set(
@@ -184,7 +169,7 @@ fn deploy(
     IWormholeDispatcher { contract_address }
 }
 
-pub fn deploy_and_init() -> IWormholeDispatcher {
+pub fn deploy_with_mainnet_guardians() -> IWormholeDispatcher {
     let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 
     dispatcher.submit_new_guardian_set(governance_upgrade_vm1());
@@ -193,6 +178,15 @@ pub fn deploy_and_init() -> IWormholeDispatcher {
     dispatcher.submit_new_guardian_set(governance_upgrade_vm4());
 
     dispatcher
+}
+
+pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
+    deploy(
+        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
+        CHAIN_ID,
+        GOVERNANCE_CHAIN_ID,
+        GOVERNANCE_CONTRACT
+    )
 }
 
 fn corrupted_vm(mut real_data: ByteArray, pos: usize, random1: usize, random2: usize) -> ByteArray {

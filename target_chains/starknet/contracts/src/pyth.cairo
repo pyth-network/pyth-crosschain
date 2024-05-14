@@ -16,7 +16,7 @@ mod pyth {
     use pyth::byte_array::{ByteArray, ByteArrayImpl};
     use core::panic_with_felt252;
     use core::starknet::{ContractAddress, get_caller_address, get_execution_info};
-    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
+    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError
     };
@@ -48,6 +48,8 @@ mod pyth {
         // For fast validation.
         is_valid_data_source: LegacyMap<DataSource, bool>,
         latest_price_info: LegacyMap<u256, PriceInfo>,
+        governance_data_source: DataSource,
+        last_executed_governance_sequence: u64,
     }
 
     /// Initializes the Pyth contract.
@@ -73,13 +75,25 @@ mod pyth {
         wormhole_address: ContractAddress,
         fee_contract_address: ContractAddress,
         single_update_fee: u256,
-        data_sources: Array<DataSource>
+        data_sources: Array<DataSource>,
+        governance_emitter_chain_id: u16,
+        governance_emitter_address: u256,
+        governance_initial_sequence: u64,
     ) {
         self.owner.write(wormhole_address);
         self.wormhole_address.write(wormhole_address);
         self.fee_contract_address.write(fee_contract_address);
         self.single_update_fee.write(single_update_fee);
         self.write_data_sources(data_sources);
+        self
+            .governance_data_source
+            .write(
+                DataSource {
+                    emitter_chain_id: governance_emitter_chain_id,
+                    emitter_address: governance_emitter_address,
+                }
+            );
+        self.last_executed_governance_sequence.write(governance_initial_sequence);
     }
 
     #[abi(embed_v0)]
@@ -171,6 +185,15 @@ mod pyth {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
             }
         }
+
+        fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            let vm = wormhole.parse_and_verify_vm(data);
+            self.verify_governance_vm(@vm);
+            //...
+            self.last_executed_governance_sequence.write(vm.sequence);
+            panic_with_felt252('todo');
+        }
     }
 
     #[generate_trait]
@@ -220,6 +243,19 @@ mod pyth {
 
         fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
             self.single_update_fee.read() * num_updates.into()
+        }
+
+        fn verify_governance_vm(self: @ContractState, vm: @VerifiedVM) {
+            let governance_data_source = self.governance_data_source.read();
+            if governance_data_source.emitter_chain_id != *vm.emitter_chain_id {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if governance_data_source.emitter_address != *vm.emitter_address {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if *vm.sequence <= self.last_executed_governance_sequence.read() {
+                panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
+            }
         }
     }
 }
