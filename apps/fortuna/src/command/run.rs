@@ -25,11 +25,31 @@ use {
         Result,
     },
     axum::Router,
-    prometheus_client::registry::Registry,
+    ethers::{
+        middleware::Middleware,
+        providers::{
+            Http,
+            Provider,
+        },
+        types::BlockNumber,
+    },
+    prometheus_client::{
+        encoding::EncodeLabelSet,
+        metrics::{
+            family::Family,
+            gauge::Gauge,
+        },
+        registry::Registry,
+    },
     std::{
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
+        time::{
+            Duration,
+            SystemTime,
+            UNIX_EPOCH,
+        },
     },
     tokio::{
         spawn,
@@ -37,11 +57,15 @@ use {
             watch,
             RwLock,
         },
+        time,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
+
+/// Track metrics in this interval
+const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
@@ -232,7 +256,74 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         ));
     }
 
-    run_api(opts.addr.clone(), chains, metrics_registry.clone(), rx_exit).await?;
+    // spawn a thread to track latest block lag
+    spawn(track_block_timestamp_lag(config, metrics_registry.clone()));
+
+    run_api(opts.addr.clone(), chains, metrics_registry, rx_exit).await?;
 
     Ok(())
+}
+
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub struct ChainLabel {
+    pub chain_id: String,
+}
+
+pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwLock<Registry>>) {
+    let metrics = Family::<ChainLabel, Gauge>::default();
+    metrics_registry.write().await.register(
+        "block_timestamp_lag",
+        "The difference between server timestamp and latest block timestamp",
+        metrics.clone(),
+    );
+    loop {
+        for (chain_id, chain_config) in &config.chains {
+            let chain_id = chain_id.clone();
+            let chain_config = chain_config.clone();
+            let metrics = metrics.clone();
+
+            spawn(async move {
+                let chain_id = chain_id.clone();
+                let chain_config = chain_config.clone();
+
+                let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        tracing::error!(
+                            "Failed to create provider for chain id {} - {:?}",
+                            &chain_id,
+                            e
+                        );
+                        return;
+                    }
+                };
+
+                match provider.get_block(BlockNumber::Latest).await {
+                    Ok(b) => {
+                        if let Some(block) = b {
+                            let block_timestamp = block.timestamp;
+                            let server_timestamp = SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap()
+                                .as_secs();
+                            let lag: i64 =
+                                (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
+
+                            metrics
+                                .get_or_create(&ChainLabel {
+                                    chain_id: chain_id.clone(),
+                                })
+                                .set(lag);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to get block for chain id {} - {:?}", &chain_id, e);
+                    }
+                };
+            });
+        }
+
+        time::sleep(TRACK_INTERVAL).await;
+    }
 }

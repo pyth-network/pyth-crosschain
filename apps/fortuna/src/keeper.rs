@@ -31,7 +31,6 @@ use {
         signers::Signer,
         types::{
             Address,
-            BlockNumber as EthereumBlockNumber,
             U256,
         },
     },
@@ -45,15 +44,9 @@ use {
         },
         registry::Registry,
     },
-    std::{
-        sync::{
-            atomic::AtomicU64,
-            Arc,
-        },
-        time::{
-            SystemTime,
-            UNIX_EPOCH,
-        },
+    std::sync::{
+        atomic::AtomicU64,
+        Arc,
     },
     tokio::{
         spawn,
@@ -89,11 +82,7 @@ pub struct AccountLabel {
     pub address:  String,
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct ChainLabel {
-    pub chain_id: String,
-}
-
+#[derive(Default)]
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
@@ -103,79 +92,62 @@ pub struct KeeperMetrics {
     pub requests:                Family<AccountLabel, Counter>,
     pub requests_processed:      Family<AccountLabel, Counter>,
     pub reveals:                 Family<AccountLabel, Counter>,
-    pub block_timestamp_lag:     Family<ChainLabel, Gauge>,
 }
 
 impl KeeperMetrics {
     pub async fn new(registry: Arc<RwLock<Registry>>) -> Self {
         let mut writable_registry = registry.write().await;
+        let keeper_metrics = KeeperMetrics::default();
 
-        let current_sequence_number = Family::<AccountLabel, Gauge>::default();
         writable_registry.register(
             "current_sequence_number",
-            "The sequence number for a new request.",
-            current_sequence_number.clone(),
+            "The sequence number for a new request",
+            keeper_metrics.current_sequence_number.clone(),
         );
 
-        let end_sequence_number = Family::<AccountLabel, Gauge>::default();
         writable_registry.register(
             "end_sequence_number",
-            "The sequence number for the end request.",
-            end_sequence_number.clone(),
+            "The sequence number for the end request",
+            keeper_metrics.end_sequence_number.clone(),
         );
 
-        let requests = Family::<AccountLabel, Counter>::default();
         writable_registry.register(
             "requests",
             "Number of requests received through events",
-            requests.clone(),
+            keeper_metrics.requests.clone(),
         );
 
-        let requests_processed = Family::<AccountLabel, Counter>::default();
         writable_registry.register(
             "requests_processed",
             "Number of requests processed",
-            requests_processed.clone(),
+            keeper_metrics.requests_processed.clone(),
         );
 
-        let reveals = Family::<AccountLabel, Counter>::default();
-        writable_registry.register("reveal", "Number of reveals", reveals.clone());
+        writable_registry.register(
+            "reveal",
+            "Number of reveals",
+            keeper_metrics.reveals.clone(),
+        );
 
-        let balance = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
-        writable_registry.register("balance", "Balance of the keeper", balance.clone());
+        writable_registry.register(
+            "balance",
+            "Balance of the keeper",
+            keeper_metrics.balance.clone(),
+        );
 
-        let collected_fee = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         writable_registry.register(
             "collected_fee",
             "Collected fee on the contract",
-            collected_fee.clone(),
+            keeper_metrics.collected_fee.clone(),
         );
 
-        let total_gas_spent = Family::<AccountLabel, Gauge<f64, AtomicU64>>::default();
         writable_registry.register(
             "total_gas_spent",
             "Total gas spent revealing requests",
-            total_gas_spent.clone(),
+            keeper_metrics.total_gas_spent.clone(),
         );
 
-        let block_timestamp_lag = Family::<ChainLabel, Gauge>::default();
-        writable_registry.register(
-            "block_timestamp_lag",
-            "The difference between server timestamp and latest block timestamp",
-            block_timestamp_lag.clone(),
-        );
-
-        KeeperMetrics {
-            current_sequence_number,
-            end_sequence_number,
-            requests,
-            requests_processed,
-            reveals,
-            balance,
-            collected_fee,
-            total_gas_spent,
-            block_timestamp_lag,
-        }
+        keeper_metrics
     }
 }
 
@@ -291,13 +263,36 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // spawn a thread to track latest block lag
     spawn(
-        track_block_timestamp_lag(
-            chain_state.id.clone(),
-            chain_eth_config.clone(),
-            keeper_metrics.clone(),
-        )
+        async move {
+            let chain_id = chain_state.id.clone();
+            let chain_config = chain_eth_config.clone();
+            let provider_address = chain_state.provider_address.clone();
+            let keeper_metrics = keeper_metrics.clone();
+
+            loop {
+                spawn(
+                    track_provider(
+                        chain_id.clone(),
+                        chain_config.clone(),
+                        provider_address.clone(),
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+                spawn(
+                    track_balance(
+                        chain_id.clone(),
+                        chain_config.clone(),
+                        keeper_address.clone(),
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+
+                time::sleep(TRACK_INTERVAL).await;
+            }
+        }
         .in_current_span(),
     );
 }
@@ -719,145 +714,100 @@ pub async fn process_backlog(
 
 
 /// tracks the balance of the given address on the given chain periodically
+#[tracing::instrument(skip_all)]
 pub async fn track_balance(
     chain_id: String,
     chain_config: EthereumConfig,
     address: Address,
     metrics_registry: Arc<KeeperMetrics>,
 ) {
-    loop {
-        let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
+    // There isn't a loop for indefinite trials. There is a new thread being spawned every 10 seconds.
+    // If rpc start failing all of these threads will just exit, instead of retrying if there was a loop.
+    // We are tracking rpc failures elsewhere, so it's fine.
+    let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::error!("Error while connecting to geth rpc. error: {:?}", e);
+            return;
+        }
+    };
 
-        let balance = match provider.get_balance(address, None).await {
-            // This conversion to u128 is fine as the total balance will never cross the limits
-            // of u128 practically.
-            Ok(r) => r.as_u128(),
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
-        // The f64 conversion is made to be able to serve metrics within the constraints of Prometheus.
-        // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
-        let balance = balance as f64 / 1e18;
+    let balance = match provider.get_balance(address, None).await {
+        // This conversion to u128 is fine as the total balance will never cross the limits
+        // of u128 practically.
+        Ok(r) => r.as_u128(),
+        Err(e) => {
+            tracing::error!("Error while getting balance. error: {:?}", e);
+            return;
+        }
+    };
+    // The f64 conversion is made to be able to serve metrics within the constraints of Prometheus.
+    // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
+    let balance = balance as f64 / 1e18;
 
-        metrics_registry
-            .balance
-            .get_or_create(&AccountLabel {
-                chain_id: chain_id.clone(),
-                address:  address.to_string(),
-            })
-            .set(balance);
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
+    metrics_registry
+        .balance
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address:  address.to_string(),
+        })
+        .set(balance);
 }
 
 /// tracks the collected fees and the hashchain data of the given provider address on the given chain periodically
+#[tracing::instrument(skip_all)]
 pub async fn track_provider(
     chain_id: String,
     chain_config: EthereumConfig,
     provider_address: Address,
     metrics_registry: Arc<KeeperMetrics>,
 ) {
-    loop {
-        let contract = match PythContract::from_config(&chain_config) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
+    let contract = match PythContract::from_config(&chain_config) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
+            return;
+        }
+    };
 
-        let provider_info = match contract.get_provider_info(provider_address).call().await {
-            Ok(info) => info,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
+    let provider_info = match contract.get_provider_info(provider_address).call().await {
+        Ok(info) => info,
+        Err(e) => {
+            tracing::error!("Error while getting provider info. error: {:?}", e);
+            return;
+        }
+    };
 
-        // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
-        // The fee is in wei, so we divide by 1e18 to convert it to eth.
-        let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
+    // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
+    // The fee is in wei, so we divide by 1e18 to convert it to eth.
+    let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
 
-        let current_sequence_number = provider_info.sequence_number;
-        let end_sequence_number = provider_info.end_sequence_number;
+    let current_sequence_number = provider_info.sequence_number;
+    let end_sequence_number = provider_info.end_sequence_number;
 
-        metrics_registry
-            .collected_fee
-            .get_or_create(&AccountLabel {
-                chain_id: chain_id.clone(),
-                address:  provider_address.to_string(),
-            })
-            .set(collected_fee);
+    metrics_registry
+        .collected_fee
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address:  provider_address.to_string(),
+        })
+        .set(collected_fee);
 
-        metrics_registry
-            .current_sequence_number
-            .get_or_create(&AccountLabel {
-                chain_id: chain_id.clone(),
-                address:  provider_address.to_string(),
-            })
-            // sequence_number type on chain is u64 but practically it will take
-            // a long time for it to cross the limits of i64.
-            // currently prometheus only supports i64 for Gauge types
-            .set(current_sequence_number as i64);
-        metrics_registry
-            .end_sequence_number
-            .get_or_create(&AccountLabel {
-                chain_id: chain_id.clone(),
-                address:  provider_address.to_string(),
-            })
-            .set(end_sequence_number as i64);
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
-}
-
-pub async fn track_block_timestamp_lag(
-    chain_id: String,
-    chain_config: EthereumConfig,
-    metrics_registry: Arc<KeeperMetrics>,
-) {
-    loop {
-        let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-            Ok(r) => r,
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
-
-        match provider.get_block(EthereumBlockNumber::Latest).await {
-            Ok(b) => {
-                if let Some(block) = b {
-                    let block_timestamp = block.timestamp;
-                    let server_timestamp = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap()
-                        .as_secs();
-                    let lag = server_timestamp - block_timestamp.as_u64();
-
-                    metrics_registry
-                        .block_timestamp_lag
-                        .get_or_create(&ChainLabel {
-                            chain_id: chain_id.clone(),
-                        })
-                        .set(lag as i64);
-                }
-            }
-            Err(_e) => {
-                time::sleep(RETRY_INTERVAL).await;
-                continue;
-            }
-        };
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
+    metrics_registry
+        .current_sequence_number
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address:  provider_address.to_string(),
+        })
+        // sequence_number type on chain is u64 but practically it will take
+        // a long time for it to cross the limits of i64.
+        // currently prometheus only supports i64 for Gauge types
+        .set(current_sequence_number as i64);
+    metrics_registry
+        .end_sequence_number
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address:  provider_address.to_string(),
+        })
+        .set(end_sequence_number as i64);
 }
