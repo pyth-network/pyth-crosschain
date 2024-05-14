@@ -29,7 +29,9 @@ jobs:
       - name: Build docker image
         run: |
           DOCKER_BUILDKIT=1 docker build -t lerna -f Dockerfile.lerna .
-          DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
+          DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            --build-arg NEXT_PUBLIC_RPC_POOL_TOKEN=${{ secrets.NEXT_PUBLIC_RPC_POOL_TOKEN }} \
+            -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
       - name: Push docker image
         if: github.ref == 'refs/heads/main'
         run: |
