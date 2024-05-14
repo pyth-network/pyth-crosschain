@@ -12,6 +12,7 @@ import {
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -107,6 +108,8 @@ export class SolanaPricePusher implements IPricePusher {
   }
 }
 
+const UPDATES_PER_JITO_BUNDLE = 7;
+
 export class SolanaPricePusherJito implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
@@ -121,7 +124,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
-    let priceFeedUpdateData;
+    let priceFeedUpdateData: string[];
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
         priceIds
@@ -131,47 +134,29 @@ export class SolanaPricePusherJito implements IPricePusher {
       return;
     }
 
-    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
-      closeUpdateAccounts: false,
-    });
-    await transactionBuilder.addUpdatePriceFeed(
-      priceFeedUpdateData,
-      this.shardId
-    );
-    await transactionBuilder.addClosePreviousEncodedVaasInstructions();
-
-    const transactions = await transactionBuilder.buildVersionedTransactions({
-      jitoTipLamports: this.jitoTipLamports,
-      tightComputeBudget: true,
-      jitoBundleSize: this.jitoBundleSize,
-    });
-
-    const firstSignature = await sendTransactionsJito(
-      transactions.slice(0, this.jitoBundleSize),
-      this.searcherClient,
-      this.pythSolanaReceiver.wallet
-    );
-
-    const blockhashResult =
-      await this.pythSolanaReceiver.connection.getLatestBlockhashAndContext({
-        commitment: "confirmed",
+    for (let i = 0; i < priceIds.length; i += UPDATES_PER_JITO_BUNDLE) {
+      const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
+        closeUpdateAccounts: true,
       });
-    await this.pythSolanaReceiver.connection.confirmTransaction(
-      {
-        signature: firstSignature,
-        blockhash: blockhashResult.value.blockhash,
-        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
-      },
-      "confirmed"
-    );
+      await transactionBuilder.addUpdatePriceFeed(
+        priceFeedUpdateData.map((x) => {
+          return sliceAccumulatorUpdateData(
+            Buffer.from(x, "base64"),
+            i,
+            i + UPDATES_PER_JITO_BUNDLE
+          ).toString("base64");
+        }),
+        this.shardId
+      );
 
-    for (
-      let i = this.jitoBundleSize;
-      i < transactions.length;
-      i += this.jitoBundleSize
-    ) {
+      const transactions = await transactionBuilder.buildVersionedTransactions({
+        jitoTipLamports: this.jitoTipLamports,
+        tightComputeBudget: true,
+        jitoBundleSize: this.jitoBundleSize,
+      });
+
       await sendTransactionsJito(
-        transactions.slice(i, i + this.jitoBundleSize),
+        transactions,
         this.searcherClient,
         this.pythSolanaReceiver.wallet
       );
