@@ -78,7 +78,6 @@ fn update_price_feeds_works() {
 }
 
 #[test]
-#[should_panic(expected: ('todo',))]
 fn test_governance_instruction() {
     let owner = 'owner'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();

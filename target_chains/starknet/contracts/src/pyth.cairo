@@ -1,6 +1,7 @@
 mod errors;
 mod interface;
 mod price_update;
+mod governance;
 
 pub use pyth::{Event, PriceFeedUpdateEvent};
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
@@ -20,6 +21,8 @@ mod pyth {
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError
     };
+    use super::governance;
+    use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
 
     #[event]
@@ -190,9 +193,17 @@ mod pyth {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(data);
             self.verify_governance_vm(@vm);
-            //...
+            let data = governance::parse_instruction(vm.payload);
+            if data.target_chain_id != wormhole.chain_id() {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+            }
+            match data.payload {
+                GovernancePayload::SetFee(data) => {
+                    let value = apply_decimal_expo(data.value, data.expo);
+                    self.single_update_fee.write(value);
+                }
+            }
             self.last_executed_governance_sequence.write(vm.sequence);
-            panic_with_felt252('todo');
         }
     }
 
@@ -257,5 +268,15 @@ mod pyth {
                 panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
             }
         }
+    }
+
+    fn apply_decimal_expo(value: u64, expo: u64) -> u256 {
+        let mut output: u256 = value.into();
+        let mut i = 0;
+        while i < expo {
+            output *= 10;
+            i += 1;
+        };
+        output
     }
 }
