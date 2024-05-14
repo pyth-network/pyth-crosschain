@@ -34,6 +34,6 @@ jobs:
             --build-arg NEXT_PUBLIC_RPC_POOL_TOKEN=${{ secrets.NEXT_PUBLIC_RPC_POOL_TOKEN }} \
             -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
       - name: Push docker image
-        if: github.ref == 'refs/heads/main'
+        # if: github.ref == 'refs/heads/main'
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
