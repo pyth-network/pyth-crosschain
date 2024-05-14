@@ -256,7 +256,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         ));
     }
 
-    // spawn a thread to track latest block lag
+    // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
     spawn(track_block_timestamp_lag(config, metrics_registry.clone()));
 
     run_api(opts.addr.clone(), chains, metrics_registry, rx_exit).await?;
@@ -270,6 +270,7 @@ pub struct ChainLabel {
     pub chain_id: String,
 }
 
+/// Tracks the difference between the server timestamp and the latest block timestamp for each chain
 pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwLock<Registry>>) {
     let metrics = Family::<ChainLabel, Gauge>::default();
     metrics_registry.write().await.register(
