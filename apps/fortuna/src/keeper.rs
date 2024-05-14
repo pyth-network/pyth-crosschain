@@ -250,6 +250,9 @@ pub async fn run_keeper_threads(
             let keeper_metrics = keeper_metrics.clone();
 
             loop {
+                // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
+                // If rpc start fails all of these threads will just exit, instead of retrying.
+                // We are tracking rpc failures elsewhere, so it's fine.
                 spawn(
                     track_provider(
                         chain_id.clone(),
@@ -693,6 +696,7 @@ pub async fn process_backlog(
 
 
 /// tracks the balance of the given address on the given chain
+/// if there was an error, the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
     chain_id: String,
@@ -700,9 +704,6 @@ pub async fn track_balance(
     address: Address,
     metrics_registry: Arc<KeeperMetrics>,
 ) {
-    // There isn't a loop for indefinite trials. There is a new thread being spawned every 10 seconds.
-    // If rpc start failing all of these threads will just exit, instead of retrying if there was a loop.
-    // We are tracking rpc failures elsewhere, so it's fine.
     let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
         Ok(r) => r,
         Err(e) => {
@@ -734,6 +735,7 @@ pub async fn track_balance(
 }
 
 /// tracks the collected fees and the hashchain data of the given provider address on the given chain
+/// if there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
     chain_id: String,
