@@ -128,7 +128,7 @@ where
                     {
                         Ok(Some(update)) => Ok(Event::default()
                             .json_data(update)
-                            .unwrap_or_else(|e| error_event(e))),
+                            .unwrap_or_else(error_event)),
                         Ok(None) => Ok(Event::default().comment("No update available")),
                         Err(e) => Ok(error_event(e)),
                     }

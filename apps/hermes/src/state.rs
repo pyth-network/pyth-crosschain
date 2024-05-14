@@ -8,29 +8,21 @@ use {
         },
         benchmarks::BenchmarksState,
         cache::CacheState,
+        metrics::MetricsState,
+        wormhole::WormholeState,
     },
-    crate::{
-        network::wormhole::GuardianSet,
-        price_feeds_metadata::PriceFeedMetaState,
-    },
+    crate::price_feeds_metadata::PriceFeedMetaState,
     prometheus_client::registry::Registry,
     reqwest::Url,
-    std::{
-        collections::{
-            BTreeMap,
-            BTreeSet,
-        },
-        sync::Arc,
-    },
-    tokio::sync::{
-        broadcast::Sender,
-        RwLock,
-    },
+    std::sync::Arc,
+    tokio::sync::broadcast::Sender,
 };
 
 pub mod aggregate;
 pub mod benchmarks;
 pub mod cache;
+pub mod metrics;
+pub mod wormhole;
 
 pub struct State {
     /// State for the `Cache` service for short-lived storage of updates.
@@ -45,15 +37,11 @@ pub struct State {
     /// State for accessing/storing Pyth price aggregates.
     pub aggregates: AggregateState,
 
-    /// Sequence numbers of lately observed Vaas. Store uses this set
-    /// to ignore the previously observed Vaas as a performance boost.
-    pub observed_vaa_seqs: RwLock<BTreeSet<u64>>,
+    /// State for tracking wormhole state when reading VAAs.
+    pub wormhole: WormholeState,
 
-    /// Wormhole guardian sets. It is used to verify Vaas before using them.
-    pub guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
-
-    /// Metrics registry
-    pub metrics_registry: RwLock<Registry>,
+    /// Metrics registry for tracking process metrics and timings.
+    pub metrics: MetricsState,
 }
 
 impl State {
@@ -64,13 +52,12 @@ impl State {
     ) -> Arc<Self> {
         let mut metrics_registry = Registry::default();
         Arc::new(Self {
-            cache:             CacheState::new(cache_size),
-            benchmarks:        BenchmarksState::new(benchmarks_endpoint),
-            price_feed_meta:   PriceFeedMetaState::new(),
-            aggregates:        AggregateState::new(update_tx, &mut metrics_registry),
-            observed_vaa_seqs: RwLock::new(Default::default()),
-            guardian_set:      RwLock::new(Default::default()),
-            metrics_registry:  RwLock::new(metrics_registry),
+            cache:           CacheState::new(cache_size),
+            benchmarks:      BenchmarksState::new(benchmarks_endpoint),
+            price_feed_meta: PriceFeedMetaState::new(),
+            aggregates:      AggregateState::new(update_tx, &mut metrics_registry),
+            wormhole:        WormholeState::new(),
+            metrics:         MetricsState::new(metrics_registry),
         })
     }
 }
@@ -78,8 +65,9 @@ impl State {
 #[cfg(test)]
 pub mod test {
     use {
+        self::wormhole::Wormhole,
         super::*,
-        crate::network::wormhole::update_guardian_set,
+        crate::network::wormhole::GuardianSet,
         tokio::sync::broadcast::Receiver,
     };
 
@@ -88,8 +76,8 @@ pub mod test {
         let state = State::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0
-        update_guardian_set(
-            &state,
+        Wormhole::update_guardian_set(
+            &*state,
             0,
             GuardianSet {
                 keys: vec![[0; 20]],
