@@ -78,6 +78,8 @@ const BLOCK_BATCH_SIZE: u64 = 100;
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
+/// Rety last N blocks
+const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct AccountLabel {
@@ -502,6 +504,7 @@ pub async fn process_block_range(
             to_block = last_block;
         }
 
+        // TODO: this is handling all blocks sequentially we might want to handle them in parallel in future.
         process_single_block_batch(
             BlockRange {
                 from: current_block,
@@ -524,7 +527,6 @@ pub async fn process_block_range(
 /// and then try to process them one by one. It checks the `fulfilled_request_cache`. If the request was already fulfilled.
 /// It won't reprocess it. If the request was already processed, it will reprocess it.
 /// If the process fails, it will retry indefinitely.
-///
 #[tracing::instrument(name="batch", skip_all, fields(batch_from_block=block_range.from, batch_to_block=block_range.to))]
 pub async fn process_single_block_batch(
     block_range: BlockRange,
@@ -701,7 +703,9 @@ pub async fn watch_blocks(
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
         if latest_safe_block > *last_safe_block_processed {
-            let mut from = latest_safe_block.checked_sub(100).unwrap_or(0);
+            let mut from = latest_safe_block
+                .checked_sub(RETRY_PREVIOUS_BLOCKS)
+                .unwrap_or(0);
 
             // In normal situation, the difference between latest and last safe block should not be more than 2-3 (for arbitrum it can be 10)
             // TODO: add a metric for this in separate PR. We need alerts
