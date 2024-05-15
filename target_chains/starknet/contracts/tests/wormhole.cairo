@@ -190,7 +190,9 @@ pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
     )
 }
 
-fn corrupted_vm(mut real_data: ByteArray, pos: usize, random1: usize, random2: usize) -> ByteArray {
+pub fn corrupted_vm(
+    mut real_data: ByteArray, pos: usize, random1: usize, random2: usize
+) -> ByteArray {
     let mut new_data = array![];
 
     // Make sure we select a position not on the last item because
