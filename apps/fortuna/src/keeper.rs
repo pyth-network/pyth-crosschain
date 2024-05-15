@@ -521,7 +521,10 @@ pub async fn process_block_range(
 }
 
 /// Process a batch of blocks for a chain. It will fetch events for all the blocks in a single call for the provided batch
-/// and then try to process them one by one. If the process fails, it will retry indefinitely.
+/// and then try to process them one by one. It checks the `fulfilled_request_cache`. If the request was already fulfilled.
+/// It won't reprocess it. If the request was already processed, it will reprocess it.
+/// If the process fails, it will retry indefinitely.
+///
 #[tracing::instrument(name="batch", skip_all, fields(batch_from_block=block_range.from, batch_to_block=block_range.to))]
 pub async fn process_single_block_batch(
     block_range: BlockRange,
