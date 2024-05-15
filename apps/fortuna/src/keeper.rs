@@ -319,6 +319,10 @@ pub async fn process_event(
     fulfilled_requests_cache: Arc<RwLock<HashMap<u64, RequestState>>>,
 ) -> Result<()> {
     if chain_config.provider_address != event.provider_address {
+        fulfilled_requests_cache
+            .write()
+            .await
+            .insert(event.sequence_number, RequestState::Fulfilled);
         return Ok(());
     }
     let provider_revelation = match chain_config.state.reveal(event.sequence_number) {
@@ -390,6 +394,10 @@ pub async fn process_event(
                         // ever. We will return an Ok(()) to signal that we have processed this reveal
                         // and concluded that its Ok to not reveal.
                         _ => {
+                            fulfilled_requests_cache
+                                .write()
+                                .await
+                                .insert(event.sequence_number, RequestState::Processed);
                             tracing::error!(
                                 sequence_number = &event.sequence_number,
                                 "Error while revealing with error: {:?}",
@@ -466,8 +474,12 @@ pub async fn process_event(
             None => {
                 tracing::info!(
                     sequence_number = &event.sequence_number,
-                    "Not processing event"
+                    "Not fulfilling event"
                 );
+                fulfilled_requests_cache
+                    .write()
+                    .await
+                    .insert(event.sequence_number, RequestState::Processed);
                 Ok(())
             }
         },
