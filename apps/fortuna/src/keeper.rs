@@ -87,15 +87,17 @@ pub struct AccountLabel {
 
 #[derive(Default)]
 pub struct KeeperMetrics {
-    pub current_sequence_number: Family<AccountLabel, Gauge>,
-    pub end_sequence_number:     Family<AccountLabel, Gauge>,
-    pub balance:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub collected_fee:           Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub total_gas_spent:         Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub requests:                Family<AccountLabel, Counter>,
-    pub requests_processed:      Family<AccountLabel, Counter>,
-    pub requests_reprocessed:    Family<AccountLabel, Counter>,
-    pub reveals:                 Family<AccountLabel, Counter>,
+    pub current_sequence_number:         Family<AccountLabel, Gauge>,
+    pub end_sequence_number:             Family<AccountLabel, Gauge>,
+    pub balance:                         Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub collected_fee:                   Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub total_gas_spent:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub requests:                        Family<AccountLabel, Counter>,
+    pub requests_processed:              Family<AccountLabel, Counter>,
+    pub requests_reprocessed:            Family<AccountLabel, Counter>,
+    pub reveals:                         Family<AccountLabel, Counter>,
+    pub watch_last_safe_block_processed: Family<AccountLabel, Gauge>,
+    pub watch_latest_block:              Family<AccountLabel, Gauge>,
 }
 
 impl KeeperMetrics {
@@ -155,6 +157,18 @@ impl KeeperMetrics {
             "requests_reprocessed",
             "Number of requests reprocessed",
             keeper_metrics.requests_reprocessed.clone(),
+        );
+
+        writable_registry.register(
+            "watch_last_safe_block_processed",
+            "The last safe block processed",
+            keeper_metrics.watch_last_safe_block_processed.clone(),
+        );
+
+        writable_registry.register(
+            "watch_latest_block",
+            "Latest block fetched",
+            keeper_metrics.watch_latest_block.clone(),
         );
 
         keeper_metrics
@@ -249,6 +263,7 @@ pub async fn run_keeper_threads(
             latest_safe_block,
             tx,
             chain_eth_config.geth_rpc_wss.clone(),
+            keeper_metrics.clone(),
         )
         .in_current_span(),
     );
@@ -631,6 +646,7 @@ pub async fn watch_blocks_wrapper(
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
     geth_rpc_wss: Option<String>,
+    keeper_metrics: Arc<KeeperMetrics>,
 ) {
     let mut last_safe_block_processed = latest_safe_block;
     loop {
@@ -639,6 +655,7 @@ pub async fn watch_blocks_wrapper(
             &mut last_safe_block_processed,
             tx.clone(),
             geth_rpc_wss.clone(),
+            keeper_metrics.clone(),
         )
         .in_current_span()
         .await
@@ -658,6 +675,7 @@ pub async fn watch_blocks(
     last_safe_block_processed: &mut BlockNumber,
     tx: mpsc::Sender<BlockRange>,
     geth_rpc_wss: Option<String>,
+    keeper_metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     tracing::info!("Watching blocks to handle new events");
 
@@ -700,6 +718,13 @@ pub async fn watch_blocks(
         }
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+        keeper_metrics
+            .watch_latest_block
+            .get_or_create(&AccountLabel {
+                chain_id: chain_state.id.clone(),
+                address:  chain_state.provider_address.to_string(),
+            })
+            .set(latest_safe_block as i64);
         if latest_safe_block > *last_safe_block_processed {
             let mut from = latest_safe_block.checked_sub(100).unwrap_or(0);
 
@@ -725,6 +750,14 @@ pub async fn watch_blocks(
                         "Block range sent to handle events",
                     );
                     *last_safe_block_processed = latest_safe_block;
+
+                    keeper_metrics
+                        .watch_last_safe_block_processed
+                        .get_or_create(&AccountLabel {
+                            chain_id: chain_state.id.clone(),
+                            address:  chain_state.provider_address.to_string(),
+                        })
+                        .set(*last_safe_block_processed as i64);
                 }
                 Err(e) => {
                     tracing::error!(
