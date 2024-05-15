@@ -138,7 +138,7 @@ class BidStatusUpdate(BaseModel):
             "won"
         ):
             assert self.index is not None, "index must be a valid integer"
-        elif self.bid_status == self.bid_status == BidStatus("lost"):
+        elif self.bid_status == BidStatus("lost"):
             pass
         else:
             assert self.index is None, "index must be None"
