@@ -55,7 +55,7 @@ impl EthereumConfig {
         &self,
         provider_addr: Address,
         private_key: &str,
-    ) -> Result<Box<dyn ChainWriter>> {
+    ) -> Result<Arc<dyn ChainWriter>> {
         let provider = Provider::<Http>::try_from(&self.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
@@ -77,7 +77,7 @@ impl EthereumConfig {
             )),
         );
 
-        Ok(Box::new(EvmWriterContract {
+        Ok(Arc::new(EvmWriterContract {
             gas_limit: self.gas_limit,
             provider_addr,
             confirmed_block_status: self.confirmed_block_status.into(),
