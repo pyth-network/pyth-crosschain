@@ -201,7 +201,10 @@ mod pyth {
                 GovernancePayload::SetFee(data) => {
                     let value = apply_decimal_expo(data.value, data.expo);
                     self.single_update_fee.write(value);
-                }
+                },
+                GovernancePayload::SetDataSources(data) => {
+                    self.write_data_sources(data.sources);
+                },
             }
             self.last_executed_governance_sequence.write(vm.sequence);
         }

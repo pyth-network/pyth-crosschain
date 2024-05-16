@@ -109,4 +109,25 @@ fn main() {
     println!("pyth_set_fee");
     print_as_array_and_last(&pyth_set_fee);
     println!();
+
+    let pyth_set_data_sources = serialize_vaa(guardians.sign_vaa(
+        &[0],
+        VaaBody {
+            timestamp: 1,
+            nonce: 2,
+            emitter_chain: 1,
+            emitter_address: u256_to_be(41.into()).into(),
+            sequence: 1.try_into().unwrap(),
+            consistency_level: 6,
+            payload: PayloadKind::Binary(vec![
+                80, 84, 71, 77, 1, 2, 234, 147, 2, 0, 1, 107, 177, 69, 9, 166, 18, 240, 31, 187,
+                196, 207, 254, 235, 212, 187, 251, 73, 42, 134, 223, 113, 126, 190, 146, 235, 109,
+                244, 50, 163, 240, 10, 37, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 45,
+            ]),
+        },
+    ));
+    println!("pyth_set_data_sources");
+    print_as_array_and_last(&pyth_set_data_sources);
+    println!();
 }
