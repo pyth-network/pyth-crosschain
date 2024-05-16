@@ -31,9 +31,15 @@ pub trait ChainReader: Send + Sync {
 }
 
 pub enum RevealError {
-    HashChainRevealFailed(Error),
+    GasLimitExceeded,
     ContractError(Error),
     RpcError(Error),
+    Unknown(Error),
+}
+
+pub struct RevealSuccess {
+    pub tx_hash:  String,
+    pub gas_used: f64,
 }
 
 #[async_trait]
@@ -43,5 +49,5 @@ pub trait ChainWriter: Send + Sync + ChainReader {
         &self,
         request_with_callback_data: RequestWithCallbackData,
         provider_revelation: [u8; 32],
-    ) -> Result<(), RevealError>;
+    ) -> Result<RevealSuccess, RevealError>;
 }

@@ -1,28 +1,35 @@
 use {
-    super::{
-        chain::{
-            ChainBlockNumber,
-            ChainReader,
-            ChainWriter,
-            RequestWithCallbackData,
-            RevealError,
-        },
-        reader::BlockStatus,
+    super::chain::{
+        ChainBlockNumber,
+        ChainReader,
+        ChainWriter,
+        RequestWithCallbackData,
+        RevealError,
     },
-    crate::config::EthereumConfig,
-    anyhow::Result,
-    ethers::{
-        contract::abigen,
-        middleware::{
-            transformer::{
-                Transformer,
-                TransformerError,
-                TransformerMiddleware,
+    crate::{
+        chain::{
+            chain::RevealSuccess,
+            ethereum::{
+                LegacyTxTransformer,
+                PythRandom,
+                RequestedWithCallbackFilter,
             },
+        },
+        config::EthereumConfig,
+    },
+    anyhow::{
+        anyhow,
+        Error,
+        Result,
+    },
+    axum::async_trait,
+    ethers::{
+        middleware::{
+            transformer::TransformerMiddleware,
             NonceManagerMiddleware,
             SignerMiddleware,
         },
-        prelude::TransactionRequest,
+        prelude::ContractError,
         providers::{
             Http,
             Middleware,
@@ -33,37 +40,13 @@ use {
             Signer,
         },
         types::{
-            transaction::eip2718::TypedTransaction,
             Address,
+            BlockNumber as EthersBlockNumber,
+            U256,
         },
     },
     std::sync::Arc,
 };
-
-// TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
-// contract in the same repo.
-abigen!(
-    PythRandom,
-    "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
-);
-
-/// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
-#[derive(Clone, Debug)]
-pub struct LegacyTxTransformer {
-    use_legacy_tx: bool,
-}
-
-impl Transformer for LegacyTxTransformer {
-    fn transform(&self, tx: &mut TypedTransaction) -> Result<(), TransformerError> {
-        if self.use_legacy_tx {
-            let legacy_request: TransactionRequest = (*tx).clone().into();
-            *tx = legacy_request.into();
-            Ok(())
-        } else {
-            Ok(())
-        }
-    }
-}
 
 pub type SignablePythContract = PythRandom<
     TransformerMiddleware<
@@ -100,8 +83,9 @@ impl EthereumConfig {
         );
 
         Ok(Box::new(EvmWriterContract {
+            gas_limit: self.gas_limit,
             provider_addr,
-            confirmed_block_status: self.confirmed_block_status,
+            confirmed_block_status: self.confirmed_block_status.into(),
             reveal_delay_blocks: self.reveal_delay_blocks,
             contract,
         }))
@@ -111,74 +95,123 @@ impl EthereumConfig {
 
 pub struct EvmWriterContract {
     provider_addr:          Address,
-    confirmed_block_status: BlockStatus,
+    confirmed_block_status: EthersBlockNumber,
+    gas_limit:              U256,
     reveal_delay_blocks:    ChainBlockNumber,
     contract:               SignablePythContract,
 }
 
+#[async_trait]
 impl ChainReader for EvmWriterContract {
-    #[doc = " Returns data of all the requests with callback made on chain between"]
-    #[doc = " the given block numbers."]
-    #[must_use]
-    #[allow(clippy::type_complexity, clippy::type_repetition_in_bounds)]
-    fn get_requests_with_callback_data<'life0, 'async_trait>(
-        &'life0 self,
+    async fn get_requests_with_callback_data(
+        &self,
         from_block: ChainBlockNumber,
         to_block: ChainBlockNumber,
-    ) -> ::core::pin::Pin<
-        Box<
-            dyn ::core::future::Future<Output = Result<Vec<RequestWithCallbackData>>>
-                + ::core::marker::Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        todo!()
+    ) -> Result<Vec<RequestWithCallbackData>> {
+        let mut event = self.contract.requested_with_callback_filter();
+        event.filter = event.filter.from_block(from_block).to_block(to_block);
+
+        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+
+        // Filter for provider_address
+        let filtered_res = res
+            .into_iter()
+            .filter(|r| r.provider == self.provider_addr)
+            .map(|r| RequestWithCallbackData {
+                sequence_number:    r.sequence_number,
+                user_random_number: r.user_random_number,
+            })
+            .collect();
+
+        Ok(filtered_res)
     }
 
-    #[doc = " Returns the latest block which we consider to be included into the chain and"]
-    #[doc = " is safe from reorgs."]
-    #[must_use]
-    #[allow(clippy::type_complexity, clippy::type_repetition_in_bounds)]
-    fn get_latest_safe_block<'life0, 'async_trait>(
-        &'life0 self,
-    ) -> ::core::pin::Pin<
-        Box<
-            dyn ::core::future::Future<Output = Result<ChainBlockNumber>>
-                + ::core::marker::Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        todo!()
+    async fn get_latest_safe_block(&self) -> Result<ChainBlockNumber> {
+        let block_number: EthersBlockNumber = self.confirmed_block_status.into();
+        let block = self
+            .contract
+            .client()
+            .get_block(block_number)
+            .await?
+            .ok_or_else(|| Error::msg("pending block confirmation"))?;
+
+        match block.number {
+            Some(n) => Ok(n.as_u64().checked_sub(self.reveal_delay_blocks).unwrap()),
+            None => Err(Error::msg("pending confirmation")),
+        }
     }
 }
 
+#[async_trait]
 impl ChainWriter for EvmWriterContract {
-    #[doc = " Fulfill the given request on chain with the given provider revelation."]
-    #[must_use]
-    #[allow(clippy::type_complexity, clippy::type_repetition_in_bounds)]
-    fn reveal_with_callback<'life0, 'async_trait>(
-        &'life0 self,
+    async fn reveal_with_callback(
+        &self,
         request_with_callback_data: RequestWithCallbackData,
         provider_revelation: [u8; 32],
-    ) -> ::core::pin::Pin<
-        Box<
-            dyn ::core::future::Future<Output = Result<(), RevealError>>
-                + ::core::marker::Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        todo!()
+    ) -> Result<RevealSuccess, RevealError> {
+        let gas_estimate = self
+            .contract
+            .reveal_with_callback(
+                self.provider_addr,
+                request_with_callback_data.sequence_number,
+                request_with_callback_data.user_random_number,
+                provider_revelation,
+            )
+            .estimate_gas()
+            .await
+            .map_err(|e| match e {
+                ContractError::ProviderError { e } => RevealError::RpcError(e.into()),
+                ContractError::Revert(reason) => RevealError::ContractError(anyhow!(reason)),
+                _ => RevealError::Unknown(anyhow!(e)),
+            })?;
+
+        let gas_estimate = EvmWriterContract::gas_multiplier(gas_estimate);
+        if gas_estimate > self.gas_limit {
+            return Err(RevealError::GasLimitExceeded);
+        }
+
+        let pending_tx = self
+            .contract
+            .reveal_with_callback(
+                self.provider_addr,
+                request_with_callback_data.sequence_number,
+                request_with_callback_data.user_random_number,
+                provider_revelation,
+            )
+            .send()
+            .await
+            .map_err(|e| match e {
+                ContractError::ProviderError { e } => RevealError::RpcError(e.into()),
+                ContractError::Revert(reason) => RevealError::ContractError(anyhow!(reason)),
+                _ => RevealError::Unknown(anyhow!(e)),
+            })?;
+
+        let res = pending_tx
+            .await
+            .map_err(|e| RevealError::RpcError(e.into()))?;
+
+        let res = res.ok_or_else(|| {
+            RevealError::RpcError(anyhow!("unable to verify transaction success"))
+        })?;
+
+        let gas_used = Self::wei_to_eth(res.gas_used.unwrap_or(U256::from(0)));
+        Ok(RevealSuccess {
+            tx_hash: res.transaction_hash.to_string(),
+            gas_used,
+        })
+    }
+}
+
+impl EvmWriterContract {
+    fn gas_multiplier(gas_estimate: U256) -> U256 {
+        let (gas_estimate, _) = gas_estimate
+            .saturating_mul(U256::from(4))
+            .div_mod(U256::from(3));
+
+        gas_estimate
+    }
+
+    fn wei_to_eth(value: U256) -> f64 {
+        value.as_u128() as f64 / 1e18
     }
 }
