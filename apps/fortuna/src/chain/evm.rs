@@ -170,21 +170,18 @@ impl ChainWriter for EvmWriterContract {
             return Err(RevealError::GasLimitExceeded);
         }
 
-        let pending_tx = self
-            .contract
-            .reveal_with_callback(
-                self.provider_addr,
-                request_with_callback_data.sequence_number,
-                request_with_callback_data.user_random_number,
-                provider_revelation,
-            )
-            .send()
-            .await
-            .map_err(|e| match e {
-                ContractError::ProviderError { e } => RevealError::RpcError(e.into()),
-                ContractError::Revert(reason) => RevealError::ContractError(anyhow!(reason)),
-                _ => RevealError::Unknown(anyhow!(e)),
-            })?;
+        let reveal_call = self.contract.reveal_with_callback(
+            self.provider_addr,
+            request_with_callback_data.sequence_number,
+            request_with_callback_data.user_random_number,
+            provider_revelation,
+        );
+
+        let pending_tx = reveal_call.send().await.map_err(|e| match e {
+            ContractError::ProviderError { e } => RevealError::RpcError(e.into()),
+            ContractError::Revert(reason) => RevealError::ContractError(anyhow!(reason)),
+            _ => RevealError::Unknown(anyhow!(e)),
+        })?;
 
         let res = pending_tx
             .await
