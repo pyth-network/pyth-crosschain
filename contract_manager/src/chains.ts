@@ -4,13 +4,12 @@ import {
   SetFee,
   CosmosUpgradeContract,
   EvmUpgradeContract,
-  SuiAuthorizeUpgradeContract,
-  AptosAuthorizeUpgradeContract,
   toChainId,
   SetDataSources,
   SetValidPeriod,
   DataSource,
   EvmSetWormholeAddress,
+  UpgradeContract256Bit,
 } from "xc_admin_common";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import Web3 from "web3";
@@ -294,10 +293,7 @@ export class SuiChain extends Chain {
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    return new SuiAuthorizeUpgradeContract(
-      this.wormholeChainName,
-      digest
-    ).encode();
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
   }
 
   getProvider(): SuiClient {
@@ -496,10 +492,7 @@ export class AptosChain extends Chain {
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    return new AptosAuthorizeUpgradeContract(
-      this.wormholeChainName,
-      digest
-    ).encode();
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
   }
 
   getType(): string {

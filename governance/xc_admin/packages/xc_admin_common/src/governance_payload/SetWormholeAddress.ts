@@ -31,3 +31,32 @@ export class EvmSetWormholeAddress extends PythGovernanceActionImpl {
     });
   }
 }
+
+export class StarknetSetWormholeAddress extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(32, "address")]);
+
+  constructor(targetChainId: ChainName, readonly address: string) {
+    super(targetChainId, "SetWormholeAddress");
+  }
+
+  static decode(data: Buffer): StarknetSetWormholeAddress | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "SetWormholeAddress",
+      this.layout
+    );
+    if (!decoded) return undefined;
+
+    return new StarknetSetWormholeAddress(
+      decoded[0].targetChainId,
+      decoded[1].address
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(StarknetSetWormholeAddress.layout, {
+      address: this.address,
+    });
+  }
+}

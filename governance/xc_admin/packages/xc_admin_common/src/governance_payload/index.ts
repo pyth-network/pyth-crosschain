@@ -1,8 +1,8 @@
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
 import {
-  AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
   EvmUpgradeContract,
+  UpgradeContract256Bit,
 } from "./UpgradeContract";
 import {
   PythGovernanceAction,
@@ -15,7 +15,10 @@ import {
 import { SetDataSources } from "./SetDataSources";
 import { SetValidPeriod } from "./SetValidPeriod";
 import { SetFee } from "./SetFee";
-import { EvmSetWormholeAddress } from "./SetWormholeAddress";
+import {
+  EvmSetWormholeAddress,
+  StarknetSetWormholeAddress,
+} from "./SetWormholeAddress";
 import { EvmExecute } from "./ExecuteAction";
 
 /** Decode a governance payload */
@@ -28,20 +31,21 @@ export function decodeGovernancePayload(
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
-    case "UpgradeContract":
+    case "UpgradeContract": {
       // NOTE: the only way to distinguish the different types of upgrade contract instructions
       // is their payload lengths. We're getting a little lucky here that all of these upgrade instructions
       // have different-length payloads.
       const payloadLength = data.length - PythGovernanceHeader.span;
       if (payloadLength == CosmosUpgradeContract.layout.span) {
         return CosmosUpgradeContract.decode(data);
-      } else if (payloadLength == AptosAuthorizeUpgradeContract.layout.span) {
-        return AptosAuthorizeUpgradeContract.decode(data);
+      } else if (payloadLength == UpgradeContract256Bit.layout.span) {
+        return UpgradeContract256Bit.decode(data);
       } else if (payloadLength == EvmUpgradeContract.layout.span) {
         return EvmUpgradeContract.decode(data);
       } else {
         return undefined;
       }
+    }
     case "AuthorizeGovernanceDataSourceTransfer":
       return AuthorizeGovernanceDataSourceTransfer.decode(data);
     case "SetDataSources":
@@ -52,8 +56,19 @@ export function decodeGovernancePayload(
       return SetValidPeriod.decode(data);
     case "RequestGovernanceDataSourceTransfer":
       return RequestGovernanceDataSourceTransfer.decode(data);
-    case "SetWormholeAddress":
-      return EvmSetWormholeAddress.decode(data);
+    case "SetWormholeAddress": {
+      // NOTE: the only way to distinguish the different types of upgrade contract instructions
+      // is their payload lengths. We're getting a little lucky here that all of these upgrade instructions
+      // have different-length payloads.
+      const payloadLength = data.length - PythGovernanceHeader.span;
+      if (payloadLength == EvmSetWormholeAddress.layout.span) {
+        return EvmSetWormholeAddress.decode(data);
+      } else if (payloadLength == StarknetSetWormholeAddress.layout.span) {
+        return StarknetSetWormholeAddress.decode(data);
+      } else {
+        return undefined;
+      }
+    }
     case "Execute":
       return EvmExecute.decode(data);
     default:

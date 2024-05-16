@@ -67,6 +67,7 @@ export const RECEIVER_CHAINS = {
   parallel: 60048,
   iota: 60049,
   flow_previewnet: 60050,
+  starknet: 60051,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -149,6 +150,7 @@ export const RECEIVER_CHAINS = {
   olive_testnet: 50072,
   orange_testnet: 50073,
   polygon_amoy: 50074,
+  starknet_sepolia: 50075,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
