@@ -18,11 +18,9 @@ import * as fc from "fast-check";
 import { ChainName, CHAINS } from "../chains";
 import { Arbitrary, IntArrayConstraints } from "fast-check";
 import {
-  AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
   EvmUpgradeContract,
-  StarknetUpgradeContract,
-  SuiAuthorizeUpgradeContract,
+  UpgradeContract256Bit,
 } from "../governance_payload/UpgradeContract";
 import {
   AuthorizeGovernanceDataSourceTransfer,
@@ -240,7 +238,7 @@ test("GovernancePayload ser/de", (done) => {
     )
   ).toBeTruthy();
 
-  const upgradeContract = new StarknetUpgradeContract(
+  const upgradeContract = new UpgradeContract256Bit(
     "starknet",
     "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee"
   );
@@ -315,32 +313,19 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       const cosmosArb = fc.bigUintN(64).map((codeId) => {
         return new CosmosUpgradeContract(header.targetChainId, codeId);
       });
-      const aptosArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+      const arb256bit = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
         (buffer) => {
-          return new AptosAuthorizeUpgradeContract(
-            header.targetChainId,
-            buffer
-          );
+          return new UpgradeContract256Bit(header.targetChainId, buffer);
         }
       );
 
-      const suiArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
-        (buffer) => {
-          return new SuiAuthorizeUpgradeContract(header.targetChainId, buffer);
-        }
-      );
-      const starknetArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
-        (buffer) => {
-          return new StarknetUpgradeContract(header.targetChainId, buffer);
-        }
-      );
       const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
         (address) => {
           return new EvmUpgradeContract(header.targetChainId, address);
         }
       );
 
-      return fc.oneof(cosmosArb, aptosArb, suiArb, starknetArb, evmArb);
+      return fc.oneof(cosmosArb, arb256bit, evmArb);
     } else if (header.action === "AuthorizeGovernanceDataSourceTransfer") {
       return bufferArb().map((claimVaa) => {
         return new AuthorizeGovernanceDataSourceTransfer(

@@ -1,8 +1,8 @@
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
 import {
-  AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
   EvmUpgradeContract,
+  UpgradeContract256Bit,
 } from "./UpgradeContract";
 import {
   PythGovernanceAction,
@@ -38,8 +38,8 @@ export function decodeGovernancePayload(
       const payloadLength = data.length - PythGovernanceHeader.span;
       if (payloadLength == CosmosUpgradeContract.layout.span) {
         return CosmosUpgradeContract.decode(data);
-      } else if (payloadLength == AptosAuthorizeUpgradeContract.layout.span) {
-        return AptosAuthorizeUpgradeContract.decode(data);
+      } else if (payloadLength == UpgradeContract256Bit.layout.span) {
+        return UpgradeContract256Bit.decode(data);
       } else if (payloadLength == EvmUpgradeContract.layout.span) {
         return EvmUpgradeContract.decode(data);
       } else {

@@ -1,5 +1,4 @@
 import {
-  AptosAuthorizeUpgradeContract,
   AuthorizeGovernanceDataSourceTransfer,
   CosmosUpgradeContract,
   EvmExecute,
@@ -12,6 +11,7 @@ import {
   SetDataSources,
   SetFee,
   SetValidPeriod,
+  UpgradeContract256Bit,
   WormholeMultisigInstruction,
   getProgramName,
 } from 'xc_admin_common'
@@ -293,7 +293,7 @@ export const WormholeInstructionView = ({
         />
       )}
 
-      {governanceAction instanceof AptosAuthorizeUpgradeContract && (
+      {governanceAction instanceof UpgradeContract256Bit && (
         <GovernanceInstructionView
           instruction={governanceAction}
           actionName={governanceAction.action}
