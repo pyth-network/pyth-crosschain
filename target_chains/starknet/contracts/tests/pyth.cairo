@@ -301,6 +301,7 @@ fn good_update1() -> ByteArray {
     ByteArrayImpl::new(array_try_into(bytes), 11)
 }
 
+// Generated with `../../tools/test_vaas/src/bin/generate_wormhole_vaas.rs`
 fn governance_set_fee() -> ByteArray {
     ByteArrayImpl::new(
         array_try_into(
@@ -316,6 +317,7 @@ fn governance_set_fee() -> ByteArray {
     )
 }
 
+// Generated with `../../tools/test_vaas/src/bin/generate_wormhole_vaas.rs`
 fn governance_set_data_sources() -> ByteArray {
     ByteArrayImpl::new(
         array_try_into(
@@ -333,6 +335,7 @@ fn governance_set_data_sources() -> ByteArray {
     )
 }
 
+// Generated with `../../tools/test_vaas/src/bin/re_sign_price_updates.rs`
 fn price_update1_test() -> ByteArray {
     ByteArrayImpl::new(
         array_try_into(
@@ -358,6 +361,7 @@ fn price_update1_test() -> ByteArray {
     )
 }
 
+// Generated with `../../tools/test_vaas/src/bin/re_sign_price_updates.rs`
 fn price_update2_test() -> ByteArray {
     ByteArrayImpl::new(
         array_try_into(
@@ -383,6 +387,8 @@ fn price_update2_test() -> ByteArray {
     )
 }
 
+// Generated with `../../tools/test_vaas/src/bin/re_sign_price_updates.rs`
+// (same as `price_update2_test()` but with a different emitter)
 fn price_update2_test_alt_emitter() -> ByteArray {
     ByteArrayImpl::new(
         array_try_into(
