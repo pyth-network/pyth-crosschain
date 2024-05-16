@@ -194,7 +194,7 @@ mod pyth {
             let vm = wormhole.parse_and_verify_vm(data);
             self.verify_governance_vm(@vm);
             let data = governance::parse_instruction(vm.payload);
-            if data.target_chain_id != wormhole.chain_id() {
+            if data.target_chain_id != 0 && data.target_chain_id != wormhole.chain_id() {
                 panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
             }
             match data.payload {
