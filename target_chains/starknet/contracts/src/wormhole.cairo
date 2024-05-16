@@ -8,6 +8,7 @@ mod governance;
 #[starknet::interface]
 pub trait IWormhole<T> {
     fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
+    fn chain_id(self: @T) -> u16;
 
     // We don't need to implement other governance actions for now.
     // Instead of upgrading the Wormhole contract, we can switch to another Wormhole address
@@ -260,6 +261,10 @@ mod wormhole {
                     .unwrap_with_felt252();
             };
             vm
+        }
+
+        fn chain_id(self: @ContractState) -> u16 {
+            self.chain_id.read()
         }
 
         fn submit_new_guardian_set(ref self: ContractState, encoded_vm: ByteArray) {

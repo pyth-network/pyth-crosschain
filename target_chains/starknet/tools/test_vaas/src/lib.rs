@@ -1,8 +1,10 @@
+use std::io::{Cursor, Seek, SeekFrom};
+
 use alloy_primitives::FixedBytes;
-use byteorder::{WriteBytesExt, BE};
+use byteorder::{ReadBytesExt, WriteBytesExt, BE};
 use libsecp256k1::{sign, Message, PublicKey, SecretKey};
 use primitive_types::U256;
-use wormhole_vaas::{keccak256, GuardianSetSig, Vaa, VaaBody, VaaHeader, Writeable};
+use wormhole_vaas::{keccak256, GuardianSetSig, Readable, Vaa, VaaBody, VaaHeader, Writeable};
 
 /// A data format compatible with `pyth::byte_array::ByteArray`.
 struct CairoByteArrayData {
@@ -135,3 +137,26 @@ pub fn serialize_vaa(vaa: Vaa) -> Vec<u8> {
 }
 
 pub struct EthAddress(pub Vec<u8>);
+
+pub fn re_sign_price_update(update: &[u8], guardian_set: &GuardianSet) -> Vec<u8> {
+    let mut reader = Cursor::new(update);
+    reader.seek(SeekFrom::Current(6)).unwrap();
+    let trailing_header_len = reader.read_u8().unwrap();
+    reader
+        .seek(SeekFrom::Current(trailing_header_len.into()))
+        .unwrap();
+    reader.seek(SeekFrom::Current(1)).unwrap();
+
+    let pos_before_vaa_size: usize = reader.position().try_into().unwrap();
+    let wh_proof_size: usize = reader.read_u16::<BE>().unwrap().into();
+    let pos_before_vaa: usize = reader.position().try_into().unwrap();
+    let pos_after_vaa = pos_before_vaa + wh_proof_size;
+
+    let vaa = Vaa::read(&mut Cursor::new(&update[pos_before_vaa..pos_after_vaa])).unwrap();
+    let new_vaa = serialize_vaa(guardian_set.sign_vaa(&[0], vaa.body));
+    let mut new_update = update[..pos_before_vaa_size].to_vec();
+    new_update.extend_from_slice(&u16::try_from(new_vaa.len()).unwrap().to_be_bytes());
+    new_update.extend_from_slice(&new_vaa);
+    new_update.extend_from_slice(&update[pos_after_vaa..]);
+    new_update
+}
