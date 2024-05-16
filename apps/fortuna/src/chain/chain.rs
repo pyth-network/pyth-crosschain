@@ -10,6 +10,7 @@ pub type ChainBlockNumber = u64;
 
 #[derive(Clone, Debug)]
 pub struct RequestWithCallbackData {
+    /// The sequence number of the request.
     pub sequence_number:    u64,
     /// The random number submitted by the user while requesting a callback.
     pub user_random_number: [u8; 32],
@@ -25,7 +26,7 @@ pub trait ChainReader: Send + Sync {
         to_block: ChainBlockNumber,
     ) -> Result<Vec<RequestWithCallbackData>>;
 
-    /// Returns the latest block which we consider to be included into the chain and
+    /// Returns the latest block which is included into the chain and
     /// is safe from reorgs.
     async fn get_latest_safe_block(&self) -> Result<ChainBlockNumber>;
 }

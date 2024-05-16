@@ -13,6 +13,7 @@ use {
                 LegacyTxTransformer,
                 PythRandom,
                 RequestedWithCallbackFilter,
+                SignablePythContract,
             },
         },
         config::EthereumConfig,
@@ -48,14 +49,8 @@ use {
     std::sync::Arc,
 };
 
-pub type SignablePythContract = PythRandom<
-    TransformerMiddleware<
-        NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-        LegacyTxTransformer,
-    >,
->;
-
 impl EthereumConfig {
+    /// Instantiate a new chain writer to help interact with the chain.
     pub async fn get_writer(
         &self,
         provider_addr: Address,
@@ -103,6 +98,8 @@ pub struct EvmWriterContract {
 
 #[async_trait]
 impl ChainReader for EvmWriterContract {
+    /// Returns data of all the requests with callback made on chain between
+    /// the given block numbers.
     async fn get_requests_with_callback_data(
         &self,
         from_block: ChainBlockNumber,
@@ -126,6 +123,8 @@ impl ChainReader for EvmWriterContract {
         Ok(filtered_res)
     }
 
+    /// Returns the latest block which is included into the chain and
+    /// is safe from reorgs.
     async fn get_latest_safe_block(&self) -> Result<ChainBlockNumber> {
         let block_number: EthersBlockNumber = self.confirmed_block_status.into();
         let block = self
@@ -144,6 +143,7 @@ impl ChainReader for EvmWriterContract {
 
 #[async_trait]
 impl ChainWriter for EvmWriterContract {
+    /// Fulfill the given request on chain with the given provider revelation.
     async fn reveal_with_callback(
         &self,
         request_with_callback_data: RequestWithCallbackData,
@@ -165,7 +165,7 @@ impl ChainWriter for EvmWriterContract {
                 _ => RevealError::Unknown(anyhow!(e)),
             })?;
 
-        let gas_estimate = EvmWriterContract::gas_multiplier(gas_estimate);
+        let gas_estimate = EvmWriterContract::pad_gas(gas_estimate);
         if gas_estimate > self.gas_limit {
             return Err(RevealError::GasLimitExceeded);
         }
@@ -203,7 +203,7 @@ impl ChainWriter for EvmWriterContract {
 }
 
 impl EvmWriterContract {
-    fn gas_multiplier(gas_estimate: U256) -> U256 {
+    fn pad_gas(gas_estimate: U256) -> U256 {
         let (gas_estimate, _) = gas_estimate
             .saturating_mul(U256::from(4))
             .div_mod(U256::from(3));
