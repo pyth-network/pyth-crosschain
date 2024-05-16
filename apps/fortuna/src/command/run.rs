@@ -136,7 +136,11 @@ pub async fn run_keeper(
             .expect("All chains should be present in the config file")
             .clone();
         let private_key = private_key.clone();
+        let chain_writer = chain_eth_config
+            .get_writer(chain_config.provider_address, &private_key)
+            .await?;
         handles.push(spawn(keeper::run_keeper_threads(
+            chain_writer,
             private_key,
             chain_eth_config,
             chain_config.clone(),
