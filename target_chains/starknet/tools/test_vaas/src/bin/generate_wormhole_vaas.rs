@@ -77,7 +77,7 @@ fn main() {
                 consistency_level: 6,
                 payload: PayloadKind::Binary(
                     GuardianSetUpgrade {
-                        chain_id: 60051,
+                        chain_id: 0,
                         set_index: 3,
                         guardians: vec![EthAddress(
                             hex::decode("686b9ea8e3237110eaaba1f1b7467559a3273819").unwrap(),
