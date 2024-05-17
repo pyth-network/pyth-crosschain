@@ -1,123 +1,12 @@
-use super::byte_array::ByteArray;
-use core::starknet::secp256_trait::Signature;
-use core::starknet::EthAddress;
-use pyth::util::UnwrapWithFelt252;
-
+mod interface;
+mod errors;
 mod governance;
+mod parse_vm;
 
-#[starknet::interface]
-pub trait IWormhole<T> {
-    fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
-    fn chain_id(self: @T) -> u16;
-
-    // We don't need to implement other governance actions for now.
-    // Instead of upgrading the Wormhole contract, we can switch to another Wormhole address
-    // in the Pyth contract.
-    fn submit_new_guardian_set(ref self: T, encoded_vm: ByteArray);
-}
-
-#[derive(Drop, Debug, Clone, Serde)]
-pub struct GuardianSignature {
-    pub guardian_index: u8,
-    pub signature: Signature,
-}
-
-#[derive(Drop, Debug, Clone, Serde)]
-pub struct VerifiedVM {
-    pub version: u8,
-    pub guardian_set_index: u32,
-    pub signatures: Array<GuardianSignature>,
-    pub timestamp: u32,
-    pub nonce: u32,
-    pub emitter_chain_id: u16,
-    pub emitter_address: u256,
-    pub sequence: u64,
-    pub consistency_level: u8,
-    pub payload: ByteArray,
-    pub hash: u256,
-}
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum GovernanceError {
-    InvalidModule,
-    InvalidAction,
-    InvalidChainId,
-    TrailingData,
-    NotCurrentGuardianSet,
-    WrongChain,
-    WrongContract,
-    ActionAlreadyConsumed,
-}
-
-impl GovernanceErrorIntoFelt252 of Into<GovernanceError, felt252> {
-    fn into(self: GovernanceError) -> felt252 {
-        match self {
-            GovernanceError::InvalidModule => 'invalid module',
-            GovernanceError::InvalidAction => 'invalid action',
-            GovernanceError::InvalidChainId => 'invalid chain ID',
-            GovernanceError::TrailingData => 'trailing data',
-            GovernanceError::NotCurrentGuardianSet => 'not signed by current guard.set',
-            GovernanceError::WrongChain => 'wrong governance chain',
-            GovernanceError::WrongContract => 'wrong governance contract',
-            GovernanceError::ActionAlreadyConsumed => 'gov. action already consumed',
-        }
-    }
-}
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum SubmitNewGuardianSetError {
-    NoGuardiansSpecified,
-    TooManyGuardians,
-    InvalidGuardianKey,
-    // guardian set index must increase in steps of 1
-    InvalidGuardianSetSequence,
-    AccessDenied,
-}
-
-impl SubmitNewGuardianSetErrorIntoFelt252 of Into<SubmitNewGuardianSetError, felt252> {
-    fn into(self: SubmitNewGuardianSetError) -> felt252 {
-        match self {
-            SubmitNewGuardianSetError::NoGuardiansSpecified => 'no guardians specified',
-            SubmitNewGuardianSetError::TooManyGuardians => 'too many guardians',
-            SubmitNewGuardianSetError::InvalidGuardianKey => 'invalid guardian key',
-            SubmitNewGuardianSetError::InvalidGuardianSetSequence => 'invalid guardian set sequence',
-            SubmitNewGuardianSetError::AccessDenied => 'access denied',
-        }
-    }
-}
-
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum ParseAndVerifyVmError {
-    Reader: pyth::reader::Error,
-    VmVersionIncompatible,
-    InvalidGuardianSetIndex,
-    InvalidSignature,
-    GuardianSetExpired,
-    NoQuorum,
-    InvalidSignatureOrder,
-    InvalidGuardianIndex,
-}
-
-impl ErrorIntoFelt252 of Into<ParseAndVerifyVmError, felt252> {
-    fn into(self: ParseAndVerifyVmError) -> felt252 {
-        match self {
-            ParseAndVerifyVmError::Reader(err) => err.into(),
-            ParseAndVerifyVmError::VmVersionIncompatible => 'VM version incompatible',
-            ParseAndVerifyVmError::InvalidGuardianSetIndex => 'invalid guardian set index',
-            ParseAndVerifyVmError::InvalidSignature => 'invalid signature',
-            ParseAndVerifyVmError::GuardianSetExpired => 'guardian set expired',
-            ParseAndVerifyVmError::NoQuorum => 'no quorum',
-            ParseAndVerifyVmError::InvalidSignatureOrder => 'invalid signature order',
-            ParseAndVerifyVmError::InvalidGuardianIndex => 'invalid guardian index',
-        }
-    }
-}
-
-pub fn quorum(num_guardians: usize) -> usize {
-    assert(num_guardians < 256, SubmitNewGuardianSetError::TooManyGuardians.into());
-    ((num_guardians * 2) / 3) + 1
-}
+pub use errors::{GovernanceError, SubmitNewGuardianSetError, ParseAndVerifyVmError};
+pub use interface::{
+    VerifiedVM, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait, GuardianSignature, quorum
+};
 
 #[starknet::contract]
 mod wormhole {
@@ -125,23 +14,17 @@ mod wormhole {
     use core::box::BoxTrait;
     use core::array::ArrayTrait;
     use super::{
-        VerifiedVM, IWormhole, GuardianSignature, quorum, ParseAndVerifyVmError,
-        SubmitNewGuardianSetError, GovernanceError
+        VerifiedVM, IWormhole, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
+        GovernanceError
     };
     use super::governance;
+    use super::parse_vm::parse_vm;
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::ByteArray;
-    use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
-    use core::starknet::secp256k1::Secp256k1Point;
-    use core::starknet::{
-        ContractAddress, get_execution_info, get_caller_address, get_block_timestamp, EthAddress,
-    };
-    use core::keccak::cairo_keccak;
+    use core::starknet::{get_block_timestamp, EthAddress};
     use core::starknet::eth_signature::is_eth_signature_valid;
-    use core::integer::u128_byte_reverse;
     use core::panic_with_felt252;
-    use pyth::hash::{Hasher, HasherImpl};
-    use pyth::util::{ONE_SHIFT_160, UNEXPECTED_OVERFLOW};
+    use pyth::util::{UNEXPECTED_OVERFLOW};
 
     #[derive(Drop, Debug, Clone, Serde, starknet::Store)]
     struct GuardianSet {
@@ -174,43 +57,7 @@ mod wormhole {
         self.governance_chain_id.write(governance_chain_id);
         self.governance_contract.write(governance_contract);
         let set_index = 0;
-        store_guardian_set(ref self, set_index, @initial_guardians);
-    }
-
-    fn store_guardian_set(ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>) {
-        if guardians.len() == 0 {
-            panic_with_felt252(SubmitNewGuardianSetError::NoGuardiansSpecified.into());
-        }
-        if guardians.len() >= 256 {
-            panic_with_felt252(SubmitNewGuardianSetError::TooManyGuardians.into());
-        }
-
-        let mut i = 0;
-        while i < guardians.len() {
-            if (*guardians.at(i)).into() == 0 {
-                panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianKey.into());
-            }
-            i += 1;
-        };
-
-        let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
-        self.guardian_sets.write(set_index, set);
-        i = 0;
-        while i < guardians.len() {
-            let key = *guardians.at(i);
-            // i < 256
-            self
-                .guardian_keys
-                .write((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)), key.into());
-            i += 1;
-        };
-        self.current_guardian_set_index.write(set_index);
-    }
-
-    fn expire_guardian_set(ref self: ContractState, set_index: u32, now: u64) {
-        let mut set = self.guardian_sets.read(set_index);
-        set.expiration_time = now + 86400;
-        self.guardian_sets.write(set_index, set);
+        self.store_guardian_set(set_index, @initial_guardians);
     }
 
     #[abi(embed_v0)]
@@ -283,73 +130,53 @@ mod wormhole {
             if new_set.set_index != current_set_index + 1 {
                 panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianSetSequence.into());
             }
-            store_guardian_set(ref self, new_set.set_index, @new_set.keys);
-            expire_guardian_set(ref self, current_set_index, get_block_timestamp());
+            self.store_guardian_set(new_set.set_index, @new_set.keys);
+            self.expire_guardian_set(current_set_index, get_block_timestamp());
 
             self.consumed_governance_actions.write(vm.hash, true);
         }
     }
 
-    fn parse_signature(ref reader: Reader) -> GuardianSignature {
-        let guardian_index = reader.read_u8();
-        let r = reader.read_u256();
-        let s = reader.read_u256();
-        let recovery_id = reader.read_u8();
-        let y_parity = (recovery_id % 2) > 0;
-        GuardianSignature { guardian_index, signature: Signature { r, s, y_parity } }
-    }
-
-    fn parse_vm(encoded_vm: ByteArray) -> VerifiedVM {
-        let mut reader = ReaderImpl::new(encoded_vm);
-        let version = reader.read_u8();
-        if version != 1 {
-            panic_with_felt252(ParseAndVerifyVmError::VmVersionIncompatible.into());
-        }
-        let guardian_set_index = reader.read_u32();
-
-        let sig_count = reader.read_u8();
-        let mut i = 0;
-        let mut signatures = array![];
-
-        while i < sig_count {
-            signatures.append(parse_signature(ref reader));
-            i += 1;
-        };
-
-        let mut reader_for_hash = reader.clone();
-        let mut hasher = HasherImpl::new();
-        hasher.push_reader(ref reader_for_hash);
-        let body_hash1 = hasher.finalize();
-        let mut hasher2 = HasherImpl::new();
-        hasher2.push_u256(body_hash1);
-        let body_hash2 = hasher2.finalize();
-
-        let timestamp = reader.read_u32();
-        let nonce = reader.read_u32();
-        let emitter_chain_id = reader.read_u16();
-        let emitter_address = reader.read_u256();
-        let sequence = reader.read_u64();
-        let consistency_level = reader.read_u8();
-        let payload_len = reader.len();
-        let payload = reader.read_byte_array(payload_len);
-
-        VerifiedVM {
-            version,
-            guardian_set_index,
-            signatures,
-            timestamp,
-            nonce,
-            emitter_chain_id,
-            emitter_address,
-            sequence,
-            consistency_level,
-            payload,
-            hash: body_hash2,
-        }
-    }
-
     #[generate_trait]
     impl PrivateImpl of PrivateImplTrait {
+        fn store_guardian_set(
+            ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>
+        ) {
+            if guardians.len() == 0 {
+                panic_with_felt252(SubmitNewGuardianSetError::NoGuardiansSpecified.into());
+            }
+            if guardians.len() >= 256 {
+                panic_with_felt252(SubmitNewGuardianSetError::TooManyGuardians.into());
+            }
+
+            let mut i = 0;
+            while i < guardians.len() {
+                if (*guardians.at(i)).into() == 0 {
+                    panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianKey.into());
+                }
+                i += 1;
+            };
+
+            let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
+            self.guardian_sets.write(set_index, set);
+            i = 0;
+            while i < guardians.len() {
+                let key = *guardians.at(i);
+                // i < 256
+                self
+                    .guardian_keys
+                    .write((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)), key.into());
+                i += 1;
+            };
+            self.current_guardian_set_index.write(set_index);
+        }
+
+        fn expire_guardian_set(ref self: ContractState, set_index: u32, now: u64) {
+            let mut set = self.guardian_sets.read(set_index);
+            set.expiration_time = now + 86400;
+            self.guardian_sets.write(set_index, set);
+        }
+
         fn verify_governance_vm(self: @ContractState, vm: @VerifiedVM) {
             if self.current_guardian_set_index.read() != *vm.guardian_set_index {
                 panic_with_felt252(GovernanceError::NotCurrentGuardianSet.into());
