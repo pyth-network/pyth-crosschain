@@ -4,6 +4,7 @@ import {
   CosmWasmPriceFeedContract,
   DefaultStore,
   EvmPriceFeedContract,
+  SuiWormholeContract,
   toPrivateKey,
 } from "../src";
 
@@ -26,6 +27,24 @@ async function main() {
 
   const privateKey = toPrivateKey(argv.privateKey);
   const chains = argv.chain;
+
+  for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
+    if (contract instanceof SuiWormholeContract) {
+      if (chains && !chains.includes(contract.getChain().getId())) {
+        continue;
+      }
+
+      try {
+        let index = await contract.getCurrentGuardianSetIndex();
+        console.log("Guardian Index at Start:", index);
+        await contract.syncMainnetGuardianSets(privateKey);
+        index = await contract.getCurrentGuardianSetIndex();
+        console.log("Guardian Index at End:", index);
+      } catch (e) {
+        console.error(`Error updating Guardianset for ${contract.getId()}`, e);
+      }
+    }
+  }
 
   for (const contract of Object.values(DefaultStore.contracts)) {
     // We are currently only managing wormhole receiver contracts in EVM and

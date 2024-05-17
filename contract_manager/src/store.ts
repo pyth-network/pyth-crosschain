@@ -15,6 +15,7 @@ import {
   EvmPriceFeedContract,
   EvmWormholeContract,
   SuiPriceFeedContract,
+  SuiWormholeContract,
   WormholeContract,
 } from "./contracts";
 import { Token } from "./token";
@@ -122,6 +123,7 @@ export class Store {
       [CosmWasmPriceFeedContract.type]: CosmWasmPriceFeedContract,
       [CosmWasmWormholeContract.type]: CosmWasmWormholeContract,
       [SuiPriceFeedContract.type]: SuiPriceFeedContract,
+      [SuiWormholeContract.type]: SuiWormholeContract,
       [EvmPriceFeedContract.type]: EvmPriceFeedContract,
       [AptosPriceFeedContract.type]: AptosPriceFeedContract,
       [AptosWormholeContract.type]: AptosWormholeContract,
