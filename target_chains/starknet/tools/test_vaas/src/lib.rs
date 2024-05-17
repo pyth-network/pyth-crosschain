@@ -138,7 +138,16 @@ pub fn serialize_vaa(vaa: Vaa) -> Vec<u8> {
 
 pub struct EthAddress(pub Vec<u8>);
 
-pub fn re_sign_price_update(update: &[u8], guardian_set: &GuardianSet) -> Vec<u8> {
+pub struct DataSource {
+    pub emitter_chain_id: u16,
+    pub emitter_address: FixedBytes<32>,
+}
+
+pub fn re_sign_price_update(
+    update: &[u8],
+    guardian_set: &GuardianSet,
+    new_emitter: Option<DataSource>,
+) -> Vec<u8> {
     let mut reader = Cursor::new(update);
     reader.seek(SeekFrom::Current(6)).unwrap();
     let trailing_header_len = reader.read_u8().unwrap();
@@ -152,7 +161,11 @@ pub fn re_sign_price_update(update: &[u8], guardian_set: &GuardianSet) -> Vec<u8
     let pos_before_vaa: usize = reader.position().try_into().unwrap();
     let pos_after_vaa = pos_before_vaa + wh_proof_size;
 
-    let vaa = Vaa::read(&mut Cursor::new(&update[pos_before_vaa..pos_after_vaa])).unwrap();
+    let mut vaa = Vaa::read(&mut Cursor::new(&update[pos_before_vaa..pos_after_vaa])).unwrap();
+    if let Some(new_emitter) = new_emitter {
+        vaa.body.emitter_chain = new_emitter.emitter_chain_id;
+        vaa.body.emitter_address = new_emitter.emitter_address;
+    }
     let new_vaa = serialize_vaa(guardian_set.sign_vaa(&[0], vaa.body));
     let mut new_update = update[..pos_before_vaa_size].to_vec();
     new_update.extend_from_slice(&u16::try_from(new_vaa.len()).unwrap().to_be_bytes());
