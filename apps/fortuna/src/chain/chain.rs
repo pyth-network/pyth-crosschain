@@ -16,6 +16,13 @@ pub struct RequestWithCallbackData {
     pub user_random_number: [u8; 32],
 }
 
+#[derive(Clone, Debug)]
+pub struct ProviderInfo {
+    pub accrued_fee:             f64,
+    pub current_sequence_number: u64,
+    pub end_sequence_number:     u64,
+}
+
 #[async_trait]
 pub trait ChainReader: Send + Sync {
     /// Returns data of all the requests with callback made on chain between
@@ -29,6 +36,12 @@ pub trait ChainReader: Send + Sync {
     /// Returns the latest block which is included into the chain and
     /// is safe from reorgs.
     async fn get_latest_safe_block(&self) -> Result<ChainBlockNumber>;
+
+    /// Returns the provider address for which we are fulfilling requests.
+    fn get_provider_address(&self) -> String;
+
+    /// Returns the provider info for which we are fulfilling requests.
+    async fn get_provider_info(&self) -> Result<ProviderInfo>;
 }
 
 pub enum RevealError {
@@ -44,11 +57,15 @@ pub struct RevealSuccess {
 }
 
 #[async_trait]
-pub trait ChainWriter: Send + Sync + ChainReader {
+pub trait ChainWriter: ChainReader {
     /// Fulfill the given request on chain with the given provider revelation.
     async fn reveal_with_callback(
         &self,
         request_with_callback_data: RequestWithCallbackData,
         provider_revelation: [u8; 32],
     ) -> Result<RevealSuccess, RevealError>;
+
+    fn get_writer_address(&self) -> String;
+
+    async fn get_writer_balance(&self) -> Result<f64>;
 }

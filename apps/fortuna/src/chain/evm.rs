@@ -3,6 +3,7 @@ use {
         ChainBlockNumber,
         ChainReader,
         ChainWriter,
+        ProviderInfo,
         RequestWithCallbackData,
         RevealError,
     },
@@ -139,6 +140,28 @@ impl ChainReader for EvmWriterContract {
             None => Err(Error::msg("pending confirmation")),
         }
     }
+
+    /// Returns the provider address for which we are fulfilling requests.
+    fn get_provider_address(&self) -> String {
+        self.provider_addr.to_string()
+    }
+
+    /// Returns the provider info.
+    async fn get_provider_info(&self) -> Result<ProviderInfo> {
+        let info = self
+            .contract
+            .get_provider_info(self.provider_addr)
+            .call()
+            .await?;
+
+        Ok(ProviderInfo {
+            accrued_fee:             EvmWriterContract::wei_to_eth(U256::from(
+                info.accrued_fees_in_wei,
+            )),
+            current_sequence_number: info.sequence_number,
+            end_sequence_number:     info.end_sequence_number,
+        })
+    }
 }
 
 #[async_trait]
@@ -196,6 +219,26 @@ impl ChainWriter for EvmWriterContract {
             tx_hash: res.transaction_hash.to_string(),
             gas_used,
         })
+    }
+
+    fn get_writer_address(&self) -> String {
+        self.contract
+            .client()
+            .inner()
+            .inner()
+            .signer()
+            .address()
+            .to_string()
+    }
+
+    async fn get_writer_balance(&self) -> Result<f64> {
+        let writer_address = self.get_writer_address();
+        let balance = self
+            .contract
+            .client()
+            .get_balance(writer_address, None)
+            .await?;
+        Ok(EvmWriterContract::wei_to_eth(balance))
     }
 }
 
