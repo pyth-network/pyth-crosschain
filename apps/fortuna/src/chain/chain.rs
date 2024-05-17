@@ -18,8 +18,11 @@ pub struct RequestWithCallbackData {
 
 #[derive(Clone, Debug)]
 pub struct ProviderInfo {
+    /// The fees accrued by the provider on chain.
     pub accrued_fee:             f64,
+    /// The sequence number that will be assigned to the next request by the provider.
     pub current_sequence_number: u64,
+    /// The last sequence number that can be assigned to a request.
     pub end_sequence_number:     u64,
 }
 
@@ -44,15 +47,23 @@ pub trait ChainReader: Send + Sync {
     async fn get_provider_info(&self) -> Result<ProviderInfo>;
 }
 
+/// Errors that can occur during the reveal process.
 pub enum RevealError {
+    /// When the reveal requires a gas more than what is set as a limit
     GasLimitExceeded,
+    /// When the contract execution failed
     ContractError(Error),
+    /// When the RPC request failed
     RpcError(Error),
+    /// When the error is unknown
     Unknown(Error),
 }
 
+/// Successful result of the reveal process.
 pub struct RevealSuccess {
+    /// The hash of the transaction which was confirmed.
     pub tx_hash:  String,
+    /// The amount of gas used by the transaction.
     pub gas_used: f64,
 }
 
@@ -65,7 +76,9 @@ pub trait ChainWriter: ChainReader {
         provider_revelation: [u8; 32],
     ) -> Result<RevealSuccess, RevealError>;
 
+    /// Returns the writer address using which we are fulfilling requests.
     fn get_writer_address(&self) -> String;
 
+    /// Returns the balance of the writer address.
     async fn get_writer_balance(&self) -> Result<f64>;
 }
