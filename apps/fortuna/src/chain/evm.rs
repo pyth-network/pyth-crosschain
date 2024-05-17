@@ -232,7 +232,13 @@ impl ChainWriter for EvmWriterContract {
     }
 
     async fn get_writer_balance(&self) -> Result<f64> {
-        let writer_address = self.get_writer_address();
+        let writer_address = self.contract
+            .client()
+            .inner()
+            .inner()
+            .signer()
+            .address();
+
         let balance = self
             .contract
             .client()
