@@ -3,6 +3,7 @@ use pyth::reader::{Reader, ReaderImpl};
 use pyth::byte_array::ByteArray;
 use pyth::pyth::errors::GovernanceActionError;
 use core::panic_with_felt252;
+use core::starknet::ContractAddress;
 use super::DataSource;
 
 const MAGIC: u32 = 0x5054474d;
@@ -45,6 +46,7 @@ pub struct GovernanceInstruction {
 pub enum GovernancePayload {
     SetFee: SetFee,
     SetDataSources: SetDataSources,
+    SetWormholeAddress: SetWormholeAddress,
 // TODO: others
 }
 
@@ -57,6 +59,11 @@ pub struct SetFee {
 #[derive(Drop, Debug)]
 pub struct SetDataSources {
     pub sources: Array<DataSource>,
+}
+
+#[derive(Drop, Debug)]
+pub struct SetWormholeAddress {
+    pub address: ContractAddress,
 }
 
 pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
@@ -102,7 +109,16 @@ pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
         GovernanceAction::RequestGovernanceDataSourceTransfer => {
             panic_with_felt252('unimplemented')
         },
-        GovernanceAction::SetWormholeAddress => { panic_with_felt252('unimplemented') },
+        GovernanceAction::SetWormholeAddress => {
+            let address: felt252 = reader
+                .read_u256()
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            let address = address
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            GovernancePayload::SetWormholeAddress(SetWormholeAddress { address })
+        },
     };
 
     if reader.len() != 0 {

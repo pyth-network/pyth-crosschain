@@ -1,4 +1,4 @@
-use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank, CheatTarget};
+use snforge_std::{declare, ContractClass, ContractClassTrait, start_prank, stop_prank, CheatTarget};
 use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
 use pyth::reader::ReaderImpl;
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
@@ -151,16 +151,23 @@ fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, r
     dispatcher.submit_new_guardian_set(good_vm1());
 }
 
-fn deploy(
+// Deploys a previously declared wormhole contract class at the specified address.
+// If address is not specified, the default address derivation is used.
+pub fn deploy_declared_at(
+    class: @ContractClass,
     guardians: Array<EthAddress>,
     chain_id: u16,
     governance_chain_id: u16,
     governance_contract: u256,
+    address: Option<ContractAddress>,
 ) -> IWormholeDispatcher {
     let mut args = array![];
     (guardians, chain_id, governance_chain_id, governance_contract).serialize(ref args);
-    let contract = declare("wormhole");
-    let contract_address = match contract.deploy(@args) {
+    let result = match address {
+        Option::Some(address) => class.deploy_at(@args, address),
+        Option::None => class.deploy(@args),
+    };
+    let contract_address = match result {
         Result::Ok(v) => { v },
         Result::Err(err) => {
             panic(err.panic_data);
@@ -170,6 +177,20 @@ fn deploy(
     IWormholeDispatcher { contract_address }
 }
 
+// Declares and deploys the contract.
+fn deploy(
+    guardians: Array<EthAddress>,
+    chain_id: u16,
+    governance_chain_id: u16,
+    governance_contract: u256,
+) -> IWormholeDispatcher {
+    let class = declare("wormhole");
+    deploy_declared_at(
+        @class, guardians, chain_id, governance_chain_id, governance_contract, Option::None
+    )
+}
+
+// Declares and deploys the contract and initializes it with mainnet guardian set upgrades.
 pub fn deploy_with_mainnet_guardians() -> IWormholeDispatcher {
     let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 
@@ -181,12 +202,30 @@ pub fn deploy_with_mainnet_guardians() -> IWormholeDispatcher {
     dispatcher
 }
 
+const TEST_GUARDIAN_ADDRESS: felt252 = 0x686b9ea8e3237110eaaba1f1b7467559a3273819;
+
+// Declares and deploys the contract with the test guardian address that's used to sign VAAs generated in `test_vaas`.
 pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
     deploy(
-        array_try_into(array![0x686b9ea8e3237110eaaba1f1b7467559a3273819]),
+        array_try_into(array![TEST_GUARDIAN_ADDRESS]),
         CHAIN_ID,
         GOVERNANCE_CHAIN_ID,
-        GOVERNANCE_CONTRACT
+        GOVERNANCE_CONTRACT,
+    )
+}
+
+// Deploys a previously declared wormhole contract class
+// with the test guardian address that's used to sign VAAs generated in `test_vaas`.
+pub fn deploy_declared_with_test_guardian_at(
+    class: @ContractClass, address: ContractAddress
+) -> IWormholeDispatcher {
+    deploy_declared_at(
+        class,
+        array_try_into(array![TEST_GUARDIAN_ADDRESS]),
+        CHAIN_ID,
+        GOVERNANCE_CHAIN_ID,
+        GOVERNANCE_CONTRACT,
+        Option::Some(address),
     )
 }
 
@@ -295,9 +334,26 @@ fn good_vm1() -> ByteArray {
     ByteArrayImpl::new(array_try_into(bytes), 22)
 }
 
-const CHAIN_ID: u16 = 60051;
-const GOVERNANCE_CHAIN_ID: u16 = 1;
-const GOVERNANCE_CONTRACT: u256 = 4;
+pub const CHAIN_ID: u16 = 60051;
+pub const GOVERNANCE_CHAIN_ID: u16 = 1;
+pub const GOVERNANCE_CONTRACT: u256 = 4;
+
+// Generated with `../../tools/test_vaas/src/bin/generate_wormhole_vaas.rs`
+pub fn upgrade_test_guardian_1_to_2() -> ByteArray {
+    ByteArrayImpl::new(
+        array_try_into(
+            array![
+                1766847064779995287375101177319600239435018729139341591012343354326614060,
+                152103705464783935682610402914146418697934830197930803919710856925871578605,
+                421150899970781847000318380764303006646986333759174982038890844802036793344,
+                4835703278458516699153920,
+                1131377253,
+                210624583337114749311237613435643962969294824395451022190048752713,
+            ]
+        ),
+        28
+    )
+}
 
 // Below are actual guardian set upgrade VAAS from
 // https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37

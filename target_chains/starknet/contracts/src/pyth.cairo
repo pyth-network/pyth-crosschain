@@ -3,7 +3,7 @@ mod interface;
 mod price_update;
 mod governance;
 
-pub use pyth::{Event, PriceFeedUpdateEvent};
+pub use pyth::{Event, PriceFeedUpdateEvent, WormholeAddressSet};
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
 pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
 
@@ -29,6 +29,7 @@ mod pyth {
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
         PriceFeedUpdate: PriceFeedUpdateEvent,
+        WormholeAddressSet: WormholeAddressSet,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -38,6 +39,12 @@ mod pyth {
         pub publish_time: u64,
         pub price: i64,
         pub conf: u64,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct WormholeAddressSet {
+        pub old_address: ContractAddress,
+        pub new_address: ContractAddress,
     }
 
     #[storage]
@@ -191,20 +198,32 @@ mod pyth {
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
-            let vm = wormhole.parse_and_verify_vm(data);
+            let vm = wormhole.parse_and_verify_vm(data.clone());
             self.verify_governance_vm(@vm);
-            let data = governance::parse_instruction(vm.payload);
-            if data.target_chain_id != 0 && data.target_chain_id != wormhole.chain_id() {
+            let instruction = governance::parse_instruction(vm.payload);
+            if instruction.target_chain_id != 0
+                && instruction.target_chain_id != wormhole.chain_id() {
                 panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
             }
-            match data.payload {
-                GovernancePayload::SetFee(data) => {
-                    let value = apply_decimal_expo(data.value, data.expo);
+            match instruction.payload {
+                GovernancePayload::SetFee(payload) => {
+                    let value = apply_decimal_expo(payload.value, payload.expo);
                     self.single_update_fee.write(value);
                 },
-                GovernancePayload::SetDataSources(data) => {
-                    self.write_data_sources(data.sources);
+                GovernancePayload::SetDataSources(payload) => {
+                    self.write_data_sources(payload.sources);
                 },
+                GovernancePayload::SetWormholeAddress(payload) => {
+                    if instruction.target_chain_id == 0 {
+                        panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+                    }
+                    self.check_new_wormhole(payload.address, data);
+                    self.wormhole_address.write(payload.address);
+                    let event = WormholeAddressSet {
+                        old_address: wormhole.contract_address, new_address: payload.address,
+                    };
+                    self.emit(event);
+                }
             }
             self.last_executed_governance_sequence.write(vm.sequence);
         }
@@ -269,6 +288,31 @@ mod pyth {
             }
             if *vm.sequence <= self.last_executed_governance_sequence.read() {
                 panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
+            }
+        }
+
+        fn check_new_wormhole(
+            self: @ContractState, wormhole_address: ContractAddress, vm: ByteArray
+        ) {
+            let wormhole = IWormholeDispatcher { contract_address: wormhole_address };
+            let vm = wormhole.parse_and_verify_vm(vm);
+            self.verify_governance_vm(@vm);
+            // Purposefully, we don't check whether the chainId is the same as the current chainId because
+            // we might want to change the chain id of the wormhole contract.
+            let data = governance::parse_instruction(vm.payload);
+            match data.payload {
+                GovernancePayload::SetWormholeAddress(payload) => {
+                    // The following check is not necessary for security, but is a sanity check that the new wormhole
+                    // contract parses the payload correctly.
+                    if payload.address != wormhole_address {
+                        panic_with_felt252(
+                            GovernanceActionError::InvalidWormholeAddressToSet.into()
+                        );
+                    }
+                },
+                _ => {
+                    panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
+                }
             }
         }
     }

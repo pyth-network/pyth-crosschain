@@ -3,16 +3,19 @@ use snforge_std::{
     EventFetcher, event_name_hash, Event
 };
 use pyth::pyth::{
-    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent
+    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
+    WormholeAddressSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
+use pyth::wormhole::IWormholeDispatcherTrait;
 use core::starknet::ContractAddress;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use super::wormhole::corrupted_vm;
 
 fn decode_event(event: @Event) -> PythEvent {
-    if *event.keys.at(0) == event_name_hash('PriceFeedUpdate') {
+    let key0 = *event.keys.at(0);
+    if key0 == event_name_hash('PriceFeedUpdate') {
         assert!(event.keys.len() == 3);
         assert!(event.data.len() == 3);
         let event = PriceFeedUpdateEvent {
@@ -25,6 +28,14 @@ fn decode_event(event: @Event) -> PythEvent {
             conf: (*event.data.at(2)).try_into().unwrap(),
         };
         PythEvent::PriceFeedUpdate(event)
+    } else if key0 == event_name_hash('WormholeAddressSet') {
+        assert!(event.keys.len() == 1);
+        assert!(event.data.len() == 2);
+        let event = WormholeAddressSet {
+            old_address: (*event.data.at(0)).try_into().unwrap(),
+            new_address: (*event.data.at(1)).try_into().unwrap(),
+        };
+        PythEvent::WormholeAddressSet(event)
     } else {
         panic!("unrecognized event")
     }
@@ -192,6 +203,140 @@ fn test_rejects_update_after_data_source_changed() {
     assert!(last_price.price == 6281522520745);
 }
 
+#[test]
+fn test_governance_set_wormhole_works() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(price_update1_test());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    // Address used in the governance instruction
+    let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
+        .try_into()
+        .unwrap();
+    let wormhole2 = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole2_address
+    );
+    wormhole2.submit_new_guardian_set(super::wormhole::upgrade_test_guardian_1_to_2());
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    pyth.execute_governance_instruction(governance_set_wormhole());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.at(0);
+    assert!(from == @pyth.contract_address);
+    let event = decode_event(event);
+    let expected = WormholeAddressSet {
+        old_address: wormhole_address, new_address: wormhole2_address,
+    };
+    assert!(event == PythEvent::WormholeAddressSet(expected));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(price_update2_test2_guardian());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+}
+
+#[test]
+#[should_panic(expected: ('invalid guardian set index',))]
+fn test_rejects_price_update_without_setting_wormhole() {
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(price_update1_test());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(price_update2_test2_guardian());
+}
+
+// This test doesn't pass because of an snforge bug.
+// See https://github.com/foundry-rs/starknet-foundry/issues/2096
+// TODO: update snforge and unignore when the next release is available
+#[test]
+#[should_panic]
+#[ignore]
+fn test_rejects_set_wormhole_without_deploying() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    pyth.execute_governance_instruction(governance_set_wormhole());
+}
+
+#[test]
+#[should_panic(expected: ('Invalid signature',))]
+fn test_rejects_set_wormhole_with_incompatible_guardians() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    // Address used in the governance instruction
+    let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
+        .try_into()
+        .unwrap();
+    super::wormhole::deploy_declared_at(
+        @wormhole_class,
+        array_try_into(array![0x301]),
+        super::wormhole::CHAIN_ID,
+        super::wormhole::GOVERNANCE_CHAIN_ID,
+        super::wormhole::GOVERNANCE_CONTRACT,
+        Option::Some(wormhole2_address),
+    );
+    pyth.execute_governance_instruction(governance_set_wormhole());
+}
+
 fn deploy_default(
     owner: ContractAddress, wormhole_address: ContractAddress, fee_contract_address: ContractAddress
 ) -> IPythDispatcher {
@@ -335,6 +480,23 @@ fn governance_set_data_sources() -> ByteArray {
     )
 }
 
+// Generated with `../../tools/test_vaas/src/bin/generate_wormhole_vaas.rs`
+fn governance_set_wormhole() -> ByteArray {
+    ByteArrayImpl::new(
+        array_try_into(
+            array![
+                1766847064779993746734475762358060494055703996306832791834621971457521573,
+                304597972750688370688620483915336485865968448355388067310514768529150663948,
+                37753701654018547624593082738443625808734511977366199414609989499994767360,
+                49565958604199796163020368,
+                148907253456057279176930315687485033494639386197985334929728922792833758561,
+                3789456330195130818,
+            ]
+        ),
+        8
+    )
+}
+
 // Generated with `../../tools/test_vaas/src/bin/re_sign_price_updates.rs`
 fn price_update1_test() -> ByteArray {
     ByteArrayImpl::new(
@@ -397,6 +559,32 @@ fn price_update2_test_alt_emitter() -> ByteArray {
                 359963320496358929787450247990998878269668655936959553372924597144593948268,
                 168294065609209340478050191639515428002729901421915929480902120205187023616,
                 301,
+                1390200461185063661704370212555794334034815850290352693418762308,
+                419598057710749587537080281518289024699150505326900462079484531390510117965,
+                341318259000017461738706238280879290398059773267212529438780607147892801536,
+                1437437604754599821041091415535991441313586347841485651963630208563420739,
+                305222830440467078008666830004555943609735125691441831219591213494068931362,
+                358396406696718360717615797531477055540194104082154743994717297650279402646,
+                429270385827211102844129651648706540139690432947840438198166022904666187018,
+                343946166212648899477337159288779715507980257611242783073384876024451565860,
+                67853010773876862913176476530730880916439012004585961528150130218675908823,
+                370855179649505412564259994413632062925303311800103998016489412083011059699,
+                1182295126766215829784496273374889928477877265080355104888778,
+            ]
+        ),
+        25
+    )
+}
+
+// Generated with `../../tools/test_vaas/src/bin/re_sign_price_updates.rs`
+fn price_update2_test2_guardian() -> ByteArray {
+    ByteArrayImpl::new(
+        array_try_into(
+            array![
+                141887862745809943100421399774809552391157901121219476151849805356757998433,
+                22927445661989480418689320204846867835510434886542566099417398893061382455,
+                299474373929736638290349370983054029794228129896969116108467835428084390625,
+                3498691308882995183871222184377409432186747119716981166996399082193594993,
                 1390200461185063661704370212555794334034815850290352693418762308,
                 419598057710749587537080281518289024699150505326900462079484531390510117965,
                 341318259000017461738706238280879290398059773267212529438780607147892801536,

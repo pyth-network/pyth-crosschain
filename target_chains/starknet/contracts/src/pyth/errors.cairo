@@ -19,6 +19,7 @@ pub enum GovernanceActionError {
     OldGovernanceMessage,
     InvalidGovernanceTarget,
     InvalidGovernanceMessage,
+    InvalidWormholeAddressToSet,
 }
 
 impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
@@ -30,6 +31,7 @@ impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
             GovernanceActionError::OldGovernanceMessage => 'old governance message',
             GovernanceActionError::InvalidGovernanceTarget => 'invalid governance target',
             GovernanceActionError::InvalidGovernanceMessage => 'invalid governance message',
+            GovernanceActionError::InvalidWormholeAddressToSet => 'invalid new wormhole address',
         }
     }
 }

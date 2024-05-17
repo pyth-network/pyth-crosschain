@@ -136,6 +136,7 @@ pub fn serialize_vaa(vaa: Vaa) -> Vec<u8> {
     vaa_bytes
 }
 
+#[derive(Debug, Clone)]
 pub struct EthAddress(pub Vec<u8>);
 
 pub struct DataSource {
