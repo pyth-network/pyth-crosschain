@@ -5,11 +5,19 @@ use test_vaas::{
 
 fn main() {
     let secret1 = "047f10198517025e9bf2f6d09ebb650826b35397f01ca2a64a38348cae653f86";
-    // address 0x686b9ea8e3237110eaaba1f1b7467559a3273819
+    // address1 = 0x686b9ea8e3237110eaaba1f1b7467559a3273819
+
+    let secret2 = "a95d32e5e2b9464b3f49a0f7ef2ede3ff17585836b253b96c832a86d2b5614cb";
+    // address2 = 0x363598f080a817e633fc2d8f2b92e6e637f8b449
 
     let guardians = GuardianSet {
         set_index: 0,
         secrets: vec![SecretKey::parse_slice(&hex::decode(secret1).unwrap()).unwrap()],
+    };
+
+    let guardians2 = GuardianSet {
+        set_index: 1,
+        secrets: vec![SecretKey::parse_slice(&hex::decode(secret2).unwrap()).unwrap()],
     };
 
     let data = [
@@ -24,7 +32,7 @@ fn main() {
     }
 
     println!("update #2 with alt emitter:");
-    let data = re_sign_price_update(
+    let update2_alt_emitter = re_sign_price_update(
         &hex::decode(data[1]).unwrap(),
         &guardians,
         Some(DataSource {
@@ -32,6 +40,11 @@ fn main() {
             emitter_address: u256_to_be(301.into()).into(),
         }),
     );
-    print_as_array_and_last(&data);
+    print_as_array_and_last(&update2_alt_emitter);
+
+    println!("update #2 with test2 guardian:");
+    let update2_test2_guardian =
+        re_sign_price_update(&hex::decode(data[1]).unwrap(), &guardians2, None);
+    print_as_array_and_last(&update2_test2_guardian);
     println!();
 }
