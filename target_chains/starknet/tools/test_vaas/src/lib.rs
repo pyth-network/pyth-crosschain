@@ -1,4 +1,7 @@
-use std::io::{Cursor, Seek, SeekFrom};
+use std::{
+    fmt::Display,
+    io::{Cursor, Seek, SeekFrom},
+};
 
 use alloy_primitives::FixedBytes;
 use byteorder::{ReadBytesExt, WriteBytesExt, BE};
@@ -53,14 +56,21 @@ pub fn print_as_cli_input(data: &[u8]) {
 }
 
 /// Print data in the format suitable for embedding in tests.
-pub fn print_as_array_and_last(data: &[u8]) {
+pub fn print_as_cairo_fn(data: &[u8], name: impl Display, comment: impl Display) {
+    println!();
+    println!("// {comment}");
     let data = to_cairo_byte_array_data(data);
-    println!("let bytes = array![");
+    println!("pub fn {name}() -> ByteArray {{");
+    println!("    let bytes = array![");
     for item in data.data {
-        println!("    {item},");
+        println!("        {item},");
     }
-    println!("];");
-    println!("let last = {};", data.num_last_bytes);
+    println!("    ];");
+    println!(
+        "    ByteArrayImpl::new(array_try_into(bytes), {})",
+        data.num_last_bytes
+    );
+    println!("}}");
 }
 
 pub struct GuardianSet {
@@ -144,11 +154,13 @@ pub struct DataSource {
     pub emitter_address: FixedBytes<32>,
 }
 
-pub fn re_sign_price_update(
-    update: &[u8],
-    guardian_set: &GuardianSet,
-    new_emitter: Option<DataSource>,
-) -> Vec<u8> {
+pub struct VaaIndexes {
+    pub pos_before_vaa_size: usize,
+    pub pos_before_vaa: usize,
+    pub pos_after_vaa: usize,
+}
+
+pub fn locate_vaa_in_price_update(update: &[u8]) -> VaaIndexes {
     let mut reader = Cursor::new(update);
     reader.seek(SeekFrom::Current(6)).unwrap();
     let trailing_header_len = reader.read_u8().unwrap();
@@ -161,6 +173,23 @@ pub fn re_sign_price_update(
     let wh_proof_size: usize = reader.read_u16::<BE>().unwrap().into();
     let pos_before_vaa: usize = reader.position().try_into().unwrap();
     let pos_after_vaa = pos_before_vaa + wh_proof_size;
+    VaaIndexes {
+        pos_before_vaa_size,
+        pos_before_vaa,
+        pos_after_vaa,
+    }
+}
+
+pub fn re_sign_price_update(
+    update: &[u8],
+    guardian_set: &GuardianSet,
+    new_emitter: Option<DataSource>,
+) -> Vec<u8> {
+    let VaaIndexes {
+        pos_before_vaa_size,
+        pos_before_vaa,
+        pos_after_vaa,
+    } = locate_vaa_in_price_update(update);
 
     let mut vaa = Vaa::read(&mut Cursor::new(&update[pos_before_vaa..pos_after_vaa])).unwrap();
     if let Some(new_emitter) = new_emitter {
