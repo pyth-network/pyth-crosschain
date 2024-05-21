@@ -39,19 +39,17 @@ pub async fn inspect(opts: &InspectOptions) -> Result<()> {
 }
 
 async fn inspect_chain(chain_config: &EthereumConfig, num_requests: u64) -> Result<()> {
-    let contract = PythContract::from_config(chain_config)?;
-
     let rpc_provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-    let entropy_provider = contract.get_default_provider().call().await?;
-
-    let provider_info = contract.get_provider_info(entropy_provider).call().await?;
-
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
         .await
         .expect("Failed to get code")
         .len()
         > 0;
+
+    let contract = PythContract::from_config(chain_config)?;
+    let entropy_provider = contract.get_default_provider().call().await?;
+    let provider_info = contract.get_provider_info(entropy_provider).call().await?;
     let mut current_request_number = provider_info.sequence_number;
     println!("Initial request number: {}", current_request_number);
     let last_request_number = current_request_number.saturating_sub(num_requests);
