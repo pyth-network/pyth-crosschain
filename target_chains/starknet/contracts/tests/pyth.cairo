@@ -4,7 +4,7 @@ use snforge_std::{
 };
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
-    WormholeAddressSet,
+    WormholeAddressSet, GovernanceDataSourceSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -14,32 +14,49 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use super::wormhole::corrupted_vm;
 use super::data;
 
-fn decode_event(event: @Event) -> PythEvent {
-    let key0 = *event.keys.at(0);
-    if key0 == event_name_hash('PriceFeedUpdate') {
-        assert!(event.keys.len() == 3);
-        assert!(event.data.len() == 3);
+#[generate_trait]
+impl DecodeEventHelpers of DecodeEventHelpersTrait {
+    fn pop<T, +TryInto<felt252, T>>(ref self: Array<felt252>) -> T {
+        self.pop_front().unwrap().try_into().unwrap()
+    }
+
+    fn pop_u256(ref self: Array<felt252>) -> u256 {
+        u256 { low: self.pop(), high: self.pop(), }
+    }
+
+    fn pop_data_source(ref self: Array<felt252>) -> DataSource {
+        DataSource { emitter_chain_id: self.pop(), emitter_address: self.pop_u256(), }
+    }
+}
+
+fn decode_event(mut event: Event) -> PythEvent {
+    let key0: felt252 = event.keys.pop();
+    let output = if key0 == event_name_hash('PriceFeedUpdate') {
         let event = PriceFeedUpdateEvent {
-            price_id: u256 {
-                low: (*event.keys.at(1)).try_into().unwrap(),
-                high: (*event.keys.at(2)).try_into().unwrap(),
-            },
-            publish_time: (*event.data.at(0)).try_into().unwrap(),
-            price: (*event.data.at(1)).try_into().unwrap(),
-            conf: (*event.data.at(2)).try_into().unwrap(),
+            price_id: event.keys.pop_u256(),
+            publish_time: event.data.pop(),
+            price: event.data.pop(),
+            conf: event.data.pop(),
         };
         PythEvent::PriceFeedUpdate(event)
     } else if key0 == event_name_hash('WormholeAddressSet') {
-        assert!(event.keys.len() == 1);
-        assert!(event.data.len() == 2);
         let event = WormholeAddressSet {
-            old_address: (*event.data.at(0)).try_into().unwrap(),
-            new_address: (*event.data.at(1)).try_into().unwrap(),
+            old_address: event.data.pop(), new_address: event.data.pop(),
         };
         PythEvent::WormholeAddressSet(event)
+    } else if key0 == event_name_hash('GovernanceDataSourceSet') {
+        let event = GovernanceDataSourceSet {
+            old_data_source: event.data.pop_data_source(),
+            new_data_source: event.data.pop_data_source(),
+            last_executed_governance_sequence: event.data.pop(),
+        };
+        PythEvent::GovernanceDataSourceSet(event)
     } else {
         panic!("unrecognized event")
-    }
+    };
+    assert!(event.keys.len() == 0);
+    assert!(event.data.len() == 0);
+    output
 }
 
 #[test]
@@ -62,8 +79,8 @@ fn update_price_feeds_works() {
 
     spy.fetch_events();
     assert!(spy.events.len() == 1);
-    let (from, event) = spy.events.at(0);
-    assert!(from == @pyth.contract_address);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = PriceFeedUpdateEvent {
         price_id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
@@ -245,8 +262,8 @@ fn test_governance_set_wormhole_works() {
 
     spy.fetch_events();
     assert!(spy.events.len() == 1);
-    let (from, event) = spy.events.at(0);
-    assert!(from == @pyth.contract_address);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = WormholeAddressSet {
         old_address: wormhole_address, new_address: wormhole2_address,
@@ -336,6 +353,58 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
         Option::Some(wormhole2_address),
     );
     pyth.execute_governance_instruction(data::pyth_set_wormhole());
+}
+
+#[test]
+fn test_governance_transfer_works() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    pyth.execute_governance_instruction(data::pyth_auth_transfer());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = GovernanceDataSourceSet {
+        old_data_source: DataSource { emitter_chain_id: 1, emitter_address: 41, },
+        new_data_source: DataSource { emitter_chain_id: 2, emitter_address: 43, },
+        last_executed_governance_sequence: 1,
+    };
+    assert!(event == PythEvent::GovernanceDataSourceSet(expected));
+
+    pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
+}
+
+#[test]
+#[should_panic(expected: ('invalid governance data source',))]
+fn test_set_fee_rejects_wrong_emitter() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
+}
+
+#[test]
+#[should_panic(expected: ('invalid governance data source',))]
+fn test_rejects_old_emitter_after_transfer() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth.execute_governance_instruction(data::pyth_auth_transfer());
+    pyth.execute_governance_instruction(data::pyth_set_fee());
 }
 
 fn deploy_default(

@@ -3,7 +3,7 @@ mod interface;
 mod price_update;
 mod governance;
 
-pub use pyth::{Event, PriceFeedUpdateEvent, WormholeAddressSet};
+pub use pyth::{Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet};
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
 pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
 
@@ -30,6 +30,7 @@ mod pyth {
     pub enum Event {
         PriceFeedUpdate: PriceFeedUpdateEvent,
         WormholeAddressSet: WormholeAddressSet,
+        GovernanceDataSourceSet: GovernanceDataSourceSet,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -47,6 +48,13 @@ mod pyth {
         pub new_address: ContractAddress,
     }
 
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct GovernanceDataSourceSet {
+        pub old_data_source: DataSource,
+        pub new_data_source: DataSource,
+        pub last_executed_governance_sequence: u64,
+    }
+
     #[storage]
     struct Storage {
         wormhole_address: ContractAddress,
@@ -60,6 +68,9 @@ mod pyth {
         latest_price_info: LegacyMap<u256, PriceInfo>,
         governance_data_source: DataSource,
         last_executed_governance_sequence: u64,
+        // Governance data source index is used to prevent replay attacks,
+        // so a claimVaa cannot be used twice.
+        governance_data_source_index: u32,
     }
 
     /// Initializes the Pyth contract.
@@ -223,9 +234,16 @@ mod pyth {
                         old_address: wormhole.contract_address, new_address: payload.address,
                     };
                     self.emit(event);
-                }
+                },
+                GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
+                    // RequestGovernanceDataSourceTransfer can be only part of
+                    // AuthorizeGovernanceDataSourceTransfer message
+                    panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+                },
+                GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
+                    self.authorize_governance_transfer(payload.claim_vaa);
+                },
             }
-            self.last_executed_governance_sequence.write(vm.sequence);
         }
     }
 
@@ -278,7 +296,7 @@ mod pyth {
             self.single_update_fee.read() * num_updates.into()
         }
 
-        fn verify_governance_vm(self: @ContractState, vm: @VerifiedVM) {
+        fn verify_governance_vm(ref self: ContractState, vm: @VerifiedVM) {
             let governance_data_source = self.governance_data_source.read();
             if governance_data_source.emitter_chain_id != *vm.emitter_chain_id {
                 panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
@@ -289,14 +307,28 @@ mod pyth {
             if *vm.sequence <= self.last_executed_governance_sequence.read() {
                 panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
             }
+            // Note: in case of AuthorizeGovernanceDataSourceTransfer,
+            // last_executed_governance_sequence is later overwritten with the value from claim_vaa
+            self.last_executed_governance_sequence.write(*vm.sequence);
         }
 
         fn check_new_wormhole(
-            self: @ContractState, wormhole_address: ContractAddress, vm: ByteArray
+            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteArray
         ) {
             let wormhole = IWormholeDispatcher { contract_address: wormhole_address };
             let vm = wormhole.parse_and_verify_vm(vm);
-            self.verify_governance_vm(@vm);
+
+            let governance_data_source = self.governance_data_source.read();
+            if governance_data_source.emitter_chain_id != vm.emitter_chain_id {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if governance_data_source.emitter_address != vm.emitter_address {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+
+            if vm.sequence != self.last_executed_governance_sequence.read() {
+                panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
+            }
             // Purposefully, we don't check whether the chainId is the same as the current chainId because
             // we might want to change the chain id of the wormhole contract.
             let data = governance::parse_instruction(vm.payload);
@@ -314,6 +346,44 @@ mod pyth {
                     panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
                 }
             }
+        }
+
+        fn authorize_governance_transfer(ref self: ContractState, claim_vaa: ByteArray) {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            let claim_vm = wormhole.parse_and_verify_vm(claim_vaa.clone());
+            // Note: no verify_governance_vm() because claim_vaa is signed by the new data source
+            let instruction = governance::parse_instruction(claim_vm.payload);
+            if instruction.target_chain_id != 0
+                && instruction.target_chain_id != wormhole.chain_id() {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+            }
+            let request_payload = match instruction.payload {
+                GovernancePayload::RequestGovernanceDataSourceTransfer(payload) => payload,
+                _ => { panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into()) }
+            };
+            // Governance data source index is used to prevent replay attacks,
+            // so a claimVaa cannot be used twice.
+            let current_index = self.governance_data_source_index.read();
+            let new_index = request_payload.governance_data_source_index;
+            if current_index >= new_index {
+                panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
+            }
+            self.governance_data_source_index.write(request_payload.governance_data_source_index);
+            let old_data_source = self.governance_data_source.read();
+            let new_data_source = DataSource {
+                emitter_chain_id: claim_vm.emitter_chain_id,
+                emitter_address: claim_vm.emitter_address,
+            };
+            self.governance_data_source.write(new_data_source);
+            // Setting the last executed governance to the claimVaa sequence to avoid
+            // using older sequences.
+            let last_executed_governance_sequence = claim_vm.sequence;
+            self.last_executed_governance_sequence.write(last_executed_governance_sequence);
+
+            let event = GovernanceDataSourceSet {
+                old_data_source, new_data_source, last_executed_governance_sequence,
+            };
+            self.emit(event);
         }
     }
 

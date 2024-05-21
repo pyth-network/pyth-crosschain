@@ -11,7 +11,7 @@ pub trait IPyth<T> {
     fn execute_governance_instruction(ref self: T, data: ByteArray);
 }
 
-#[derive(Drop, Debug, Clone, Copy, Hash, Default, Serde, starknet::Store)]
+#[derive(Drop, Debug, Clone, Copy, PartialEq, Hash, Default, Serde, starknet::Store)]
 pub struct DataSource {
     pub emitter_chain_id: u16,
     pub emitter_address: u256,

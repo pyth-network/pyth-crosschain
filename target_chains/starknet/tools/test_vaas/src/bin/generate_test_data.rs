@@ -168,6 +168,9 @@ fn main() {
 
     // Pyth governance payload bytes are copied from
     // `governance/xc_admin/packages/xc_admin_common/src/__tests__/GovernancePayload.test.ts`
+    let pyth_set_fee_payload = vec![
+        80, 84, 71, 77, 1, 3, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 2,
+    ];
     let pyth_set_fee = serialize_vaa(guardians.sign_vaa(
         &[0],
         VaaBody {
@@ -177,9 +180,7 @@ fn main() {
             emitter_address: u256_to_be(41.into()).into(),
             sequence: 1.try_into().unwrap(),
             consistency_level: 6,
-            payload: PayloadKind::Binary(vec![
-                80, 84, 71, 77, 1, 3, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 2,
-            ]),
+            payload: PayloadKind::Binary(pyth_set_fee_payload.clone()),
         },
     ));
     print_as_cairo_fn(
@@ -231,6 +232,62 @@ fn main() {
         &pyth_set_wormhole,
         "pyth_set_wormhole",
         "A Pyth governance instruction to set wormhole address signed by the test guardian #1.",
+    );
+
+    let pyth_request_transfer = serialize_vaa(guardians.sign_vaa(
+        &[0],
+        VaaBody {
+            timestamp: 1,
+            nonce: 2,
+            emitter_chain: 2,
+            emitter_address: u256_to_be(43.into()).into(),
+            sequence: 1.try_into().unwrap(),
+            consistency_level: 6,
+            payload: PayloadKind::Binary(vec![80, 84, 71, 77, 1, 5, 234, 147, 0, 0, 0, 1]),
+        },
+    ));
+    print_as_cairo_fn(
+        &pyth_request_transfer,
+        "pyth_request_transfer",
+        "A Pyth governance instruction to request governance data source transfer signed by the test guardian #1.",
+    );
+
+    let mut pyth_auth_transfer_payload = vec![80, 84, 71, 77, 1, 1, 234, 147];
+    pyth_auth_transfer_payload.extend_from_slice(&pyth_request_transfer);
+    let pyth_auth_transfer = serialize_vaa(guardians.sign_vaa(
+        &[0],
+        VaaBody {
+            timestamp: 1,
+            nonce: 2,
+            emitter_chain: 1,
+            emitter_address: u256_to_be(41.into()).into(),
+            sequence: 1.try_into().unwrap(),
+            consistency_level: 6,
+            payload: PayloadKind::Binary(pyth_auth_transfer_payload),
+        },
+    ));
+    print_as_cairo_fn(
+        &pyth_auth_transfer,
+        "pyth_auth_transfer",
+        "A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.",
+    );
+
+    let pyth_set_fee_alt_emitter = serialize_vaa(guardians.sign_vaa(
+        &[0],
+        VaaBody {
+            timestamp: 1,
+            nonce: 2,
+            emitter_chain: 2,
+            emitter_address: u256_to_be(43.into()).into(),
+            sequence: 2.try_into().unwrap(),
+            consistency_level: 6,
+            payload: PayloadKind::Binary(pyth_set_fee_payload.clone()),
+        },
+    ));
+    print_as_cairo_fn(
+        &pyth_set_fee_alt_emitter,
+        "pyth_set_fee_alt_emitter",
+        "A Pyth governance instruction to set fee with alternative emitter signed by the test guardian #1.",
     );
 
     let guardians2 = GuardianSet {
