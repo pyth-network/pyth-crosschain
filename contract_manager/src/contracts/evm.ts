@@ -489,6 +489,17 @@ interface EntropyProviderInfo {
   currentCommitmentSequenceNumber: string;
 }
 
+interface EntropyRequest {
+  provider: string;
+  sequenceNumber: string;
+  numHashes: string;
+  commitment: string;
+  blockNumber: string;
+  requester: string;
+  useBlockhash: boolean;
+  isRequestWithCallback: boolean;
+}
+
 export class EvmEntropyContract extends Storable {
   static type = "EvmEntropyContract";
 
@@ -620,6 +631,52 @@ export class EvmEntropyContract extends Storable {
       ...info,
       uri: Web3.utils.toAscii(info.uri),
     };
+  }
+
+  async getRequest(
+    provider: string,
+    sequenceNumber: number
+  ): Promise<EntropyRequest> {
+    const contract = this.getContract();
+    return contract.methods.getRequest(provider, sequenceNumber).call();
+  }
+
+  async getUserRandomNumber(
+    provider: string,
+    sequenceNumber: number,
+    block: number
+  ): Promise<string> {
+    const contract = this.getContract();
+    const result = await contract.getPastEvents("RequestedWithCallback", {
+      fromBlock: block,
+      toBlock: block,
+      filter: {
+        provider,
+        sequenceNumber: sequenceNumber,
+      },
+    });
+    return result[0].returnValues.userRandomNumber;
+  }
+
+  async revealWithCallback(
+    userRandomNumber: string,
+    providerRevelation: string,
+    provider: string,
+    sequenceNumber: number,
+    senderPrivateKey: PrivateKey
+  ) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const contract = this.getContract();
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const transactionObject = contract.methods.revealWithCallback(
+      provider,
+      sequenceNumber,
+      userRandomNumber,
+      providerRevelation
+    );
+    return this.chain.estiamteAndSendTransaction(transactionObject, {
+      from: address,
+    });
   }
 
   generateUserRandomNumber() {
