@@ -21,9 +21,12 @@ jobs:
         run: cargo fmt --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml -- --check
       - name: Run clippy
         run: cargo clippy --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --all-targets -- --deny warnings
-      - name: Run wormhole_mainnet_upgrades binary
-        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin wormhole_mainnet_upgrades
       - name: Run generate_keypair binary
         run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_keypair
-      - name: Run generate_wormhole_vaas binary
-        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_wormhole_vaas
+      - name: Check test data
+        run: |
+          cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_test_data > /tmp/data.cairo
+          if ! diff ./target_chains/starknet/contracts/tests/data.cairo /tmp/data.cairo; then
+            >&2 echo "Re-run generate_test_data to update data.cairo"
+            exit 1
+          fi
