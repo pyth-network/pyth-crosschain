@@ -274,6 +274,40 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
     );
   });
 
+async function closeProgramOrBuffer(
+  vault: MultisigVault,
+  cluster: PythCluster,
+  programDataOrBufferAccount: PublicKey,
+  spill: PublicKey,
+  programId?: PublicKey
+) {
+  let accounts = [
+    { pubkey: programDataOrBufferAccount, isSigner: false, isWritable: true },
+    { pubkey: spill, isSigner: false, isWritable: true },
+    {
+      pubkey: await vault.getVaultAuthorityPDA(cluster),
+      isSigner: true,
+      isWritable: false,
+    },
+  ];
+  if (programId) {
+    accounts.push({ pubkey: programId, isSigner: false, isWritable: true });
+  }
+
+  const proposalInstruction: TransactionInstruction = {
+    programId: BPF_UPGRADABLE_LOADER,
+    // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
+    data: Buffer.from([5, 0, 0, 0]),
+    keys: accounts,
+  };
+
+  await vault.proposeInstructions(
+    [proposalInstruction],
+    cluster,
+    DEFAULT_PRIORITY_FEE_CONFIG
+  );
+}
+
 multisigCommand(
   "close-program",
   "Close a program, retrieve the funds. WARNING : THIS WILL BRICK THE PROGRAM AND THE ACCOUNTS IT OWNS FOREVER"
@@ -291,27 +325,25 @@ multisigCommand(
       BPF_UPGRADABLE_LOADER
     )[0];
 
-    const proposalInstruction: TransactionInstruction = {
-      programId: BPF_UPGRADABLE_LOADER,
-      // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
-      data: Buffer.from([5, 0, 0, 0]),
-      keys: [
-        { pubkey: programDataAccount, isSigner: false, isWritable: true },
-        { pubkey: spill, isSigner: false, isWritable: true },
-        {
-          pubkey: await vault.getVaultAuthorityPDA(cluster),
-          isSigner: true,
-          isWritable: false,
-        },
-        { pubkey: programId, isSigner: false, isWritable: true },
-      ],
-    };
-
-    await vault.proposeInstructions(
-      [proposalInstruction],
+    await closeProgramOrBuffer(
+      vault,
       cluster,
-      DEFAULT_PRIORITY_FEE_CONFIG
+      programDataAccount,
+      spill,
+      programId
     );
+  });
+
+multisigCommand("close-buffer", "Close a buffer, retrieve the funds.")
+  .requiredOption("-b, --buffer <pubkey>", "buffer that you want to close")
+  .requiredOption("-s, --spill <pubkey>", "address to receive the funds")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const spill = new PublicKey(options.spill);
+    const cluster: PythCluster = options.cluster;
+    const bufferAccount = new PublicKey(options.buffer);
+
+    await closeProgramOrBuffer(vault, cluster, bufferAccount, spill);
   });
 
 multisigCommand(
