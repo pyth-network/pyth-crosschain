@@ -30,6 +30,7 @@ use {
 pub use {
     generate::GenerateOptions,
     get_request::GetRequestOptions,
+    inspect::InspectOptions,
     register_provider::RegisterProviderOptions,
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
@@ -38,6 +39,7 @@ pub use {
 
 mod generate;
 mod get_request;
+mod inspect;
 mod register_provider;
 mod request_randomness;
 mod run;
@@ -65,6 +67,9 @@ pub enum Options {
 
     /// Request a random number from the contract.
     RequestRandomness(RequestRandomnessOptions),
+
+    /// Inspect recent requests and find unfulfilled requests with callback.
+    Inspect(InspectOptions),
 
     /// Generate a random number by running the entire protocol end-to-end
     Generate(GenerateOptions),
