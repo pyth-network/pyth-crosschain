@@ -17,6 +17,13 @@ jobs:
           toolchain: 1.78.0
           components: rustfmt, clippy
           override: true
+      - uses: actions/checkout@v3
+      - name: Install Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          tool-versions: target_chains/starknet/contracts/.tool-versions
+      - name: Install Starkli
+        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' target_chains/starknet/contracts/.tool-versions)
       - name: Check formatting
         run: cargo fmt --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml -- --check
       - name: Run clippy
@@ -25,7 +32,7 @@ jobs:
         run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_keypair
       - name: Check test data
         run: |
-          cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_test_data > /tmp/data.cairo
+          . ~/.config/.starkli/env && cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_test_data > /tmp/data.cairo
           if ! diff ./target_chains/starknet/contracts/tests/data.cairo /tmp/data.cairo; then
             >&2 echo "Re-run generate_test_data to update data.cairo"
             exit 1

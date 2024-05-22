@@ -4,7 +4,7 @@ use pyth::reader::{Reader, ReaderImpl};
 use pyth::byte_array::ByteArray;
 use pyth::pyth::errors::GovernanceActionError;
 use core::panic_with_felt252;
-use core::starknet::ContractAddress;
+use core::starknet::{ContractAddress, ClassHash};
 use super::DataSource;
 
 const MAGIC: u32 = 0x5054474d;
@@ -45,12 +45,13 @@ pub struct GovernanceInstruction {
 
 #[derive(Drop, Debug)]
 pub enum GovernancePayload {
-    SetFee: SetFee,
-    SetDataSources: SetDataSources,
-    SetWormholeAddress: SetWormholeAddress,
-    RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
+    UpgradeContract: UpgradeContract,
     AuthorizeGovernanceDataSourceTransfer: AuthorizeGovernanceDataSourceTransfer,
-// TODO: others
+    SetDataSources: SetDataSources,
+    SetFee: SetFee,
+    // SetValidPeriod is unsupported
+    RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
+    SetWormholeAddress: SetWormholeAddress,
 }
 
 #[derive(Drop, Debug)]
@@ -84,6 +85,11 @@ pub struct AuthorizeGovernanceDataSourceTransfer {
     pub claim_vaa: ByteArray,
 }
 
+#[derive(Drop, Debug)]
+pub struct UpgradeContract {
+    pub new_implementation: ClassHash,
+}
+
 pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
     let mut reader = ReaderImpl::new(payload);
     let magic = reader.read_u32();
@@ -102,7 +108,19 @@ pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
     let target_chain_id = reader.read_u16();
 
     let payload = match action {
-        GovernanceAction::UpgradeContract => { panic_with_felt252('unimplemented') },
+        GovernanceAction::UpgradeContract => {
+            let new_implementation: felt252 = reader
+                .read_u256()
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            if new_implementation == 0 {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+            }
+            let new_implementation = new_implementation
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            GovernancePayload::UpgradeContract(UpgradeContract { new_implementation })
+        },
         GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
             let len = reader.len();
             let claim_vaa = reader.read_byte_array(len);
