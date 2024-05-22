@@ -96,7 +96,7 @@ abstract contract WormholeTestUtils is Test {
         uint64 sequence,
         bytes memory payload,
         uint8 numSigners
-    ) public returns (bytes memory vaa) {
+    ) public view returns (bytes memory vaa) {
         bytes memory body = abi.encodePacked(
             timestamp,
             uint32(0), // Nonce. It is zero for single VAAs.
@@ -141,7 +141,7 @@ abstract contract WormholeTestUtils is Test {
         bytes memory payload,
         uint8 numSigners,
         bytes memory forgeItem
-    ) public returns (bytes memory vaa) {
+    ) public view returns (bytes memory vaa) {
         bytes memory body = abi.encodePacked(
             timestamp,
             uint32(0), // Nonce. It is zero for single VAAs.
@@ -201,7 +201,6 @@ abstract contract WormholeTestUtils is Test {
             // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
             newGuardians = abi.encodePacked(newGuardians, vm.addr(i + 1 + 10));
         }
-        uint32 newGuardianSetIndex = uint32(1);
         bytes memory upgradeGuardianSetPayload = abi.encodePacked(
             bytes32(
                 0x00000000000000000000000000000000000000000000000000000000436f7265
@@ -327,9 +326,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = forgeVaa(
             TEST_VAA_TIMESTAMP,
@@ -351,9 +347,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = forgeVaa(
             TEST_VAA_TIMESTAMP,
@@ -375,9 +368,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         upgradeGuardianSet(5);
         // generate the vaa and sign with the new wormhole guardian set
         bytes memory vaa = generateVaa(
@@ -388,7 +378,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
             TEST_PAYLOAD,
             TEST_NUM_SIGNERS
         );
-        uint32 guardianSetIdx = wormhole.getCurrentGuardianSetIndex();
         vm.warp(block.timestamp + 5 days);
 
         (Structs.VM memory vm, bool valid, string memory reason) = wormhole
@@ -402,9 +391,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = generateVaa(
             TEST_VAA_TIMESTAMP,
@@ -416,7 +402,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
 
         upgradeGuardianSet(numGuardians);
-        uint32 guardianSetIdx = wormhole.getCurrentGuardianSetIndex();
         uint previousGuardianSetExpiration = wormhole
             .getGuardianSet(0)
             .expirationTime;
@@ -431,9 +416,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = generateVaa(
             TEST_VAA_TIMESTAMP,
@@ -445,7 +427,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
 
         upgradeGuardianSet(numGuardians);
-        uint32 guardianSetIdx = wormhole.getCurrentGuardianSetIndex();
         vm.warp(block.timestamp + 5 days);
         (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
         assertEq(valid, false);
@@ -456,9 +437,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = forgeVaa(
             TEST_VAA_TIMESTAMP,
@@ -479,9 +457,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
         IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = forgeVaa(
             TEST_VAA_TIMESTAMP,

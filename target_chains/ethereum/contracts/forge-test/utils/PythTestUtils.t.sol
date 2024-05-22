@@ -56,7 +56,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         return address(pyth);
     }
 
-    function singleUpdateFeeInWei() public view returns (uint) {
+    function singleUpdateFeeInWei() public pure returns (uint) {
         return SINGLE_UPDATE_FEE_IN_WEI;
     }
 
@@ -182,7 +182,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         uint8 numSigners,
         uint8 minorVersion,
         bytes memory trailingHeaderData
-    ) internal returns (bytes memory whMerkleUpdateData) {
+    ) internal view returns (bytes memory whMerkleUpdateData) {
         bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
             priceFeedMessages
         );
@@ -222,7 +222,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
     function generateForwardCompatibleWormholeMerkleUpdateHeader(
         uint8 minorVersion,
         bytes memory trailingHeaderData
-    ) private returns (bytes memory whMerkleUpdateHeader) {
+    ) private pure returns (bytes memory whMerkleUpdateHeader) {
         whMerkleUpdateHeader = abi.encodePacked(
             uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
             uint8(1), // major version
@@ -237,7 +237,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         bytes20 rootDigest,
         bytes memory futureData,
         uint8 numSigners
-    ) internal returns (bytes memory wormholeMerkleVaa) {
+    ) internal view returns (bytes memory wormholeMerkleVaa) {
         wormholeMerkleVaa = generateVaa(
             0,
             SOURCE_EMITTER_CHAIN_ID,

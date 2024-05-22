@@ -812,7 +812,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             assignedSequenceNumber
         );
-        bytes32 blockHash = bytes32(uint256(0));
 
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
@@ -866,7 +865,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             assignedSequenceNumber
         );
-        bytes32 blockHash = bytes32(uint256(0));
 
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
@@ -943,10 +941,10 @@ contract EntropyConsumer is IEntropyConsumer {
     function requestEntropy(
         bytes32 randomNumber
     ) public payable returns (uint64 sequenceNumber) {
-        address provider = IEntropy(entropy).getDefaultProvider();
+        address _provider = IEntropy(entropy).getDefaultProvider();
         sequenceNumber = IEntropy(entropy).requestWithCallback{
             value: msg.value
-        }(provider, randomNumber);
+        }(_provider, randomNumber);
     }
 
     function getEntropy() internal view override returns (address) {
@@ -977,11 +975,7 @@ contract EntropyConsumerFails is IEntropyConsumer {
         return entropy;
     }
 
-    function entropyCallback(
-        uint64 _sequence,
-        address _provider,
-        bytes32 _randomness
-    ) internal override {
+    function entropyCallback(uint64, address, bytes32) internal pure override {
         revert("Callback failed");
     }
 }
