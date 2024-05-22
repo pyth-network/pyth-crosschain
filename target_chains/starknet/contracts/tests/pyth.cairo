@@ -4,7 +4,7 @@ use snforge_std::{
 };
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
-    WormholeAddressSet, GovernanceDataSourceSet,
+    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -51,6 +51,9 @@ fn decode_event(mut event: Event) -> PythEvent {
             last_executed_governance_sequence: event.data.pop(),
         };
         PythEvent::GovernanceDataSourceSet(event)
+    } else if key0 == event_name_hash('ContractUpgraded') {
+        let event = ContractUpgraded { new_class_hash: event.data.pop() };
+        PythEvent::ContractUpgraded(event)
     } else {
         panic!("unrecognized event")
     };
@@ -406,6 +409,73 @@ fn test_rejects_old_emitter_after_transfer() {
     pyth.execute_governance_instruction(data::pyth_auth_transfer());
     pyth.execute_governance_instruction(data::pyth_set_fee());
 }
+
+#[test]
+fn test_upgrade_works() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    let class = declare("pyth_fake_upgrade1");
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    pyth.execute_governance_instruction(data::pyth_upgrade_fake1());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = ContractUpgraded { new_class_hash: class.class_hash };
+    assert!(event == PythEvent::ContractUpgraded(expected));
+
+    let last_price = pyth.get_price_unsafe(1234).unwrap_with_felt252();
+    assert!(last_price.price == 42);
+}
+
+#[test]
+#[should_panic]
+#[ignore] // TODO: unignore when snforge is updated
+fn test_upgrade_rejects_invalid_hash() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth.execute_governance_instruction(data::pyth_upgrade_invalid_hash());
+}
+
+#[test]
+#[should_panic]
+#[ignore] // TODO: unignore when snforge is updated
+fn test_upgrade_rejects_not_pyth() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    declare("pyth_fake_upgrade_not_pyth");
+    pyth.execute_governance_instruction(data::pyth_upgrade_not_pyth());
+}
+
+#[test]
+#[should_panic(expected: ('invalid governance message',))]
+fn test_upgrade_rejects_wrong_magic() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    declare("pyth_fake_upgrade_wrong_magic");
+    pyth.execute_governance_instruction(data::pyth_upgrade_wrong_magic());
+}
+
 
 fn deploy_default(
     owner: ContractAddress, wormhole_address: ContractAddress, fee_contract_address: ContractAddress
