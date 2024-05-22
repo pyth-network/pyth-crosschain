@@ -228,6 +228,7 @@ pub async fn run_keeper_threads(
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashMap::<u64, RequestState>::new()));
 
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
+    let gas_limit: U256 = chain_eth_config.gas_limit.into();
     spawn(
         process_backlog(
             BlockRange {
@@ -235,7 +236,7 @@ pub async fn run_keeper_threads(
                 to:   latest_safe_block,
             },
             contract.clone(),
-            chain_eth_config.gas_limit,
+            gas_limit,
             chain_state.clone(),
             keeper_metrics.clone(),
             fulfilled_requests_cache.clone(),
@@ -260,7 +261,7 @@ pub async fn run_keeper_threads(
             chain_state.clone(),
             rx,
             Arc::clone(&contract),
-            chain_eth_config.gas_limit,
+            gas_limit,
             keeper_metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
