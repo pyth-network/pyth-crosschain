@@ -1,3 +1,4 @@
+use pyth::reader::ReaderTrait;
 use core::array::ArrayTrait;
 use pyth::reader::{Reader, ReaderImpl};
 use pyth::byte_array::ByteArray;
@@ -47,6 +48,8 @@ pub enum GovernancePayload {
     SetFee: SetFee,
     SetDataSources: SetDataSources,
     SetWormholeAddress: SetWormholeAddress,
+    RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
+    AuthorizeGovernanceDataSourceTransfer: AuthorizeGovernanceDataSourceTransfer,
 // TODO: others
 }
 
@@ -64,6 +67,21 @@ pub struct SetDataSources {
 #[derive(Drop, Debug)]
 pub struct SetWormholeAddress {
     pub address: ContractAddress,
+}
+
+#[derive(Drop, Debug)]
+pub struct RequestGovernanceDataSourceTransfer {
+    // Index is used to prevent replay attacks
+    // So a claimVaa cannot be used twice.
+    pub governance_data_source_index: u32,
+}
+
+#[derive(Drop, Debug)]
+pub struct AuthorizeGovernanceDataSourceTransfer {
+    // Transfer governance control over this contract to another data source.
+    // The claim_vaa field is a VAA created by the new data source; using a VAA prevents mistakes
+    // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
+    pub claim_vaa: ByteArray,
 }
 
 pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
@@ -86,7 +104,17 @@ pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
     let payload = match action {
         GovernanceAction::UpgradeContract => { panic_with_felt252('unimplemented') },
         GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
-            panic_with_felt252('unimplemented')
+            let len = reader.len();
+            let claim_vaa = reader.read_byte_array(len);
+            GovernancePayload::AuthorizeGovernanceDataSourceTransfer(
+                AuthorizeGovernanceDataSourceTransfer { claim_vaa }
+            )
+        },
+        GovernanceAction::RequestGovernanceDataSourceTransfer => {
+            let governance_data_source_index = reader.read_u32();
+            GovernancePayload::RequestGovernanceDataSourceTransfer(
+                RequestGovernanceDataSourceTransfer { governance_data_source_index }
+            )
         },
         GovernanceAction::SetDataSources => {
             let num_sources = reader.read_u8();
@@ -106,9 +134,6 @@ pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
             GovernancePayload::SetFee(SetFee { value, expo })
         },
         GovernanceAction::SetValidPeriod => { panic_with_felt252('unimplemented') },
-        GovernanceAction::RequestGovernanceDataSourceTransfer => {
-            panic_with_felt252('unimplemented')
-        },
         GovernanceAction::SetWormholeAddress => {
             let address: felt252 = reader
                 .read_u256()
