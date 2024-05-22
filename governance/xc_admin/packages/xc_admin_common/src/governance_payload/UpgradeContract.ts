@@ -34,7 +34,8 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
   }
 }
 
-export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
+// Used by Aptos, Sui and Starknet
+export class UpgradeContract256Bit extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
 
@@ -42,7 +43,7 @@ export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
     super(targetChainId, "UpgradeContract");
   }
 
-  static decode(data: Buffer): AptosAuthorizeUpgradeContract | undefined {
+  static decode(data: Buffer): UpgradeContract256Bit | undefined {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
@@ -50,43 +51,11 @@ export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
     );
     if (!decoded) return undefined;
 
-    return new AptosAuthorizeUpgradeContract(
-      decoded[0].targetChainId,
-      decoded[1].hash
-    );
+    return new UpgradeContract256Bit(decoded[0].targetChainId, decoded[1].hash);
   }
 
   encode(): Buffer {
-    return super.encodeWithPayload(AptosAuthorizeUpgradeContract.layout, {
-      hash: this.hash,
-    });
-  }
-}
-
-export class SuiAuthorizeUpgradeContract extends PythGovernanceActionImpl {
-  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
-    BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
-
-  constructor(targetChainId: ChainName, readonly hash: string) {
-    super(targetChainId, "UpgradeContract");
-  }
-
-  static decode(data: Buffer): SuiAuthorizeUpgradeContract | undefined {
-    const decoded = PythGovernanceActionImpl.decodeWithPayload(
-      data,
-      "UpgradeContract",
-      this.layout
-    );
-    if (!decoded) return undefined;
-
-    return new SuiAuthorizeUpgradeContract(
-      decoded[0].targetChainId,
-      decoded[1].hash
-    );
-  }
-
-  encode(): Buffer {
-    return super.encodeWithPayload(SuiAuthorizeUpgradeContract.layout, {
+    return super.encodeWithPayload(UpgradeContract256Bit.layout, {
       hash: this.hash,
     });
   }

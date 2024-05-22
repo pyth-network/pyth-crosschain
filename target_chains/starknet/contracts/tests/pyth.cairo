@@ -3,50 +3,69 @@ use snforge_std::{
     EventFetcher, event_name_hash, Event
 };
 use pyth::pyth::{
-    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent
+    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
+    WormholeAddressSet, GovernanceDataSourceSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
-use pyth::util::{array_felt252_to_bytes31, UnwrapWithFelt252};
+use pyth::util::{array_try_into, UnwrapWithFelt252};
+use pyth::wormhole::IWormholeDispatcherTrait;
 use core::starknet::ContractAddress;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use super::wormhole::corrupted_vm;
+use super::data;
 
-fn decode_event(event: @Event) -> PythEvent {
-    if *event.keys.at(0) == event_name_hash('PriceFeedUpdate') {
-        assert!(event.keys.len() == 3);
-        assert!(event.data.len() == 3);
+#[generate_trait]
+impl DecodeEventHelpers of DecodeEventHelpersTrait {
+    fn pop<T, +TryInto<felt252, T>>(ref self: Array<felt252>) -> T {
+        self.pop_front().unwrap().try_into().unwrap()
+    }
+
+    fn pop_u256(ref self: Array<felt252>) -> u256 {
+        u256 { low: self.pop(), high: self.pop(), }
+    }
+
+    fn pop_data_source(ref self: Array<felt252>) -> DataSource {
+        DataSource { emitter_chain_id: self.pop(), emitter_address: self.pop_u256(), }
+    }
+}
+
+fn decode_event(mut event: Event) -> PythEvent {
+    let key0: felt252 = event.keys.pop();
+    let output = if key0 == event_name_hash('PriceFeedUpdate') {
         let event = PriceFeedUpdateEvent {
-            price_id: u256 {
-                low: (*event.keys.at(1)).try_into().unwrap(),
-                high: (*event.keys.at(2)).try_into().unwrap(),
-            },
-            publish_time: (*event.data.at(0)).try_into().unwrap(),
-            price: (*event.data.at(1)).try_into().unwrap(),
-            conf: (*event.data.at(2)).try_into().unwrap(),
+            price_id: event.keys.pop_u256(),
+            publish_time: event.data.pop(),
+            price: event.data.pop(),
+            conf: event.data.pop(),
         };
         PythEvent::PriceFeedUpdate(event)
+    } else if key0 == event_name_hash('WormholeAddressSet') {
+        let event = WormholeAddressSet {
+            old_address: event.data.pop(), new_address: event.data.pop(),
+        };
+        PythEvent::WormholeAddressSet(event)
+    } else if key0 == event_name_hash('GovernanceDataSourceSet') {
+        let event = GovernanceDataSourceSet {
+            old_data_source: event.data.pop_data_source(),
+            new_data_source: event.data.pop_data_source(),
+            last_executed_governance_sequence: event.data.pop(),
+        };
+        PythEvent::GovernanceDataSourceSet(event)
     } else {
         panic!("unrecognized event")
-    }
+    };
+    assert!(event.keys.len() == 0);
+    assert!(event.data.len() == 0);
+    output
 }
 
 #[test]
 fn update_price_feeds_works() {
     let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_and_init(owner);
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy(
-        owner,
-        wormhole.contract_address,
-        fee_contract.contract_address,
-        1000,
-        array![
-            DataSource {
-                emitter_chain_id: 26,
-                emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-            }
-        ]
-    );
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
     fee_contract.approve(pyth.contract_address, 10000);
@@ -55,13 +74,13 @@ fn update_price_feeds_works() {
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
     start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
-    pyth.update_price_feeds(good_update1()).unwrap_with_felt252();
+    pyth.update_price_feeds(data::good_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
 
     spy.fetch_events();
     assert!(spy.events.len() == 1);
-    let (from, event) = spy.events.at(0);
-    assert!(from == @pyth.contract_address);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = PriceFeedUpdateEvent {
         price_id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
@@ -88,16 +107,340 @@ fn update_price_feeds_works() {
     assert!(last_ema_price.publish_time == 1712589206);
 }
 
+#[test]
+fn test_governance_set_fee_works() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    let mut balance = fee_contract.balanceOf(user);
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let new_balance = fee_contract.balanceOf(user);
+    assert!(balance - new_balance == 1000);
+    balance = new_balance;
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    pyth.execute_governance_instruction(data::pyth_set_fee());
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update2());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let new_balance = fee_contract.balanceOf(user);
+    assert!(balance - new_balance == 4200);
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+}
+
+#[test]
+#[fuzzer(runs: 100, seed: 0)]
+#[should_panic]
+fn test_rejects_corrupted_governance_instruction(pos: usize, random1: usize, random2: usize) {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    let input = corrupted_vm(data::pyth_set_fee(), pos, random1, random2);
+    pyth.execute_governance_instruction(input);
+}
+
+#[test]
+fn test_governance_set_data_sources_works() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    pyth.execute_governance_instruction(data::pyth_set_data_sources());
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_update2_alt_emitter());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+}
+
+#[test]
+#[should_panic(expected: ('invalid update data source',))]
+fn test_rejects_update_after_data_source_changed() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    pyth.execute_governance_instruction(data::pyth_set_data_sources());
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update2());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+}
+
+#[test]
+fn test_governance_set_wormhole_works() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    // Address used in the governance instruction
+    let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
+        .try_into()
+        .unwrap();
+    let wormhole2 = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole2_address
+    );
+    wormhole2.submit_new_guardian_set(data::upgrade_to_test2());
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    pyth.execute_governance_instruction(data::pyth_set_wormhole());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = WormholeAddressSet {
+        old_address: wormhole_address, new_address: wormhole2_address,
+    };
+    assert!(event == PythEvent::WormholeAddressSet(expected));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_update2_set2());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+}
+
+#[test]
+#[should_panic(expected: ('invalid guardian set index',))]
+fn test_rejects_price_update_without_setting_wormhole() {
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_price_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds(data::test_update2_set2());
+}
+
+// This test doesn't pass because of an snforge bug.
+// See https://github.com/foundry-rs/starknet-foundry/issues/2096
+// TODO: update snforge and unignore when the next release is available
+#[test]
+#[should_panic]
+#[ignore]
+fn test_rejects_set_wormhole_without_deploying() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    pyth.execute_governance_instruction(data::pyth_set_wormhole());
+}
+
+#[test]
+#[should_panic(expected: ('Invalid signature',))]
+fn test_rejects_set_wormhole_with_incompatible_guardians() {
+    let wormhole_class = declare("wormhole");
+    // Arbitrary
+    let wormhole_address = 0x42.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
+        @wormhole_class, wormhole_address
+    );
+
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    // Address used in the governance instruction
+    let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
+        .try_into()
+        .unwrap();
+    super::wormhole::deploy_declared_at(
+        @wormhole_class,
+        array_try_into(array![0x301]),
+        super::wormhole::CHAIN_ID,
+        super::wormhole::GOVERNANCE_CHAIN_ID,
+        super::wormhole::GOVERNANCE_CONTRACT,
+        Option::Some(wormhole2_address),
+    );
+    pyth.execute_governance_instruction(data::pyth_set_wormhole());
+}
+
+#[test]
+fn test_governance_transfer_works() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    pyth.execute_governance_instruction(data::pyth_auth_transfer());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = GovernanceDataSourceSet {
+        old_data_source: DataSource { emitter_chain_id: 1, emitter_address: 41, },
+        new_data_source: DataSource { emitter_chain_id: 2, emitter_address: 43, },
+        last_executed_governance_sequence: 1,
+    };
+    assert!(event == PythEvent::GovernanceDataSourceSet(expected));
+
+    pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
+}
+
+#[test]
+#[should_panic(expected: ('invalid governance data source',))]
+fn test_set_fee_rejects_wrong_emitter() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
+}
+
+#[test]
+#[should_panic(expected: ('invalid governance data source',))]
+fn test_rejects_old_emitter_after_transfer() {
+    let owner = 'owner'.try_into().unwrap();
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+
+    pyth.execute_governance_instruction(data::pyth_auth_transfer());
+    pyth.execute_governance_instruction(data::pyth_set_fee());
+}
+
+fn deploy_default(
+    owner: ContractAddress, wormhole_address: ContractAddress, fee_contract_address: ContractAddress
+) -> IPythDispatcher {
+    deploy(
+        owner,
+        wormhole_address,
+        fee_contract_address,
+        1000,
+        array![
+            DataSource {
+                emitter_chain_id: 26,
+                emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+            }
+        ],
+        1,
+        41,
+        0,
+    )
+}
+
 fn deploy(
     owner: ContractAddress,
     wormhole_address: ContractAddress,
     fee_contract_address: ContractAddress,
     single_update_fee: u256,
-    data_sources: Array<DataSource>
+    data_sources: Array<DataSource>,
+    governance_emitter_chain_id: u16,
+    governance_emitter_address: u256,
+    governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
     (owner, wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
-    data_sources.serialize(ref args);
+    (data_sources, governance_emitter_chain_id).serialize(ref args);
+    (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
@@ -123,52 +466,4 @@ fn deploy_fee_contract(recipient: ContractAddress) -> IERC20CamelDispatcher {
         },
     };
     IERC20CamelDispatcher { contract_address }
-}
-
-// A random update pulled from Hermes.
-fn good_update1() -> ByteArray {
-    let bytes = array![
-        141887862745809943100717722154781668316147089807066324001213790862261653767,
-        451230040559159019530944948086670994623010697390864133264612902902585665886,
-        355897384610106978643111834734000274494997301794613218547634257521495150151,
-        140511063638834349363702006999356227863549404051701803148734324248522745879,
-        435849190784772134907557391544163070978531038970298390345939133663347953446,
-        416390591179833928094641114955594939466104495718036761707729297119441316151,
-        360454929416220920336539568461651500076647166763464050800345920693176904002,
-        316054999864337699543932294956493808847640383114707243342262764542081441331,
-        325277902980160684959962429721294603784343718796390808940252812862355246813,
-        43683235854839458868457367619068018785880460427473556950900276498953667,
-        448289429405712011882317781416869052550573589492688760675666957663813001522,
-        118081463902430977133121147164253483958565039026724621562859841189218059803,
-        194064310618695309465615383754562031677972810736048112738513050109934134235,
-        133901765334590923121691219814784557892214901646312752962904032795881821509,
-        404227501001709279944936006741063968912686453006275462577777397594240621266,
-        81649001731335394114026683805238949464016657447685509824621946636993704965,
-        32402065226491532148674904435794801976788068837745943243341272676331333141,
-        431262841416902409381606630149292665102873776020834630861578112749151562174,
-        6164523115980545628843981978797257048781800754033825701059814297149591186,
-        408761574582108996678203805090470134287794603493622537384530614829262728153,
-        185368533577943244707350150853170361880334596276529206938783888784867529821,
-        173578821500714074579643724957224629379984215847383417303110192934676518530,
-        90209855380378362490166376523380463998928070428866100240907090599465187835,
-        97758466908511588082569287391708453107999243934457382895073183209581711489,
-        132725011490528489913736834798247512772139171145730373610858422315799224432,
-        117123868005849140967825260063167768530251411611975150066586827543934313288,
-        408149062252618928234854115279677715692278734600386004492580987016428761675,
-        164529520317122600276020522906605877985809506451193373524142111430138855019,
-        444793051809958482843529748761971363435331354795896511243191618771787268378,
-        247660009137502548346315865368477795392972486141407800140910365553760622080,
-        3281582060272565111592312037403686940429019548922889497694300188,
-        93649805131515836129946966966350066506512123780266587069413066350925286142,
-        394112423559676785086098106350541172262729583743734966358666094809121292390,
-        35403101004688876764673991514113473446030702766599795822870037077688984558,
-        99366103604611980443183454746643823071419076016677225828619807954313149423,
-        10381657217606191031071521950784155484751645280452344547752823767622424055,
-        391045354044274401116419632681482293741435113770205621235865697077178955228,
-        311250087759201408758984550959714865999349469611700431708031036894849650573,
-        59953730895385399344628932835545900304309851622811198425230584225200786697,
-        226866843267230707879834616967256711063296411939069440476882347301771901839,
-        95752383404870925303422787,
-    ];
-    ByteArrayImpl::new(array_felt252_to_bytes31(bytes), 11)
 }

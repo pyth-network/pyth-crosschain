@@ -618,7 +618,7 @@ contract PythWormholeMerkleAccumulatorTest is
         (
             bytes[] memory updateData,
             uint updateFee,
-            bytes32[] memory priceIds
+
         ) = createAndForgeWormholeMerkleUpdateData("");
 
         pyth.updatePriceFeeds{value: updateFee}(updateData);

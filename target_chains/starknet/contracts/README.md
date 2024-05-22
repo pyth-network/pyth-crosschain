@@ -13,6 +13,18 @@ The `.tool-versions` file in this directory specifies the tool versions used by 
 
 Run `snforge test` in this directory to run the contract unit tests and integration tests.
 
+The `tests/data.cairo` file contains input data that was generated with `test_vaas` tool.
+To regenerate it, run the following commands from the repository root (requires Rust installation):
+
+```
+cd target_chains/starknet/tools/test_vaas
+cargo run --bin generate_test_data > ../../contracts/tests/data.cairo
+```
+
+## Formatting
+
+Run `scarb fmt` to automatically format the source code.
+
 ## Local deployment
 
 1. Install Starkli (a cli tool for Starknet) by following [the installation instructions](https://github.com/xJonathanLEI/starkli).

@@ -1,6 +1,6 @@
 [package]
 name    = "fortuna"
-version = "6.0.0"
+version = "5.4.2"
 edition = "2021"
 
 [dependencies]
@@ -34,6 +34,7 @@ utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }
 once_cell = "1.18.0"
 lazy_static = "1.4.0"
 url = "2.5.0"
+chrono = { version = "0.4.38", features = ["clock", "std"] , default-features = false}
 
 
 [dev-dependencies]

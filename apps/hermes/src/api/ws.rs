@@ -12,7 +12,10 @@ use {
             AggregationEvent,
             RequestTime,
         },
-        State,
+        metrics::Metrics,
+        Benchmarks,
+        Cache,
+        PriceFeedMeta,
     },
     anyhow::{
         anyhow,
@@ -115,12 +118,16 @@ pub struct Labels {
     pub status:      Status,
 }
 
-pub struct Metrics {
+pub struct WsMetrics {
     pub interactions: Family<Labels, Counter>,
 }
 
-impl Metrics {
-    pub fn new(state: Arc<State>) -> Self {
+impl WsMetrics {
+    pub fn new<S>(state: Arc<S>) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
         let new = Self {
             interactions: Family::default(),
         };
@@ -129,11 +136,15 @@ impl Metrics {
             let interactions = new.interactions.clone();
 
             tokio::spawn(async move {
-                state.metrics_registry.write().await.register(
-                    "ws_interactions",
-                    "Total number of websocket interactions",
-                    interactions,
-                );
+                Metrics::register(
+                    &*state,
+                    (
+                        "ws_interactions",
+                        "Total number of websocket interactions",
+                        interactions,
+                    ),
+                )
+                .await;
             });
         }
 
@@ -146,11 +157,15 @@ pub struct WsState {
     pub bytes_limit_whitelist:    Vec<IpNet>,
     pub rate_limiter:             DefaultKeyedRateLimiter<IpAddr>,
     pub requester_ip_header_name: String,
-    pub metrics:                  Metrics,
+    pub metrics:                  WsMetrics,
 }
 
 impl WsState {
-    pub fn new(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<State>) -> Self {
+    pub fn new<S>(whitelist: Vec<IpNet>, requester_ip_header_name: String, state: Arc<S>) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
         Self {
             subscriber_counter: AtomicUsize::new(0),
             rate_limiter: RateLimiter::dashmap(Quota::per_second(nonzero!(
@@ -158,7 +173,7 @@ impl WsState {
             ))),
             bytes_limit_whitelist: whitelist,
             requester_ip_header_name,
-            metrics: Metrics::new(state.clone()),
+            metrics: WsMetrics::new(state.clone()),
         }
     }
 }
@@ -200,11 +215,18 @@ enum ServerResponseMessage {
     Err { error: String },
 }
 
-pub async fn ws_route_handler(
+pub async fn ws_route_handler<S>(
     ws: WebSocketUpgrade,
-    AxumState(state): AxumState<super::ApiState>,
+    AxumState(state): AxumState<ApiState<S>>,
     headers: HeaderMap,
-) -> impl IntoResponse {
+) -> impl IntoResponse
+where
+    S: Aggregates,
+    S: Benchmarks,
+    S: Cache,
+    S: PriceFeedMeta,
+    S: Send + Sync + 'static,
+{
     let requester_ip = headers
         .get(state.ws.requester_ip_header_name.as_str())
         .and_then(|value| value.to_str().ok())
@@ -219,6 +241,7 @@ pub async fn ws_route_handler(
 async fn websocket_handler<S>(stream: WebSocket, state: ApiState<S>, subscriber_ip: Option<IpAddr>)
 where
     S: Aggregates,
+    S: Send,
 {
     let ws_state = state.ws.clone();
 
@@ -344,7 +367,7 @@ where
             _ = self.exit.changed() => {
                 self.sender.close().await?;
                 self.closed = true;
-                return Err(anyhow!("Application is shutting down. Closing connection."));
+                Err(anyhow!("Application is shutting down. Closing connection."))
             }
         }
     }

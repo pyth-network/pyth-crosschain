@@ -9,9 +9,9 @@ use ::data_structures::{
         PriceFeed,
         PriceFeedId,
     },
+    governance_payload::UpgradeContractPayload,
     wormhole_light::{
         GuardianSet,
-        WormholeProvider,
     },
 };
 use std::{bytes::Bytes, storage::storage_vec::*};
@@ -259,9 +259,13 @@ abi PythInit {
     #[storage(read, write)]
     fn constructor(
         data_sources: Vec<DataSource>,
+        governance_data_source: DataSource,
+        wormhole_governance_data_source: DataSource,
         single_update_fee: u64,
         valid_time_period_seconds: u64,
-        wormhole_guardian_set_upgrade: Bytes,
+        wormhole_guardian_set_addresses: Vec<b256>,
+        wormhole_guardian_set_index: u32,
+        chain_id: u16,
     );
 }
 
@@ -284,7 +288,7 @@ abi PythInfo {
     fn single_update_fee() -> u64;
 
     #[storage(read)]
-    fn valid_data_source(data_source: DataSource) -> bool;
+    fn is_valid_data_source(data_source: DataSource) -> bool;
 
     #[storage(read)]
     fn valid_data_sources() -> Vec<DataSource>;
@@ -295,7 +299,7 @@ abi WormholeGuardians {
     fn current_guardian_set_index() -> u32;
 
     #[storage(read)]
-    fn current_wormhole_provider() -> WormholeProvider;
+    fn current_wormhole_provider() -> DataSource;
 
     #[storage(read)]
     fn governance_action_is_consumed(hash: b256) -> bool;

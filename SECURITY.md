@@ -30,6 +30,8 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain-aptos contracts_
 - **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_11_01/pyth.pdf)**
   - **Scope**: _pyth-crosschain-evm contracts_
+- **[December 12, 2022 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2023_07_27/pyth_sui_audit_final.pdf)**
+  - **Scope**: _pyth-crosschain-sui contracts_
 - **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-governance.pdf)**
   - **Scope**: _pyth-crosschain-governance contracts_
 - **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-solana.pdf)**
@@ -38,6 +40,16 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain-evm contracts_
 - **[March 14, 2023 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2023_03_14/Pyth%20Network%20-%20Zellic%20Audit%20Report.pdf)**
   - **Scope**: _pyth-crosschain-cosmwasm contracts_
+- **[July 10, 2023 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2023_07_26/EVM%20Patch%20Review.pdf)**
+  - **Scope**: _pyth-crosschain-evm contracts_
+- **[July 24, 2023 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2023_07_26/Pyth%20Network%20Smart%20Contract%20Patch%20Review.pdf)**
+  - **Scope**: _pyth-crosschain-cosmwasm/aptos/sui contracts_
+- **[July 31, 2023 - Trail of Bits](https://github.com/pyth-network/audit-reports/blob/main/2023_07_31/Trail%20of%20Bits%20Pythnet%20Report.pdf)**
+  - **Scope**: _pyth-crosschain pythnet validator, message_buffer/remote_executor/oracle contracts, merkle tree library, xc_admin_frontend_
+- **[January 18, 2024 - Trail of Bits](https://github.com/pyth-network/audit-reports/blob/main/2024_01_23/Pyth%20Data%20Association%20-%20Entropy%20-%20Comprehensive%20Report.pdf)**
+  - **Scope**: _pyth-crosschain-entropy contracts and fortuna web service_
+- **[April 25, 2024 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_pull_oracle_audit_final.pdf)**
+  - **Scope**: _pyth-crosschain-solana contracts_
 
 ## Social Media Monitoring
 

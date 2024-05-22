@@ -16,7 +16,9 @@ use fuels::{
 use rand::Rng;
 use reqwest;
 use serde_json;
+use serde_wormhole::RawMessage;
 use std::path::PathBuf;
+use wormhole_sdk::Vaa;
 
 abigen!(Contract(
     name = "PythOracleContract",
@@ -87,6 +89,80 @@ pub fn test_accumulator_update_data_bytes() -> Vec<Bytes> {
     )]
 }
 
+pub fn create_set_fee_payload(new_fee: u64, exponent: u64) -> Vec<u8> {
+    let base = new_fee / 10u64.pow(exponent.try_into().unwrap());
+    let base_bytes = base.to_be_bytes();
+    let exponent_bytes = exponent.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&base_bytes);
+    payload.extend_from_slice(&exponent_bytes);
+    payload
+}
+
+pub fn create_set_valid_period_payload(new_valid_period: u64) -> Vec<u8> {
+    let valid_period_bytes = new_valid_period.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&valid_period_bytes);
+    payload
+}
+
+pub fn create_set_data_sources_payload(data_sources: Vec<DataSource>) -> Vec<u8> {
+    let mut payload = Vec::new();
+    payload.push(data_sources.len() as u8);
+    for data_source in data_sources {
+        payload.extend_from_slice(&data_source.chain_id.to_be_bytes());
+        payload.extend_from_slice(&data_source.emitter_address.0);
+    }
+    payload
+}
+
+pub fn create_authorize_governance_data_source_transfer_payload(
+    claim_vaa: Vaa<Box<RawMessage>>,
+) -> Vec<u8> {
+    serde_wormhole::to_vec(&claim_vaa).unwrap()
+}
+
+pub fn create_request_governance_data_source_transfer_payload(
+    governance_data_source_index: u32,
+) -> Vec<u8> {
+    let index_bytes = governance_data_source_index.to_be_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&index_bytes);
+    payload
+}
+
+pub fn create_governance_instruction_payload(
+    magic: u32,
+    module: GovernanceModule,
+    action: GovernanceAction,
+    target_chain_id: u16,
+    payload: Vec<u8>,
+) -> Vec<u8> {
+    let mut buffer = Vec::new();
+    buffer.extend_from_slice(&magic.to_be_bytes());
+    let module_number = match module {
+        GovernanceModule::Executor => 0,
+        GovernanceModule::Target => 1,
+        GovernanceModule::EvmExecutor => 2,
+        GovernanceModule::StacksTarget => 3,
+        GovernanceModule::Invalid => u8::MAX, // Typically 255 for invalid
+    };
+    buffer.push(module_number);
+    let action_number = match action {
+        GovernanceAction::UpgradeContract => 0,
+        GovernanceAction::AuthorizeGovernanceDataSourceTransfer => 1,
+        GovernanceAction::SetDataSources => 2,
+        GovernanceAction::SetFee => 3,
+        GovernanceAction::SetValidPeriod => 4,
+        GovernanceAction::RequestGovernanceDataSourceTransfer => 5,
+        GovernanceAction::Invalid => u8::MAX, // Typically 255 for invalid
+    };
+    buffer.push(action_number);
+    buffer.extend_from_slice(&target_chain_id.to_be_bytes());
+    buffer.extend_from_slice(&payload);
+    buffer
+}
+
 impl Pyth {
     pub async fn price(&self, price_feed_id: Bits256) -> Result<FuelCallResponse<Price>, Error> {
         self.instance
@@ -119,16 +195,24 @@ impl Pyth {
 
     pub async fn constructor(
         &self,
+        governance_data_source: DataSource,
+        wormhole_governance_data_source: DataSource,
         valid_time_period_seconds: u64,
-        wormhole_guardian_set_upgrade: Bytes,
+        wormhole_guardian_set_addresses: Vec<Bits256>,
+        wormhole_guardian_set_index: u32,
+        chain_id: u16,
     ) -> Result<FuelCallResponse<()>, Error> {
         self.instance
             .methods()
             .constructor(
                 default_data_sources(),
+                governance_data_source,
+                wormhole_governance_data_source,
                 DEFAULT_SINGLE_UPDATE_FEE,
                 valid_time_period_seconds,
-                wormhole_guardian_set_upgrade,
+                wormhole_guardian_set_addresses,
+                wormhole_guardian_set_index,
+                chain_id,
             )
             .with_tx_policies(TxPolicies::default().with_gas_price(1))
             .call()
@@ -171,6 +255,68 @@ pub fn guardian_set_upgrade_3_vaa() -> Bytes {
 }
 pub fn guardian_set_upgrade_4_vaa() -> Bytes {
     Bytes(hex::decode(GUARDIAN_SET_UPGRADE_4_VAA).unwrap())
+}
+
+// Full list of guardian set upgrade 3 addresses can be found here: https://github.com/wormhole-foundation/wormhole-networks/blob/master/mainnetv2/guardianset/v3.prototxt
+pub fn guardian_set_upgrade_3_addresses() -> Vec<Bits256> {
+    let addresses = vec![
+        "58CC3AE5C097b213cE3c81979e1B9f9570746AA5", // Certus One
+        "fF6CB952589BDE862c25Ef4392132fb9D4A42157", // Staked
+        "114De8460193bdf3A2fCf81f86a09765F4762fD1", // Figment
+        "107A0086b32d7A0977926A205131d8731D39cbEB", // ChainodeTech
+        "8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2", // Inotel
+        "11b39756C042441BE6D8650b69b54EbE715E2343", // HashQuark
+        "54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd", // Chainlayer
+        "15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20", // xLabs
+        "74a3bf913953D695260D88BC1aA25A4eeE363ef0", // Forbole
+        "000aC0076727b35FBea2dAc28fEE5cCB0fEA768e", // Staking Fund
+        "AF45Ced136b9D9e24903464AE889F5C8a723FC14", // Moonlet Wallet
+        "f93124b7c738843CBB89E864c862c38cddCccF95", // P2P
+        "D2CC37A4dc036a8D232b48f62cDD4731412f4890", // 01Node
+        "DA798F6896A3331F64b48c12D1D57Fd9cbe70811", // MCF
+        "71AA1BE1D36CaFE3867910F99C09e347899C19C3", // Everstake
+        "8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf", // Chorus One
+        "178e21ad2E77AE06711549CFBB1f9c7a9d8096e8", // Syncnode
+        "5E1487F35515d02A92753504a8D75471b9f49EdB", // Triton
+        "6FbEBc898F403E4773E95feB15E80C9A99c8348d", // Staking Facilities
+    ];
+
+    // Convert the addresses to Bits256 by padding the leftmost 12 bytes with zeros. This is done because the original 20-byte key is shorter than the 32-byte b256 type.
+    addresses
+        .iter()
+        .map(|&addr| Bits256::from_hex_str(&format!("{:0>64}", addr)).unwrap())
+        .collect()
+}
+
+// Full list of guardian set upgrade 4 addresses can be found here: https://github.com/wormhole-foundation/wormhole-networks/blob/master/mainnetv2/guardianset/v4.prototxt
+pub fn guardian_set_upgrade_4_addresses() -> Vec<Bits256> {
+    let addresses = vec![
+        "5893B5A76c3f739645648885bDCcC06cd70a3Cd3", // RockawayX
+        "fF6CB952589BDE862c25Ef4392132fb9D4A42157", // Staked
+        "114De8460193bdf3A2fCf81f86a09765F4762fD1", // Figment
+        "107A0086b32d7A0977926A205131d8731D39cbEB", // ChainodeTech
+        "8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2", // Inotel
+        "11b39756C042441BE6D8650b69b54EbE715E2343", // HashQuark
+        "54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd", // Chainlayer
+        "15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20", // xLabs
+        "74a3bf913953D695260D88BC1aA25A4eeE363ef0", // Forbole
+        "000aC0076727b35FBea2dAc28fEE5cCB0fEA768e", // Staking Fund
+        "AF45Ced136b9D9e24903464AE889F5C8a723FC14", // Moonlet Wallet
+        "f93124b7c738843CBB89E864c862c38cddCccF95", // P2P
+        "D2CC37A4dc036a8D232b48f62cDD4731412f4890", // 01Node
+        "DA798F6896A3331F64b48c12D1D57Fd9cbe70811", // MCF
+        "71AA1BE1D36CaFE3867910F99C09e347899C19C3", // Everstake
+        "8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf", // Chorus One
+        "178e21ad2E77AE06711549CFBB1f9c7a9d8096e8", // Syncnode
+        "5E1487F35515d02A92753504a8D75471b9f49EdB", // Triton
+        "6FbEBc898F403E4773E95feB15E80C9A99c8348d", // Staking Facilities
+    ];
+
+    // Convert the addresses to Bits256 by padding the leftmost 12 bytes with zeros. This is done because the original 20-byte key is shorter than the 32-byte b256 type.
+    addresses
+        .iter()
+        .map(|&addr| Bits256::from_hex_str(&format!("{:0>64}", addr)).unwrap())
+        .collect()
 }
 
 pub fn default_price_feed_ids() -> Vec<Bits256> {

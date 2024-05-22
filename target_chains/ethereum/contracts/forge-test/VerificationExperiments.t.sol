@@ -286,7 +286,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
         ) = generateMerkleProof(priceId, price, depth);
 
         data = generateMessagePayload(priceId, price);
-        bytes32 hash = keccak256(data);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, root);
         bytes memory signature = abi.encodePacked(r, s, v - 27);
@@ -592,7 +591,7 @@ contract PythExperimental is Pyth {
         bytes32 expectedRoot,
         bytes memory data,
         bytes32[] memory proof
-    ) public returns (bool) {
+    ) public pure returns (bool) {
         bytes32 curNodeHash = keccak256(data);
         for (uint i = 0; i < proof.length; ) {
             curNodeHash = keccak256(abi.encode(curNodeHash, proof[i]));

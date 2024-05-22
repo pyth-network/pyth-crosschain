@@ -91,10 +91,6 @@ export interface components {
           type: "pending";
         }
       | {
-          /** @enum {string} */
-          type: "simulation_failed";
-        }
-      | {
           /**
            * Format: int32
            * @example 1
@@ -106,10 +102,26 @@ export interface components {
           type: "submitted";
         }
       | {
+          /**
+           * Format: int32
+           * @example 1
+           */
+          index?: number | null;
+          /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
+          result?: string | null;
+          /** @enum {string} */
+          type: "lost";
+        }
+      | {
+          /**
+           * Format: int32
+           * @example 1
+           */
+          index: number;
           /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
           result: string;
           /** @enum {string} */
-          type: "lost";
+          type: "won";
         };
     BidStatusWithId: {
       bid_status: components["schemas"]["BidStatus"];

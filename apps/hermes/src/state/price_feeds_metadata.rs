@@ -12,6 +12,7 @@ use {
 
 pub const DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL: u64 = 600;
 
+#[derive(Default)]
 pub struct PriceFeedMetaState {
     pub data: RwLock<Vec<PriceFeedMetadata>>,
 }

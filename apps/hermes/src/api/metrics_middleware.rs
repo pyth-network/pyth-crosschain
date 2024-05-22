@@ -1,6 +1,6 @@
 use {
     super::ApiState,
-    crate::state::State as AppState,
+    crate::state::metrics::Metrics,
     axum::{
         extract::{
             MatchedPath,
@@ -22,13 +22,17 @@ use {
     tokio::time::Instant,
 };
 
-pub struct Metrics {
+pub struct ApiMetrics {
     pub requests:  Family<Labels, Counter>,
     pub latencies: Family<Labels, Histogram>,
 }
 
-impl Metrics {
-    pub fn new(state: Arc<AppState>) -> Self {
+impl ApiMetrics {
+    pub fn new<S>(state: Arc<S>) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
         let new = Self {
             requests:  Family::default(),
             latencies: Family::new_with_constructor(|| {
@@ -46,15 +50,21 @@ impl Metrics {
             let latencies = new.latencies.clone();
 
             tokio::spawn(async move {
-                let mut metrics_registry = state.metrics_registry.write().await;
+                Metrics::register(
+                    &*state,
+                    ("api_requests", "Total number of API requests", requests),
+                )
+                .await;
 
-                metrics_registry.register("api_requests", "Total number of API requests", requests);
-
-                metrics_registry.register(
-                    "api_request_latency_seconds",
-                    "API request latency in seconds",
-                    latencies,
-                );
+                Metrics::register(
+                    &*state,
+                    (
+                        "api_request_latency_seconds",
+                        "API request latency in seconds",
+                        latencies,
+                    ),
+                )
+                .await;
             });
         }
 
@@ -69,8 +79,8 @@ pub struct Labels {
     pub status: u16,
 }
 
-pub async fn track_metrics<B>(
-    State(api_state): State<ApiState>,
+pub async fn track_metrics<B, S>(
+    State(api_state): State<ApiState<S>>,
     req: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {
@@ -80,13 +90,11 @@ pub async fn track_metrics<B>(
     } else {
         req.uri().path().to_owned()
     };
+
     let method = req.method().clone();
-
     let response = next.run(req).await;
-
     let latency = start.elapsed().as_secs_f64();
     let status = response.status().as_u16();
-
     let labels = Labels {
         method: method.to_string(),
         path,
@@ -94,7 +102,6 @@ pub async fn track_metrics<B>(
     };
 
     api_state.metrics.requests.get_or_create(&labels).inc();
-
     api_state
         .metrics
         .latencies

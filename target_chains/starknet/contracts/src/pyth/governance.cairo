@@ -1,0 +1,153 @@
+use pyth::reader::ReaderTrait;
+use core::array::ArrayTrait;
+use pyth::reader::{Reader, ReaderImpl};
+use pyth::byte_array::ByteArray;
+use pyth::pyth::errors::GovernanceActionError;
+use core::panic_with_felt252;
+use core::starknet::ContractAddress;
+use super::DataSource;
+
+const MAGIC: u32 = 0x5054474d;
+const MODULE_TARGET: u8 = 1;
+
+#[derive(Drop, Debug)]
+pub enum GovernanceAction {
+    UpgradeContract,
+    AuthorizeGovernanceDataSourceTransfer,
+    SetDataSources,
+    SetFee,
+    SetValidPeriod,
+    RequestGovernanceDataSourceTransfer,
+    SetWormholeAddress,
+}
+
+impl U8TryIntoGovernanceAction of TryInto<u8, GovernanceAction> {
+    fn try_into(self: u8) -> Option<GovernanceAction> {
+        let v = match self {
+            0 => GovernanceAction::UpgradeContract,
+            1 => GovernanceAction::AuthorizeGovernanceDataSourceTransfer,
+            2 => GovernanceAction::SetDataSources,
+            3 => GovernanceAction::SetFee,
+            4 => GovernanceAction::SetValidPeriod,
+            5 => GovernanceAction::RequestGovernanceDataSourceTransfer,
+            6 => GovernanceAction::SetWormholeAddress,
+            _ => { return Option::None; }
+        };
+        Option::Some(v)
+    }
+}
+
+#[derive(Drop, Debug)]
+pub struct GovernanceInstruction {
+    pub target_chain_id: u16,
+    pub payload: GovernancePayload,
+}
+
+#[derive(Drop, Debug)]
+pub enum GovernancePayload {
+    SetFee: SetFee,
+    SetDataSources: SetDataSources,
+    SetWormholeAddress: SetWormholeAddress,
+    RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
+    AuthorizeGovernanceDataSourceTransfer: AuthorizeGovernanceDataSourceTransfer,
+// TODO: others
+}
+
+#[derive(Drop, Debug)]
+pub struct SetFee {
+    pub value: u64,
+    pub expo: u64,
+}
+
+#[derive(Drop, Debug)]
+pub struct SetDataSources {
+    pub sources: Array<DataSource>,
+}
+
+#[derive(Drop, Debug)]
+pub struct SetWormholeAddress {
+    pub address: ContractAddress,
+}
+
+#[derive(Drop, Debug)]
+pub struct RequestGovernanceDataSourceTransfer {
+    // Index is used to prevent replay attacks
+    // So a claimVaa cannot be used twice.
+    pub governance_data_source_index: u32,
+}
+
+#[derive(Drop, Debug)]
+pub struct AuthorizeGovernanceDataSourceTransfer {
+    // Transfer governance control over this contract to another data source.
+    // The claim_vaa field is a VAA created by the new data source; using a VAA prevents mistakes
+    // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
+    pub claim_vaa: ByteArray,
+}
+
+pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
+    let mut reader = ReaderImpl::new(payload);
+    let magic = reader.read_u32();
+    if magic != MAGIC {
+        panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+    }
+    let module = reader.read_u8();
+    if module != MODULE_TARGET {
+        panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+    }
+    let action: GovernanceAction = reader
+        .read_u8()
+        .try_into()
+        .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+
+    let target_chain_id = reader.read_u16();
+
+    let payload = match action {
+        GovernanceAction::UpgradeContract => { panic_with_felt252('unimplemented') },
+        GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
+            let len = reader.len();
+            let claim_vaa = reader.read_byte_array(len);
+            GovernancePayload::AuthorizeGovernanceDataSourceTransfer(
+                AuthorizeGovernanceDataSourceTransfer { claim_vaa }
+            )
+        },
+        GovernanceAction::RequestGovernanceDataSourceTransfer => {
+            let governance_data_source_index = reader.read_u32();
+            GovernancePayload::RequestGovernanceDataSourceTransfer(
+                RequestGovernanceDataSourceTransfer { governance_data_source_index }
+            )
+        },
+        GovernanceAction::SetDataSources => {
+            let num_sources = reader.read_u8();
+            let mut i = 0;
+            let mut sources = array![];
+            while i < num_sources {
+                let emitter_chain_id = reader.read_u16();
+                let emitter_address = reader.read_u256();
+                sources.append(DataSource { emitter_chain_id, emitter_address });
+                i += 1;
+            };
+            GovernancePayload::SetDataSources(SetDataSources { sources })
+        },
+        GovernanceAction::SetFee => {
+            let value = reader.read_u64();
+            let expo = reader.read_u64();
+            GovernancePayload::SetFee(SetFee { value, expo })
+        },
+        GovernanceAction::SetValidPeriod => { panic_with_felt252('unimplemented') },
+        GovernanceAction::SetWormholeAddress => {
+            let address: felt252 = reader
+                .read_u256()
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            let address = address
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            GovernancePayload::SetWormholeAddress(SetWormholeAddress { address })
+        },
+    };
+
+    if reader.len() != 0 {
+        panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+    }
+    GovernanceInstruction { target_chain_id, payload, }
+}

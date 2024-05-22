@@ -75,14 +75,16 @@ class SimpleSearcher:
         id = bid_status_update.id
         bid_status = bid_status_update.bid_status
         result = bid_status_update.result
+        index = bid_status_update.index
 
         result_details = ""
-        if bid_status == BidStatus("submitted"):
-            result_details = (
-                f", transaction {result}, index {bid_status_update.index} of multicall"
-            )
+        if bid_status == BidStatus("submitted") or bid_status == BidStatus("won"):
+            result_details = f", transaction {result}, index {index} of multicall"
         elif bid_status == BidStatus("lost"):
-            result_details = f", transaction {result}"
+            if result:
+                result_details = f", transaction {result}"
+            if index:
+                result_details += f", index {index} of multicall"
         logger.error(
             f"Bid status for bid {id}: {bid_status.value.replace('_', ' ')}{result_details}"
         )

@@ -64,6 +64,59 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   };
 }
 
+/**
+ * An AccumulatorUpdateData contains a VAA and a list of updates. This function returns a new serialized AccumulatorUpdateData with only the updates in the range [start, end).
+ */
+export function sliceAccumulatorUpdateData(
+  data: Buffer,
+  start?: number,
+  end?: number
+): Buffer {
+  if (!isAccumulatorUpdateData(data)) {
+    throw new Error("Invalid accumulator message");
+  }
+  let cursor = 6;
+  const trailingPayloadSize = data.readUint8(cursor);
+  cursor += 1 + trailingPayloadSize;
+
+  // const proofType = data.readUint8(cursor);
+  cursor += 1;
+
+  const vaaSize = data.readUint16BE(cursor);
+  cursor += 2;
+  cursor += vaaSize;
+
+  const endOfVaa = cursor;
+
+  const updates = [];
+  const numUpdates = data.readUInt8(cursor);
+  cursor += 1;
+
+  for (let i = 0; i < numUpdates; i++) {
+    const updateStart = cursor;
+    const messageSize = data.readUint16BE(cursor);
+    cursor += 2;
+    cursor += messageSize;
+
+    const numProofs = data.readUInt8(cursor);
+    cursor += 1;
+    cursor += KECCAK160_HASH_SIZE * numProofs;
+
+    updates.push(data.subarray(updateStart, cursor));
+  }
+
+  if (cursor !== data.length) {
+    throw new Error("Didn't reach the end of the message");
+  }
+
+  const sliceUpdates = updates.slice(start, end);
+  return Buffer.concat([
+    data.subarray(0, endOfVaa),
+    Buffer.from([sliceUpdates.length]),
+    ...updates.slice(start, end),
+  ]);
+}
+
 export function parseAccumulatorUpdateData(
   data: Buffer
 ): AccumulatorUpdateData {

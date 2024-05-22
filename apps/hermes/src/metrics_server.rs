@@ -5,7 +5,7 @@
 use {
     crate::{
         config::RunOptions,
-        state::State as AppState,
+        state::metrics::Metrics,
     },
     anyhow::Result,
     axum::{
@@ -15,13 +15,16 @@ use {
         routing::get,
         Router,
     },
-    prometheus_client::encoding::text::encode,
     std::sync::Arc,
 };
 
 
 #[tracing::instrument(skip(opts, state))]
-pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
+pub async fn run<S>(opts: RunOptions, state: Arc<S>) -> Result<()>
+where
+    S: Metrics,
+    S: Send + Sync + 'static,
+{
     tracing::info!(endpoint = %opts.metrics.server_listen_addr, "Starting Metrics Server.");
 
     let app = Router::new();
@@ -42,14 +45,11 @@ pub async fn run(opts: RunOptions, state: Arc<AppState>) -> Result<()> {
     Ok(())
 }
 
-pub async fn metrics(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let registry = state.metrics_registry.read().await;
-    let mut buffer = String::new();
-
-    // Should not fail if the metrics are valid and there is memory available
-    // to write to the buffer.
-    encode(&mut buffer, &registry).unwrap();
-
+pub async fn metrics<S>(State(state): State<Arc<S>>) -> impl IntoResponse
+where
+    S: Metrics,
+{
+    let buffer = Metrics::encode(&*state).await;
     (
         [(
             header::CONTENT_TYPE,

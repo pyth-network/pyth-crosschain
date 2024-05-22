@@ -95,9 +95,7 @@ pub async fn price_stream_sse_handler<S>(
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, RestError>
 where
     S: Aggregates,
-    S: Sync,
-    S: Send,
-    S: 'static,
+    S: Send + Sync + 'static,
 {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
 
@@ -128,7 +126,7 @@ where
                     {
                         Ok(Some(update)) => Ok(Event::default()
                             .json_data(update)
-                            .unwrap_or_else(|e| error_event(e))),
+                            .unwrap_or_else(error_event)),
                         Ok(None) => Ok(Event::default().comment("No update available")),
                         Err(e) => Ok(error_event(e)),
                     }

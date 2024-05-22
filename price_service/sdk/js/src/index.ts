@@ -11,6 +11,7 @@ export type HexString = string;
 
 export {
   isAccumulatorUpdateData,
+  sliceAccumulatorUpdateData,
   parseAccumulatorUpdateData,
   AccumulatorUpdateData,
   parsePriceFeedMessage,

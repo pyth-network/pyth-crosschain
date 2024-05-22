@@ -3,12 +3,14 @@ use crate::utils::interface::{
     pyth_info::price_feed_exists,
     pyth_init::constructor,
 };
-
 use crate::utils::setup::setup_environment;
 use pyth_sdk::{
-    constants::{DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD},
+    constants::{
+        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID,
+        GOVERNANCE_DATA_SOURCE, WORMHOLE_GOVERNANCE_DATA_SOURCE,
+    },
     pyth_utils::{
-        default_data_sources, default_price_feed_ids, guardian_set_upgrade_3_vaa,
+        default_data_sources, default_price_feed_ids, guardian_set_upgrade_3_addresses,
         test_accumulator_update_data_bytes, test_batch_update_data_bytes,
     },
 };
@@ -23,9 +25,13 @@ mod success {
         constructor(
             &deployer.instance,
             default_data_sources(),
+            GOVERNANCE_DATA_SOURCE,
+            WORMHOLE_GOVERNANCE_DATA_SOURCE,
             DEFAULT_SINGLE_UPDATE_FEE,
             DEFAULT_VALID_TIME_PERIOD,
-            guardian_set_upgrade_3_vaa(),
+            guardian_set_upgrade_3_addresses(),
+            3,
+            DUMMY_CHAIN_ID,
         )
         .await;
 
@@ -69,9 +75,13 @@ mod success {
         constructor(
             &deployer.instance,
             default_data_sources(),
+            GOVERNANCE_DATA_SOURCE,
+            WORMHOLE_GOVERNANCE_DATA_SOURCE,
             DEFAULT_SINGLE_UPDATE_FEE,
             DEFAULT_VALID_TIME_PERIOD,
-            guardian_set_upgrade_3_vaa(),
+            guardian_set_upgrade_3_addresses(),
+            3,
+            DUMMY_CHAIN_ID,
         )
         .await;
 

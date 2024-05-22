@@ -1,7 +1,7 @@
 use {
     crate::api::{
         ChainId,
-        Label,
+        RequestLabel,
         RestError,
     },
     anyhow::Result,
@@ -45,8 +45,8 @@ pub async fn revelation(
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
-        .request_counter
-        .get_or_create(&Label {
+        .http_requests
+        .get_or_create(&RequestLabel {
             value: "/v1/chains/{chain_id}/revelations/{sequence}".to_string(),
         })
         .inc();
@@ -68,7 +68,7 @@ pub async fn revelation(
 
     let (maybe_request, current_block_number) =
         try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
-            tracing::error!("RPC request failed {}", e);
+            tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
             RestError::TemporarilyUnavailable
         })?;
 
@@ -77,7 +77,12 @@ pub async fn revelation(
             if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
         {
             let value = &state.state.reveal(sequence).map_err(|e| {
-                tracing::error!("Reveal failed {}", e);
+                tracing::error!(
+                    chain_id = chain_id,
+                    sequence = sequence,
+                    "Reveal failed {}",
+                    e
+                );
                 RestError::Unknown
             })?;
             let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());

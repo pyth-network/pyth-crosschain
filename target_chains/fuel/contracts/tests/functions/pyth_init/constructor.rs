@@ -1,6 +1,6 @@
 use crate::utils::interface::{
     pyth_core::valid_time_period,
-    pyth_info::{owner, single_update_fee, valid_data_source, valid_data_sources},
+    pyth_info::{is_valid_data_source, owner, single_update_fee, valid_data_sources},
     pyth_init::constructor,
     wormhole_guardians::{
         current_guardian_set_index, current_wormhole_provider, governance_action_is_consumed,
@@ -8,10 +8,10 @@ use crate::utils::interface::{
 };
 use pyth_sdk::{
     constants::{
-        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, UPGRADE_3_VAA_GOVERNANCE_ACTION_HASH,
+        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, UPGRADE_3_VAA_GOVERNANCE_ACTION_HASH, GOVERNANCE_DATA_SOURCE, WORMHOLE_GOVERNANCE_DATA_SOURCE, DUMMY_CHAIN_ID
     },
     pyth_utils::{
-        default_data_sources, guardian_set_upgrade_3_vaa, ConstructedEvent, State, WormholeProvider,
+        default_data_sources, guardian_set_upgrade_3_addresses, ConstructedEvent, DataSource, State,
     },
 };
 
@@ -29,7 +29,7 @@ mod success {
 
         // Initial values
         assert!(
-            !valid_data_source(&deployer.instance, &default_data_sources()[0])
+            !is_valid_data_source(&deployer.instance, &default_data_sources()[0])
                 .await
                 .value
         );
@@ -50,9 +50,9 @@ mod success {
         );
         assert_eq!(
             current_wormhole_provider(&deployer.instance,).await.value,
-            WormholeProvider {
-                governance_chain_id: 0,
-                governance_contract: Bits256::zeroed(),
+            DataSource {
+                chain_id: 0,
+                emitter_address: Bits256::zeroed(),
             }
         );
         assert_eq!(owner(&deployer.instance,).await.value, State::Uninitialized);
@@ -60,9 +60,13 @@ mod success {
         let response = constructor(
             &deployer.instance,
             default_data_sources(),
+            GOVERNANCE_DATA_SOURCE,
+            WORMHOLE_GOVERNANCE_DATA_SOURCE,
             DEFAULT_SINGLE_UPDATE_FEE,
             DEFAULT_VALID_TIME_PERIOD,
-            guardian_set_upgrade_3_vaa(),
+            guardian_set_upgrade_3_addresses(),
+            3,
+            DUMMY_CHAIN_ID
         )
         .await;
 
@@ -79,7 +83,7 @@ mod success {
 
         // Final values
         assert!(
-            valid_data_source(&deployer.instance, &default_data_sources()[0])
+            is_valid_data_source(&deployer.instance, &default_data_sources()[0])
                 .await
                 .value
         );
@@ -95,20 +99,15 @@ mod success {
             single_update_fee(&deployer.instance).await.value,
             DEFAULT_SINGLE_UPDATE_FEE
         );
-        assert!(
-            governance_action_is_consumed(&deployer.instance, UPGRADE_3_VAA_GOVERNANCE_ACTION_HASH)
-                .await
-                .value
-        );
         assert_eq!(
             current_guardian_set_index(&deployer.instance,).await.value,
             3
         );
         assert_eq!(
             current_wormhole_provider(&deployer.instance,).await.value,
-            WormholeProvider {
-                governance_chain_id: 1,
-                governance_contract: Bits256([
+            DataSource {
+                chain_id: 1,
+                emitter_address: Bits256([
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 4
                 ])

@@ -1,0 +1,13 @@
+[package]
+name = "test_vaas"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hex = "0.4.3"
+primitive-types = "0.12.2"
+byteorder = "1.5.0"
+libsecp256k1 = "0.7.1"
+wormhole-vaas = "0.1.1"
+rand = "0.8.5"
+alloy-primitives = "0.2.0"

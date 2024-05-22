@@ -9,7 +9,7 @@ use {
 };
 
 pub async fn metrics(State(state): State<crate::api::ApiState>) -> impl IntoResponse {
-    let registry = state.metrics.registry.read().await;
+    let registry = state.metrics_registry.read().await;
     let mut buffer = String::new();
 
     // Should not fail if the metrics are valid and there is memory available

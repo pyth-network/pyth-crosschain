@@ -62,10 +62,12 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             }
           );
         case 5:
-          return new BpfUpgradableLoaderInstruction(
-            "Close",
-            {},
-            {
+          let args;
+          // Close instruction supports closing two types of accounts:
+          // - A program which takes 4 keys (programData, spill, upgradeAuthority, program)
+          // - A buffer which takes 3 keys (buffer, spill, upgradeAuthority)
+          if (instruction.keys.length >= 4) {
+            args = {
               named: {
                 programData: instruction.keys[0],
                 spill: instruction.keys[1],
@@ -73,8 +75,19 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
                 program: instruction.keys[3],
               },
               remaining: instruction.keys.slice(4),
-            }
-          );
+            };
+          } else {
+            args = {
+              named: {
+                buffer: instruction.keys[0],
+                spill: instruction.keys[1],
+                upgradeAuthority: instruction.keys[2],
+              },
+              remaining: instruction.keys.slice(3),
+            };
+          }
+
+          return new BpfUpgradableLoaderInstruction("Close", {}, args);
         default: // Many more cases are not supported
           throw Error("Not implemented");
       }

@@ -70,7 +70,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function getTestUpgradeVaa(
         address newImplementation,
         uint value
-    ) internal returns (bytes memory vaa) {
+    ) internal view returns (bytes memory vaa) {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
             PythGovernanceInstructions.GovernanceModule.EvmExecutor,
@@ -637,7 +637,7 @@ contract TestCallable is ICallable {
         lastCaller = msg.sender;
     }
 
-    function reverts() external override {
+    function reverts() external pure override {
         revert("call should revert");
     }
 }

@@ -1,148 +1,36 @@
-use core::array::ArrayTrait;
-use core::fmt::{Debug, Formatter};
-use super::byte_array::ByteArray;
-use super::util::UnwrapWithFelt252;
+mod errors;
+mod interface;
+mod price_update;
+mod governance;
 
-pub use pyth::{Event, PriceFeedUpdateEvent};
-
-#[starknet::interface]
-pub trait IPyth<T> {
-    fn get_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
-    fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
-    fn set_data_sources(
-        ref self: T, sources: Array<DataSource>
-    ) -> Result<(), GovernanceActionError>;
-    fn set_fee(ref self: T, single_update_fee: u256) -> Result<(), GovernanceActionError>;
-    fn update_price_feeds(ref self: T, data: ByteArray) -> Result<(), UpdatePriceFeedsError>;
-}
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum GetPriceUnsafeError {
-    PriceFeedNotFound,
-}
-
-pub impl GetPriceUnsafeErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GetPriceUnsafeError> {
-    fn unwrap_with_felt252(self: Result<T, GetPriceUnsafeError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
-impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
-    fn into(self: GetPriceUnsafeError) -> felt252 {
-        match self {
-            GetPriceUnsafeError::PriceFeedNotFound => 'price feed not found',
-        }
-    }
-}
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum GovernanceActionError {
-    AccessDenied,
-}
-
-pub impl GovernanceActionErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, GovernanceActionError> {
-    fn unwrap_with_felt252(self: Result<T, GovernanceActionError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
-impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
-    fn into(self: GovernanceActionError) -> felt252 {
-        match self {
-            GovernanceActionError::AccessDenied => 'access denied',
-        }
-    }
-}
-
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
-pub enum UpdatePriceFeedsError {
-    Reader: super::reader::Error,
-    Wormhole: super::wormhole::ParseAndVerifyVmError,
-    InvalidUpdateData,
-    InvalidUpdateDataSource,
-    InsufficientFeeAllowance,
-}
-
-pub impl UpdatePriceFeedsErrorUnwrapWithFelt252<T> of UnwrapWithFelt252<T, UpdatePriceFeedsError> {
-    fn unwrap_with_felt252(self: Result<T, UpdatePriceFeedsError>) -> T {
-        match self {
-            Result::Ok(v) => v,
-            Result::Err(err) => core::panic_with_felt252(err.into()),
-        }
-    }
-}
-
-impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
-    fn into(self: UpdatePriceFeedsError) -> felt252 {
-        match self {
-            UpdatePriceFeedsError::Reader(err) => err.into(),
-            UpdatePriceFeedsError::Wormhole(err) => err.into(),
-            UpdatePriceFeedsError::InvalidUpdateData => 'invalid update data',
-            UpdatePriceFeedsError::InvalidUpdateDataSource => 'invalid update data source',
-            UpdatePriceFeedsError::InsufficientFeeAllowance => 'insufficient fee allowance',
-        }
-    }
-}
-
-#[derive(Drop, Debug, Clone, Copy, Hash, Default, Serde, starknet::Store)]
-pub struct DataSource {
-    pub emitter_chain_id: u16,
-    pub emitter_address: u256,
-}
-
-#[derive(Drop, Clone, Serde, starknet::Store)]
-struct PriceInfo {
-    pub price: i64,
-    pub conf: u64,
-    pub expo: i32,
-    pub publish_time: u64,
-    pub ema_price: i64,
-    pub ema_conf: u64,
-}
-
-#[derive(Drop, Clone, Serde)]
-struct Price {
-    pub price: i64,
-    pub conf: u64,
-    pub expo: i32,
-    pub publish_time: u64,
-}
+pub use pyth::{Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet};
+pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
+pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
 
 #[starknet::contract]
 mod pyth {
-    use pyth::reader::ReaderTrait;
+    use super::price_update::{
+        PriceInfo, PriceFeedMessage, read_and_verify_message, read_header_and_wormhole_proof,
+        parse_wormhole_proof
+    };
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::{ByteArray, ByteArrayImpl};
     use core::panic_with_felt252;
     use core::starknet::{ContractAddress, get_caller_address, get_execution_info};
-    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
+    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
-        DataSource, UpdatePriceFeedsError, PriceInfo, GovernanceActionError, Price,
-        GetPriceUnsafeError
+        DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError
     };
-    use pyth::merkle_tree::{read_and_verify_proof, MerkleVerificationError};
-    use pyth::hash::{Hasher, HasherImpl};
-    use core::fmt::{Debug, Formatter};
-    use pyth::util::{u64_as_i64, u32_as_i32};
+    use super::governance;
+    use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
-
-    // Stands for PNAU (Pyth Network Accumulator Update)
-    const ACCUMULATOR_MAGIC: u32 = 0x504e4155;
-    // Stands for AUWV (Accumulator Update Wormhole Verficiation)
-    const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
-    const MAJOR_VERSION: u8 = 1;
-    const MINIMUM_ALLOWED_MINOR_VERSION: u8 = 0;
 
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
         PriceFeedUpdate: PriceFeedUpdateEvent,
+        WormholeAddressSet: WormholeAddressSet,
+        GovernanceDataSourceSet: GovernanceDataSourceSet,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -154,72 +42,17 @@ mod pyth {
         pub conf: u64,
     }
 
-    #[generate_trait]
-    impl ResultReaderToUpdatePriceFeeds<T> of ResultReaderToUpdatePriceFeedsTrait<T> {
-        fn map_err(self: Result<T, pyth::reader::Error>) -> Result<T, UpdatePriceFeedsError> {
-            match self {
-                Result::Ok(v) => Result::Ok(v),
-                Result::Err(err) => Result::Err(UpdatePriceFeedsError::Reader(err)),
-            }
-        }
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct WormholeAddressSet {
+        pub old_address: ContractAddress,
+        pub new_address: ContractAddress,
     }
 
-    #[generate_trait]
-    impl ResultWormholeToUpdatePriceFeeds<T> of ResultWormholeToUpdatePriceFeedsTrait<T> {
-        fn map_err(
-            self: Result<T, pyth::wormhole::ParseAndVerifyVmError>
-        ) -> Result<T, UpdatePriceFeedsError> {
-            match self {
-                Result::Ok(v) => Result::Ok(v),
-                Result::Err(err) => Result::Err(UpdatePriceFeedsError::Wormhole(err)),
-            }
-        }
-    }
-
-    #[generate_trait]
-    impl ResultMerkleToUpdatePriceFeeds<T> of ResultMerkleToUpdatePriceFeedsTrait<T> {
-        fn map_err(self: Result<T, MerkleVerificationError>) -> Result<T, UpdatePriceFeedsError> {
-            match self {
-                Result::Ok(v) => Result::Ok(v),
-                Result::Err(err) => {
-                    let err = match err {
-                        MerkleVerificationError::Reader(err) => UpdatePriceFeedsError::Reader(err),
-                        MerkleVerificationError::DigestMismatch => UpdatePriceFeedsError::InvalidUpdateData,
-                    };
-                    Result::Err(err)
-                },
-            }
-        }
-    }
-
-    #[derive(Drop)]
-    enum UpdateType {
-        WormholeMerkle
-    }
-
-    impl U8TryIntoUpdateType of TryInto<u8, UpdateType> {
-        fn try_into(self: u8) -> Option<UpdateType> {
-            if self == 0 {
-                Option::Some(UpdateType::WormholeMerkle)
-            } else {
-                Option::None
-            }
-        }
-    }
-
-    #[derive(Drop)]
-    enum MessageType {
-        PriceFeed
-    }
-
-    impl U8TryIntoMessageType of TryInto<u8, MessageType> {
-        fn try_into(self: u8) -> Option<MessageType> {
-            if self == 0 {
-                Option::Some(MessageType::PriceFeed)
-            } else {
-                Option::None
-            }
-        }
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct GovernanceDataSourceSet {
+        pub old_data_source: DataSource,
+        pub new_data_source: DataSource,
+        pub last_executed_governance_sequence: u64,
     }
 
     #[storage]
@@ -233,6 +66,11 @@ mod pyth {
         // For fast validation.
         is_valid_data_source: LegacyMap<DataSource, bool>,
         latest_price_info: LegacyMap<u256, PriceInfo>,
+        governance_data_source: DataSource,
+        last_executed_governance_sequence: u64,
+        // Governance data source index is used to prevent replay attacks,
+        // so a claimVaa cannot be used twice.
+        governance_data_source_index: u32,
     }
 
     /// Initializes the Pyth contract.
@@ -258,45 +96,25 @@ mod pyth {
         wormhole_address: ContractAddress,
         fee_contract_address: ContractAddress,
         single_update_fee: u256,
-        data_sources: Array<DataSource>
+        data_sources: Array<DataSource>,
+        governance_emitter_chain_id: u16,
+        governance_emitter_address: u256,
+        governance_initial_sequence: u64,
     ) {
         self.owner.write(wormhole_address);
         self.wormhole_address.write(wormhole_address);
         self.fee_contract_address.write(fee_contract_address);
         self.single_update_fee.write(single_update_fee);
-        write_data_sources(ref self, data_sources);
-    }
-
-    fn write_data_sources(ref self: ContractState, data_sources: Array<DataSource>) {
-        let num_old = self.num_data_sources.read();
-        let mut i = 0;
-        while i < num_old {
-            let old_source = self.data_sources.read(i);
-            self.is_valid_data_source.write(old_source, false);
-            self.data_sources.write(i, Default::default());
-            i += 1;
-        };
-
-        self.num_data_sources.write(data_sources.len());
-        i = 0;
-        while i < data_sources.len() {
-            let source = data_sources.at(i);
-            self.is_valid_data_source.write(*source, true);
-            self.data_sources.write(i, *source);
-            i += 1;
-        };
-    }
-
-    #[derive(Drop)]
-    struct PriceFeedMessage {
-        price_id: u256,
-        price: i64,
-        conf: u64,
-        expo: i32,
-        publish_time: u64,
-        prev_publish_time: u64,
-        ema_price: i64,
-        ema_conf: u64,
+        self.write_data_sources(data_sources);
+        self
+            .governance_data_source
+            .write(
+                DataSource {
+                    emitter_chain_id: governance_emitter_chain_id,
+                    emitter_address: governance_emitter_address,
+                }
+            );
+        self.last_executed_governance_sequence.write(governance_initial_sequence);
     }
 
     #[abi(embed_v0)]
@@ -333,85 +151,37 @@ mod pyth {
             Result::Ok(price)
         }
 
-        fn set_data_sources(
-            ref self: ContractState, sources: Array<DataSource>
-        ) -> Result<(), GovernanceActionError> {
+        fn set_data_sources(ref self: ContractState, sources: Array<DataSource>) {
             if self.owner.read() != get_caller_address() {
-                return Result::Err(GovernanceActionError::AccessDenied);
+                panic_with_felt252(GovernanceActionError::AccessDenied.into());
             }
-            write_data_sources(ref self, sources);
-            Result::Ok(())
+            self.write_data_sources(sources);
         }
 
-        fn set_fee(
-            ref self: ContractState, single_update_fee: u256
-        ) -> Result<(), GovernanceActionError> {
+        fn set_fee(ref self: ContractState, single_update_fee: u256) {
             if self.owner.read() != get_caller_address() {
-                return Result::Err(GovernanceActionError::AccessDenied);
+                panic_with_felt252(GovernanceActionError::AccessDenied.into());
             }
             self.single_update_fee.write(single_update_fee);
-            Result::Ok(())
         }
 
-        fn update_price_feeds(
-            ref self: ContractState, data: ByteArray
-        ) -> Result<(), UpdatePriceFeedsError> {
+        fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             let mut reader = ReaderImpl::new(data);
-            let x = reader.read_u32();
-            if x != ACCUMULATOR_MAGIC {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
-            }
-            if reader.read_u8() != MAJOR_VERSION {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
-            }
-            if reader.read_u8() < MINIMUM_ALLOWED_MINOR_VERSION {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
-            }
-
-            let trailing_header_size = reader.read_u8();
-            reader.skip(trailing_header_size);
-
-            let update_type: Option<UpdateType> = reader.read_u8().try_into();
-            match update_type {
-                Option::Some(v) => match v {
-                    UpdateType::WormholeMerkle => {}
-                },
-                Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
-            };
-
-            let wh_proof_size = reader.read_u16();
-            let wh_proof = reader.read_byte_array(wh_proof_size.into());
+            let wormhole_proof = read_header_and_wormhole_proof(ref reader);
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
-            let vm = wormhole.parse_and_verify_vm(wh_proof).map_err()?;
+            let vm = wormhole.parse_and_verify_vm(wormhole_proof);
 
             let source = DataSource {
                 emitter_chain_id: vm.emitter_chain_id, emitter_address: vm.emitter_address
             };
             if !self.is_valid_data_source.read(source) {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateDataSource);
+                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateDataSource.into());
             }
 
-            let mut payload_reader = ReaderImpl::new(vm.payload);
-            let x = payload_reader.read_u32();
-            if x != ACCUMULATOR_WORMHOLE_MAGIC {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
-            }
-
-            let update_type: Option<UpdateType> = payload_reader.read_u8().try_into();
-            match update_type {
-                Option::Some(v) => match v {
-                    UpdateType::WormholeMerkle => {}
-                },
-                Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
-            };
-
-            let _slot = payload_reader.read_u64();
-            let _ring_size = payload_reader.read_u32();
-            let root_digest = payload_reader.read_u160();
+            let root_digest = parse_wormhole_proof(vm.payload);
 
             let num_updates = reader.read_u8();
-
-            let total_fee = get_total_fee(ref self, num_updates);
+            let total_fee = self.get_total_fee(num_updates);
             let fee_contract = IERC20CamelDispatcher {
                 contract_address: self.fee_contract_address.read()
             };
@@ -419,90 +189,211 @@ mod pyth {
             let caller = execution_info.caller_address;
             let contract = execution_info.contract_address;
             if fee_contract.allowance(caller, contract) < total_fee {
-                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
+                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
             }
             if !fee_contract.transferFrom(caller, contract, total_fee) {
-                return Result::Err(UpdatePriceFeedsError::InsufficientFeeAllowance);
+                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
             }
 
             let mut i = 0;
-            let mut result = Result::Ok(());
             while i < num_updates {
-                let r = read_and_verify_message(ref reader, root_digest);
-                match r {
-                    Result::Ok(message) => { update_latest_price_if_necessary(ref self, message); },
-                    Result::Err(err) => {
-                        result = Result::Err(err);
-                        break;
-                    }
-                }
+                let message = read_and_verify_message(ref reader, root_digest);
+                self.update_latest_price_if_necessary(message);
                 i += 1;
             };
-            result?;
 
             if reader.len() != 0 {
-                return Result::Err(UpdatePriceFeedsError::InvalidUpdateData);
+                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
             }
+        }
 
-            Result::Ok(())
+        fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            let vm = wormhole.parse_and_verify_vm(data.clone());
+            self.verify_governance_vm(@vm);
+            let instruction = governance::parse_instruction(vm.payload);
+            if instruction.target_chain_id != 0
+                && instruction.target_chain_id != wormhole.chain_id() {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+            }
+            match instruction.payload {
+                GovernancePayload::SetFee(payload) => {
+                    let value = apply_decimal_expo(payload.value, payload.expo);
+                    self.single_update_fee.write(value);
+                },
+                GovernancePayload::SetDataSources(payload) => {
+                    self.write_data_sources(payload.sources);
+                },
+                GovernancePayload::SetWormholeAddress(payload) => {
+                    if instruction.target_chain_id == 0 {
+                        panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+                    }
+                    self.check_new_wormhole(payload.address, data);
+                    self.wormhole_address.write(payload.address);
+                    let event = WormholeAddressSet {
+                        old_address: wormhole.contract_address, new_address: payload.address,
+                    };
+                    self.emit(event);
+                },
+                GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
+                    // RequestGovernanceDataSourceTransfer can be only part of
+                    // AuthorizeGovernanceDataSourceTransfer message
+                    panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+                },
+                GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
+                    self.authorize_governance_transfer(payload.claim_vaa);
+                },
+            }
         }
     }
 
-    fn read_and_verify_message(
-        ref reader: Reader, root_digest: u256
-    ) -> Result<PriceFeedMessage, UpdatePriceFeedsError> {
-        let message_size = reader.read_u16();
-        let message = reader.read_byte_array(message_size.into());
-        read_and_verify_proof(root_digest, @message, ref reader).map_err()?;
-
-        let mut message_reader = ReaderImpl::new(message);
-        let message_type: Option<MessageType> = message_reader.read_u8().try_into();
-        match message_type {
-            Option::Some(v) => match v {
-                MessageType::PriceFeed => {}
-            },
-            Option::None => { return Result::Err(UpdatePriceFeedsError::InvalidUpdateData); }
-        };
-
-        let price_id = message_reader.read_u256();
-        let price = u64_as_i64(message_reader.read_u64());
-        let conf = message_reader.read_u64();
-        let expo = u32_as_i32(message_reader.read_u32());
-        let publish_time = message_reader.read_u64();
-        let prev_publish_time = message_reader.read_u64();
-        let ema_price = u64_as_i64(message_reader.read_u64());
-        let ema_conf = message_reader.read_u64();
-
-        let message = PriceFeedMessage {
-            price_id, price, conf, expo, publish_time, prev_publish_time, ema_price, ema_conf,
-        };
-        Result::Ok(message)
-    }
-
-    fn update_latest_price_if_necessary(ref self: ContractState, message: PriceFeedMessage) {
-        let latest_publish_time = self.latest_price_info.read(message.price_id).publish_time;
-        if message.publish_time > latest_publish_time {
-            let info = PriceInfo {
-                price: message.price,
-                conf: message.conf,
-                expo: message.expo,
-                publish_time: message.publish_time,
-                ema_price: message.ema_price,
-                ema_conf: message.ema_conf,
+    #[generate_trait]
+    impl PrivateImpl of PrivateTrait {
+        fn write_data_sources(ref self: ContractState, data_sources: Array<DataSource>) {
+            let num_old = self.num_data_sources.read();
+            let mut i = 0;
+            while i < num_old {
+                let old_source = self.data_sources.read(i);
+                self.is_valid_data_source.write(old_source, false);
+                self.data_sources.write(i, Default::default());
+                i += 1;
             };
-            self.latest_price_info.write(message.price_id, info);
 
-            let event = PriceFeedUpdateEvent {
-                price_id: message.price_id,
-                publish_time: message.publish_time,
-                price: message.price,
-                conf: message.conf,
+            self.num_data_sources.write(data_sources.len());
+            i = 0;
+            while i < data_sources.len() {
+                let source = data_sources.at(i);
+                self.is_valid_data_source.write(*source, true);
+                self.data_sources.write(i, *source);
+                i += 1;
+            };
+        }
+
+        fn update_latest_price_if_necessary(ref self: ContractState, message: PriceFeedMessage) {
+            let latest_publish_time = self.latest_price_info.read(message.price_id).publish_time;
+            if message.publish_time > latest_publish_time {
+                let info = PriceInfo {
+                    price: message.price,
+                    conf: message.conf,
+                    expo: message.expo,
+                    publish_time: message.publish_time,
+                    ema_price: message.ema_price,
+                    ema_conf: message.ema_conf,
+                };
+                self.latest_price_info.write(message.price_id, info);
+
+                let event = PriceFeedUpdateEvent {
+                    price_id: message.price_id,
+                    publish_time: message.publish_time,
+                    price: message.price,
+                    conf: message.conf,
+                };
+                self.emit(event);
+            }
+        }
+
+        fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+            self.single_update_fee.read() * num_updates.into()
+        }
+
+        fn verify_governance_vm(ref self: ContractState, vm: @VerifiedVM) {
+            let governance_data_source = self.governance_data_source.read();
+            if governance_data_source.emitter_chain_id != *vm.emitter_chain_id {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if governance_data_source.emitter_address != *vm.emitter_address {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if *vm.sequence <= self.last_executed_governance_sequence.read() {
+                panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
+            }
+            // Note: in case of AuthorizeGovernanceDataSourceTransfer,
+            // last_executed_governance_sequence is later overwritten with the value from claim_vaa
+            self.last_executed_governance_sequence.write(*vm.sequence);
+        }
+
+        fn check_new_wormhole(
+            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteArray
+        ) {
+            let wormhole = IWormholeDispatcher { contract_address: wormhole_address };
+            let vm = wormhole.parse_and_verify_vm(vm);
+
+            let governance_data_source = self.governance_data_source.read();
+            if governance_data_source.emitter_chain_id != vm.emitter_chain_id {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+            if governance_data_source.emitter_address != vm.emitter_address {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceDataSource.into());
+            }
+
+            if vm.sequence != self.last_executed_governance_sequence.read() {
+                panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
+            }
+            // Purposefully, we don't check whether the chainId is the same as the current chainId because
+            // we might want to change the chain id of the wormhole contract.
+            let data = governance::parse_instruction(vm.payload);
+            match data.payload {
+                GovernancePayload::SetWormholeAddress(payload) => {
+                    // The following check is not necessary for security, but is a sanity check that the new wormhole
+                    // contract parses the payload correctly.
+                    if payload.address != wormhole_address {
+                        panic_with_felt252(
+                            GovernanceActionError::InvalidWormholeAddressToSet.into()
+                        );
+                    }
+                },
+                _ => {
+                    panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
+                }
+            }
+        }
+
+        fn authorize_governance_transfer(ref self: ContractState, claim_vaa: ByteArray) {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            let claim_vm = wormhole.parse_and_verify_vm(claim_vaa.clone());
+            // Note: no verify_governance_vm() because claim_vaa is signed by the new data source
+            let instruction = governance::parse_instruction(claim_vm.payload);
+            if instruction.target_chain_id != 0
+                && instruction.target_chain_id != wormhole.chain_id() {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+            }
+            let request_payload = match instruction.payload {
+                GovernancePayload::RequestGovernanceDataSourceTransfer(payload) => payload,
+                _ => { panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into()) }
+            };
+            // Governance data source index is used to prevent replay attacks,
+            // so a claimVaa cannot be used twice.
+            let current_index = self.governance_data_source_index.read();
+            let new_index = request_payload.governance_data_source_index;
+            if current_index >= new_index {
+                panic_with_felt252(GovernanceActionError::OldGovernanceMessage.into());
+            }
+            self.governance_data_source_index.write(request_payload.governance_data_source_index);
+            let old_data_source = self.governance_data_source.read();
+            let new_data_source = DataSource {
+                emitter_chain_id: claim_vm.emitter_chain_id,
+                emitter_address: claim_vm.emitter_address,
+            };
+            self.governance_data_source.write(new_data_source);
+            // Setting the last executed governance to the claimVaa sequence to avoid
+            // using older sequences.
+            let last_executed_governance_sequence = claim_vm.sequence;
+            self.last_executed_governance_sequence.write(last_executed_governance_sequence);
+
+            let event = GovernanceDataSourceSet {
+                old_data_source, new_data_source, last_executed_governance_sequence,
             };
             self.emit(event);
         }
     }
 
-    fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
-        self.single_update_fee.read() * num_updates.into()
+    fn apply_decimal_expo(value: u64, expo: u64) -> u256 {
+        let mut output: u256 = value.into();
+        let mut i = 0;
+        while i < expo {
+            output *= 10;
+            i += 1;
+        };
+        output
     }
 }
