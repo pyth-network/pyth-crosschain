@@ -25,20 +25,24 @@ pub async fn inspect(opts: &InspectOptions) -> Result<()> {
     match opts.chain_id.clone() {
         Some(chain_id) => {
             let chain_config = &Config::load(&opts.config.config)?.get_chain_config(&chain_id)?;
-            inspect_chain(chain_config, opts.num_requests).await?;
+            inspect_chain(chain_config, opts.num_requests, opts.multicall_batch_size).await?;
         }
         None => {
             let config = Config::load(&opts.config.config)?;
             for (chain_id, chain_config) in config.chains.iter() {
                 println!("Inspecting chain: {}", chain_id);
-                inspect_chain(chain_config, opts.num_requests).await?;
+                inspect_chain(chain_config, opts.num_requests, opts.multicall_batch_size).await?;
             }
         }
     }
     Ok(())
 }
 
-async fn inspect_chain(chain_config: &EthereumConfig, num_requests: u64) -> Result<()> {
+async fn inspect_chain(
+    chain_config: &EthereumConfig,
+    num_requests: u64,
+    multicall_batch_size: u64,
+) -> Result<()> {
     let rpc_provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
@@ -60,10 +64,9 @@ async fn inspect_chain(chain_config: &EthereumConfig, num_requests: u64) -> Resu
             Some(ethers::contract::MULTICALL_ADDRESS),
         )
         .await?;
-        let batch_size = 100;
         while current_request_number > last_request_number {
             multicall.clear_calls();
-            for _ in 0..batch_size {
+            for _ in 0..multicall_batch_size {
                 if current_request_number == 0 {
                     break;
                 }
