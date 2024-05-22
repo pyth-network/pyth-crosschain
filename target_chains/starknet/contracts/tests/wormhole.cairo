@@ -1,11 +1,37 @@
-use snforge_std::{declare, ContractClass, ContractClassTrait, start_prank, stop_prank, CheatTarget};
-use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError};
+use snforge_std::{
+    declare, ContractClass, ContractClassTrait, start_prank, stop_prank, CheatTarget, Event,
+    event_name_hash, spy_events, SpyOn, EventFetcher,
+};
+use pyth::wormhole::{
+    IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError, Event as WormholeEvent,
+    GuardianSetAdded
+};
 use pyth::reader::ReaderImpl;
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{UnwrapWithFelt252, array_try_into};
 use core::starknet::{ContractAddress, EthAddress};
 use core::panic_with_felt252;
 use super::data;
+
+#[generate_trait]
+impl DecodeEventHelpers of DecodeEventHelpersTrait {
+    fn pop<T, +TryInto<felt252, T>>(ref self: Array<felt252>) -> T {
+        self.pop_front().unwrap().try_into().unwrap()
+    }
+}
+
+fn decode_event(mut event: Event) -> WormholeEvent {
+    let key0: felt252 = event.keys.pop();
+    let output = if key0 == event_name_hash('GuardianSetAdded') {
+        let event = GuardianSetAdded { index: event.data.pop(), };
+        WormholeEvent::GuardianSetAdded(event)
+    } else {
+        panic!("unrecognized event")
+    };
+    assert!(event.keys.len() == 0);
+    assert!(event.data.len() == 0);
+    output
+}
 
 #[test]
 fn test_parse_and_verify_vm_works() {
@@ -61,6 +87,33 @@ fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade3());
+}
+
+#[test]
+fn test_submit_guardian_set_emits_events() {
+    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+
+    let mut spy = spy_events(SpyOn::One(dispatcher.contract_address));
+
+    dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == dispatcher.contract_address);
+    let event = decode_event(event);
+    let expected = GuardianSetAdded { index: 1 };
+    assert!(event == WormholeEvent::GuardianSetAdded(expected));
+
+    dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == dispatcher.contract_address);
+    let event = decode_event(event);
+    let expected = GuardianSetAdded { index: 2 };
+    assert!(event == WormholeEvent::GuardianSetAdded(expected));
 }
 
 #[test]
