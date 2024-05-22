@@ -34,7 +34,7 @@ jobs:
         run: npm run install-forge-deps
 
       - name: Run tests
-        run: forge test -vvv
+        run: forge test -vvv --deny-warnings
 
       - name: Run snapshot
         run: NO_COLOR=1 forge snapshot --match-contract GasBenchmark >> $GITHUB_STEP_SUMMARY
