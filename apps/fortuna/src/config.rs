@@ -18,10 +18,7 @@ use {
         Args,
         Parser,
     },
-    ethers::types::{
-        Address,
-        U256,
-    },
+    ethers::types::Address,
     std::{
         collections::HashMap,
         fs,
@@ -161,7 +158,7 @@ pub struct EthereumConfig {
     pub confirmed_block_status: BlockStatus,
 
     /// The gas limit to use for entropy callback transactions.
-    pub gas_limit: U256,
+    pub gas_limit: u64,
 }
 
 #[derive(Args, Clone, Debug)]
