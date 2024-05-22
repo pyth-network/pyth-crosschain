@@ -87,6 +87,10 @@ pub struct AuthorizeGovernanceDataSourceTransfer {
 
 #[derive(Drop, Debug)]
 pub struct UpgradeContract {
+    // Class hash of the new contract class. The contract class must already be deployed on the network
+    // (e.g. with `starkli declare`). Class hash is a Poseidon hash of all properties
+    // of the contract code, including entry points, ABI, and bytecode,
+    // so specifying a hash securely identifies the new implementation.
     pub new_implementation: ClassHash,
 }
 
