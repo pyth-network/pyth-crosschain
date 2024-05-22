@@ -7,6 +7,7 @@ pub use errors::{GovernanceError, SubmitNewGuardianSetError, ParseAndVerifyVmErr
 pub use interface::{
     VerifiedVM, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait, GuardianSignature, quorum
 };
+pub use wormhole::{Event, GuardianSetAdded};
 
 #[starknet::contract]
 mod wormhole {
@@ -25,6 +26,17 @@ mod wormhole {
     use core::starknet::eth_signature::is_eth_signature_valid;
     use core::panic_with_felt252;
     use pyth::util::{UNEXPECTED_OVERFLOW};
+
+    #[event]
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub enum Event {
+        GuardianSetAdded: GuardianSetAdded,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct GuardianSetAdded {
+        pub index: u32,
+    }
 
     #[derive(Drop, Debug, Clone, Serde, starknet::Store)]
     struct GuardianSet {
@@ -134,6 +146,9 @@ mod wormhole {
             self.expire_guardian_set(current_set_index, get_block_timestamp());
 
             self.consumed_governance_actions.write(vm.hash, true);
+
+            let event = GuardianSetAdded { index: new_set.set_index };
+            self.emit(event);
         }
     }
 
