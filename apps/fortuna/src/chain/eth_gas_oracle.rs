@@ -20,7 +20,7 @@ use {
 // work well in layer 2 networks because it lower bounds the priority fee at 3 gwei.
 // Unfortunately this logic is not configurable in ethers.rs.
 //
-// Thus, this file is copy-pasted from places in ethers.rs with all of the fee constants divided by 100000.
+// Thus, this file is copy-pasted from places in ethers.rs with all of the fee constants divided by 1000000.
 // See original logic here:
 // https://github.com/gakonst/ethers-rs/blob/master/ethers-providers/src/rpc/provider.rs#L452
 
