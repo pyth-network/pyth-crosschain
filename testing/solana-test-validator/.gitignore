@@ -1,0 +1,5 @@
+.test
+artifacts*
+node_modules
+wormhole-main
+validator.log

@@ -1,0 +1,6 @@
+target
+bin
+**/target
+**/node_modules
+
+wormchain/build/config/gentx/

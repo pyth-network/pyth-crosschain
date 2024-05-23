@@ -1,0 +1,12 @@
+FROM ghcr.io/wormhole-foundation/near:0.2@sha256:c2089c5e93df2396d74f9c07e7cd3d76983fad97bddb202030ca442c2c00c3c2 AS near-contracts-build
+
+ADD . .
+RUN make clean
+RUN ./build-contracts.sh
+
+FROM scratch AS near-contracts-export
+
+COPY --from=near-contracts-build /tmp/contracts/token-bridge/target/wasm32-unknown-unknown/release/near_token_bridge.wasm near_token_bridge.wasm
+COPY --from=near-contracts-build /tmp/contracts/wormhole/target/wasm32-unknown-unknown/release/near_wormhole.wasm near_wormhole.wasm
+COPY --from=near-contracts-build /tmp/contracts/ft/target/wasm32-unknown-unknown/release/near_ft.wasm near_ft.wasm
+
