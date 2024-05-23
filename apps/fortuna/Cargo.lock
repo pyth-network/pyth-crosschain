@@ -1488,7 +1488,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "5.3.2"
+version = "5.3.3"
 dependencies = [
  "anyhow",
  "axum",

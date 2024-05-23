@@ -7,6 +7,9 @@ use {
             EntropyReader,
             RequestedWithCallbackEvent,
         },
+        chain::eth_gas_oracle::{
+            EthProviderOracle,
+        },
         config::EthereumConfig,
     },
     anyhow::{
@@ -26,7 +29,6 @@ use {
         middleware::{
             gas_oracle::{
                 GasOracleMiddleware,
-                ProviderOracle,
             },
             transformer::{
                 Transformer,
@@ -72,7 +74,7 @@ pub type SignablePythContract = PythRandom<
             NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
             LegacyTxTransformer,
         >,
-        ProviderOracle<Provider<Http>>,
+        EthProviderOracle<Provider<Http>>,
     >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
@@ -103,7 +105,7 @@ impl SignablePythContract {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
-        let gas_oracle = ProviderOracle::new(provider.clone());
+        let gas_oracle = EthProviderOracle::new(provider.clone());
 
         let transformer = LegacyTxTransformer {
             use_legacy_tx: chain_config.legacy_tx,
