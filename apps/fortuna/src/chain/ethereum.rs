@@ -67,12 +67,12 @@ abigen!(
 );
 
 pub type SignablePythContract = PythRandom<
-    GasOracleMiddleware<
-        TransformerMiddleware<
+    TransformerMiddleware<
+        GasOracleMiddleware<
             NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-            LegacyTxTransformer,
+            EthProviderOracle<Provider<Http>>,
         >,
-        EthProviderOracle<Provider<Http>>,
+        LegacyTxTransformer,
     >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
@@ -117,12 +117,12 @@ impl SignablePythContract {
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
-            Arc::new(GasOracleMiddleware::new(
-                TransformerMiddleware::new(
+            Arc::new(TransformerMiddleware::new(
+                GasOracleMiddleware::new(
                     NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
-                    transformer,
+                    gas_oracle,
                 ),
-                gas_oracle,
+                transformer,
             )),
         ))
     }
