@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eth-devnet
+  labels:
+    app: eth-devnet
+spec:
+  ports:
+    - port: 8545
+      name: rpc
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: eth-devnet
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eth-devnet
+spec:
+  selector:
+    matchLabels:
+      app: eth-devnet
+  serviceName: eth-devnet
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: eth-devnet
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: anvil
+          image: eth-node
+          command:
+            - anvil
+            - --silent
+            - --mnemonic=myth like bonus scare over problem client lizard pioneer submit female collect
+            - --block-time=1
+            - --host=0.0.0.0
+            - --accounts=13
+            - --chain-id=1337
+          ports:
+            - containerPort: 8545
+              name: rpc
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: rpc
+        - name: tests
+          image: eth-node
+          stdin: true
+          command:
+            - /bin/sh
+            - -c
+            - "cd ../../ethereum && CHAIN_ID=2 NETWORK=devnet ./sh/devnetInitialization.sh && cd ../relayer/ethereum && npm run deploy-relayers-evm1 && nc -lkn 2000"
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 300
+            initialDelaySeconds: 90
+            tcpSocket:
+              port: 2000
+---
+

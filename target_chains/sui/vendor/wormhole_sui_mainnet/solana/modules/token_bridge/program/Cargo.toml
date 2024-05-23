@@ -1,0 +1,41 @@
+[package]
+name = "token-bridge"
+version = "0.1.0"
+description = "Created with Rocksalt"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "token_bridge"
+
+[features]
+no-entrypoint = ["solitaire/no-entrypoint", "instructions"]
+trace = ["solitaire/trace"]
+wasm = ["no-entrypoint", "wasm-bindgen"]
+client = ["no-entrypoint"]
+cpi = ["no-entrypoint"]
+default = []
+instructions = []
+
+[dependencies]
+wormhole-bridge-solana = { path = "../../../bridge/program", features = ["no-entrypoint", "cpi"] }
+borsh = "=0.9.3"
+bstr = "0.2.16"
+byteorder = "1.4.3"
+rocksalt = { path = "../../../solitaire/rocksalt" }
+solitaire = { path = "../../../solitaire/program" }
+sha3 = "0.9.1"
+solana-program = "*"
+spl-token = { version = "=3.3.0", features = ["no-entrypoint"] }
+primitive-types = { version = "0.9.0", default-features = false }
+spl-token-metadata = { git = "https://github.com/wormhole-foundation/metaplex-program-library", rev = "a7ab32ab0defd89c98f205c80ebdaf77ed60152d", package = "mpl-token-metadata" }
+wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true }
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+hex = "*"
+hex-literal = "0.3.1"
+libsecp256k1 = { version = "0.6.0", features = [] }
+rand = "0.7.3"
+solana-program-test = "=1.10.31"
+solana-sdk = "=1.10.31"

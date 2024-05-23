@@ -1,0 +1,107 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: solana-devnet
+  labels:
+    app: solana-devnet
+spec:
+  ports:
+    - port: 8899
+      name: rpc
+      protocol: TCP
+    - port: 9900
+      name: faucet
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: solana-devnet
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: solana-devnet
+spec:
+  selector:
+    matchLabels:
+      app: solana-devnet
+  serviceName: solana-devnet
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: solana-devnet
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: devnet
+          image: solana-contract
+          command:
+            - /root/.local/share/solana/install/active_release/bin/solana-test-validator
+            - --bpf-program
+            - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
+            - /opt/solana/deps/bridge.so
+            - --bpf-program
+            - B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE
+            - /opt/solana/deps/token_bridge.so
+            - --bpf-program
+            - NFTWqJR8YnRVqPDvTJrYuLrQDitTG5AScqbeghi4zSA
+            - /opt/solana/deps/nft_bridge.so
+            - --bpf-program
+            - CP1co2QMMoDPbsmV7PGcUTLFwyhgCgTXt25gLQ5LewE1
+            - /opt/solana/deps/cpi_poster.so
+            - --bpf-program
+            - metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
+            - /opt/solana/deps/mpl_token_metadata.so
+            - --bpf-program
+            - Ex9bCdVMSfx7EzB3pgSi2R4UHwJAXvTw18rBQm5YQ8gK
+            - /opt/solana/deps/wormhole_migration.so
+            # - --log
+            - -q
+          ports:
+            - containerPort: 8001
+              name: gossip
+              protocol: UDP
+            - containerPort: 8003
+              name: tpu
+              protocol: UDP
+            - containerPort: 8004
+              name: tpufwd
+              protocol: UDP
+            - containerPort: 8000
+              name: tvu
+              protocol: UDP
+            - containerPort: 8002
+              name: tvufwd
+              protocol: UDP
+            - containerPort: 8006
+              name: repair
+              protocol: UDP
+            - containerPort: 8007
+              name: serverepair
+              protocol: UDP
+            - containerPort: 8899
+              name: rpc
+              protocol: TCP
+            - containerPort: 8900
+              name: pubsub
+              protocol: TCP
+            - containerPort: 9900
+              name: faucet
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              port: rpc
+              path: /health
+            periodSeconds: 1
+        - name: setup
+          image: bridge-client
+          command:
+            - /bin/bash
+            - -c
+            - "cd /usr/src/solana && ./devnet_setup.sh"
+          readinessProbe:
+            tcpSocket:
+              port: 2000
+            periodSeconds: 1
+            failureThreshold: 300
