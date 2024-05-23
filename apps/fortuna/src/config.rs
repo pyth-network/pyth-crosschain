@@ -167,7 +167,7 @@ pub struct EthereumConfig {
 pub struct ProviderConfigOptions {
     #[arg(long = "provider-config")]
     #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
-    pub provider_config: Option<String>,
+    pub provider_config: String,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -185,26 +185,33 @@ impl ProviderConfig {
 
     /// Get the provider chain config. The method returns an Option for ProviderChainConfig.
     /// We may not have past any commitments for a chain. For example, for a new chain
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Option<ProviderChainConfig> {
-        self.chains.get(chain_id).map(|x| x.clone())
+    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
+        self.chains.get(chain_id).map(|x| x.clone()).ok_or(
+            anyhow!(
+                "Could not find chain id {} in provider configuration",
+                &chain_id
+            )
+            .into(),
+        )
     }
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ProviderChainConfig {
-    commitments: Vec<Commitment>,
+    commitments: Option<Vec<Commitment>>,
+    pub fee:     u128,
 }
 
 impl ProviderChainConfig {
     /// Returns a clone of the commitments in the sorted order.
     /// `HashChainState`  requires offsets to be in order.
     pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
-        let mut sorted_commitments = self.commitments.clone();
-        sorted_commitments.sort_by(|c1, c2| {
+        let mut commitments = self.commitments.clone().unwrap_or(Vec::new());
+        commitments.sort_by(|c1, c2| {
             c1.original_commitment_sequence_number
                 .cmp(&c2.original_commitment_sequence_number)
         });
-        sorted_commitments
+        commitments
     }
 }
 
