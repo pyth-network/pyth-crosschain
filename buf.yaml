@@ -1,0 +1,22 @@
+---
+version: v1beta1
+name: buf.build/wormhole-foundation/wormhole
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc-ecosystem/grpc-gateway
+build:
+  roots:
+    - proto
+lint:
+  use:
+    - DEFAULT
+    # https://github.com/twitchtv/twirp/issues/70#issuecomment-470367807
+    - UNARY_RPC
+  ignore_only:
+    RPC_NO_SERVER_STREAMING:
+      # Allow streamed RPC for the spy server, which is designed to run as a sidecar
+      # and won't handle large amounts of connections.
+      - spy/v1/spy.proto
+breaking:
+  use:
+    - WIRE_JSON

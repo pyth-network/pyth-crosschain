@@ -1,0 +1,49 @@
+#syntax=docker/dockerfile:1.2@sha256:e2a8561e419ab1ba6b2fe6cbdf49fd92b95912df1cf7d313c3e2230a333fdbcc
+FROM cli-gen AS cli-export
+FROM const-gen AS const-export
+FROM ghcr.io/wormhole-foundation/solana:1.10.31@sha256:d31e8db926a1d3fbaa9d9211d9979023692614b7b64912651aba0383e8c01bad AS solana
+
+RUN apt-get update
+
+# libudev is needed by spl-token-cli, and ncat is needed by the devnet setup
+# script to be able to signal a health status for tilt
+RUN apt-get install -y libudev-dev ncat ca-certificates curl gnupg
+RUN mkdir -p /etc/apt/keyrings
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+ARG NODE_MAJOR=18
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get update
+RUN apt-get install nodejs -y
+
+RUN --mount=type=cache,target=/root/.cache \
+    cargo install --version =2.0.12 --locked spl-token-cli
+
+COPY solana /usr/src/solana
+COPY proto /usr/src/proto
+
+WORKDIR /usr/src/solana
+
+RUN solana config set --keypair "/usr/src/solana/keys/solana-devnet.json"
+RUN solana config set --url "http://solana-devnet:8899"
+
+ENV EMITTER_ADDRESS="11111111111111111111111111111115"
+ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
+
+RUN --mount=type=cache,target=/root/.cache \
+    --mount=type=cache,target=target \
+    --mount=type=cache,target=/usr/local/cargo/registry,id=cargo_registry \
+    set -xe && \
+    cargo build --manifest-path ./Cargo.toml --package bridge_client --release --locked && \
+    cargo build --manifest-path ./Cargo.toml --package token_bridge_client --release --locked && \
+    cp target/release/bridge_client /usr/local/bin/client && \
+    cp target/release/token_bridge_client /usr/local/bin/token-bridge-client
+
+# Copy .env and CLI and link `worm`
+COPY --from=const-export .env /usr/src/solana/.env
+COPY --from=cli-export clients/js /usr/src/cli
+
+WORKDIR /usr/src/cli
+
+RUN npm link
