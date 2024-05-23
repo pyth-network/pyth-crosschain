@@ -54,12 +54,13 @@ async function testLatency(
 
   const startTime = Date.now();
 
-  let fromBlock = requestResponse.blockNumber;
+  const fromBlock = requestResponse.blockNumber;
   const web3 = new Web3(contract.chain.getRpcUrl());
   const entropyContract = contract.getContract();
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const currentBlock = await web3.eth.getBlockNumber();
 
     if (fromBlock > currentBlock) {
@@ -70,7 +71,6 @@ async function testLatency(
       fromBlock: fromBlock,
       toBlock: currentBlock,
     });
-    fromBlock = currentBlock + 1;
 
     const event = events.find(
       (event) => event.returnValues.request[1] == sequenceNumber
@@ -87,8 +87,10 @@ async function testLatency(
       );
       break;
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (Date.now() - startTime > 60000) {
+      console.log("Timeout: 60s passed without the callback being called.");
+      break;
+    }
   }
 }
 
