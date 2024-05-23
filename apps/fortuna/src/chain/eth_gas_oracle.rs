@@ -149,11 +149,11 @@ fn estimate_priority_fee(rewards: Vec<Vec<U256>>) -> U256 {
 }
 
 fn base_fee_surged(base_fee_per_gas: U256) -> U256 {
-    if base_fee_per_gas <= U256::from(40_000u64) {
+    if base_fee_per_gas <= U256::from(SURGE_THRESHOLD_1) {
         base_fee_per_gas * 2
-    } else if base_fee_per_gas <= U256::from(100_000u64) {
+    } else if base_fee_per_gas <= U256::from(SURGE_THRESHOLD_2) {
         base_fee_per_gas * 16 / 10
-    } else if base_fee_per_gas <= U256::from(200_000u64) {
+    } else if base_fee_per_gas <= U256::from(SURGE_THRESHOLD_3) {
         base_fee_per_gas * 14 / 10
     } else {
         base_fee_per_gas * 12 / 10
