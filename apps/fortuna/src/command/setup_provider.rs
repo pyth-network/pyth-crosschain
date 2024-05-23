@@ -124,12 +124,10 @@ async fn setup_chain_provider(
     if register {
         tracing::info!("Registering");
         register_provider(&RegisterProviderOptions {
-            config: opts.config.clone(),
-            chain_id: chain_id.clone(),
+            config:      opts.config.clone(),
+            chain_id:    chain_id.clone(),
             private_key: private_key.clone(),
-            randomness: opts.randomness.clone(),
-            fee: provider_fee,
-            uri,
+            randomness:  opts.randomness.clone(),
         })
         .await
         .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;

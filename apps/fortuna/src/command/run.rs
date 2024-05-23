@@ -225,6 +225,16 @@ async fn setup_chain_state(
         )
     })?;
 
+    let last_prior_commitment = provider_commitments.last();
+    if last_prior_commitment.is_some()
+        && last_prior_commitment
+            .unwrap()
+            .original_commitment_sequence_number
+            >= provider_info.original_commitment_sequence_number
+    {
+        return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id).into());
+    }
+
     provider_commitments.push(Commitment {
         seed:                                latest_metadata.seed,
         chain_length:                        latest_metadata.chain_length,

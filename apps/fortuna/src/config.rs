@@ -111,7 +111,8 @@ impl RandomnessOptions {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains: HashMap<ChainId, EthereumConfig>,
+    pub chains:   HashMap<ChainId, EthereumConfig>,
+    pub provider: ProviderConfig,
 }
 
 
@@ -157,7 +158,7 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
-    /// How much the provider charges for a request.
+    /// How much the provider charges for a request on this chain.
     #[serde(default)]
     pub fee: u128,
 
@@ -175,4 +176,12 @@ pub struct Commitment {
     pub seed:                                [u8; 32],
     pub chain_length:                        u64,
     pub original_commitment_sequence_number: u64,
+}
+
+/// Configuration values that are common to a single provider (and shared across chains).
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderConfig {
+    /// The URI where clients can retrieve random values from this provider,
+    /// i.e., wherever fortuna for this provider will be hosted.
+    pub uri: String,
 }
