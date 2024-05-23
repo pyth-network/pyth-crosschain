@@ -107,7 +107,8 @@ impl SignablePythContract {
             .await?
             .ok_or_else(|| anyhow!("Latest block not found"))?
             .base_fee_per_gas
-            .is_some();
+            .unwrap_or(U256::zero())
+            .is_zero(); // sei testnet returns 0 instead of None
         let gas_oracle = EthProviderOracle::new(provider.clone());
         let transformer = LegacyTxTransformer {
             use_legacy_tx: !eip1559_supported,
