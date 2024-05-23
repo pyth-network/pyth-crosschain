@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: near
+  name: near
+spec:
+  ports:
+    - name: node
+      port: 3030
+      targetPort: node
+  selector:
+    app: near
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: near
+  name: near
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: near
+  serviceName: near
+  template:
+    metadata:
+      labels:
+        app: near
+    spec:
+      containers:
+        - name: near-node
+          image: near-node
+          env:
+            # this still results in DEBUG logs from "stats", but `warn,stats=warn` didn't work
+            - name: RUST_LOG
+              value: warn
+          command:
+            - /bin/sh
+            - -c
+            # because the above still left logs, redirecting stderr
+            - "/tmp/start_node.sh 2> /dev/null"
+          ports:
+            - containerPort: 3030
+              name: node
+              protocol: TCP
+            - containerPort: 3031
+              name: webserver
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 3030
+        - name: near-deploy
+          image: near-deploy
+          command:
+            - /bin/sh
+            - -c
+            - "sh /app/devnet_deploy.sh && touch success && sleep infinity"
+          readinessProbe:
+            tcpSocket:
+              port: 3030
+            periodSeconds: 1
+            initialDelaySeconds: 15
+
+      restartPolicy: Always

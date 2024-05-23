@@ -1,0 +1,24 @@
+[package]
+name = "solitaire"
+version = "0.1.0"
+description = "Solana program framework"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "solitaire"
+
+[features]
+client = ["no-entrypoint"]
+cpi = ["no-entrypoint"]
+default = []
+no-entrypoint = []
+trace = []
+
+[dependencies]
+borsh = "=0.9.3"
+byteorder = "1.4.3"
+rocksalt = { path = "../../solitaire/rocksalt" }
+
+sha3 = "0.9.1"
+solana-program = "=1.10.31"

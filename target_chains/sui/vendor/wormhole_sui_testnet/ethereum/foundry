@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# This script is a wrapper around the foundry Docker image.
+# In an ideal world, we could just use anvil (and forge) directly, but there are regular
+# upstream breaking changes in the nightly builds, and binaries of older
+# versions are deleted frequently from their GitHub. The Docker releases are
+# available for longer, so we just use those here.
+#
+# the DOCKER_ARGS environment variable can be used to pass additional args to docker.
+
+set -eo pipefail
+
+# This is a known-to-be-working build.
+DOCKER_IMAGE="ghcr.io/foundry-rs/foundry:nightly-6defdcebf7f59ee471086b1b51ff85392aafd445@sha256:cd9a68e7bd69d9d5f9025eaeb525efd7f162f11e4566792da8ec4891b080a415"
+
+args=$(printf '"%s" ' "$@")
+
+docker run --rm -i $DOCKER_ARGS $DOCKER_IMAGE  "$args"

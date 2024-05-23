@@ -1,0 +1,20 @@
+version: v1beta1
+plugins:
+  - name: tsproto
+    out: sdk/js-proto-web/src
+    path: tools/node_modules/.bin/protoc-gen-ts_proto
+    opt:
+      - paths=source_relative
+      - esModuleInterop=true
+      - env=browser
+      - forceLong=string
+      - outputClientImpl=grpc-web
+  - name: tsproto
+    out: sdk/js-proto-node/src
+    path: tools/node_modules/.bin/protoc-gen-ts_proto
+    opt:
+      - paths=source_relative
+      - esModuleInterop=true
+      - env=node
+      - forceLong=string
+      - outputServices=grpc-js
