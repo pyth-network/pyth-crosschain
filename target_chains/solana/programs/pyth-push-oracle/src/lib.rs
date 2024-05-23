@@ -1,13 +1,10 @@
 use {
     anchor_lang::prelude::*,
     pyth_solana_receiver_sdk::{
-        cpi::post_update::{
-            post_update,
-            PostUpdate,
-        },
-        params::PostUpdateParams,
+        cpi::accounts::PostUpdate,
         price_update::PriceUpdateV2,
         program::PythSolanaReceiver,
+        PostUpdateParams,
         PYTH_PUSH_ORACLE_ID,
     },
     pythnet_sdk::{
@@ -94,7 +91,7 @@ pub mod pyth_push_oracle {
         // Only update the price feed if the message contains a newer price. Pushing a stale price
         // suceeds without changing the on-chain state.
         if next_timestamp > current_timestamp {
-            post_update(cpi_context, params)?;
+            pyth_solana_receiver_sdk::cpi::post_update(cpi_context, params)?;
             {
                 let price_feed_account_data = ctx.accounts.price_feed_account.try_borrow_data()?;
                 let price_feed_account =

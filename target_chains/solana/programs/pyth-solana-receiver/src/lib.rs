@@ -7,10 +7,6 @@ use {
             Config,
             DataSource,
         },
-        params::{
-            PostUpdateAtomicParams,
-            PostUpdateParams,
-        },
         pda::{
             CONFIG_SEED,
             TREASURY_SEED,
@@ -19,6 +15,8 @@ use {
             PriceUpdateV2,
             VerificationLevel,
         },
+        PostUpdateAtomicParams,
+        PostUpdateParams,
     },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,

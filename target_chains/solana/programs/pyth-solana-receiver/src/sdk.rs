@@ -14,14 +14,12 @@ use {
             Config,
             DataSource,
         },
-        params::{
-            PostUpdateAtomicParams,
-            PostUpdateParams,
-        },
         pda::{
             get_config_address,
             get_treasury_address,
         },
+        PostUpdateAtomicParams,
+        PostUpdateParams,
     },
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,
