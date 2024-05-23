@@ -223,7 +223,7 @@ pub async fn run_keeper_threads(
             .await
             .expect("Chain config should be valid"),
     );
-    let keeper_address = contract.client().inner().inner().signer().address();
+    let keeper_address = contract.client().inner().inner().inner().signer().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashMap::<u64, RequestState>::new()));
 
@@ -428,6 +428,7 @@ pub async fn process_event(
                                         chain_id: chain_config.id.clone(),
                                         address:  contract
                                             .client()
+                                            .inner()
                                             .inner()
                                             .inner()
                                             .signer()
