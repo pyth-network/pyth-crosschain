@@ -1,0 +1,53 @@
+[workspace]
+members = [
+    "contracts/cw20-wrapped",
+    "contracts/wormhole",
+    "contracts/shutdown-wormhole",
+    "contracts/token-bridge",
+    "contracts/shutdown-token-bridge",
+    "contracts/mock-bridge-integration",
+    "packages/accountant",
+    "contracts/global-accountant",
+    "contracts/ntt-global-accountant",
+    "packages/wormhole-bindings",
+    "packages/cw_transcode",
+    "contracts/wormhole-ibc",
+    "contracts/wormchain-ibc-receiver",
+    "contracts/ibc-translator"
+]
+
+# Needed to prevent unwanted feature unification between normal builds and dev builds.  See
+# https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions for more details.
+resolver = "2"
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[workspace.dependencies.serde_wormhole]
+version = "0.1.0"
+path = "../sdk/rust/serde_wormhole"
+
+[workspace.dependencies.wormhole-sdk]
+package = "wormhole-vaas-serde"
+version = "0.1.0"
+path = "../sdk/rust/vaas-serde"
+
+[patch.crates-io]
+accountant = { path = "packages/accountant" }
+cw_transcode = { path = "packages/cw_transcode" }
+cw20-wrapped-2 = { path = "contracts/cw20-wrapped" }
+token-bridge-cosmwasm = { path = "contracts/token-bridge" }
+global-accountant = { path = "contracts/global-accountant" }
+ntt-global-accountant = { path = "contracts/ntt-global-accountant" }
+wormhole-bindings = { path = "packages/wormhole-bindings" }
+wormhole-cosmwasm = { path = "contracts/wormhole" }
+wormchain-ibc-receiver = { path = "contracts/wormchain-ibc-receiver" }
+wormhole-ibc = { path = "contracts/wormhole-ibc" }

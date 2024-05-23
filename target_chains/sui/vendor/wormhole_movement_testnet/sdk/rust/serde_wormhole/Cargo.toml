@@ -1,0 +1,21 @@
+[package]
+name = "serde_wormhole"
+description = "Serde data format for VAA payloads"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+base64.workspace = true
+itoa.workspace = true
+serde.workspace = true
+serde_bytes.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde = { workspace = true, features = ["alloc", "derive"] }
+serde_json.workspace = true
+serde_repr.workspace = true
