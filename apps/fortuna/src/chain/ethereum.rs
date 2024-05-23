@@ -102,11 +102,15 @@ impl SignablePythContract {
     ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-
+        let eip1559_supported = provider
+            .get_block(ethers::prelude::BlockNumber::Latest)
+            .await?
+            .ok_or_else(|| anyhow!("Latest block not found"))?
+            .base_fee_per_gas
+            .is_some();
         let gas_oracle = EthProviderOracle::new(provider.clone());
-
         let transformer = LegacyTxTransformer {
-            use_legacy_tx: chain_config.legacy_tx,
+            use_legacy_tx: !eip1559_supported,
         };
 
         let wallet__ = private_key
