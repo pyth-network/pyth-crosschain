@@ -1,14 +1,14 @@
 use {
     crate::{
-        chain::reader::{
-            self,
-            BlockNumber,
-            BlockStatus,
-            EntropyReader,
-            RequestedWithCallbackEvent,
-        },
-        chain::eth_gas_oracle::{
-            EthProviderOracle,
+        chain::{
+            eth_gas_oracle::EthProviderOracle,
+            reader::{
+                self,
+                BlockNumber,
+                BlockStatus,
+                EntropyReader,
+                RequestedWithCallbackEvent,
+            },
         },
         config::EthereumConfig,
     },
@@ -27,9 +27,7 @@ use {
         },
         core::types::Address,
         middleware::{
-            gas_oracle::{
-                GasOracleMiddleware,
-            },
+            gas_oracle::GasOracleMiddleware,
             transformer::{
                 Transformer,
                 TransformerError,

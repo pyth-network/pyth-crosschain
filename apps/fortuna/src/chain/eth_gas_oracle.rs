@@ -5,6 +5,30 @@ use ethers::prelude::gas_oracle::GasOracleError;
 use ethers::prelude::gas_oracle::Result;
 use axum::async_trait;
 
+// The default fee estimation logic in ethers.rs includes some hardcoded constants that do not
+// work well in layer 2 networks because it lower bounds the priority fee at 3 gwei.
+// Unfortunately this logic is not configurable in ethers.rs.
+//
+// Thus, this file is copy-pasted from places in ethers.rs with all of the fee constants divided by 100000.
+// See original logic here:
+// https://github.com/gakonst/ethers-rs/blob/master/ethers-providers/src/rpc/provider.rs#L452
+
+/// The default max priority fee per gas, used in case the base fee is within a threshold.
+pub const EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE: u64 = 3_000;
+/// The threshold for base fee below which we use the default priority fee, and beyond which we
+/// estimate an appropriate value for priority fee.
+pub const EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER: u64 = 100_000;
+
+/// Thresholds at which the base fee gets a multiplier
+pub const SURGE_THRESHOLD_1: u64 = 40_000;
+pub const SURGE_THRESHOLD_2: u64 = 100_000;
+pub const SURGE_THRESHOLD_3: u64 = 200_000;
+
+
+/// The threshold max change/difference (in %) at which we will ignore the fee history values
+/// under it.
+pub const EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE: i64 = 200;
+
 
 /// Gas oracle from a [`Middleware`] implementation such as an
 /// Ethereum RPC provider.
@@ -40,15 +64,6 @@ impl<M: Middleware> GasOracle for EthProviderOracle<M>
             .map_err(|err| GasOracleError::ProviderError(Box::new(err)))
     }
 }
-
-/// The default max priority fee per gas, used in case the base fee is within a threshold.
-pub const EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE: u64 = 3_000;
-/// The threshold for base fee below which we use the default priority fee, and beyond which we
-/// estimate an appropriate value for priority fee.
-pub const EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER: u64 = 100_000;
-/// The threshold max change/difference (in %) at which we will ignore the fee history values
-/// under it.
-pub const EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE: i64 = 200;
 
 /// The default EIP-1559 fee estimator which is based on the work by [MyCrypto](https://github.com/MyCryptoHQ/MyCrypto/blob/master/src/services/ApiService/Gas/eip1559.ts)
 fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>) -> (U256, U256) {
