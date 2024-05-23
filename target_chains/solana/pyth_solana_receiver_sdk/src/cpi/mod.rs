@@ -12,6 +12,7 @@ use {
 
 pub mod accounts;
 
+// This implementation comes from the expanded macros of programs/pyth-solana-receiver/src/lib.rs
 pub fn post_update<'info>(
     ctx: anchor_lang::context::CpiContext<'_, '_, '_, 'info, PostUpdate<'info>>,
     params: PostUpdateParams,
@@ -33,7 +34,7 @@ pub fn post_update<'info>(
         .map_or_else(|e| Err(Into::into(e)), |_| Ok(()))
 }
 
-
+// This implementation comes from the expanded macros of programs/pyth-solana-receiver/src/lib.rs
 pub fn post_update_atomic<'info>(
     ctx: anchor_lang::context::CpiContext<'_, '_, '_, 'info, PostUpdateAtomic<'info>>,
     params: PostUpdateAtomicParams,
