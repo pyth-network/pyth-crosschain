@@ -42,7 +42,7 @@ impl PebbleHashChain {
         chain_length: u64,
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
-        input.extend_from_slice(&hex::decode(secret)?);
+        input.extend_from_slice(&hex::decode(secret.trim())?);
         input.extend_from_slice(&chain_id.as_bytes());
         input.extend_from_slice(&provider_address.as_bytes());
         input.extend_from_slice(&contract_address.as_bytes());

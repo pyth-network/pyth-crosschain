@@ -102,7 +102,7 @@ impl SignablePythContract {
     ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-        let eip1559_supported = provider
+        let eip1559_supported = !provider
             .get_block(ethers::prelude::BlockNumber::Latest)
             .await?
             .ok_or_else(|| anyhow!("Latest block not found"))?
