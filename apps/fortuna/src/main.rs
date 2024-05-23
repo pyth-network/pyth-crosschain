@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
             .finish(),
     )?;
 
-    config::Options::parse() {
+    match config::Options::parse() {
         config::Options::GetRequest(opts) => command::get_request(&opts).await,
         config::Options::Generate(opts) => command::generate(&opts).await,
         config::Options::Run(opts) => command::run(&opts).await,

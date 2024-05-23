@@ -1,9 +1,20 @@
-use ethers::types::{U256, I256};
-use ethers::providers::Middleware;
-use ethers::prelude::GasOracle;
-use ethers::prelude::gas_oracle::GasOracleError;
-use ethers::prelude::gas_oracle::Result;
-use axum::async_trait;
+use {
+    axum::async_trait,
+    ethers::{
+        prelude::{
+            gas_oracle::{
+                GasOracleError,
+                Result,
+            },
+            GasOracle,
+        },
+        providers::Middleware,
+        types::{
+            I256,
+            U256,
+        },
+    },
+};
 
 // The default fee estimation logic in ethers.rs includes some hardcoded constants that do not
 // work well in layer 2 networks because it lower bounds the priority fee at 3 gwei.
@@ -47,8 +58,8 @@ impl<M: Middleware> EthProviderOracle<M> {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<M: Middleware> GasOracle for EthProviderOracle<M>
-    where
-        M::Error: 'static,
+where
+    M::Error: 'static,
 {
     async fn fetch(&self) -> Result<U256> {
         self.provider
@@ -86,13 +97,16 @@ fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>) ->
 }
 
 fn estimate_priority_fee(rewards: Vec<Vec<U256>>) -> U256 {
-    let mut rewards: Vec<U256> =
-        rewards.iter().map(|r| r[0]).filter(|r| *r > U256::zero()).collect();
+    let mut rewards: Vec<U256> = rewards
+        .iter()
+        .map(|r| r[0])
+        .filter(|r| *r > U256::zero())
+        .collect();
     if rewards.is_empty() {
-        return U256::zero()
+        return U256::zero();
     }
     if rewards.len() == 1 {
-        return rewards[0]
+        return rewards[0];
     }
     // Sort the rewards as we will eventually take the median.
     rewards.sort();
@@ -115,12 +129,15 @@ fn estimate_priority_fee(rewards: Vec<Vec<U256>>) -> U256 {
 
     // Fetch the max of the percentage change, and that element's index.
     let max_change = percentage_change.iter().max().unwrap();
-    let max_change_index = percentage_change.iter().position(|&c| c == *max_change).unwrap();
+    let max_change_index = percentage_change
+        .iter()
+        .position(|&c| c == *max_change)
+        .unwrap();
 
     // If we encountered a big change in fees at a certain position, then consider only
     // the values >= it.
-    let values = if *max_change >= EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE.into() &&
-        (max_change_index >= (rewards.len() / 2))
+    let values = if *max_change >= EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE.into()
+        && (max_change_index >= (rewards.len() / 2))
     {
         rewards[max_change_index..].to_vec()
     } else {
