@@ -1,0 +1,30 @@
+[package]
+name = "wormhole-cosmwasm"
+version = "0.1.0"
+authors = ["Yuriy Savchenko <yuriy.savchenko@gmail.com>"]
+edition = "2018"
+description = "Wormhole contract"
+
+[lib]
+name = "cw_wormhole"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all init/handle/query exports
+library = []
+# The 'full' feature enables all non-shutdown functionality.  Without the 'full' feature
+# enabled, only shutdown functionality is enabled (basically governance).
+full = []
+default = ["full"]
+
+[dependencies]
+cosmwasm-std = { version = "1.0.0" }
+cosmwasm-storage = { version = "1.0.0" }
+schemars = "0.8.8"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.31" }
+k256 = { version = "0.11", default-features = false, features = ["ecdsa"] }
+sha3 = { version = "0.9.1", default-features = false }
+generic-array = { version = "0.14.4" }
+hex = "0.4.2"
