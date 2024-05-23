@@ -1,10 +1,7 @@
 use {
     crate::{
         api::ChainId,
-        config::{
-            ConfigOptions,
-            RandomnessOptions,
-        },
+        config::ConfigOptions,
     },
     clap::Args,
 };
@@ -20,13 +17,4 @@ pub struct RegisterProviderOptions {
     #[arg(long = "chain-id")]
     #[arg(env = "FORTUNA_CHAIN_ID")]
     pub chain_id: ChainId,
-
-    /// A 20-byte (40 char) hex encoded Ethereum private key.
-    /// This key is required to submit transactions (such as registering with the contract).
-    #[arg(long = "private-key")]
-    #[arg(env = "PRIVATE_KEY")]
-    pub private_key: String,
-
-    #[command(flatten)]
-    pub randomness: RandomnessOptions,
 }

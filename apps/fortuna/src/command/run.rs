@@ -31,7 +31,10 @@ use {
             Http,
             Provider,
         },
-        types::BlockNumber,
+        types::{
+            Address,
+            BlockNumber,
+        },
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
@@ -149,12 +152,13 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let secret = opts.randomness.load_secret()?;
+    let secret = config.provider.load_secret()?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
-        let state = setup_chain_state(&opts, &secret, chain_id, chain_config).await;
+        let state =
+            setup_chain_state(&config.provider.address, &secret, chain_id, chain_config).await;
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
@@ -183,14 +187,13 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
-    if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
-        spawn(run_keeper(
-            chains.clone(),
-            config.clone(),
-            keeper_private_key,
-            metrics_registry.clone(),
-        ));
-    }
+    let keeper_private_key = config.keeper.load_private_key()?;
+    spawn(run_keeper(
+        chains.clone(),
+        config.clone(),
+        keeper_private_key,
+        metrics_registry.clone(),
+    ));
 
     // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
     spawn(track_block_timestamp_lag(config, metrics_registry.clone()));
@@ -201,7 +204,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 }
 
 async fn setup_chain_state(
-    opts: &&RunOptions,
+    provider: &Address,
     secret: &String,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
@@ -213,7 +216,7 @@ async fn setup_chain_state(
             .cmp(&c2.original_commitment_sequence_number)
     });
 
-    let provider_info = contract.get_provider_info(opts.provider).call().await?;
+    let provider_info = contract.get_provider_info(*provider).call().await?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
     )
@@ -255,7 +258,7 @@ async fn setup_chain_state(
         let pebble_hash_chain = PebbleHashChain::from_config(
             &secret,
             &chain_id,
-            &opts.provider,
+            &provider,
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
@@ -280,7 +283,7 @@ async fn setup_chain_state(
         id: chain_id.clone(),
         state: Arc::new(chain_state),
         contract,
-        provider_address: opts.provider,
+        provider_address: provider.clone(),
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
         confirmed_block_status: chain_config.confirmed_block_status,
     };

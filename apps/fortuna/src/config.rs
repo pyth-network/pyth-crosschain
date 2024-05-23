@@ -86,35 +86,12 @@ pub struct ConfigOptions {
     pub config: String,
 }
 
-#[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Randomness Options")]
-#[group(id = "Randomness")]
-pub struct RandomnessOptions {
-    /// Path to file containing a secret which is a 64-char hex string.
-    /// The secret is used for generating new hash chains
-    #[arg(long = "secret")]
-    #[arg(env = "FORTUNA_SECRET")]
-    pub secret_file: String,
-
-    /// The length of the hash chain to generate.
-    #[arg(long = "chain-length")]
-    #[arg(env = "FORTUNA_CHAIN_LENGTH")]
-    #[arg(default_value = "100000")]
-    pub chain_length: u64,
-}
-
-impl RandomnessOptions {
-    pub fn load_secret(&self) -> Result<String> {
-        return Ok((fs::read_to_string(&self.secret_file))?);
-    }
-}
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
     pub chains:   HashMap<ChainId, EthereumConfig>,
     pub provider: ProviderConfig,
+    pub keeper:   KeeperConfig,
 }
-
 
 impl Config {
     pub fn load(path: &str) -> Result<Config> {
@@ -184,4 +161,53 @@ pub struct ProviderConfig {
     /// The URI where clients can retrieve random values from this provider,
     /// i.e., wherever fortuna for this provider will be hosted.
     pub uri: String,
+
+    /// The public key of the provider whose requests the server will respond to.
+    pub address: Address,
+
+    pub private_key_file: Option<String>,
+
+    /// Path to file containing a secret which is a 64-char hex string.
+    /// The secret is used for generating new hash chains
+    pub secret_file: String,
+
+    /// The length of the hash chain to generate.
+    pub chain_length: u64,
+}
+
+impl ProviderConfig {
+    pub fn load_secret(&self) -> Result<String> {
+        return Ok((fs::read_to_string(&self.secret_file))?);
+    }
+
+    pub fn load_private_key(&self) -> Result<String> {
+        return Ok(fs::read_to_string(
+            &self
+                .private_key_file
+                .clone()
+                .ok_or(anyhow!("private key not specified"))?,
+        )?);
+    }
+}
+
+/// Configuration values for the keeper service that are shared across chains.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeeperConfig {
+    /// If provided, the keeper will run alongside the Fortuna API service.
+    /// It should be a path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
+    /// This key is required to submit transactions for entropy callback requests.
+    /// This key *does not need to be a registered provider*. In particular, production deployments
+    /// should ensure this is a different key in order to reduce the severity of security breaches.
+    pub private_key_file: Option<String>,
+}
+
+impl KeeperConfig {
+    pub fn load_private_key(&self) -> Result<String> {
+        return Ok(fs::read_to_string(
+            &self
+                .private_key_file
+                .clone()
+                .ok_or(anyhow!("private key not specified"))?,
+        )?);
+    }
 }

@@ -15,7 +15,7 @@ pub struct GenerateOptions {
     #[command(flatten)]
     pub config: ConfigOptions,
 
-    /// Retrieve a randomness request to this provider
+    /// The chain on which to submit the random number generation request.
     #[arg(long = "chain-id")]
     #[arg(env = "FORTUNA_CHAIN_ID")]
     pub chain_id: ChainId,

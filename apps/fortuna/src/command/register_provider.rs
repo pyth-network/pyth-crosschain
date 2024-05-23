@@ -1,8 +1,11 @@
 use {
     crate::{
+        api::ChainId,
         chain::ethereum::SignablePythContract,
         config::{
             Config,
+            EthereumConfig,
+            ProviderConfig,
             RegisterProviderOptions,
         },
         state::PebbleHashChain,
@@ -31,18 +34,30 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let chain_config = config.get_chain_config(&opts.chain_id)?;
 
+    register_provider_from_config(&config.provider, &opts.chain_id, &chain_config).await?;
+
+    Ok(())
+}
+
+pub async fn register_provider_from_config(
+    provider_config: &ProviderConfig,
+    chain_id: &ChainId,
+    chain_config: &EthereumConfig,
+) -> Result<()> {
+    let private_key_string = provider_config.load_private_key()?.clone();
+
     // Initialize a Provider to interface with the EVM contract.
     let contract =
-        Arc::new(SignablePythContract::from_config(&chain_config, &opts.private_key).await?);
+        Arc::new(SignablePythContract::from_config(&chain_config, &private_key_string).await?);
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
-    let secret = opts.randomness.load_secret()?;
+    let secret = provider_config.load_secret()?;
 
-    let commitment_length = opts.randomness.chain_length;
+    let commitment_length = provider_config.chain_length;
     let mut chain = PebbleHashChain::from_config(
         &secret,
-        &opts.chain_id,
-        &opts.private_key.clone().parse::<LocalWallet>()?.address(),
+        &chain_id,
+        &private_key_string.parse::<LocalWallet>()?.address(),
         &chain_config.contract_addr,
         &random,
         commitment_length,
@@ -64,7 +79,8 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
         commitment_length,
         // Use Bytes to serialize the uri. Most users will be using JS/TS to deserialize this uri.
         // Bincode is a different encoding mechanisms, and I didn't find any JS/TS library to parse bincode.
-        Bytes::from(config.provider.uri.as_str()).into(),
+        // FIXME: is this uri consistent with other URIs?
+        Bytes::from(provider_config.uri.as_str()).into(),
     );
     let mut gas_estimate = call.estimate_gas().await?;
     let gas_multiplier = U256::from(2); //TODO: smarter gas estimation

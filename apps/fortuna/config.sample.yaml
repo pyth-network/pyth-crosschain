@@ -14,3 +14,9 @@ chains:
         original_commitment_sequence_number: 104
 provider:
     uri: http://insert-url-here.com/
+    address: 0xADDRESS
+    private_key_file: provider-key.txt
+    secret_file: blast-testnet-secret.txt
+    chain_length: 100000
+keeper:
+    private_key_file: keeper-key.txt
