@@ -114,6 +114,7 @@ pub struct Config {
     pub chains: HashMap<ChainId, EthereumConfig>,
 }
 
+
 impl Config {
     pub fn load(path: &str) -> Result<Config> {
         // Open and read the YAML file
@@ -155,62 +156,18 @@ pub struct EthereumConfig {
 
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
+
+    #[serde(default)]
+    pub fee: u128,
+
+    pub commitments: Option<Vec<Commitment>>,
 }
 
-#[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Provider Config Options")]
-#[group(id = "ProviderConfig")]
-pub struct ProviderConfigOptions {
-    #[arg(long = "provider-config")]
-    #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
-    pub provider_config: String,
-}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ProviderConfig {
-    pub chains: HashMap<ChainId, ProviderChainConfig>,
-}
-
-impl ProviderConfig {
-    pub fn load(path: &str) -> Result<ProviderConfig> {
-        // Open and read the YAML file
-        let yaml_content = fs::read_to_string(path)?;
-        let config: ProviderConfig = serde_yaml::from_str(&yaml_content)?;
-        Ok(config)
-    }
-
-    /// Get the provider chain config. The method returns an Option for ProviderChainConfig.
-    /// We may not have past any commitments for a chain. For example, for a new chain
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
-        self.chains.get(chain_id).map(|x| x.clone()).ok_or(
-            anyhow!(
-                "Could not find chain id {} in provider configuration",
-                &chain_id
-            )
-            .into(),
-        )
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ProviderChainConfig {
-    commitments: Option<Vec<Commitment>>,
-    pub fee:     u128,
-}
-
-impl ProviderChainConfig {
-    /// Returns a clone of the commitments in the sorted order.
-    /// `HashChainState`  requires offsets to be in order.
-    pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
-        let mut commitments = self.commitments.clone().unwrap_or(Vec::new());
-        commitments.sort_by(|c1, c2| {
-            c1.original_commitment_sequence_number
-                .cmp(&c2.original_commitment_sequence_number)
-        });
-        commitments
-    }
-}
-
+/// A commitment that the provider used to generate random numbers at some point in the past.
+/// These historical commitments need to be stored in the configuration to support transition points where
+/// the commitment changes. In theory, this information is stored on the blockchain, but unfortunately it
+/// is hard to retrieve from there.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Commitment {
     pub seed:                                [u8; 32],

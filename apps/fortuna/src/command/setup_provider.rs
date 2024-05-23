@@ -15,7 +15,6 @@ use {
         config::{
             Config,
             EthereumConfig,
-            ProviderConfig,
             RegisterProviderOptions,
             SetupProviderOptions,
         },
@@ -63,10 +62,9 @@ async fn setup_chain_provider(
     chain_config: &EthereumConfig,
 ) -> Result<()> {
     tracing::info!("Setting up provider for chain: {0}", chain_id);
-    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let private_key = opts.load_private_key()?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
-    let provider_fee = provider_config.get_chain_config(chain_id)?.fee;
+    let provider_fee = chain_config.fee;
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
 

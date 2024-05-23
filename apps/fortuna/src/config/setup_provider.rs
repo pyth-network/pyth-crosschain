@@ -1,7 +1,6 @@
 use {
     crate::config::{
         ConfigOptions,
-        ProviderConfigOptions,
         RandomnessOptions,
     },
     anyhow::Result,
@@ -15,9 +14,6 @@ use {
 pub struct SetupProviderOptions {
     #[command(flatten)]
     pub config: ConfigOptions,
-
-    #[command(flatten)]
-    pub provider_config: ProviderConfigOptions,
 
     /// Path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
     /// This key is required to submit transactions (such as registering with the contract).

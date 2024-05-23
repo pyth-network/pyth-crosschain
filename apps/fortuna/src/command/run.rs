@@ -11,7 +11,6 @@ use {
             Commitment,
             Config,
             EthereumConfig,
-            ProviderConfig,
             RunOptions,
         },
         keeper,
@@ -207,10 +206,13 @@ async fn setup_chain_state(
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
-    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let contract = Arc::new(PythContract::from_config(&chain_config)?);
-    let provider_chain_config = provider_config.get_chain_config(chain_id)?;
-    let mut provider_commitments = provider_chain_config.get_sorted_commitments();
+    let mut provider_commitments = chain_config.commitments.clone().unwrap_or(Vec::new());
+    provider_commitments.sort_by(|c1, c2| {
+        c1.original_commitment_sequence_number
+            .cmp(&c2.original_commitment_sequence_number)
+    });
+
     let provider_info = contract.get_provider_info(opts.provider).call().await?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
