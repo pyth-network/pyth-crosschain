@@ -102,13 +102,10 @@ impl SignablePythContract {
     ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-        let eip1559_supported = !provider
-            .get_block(ethers::prelude::BlockNumber::Latest)
-            .await?
-            .ok_or_else(|| anyhow!("Latest block not found"))?
-            .base_fee_per_gas
-            .unwrap_or(U256::zero())
-            .is_zero(); // sei testnet returns 0 instead of None
+        let eip1559_supported = match provider.estimate_eip1559_fees(None).await {
+            Ok((max_fee, max_priority_fee)) => !max_fee.is_zero() && !max_priority_fee.is_zero(),
+            Err(_) => false,
+        };
         let gas_oracle = EthProviderOracle::new(provider.clone());
         let transformer = LegacyTxTransformer {
             use_legacy_tx: !eip1559_supported,
