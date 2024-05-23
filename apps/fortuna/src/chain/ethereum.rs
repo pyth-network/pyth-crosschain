@@ -1,11 +1,14 @@
 use {
     crate::{
-        chain::reader::{
-            self,
-            BlockNumber,
-            BlockStatus,
-            EntropyReader,
-            RequestedWithCallbackEvent,
+        chain::{
+            eth_gas_oracle::EthProviderOracle,
+            reader::{
+                self,
+                BlockNumber,
+                BlockStatus,
+                EntropyReader,
+                RequestedWithCallbackEvent,
+            },
         },
         config::EthereumConfig,
     },
@@ -24,6 +27,7 @@ use {
         },
         core::types::Address,
         middleware::{
+            gas_oracle::GasOracleMiddleware,
             transformer::{
                 Transformer,
                 TransformerError,
@@ -63,9 +67,12 @@ abigen!(
 );
 
 pub type SignablePythContract = PythRandom<
-    TransformerMiddleware<
-        NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-        LegacyTxTransformer,
+    GasOracleMiddleware<
+        TransformerMiddleware<
+            NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
+            LegacyTxTransformer,
+        >,
+        EthProviderOracle<Provider<Http>>,
     >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
@@ -96,6 +103,8 @@ impl SignablePythContract {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
 
+        let gas_oracle = EthProviderOracle::new(provider.clone());
+
         let transformer = LegacyTxTransformer {
             use_legacy_tx: chain_config.legacy_tx,
         };
@@ -108,9 +117,12 @@ impl SignablePythContract {
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
-            Arc::new(TransformerMiddleware::new(
-                NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
-                transformer,
+            Arc::new(GasOracleMiddleware::new(
+                TransformerMiddleware::new(
+                    NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
+                    transformer,
+                ),
+                gas_oracle,
             )),
         ))
     }

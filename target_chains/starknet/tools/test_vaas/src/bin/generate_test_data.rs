@@ -1,4 +1,7 @@
+use std::{path::Path, process::Command, str};
+
 use libsecp256k1::SecretKey;
+use primitive_types::U256;
 use test_vaas::{
     locate_vaa_in_price_update, print_as_cairo_fn, re_sign_price_update, serialize_vaa, u256_to_be,
     DataSource, EthAddress, GuardianSet, GuardianSetUpgrade,
@@ -290,6 +293,49 @@ fn main() {
         "A Pyth governance instruction to set fee with alternative emitter signed by the test guardian #1.",
     );
 
+    let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts");
+    let status = Command::new("scarb")
+        .arg("build")
+        .current_dir(&contracts_dir)
+        .output()
+        .unwrap()
+        .status;
+    assert!(status.success(), "scarb failed with {status:?}");
+
+    let upgrade_hashes = [
+        ("fake1", get_class_hash("fake_upgrade1", &contracts_dir)),
+        (
+            "not_pyth",
+            get_class_hash("fake_upgrade_not_pyth", &contracts_dir),
+        ),
+        (
+            "wrong_magic",
+            get_class_hash("fake_upgrade_wrong_magic", &contracts_dir),
+        ),
+        ("invalid_hash", 505.into()),
+    ];
+    for (name, hash) in upgrade_hashes {
+        let mut pyth_upgrade_payload = vec![80, 84, 71, 77, 1, 0, 234, 147];
+        pyth_upgrade_payload.extend_from_slice(&u256_to_be(hash));
+        let pyth_upgrade = serialize_vaa(guardians.sign_vaa(
+            &[0],
+            VaaBody {
+                timestamp: 1,
+                nonce: 2,
+                emitter_chain: 1,
+                emitter_address: u256_to_be(41.into()).into(),
+                sequence: 1.try_into().unwrap(),
+                consistency_level: 6,
+                payload: PayloadKind::Binary(pyth_upgrade_payload),
+            },
+        ));
+        print_as_cairo_fn(
+            &pyth_upgrade,
+            format!("pyth_upgrade_{name}"),
+            "A Pyth governance instruction to upgrade the contract signed by the test guardian #1.",
+        );
+    }
+
     let guardians2 = GuardianSet {
         set_index: 1,
         secrets: vec![SecretKey::parse_slice(&hex::decode(secret2).unwrap()).unwrap()],
@@ -329,4 +375,20 @@ fn main() {
         "test_update2_set2",
         "An update pulled from Hermes and re-signed by the test guardian #2.",
     );
+}
+
+fn get_class_hash(name: &str, dir: &Path) -> U256 {
+    let output = Command::new("starkli")
+        .arg("class-hash")
+        .arg(format!("target/dev/pyth_pyth_{name}.contract_class.json"))
+        .current_dir(dir)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "starkli failed with {:?}",
+        output.status
+    );
+    let hash = str::from_utf8(&output.stdout).unwrap();
+    hash.trim().parse().unwrap()
 }

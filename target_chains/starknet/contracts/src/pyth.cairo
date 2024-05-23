@@ -3,7 +3,11 @@ mod interface;
 mod price_update;
 mod governance;
 
-pub use pyth::{Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet};
+mod fake_upgrades;
+
+pub use pyth::{
+    Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded
+};
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
 pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
 
@@ -16,10 +20,15 @@ mod pyth {
     use pyth::reader::{Reader, ReaderImpl};
     use pyth::byte_array::{ByteArray, ByteArrayImpl};
     use core::panic_with_felt252;
-    use core::starknet::{ContractAddress, get_caller_address, get_execution_info};
+    use core::starknet::{
+        ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
+        get_contract_address,
+    };
+    use core::starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
-        DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError
+        DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
+        IPythDispatcher, IPythDispatcherTrait,
     };
     use super::governance;
     use super::governance::GovernancePayload;
@@ -31,6 +40,7 @@ mod pyth {
         PriceFeedUpdate: PriceFeedUpdateEvent,
         WormholeAddressSet: WormholeAddressSet,
         GovernanceDataSourceSet: GovernanceDataSourceSet,
+        ContractUpgraded: ContractUpgraded,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -53,6 +63,11 @@ mod pyth {
         pub old_data_source: DataSource,
         pub new_data_source: DataSource,
         pub last_executed_governance_sequence: u64,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct ContractUpgraded {
+        pub new_class_hash: ClassHash,
     }
 
     #[storage]
@@ -243,7 +258,17 @@ mod pyth {
                 GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
                     self.authorize_governance_transfer(payload.claim_vaa);
                 },
+                GovernancePayload::UpgradeContract(payload) => {
+                    if instruction.target_chain_id == 0 {
+                        panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
+                    }
+                    self.upgrade_contract(payload.new_implementation);
+                }
             }
+        }
+
+        fn pyth_upgradable_magic(self: @ContractState) -> u32 {
+            0x97a6f304
         }
     }
 
@@ -383,6 +408,18 @@ mod pyth {
             let event = GovernanceDataSourceSet {
                 old_data_source, new_data_source, last_executed_governance_sequence,
             };
+            self.emit(event);
+        }
+
+        fn upgrade_contract(ref self: ContractState, new_implementation: ClassHash) {
+            let contract_address = get_contract_address();
+            replace_class_syscall(new_implementation).unwrap_syscall();
+            // Dispatcher uses `call_contract_syscall` so it will call the new implementation.
+            let magic = IPythDispatcher { contract_address }.pyth_upgradable_magic();
+            if magic != 0x97a6f304 {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+            }
+            let event = ContractUpgraded { new_class_hash: new_implementation };
             self.emit(event);
         }
     }
