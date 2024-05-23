@@ -67,12 +67,12 @@ abigen!(
 );
 
 pub type SignablePythContract = PythRandom<
-    GasOracleMiddleware<
-        TransformerMiddleware<
+    TransformerMiddleware<
+        GasOracleMiddleware<
             NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-            LegacyTxTransformer,
+            EthProviderOracle<Provider<Http>>,
         >,
-        EthProviderOracle<Provider<Http>>,
+        LegacyTxTransformer,
     >,
 >;
 pub type PythContract = PythRandom<Provider<Http>>;
@@ -102,11 +102,15 @@ impl SignablePythContract {
     ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-
+        let eip1559_supported = provider
+            .get_block(ethers::prelude::BlockNumber::Latest)
+            .await?
+            .ok_or_else(|| anyhow!("Latest block not found"))?
+            .base_fee_per_gas
+            .is_some();
         let gas_oracle = EthProviderOracle::new(provider.clone());
-
         let transformer = LegacyTxTransformer {
-            use_legacy_tx: chain_config.legacy_tx,
+            use_legacy_tx: !eip1559_supported,
         };
 
         let wallet__ = private_key
@@ -117,12 +121,12 @@ impl SignablePythContract {
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
-            Arc::new(GasOracleMiddleware::new(
-                TransformerMiddleware::new(
+            Arc::new(TransformerMiddleware::new(
+                GasOracleMiddleware::new(
                     NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
-                    transformer,
+                    gas_oracle,
                 ),
-                gas_oracle,
+                transformer,
             )),
         ))
     }

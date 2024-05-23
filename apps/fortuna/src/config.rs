@@ -148,10 +148,6 @@ pub struct EthereumConfig {
     /// its commitment.
     pub reveal_delay_blocks: BlockNumber,
 
-    /// Use the legacy transaction format (for networks without EIP 1559)
-    #[serde(default)]
-    pub legacy_tx: bool,
-
     /// The BlockStatus of the block that is considered confirmed.
     /// For example, Finalized, Safe, Latest
     #[serde(default)]
