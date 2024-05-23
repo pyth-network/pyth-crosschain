@@ -157,9 +157,11 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// How much the provider charges for a request.
     #[serde(default)]
     pub fee: u128,
 
+    /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
 }
 
