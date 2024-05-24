@@ -24,12 +24,6 @@ mod pyth_fake_upgrade1 {
         ) -> Result<Price, GetPriceUnsafeError> {
             panic!("unsupported")
         }
-        fn set_data_sources(ref self: ContractState, sources: Array<DataSource>) {
-            panic!("unsupported")
-        }
-        fn set_fee(ref self: ContractState, single_update_fee: u256) {
-            panic!("unsupported")
-        }
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             panic!("unsupported")
         }
@@ -63,12 +57,6 @@ mod pyth_fake_upgrade_wrong_magic {
         fn get_ema_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
-            panic!("unsupported")
-        }
-        fn set_data_sources(ref self: ContractState, sources: Array<DataSource>) {
-            panic!("unsupported")
-        }
-        fn set_fee(ref self: ContractState, single_update_fee: u256) {
             panic!("unsupported")
         }
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
