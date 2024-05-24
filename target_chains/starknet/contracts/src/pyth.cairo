@@ -7,7 +7,7 @@ mod fake_upgrades;
 
 pub use pyth::{
     Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
-    DataSourcesSet
+    DataSourcesSet, FeeSet,
 };
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
 pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
@@ -39,6 +39,7 @@ mod pyth {
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
         PriceFeedUpdate: PriceFeedUpdateEvent,
+        FeeSet: FeeSet,
         DataSourcesSet: DataSourcesSet,
         WormholeAddressSet: WormholeAddressSet,
         GovernanceDataSourceSet: GovernanceDataSourceSet,
@@ -52,6 +53,12 @@ mod pyth {
         pub publish_time: u64,
         pub price: i64,
         pub conf: u64,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct FeeSet {
+        pub old_fee: u256,
+        pub new_fee: u256,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -221,8 +228,11 @@ mod pyth {
             }
             match instruction.payload {
                 GovernancePayload::SetFee(payload) => {
-                    let value = apply_decimal_expo(payload.value, payload.expo);
-                    self.single_update_fee.write(value);
+                    let new_fee = apply_decimal_expo(payload.value, payload.expo);
+                    let old_fee = self.single_update_fee.read();
+                    self.single_update_fee.write(new_fee);
+                    let event = FeeSet { old_fee, new_fee };
+                    self.emit(event);
                 },
                 GovernancePayload::SetDataSources(payload) => {
                     let new_data_sources = payload.sources;

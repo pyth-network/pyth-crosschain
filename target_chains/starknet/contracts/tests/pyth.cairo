@@ -4,7 +4,7 @@ use snforge_std::{
 };
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
-    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet,
+    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -50,6 +50,9 @@ fn decode_event(mut event: Event) -> PythEvent {
             conf: event.data.pop(),
         };
         PythEvent::PriceFeedUpdate(event)
+    } else if key0 == event_name_hash('FeeSet') {
+        let event = FeeSet { old_fee: event.data.pop_u256(), new_fee: event.data.pop_u256(), };
+        PythEvent::FeeSet(event)
     } else if key0 == event_name_hash('DataSourcesSet') {
         let event = DataSourcesSet {
             old_data_sources: event.data.pop_data_sources(),
@@ -149,7 +152,17 @@ fn test_governance_set_fee_works() {
         .unwrap_with_felt252();
     assert!(last_price.price == 6281060000000);
 
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
     pyth.execute_governance_instruction(data::pyth_set_fee());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = FeeSet { old_fee: 1000, new_fee: 4200, };
+    assert!(event == PythEvent::FeeSet(expected));
 
     start_prank(CheatTarget::One(pyth.contract_address), user);
     pyth.update_price_feeds(data::test_price_update2());
