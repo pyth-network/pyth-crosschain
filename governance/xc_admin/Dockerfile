@@ -11,7 +11,7 @@ COPY --chown=1000:1000 governance/xc_admin governance/xc_admin
 COPY --chown=1000:1000 pythnet/message_buffer pythnet/message_buffer
 COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
 
-RUN npx lerna run build --scope="{crank_executor,crank_pythnet_relayer,proposer_server}" --include-dependencies
+RUN npx lerna run build --scope="{@pythnetwork/xc-admin-crank-executor,crank_pythnet_relayer,proposer_server}" --include-dependencies
 
 WORKDIR /home/node/governance/xc_admin
 

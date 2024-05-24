@@ -1,5 +1,5 @@
 {
-  "name": "crank_executor",
+  "name": "@pythnetwork/xc-admin-crank-executor",
   "version": "0.0.0",
   "description": "A crank to executed all executeReady multisig transaction",
   "private": "true",
