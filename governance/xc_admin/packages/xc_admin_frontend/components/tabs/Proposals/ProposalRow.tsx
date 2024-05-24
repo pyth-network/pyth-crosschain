@@ -10,7 +10,10 @@ import { getInstructionsSummary, getProposalStatus } from './utils'
 
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { AccountMeta, Keypair } from '@solana/web3.js'
-import { MultisigParser, getManyProposalsInstructions } from '@pythnetwork/xc-admin-common'
+import {
+  MultisigParser,
+  getManyProposalsInstructions,
+} from '@pythnetwork/xc-admin-common'
 
 export const ProposalRow = ({
   proposal,

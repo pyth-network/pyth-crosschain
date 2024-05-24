@@ -2,7 +2,11 @@ import { Commitment, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID } from "@sqds/mesh";
 import * as fs from "fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
-import { envOrErr, executeProposal, getProposals } from "@pythnetwork/xc-admin-common";
+import {
+  envOrErr,
+  executeProposal,
+  getProposals,
+} from "@pythnetwork/xc-admin-common";
 import {
   getPythClusterApiUrl,
   PythCluster,
