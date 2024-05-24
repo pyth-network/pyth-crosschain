@@ -13,8 +13,8 @@ chains:
     commitments:
       # prettier-ignore
       - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
-              chain_length: 10000
-              original_commitment_sequence_number: 104
+        chain_length: 10000
+        original_commitment_sequence_number: 104
 provider:
   uri: http://localhost:8080/
   chain_length: 100000
