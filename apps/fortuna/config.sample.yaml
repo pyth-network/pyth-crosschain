@@ -15,8 +15,13 @@ chains:
 provider:
     uri: http://insert-url-here.com/
     address: 0xADDRESS
-    private_key_file: provider-key.txt
-    secret_file: blast-testnet-secret.txt
+    private_key:
+        # value: 0xabcd # fill this in with a private key
+        file: provider-key.txt
+    secret:
+        # value: 0xabdc #
+        file: blast-testnet-secret.txt
     chain_length: 100000
 keeper:
-    private_key_file: keeper-key.txt
+    private_key:
+        file: keeper-key.txt

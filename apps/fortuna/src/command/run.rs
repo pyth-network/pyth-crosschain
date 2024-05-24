@@ -152,7 +152,9 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let secret = config.provider.load_secret()?;
+    let secret = config.provider.secret.load()?.ok_or(anyhow!(
+        "Please specify a provider secret in the config file."
+    ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
@@ -187,7 +189,9 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
-    let keeper_private_key = config.keeper.load_private_key()?;
+    let keeper_private_key = config.keeper.private_key.load()?.ok_or(anyhow!(
+        "Please specify a keeper private key in the config file"
+    ))?;
     spawn(run_keeper(
         chains.clone(),
         config.clone(),

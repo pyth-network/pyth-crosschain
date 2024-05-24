@@ -165,49 +165,55 @@ pub struct ProviderConfig {
     /// The public key of the provider whose requests the server will respond to.
     pub address: Address,
 
-    pub private_key_file: Option<String>,
+    /// The provider's private key, which is required to register, update the commitment,
+    /// or claim fees. This argument *will not* be loaded for commands that do not need
+    /// the private key (e.g., running the server).
+    pub private_key: SecretString,
 
-    /// Path to file containing a secret which is a 64-char hex string.
+    /// The provider's secret which is a 64-char hex string.
     /// The secret is used for generating new hash chains
-    pub secret_file: String,
+    pub secret: SecretString,
 
     /// The length of the hash chain to generate.
     pub chain_length: u64,
-}
-
-impl ProviderConfig {
-    pub fn load_secret(&self) -> Result<String> {
-        return Ok((fs::read_to_string(&self.secret_file))?);
-    }
-
-    pub fn load_private_key(&self) -> Result<String> {
-        return Ok(fs::read_to_string(
-            &self
-                .private_key_file
-                .clone()
-                .ok_or(anyhow!("private key not specified"))?,
-        )?);
-    }
 }
 
 /// Configuration values for the keeper service that are shared across chains.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct KeeperConfig {
     /// If provided, the keeper will run alongside the Fortuna API service.
-    /// It should be a path to a file containing a 20-byte (40 char) hex encoded Ethereum private key.
+    /// The private key is a 20-byte (40 char) hex encoded Ethereum private key.
     /// This key is required to submit transactions for entropy callback requests.
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
-    pub private_key_file: Option<String>,
+    pub private_key: SecretString,
 }
 
-impl KeeperConfig {
-    pub fn load_private_key(&self) -> Result<String> {
-        return Ok(fs::read_to_string(
-            &self
-                .private_key_file
-                .clone()
-                .ok_or(anyhow!("private key not specified"))?,
-        )?);
+// A secret is a string that can be provided either as a literal in the config,
+// or in a separate file. (The separate file option is useful for 1password mounting in production.)
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SecretString {
+    pub value: Option<String>,
+
+    // The name of a file containing the string to read. Note that the file contents is trimmed
+    // of leading/trailing whitespace when read.
+    pub file: Option<String>,
+}
+
+impl SecretString {
+    pub fn load(&self) -> Result<Option<String>> {
+        match &self.value {
+            Some(v) => return Ok(Some(v.clone())),
+            _ => {}
+        }
+
+        match &self.file {
+            Some(v) => {
+                return Ok(Some(fs::read_to_string(v)?.trim().to_string()));
+            }
+            _ => {}
+        }
+
+        Ok(None)
     }
 }

@@ -10,7 +10,10 @@ use {
         },
         state::PebbleHashChain,
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     ethers::{
         abi::Bytes,
         signers::{
@@ -44,14 +47,23 @@ pub async fn register_provider_from_config(
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<()> {
-    let private_key_string = provider_config.load_private_key()?.clone();
+    let private_key_string = provider_config
+        .private_key
+        .load()?
+        .ok_or(anyhow!(
+            "Please specify a provider private key in the config"
+        ))?
+        .clone();
 
     // Initialize a Provider to interface with the EVM contract.
     let contract =
         Arc::new(SignablePythContract::from_config(&chain_config, &private_key_string).await?);
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
-    let secret = provider_config.load_secret()?;
+    let secret = provider_config
+        .secret
+        .load()?
+        .ok_or(anyhow!("Please specify a provider secret in the config"))?;
 
     let commitment_length = provider_config.chain_length;
     let mut chain = PebbleHashChain::from_config(

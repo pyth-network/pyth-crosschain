@@ -62,7 +62,9 @@ async fn setup_chain_provider(
 ) -> Result<()> {
     tracing::info!("Setting up provider for chain: {0}", chain_id);
     let provider_config = &config.provider;
-    let private_key = provider_config.load_private_key()?;
+    let private_key = provider_config.private_key.load()?.ok_or(anyhow!(
+        "Please specify a provider private key in the config file."
+    ))?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
     let provider_fee = chain_config.fee;
     // Initialize a Provider to interface with the EVM contract.
@@ -96,7 +98,9 @@ async fn setup_chain_provider(
                     )
                 })?;
 
-        let secret = provider_config.load_secret()?;
+        let secret = provider_config.secret.load()?.ok_or(anyhow!(
+            "Please specify a provider secret in the config file."
+        ))?;
         let hash_chain = PebbleHashChain::from_config(
             &secret,
             &chain_id,
