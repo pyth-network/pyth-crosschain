@@ -1,5 +1,5 @@
 {
-  "name": "proposer_server",
+  "name": "@pythnetwork/xc-admin-proposer-server",
   "version": "0.0.0",
   "description": "A server that proposes the instructions that it receives to the multisig",
   "private": "true",
