@@ -18,7 +18,10 @@ use {
         Args,
         Parser,
     },
-    ethers::types::Address,
+    ethers::{
+        types::Address,
+        utils::ParseUnits,
+    },
     std::{
         collections::HashMap,
         fs,
@@ -226,3 +229,29 @@ impl SecretString {
         Ok(None)
     }
 }
+
+/*
+#[derive(Clone, Debug)]
+pub struct EthQty {
+    pub value_in_wei: U256,
+}
+
+impl<'de> serde::Deserialize<'de> for EthQty {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: &str = Deserialize::deserialize(deserializer)?;
+
+        let parts = s.split_whitespace();
+
+        ParseUnits = parse_units(s)
+
+        // Call your existing function to parse the string into MyStruct
+        match parse_string_into_type(s) {
+            Ok(parsed_struct) => Ok(parsed_struct),
+            Err(_) => Err(serde::de::Error::custom("Failed to parse string into MyStruct")),
+        }
+    }
+}
+*/
