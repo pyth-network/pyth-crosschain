@@ -1,5 +1,5 @@
 {
-  "name": "xc_admin_frontend",
+  "name": "@pythnetwork/xc-admin-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
