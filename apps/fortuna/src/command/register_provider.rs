@@ -1,6 +1,9 @@
 use {
     crate::{
-        api::ChainId,
+        api::{
+            get_register_uri,
+            ChainId,
+        },
         chain::ethereum::SignablePythContract,
         config::{
             Config,
@@ -84,6 +87,7 @@ pub async fn register_provider_from_config(
         seed:         random,
         chain_length: commitment_length,
     };
+    let uri = get_register_uri(&provider_config.uri, &chain_id)?;
     let call = contract.register(
         fee_in_wei,
         commitment,
@@ -91,8 +95,7 @@ pub async fn register_provider_from_config(
         commitment_length,
         // Use Bytes to serialize the uri. Most users will be using JS/TS to deserialize this uri.
         // Bincode is a different encoding mechanisms, and I didn't find any JS/TS library to parse bincode.
-        // FIXME: is this uri consistent with other URIs?
-        Bytes::from(provider_config.uri.as_str()).into(),
+        Bytes::from(uri.as_str()).into(),
     );
     let mut gas_estimate = call.estimate_gas().await?;
     let gas_multiplier = U256::from(2); //TODO: smarter gas estimation

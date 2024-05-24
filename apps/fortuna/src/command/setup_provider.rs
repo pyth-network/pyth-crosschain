@@ -76,8 +76,6 @@ async fn setup_chain_provider(
 
     let mut register = false;
 
-    let uri = get_register_uri(&provider_config.uri, &chain_id)?;
-
     // This condition satisfies for both when there is no registration and when there are no
     // more random numbers left to request
     if provider_info.end_sequence_number <= provider_info.sequence_number {
@@ -135,6 +133,7 @@ async fn setup_chain_provider(
         sync_fee(&contract, &provider_info, provider_fee)
             .in_current_span()
             .await?;
+        let uri = get_register_uri(&provider_config.uri, &chain_id)?;
         sync_uri(&contract, &provider_info, uri)
             .in_current_span()
             .await?;
