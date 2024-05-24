@@ -38,27 +38,22 @@ use {
             H160,
             U256,
         },
+        utils::parse_units,
     },
     std::sync::Arc,
 };
 
-struct RebalanceInfo {
-    address:               H160,
-    provider_retained_wei: U256,
-}
 
 pub async fn withdraw_fees(opts: &WithdrawFeesOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
 
-    let keeper_address = if let Some(provider_retained_str) = opts.rebalance {
+    let keeper_address = if opts.cron {
         let keeper_private_key = config
             .keeper
             .private_key
             .load()?
             .ok_or(anyhow!("Please specify a keeper private key in the config"))?;
-        let keeper_address = keeper_private_key.parse::<LocalWallet>()?.address();
-
-        let provider_retained_wei = ParseUnits(provider_retained_str, "ether");
+        Some(keeper_private_key.parse::<LocalWallet>()?.address())
     } else {
         None
     };
@@ -107,10 +102,13 @@ pub async fn withdraw_fees_for_chain(
     let fees = provider_info.accrued_fees_in_wei;
     tracing::info!("Accrued fees: {} wei", fees);
 
-    let FEE_THRESHOLD = 100000;
-    let PROVIDER_THRESHOLD: U256 = U256::from(100000);
+    let default_min_balance: U256 = parse_units("0.02", "ether")?.into();
+    let min_balance = chain_config
+        .provider_min_balance
+        .map(|x| U256::from(x))
+        .unwrap_or(default_min_balance);
 
-    if fees > FEE_THRESHOLD {
+    if U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
         let tx_result = contract.withdraw(fees).send().await?.await?;
         log_tx_hash(&tx_result);
@@ -121,7 +119,7 @@ pub async fn withdraw_fees_for_chain(
     let balance = provider.get_balance(wallet.address(), None).await?;
 
     if let Some(rebalance_address) = rebalance_to {
-        if balance > PROVIDER_THRESHOLD {
+        if balance > min_balance {
             tracing::info!("Funding keeper wallet: ");
             let amount_to_transfer = ethers::types::U256::from(10); // balance - PROVIDER_THRESHOLD
 

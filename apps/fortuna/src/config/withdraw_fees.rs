@@ -17,14 +17,10 @@ pub struct WithdrawFeesOptions {
     #[arg(long = "chain-id")]
     pub chain_id: Option<ChainId>,
 
-    /// Only send the withdrawal transaction if the accrued fees are larger than this amount.
-    #[arg(long = "threshold")]
-    #[arg(default_value = "0.02")]
-    pub threshold: String,
-
-    /// Rebalance any ETH in the provider wallet over this quantity to the keeper wallet.
-    /// If not provided, all claimed fees will stay in the provider wallet.
-    #[arg(long = "rebalance")]
-    #[arg(default_value = "None")]
-    pub rebalance: Option<String>,
+    /// Run the withdrawal task in "cron" mode, such that it can be repeated on a schedule.
+    /// This flag doesn't claim fees under a certain quantity (to save gas) and also rebalances
+    /// fees above a configure threshold into the keeper wallet.
+    #[arg(long = "cron")]
+    #[arg(default_value = "false")]
+    pub cron: bool,
 }
