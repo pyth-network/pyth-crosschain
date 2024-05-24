@@ -1,5 +1,5 @@
 {
-  "name": "xc_admin_cli",
+  "name": "@pythnetwork/xc-admin-cli",
   "version": "0.0.0",
   "private": "true",
   "description": "",
@@ -28,7 +28,7 @@
     "@sqds/mesh": "^1.0.6",
     "commander": "^9.5.0",
     "typescript": "^4.9.4",
-    "xc_admin_common": "*",
+    "@pythnetwork/xc-admin-common": "*",
     "@pythnetwork/pyth-solana-receiver": "*"
   }
 }

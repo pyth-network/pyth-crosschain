@@ -1,4 +1,4 @@
-import { DataSource } from "xc_admin_common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { Chain } from "./chains";
 
 export interface TxResult {

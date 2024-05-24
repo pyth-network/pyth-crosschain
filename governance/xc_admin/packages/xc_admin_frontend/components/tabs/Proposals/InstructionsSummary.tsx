@@ -1,5 +1,5 @@
 import { PythCluster } from '@pythnetwork/client'
-import { MultisigInstruction } from 'xc_admin_common'
+import { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import { getInstructionsSummary } from './utils'
 
 export const InstructionsSummary = ({

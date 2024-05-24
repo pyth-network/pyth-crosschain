@@ -17,7 +17,7 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NEXT_PUBLIC_RPC_POOL_TOKEN $NEXT_PUBLIC_RPC_POOL_TOKEN
 
-RUN npx lerna run build --scope="xc_admin_frontend" --include-dependencies
+RUN npx lerna run build --scope="@pythnetwork/xc-admin-frontend" --include-dependencies
 
 WORKDIR /home/node/governance/xc_admin/packages/xc_admin_frontend
 

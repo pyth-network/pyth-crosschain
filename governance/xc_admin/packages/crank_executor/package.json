@@ -1,5 +1,5 @@
 {
-  "name": "crank_executor",
+  "name": "@pythnetwork/xc-admin-crank-executor",
   "version": "0.0.0",
   "description": "A crank to executed all executeReady multisig transaction",
   "private": "true",
@@ -25,6 +25,6 @@
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "ts-node": "^10.9.1",
-    "xc_admin_common": "*"
+    "@pythnetwork/xc-admin-common": "*"
   }
 }

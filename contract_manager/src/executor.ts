@@ -3,7 +3,7 @@ import {
   DataSource,
   EvmExecute,
   decodeGovernancePayload,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 import { DefaultStore } from "./store";
 import { PrivateKey, TxResult } from "./base";
 import { EvmExecutorContract } from "./contracts";

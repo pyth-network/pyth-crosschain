@@ -8,7 +8,7 @@ import {
 
 import { Ed25519Keypair } from "@mysten/sui.js/dist/cjs/keypairs/ed25519";
 import { execSync } from "child_process";
-import { DataSource } from "xc_admin_common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { SuiClient } from "@mysten/sui.js/client";
 
 export async function publishPackage(

@@ -8,7 +8,7 @@ import {
   PythGovernanceActionImpl,
   SetDataSources,
   WormholeMultisigInstruction,
-} from 'xc_admin_common'
+} from '@pythnetwork/xc-admin-common'
 
 export type ProposalStatus =
   | 'active'

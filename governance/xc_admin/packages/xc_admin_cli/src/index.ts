@@ -35,7 +35,7 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   getMultisigCluster,
   getProposalInstructions,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 
 import {
   pythSolanaReceiverIdl,

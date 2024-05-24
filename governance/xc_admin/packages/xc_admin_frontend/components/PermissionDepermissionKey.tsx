@@ -15,7 +15,7 @@ import {
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
-} from 'xc_admin_common'
+} from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
 import { ProductRawConfig } from '../hooks/usePyth'

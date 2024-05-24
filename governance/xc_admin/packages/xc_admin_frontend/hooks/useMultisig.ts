@@ -9,7 +9,7 @@ import {
   UPGRADE_MULTISIG,
   getMultisigCluster,
   getProposals,
-} from 'xc_admin_common'
+} from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 

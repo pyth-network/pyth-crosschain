@@ -2,7 +2,7 @@ import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { getMultisigCluster } from 'xc_admin_common'
+import { getMultisigCluster } from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { StatusTag } from './StatusTag'
@@ -10,7 +10,10 @@ import { getInstructionsSummary, getProposalStatus } from './utils'
 
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { AccountMeta, Keypair } from '@solana/web3.js'
-import { MultisigParser, getManyProposalsInstructions } from 'xc_admin_common'
+import {
+  MultisigParser,
+  getManyProposalsInstructions,
+} from '@pythnetwork/xc-admin-common'
 
 export const ProposalRow = ({
   proposal,

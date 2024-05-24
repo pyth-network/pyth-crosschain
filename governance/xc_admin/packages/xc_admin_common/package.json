@@ -1,5 +1,5 @@
 {
-  "name": "xc_admin_common",
+  "name": "@pythnetwork/xc-admin-common",
   "version": "0.0.0",
   "description": "",
   "private": "true",
@@ -21,7 +21,7 @@
   },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",
-    "wormhole-sdk can be built with the correct version of the package in nextjs (xc_admin_frontend).",
+    "wormhole-sdk can be built with the correct version of the package in nextjs (@pythnetwork/xc-admin-frontend).",
     "Otherwise, the nextjs build will fail due to using a different version of the package."
   ],
   "dependencies": {

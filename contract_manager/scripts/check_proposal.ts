@@ -11,7 +11,7 @@ import {
   getProposalInstructions,
   MultisigParser,
   WormholeMultisigInstruction,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 import SquadsMesh from "@sqds/mesh";
 import {
   getPythClusterApiUrl,
