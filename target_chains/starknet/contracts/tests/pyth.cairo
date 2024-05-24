@@ -3,8 +3,8 @@ use snforge_std::{
     EventFetcher, event_name_hash, Event
 };
 use pyth::pyth::{
-    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
-    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
+    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
+    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -27,18 +27,38 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
     fn pop_data_source(ref self: Array<felt252>) -> DataSource {
         DataSource { emitter_chain_id: self.pop(), emitter_address: self.pop_u256(), }
     }
+
+    fn pop_data_sources(ref self: Array<felt252>) -> Array<DataSource> {
+        let count: usize = self.pop();
+        let mut i = 0;
+        let mut output = array![];
+        while i < count {
+            output.append(self.pop_data_source());
+            i += 1;
+        };
+        output
+    }
 }
 
 fn decode_event(mut event: Event) -> PythEvent {
     let key0: felt252 = event.keys.pop();
-    let output = if key0 == event_name_hash('PriceFeedUpdate') {
-        let event = PriceFeedUpdateEvent {
+    let output = if key0 == event_name_hash('PriceFeedUpdated') {
+        let event = PriceFeedUpdated {
             price_id: event.keys.pop_u256(),
             publish_time: event.data.pop(),
             price: event.data.pop(),
             conf: event.data.pop(),
         };
-        PythEvent::PriceFeedUpdate(event)
+        PythEvent::PriceFeedUpdated(event)
+    } else if key0 == event_name_hash('FeeSet') {
+        let event = FeeSet { old_fee: event.data.pop_u256(), new_fee: event.data.pop_u256(), };
+        PythEvent::FeeSet(event)
+    } else if key0 == event_name_hash('DataSourcesSet') {
+        let event = DataSourcesSet {
+            old_data_sources: event.data.pop_data_sources(),
+            new_data_sources: event.data.pop_data_sources(),
+        };
+        PythEvent::DataSourcesSet(event)
     } else if key0 == event_name_hash('WormholeAddressSet') {
         let event = WormholeAddressSet {
             old_address: event.data.pop(), new_address: event.data.pop(),
@@ -84,13 +104,13 @@ fn update_price_feeds_works() {
     let (from, event) = spy.events.pop_front().unwrap();
     assert!(from == pyth.contract_address);
     let event = decode_event(event);
-    let expected = PriceFeedUpdateEvent {
+    let expected = PriceFeedUpdated {
         price_id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
         publish_time: 1712589206,
         price: 7192002930010,
         conf: 3596501465,
     };
-    assert!(event == PythEvent::PriceFeedUpdate(expected));
+    assert!(event == PythEvent::PriceFeedUpdated(expected));
 
     let last_price = pyth
         .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
@@ -132,7 +152,17 @@ fn test_governance_set_fee_works() {
         .unwrap_with_felt252();
     assert!(last_price.price == 6281060000000);
 
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
     pyth.execute_governance_instruction(data::pyth_set_fee());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = FeeSet { old_fee: 1000, new_fee: 4200, };
+    assert!(event == PythEvent::FeeSet(expected));
 
     start_prank(CheatTarget::One(pyth.contract_address), user);
     pyth.update_price_feeds(data::test_price_update2());
@@ -177,7 +207,31 @@ fn test_governance_set_data_sources_works() {
         .unwrap_with_felt252();
     assert!(last_price.price == 6281060000000);
 
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
     pyth.execute_governance_instruction(data::pyth_set_data_sources());
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = DataSourcesSet {
+        old_data_sources: array![
+            DataSource {
+                emitter_chain_id: 26,
+                emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+            }
+        ],
+        new_data_sources: array![
+            DataSource {
+                emitter_chain_id: 1,
+                emitter_address: 0x6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25,
+            },
+            DataSource { emitter_chain_id: 3, emitter_address: 0x12d, },
+        ],
+    };
+    assert!(event == PythEvent::DataSourcesSet(expected));
 
     start_prank(CheatTarget::One(pyth.contract_address), user);
     pyth.update_price_feeds(data::test_update2_alt_emitter());

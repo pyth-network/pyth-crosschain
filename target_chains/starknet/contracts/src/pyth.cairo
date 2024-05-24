@@ -6,7 +6,8 @@ mod governance;
 mod fake_upgrades;
 
 pub use pyth::{
-    Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded
+    Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
+    DataSourcesSet, FeeSet,
 };
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
 pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
@@ -37,19 +38,33 @@ mod pyth {
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
-        PriceFeedUpdate: PriceFeedUpdateEvent,
+        PriceFeedUpdated: PriceFeedUpdated,
+        FeeSet: FeeSet,
+        DataSourcesSet: DataSourcesSet,
         WormholeAddressSet: WormholeAddressSet,
         GovernanceDataSourceSet: GovernanceDataSourceSet,
         ContractUpgraded: ContractUpgraded,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
-    pub struct PriceFeedUpdateEvent {
+    pub struct PriceFeedUpdated {
         #[key]
         pub price_id: u256,
         pub publish_time: u64,
         pub price: i64,
         pub conf: u64,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct FeeSet {
+        pub old_fee: u256,
+        pub new_fee: u256,
+    }
+
+    #[derive(Drop, PartialEq, starknet::Event)]
+    pub struct DataSourcesSet {
+        pub old_data_sources: Array<DataSource>,
+        pub new_data_sources: Array<DataSource>,
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -114,7 +129,7 @@ mod pyth {
         self.wormhole_address.write(wormhole_address);
         self.fee_contract_address.write(fee_contract_address);
         self.single_update_fee.write(single_update_fee);
-        self.write_data_sources(data_sources);
+        self.write_data_sources(@data_sources);
         self
             .governance_data_source
             .write(
@@ -213,11 +228,17 @@ mod pyth {
             }
             match instruction.payload {
                 GovernancePayload::SetFee(payload) => {
-                    let value = apply_decimal_expo(payload.value, payload.expo);
-                    self.single_update_fee.write(value);
+                    let new_fee = apply_decimal_expo(payload.value, payload.expo);
+                    let old_fee = self.single_update_fee.read();
+                    self.single_update_fee.write(new_fee);
+                    let event = FeeSet { old_fee, new_fee };
+                    self.emit(event);
                 },
                 GovernancePayload::SetDataSources(payload) => {
-                    self.write_data_sources(payload.sources);
+                    let new_data_sources = payload.sources;
+                    let old_data_sources = self.write_data_sources(@new_data_sources);
+                    let event = DataSourcesSet { old_data_sources, new_data_sources };
+                    self.emit(event);
                 },
                 GovernancePayload::SetWormholeAddress(payload) => {
                     if instruction.target_chain_id == 0 {
@@ -254,11 +275,15 @@ mod pyth {
 
     #[generate_trait]
     impl PrivateImpl of PrivateTrait {
-        fn write_data_sources(ref self: ContractState, data_sources: Array<DataSource>) {
+        fn write_data_sources(
+            ref self: ContractState, data_sources: @Array<DataSource>
+        ) -> Array<DataSource> {
             let num_old = self.num_data_sources.read();
             let mut i = 0;
+            let mut old_data_sources = array![];
             while i < num_old {
                 let old_source = self.data_sources.read(i);
+                old_data_sources.append(old_source);
                 self.is_valid_data_source.write(old_source, false);
                 self.data_sources.write(i, Default::default());
                 i += 1;
@@ -272,6 +297,7 @@ mod pyth {
                 self.data_sources.write(i, *source);
                 i += 1;
             };
+            old_data_sources
         }
 
         fn update_latest_price_if_necessary(ref self: ContractState, message: PriceFeedMessage) {
@@ -287,7 +313,7 @@ mod pyth {
                 };
                 self.latest_price_info.write(message.price_id, info);
 
-                let event = PriceFeedUpdateEvent {
+                let event = PriceFeedUpdated {
                     price_id: message.price_id,
                     publish_time: message.publish_time,
                     price: message.price,
