@@ -25,7 +25,7 @@ import {
   MultisigVault,
   WORMHOLE_ADDRESS,
   WORMHOLE_API_ENDPOINT,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 import {
   createWormholeProgramInterface,
   deriveEmitterSequenceKey,

@@ -10,7 +10,7 @@ use {
         system_program,
         InstructionData,
     },
-    pyth_solana_receiver::sdk::{
+    pyth_solana_receiver_sdk::pda::{
         get_config_address,
         get_treasury_address,
     },
@@ -39,7 +39,7 @@ impl accounts::UpdatePriceFeed {
             config: get_config_address(),
             treasury: get_treasury_address(treasury_id),
             price_feed_account: get_price_feed_address(shard_id, feed_id),
-            pyth_solana_receiver: pyth_solana_receiver::ID,
+            pyth_solana_receiver: pyth_solana_receiver_sdk::ID,
             system_program: system_program::ID,
         }
     }

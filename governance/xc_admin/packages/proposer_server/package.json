@@ -1,5 +1,5 @@
 {
-  "name": "proposer_server",
+  "name": "@pythnetwork/xc-admin-proposer-server",
   "version": "0.0.0",
   "description": "A server that proposes the instructions that it receives to the multisig",
   "private": "true",
@@ -26,6 +26,6 @@
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
     "ts-node": "^10.9.1",
-    "xc_admin_common": "*"
+    "@pythnetwork/xc-admin-common": "*"
   }
 }

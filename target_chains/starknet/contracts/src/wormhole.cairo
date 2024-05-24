@@ -3,9 +3,12 @@ mod errors;
 mod governance;
 mod parse_vm;
 
-pub use errors::{GovernanceError, SubmitNewGuardianSetError, ParseAndVerifyVmError};
+pub use errors::{
+    GovernanceError, SubmitNewGuardianSetError, ParseAndVerifyVmError, GetGuardianSetError
+};
 pub use interface::{
-    VerifiedVM, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait, GuardianSignature, quorum
+    VerifiedVM, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait, GuardianSignature, quorum,
+    GuardianSet
 };
 pub use wormhole::{Event, GuardianSetAdded};
 
@@ -16,7 +19,7 @@ mod wormhole {
     use core::array::ArrayTrait;
     use super::{
         VerifiedVM, IWormhole, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
-        GovernanceError
+        GovernanceError, GetGuardianSetError
     };
     use super::governance;
     use super::parse_vm::parse_vm;
@@ -122,8 +125,33 @@ mod wormhole {
             vm
         }
 
+        fn get_guardian_set(self: @ContractState, index: u32) -> super::GuardianSet {
+            let mut keys = array![];
+            let set = self.guardian_sets.read(index);
+            if set.num_guardians == 0 {
+                panic_with_felt252(GetGuardianSetError::InvalidIndex.into());
+            }
+            let mut i: u8 = 0;
+            while i.into() < set.num_guardians {
+                keys.append(self.guardian_keys.read((index, i)));
+                i += 1;
+            };
+            super::GuardianSet { keys, expiration_time: set.expiration_time }
+        }
+        fn get_current_guardian_set_index(self: @ContractState) -> u32 {
+            self.current_guardian_set_index.read()
+        }
+        fn governance_action_is_consumed(self: @ContractState, hash: u256) -> bool {
+            self.consumed_governance_actions.read(hash)
+        }
         fn chain_id(self: @ContractState) -> u16 {
             self.chain_id.read()
+        }
+        fn governance_chain_id(self: @ContractState) -> u16 {
+            self.governance_chain_id.read()
+        }
+        fn governance_contract(self: @ContractState) -> u256 {
+            self.governance_contract.read()
         }
 
         fn submit_new_guardian_set(ref self: ContractState, encoded_vm: ByteArray) {

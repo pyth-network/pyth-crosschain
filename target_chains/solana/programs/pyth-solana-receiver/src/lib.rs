@@ -7,10 +7,16 @@ use {
             Config,
             DataSource,
         },
+        pda::{
+            CONFIG_SEED,
+            TREASURY_SEED,
+        },
         price_update::{
             PriceUpdateV2,
             VerificationLevel,
         },
+        PostUpdateAtomicParams,
+        PostUpdateParams,
     },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
@@ -250,9 +256,6 @@ pub mod pyth_solana_receiver {
     }
 }
 
-pub const CONFIG_SEED: &str = "config";
-pub const TREASURY_SEED: &str = "treasury";
-
 #[derive(Accounts)]
 #[instruction(initial_config : Config)]
 pub struct Initialize<'info> {
@@ -335,19 +338,6 @@ pub struct ReclaimRent<'info> {
     pub payer:                Signer<'info>,
     #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
-}
-
-#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct PostUpdateAtomicParams {
-    pub vaa:                 Vec<u8>,
-    pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id:         u8,
-}
-
-#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct PostUpdateParams {
-    pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id:         u8,
 }
 
 fn deserialize_guardian_set_checked(

@@ -12,7 +12,7 @@ import {
   EvmWormholeContract,
 } from "@pythnetwork/contract-manager";
 import Web3 from "web3";
-import { CHAINS } from "xc_admin_common";
+import { CHAINS } from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
 
 const { getDefaultConfig } = require("./contractManagerConfig");

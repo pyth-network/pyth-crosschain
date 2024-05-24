@@ -14,7 +14,7 @@ import {
   UpgradeContract256Bit,
   WormholeMultisigInstruction,
   getProgramName,
-} from 'xc_admin_common'
+} from '@pythnetwork/xc-admin-common'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import CopyText from '../common/CopyText'
 import { ParsedAccountPubkeyRow, SignerTag, WritableTag } from './AccountUtils'

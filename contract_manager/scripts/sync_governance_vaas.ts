@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src/store";
 import { SubmittedWormholeMessage, Vault } from "../src/governance";
 import { parseVaa } from "@certusone/wormhole-sdk";
-import { decodeGovernancePayload } from "xc_admin_common";
+import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
 import { toPrivateKey } from "../src";
 
 const parser = yargs(hideBin(process.argv))

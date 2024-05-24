@@ -30,7 +30,7 @@ import {
   mapKey,
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));

@@ -1,5 +1,5 @@
 import { Chain, SuiChain } from "../chains";
-import { DataSource } from "xc_admin_common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
