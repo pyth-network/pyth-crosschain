@@ -153,6 +153,10 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub confirmed_block_status: BlockStatus,
 
+    /// Use the legacy transaction format (for networks without EIP 1559)
+    #[serde(default)]
+    pub legacy_tx: bool,
+
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 }

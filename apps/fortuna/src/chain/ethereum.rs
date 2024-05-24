@@ -102,15 +102,10 @@ impl SignablePythContract {
     ) -> Result<SignablePythContract> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
-        let eip1559_supported = match provider.estimate_eip1559_fees(None).await {
-            Ok((max_fee, max_priority_fee)) => !max_fee.is_zero() && !max_priority_fee.is_zero(),
-            Err(_) => false,
-        };
         let gas_oracle = EthProviderOracle::new(provider.clone());
         let transformer = LegacyTxTransformer {
-            use_legacy_tx: !eip1559_supported,
+            use_legacy_tx: chain_config.legacy_tx,
         };
-
         let wallet__ = private_key
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
