@@ -14,7 +14,7 @@ Fortuna uses Cargo for building and dependency management.
 Simply run `cargo build` and `cargo test` to build and test the project.
 
 ## Command-Line Interface
-   
+
 The Fortuna binary has a command-line interface to perform useful operations on the contract, such as
 registering a new randomness provider, or drawing a random value. To see the available commands, simply run `cargo run`.
 
@@ -27,7 +27,7 @@ To start an instance of the webserver for local testing, you first need to perfo
 1. Run `cargo run -- setup-provider` to register a randomness provider for this service. This command
    will update the on-chain contracts such that the configured provider key is a randomness provider,
    and its on-chain configuration matches `config.yaml`.
-   
+
 Once you've completed the setup, simply run the following command to start the service:
 
 ```bash

@@ -1,44 +1,44 @@
 chains:
-    lightlink_pegasus:
-        geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
-        contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
+  lightlink_pegasus:
+    geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
+    contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
 
-        # Keeper configuration for the chain
-        reveal_delay_blocks: 0
-        gas_limit: 500000
+    # Keeper configuration for the chain
+    reveal_delay_blocks: 0
+    gas_limit: 500000
 
-        # Provider configuration
-        fee: 1500000000000000
-        # Historical commitments -- delete this block for local development purposes
-        commitments:
-            # prettier-ignore
-            - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
+    # Provider configuration
+    fee: 1500000000000000
+    # Historical commitments -- delete this block for local development purposes
+    commitments:
+      # prettier-ignore
+      - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
               chain_length: 10000
               original_commitment_sequence_number: 104
 provider:
-    uri: http://localhost:8080/
-    chain_length: 100000
+  uri: http://localhost:8080/
+  chain_length: 100000
 
-    # An ethereum wallet address and private key. Generate with `cast wallet new`
-    address: 0xADDRESS
-    private_key:
-        # For local development, you can hardcode the private key here
-        value: 0xabcd
-        # For production, you can store the private key in a file.
-        # file: provider-key.txt
-    # A 32 byte random value in hexadecimal
-    # Generate with `openssl rand -hex 32`
-    secret:
-        # For local development, you can hardcode the value here
-        value: abcd
-        # For production, you can store the private key in a file.
-        # file: secret.txt
+  # An ethereum wallet address and private key. Generate with `cast wallet new`
+  address: 0xADDRESS
+  private_key:
+    # For local development, you can hardcode the private key here
+    value: 0xabcd
+    # For production, you can store the private key in a file.
+    # file: provider-key.txt
+  # A 32 byte random value in hexadecimal
+  # Generate with `openssl rand -hex 32`
+  secret:
+    # For local development, you can hardcode the value here
+    value: abcd
+    # For production, you can store the private key in a file.
+    # file: secret.txt
 keeper:
-    # An ethereum wallet address and private key for running the keeper service.
-    # This does not have to be the same key as the provider's key above.
-    # Generate with `cast wallet new`
-    private_key:
-        # For local development, you can hardcode the private key here
-        value: 0xabcd
-        # For production, you can store the private key in a file.
-        # file: keeper-key.txt
+  # An ethereum wallet address and private key for running the keeper service.
+  # This does not have to be the same key as the provider's key above.
+  # Generate with `cast wallet new`
+  private_key:
+    # For local development, you can hardcode the private key here
+    value: 0xabcd
+    # For production, you can store the private key in a file.
+    # file: keeper-key.txt
