@@ -76,3 +76,16 @@ impl ErrorIntoFelt252 of Into<ParseAndVerifyVmError, felt252> {
         }
     }
 }
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GetGuardianSetError {
+    InvalidIndex,
+}
+
+impl GetGuardianSetErrorIntoFelt252 of Into<GetGuardianSetError, felt252> {
+    fn into(self: GetGuardianSetError) -> felt252 {
+        match self {
+            GetGuardianSetError::InvalidIndex => 'invalid index',
+        }
+    }
+}
