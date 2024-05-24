@@ -36,7 +36,8 @@ provider:
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
   # This does not have to be the same key as the provider's key above.
-  # Generate with `cast wallet new`
+  # Generate with `cast wallet new`.
+  # The keeper private key can be omitted to run the webservice without the keeper.
   private_key:
     # For local development, you can hardcode the private key here
     value: 0xabcd

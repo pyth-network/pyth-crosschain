@@ -189,15 +189,16 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
-    let keeper_private_key = config.keeper.private_key.load()?.ok_or(anyhow!(
-        "Please specify a keeper private key in the config file"
-    ))?;
-    spawn(run_keeper(
-        chains.clone(),
-        config.clone(),
-        keeper_private_key,
-        metrics_registry.clone(),
-    ));
+    if let Some(keeper_private_key) = config.keeper.private_key.load()? {
+        spawn(run_keeper(
+            chains.clone(),
+            config.clone(),
+            keeper_private_key,
+            metrics_registry.clone(),
+        ));
+    } else {
+        tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
+    }
 
     // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
     spawn(track_block_timestamp_lag(config, metrics_registry.clone()));
@@ -239,7 +240,7 @@ async fn setup_chain_state(
             .original_commitment_sequence_number
             >= provider_info.original_commitment_sequence_number
     {
-        return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id).into());
+        return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id));
     }
 
     provider_commitments.push(Commitment {

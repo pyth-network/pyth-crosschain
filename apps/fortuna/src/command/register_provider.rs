@@ -50,13 +50,9 @@ pub async fn register_provider_from_config(
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<()> {
-    let private_key_string = provider_config
-        .private_key
-        .load()?
-        .ok_or(anyhow!(
-            "Please specify a provider private key in the config"
-        ))?
-        .clone();
+    let private_key_string = provider_config.private_key.load()?.ok_or(anyhow!(
+        "Please specify a provider private key in the config"
+    ))?;
 
     // Initialize a Provider to interface with the EVM contract.
     let contract =
