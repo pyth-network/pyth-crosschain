@@ -10,7 +10,7 @@ import {
   DataSource,
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import Web3 from "web3";
 import {
@@ -52,7 +52,7 @@ export abstract class Chain extends Storable {
     if (toChainId(this.wormholeChainName) === undefined)
       throw new Error(
         `Invalid chain name ${wormholeChainName}.
-        Try rebuilding xc_admin_common: npx lerna run build --scope xc_admin_common`
+        Try rebuilding @pythnetwork/xc-admin-common: npx lerna run build --scope @pythnetwork/xc-admin-common`
       );
   }
 

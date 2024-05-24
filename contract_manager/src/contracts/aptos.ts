@@ -1,7 +1,7 @@
 import { PriceFeedContract, PriceFeed, PrivateKey, TxResult } from "../base";
 import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
-import { DataSource } from "xc_admin_common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { TokenQty } from "../token";
 

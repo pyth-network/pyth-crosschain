@@ -1,5 +1,5 @@
 {
-  "name": "xc_admin_common",
+  "name": "@pythnetwork/xc-admin-common",
   "version": "0.0.0",
   "description": "",
   "private": "true",

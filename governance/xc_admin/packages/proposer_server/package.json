@@ -26,6 +26,6 @@
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
     "ts-node": "^10.9.1",
-    "xc_admin_common": "*"
+    "@pythnetwork/xc-admin-common": "*"
   }
 }

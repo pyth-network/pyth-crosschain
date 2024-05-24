@@ -9,7 +9,7 @@ import {
   Store,
   toPrivateKey,
 } from "@pythnetwork/contract-manager";
-import { CHAINS } from "xc_admin_common";
+import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { DeploymentType, getContractBytesDict } from "./helper";
 
 const argv = yargs(hideBin(process.argv))

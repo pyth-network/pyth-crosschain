@@ -8,7 +8,7 @@ import {
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Coin } from "@cosmjs/stargate";
-import { DataSource } from "xc_admin_common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import {
   PriceFeedContract,

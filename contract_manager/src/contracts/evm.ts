@@ -3,7 +3,7 @@ import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
-import { DataSource, EvmExecute } from "xc_admin_common";
+import { DataSource, EvmExecute } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { TokenQty } from "../token";
 

@@ -1,5 +1,5 @@
 const elliptic = require("elliptic");
-const governance = require("xc_admin_common");
+const governance = require("@pythnetwork/xc-admin-common");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const {
@@ -8,7 +8,7 @@ const {
   time,
 } = require("@openzeppelin/test-helpers");
 const { assert, expect } = require("chai");
-const { EvmSetWormholeAddress } = require("xc_admin_common");
+const { EvmSetWormholeAddress } = require("@pythnetwork/xc-admin-common");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Setup = artifacts.require("Setup");

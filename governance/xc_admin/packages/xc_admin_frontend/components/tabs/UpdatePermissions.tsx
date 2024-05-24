@@ -23,7 +23,7 @@ import {
   mapKey,
   UPGRADE_MULTISIG,
   MultisigVault,
-} from 'xc_admin_common'
+} from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'

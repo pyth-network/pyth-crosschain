@@ -35,7 +35,7 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   getMultisigCluster,
   getProposalInstructions,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 
 import {
   pythSolanaReceiverIdl,
@@ -93,7 +93,7 @@ const multisigCommand = (name: string, description: string) =>
     )
     .requiredOption(
       "-v, --vault <pubkey>",
-      "multisig address, all the addresses can be found in xc_admin_common/src/multisig.ts"
+      "multisig address, all the addresses can be found in @pythnetwork/xc-admin-common/src/multisig.ts"
     )
     .option(
       "-lda, --ledger-derivation-account <number>",

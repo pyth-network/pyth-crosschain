@@ -12,7 +12,7 @@ import {
   getMultisigCluster,
   MultisigVault,
   PRICE_FEED_MULTISIG,
-} from "xc_admin_common";
+} from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
 import { getPythClusterApiUrl, PythCluster } from "@pythnetwork/client";
 import SquadsMesh from "@sqds/mesh";
