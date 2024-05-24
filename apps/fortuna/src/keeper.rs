@@ -223,7 +223,7 @@ pub async fn run_keeper_threads(
             .await
             .expect("Chain config should be valid"),
     );
-    let keeper_address = contract.client().inner().inner().inner().signer().address();
+    let keeper_address = contract.wallet().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashMap::<u64, RequestState>::new()));
 
@@ -426,14 +426,7 @@ pub async fn process_event(
                                     .total_gas_spent
                                     .get_or_create(&AccountLabel {
                                         chain_id: chain_config.id.clone(),
-                                        address:  contract
-                                            .client()
-                                            .inner()
-                                            .inner()
-                                            .inner()
-                                            .signer()
-                                            .address()
-                                            .to_string(),
+                                        address:  contract.wallet().address().to_string(),
                                     })
                                     .inc_by(gas_used);
                             }

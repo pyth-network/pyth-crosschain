@@ -32,6 +32,7 @@ pub use {
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
     setup_provider::SetupProviderOptions,
+    withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -41,6 +42,7 @@ mod register_provider;
 mod request_randomness;
 mod run;
 mod setup_provider;
+mod withdraw_fees;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
@@ -73,6 +75,9 @@ pub enum Options {
 
     /// Get the status of a pending request for a random number.
     GetRequest(GetRequestOptions),
+
+    /// Withdraw any of the provider's accumulated fees from the contract.
+    WithdrawFees(WithdrawFeesOptions),
 }
 
 #[derive(Args, Clone, Debug)]

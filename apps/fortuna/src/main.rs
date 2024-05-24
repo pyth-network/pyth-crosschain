@@ -43,5 +43,6 @@ async fn main() -> Result<()> {
         config::Options::SetupProvider(opts) => command::setup_provider(&opts).await,
         config::Options::RequestRandomness(opts) => command::request_randomness(&opts).await,
         config::Options::Inspect(opts) => command::inspect(&opts).await,
+        config::Options::WithdrawFees(opts) => command::withdraw_fees(&opts).await,
     }
 }

@@ -124,6 +124,11 @@ impl SignablePythContract {
         ))
     }
 
+    /// Get the wallet that signs transactions sent to this contract.
+    pub fn wallet(&self) -> LocalWallet {
+        self.client().inner().inner().inner().signer().clone()
+    }
+
     /// Submit a request for a random number to the contract.
     ///
     /// This method is a version of the autogenned `request` method that parses the emitted logs
