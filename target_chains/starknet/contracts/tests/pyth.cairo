@@ -3,7 +3,7 @@ use snforge_std::{
     EventFetcher, event_name_hash, Event
 };
 use pyth::pyth::{
-    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdateEvent,
+    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
     WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
@@ -42,14 +42,14 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
 
 fn decode_event(mut event: Event) -> PythEvent {
     let key0: felt252 = event.keys.pop();
-    let output = if key0 == event_name_hash('PriceFeedUpdate') {
-        let event = PriceFeedUpdateEvent {
+    let output = if key0 == event_name_hash('PriceFeedUpdated') {
+        let event = PriceFeedUpdated {
             price_id: event.keys.pop_u256(),
             publish_time: event.data.pop(),
             price: event.data.pop(),
             conf: event.data.pop(),
         };
-        PythEvent::PriceFeedUpdate(event)
+        PythEvent::PriceFeedUpdated(event)
     } else if key0 == event_name_hash('FeeSet') {
         let event = FeeSet { old_fee: event.data.pop_u256(), new_fee: event.data.pop_u256(), };
         PythEvent::FeeSet(event)
@@ -104,13 +104,13 @@ fn update_price_feeds_works() {
     let (from, event) = spy.events.pop_front().unwrap();
     assert!(from == pyth.contract_address);
     let event = decode_event(event);
-    let expected = PriceFeedUpdateEvent {
+    let expected = PriceFeedUpdated {
         price_id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
         publish_time: 1712589206,
         price: 7192002930010,
         conf: 3596501465,
     };
-    assert!(event == PythEvent::PriceFeedUpdate(expected));
+    assert!(event == PythEvent::PriceFeedUpdated(expected));
 
     let last_price = pyth
         .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)

@@ -6,7 +6,7 @@ mod governance;
 mod fake_upgrades;
 
 pub use pyth::{
-    Event, PriceFeedUpdateEvent, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
+    Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
     DataSourcesSet, FeeSet,
 };
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
@@ -38,7 +38,7 @@ mod pyth {
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
-        PriceFeedUpdate: PriceFeedUpdateEvent,
+        PriceFeedUpdated: PriceFeedUpdated,
         FeeSet: FeeSet,
         DataSourcesSet: DataSourcesSet,
         WormholeAddressSet: WormholeAddressSet,
@@ -47,7 +47,7 @@ mod pyth {
     }
 
     #[derive(Drop, PartialEq, starknet::Event)]
-    pub struct PriceFeedUpdateEvent {
+    pub struct PriceFeedUpdated {
         #[key]
         pub price_id: u256,
         pub publish_time: u64,
@@ -313,7 +313,7 @@ mod pyth {
                 };
                 self.latest_price_info.write(message.price_id, info);
 
-                let event = PriceFeedUpdateEvent {
+                let event = PriceFeedUpdated {
                     price_id: message.price_id,
                     publish_time: message.publish_time,
                     price: message.price,
