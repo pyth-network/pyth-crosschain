@@ -86,32 +86,11 @@ pub struct ConfigOptions {
     pub config: String,
 }
 
-#[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Randomness Options")]
-#[group(id = "Randomness")]
-pub struct RandomnessOptions {
-    /// Path to file containing a secret which is a 64-char hex string.
-    /// The secret is used for generating new hash chains
-    #[arg(long = "secret")]
-    #[arg(env = "FORTUNA_SECRET")]
-    pub secret_file: String,
-
-    /// The length of the hash chain to generate.
-    #[arg(long = "chain-length")]
-    #[arg(env = "FORTUNA_CHAIN_LENGTH")]
-    #[arg(default_value = "100000")]
-    pub chain_length: u64,
-}
-
-impl RandomnessOptions {
-    pub fn load_secret(&self) -> Result<String> {
-        return Ok((fs::read_to_string(&self.secret_file))?);
-    }
-}
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains: HashMap<ChainId, EthereumConfig>,
+    pub chains:   HashMap<ChainId, EthereumConfig>,
+    pub provider: ProviderConfig,
+    pub keeper:   KeeperConfig,
 }
 
 impl Config {
@@ -159,65 +138,86 @@ pub struct EthereumConfig {
 
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
+
+    /// How much the provider charges for a request on this chain.
+    #[serde(default)]
+    pub fee: u128,
+
+    /// Historical commitments made by the provider.
+    pub commitments: Option<Vec<Commitment>>,
 }
 
-#[derive(Args, Clone, Debug)]
-#[command(next_help_heading = "Provider Config Options")]
-#[group(id = "ProviderConfig")]
-pub struct ProviderConfigOptions {
-    #[arg(long = "provider-config")]
-    #[arg(env = "FORTUNA_PROVIDER_CONFIG")]
-    pub provider_config: String,
-}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ProviderConfig {
-    pub chains: HashMap<ChainId, ProviderChainConfig>,
-}
-
-impl ProviderConfig {
-    pub fn load(path: &str) -> Result<ProviderConfig> {
-        // Open and read the YAML file
-        let yaml_content = fs::read_to_string(path)?;
-        let config: ProviderConfig = serde_yaml::from_str(&yaml_content)?;
-        Ok(config)
-    }
-
-    /// Get the provider chain config. The method returns an Option for ProviderChainConfig.
-    /// We may not have past any commitments for a chain. For example, for a new chain
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<ProviderChainConfig> {
-        self.chains.get(chain_id).map(|x| x.clone()).ok_or(
-            anyhow!(
-                "Could not find chain id {} in provider configuration",
-                &chain_id
-            )
-            .into(),
-        )
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ProviderChainConfig {
-    commitments: Option<Vec<Commitment>>,
-    pub fee:     u128,
-}
-
-impl ProviderChainConfig {
-    /// Returns a clone of the commitments in the sorted order.
-    /// `HashChainState`  requires offsets to be in order.
-    pub fn get_sorted_commitments(&self) -> Vec<Commitment> {
-        let mut commitments = self.commitments.clone().unwrap_or(Vec::new());
-        commitments.sort_by(|c1, c2| {
-            c1.original_commitment_sequence_number
-                .cmp(&c2.original_commitment_sequence_number)
-        });
-        commitments
-    }
-}
-
+/// A commitment that the provider used to generate random numbers at some point in the past.
+/// These historical commitments need to be stored in the configuration to support transition points where
+/// the commitment changes. In theory, this information is stored on the blockchain, but unfortunately it
+/// is hard to retrieve from there.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Commitment {
     pub seed:                                [u8; 32],
     pub chain_length:                        u64,
     pub original_commitment_sequence_number: u64,
+}
+
+/// Configuration values that are common to a single provider (and shared across chains).
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ProviderConfig {
+    /// The URI where clients can retrieve random values from this provider,
+    /// i.e., wherever fortuna for this provider will be hosted.
+    pub uri: String,
+
+    /// The public key of the provider whose requests the server will respond to.
+    pub address: Address,
+
+    /// The provider's private key, which is required to register, update the commitment,
+    /// or claim fees. This argument *will not* be loaded for commands that do not need
+    /// the private key (e.g., running the server).
+    pub private_key: SecretString,
+
+    /// The provider's secret which is a 64-char hex string.
+    /// The secret is used for generating new hash chains
+    pub secret: SecretString,
+
+    /// The length of the hash chain to generate.
+    pub chain_length: u64,
+}
+
+/// Configuration values for the keeper service that are shared across chains.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeeperConfig {
+    /// If provided, the keeper will run alongside the Fortuna API service.
+    /// The private key is a 20-byte (40 char) hex encoded Ethereum private key.
+    /// This key is required to submit transactions for entropy callback requests.
+    /// This key *does not need to be a registered provider*. In particular, production deployments
+    /// should ensure this is a different key in order to reduce the severity of security breaches.
+    pub private_key: SecretString,
+}
+
+// A secret is a string that can be provided either as a literal in the config,
+// or in a separate file. (The separate file option is useful for 1password mounting in production.)
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SecretString {
+    pub value: Option<String>,
+
+    // The name of a file containing the string to read. Note that the file contents is trimmed
+    // of leading/trailing whitespace when read.
+    pub file: Option<String>,
+}
+
+impl SecretString {
+    pub fn load(&self) -> Result<Option<String>> {
+        match &self.value {
+            Some(v) => return Ok(Some(v.clone())),
+            _ => {}
+        }
+
+        match &self.file {
+            Some(v) => {
+                return Ok(Some(fs::read_to_string(v)?.trim().to_string()));
+            }
+            _ => {}
+        }
+
+        Ok(None)
+    }
 }

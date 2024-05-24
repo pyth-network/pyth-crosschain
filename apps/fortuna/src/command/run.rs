@@ -11,7 +11,6 @@ use {
             Commitment,
             Config,
             EthereumConfig,
-            ProviderConfig,
             RunOptions,
         },
         keeper,
@@ -32,7 +31,10 @@ use {
             Http,
             Provider,
         },
-        types::BlockNumber,
+        types::{
+            Address,
+            BlockNumber,
+        },
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
@@ -150,12 +152,15 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let secret = opts.randomness.load_secret()?;
+    let secret = config.provider.secret.load()?.ok_or(anyhow!(
+        "Please specify a provider secret in the config file."
+    ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
-        let state = setup_chain_state(&opts, &secret, chain_id, chain_config).await;
+        let state =
+            setup_chain_state(&config.provider.address, &secret, chain_id, chain_config).await;
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
@@ -184,13 +189,15 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
 
-    if let Some(keeper_private_key) = opts.load_keeper_private_key()? {
+    if let Some(keeper_private_key) = config.keeper.private_key.load()? {
         spawn(run_keeper(
             chains.clone(),
             config.clone(),
             keeper_private_key,
             metrics_registry.clone(),
         ));
+    } else {
+        tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
 
     // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
@@ -202,16 +209,19 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 }
 
 async fn setup_chain_state(
-    opts: &&RunOptions,
+    provider: &Address,
     secret: &String,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
-    let provider_config = ProviderConfig::load(&opts.provider_config.provider_config)?;
     let contract = Arc::new(PythContract::from_config(&chain_config)?);
-    let provider_chain_config = provider_config.get_chain_config(chain_id)?;
-    let mut provider_commitments = provider_chain_config.get_sorted_commitments();
-    let provider_info = contract.get_provider_info(opts.provider).call().await?;
+    let mut provider_commitments = chain_config.commitments.clone().unwrap_or(Vec::new());
+    provider_commitments.sort_by(|c1, c2| {
+        c1.original_commitment_sequence_number
+            .cmp(&c2.original_commitment_sequence_number)
+    });
+
+    let provider_info = contract.get_provider_info(*provider).call().await?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
     )
@@ -222,6 +232,16 @@ async fn setup_chain_state(
             e
         )
     })?;
+
+    let last_prior_commitment = provider_commitments.last();
+    if last_prior_commitment.is_some()
+        && last_prior_commitment
+            .unwrap()
+            .original_commitment_sequence_number
+            >= provider_info.original_commitment_sequence_number
+    {
+        return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id));
+    }
 
     provider_commitments.push(Commitment {
         seed:                                latest_metadata.seed,
@@ -243,7 +263,7 @@ async fn setup_chain_state(
         let pebble_hash_chain = PebbleHashChain::from_config(
             &secret,
             &chain_id,
-            &opts.provider,
+            &provider,
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
@@ -268,7 +288,7 @@ async fn setup_chain_state(
         id: chain_id.clone(),
         state: Arc::new(chain_state),
         contract,
-        provider_address: opts.provider,
+        provider_address: provider.clone(),
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
         confirmed_block_status: chain_config.confirmed_block_status,
     };
