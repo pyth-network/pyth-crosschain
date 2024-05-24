@@ -64,11 +64,10 @@ fn decode_event(mut event: Event) -> PythEvent {
 
 #[test]
 fn update_price_feeds_works() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_mainnet_guardians();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
     fee_contract.approve(pyth.contract_address, 10000);
@@ -112,11 +111,10 @@ fn update_price_feeds_works() {
 
 #[test]
 fn test_governance_set_fee_works() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -151,11 +149,10 @@ fn test_governance_set_fee_works() {
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_rejects_corrupted_governance_instruction(pos: usize, random1: usize, random2: usize) {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     let input = corrupted_vm(data::pyth_set_fee(), pos, random1, random2);
     pyth.execute_governance_instruction(input);
@@ -163,11 +160,10 @@ fn test_rejects_corrupted_governance_instruction(pos: usize, random1: usize, ran
 
 #[test]
 fn test_governance_set_data_sources_works() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -195,11 +191,10 @@ fn test_governance_set_data_sources_works() {
 #[test]
 #[should_panic(expected: ('invalid update data source',))]
 fn test_rejects_update_after_data_source_changed() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -233,10 +228,9 @@ fn test_governance_set_wormhole_works() {
         @wormhole_class, wormhole_address
     );
 
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -286,10 +280,9 @@ fn test_governance_set_wormhole_works() {
 #[should_panic(expected: ('invalid guardian set index',))]
 fn test_rejects_price_update_without_setting_wormhole() {
     let wormhole = super::wormhole::deploy_with_test_guardian();
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -321,10 +314,9 @@ fn test_rejects_set_wormhole_without_deploying() {
         @wormhole_class, wormhole_address
     );
 
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
     pyth.execute_governance_instruction(data::pyth_set_wormhole());
 }
 
@@ -338,10 +330,9 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
         @wormhole_class, wormhole_address
     );
 
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     // Address used in the governance instruction
     let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
@@ -360,11 +351,10 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
 
 #[test]
 fn test_governance_transfer_works() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
@@ -388,11 +378,10 @@ fn test_governance_transfer_works() {
 #[test]
 #[should_panic(expected: ('invalid governance data source',))]
 fn test_set_fee_rejects_wrong_emitter() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
 }
@@ -400,11 +389,10 @@ fn test_set_fee_rejects_wrong_emitter() {
 #[test]
 #[should_panic(expected: ('invalid governance data source',))]
 fn test_rejects_old_emitter_after_transfer() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     pyth.execute_governance_instruction(data::pyth_auth_transfer());
     pyth.execute_governance_instruction(data::pyth_set_fee());
@@ -412,11 +400,10 @@ fn test_rejects_old_emitter_after_transfer() {
 
 #[test]
 fn test_upgrade_works() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     let class = declare("pyth_fake_upgrade1");
 
@@ -440,11 +427,10 @@ fn test_upgrade_works() {
 #[should_panic]
 #[ignore] // TODO: unignore when snforge is updated
 fn test_upgrade_rejects_invalid_hash() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     pyth.execute_governance_instruction(data::pyth_upgrade_invalid_hash());
 }
@@ -453,11 +439,10 @@ fn test_upgrade_rejects_invalid_hash() {
 #[should_panic]
 #[ignore] // TODO: unignore when snforge is updated
 fn test_upgrade_rejects_not_pyth() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     declare("pyth_fake_upgrade_not_pyth");
     pyth.execute_governance_instruction(data::pyth_upgrade_not_pyth());
@@ -466,11 +451,10 @@ fn test_upgrade_rejects_not_pyth() {
 #[test]
 #[should_panic(expected: ('invalid governance message',))]
 fn test_upgrade_rejects_wrong_magic() {
-    let owner = 'owner'.try_into().unwrap();
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(owner, wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     declare("pyth_fake_upgrade_wrong_magic");
     pyth.execute_governance_instruction(data::pyth_upgrade_wrong_magic());
@@ -478,10 +462,9 @@ fn test_upgrade_rejects_wrong_magic() {
 
 
 fn deploy_default(
-    owner: ContractAddress, wormhole_address: ContractAddress, fee_contract_address: ContractAddress
+    wormhole_address: ContractAddress, fee_contract_address: ContractAddress
 ) -> IPythDispatcher {
     deploy(
-        owner,
         wormhole_address,
         fee_contract_address,
         1000,
@@ -498,7 +481,6 @@ fn deploy_default(
 }
 
 fn deploy(
-    owner: ContractAddress,
     wormhole_address: ContractAddress,
     fee_contract_address: ContractAddress,
     single_update_fee: u256,
@@ -508,7 +490,7 @@ fn deploy(
     governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
-    (owner, wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
+    (wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
     (data_sources, governance_emitter_chain_id).serialize(ref args);
     (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");

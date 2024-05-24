@@ -75,7 +75,6 @@ mod pyth {
         wormhole_address: ContractAddress,
         fee_contract_address: ContractAddress,
         single_update_fee: u256,
-        owner: ContractAddress,
         data_sources: LegacyMap<usize, DataSource>,
         num_data_sources: usize,
         // For fast validation.
@@ -89,9 +88,6 @@ mod pyth {
     }
 
     /// Initializes the Pyth contract.
-    ///
-    /// `owner` is the address that will be allowed to call governance methods (it's a placeholder
-    /// until we implement governance properly).
     ///
     /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
     ///
@@ -107,7 +103,6 @@ mod pyth {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        owner: ContractAddress,
         wormhole_address: ContractAddress,
         fee_contract_address: ContractAddress,
         single_update_fee: u256,
@@ -116,7 +111,6 @@ mod pyth {
         governance_emitter_address: u256,
         governance_initial_sequence: u64,
     ) {
-        self.owner.write(wormhole_address);
         self.wormhole_address.write(wormhole_address);
         self.fee_contract_address.write(fee_contract_address);
         self.single_update_fee.write(single_update_fee);
@@ -164,20 +158,6 @@ mod pyth {
                 publish_time: info.publish_time,
             };
             Result::Ok(price)
-        }
-
-        fn set_data_sources(ref self: ContractState, sources: Array<DataSource>) {
-            if self.owner.read() != get_caller_address() {
-                panic_with_felt252(GovernanceActionError::AccessDenied.into());
-            }
-            self.write_data_sources(sources);
-        }
-
-        fn set_fee(ref self: ContractState, single_update_fee: u256) {
-            if self.owner.read() != get_caller_address() {
-                panic_with_felt252(GovernanceActionError::AccessDenied.into());
-            }
-            self.single_update_fee.write(single_update_fee);
         }
 
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
