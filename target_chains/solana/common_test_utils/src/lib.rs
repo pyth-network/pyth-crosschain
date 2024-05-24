@@ -4,17 +4,17 @@ use {
     program_simulator::ProgramSimulator,
     pyth_solana_receiver::{
         instruction::Initialize,
-        sdk::{
-            get_config_address,
-            get_guardian_set_address,
-            get_treasury_address,
-        },
+        sdk::get_guardian_set_address,
         ID,
     },
     pyth_solana_receiver_sdk::{
         config::{
             Config,
             DataSource,
+        },
+        pda::{
+            get_config_address,
+            get_treasury_address,
         },
         PYTH_PUSH_ORACLE_ID,
     },

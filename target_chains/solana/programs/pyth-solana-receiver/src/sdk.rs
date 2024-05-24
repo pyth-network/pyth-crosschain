@@ -2,20 +2,24 @@ use {
     crate::{
         accounts,
         instruction,
-        PostUpdateAtomicParams,
-        PostUpdateParams,
-        CONFIG_SEED,
         ID,
-        TREASURY_SEED,
     },
     anchor_lang::{
         prelude::*,
         system_program,
         InstructionData,
     },
-    pyth_solana_receiver_sdk::config::{
-        Config,
-        DataSource,
+    pyth_solana_receiver_sdk::{
+        config::{
+            Config,
+            DataSource,
+        },
+        pda::{
+            get_config_address,
+            get_treasury_address,
+        },
+        PostUpdateAtomicParams,
+        PostUpdateParams,
     },
     pythnet_sdk::wire::v1::{
         AccumulatorUpdateData,
@@ -296,17 +300,6 @@ impl instruction::ReclaimRent {
             data:       instruction::ReclaimRent {}.data(),
         }
     }
-}
-
-
-// There is one treasury for each u8 value
-// This is to load balance the write load
-pub fn get_treasury_address(treasury_id: u8) -> Pubkey {
-    Pubkey::find_program_address(&[TREASURY_SEED.as_ref(), &[treasury_id]], &ID).0
-}
-
-pub fn get_config_address() -> Pubkey {
-    Pubkey::find_program_address(&[CONFIG_SEED.as_ref()], &ID).0
 }
 
 pub fn get_guardian_set_address(wormhole_address: Pubkey, guardian_set_index: u32) -> Pubkey {

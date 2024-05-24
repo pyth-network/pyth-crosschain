@@ -16,11 +16,13 @@ use {
             SetMinimumSignatures,
             SetWormholeAddress,
         },
-        sdk::get_config_address,
     },
-    pyth_solana_receiver_sdk::config::{
-        Config,
-        DataSource,
+    pyth_solana_receiver_sdk::{
+        config::{
+            Config,
+            DataSource,
+        },
+        pda::get_config_address,
     },
     pythnet_sdk::test_utils::SECONDARY_DATA_SOURCE,
     solana_program::{
