@@ -82,17 +82,22 @@ pub async fn withdraw_fees_for_chain(
         "Please specify a provider private key in the config"
     ))?;
 
-    // Initialize a Provider to interface with the EVM contract.
     let contract =
         Arc::new(SignablePythContract::from_config(&chain_config, &private_key_string).await?);
-
     let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
     let wallet = contract.wallet();
-    let balance = provider.get_balance(wallet.address(), None).await?;
 
-    tracing::info!("Initial provider balance");
-    tracing::info!("Address: {:?}", wallet.address());
-    tracing::info!("Balance: {} wei", balance);
+    let balance = provider.get_balance(wallet.address(), None).await?;
+    tracing::info!("Initial balances");
+    tracing::info!(
+        "Provider Address: {:?} Balance: {} wei",
+        wallet.address(),
+        balance
+    );
+    if let Some(addr) = rebalance_to {
+        let keeper_balance = provider.get_balance(*addr, None).await?;
+        tracing::info!("Keeper Address: {:?} Balance: {} wei", addr, keeper_balance);
+    }
 
     tracing::info!("Fetching provider fees");
     let provider_info = contract
@@ -123,7 +128,6 @@ pub async fn withdraw_fees_for_chain(
             tracing::info!("Funding keeper wallet: ");
             let amount_to_transfer = ethers::types::U256::from(10); // balance - PROVIDER_THRESHOLD
 
-            // Prepare the transaction
             let transaction = TransactionRequest::new()
                 .from(wallet.address())
                 .to(*rebalance_address) // Replace with recipient's address
@@ -138,9 +142,18 @@ pub async fn withdraw_fees_for_chain(
         }
     }
 
-    tracing::info!("Final provider balance");
-    tracing::info!("Address: {:?}", wallet.address());
-    tracing::info!("Balance: {} wei", balance);
+    tracing::info!("Final balances");
+    let balance = provider.get_balance(wallet.address(), None).await?;
+    tracing::info!("Initial balances");
+    tracing::info!(
+        "Provider Address: {:?} Balance: {} wei",
+        wallet.address(),
+        balance
+    );
+    if let Some(addr) = rebalance_to {
+        let keeper_balance = provider.get_balance(*addr, None).await?;
+        tracing::info!("Keeper Address: {:?} Balance: {} wei", addr, keeper_balance);
+    }
 
     Ok(())
 }
