@@ -6,6 +6,7 @@ pub trait IPyth<T> {
     fn get_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn update_price_feeds(ref self: T, data: ByteArray);
+    fn get_update_fee(self: @T, data: ByteArray) -> u256;
     fn execute_governance_instruction(ref self: T, data: ByteArray);
     fn pyth_upgradable_magic(self: @T) -> u32;
 }

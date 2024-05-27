@@ -89,8 +89,11 @@ fn update_price_feeds_works() {
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
+    let fee = pyth.get_update_fee(data::good_update1());
+    assert!(fee == 1000);
+
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, 10000);
+    fee_contract.approve(pyth.contract_address, fee);
     stop_prank(CheatTarget::One(fee_contract.contract_address));
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
@@ -136,6 +139,9 @@ fn test_governance_set_fee_works() {
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
+    let fee1 = pyth.get_update_fee(data::test_price_update1());
+    assert!(fee1 == 1000);
+
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
     stop_prank(CheatTarget::One(fee_contract.contract_address));
@@ -163,6 +169,9 @@ fn test_governance_set_fee_works() {
     let event = decode_event(event);
     let expected = FeeSet { old_fee: 1000, new_fee: 4200, };
     assert!(event == PythEvent::FeeSet(expected));
+
+    let fee2 = pyth.get_update_fee(data::test_price_update2());
+    assert!(fee2 == 4200);
 
     start_prank(CheatTarget::One(pyth.contract_address), user);
     pyth.update_price_feeds(data::test_price_update2());

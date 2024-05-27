@@ -15,7 +15,7 @@ pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Pr
 #[starknet::contract]
 mod pyth {
     use super::price_update::{
-        PriceInfo, PriceFeedMessage, read_and_verify_message, read_header_and_wormhole_proof,
+        PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
         parse_wormhole_proof
     };
     use pyth::reader::{Reader, ReaderImpl};
@@ -177,7 +177,10 @@ mod pyth {
 
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             let mut reader = ReaderImpl::new(data);
-            let wormhole_proof = read_header_and_wormhole_proof(ref reader);
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            let wormhole_proof = reader.read_byte_array(wormhole_proof_size.into());
+
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(wormhole_proof);
 
@@ -215,6 +218,15 @@ mod pyth {
             if reader.len() != 0 {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
             }
+        }
+
+        fn get_update_fee(self: @ContractState, data: ByteArray) -> u256 {
+            let mut reader = ReaderImpl::new(data);
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            reader.skip(wormhole_proof_size.into());
+            let num_updates = reader.read_u8();
+            self.get_total_fee(num_updates)
         }
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
@@ -323,7 +335,7 @@ mod pyth {
             }
         }
 
-        fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+        fn get_total_fee(self: @ContractState, num_updates: u8) -> u256 {
             self.single_update_fee.read() * num_updates.into()
         }
 
