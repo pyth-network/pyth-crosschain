@@ -328,3 +328,9 @@
 - chain: polygon_amoy
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
+- chain: taiko_mainnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: sei_evm_mainnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract

@@ -307,3 +307,9 @@
 - chain: polygon_amoy
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: taiko_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: sei_evm_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
