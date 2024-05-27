@@ -12,6 +12,31 @@ impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
 }
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GetPriceNoOlderThanError {
+    PriceFeedNotFound,
+    StalePrice,
+}
+
+impl GetPriceNoOlderThanErrorIntoFelt252 of Into<GetPriceNoOlderThanError, felt252> {
+    fn into(self: GetPriceNoOlderThanError) -> felt252 {
+        match self {
+            GetPriceNoOlderThanError::PriceFeedNotFound => 'price feed not found',
+            GetPriceNoOlderThanError::StalePrice => 'stale price',
+        }
+    }
+}
+
+impl GetPriceUnsafeErrorIntoGetPriceNoOlderThanError of Into<
+    GetPriceUnsafeError, GetPriceNoOlderThanError
+> {
+    fn into(self: GetPriceUnsafeError) -> GetPriceNoOlderThanError {
+        match self {
+            GetPriceUnsafeError::PriceFeedNotFound => GetPriceNoOlderThanError::PriceFeedNotFound,
+        }
+    }
+}
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceActionError {
     AccessDenied,
     Wormhole: pyth::wormhole::ParseAndVerifyVmError,

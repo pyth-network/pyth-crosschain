@@ -1,11 +1,11 @@
 use snforge_std::{
     declare, ContractClassTrait, start_prank, stop_prank, CheatTarget, spy_events, SpyOn, EventSpy,
-    EventFetcher, event_name_hash, Event
+    EventFetcher, event_name_hash, Event, start_warp, stop_warp
 };
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
     WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
-    PriceFeedPublishTime,
+    PriceFeedPublishTime, GetPriceNoOlderThanError,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -185,6 +185,41 @@ fn test_update_if_necessary_works() {
     assert!(spy.events.len() == 2);
 
     stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+fn test_get_no_older_works() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
+    let err = pyth.get_price_no_older_than(price_id, 100).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+
+    start_warp(CheatTarget::One(pyth.contract_address), 1712589210);
+    let err = pyth.get_price_no_older_than(price_id, 3).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::StalePrice);
+
+    start_warp(CheatTarget::One(pyth.contract_address), 1712589208);
+    let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.publish_time == 1712589206);
+    assert!(val.price == 7192002930010);
+
+    start_warp(CheatTarget::One(pyth.contract_address), 1712589204);
+    let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.publish_time == 1712589206);
+    assert!(val.price == 7192002930010);
+
+    stop_warp(CheatTarget::One(pyth.contract_address));
 }
 
 #[test]

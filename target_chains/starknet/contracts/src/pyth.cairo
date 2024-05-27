@@ -9,7 +9,9 @@ pub use pyth::{
     Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
     DataSourcesSet, FeeSet,
 };
-pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
+pub use errors::{
+    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError
+};
 pub use interface::{
     IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime
 };
@@ -26,17 +28,18 @@ mod pyth {
     use core::panic_with_felt252;
     use core::starknet::{
         ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
-        get_contract_address,
+        get_contract_address, get_block_timestamp,
     };
     use core::starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
-        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime,
+        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime, GetPriceNoOlderThanError,
     };
     use super::governance;
     use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
+    use pyth::util::ResultMapErrInto;
 
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -146,6 +149,16 @@ mod pyth {
 
     #[abi(embed_v0)]
     impl PythImpl of super::IPyth<ContractState> {
+        fn get_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
+        }
+
         fn get_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
@@ -470,5 +483,15 @@ mod pyth {
             i += 1;
         };
         output
+    }
+
+    fn is_no_older_than(publish_time: u64, age: u64) -> bool {
+        let current = get_block_timestamp();
+        let actual_age = if current >= publish_time {
+            current - publish_time
+        } else {
+            0
+        };
+        actual_age <= age
     }
 }

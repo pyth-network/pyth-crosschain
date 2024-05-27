@@ -1,8 +1,11 @@
-use super::GetPriceUnsafeError;
+use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
 use pyth::byte_array::ByteArray;
 
 #[starknet::interface]
 pub trait IPyth<T> {
+    fn get_price_no_older_than(
+        self: @T, price_id: u256, age: u64
+    ) -> Result<Price, GetPriceNoOlderThanError>;
     fn get_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn update_price_feeds(ref self: T, data: ByteArray);
