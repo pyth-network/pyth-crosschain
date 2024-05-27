@@ -64,7 +64,7 @@ pub struct PriceFeedMessage {
     pub ema_conf: u64,
 }
 
-pub fn read_header_and_wormhole_proof(ref reader: Reader) -> ByteArray {
+pub fn read_and_verify_header(ref reader: Reader) {
     if reader.read_u32() != ACCUMULATOR_MAGIC {
         panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
     }
@@ -76,7 +76,7 @@ pub fn read_header_and_wormhole_proof(ref reader: Reader) -> ByteArray {
     }
 
     let trailing_header_size = reader.read_u8();
-    reader.skip(trailing_header_size);
+    reader.skip(trailing_header_size.into());
 
     let update_type: UpdateType = reader
         .read_u8()
@@ -86,9 +86,6 @@ pub fn read_header_and_wormhole_proof(ref reader: Reader) -> ByteArray {
     match update_type {
         UpdateType::WormholeMerkle => {}
     }
-
-    let wormhole_proof_size = reader.read_u16();
-    reader.read_byte_array(wormhole_proof_size.into())
 }
 
 pub fn parse_wormhole_proof(payload: ByteArray) -> u256 {
