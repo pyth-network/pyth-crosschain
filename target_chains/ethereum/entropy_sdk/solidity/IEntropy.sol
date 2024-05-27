@@ -22,6 +22,8 @@ interface IEntropy is EntropyEvents {
     // balance of fees in the contract).
     function withdraw(uint128 amount) external;
 
+    function withdrawAsManager(address provider, uint128 amount) external;
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -102,7 +104,16 @@ interface IEntropy is EntropyEvents {
 
     function setProviderFee(uint128 newFeeInWei) external;
 
+    function setFeeAsManager(address provider, uint128 newFeeInWei) external;
+
     function setProviderUri(bytes calldata newUri) external;
+
+    function setManager(address adminAddress, bool isAdmin) external;
+
+    function isManager(
+        address provider,
+        address managerAddress
+    ) external view returns (bool isMgr);
 
     function constructUserCommitment(
         bytes32 userRandomness

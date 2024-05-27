@@ -32,6 +32,7 @@ contract EntropyStructs {
         // are revealed on-chain.
         bytes32 currentCommitment;
         uint64 currentCommitmentSequenceNumber;
+        mapping(address => bool) isManager;
     }
 
     struct Request {
