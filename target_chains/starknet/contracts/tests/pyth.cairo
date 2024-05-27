@@ -196,6 +196,8 @@ fn test_get_no_older_works() {
     let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
     let err = pyth.get_price_no_older_than(price_id, 100).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
+    let err = pyth.get_ema_price_no_older_than(price_id, 100).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
     fee_contract.approve(pyth.contract_address, 10000);
@@ -208,16 +210,24 @@ fn test_get_no_older_works() {
     start_warp(CheatTarget::One(pyth.contract_address), 1712589210);
     let err = pyth.get_price_no_older_than(price_id, 3).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::StalePrice);
+    let err = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::StalePrice);
 
     start_warp(CheatTarget::One(pyth.contract_address), 1712589208);
     let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
     assert!(val.publish_time == 1712589206);
     assert!(val.price == 7192002930010);
+    let val = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.publish_time == 1712589206);
+    assert!(val.price == 7181868900000);
 
     start_warp(CheatTarget::One(pyth.contract_address), 1712589204);
     let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
     assert!(val.publish_time == 1712589206);
     assert!(val.price == 7192002930010);
+    let val = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.publish_time == 1712589206);
+    assert!(val.price == 7181868900000);
 
     stop_warp(CheatTarget::One(pyth.contract_address));
 }

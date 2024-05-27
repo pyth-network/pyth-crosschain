@@ -175,6 +175,16 @@ mod pyth {
             Result::Ok(price)
         }
 
+        fn get_ema_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_ema_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
+        }
+
         fn get_ema_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
