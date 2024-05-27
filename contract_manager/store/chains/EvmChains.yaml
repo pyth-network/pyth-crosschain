@@ -591,6 +591,6 @@
   type: EvmChain
 - id: sei_evm_mainnet
   mainnet: true
-  rpcUrl: https://autumn-divine-seed.sei-pacific.quiknode.pro/d709a1dd22def532197c38e0379919fdd1a7db2f/
+  rpcUrl: https://evm-rpc.sei-apis.com
   networkId: 1329
   type: EvmChain
