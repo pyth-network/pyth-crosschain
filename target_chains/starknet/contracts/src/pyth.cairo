@@ -10,10 +10,13 @@ pub use pyth::{
     DataSourcesSet, FeeSet,
 };
 pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
-pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
+pub use interface::{
+    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime
+};
 
 #[starknet::contract]
 mod pyth {
+    use pyth::pyth::interface::IPyth;
     use super::price_update::{
         PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
         parse_wormhole_proof
@@ -29,7 +32,7 @@ mod pyth {
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
-        IPythDispatcher, IPythDispatcherTrait,
+        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime,
     };
     use super::governance;
     use super::governance::GovernancePayload;
@@ -227,6 +230,23 @@ mod pyth {
             reader.skip(wormhole_proof_size.into());
             let num_updates = reader.read_u8();
             self.get_total_fee(num_updates)
+        }
+
+        fn update_price_feeds_if_necessary(
+            ref self: ContractState,
+            update: ByteArray,
+            required_publish_times: Array<PriceFeedPublishTime>
+        ) {
+            let mut i = 0;
+            while i < required_publish_times.len() {
+                let item = required_publish_times.at(i);
+                let latest_time = self.latest_price_info.read(*item.price_id).publish_time;
+                if latest_time < *item.publish_time {
+                    self.update_price_feeds(update);
+                    break;
+                }
+                i += 1;
+            }
         }
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
