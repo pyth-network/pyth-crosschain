@@ -1,7 +1,10 @@
+use std::{net::AddrParseError, sync::Arc};
+
 use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{Bytes, CallParameters, TxPolicies},
     programs::call_response::FuelCallResponse,
+    types::errors::Error,
     types::Bits256,
 };
 
@@ -129,6 +132,28 @@ pub(crate) async fn update_price_feeds(
         .unwrap()
         .call()
         .await
+        .map_err(|e| {
+            if let Error::RevertTransactionError {
+                reason: _,
+                revert_id: _,
+                ref receipts,
+            } = e
+            {
+                for r in receipts {
+                    match r {
+                        fuels::tx::Receipt::Log { ra, .. } => {
+                            println!("{:?}", ra);
+                        }
+                        fuels::tx::Receipt::LogData { data, .. } => {
+                            println!("{:?}", hex::encode(data.clone().unwrap()));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            e
+        })
         .unwrap()
 }
 

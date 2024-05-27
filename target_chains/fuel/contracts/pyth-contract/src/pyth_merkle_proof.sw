@@ -1,10 +1,25 @@
 library;
 
-use std::{bytes::Bytes, hash::{Hash, keccak256}};
+use std::{hash::{Hash, keccak256}};
+use std::{array_conversions::u32::*, bytes::Bytes};
 use ::errors::PythError;
 
 pub const MERKLE_LEAF_PREFIX = 0u8;
 pub const MERKLE_NODE_PREFIX = 1u8;
+
+const ACCUMULATOR_MAGIC: u32 = 0x12345678;
+
+pub fn accumulator_magic_bytes() -> Bytes {
+    let accumulator_magic_array = ACCUMULATOR_MAGIC.to_be_bytes();
+
+    let mut accumulator_magic_bytes = Bytes::with_capacity(4);
+    accumulator_magic_bytes.push(accumulator_magic_array[0]);
+    accumulator_magic_bytes.push(accumulator_magic_array[1]);
+    accumulator_magic_bytes.push(accumulator_magic_array[2]);
+    accumulator_magic_bytes.push(accumulator_magic_array[3]);
+
+    accumulator_magic_bytes
+}
 
 fn leaf_hash(data: Bytes) -> Bytes {
     let mut bytes = Bytes::new();
@@ -41,6 +56,9 @@ pub fn validate_proof(
     ref mut proof_offset: u64,
     root: Bytes,
 ) -> u64 {
+    let test_bytes = accumulator_magic_bytes();
+    log(test_bytes);
+
     let mut current_digest = leaf_hash(leaf_data);
 
     let proof_size = encoded_proof.get(proof_offset).unwrap().as_u64();
@@ -58,7 +76,7 @@ pub fn validate_proof(
     }
 
     // TODO: investigate failing require statement on the accumulator update path.
-    // require(current_digest == root, PythError::InvalidProof);
+    require(current_digest == root, PythError::InvalidProof);
 
     proof_offset
 }
