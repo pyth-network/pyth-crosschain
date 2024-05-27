@@ -15,6 +15,7 @@ import {
   OpportunityBid,
   OpportunityParams,
   TokenAmount,
+  BidsResponse,
 } from "./types";
 
 export * from "./types";
@@ -28,9 +29,10 @@ export interface WsOptions {
    * Max time to wait for a response from the server in milliseconds
    */
   response_timeout: number;
+  apiKey?: string;
 }
 
-const DEFAULT_WS_OPTIONS: WsOptions = {
+export const DEFAULT_WS_OPTIONS: WsOptions = {
   response_timeout: 5000,
 };
 
@@ -93,7 +95,11 @@ export class Client {
       websocketEndpoint.protocol === "https:" ? "wss:" : "ws:";
     websocketEndpoint.pathname = "/v1/ws";
 
-    this.websocket = new WebSocket(websocketEndpoint.toString());
+    this.websocket = new WebSocket(websocketEndpoint.toString(), {
+      headers: this.wsOptions.apiKey
+        ? { Authorization: `Bearer ${this.wsOptions.apiKey}` }
+        : {},
+    });
     this.websocket.on("message", async (data: string) => {
       const message:
         | components["schemas"]["ServerResultResponse"]
@@ -441,6 +447,25 @@ export class Client {
       } else {
         return response.data.id;
       }
+    }
+  }
+
+  /**
+   * Get bids for an api key
+   * @param fromTime The datetime to fetch bids from. If undefined or null, fetches from the beginning of time.
+   * @returns The paginated bids response
+   */
+  async getBids(fromTime?: Date): Promise<BidsResponse> {
+    const client = createClient<paths>(this.clientOptions);
+    const response = await client.GET("/v1/bids", {
+      params: { query: { from_time: fromTime?.toISOString() } },
+    });
+    if (response.error) {
+      throw new ClientError(response.error.error);
+    } else if (response.data === undefined) {
+      throw new ClientError("No data returned");
+    } else {
+      return response.data;
     }
   }
 }

@@ -1,5 +1,6 @@
 import asyncio
 from asyncio import Task
+from datetime import datetime
 import json
 import urllib.parse
 from typing import Callable, Any
@@ -10,10 +11,10 @@ import websockets
 from websockets.client import WebSocketClientProtocol
 from eth_account.account import Account
 from express_relay.express_relay_types import (
+    BidResponse,
     Opportunity,
     BidStatusUpdate,
     ClientMessage,
-    BidStatus,
     Bid,
     OpportunityBid,
     OpportunityParams,
@@ -318,17 +319,11 @@ class ExpressRelayClient:
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        id = msg_json["status"]["id"]
-                        bid_status = msg_json["status"]["bid_status"]["type"]
-                        result = msg_json["status"]["bid_status"].get("result")
-                        index = msg_json["status"]["bid_status"].get("index")
-                        bid_status_update = BidStatusUpdate(
-                            id=id,
-                            bid_status=BidStatus(bid_status),
-                            result=result,
-                            index=index,
+                        bid_status_update = BidStatusUpdate.process_bid_status_dict(
+                            msg_json["status"]
                         )
-                        asyncio.create_task(bid_status_callback(bid_status_update))
+                        if bid_status_update:
+                            asyncio.create_task(bid_status_callback(bid_status_update))
 
             elif msg_json.get("id"):
                 future = self.ws_msg_futures.pop(msg_json["id"])
@@ -383,6 +378,35 @@ class ExpressRelayClient:
             )
         resp.raise_for_status()
         return UUID(resp.json()["opportunity_id"])
+
+    async def get_bids(self, from_time: datetime | None = None) -> list[BidResponse]:
+        """
+        Fetches bids for an api key from the server with pagination of 20 bids per page.
+
+        Args:
+            from_time: The datetime to fetch bids from. If None, fetches from the beginning of time.
+        Returns:
+            A list of bids.
+        """
+        async with httpx.AsyncClient(**self.http_options) as client:
+            resp = await client.get(
+                urllib.parse.urlparse(self.server_url)
+                ._replace(path="/v1/bids")
+                .geturl(),
+                params=(
+                    {"from_time": from_time.isoformat() + "Z"} if from_time else None
+                ),
+            )
+
+        resp.raise_for_status()
+
+        bids = []
+        for bid in resp.json()["items"]:
+            bid_processed = BidResponse.process_bid_response_dict(bid)
+            if bid_processed:
+                bids.append(bid_processed)
+
+        return bids
 
 
 def sign_bid(
