@@ -584,3 +584,13 @@
   rpcUrl: https://polygon-amoy-bor-rpc.publicnode.com
   networkId: 80002
   type: EvmChain
+- id: taiko_mainnet
+  mainnet: true
+  rpcUrl: https://rpc.mainnet.taiko.xyz
+  networkId: 167000
+  type: EvmChain
+- id: sei_evm_mainnet
+  mainnet: true
+  rpcUrl: https://autumn-divine-seed.sei-pacific.quiknode.pro/d709a1dd22def532197c38e0379919fdd1a7db2f/
+  networkId: 1329
+  type: EvmChain
