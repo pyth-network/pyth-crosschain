@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "express-relay"
-version = "0.5.0"
+version = "0.6.0"
 description = "Utilities for searchers and protocols to interact with the Express Relay protocol."
 authors = ["dourolabs"]
 license = "Proprietary"

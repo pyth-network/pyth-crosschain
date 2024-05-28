@@ -150,3 +150,8 @@ export type Bid = {
 export type BidStatusUpdate = {
   id: BidId;
 } & components["schemas"]["BidStatus"];
+
+export type BidResponse = components["schemas"]["SimulatedBid"];
+export type BidsResponse = {
+  items: BidResponse[];
+};

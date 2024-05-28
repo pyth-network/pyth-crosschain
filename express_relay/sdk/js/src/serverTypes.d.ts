@@ -6,42 +6,41 @@
 export interface paths {
   "/v1/bids": {
     /**
+     * Returns at most 20 bids which were submitted after a specific time.
+     * @description If no time is provided, the server will return the first bids.
+     */
+    get: operations["get_bids_by_time"];
+    /**
      * Bid on a specific permission key for a specific chain.
-     * @description Bid on a specific permission key for a specific chain.
-     *
-     * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
+     * @description Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
      * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
      */
     post: operations["bid"];
   };
   "/v1/bids/{bid_id}": {
-    /**
-     * Query the status of a specific bid.
-     * @description Query the status of a specific bid.
-     */
+    /** Query the status of a specific bid. */
     get: operations["bid_status"];
   };
   "/v1/opportunities": {
-    /**
-     * Fetch all opportunities ready to be exectued.
-     * @description Fetch all opportunities ready to be exectued.
-     */
+    /** Fetch all opportunities ready to be exectued. */
     get: operations["get_opportunities"];
     /**
      * Submit an opportunity ready to be executed.
-     * @description Submit an opportunity ready to be executed.
-     *
-     * The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
+     * @description The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
      * and will be available for bidding.
      */
     post: operations["post_opportunity"];
   };
   "/v1/opportunities/{opportunity_id}/bids": {
-    /**
-     * Bid on opportunity
-     * @description Bid on opportunity
-     */
+    /** Bid on opportunity */
     post: operations["opportunity_bid"];
+  };
+  "/v1/profiles/access_tokens": {
+    /**
+     * Revoke the authenticated profile access token.
+     * @description Returns empty response.
+     */
+    delete: operations["delete_profile_access_token"];
   };
 }
 
@@ -295,6 +294,54 @@ export interface components {
           /** @enum {string} */
           type: "bid_status_update";
         };
+    /** BidResponse */
+    SimulatedBid: {
+      /**
+       * @description Amount of bid in wei.
+       * @example 10
+       */
+      bid_amount: string;
+      /**
+       * @description The chain id for bid.
+       * @example op_sepolia
+       */
+      chain_id: string;
+      /**
+       * @description The unique id for bid.
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
+       */
+      id: string;
+      /**
+       * @description The time server received the bid formatted in rfc3339.
+       * @example 2024-05-23T21:26:57.329954Z
+       */
+      initiation_time: string;
+      /**
+       * @description The permission key for bid.
+       * @example 0xdeadbeef
+       */
+      permission_key: string;
+      /**
+       * @description The profile id for the bid owner.
+       * @example
+       */
+      profile_id: string;
+      status: components["schemas"]["BidStatus"];
+      /**
+       * @description Calldata for the contract call.
+       * @example 0xdeadbeef
+       */
+      target_calldata: string;
+      /**
+       * @description The contract address to call.
+       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
+       */
+      target_contract: string;
+    };
+    /** BidsResponse */
+    SimulatedBids: {
+      items: components["schemas"]["SimulatedBid"][];
+    };
     TokenAmount: {
       /**
        * @description Token amount
@@ -350,6 +397,13 @@ export interface components {
         };
       };
     };
+    SimulatedBids: {
+      content: {
+        "application/json": {
+          items: components["schemas"]["SimulatedBid"][];
+        };
+      };
+    };
   };
   parameters: never;
   requestBodies: never;
@@ -363,10 +417,29 @@ export type external = Record<string, never>;
 
 export interface operations {
   /**
+   * Returns at most 20 bids which were submitted after a specific time.
+   * @description If no time is provided, the server will return the first bids.
+   */
+  get_bids_by_time: {
+    parameters: {
+      query?: {
+        /** @example 2024-05-23T21:26:57.329954Z */
+        from_time?: string | null;
+      };
+    };
+    responses: {
+      /** @description Paginated list of bids for the specified query */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SimulatedBids"];
+        };
+      };
+      400: components["responses"]["ErrorBodyResponse"];
+    };
+  };
+  /**
    * Bid on a specific permission key for a specific chain.
-   * @description Bid on a specific permission key for a specific chain.
-   *
-   * Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
+   * @description Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
    * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
    */
   bid: {
@@ -391,10 +464,7 @@ export interface operations {
       };
     };
   };
-  /**
-   * Query the status of a specific bid.
-   * @description Query the status of a specific bid.
-   */
+  /** Query the status of a specific bid. */
   bid_status: {
     parameters: {
       path: {
@@ -418,10 +488,7 @@ export interface operations {
       };
     };
   };
-  /**
-   * Fetch all opportunities ready to be exectued.
-   * @description Fetch all opportunities ready to be exectued.
-   */
+  /** Fetch all opportunities ready to be exectued. */
   get_opportunities: {
     parameters: {
       query?: {
@@ -447,9 +514,7 @@ export interface operations {
   };
   /**
    * Submit an opportunity ready to be executed.
-   * @description Submit an opportunity ready to be executed.
-   *
-   * The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
+   * @description The opportunity will be verified by the server. If the opportunity is valid, it will be stored in the database
    * and will be available for bidding.
    */
   post_opportunity: {
@@ -474,10 +539,7 @@ export interface operations {
       };
     };
   };
-  /**
-   * Bid on opportunity
-   * @description Bid on opportunity
-   */
+  /** Bid on opportunity */
   opportunity_bid: {
     parameters: {
       path: {
@@ -504,6 +566,19 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBodyResponse"];
         };
       };
+    };
+  };
+  /**
+   * Revoke the authenticated profile access token.
+   * @description Returns empty response.
+   */
+  delete_profile_access_token: {
+    responses: {
+      /** @description The token successfully revoked */
+      200: {
+        content: never;
+      };
+      400: components["responses"]["ErrorBodyResponse"];
     };
   };
 }

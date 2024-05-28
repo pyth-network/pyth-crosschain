@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, model_validator
 from pydantic.functional_validators import AfterValidator
@@ -143,6 +144,84 @@ class BidStatusUpdate(BaseModel):
         else:
             assert self.index is None, "index must be None"
         return self
+
+    @classmethod
+    def process_bid_status_dict(cls, bid_status_dict: dict):
+        """
+        Processes a bid status dictionary and converts to a class object.
+
+        Args:
+            bid_status_dict: The bid status dictionary to convert.
+
+        Returns:
+            The bid status as a class object.
+        """
+        try:
+            return cls.model_validate(
+                dict(
+                    id=bid_status_dict.get("id"),
+                    bid_status=bid_status_dict.get("bid_status", {}).pop("type"),
+                    **bid_status_dict.get("bid_status", {}),
+                )
+            )
+        except Exception as e:
+            warnings.warn(str(e))
+            return None
+
+
+class BidResponse(BaseModel):
+    """
+    Attributes:
+        id: The unique id for bid.
+        amount: The amount of the bid in wei.
+        target_calldata: Calldata for the contract call.
+        chain_id: The chain ID to bid on.
+        target_contract: The contract address to call.
+        permission_key: The permission key to bid on.
+        status: The latest status for bid.
+        initiation_time: The time server received the bid formatted in rfc3339.
+        profile_id: The profile id for the bid owner.
+    """
+
+    id: UUIDString
+    bid_amount: IntString
+    target_calldata: HexString
+    chain_id: str
+    target_contract: Address
+    permission_key: HexString
+    status: BidStatusUpdate
+    initiation_time: datetime
+    profile_id: str | None = Field(default=None)
+
+    @classmethod
+    def process_bid_response_dict(cls, bid_response_dict: dict):
+        """
+        Processes a bid response dictionary and converts to a class object.
+
+        Args:
+            bid_response_dict: The bid response dictionary to convert.
+
+        Returns:
+            The bid response as a class object.
+        """
+        try:
+            return cls.model_validate(
+                dict(
+                    status=BidStatusUpdate.process_bid_status_dict(
+                        dict(
+                            id=bid_response_dict.get("id"),
+                            bid_status=bid_response_dict.pop("status"),
+                        )
+                    ),
+                    initiation_time=datetime.fromisoformat(
+                        bid_response_dict.pop("initiation_time")
+                    ),
+                    **bid_response_dict,
+                )
+            )
+        except UnsupportedOpportunityVersionException as e:
+            warnings.warn(str(e))
+            return None
 
 
 class OpportunityBid(BaseModel):
