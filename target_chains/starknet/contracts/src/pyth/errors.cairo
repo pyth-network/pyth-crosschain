@@ -98,3 +98,18 @@ impl UpdatePriceFeedsIfNecessaryErrorIntoFelt252 of Into<
         }
     }
 }
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum ParsePriceFeedsError {
+    Update: UpdatePriceFeedsError,
+    PriceFeedNotFoundWithinRange,
+}
+
+impl ParsePriceFeedsErrorIntoFelt252 of Into<ParsePriceFeedsError, felt252> {
+    fn into(self: ParsePriceFeedsError) -> felt252 {
+        match self {
+            ParsePriceFeedsError::Update(err) => err.into(),
+            ParsePriceFeedsError::PriceFeedNotFoundWithinRange => 'price feed not found',
+        }
+    }
+}

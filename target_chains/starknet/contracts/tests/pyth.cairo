@@ -5,7 +5,7 @@ use snforge_std::{
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
     WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
-    PriceFeedPublishTime, GetPriceNoOlderThanError,
+    PriceFeedPublishTime, GetPriceNoOlderThanError, Price, PriceFeed,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -171,6 +171,180 @@ fn test_update_if_necessary_works() {
     assert!(spy.events.len() == 2);
 
     stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+fn test_parse_price_feed_updates_works() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    let fee = pyth.get_update_fee(data::good_update1());
+    assert!(fee == 1000);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
+    fee_contract.approve(pyth.contract_address, fee);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    let output = pyth
+        .parse_price_feed_updates(
+            data::good_update1(),
+            array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
+            0,
+            1712589208
+        );
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(output.len() == 1);
+    let output = output.at(0).clone();
+    let expected = PriceFeed {
+        id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+        price: Price {
+            price: 7192002930010, conf: 3596501465, expo: -8, publish_time: 1712589206,
+        },
+        ema_price: Price {
+            price: 7181868900000, conf: 4096812700, expo: -8, publish_time: 1712589206,
+        },
+    };
+    assert!(output == expected);
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+    let (from, event) = spy.events.pop_front().unwrap();
+    assert!(from == pyth.contract_address);
+    let event = decode_event(event);
+    let expected = PriceFeedUpdated {
+        price_id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+        publish_time: 1712589206,
+        price: 7192002930010,
+        conf: 3596501465,
+    };
+    assert!(event == PythEvent::PriceFeedUpdated(expected));
+
+    let last_price = pyth
+        .get_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_price.price == 7192002930010);
+    assert!(last_price.conf == 3596501465);
+    assert!(last_price.expo == -8);
+    assert!(last_price.publish_time == 1712589206);
+
+    let last_ema_price = pyth
+        .get_ema_price_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(last_ema_price.price == 7181868900000);
+    assert!(last_ema_price.conf == 4096812700);
+    assert!(last_ema_price.expo == -8);
+    assert!(last_ema_price.publish_time == 1712589206);
+}
+
+#[test]
+#[should_panic(expected: ('price feed not found',))]
+fn test_parse_price_feed_updates_rejects_bad_price_id() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    let fee = pyth.get_update_fee(data::good_update1());
+    assert!(fee == 1000);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
+    fee_contract.approve(pyth.contract_address, fee);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    pyth.parse_price_feed_updates(data::good_update1(), array![0x14], 0, 1712589208);
+}
+
+#[test]
+#[should_panic(expected: ('price feed not found',))]
+fn test_parse_price_feed_updates_rejects_out_of_range() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    let fee = pyth.get_update_fee(data::good_update1());
+    assert!(fee == 1000);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
+    fee_contract.approve(pyth.contract_address, fee);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    pyth
+        .parse_price_feed_updates(
+            data::good_update1(),
+            array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
+            0,
+            1712589000
+        );
+}
+
+#[test]
+fn test_parse_price_feed_updates_unique_works() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    let fee1 = pyth.get_update_fee(data::test_price_update2());
+    assert!(fee1 == 1000);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    let output = pyth
+        .parse_unique_price_feed_updates(
+            data::unique_update1(),
+            array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
+            1716904943,
+            2,
+        );
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(output.len() == 1);
+    let output = output.at(0).clone();
+    let expected = PriceFeed {
+        id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+        price: Price {
+            price: 6751021151231, conf: 7471389383, expo: -8, publish_time: 1716904943,
+        },
+        ema_price: Price {
+            price: 6815630100000, conf: 6236878200, expo: -8, publish_time: 1716904943,
+        },
+    };
+    assert!(output == expected);
+}
+
+#[test]
+#[should_panic(expected: ('price feed not found',))]
+fn test_parse_price_feed_updates_unique_rejects_non_unique() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    let fee1 = pyth.get_update_fee(data::test_price_update2());
+    assert!(fee1 == 1000);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth
+        .parse_unique_price_feed_updates(
+            data::good_update1(),
+            array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
+            1712589206,
+            2,
+        );
 }
 
 #[test]
