@@ -166,7 +166,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Withdrawal(msg.sender, msg.sender, amount);
     }
 
-    function withdrawAsManager(
+    function withdrawAsFeeManager(
         address provider,
         uint128 amount
     ) external override {
@@ -507,7 +507,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
     }
 
-    function setProviderFeeAsManager(
+    function setProviderFeeAsFeeManager(
         address provider,
         uint128 newFeeInWei
     ) external override {
@@ -527,12 +527,6 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.feeInWei = newFeeInWei;
 
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
-        emit ProviderFeeUpdatedV2(
-            provider,
-            msg.sender,
-            oldFeeInWei,
-            newFeeInWei
-        );
     }
 
     // Set provider uri. It will revert if provider is not registered.
@@ -548,7 +542,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit ProviderUriUpdated(msg.sender, oldUri, newUri);
     }
 
-    function setManager(address manager) external override {
+    function setFeeManager(address manager) external override {
         EntropyStructs.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
