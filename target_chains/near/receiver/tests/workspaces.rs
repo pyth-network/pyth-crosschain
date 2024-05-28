@@ -29,8 +29,8 @@ use {
         SECONDARY_DATA_SOURCE,
         SECONDARY_GOVERNANCE_SOURCE,
     },
-    std::collections::HashMap,
     serde_json::json,
+    std::collections::HashMap,
     wormhole_sdk::Chain as WormholeChain,
 };
 
@@ -109,11 +109,15 @@ async fn test_set_sources() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            DEFAULT_DATA_SOURCE.chain,
+                        ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            SECONDARY_DATA_SOURCE.chain,
+                        ))),
                     },
                 ],
             },
@@ -219,11 +223,15 @@ async fn test_set_governance_source() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            DEFAULT_DATA_SOURCE.chain,
+                        ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            SECONDARY_DATA_SOURCE.chain,
+                        ))),
                     },
                 ],
             },
@@ -261,11 +269,15 @@ async fn test_set_governance_source() {
                     Source::default(),
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            DEFAULT_DATA_SOURCE.chain,
+                        ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
+                        chain:   Chain::from(WormholeChain::from(u16::from(
+                            SECONDARY_DATA_SOURCE.chain,
+                        ))),
                     },
                 ],
             },
@@ -390,7 +402,9 @@ async fn test_stale_threshold() {
                 .unwrap()
                 .result
         )
-        .unwrap().get(&PriceIdentifier([0; 32])).unwrap(),
+        .unwrap()
+        .get(&PriceIdentifier([0; 32]))
+        .unwrap(),
     );
 
     // Submit another Price Attestation to the contract with an even older timestamp. Which
@@ -524,7 +538,9 @@ async fn test_stale_threshold() {
                 .unwrap()
                 .result
         )
-        .unwrap().get(&PriceIdentifier([0; 32])).unwrap(),
+        .unwrap()
+        .get(&PriceIdentifier([0; 32]))
+        .unwrap(),
     );
 }
 

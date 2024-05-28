@@ -13,7 +13,7 @@ use {
     near_sdk::{
         ext_contract,
         json_types::U128,
-    }, 
+    },
     std::collections::HashMap,
 };
 
@@ -45,10 +45,28 @@ pub trait Pyth {
     fn get_ema_price(&self, price_id: PriceIdentifier) -> Option<Price>;
     fn get_ema_price_unsafe(&self, price_id: PriceIdentifier) -> Option<Price>;
     fn get_ema_price_no_older_than(&self, price_id: PriceIdentifier, age: u64) -> Option<Price>;
-    fn list_prices(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
-    fn list_prices_unsafe(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
-    fn list_prices_no_older_than(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
-    fn list_ema_prices(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
-    fn list_ema_prices_unsafe(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
-    fn list_ema_prices_no_older_than(&self, price_ids: Vec<PriceIdentifier>) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_prices(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_prices_unsafe(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_prices_no_older_than(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_ema_prices(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_ema_prices_unsafe(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
+    fn list_ema_prices_no_older_than(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>>;
 }
