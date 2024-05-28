@@ -57,7 +57,7 @@ pub fn validate_proof(
 
     let current_digest_b256: b256 = current_digest.into();
     let root_b256: b256 = root.into();
-    
+
     require(current_digest_b256 == root_b256, PythError::InvalidProof);
 
     proof_offset
