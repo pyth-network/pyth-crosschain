@@ -10,7 +10,8 @@ pub use pyth::{
     DataSourcesSet, FeeSet,
 };
 pub use errors::{
-    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError
+    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError,
+    UpdatePriceFeedsIfNecessaryError,
 };
 pub use interface::{
     IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime
@@ -35,6 +36,7 @@ mod pyth {
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
         IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime, GetPriceNoOlderThanError,
+        UpdatePriceFeedsIfNecessaryError,
     };
     use super::governance;
     use super::governance::GovernancePayload;
@@ -261,14 +263,19 @@ mod pyth {
             required_publish_times: Array<PriceFeedPublishTime>
         ) {
             let mut i = 0;
+            let mut found = false;
             while i < required_publish_times.len() {
                 let item = required_publish_times.at(i);
                 let latest_time = self.latest_price_info.read(*item.price_id).publish_time;
                 if latest_time < *item.publish_time {
                     self.update_price_feeds(update);
+                    found = true;
                     break;
                 }
                 i += 1;
+            };
+            if !found {
+                panic_with_felt252(UpdatePriceFeedsIfNecessaryError::NoFreshUpdate.into());
             }
         }
 

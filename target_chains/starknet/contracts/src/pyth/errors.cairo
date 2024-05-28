@@ -81,3 +81,20 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
         }
     }
 }
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum UpdatePriceFeedsIfNecessaryError {
+    Update: UpdatePriceFeedsError,
+    NoFreshUpdate,
+}
+
+impl UpdatePriceFeedsIfNecessaryErrorIntoFelt252 of Into<
+    UpdatePriceFeedsIfNecessaryError, felt252
+> {
+    fn into(self: UpdatePriceFeedsIfNecessaryError) -> felt252 {
+        match self {
+            UpdatePriceFeedsIfNecessaryError::Update(err) => err.into(),
+            UpdatePriceFeedsIfNecessaryError::NoFreshUpdate => 'no fresh update',
+        }
+    }
+}

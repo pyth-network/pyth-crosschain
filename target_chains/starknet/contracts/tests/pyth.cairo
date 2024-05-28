@@ -146,6 +146,64 @@ fn test_update_if_necessary_works() {
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
+    let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
+    assert!(pyth.get_price_unsafe(price_id).is_err());
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    let times = array![PriceFeedPublishTime { price_id, publish_time: 1715769470 }];
+    pyth.update_price_feeds_if_necessary(data::test_price_update1(), times);
+
+    let last_price = pyth.get_price_unsafe(price_id).unwrap_with_felt252();
+    assert!(last_price.price == 6281060000000);
+    assert!(last_price.publish_time == 1715769470);
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 1);
+
+    let times = array![PriceFeedPublishTime { price_id, publish_time: 1715769475 }];
+    pyth.update_price_feeds_if_necessary(data::test_price_update2(), times);
+
+    let last_price = pyth.get_price_unsafe(price_id).unwrap_with_felt252();
+    assert!(last_price.price == 6281522520745);
+    assert!(last_price.publish_time == 1715769475);
+
+    spy.fetch_events();
+    assert!(spy.events.len() == 2);
+
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+#[should_panic(expected: ('no fresh update',))]
+fn test_update_if_necessary_rejects_empty() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(pyth.contract_address), user);
+    pyth.update_price_feeds_if_necessary(data::test_price_update1(), array![]);
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+#[should_panic(expected: ('no fresh update',))]
+fn test_update_if_necessary_rejects_no_fresh() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    start_prank(CheatTarget::One(fee_contract.contract_address), user);
+    fee_contract.approve(pyth.contract_address, 10000);
+    stop_prank(CheatTarget::One(fee_contract.contract_address));
+
+    let mut spy = spy_events(SpyOn::One(pyth.contract_address));
+
     start_prank(CheatTarget::One(pyth.contract_address), user);
     pyth.update_price_feeds_if_necessary(data::test_price_update1(), array![]);
 
@@ -166,25 +224,6 @@ fn test_update_if_necessary_works() {
 
     let times = array![PriceFeedPublishTime { price_id, publish_time: 1715769470 }];
     pyth.update_price_feeds_if_necessary(data::test_price_update2(), times);
-
-    let last_price = pyth.get_price_unsafe(price_id).unwrap_with_felt252();
-    assert!(last_price.price == 6281060000000);
-    assert!(last_price.publish_time == 1715769470);
-
-    spy.fetch_events();
-    assert!(spy.events.len() == 1);
-
-    let times = array![PriceFeedPublishTime { price_id, publish_time: 1715769475 }];
-    pyth.update_price_feeds_if_necessary(data::test_price_update2(), times);
-
-    let last_price = pyth.get_price_unsafe(price_id).unwrap_with_felt252();
-    assert!(last_price.price == 6281522520745);
-    assert!(last_price.publish_time == 1715769475);
-
-    spy.fetch_events();
-    assert!(spy.events.len() == 2);
-
-    stop_prank(CheatTarget::One(pyth.contract_address));
 }
 
 #[test]
