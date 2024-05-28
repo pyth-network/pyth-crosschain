@@ -33,5 +33,9 @@ interface EntropyEvents {
 
     event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
 
-    event Withdrawal(address provider, address sender, uint128 withdrawnAmount);
+    event Withdrawal(
+        address provider,
+        address recipient,
+        uint128 withdrawnAmount
+    );
 }

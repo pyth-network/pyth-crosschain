@@ -103,6 +103,11 @@
             "internalType": "uint64",
             "name": "currentCommitmentSequenceNumber",
             "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "feeManager",
+            "type": "address"
           }
         ],
         "indexed": false,
@@ -401,6 +406,31 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "withdrawnAmount",
+        "type": "uint128"
+      }
+    ],
+    "name": "Withdrawal",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -554,6 +584,11 @@
             "internalType": "uint64",
             "name": "currentCommitmentSequenceNumber",
             "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "feeManager",
+            "type": "address"
           }
         ],
         "internalType": "struct EntropyStructs.ProviderInfo",
@@ -781,12 +816,43 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      }
+    ],
+    "name": "setFeeManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint128",
         "name": "newFeeInWei",
         "type": "uint128"
       }
     ],
     "name": "setProviderFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint128",
+        "name": "newFeeInWei",
+        "type": "uint128"
+      }
+    ],
+    "name": "setProviderFeeAsFeeManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -813,6 +879,24 @@
       }
     ],
     "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint128",
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "withdrawAsFeeManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
