@@ -32,7 +32,8 @@ contract EntropyStructs {
         // are revealed on-chain.
         bytes32 currentCommitment;
         uint64 currentCommitmentSequenceNumber;
-        mapping(address => bool) isManager;
+        // An address that is authorized to set / withdraw fees on behalf of this provider.
+        address feeManager;
     }
 
     struct Request {

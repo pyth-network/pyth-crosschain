@@ -31,5 +31,14 @@ interface EntropyEvents {
 
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
+    event ProviderFeeUpdatedV2(
+        address provider,
+        address sender,
+        uint128 oldFee,
+        uint128 newFee
+    );
+
     event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
+
+    event Withdrawal(address provider, address sender, uint128 withdrawnAmount);
 }

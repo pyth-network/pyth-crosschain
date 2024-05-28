@@ -163,24 +163,23 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        // TODO: event
+        emit Withdrawal(msg.sender, msg.sender, amount);
     }
 
     function withdrawAsManager(
         address provider,
         uint128 amount
     ) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
 
-        if (provider.sequenceNumber == 0) {
+        if (providerInfo.sequenceNumber == 0) {
             revert EntropyErrors.NoSuchProvider();
         }
 
-        if (!provider.isManager(msg.sender)) {
-            // TODO
-            revert;
+        if (providerInfo.feeManager != msg.sender) {
+            revert EntropyErrors.Unauthorized();
         }
 
         // Use checks-effects-interactions pattern to prevent reentrancy attacks.
@@ -194,7 +193,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        // TODO: event
+        emit Withdrawal(provider, msg.sender, amount);
     }
 
     // requestHelper allocates and returns a new request for the given provider.
@@ -512,23 +511,28 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         uint128 newFeeInWei
     ) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
 
-        if (provider.sequenceNumber == 0) {
+        if (providerInfo.sequenceNumber == 0) {
             revert EntropyErrors.NoSuchProvider();
         }
 
-        if (!provider.isManager(msg.sender)) {
-            // TODO
-            revert;
+        if (providerInfo.feeManager != msg.sender) {
+            revert EntropyErrors.Unauthorized();
         }
 
-        uint128 oldFeeInWei = provider.feeInWei;
-        provider.feeInWei = newFeeInWei;
-        // TODO: can we change this event?
+        uint128 oldFeeInWei = providerInfo.feeInWei;
+        providerInfo.feeInWei = newFeeInWei;
+
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
+        emit ProviderFeeUpdatedV2(
+            provider,
+            msg.sender,
+            oldFeeInWei,
+            newFeeInWei
+        );
     }
 
     // Set provider uri. It will revert if provider is not registered.
@@ -544,10 +548,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit ProviderUriUpdated(msg.sender, oldUri, newUri);
     }
 
-    function setManager(
-        address managerAddress,
-        bool isManager
-    ) external override {
+    function setManager(address manager) external override {
         EntropyStructs.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
@@ -555,21 +556,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             revert EntropyErrors.NoSuchProvider();
         }
 
-        provider.isManager[managerAddress] = isManager;
-    }
-
-    function isManager(
-        address provider,
-        address managerAddress
-    ) external view override returns (bool isMgr) {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
-            msg.sender
-        ];
-        if (provider.sequenceNumber == 0) {
-            revert EntropyErrors.NoSuchProvider();
-        }
-
-        isMgr = provider.isManager[managerAddress];
+        provider.feeManager = manager;
     }
 
     function constructUserCommitment(

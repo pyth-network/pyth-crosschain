@@ -104,16 +104,14 @@ interface IEntropy is EntropyEvents {
 
     function setProviderFee(uint128 newFeeInWei) external;
 
-    function setFeeAsManager(address provider, uint128 newFeeInWei) external;
+    function setProviderFeeAsManager(
+        address provider,
+        uint128 newFeeInWei
+    ) external;
 
     function setProviderUri(bytes calldata newUri) external;
 
-    function setManager(address adminAddress, bool isAdmin) external;
-
-    function isManager(
-        address provider,
-        address managerAddress
-    ) external view returns (bool isMgr);
+    function setManager(address manager) external;
 
     function constructUserCommitment(
         bytes32 userRandomness
