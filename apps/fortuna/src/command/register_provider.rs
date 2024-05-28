@@ -65,7 +65,7 @@ pub async fn register_provider_from_config(
         .ok_or(anyhow!("Please specify a provider secret in the config"))?;
 
     let commitment_length = provider_config.chain_length;
-    let mut chain = PebbleHashChain::from_config(
+    let chain = PebbleHashChain::from_config(
         &secret,
         &chain_id,
         &private_key_string.parse::<LocalWallet>()?.address(),
@@ -76,7 +76,7 @@ pub async fn register_provider_from_config(
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = chain_config.fee;
-    let commitment = chain.reveal()?;
+    let commitment = chain.reveal_ith(0)?;
     // Store the random seed and chain length in the metadata field so that we can regenerate the hash
     // chain at-will. (This is secure because you can't generate the chain unless you also have the secret)
     let commitment_metadata = CommitmentMetadata {

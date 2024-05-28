@@ -14,24 +14,41 @@ use {
 /// A HashChain.
 #[derive(Clone)]
 pub struct PebbleHashChain {
-    hash: Vec<[u8; 32]>,
-    next: usize,
+    hash:            Vec<[u8; 32]>,
+    sample_interval: usize,
+    length:          usize,
 }
 
 impl PebbleHashChain {
     // Given a secret, we hash it with Keccak256 len times to get the final hash, this is an S/KEY
     // like protocol in which revealing the hashes in reverse proves knowledge.
     pub fn new(secret: [u8; 32], length: usize) -> Self {
+        Self::new_with_interval(secret, length, 1)
+    }
+
+    pub fn new_with_interval(secret: [u8; 32], length: usize, sample_interval: usize) -> Self {
         let mut hash = Vec::<[u8; 32]>::with_capacity(length);
-        hash.push(Keccak256::digest(secret).into());
-        for _ in 1..length {
-            hash.push(Keccak256::digest(&hash[hash.len() - 1]).into());
+        let mut current: [u8; 32] = Keccak256::digest(secret).into();
+
+        let sampled_chain_length = (length / sample_interval) * sample_interval + 1;
+
+        hash.push(current.clone());
+        for i in 1..sampled_chain_length {
+            current = Keccak256::digest(&current).into();
+            if i % sample_interval == 0 {
+                hash.push(current);
+            }
         }
 
         hash.reverse();
 
-        Self { hash, next: 0 }
+        Self {
+            hash,
+            sample_interval,
+            length,
+        }
     }
+
 
     pub fn from_config(
         secret: &str,
@@ -40,6 +57,7 @@ impl PebbleHashChain {
         contract_address: &Address,
         random: &[u8; 32],
         chain_length: u64,
+        // sample_interval: usize,
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
         input.extend_from_slice(&hex::decode(secret.trim())?);
@@ -48,25 +66,33 @@ impl PebbleHashChain {
         input.extend_from_slice(&contract_address.as_bytes());
         input.extend_from_slice(random);
 
-        let secret: [u8; 32] = Keccak256::digest(input).into();
-        Ok(Self::new(secret, chain_length.try_into()?))
-    }
+        // TODO
+        let sample_interval: usize = 1;
 
-    /// Reveal the next hash in the chain using the previous proof.
-    pub fn reveal(&mut self) -> Result<[u8; 32]> {
-        ensure!(self.next < self.len(), "no more hashes in the chain");
-        let next = self.hash[self.next].clone();
-        self.next += 1;
-        Ok(next)
+        let secret: [u8; 32] = Keccak256::digest(input).into();
+        Ok(Self::new_with_interval(
+            secret,
+            chain_length.try_into()?,
+            sample_interval,
+        ))
     }
 
     pub fn reveal_ith(&self, i: usize) -> Result<[u8; 32]> {
         ensure!(i < self.len(), "index not in range");
-        Ok(self.hash[i].clone())
+        let closest_index = (i / self.sample_interval) + 1;
+        let mut i_index = closest_index * self.sample_interval;
+        let mut val = self.hash[closest_index].clone();
+
+        while i_index > i {
+            val = Keccak256::digest(val).into();
+            i_index -= 1;
+        }
+
+        Ok(val)
     }
 
     pub fn len(&self) -> usize {
-        self.hash.len()
+        self.length
     }
 }
 
@@ -114,10 +140,22 @@ mod test {
     #[test]
     fn test_hash_chain() {
         let secret = [0u8; 32];
-        let chain = PebbleHashChain::new(secret, 100);
+        let chain = PebbleHashChain::new_with_interval(secret, 100, 2);
+        let unsampled_chain = PebbleHashChain::new_with_interval(secret, 100, 1);
+
+        for i in 0..10 {
+            println!("{} {:?}", i, unsampled_chain.reveal_ith(i).unwrap());
+        }
+
+        for i in 0..10 {
+            println!("{} {:?}", i, chain.hash[i]);
+        }
 
         let mut last_val = chain.reveal_ith(0).unwrap();
         for i in 1..chain.len() {
+            println!("CHECKING {:?}", i);
+            println!("{:?}", chain.reveal_ith(i).unwrap());
+
             let cur_val = chain.reveal_ith(i).unwrap();
             let expected_last_val: [u8; 32] = Keccak256::digest(cur_val).into();
 
