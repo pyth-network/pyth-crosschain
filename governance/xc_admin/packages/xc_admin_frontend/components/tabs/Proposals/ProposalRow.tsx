@@ -23,7 +23,8 @@ export const ProposalRow = ({
   multisig: MultisigAccount | undefined
 }) => {
   const [time, setTime] = useState<Date>()
-  const [instructions, setInstructions] = useState<[string, number][]>()
+  const [instructions, setInstructions] =
+    useState<(readonly [string, number])[]>()
   const status = getProposalStatus(proposal, multisig)
   const { cluster } = useContext(ClusterContext)
   const { isLoading: isMultisigLoading, connection } = useMultisigContext()
@@ -92,12 +93,13 @@ export const ProposalRow = ({
 
           // show only the first two instructions
           // and group the rest under 'other'
-          const shortSummary = Object.entries(summary).slice(0, 2)
-          const otherValue = Object.values(summary)
+          const shortSummary = summary.slice(0, 2)
+          const otherValue = summary
             .slice(2)
-            .reduce((acc, curr) => acc + curr, 0)
+            .map(({ count }) => count)
+            .reduce((total, item) => total + item, 0)
           const updatedSummary = [
-            ...shortSummary,
+            ...shortSummary.map(({ name, count }) => [name, count] as const),
             ...(otherValue > 0
               ? ([['other', otherValue]] as [string, number][])
               : []),

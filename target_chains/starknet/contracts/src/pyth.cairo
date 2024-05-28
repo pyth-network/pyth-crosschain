@@ -9,13 +9,19 @@ pub use pyth::{
     Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
     DataSourcesSet, FeeSet,
 };
-pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
-pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
+pub use errors::{
+    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError,
+    UpdatePriceFeedsIfNecessaryError,
+};
+pub use interface::{
+    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime
+};
 
 #[starknet::contract]
 mod pyth {
+    use pyth::pyth::interface::IPyth;
     use super::price_update::{
-        PriceInfo, PriceFeedMessage, read_and_verify_message, read_header_and_wormhole_proof,
+        PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
         parse_wormhole_proof
     };
     use pyth::reader::{Reader, ReaderImpl};
@@ -23,17 +29,19 @@ mod pyth {
     use core::panic_with_felt252;
     use core::starknet::{
         ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
-        get_contract_address,
+        get_contract_address, get_block_timestamp,
     };
     use core::starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
-        IPythDispatcher, IPythDispatcherTrait,
+        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime, GetPriceNoOlderThanError,
+        UpdatePriceFeedsIfNecessaryError,
     };
     use super::governance;
     use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
+    use pyth::util::ResultMapErrInto;
 
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -143,6 +151,16 @@ mod pyth {
 
     #[abi(embed_v0)]
     impl PythImpl of super::IPyth<ContractState> {
+        fn get_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
+        }
+
         fn get_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
@@ -157,6 +175,16 @@ mod pyth {
                 publish_time: info.publish_time,
             };
             Result::Ok(price)
+        }
+
+        fn get_ema_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_ema_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
         }
 
         fn get_ema_price_unsafe(
@@ -177,7 +205,10 @@ mod pyth {
 
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             let mut reader = ReaderImpl::new(data);
-            let wormhole_proof = read_header_and_wormhole_proof(ref reader);
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            let wormhole_proof = reader.read_byte_array(wormhole_proof_size.into());
+
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(wormhole_proof);
 
@@ -214,6 +245,37 @@ mod pyth {
 
             if reader.len() != 0 {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
+            }
+        }
+
+        fn get_update_fee(self: @ContractState, data: ByteArray) -> u256 {
+            let mut reader = ReaderImpl::new(data);
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            reader.skip(wormhole_proof_size.into());
+            let num_updates = reader.read_u8();
+            self.get_total_fee(num_updates)
+        }
+
+        fn update_price_feeds_if_necessary(
+            ref self: ContractState,
+            update: ByteArray,
+            required_publish_times: Array<PriceFeedPublishTime>
+        ) {
+            let mut i = 0;
+            let mut found = false;
+            while i < required_publish_times.len() {
+                let item = required_publish_times.at(i);
+                let latest_time = self.latest_price_info.read(*item.price_id).publish_time;
+                if latest_time < *item.publish_time {
+                    self.update_price_feeds(update);
+                    found = true;
+                    break;
+                }
+                i += 1;
+            };
+            if !found {
+                panic_with_felt252(UpdatePriceFeedsIfNecessaryError::NoFreshUpdate.into());
             }
         }
 
@@ -323,7 +385,7 @@ mod pyth {
             }
         }
 
-        fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+        fn get_total_fee(self: @ContractState, num_updates: u8) -> u256 {
             self.single_update_fee.read() * num_updates.into()
         }
 
@@ -438,5 +500,15 @@ mod pyth {
             i += 1;
         };
         output
+    }
+
+    fn is_no_older_than(publish_time: u64, age: u64) -> bool {
+        let current = get_block_timestamp();
+        let actual_age = if current >= publish_time {
+            current - publish_time
+        } else {
+            0
+        };
+        actual_age <= age
     }
 }

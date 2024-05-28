@@ -1,6 +1,7 @@
 import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
+  HeadersOptions,
 } from "openapi-fetch";
 import { Address, Hex, isAddress, isHex } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
@@ -15,13 +16,14 @@ import {
   OpportunityBid,
   OpportunityParams,
   TokenAmount,
+  BidsResponse,
 } from "./types";
 
 export * from "./types";
 
 export class ClientError extends Error {}
 
-type ClientOptions = FetchClientOptions & { baseUrl: string };
+type ClientOptions = FetchClientOptions & { baseUrl: string; apiKey?: string };
 
 export interface WsOptions {
   /**
@@ -75,6 +77,14 @@ export class Client {
     statusUpdate: BidStatusUpdate
   ) => Promise<void>;
 
+  private getAuthorization() {
+    return this.clientOptions.apiKey
+      ? {
+          Authorization: `Bearer ${this.clientOptions.apiKey}`,
+        }
+      : {};
+  }
+
   constructor(
     clientOptions: ClientOptions,
     wsOptions?: WsOptions,
@@ -82,6 +92,10 @@ export class Client {
     bidStatusCallback?: (statusUpdate: BidStatusUpdate) => Promise<void>
   ) {
     this.clientOptions = clientOptions;
+    this.clientOptions.headers = {
+      ...(this.clientOptions.headers ?? {}),
+      ...this.getAuthorization(),
+    };
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
     this.websocketOpportunityCallback = opportunityCallback;
     this.websocketBidStatusCallback = bidStatusCallback;
@@ -93,7 +107,9 @@ export class Client {
       websocketEndpoint.protocol === "https:" ? "wss:" : "ws:";
     websocketEndpoint.pathname = "/v1/ws";
 
-    this.websocket = new WebSocket(websocketEndpoint.toString());
+    this.websocket = new WebSocket(websocketEndpoint.toString(), {
+      headers: this.getAuthorization(),
+    });
     this.websocket.on("message", async (data: string) => {
       const message:
         | components["schemas"]["ServerResultResponse"]
@@ -441,6 +457,25 @@ export class Client {
       } else {
         return response.data.id;
       }
+    }
+  }
+
+  /**
+   * Get bids for an api key
+   * @param fromTime The datetime to fetch bids from. If undefined or null, fetches from the beginning of time.
+   * @returns The paginated bids response
+   */
+  async getBids(fromTime?: Date): Promise<BidsResponse> {
+    const client = createClient<paths>(this.clientOptions);
+    const response = await client.GET("/v1/bids", {
+      params: { query: { from_time: fromTime?.toISOString() } },
+    });
+    if (response.error) {
+      throw new ClientError(response.error.error);
+    } else if (response.data === undefined) {
+      throw new ClientError("No data returned");
+    } else {
+      return response.data;
     }
   }
 }

@@ -19,9 +19,14 @@ VALID_UNTIL_MAX = 2**256 - 1
 
 
 class SimpleSearcher:
-    def __init__(self, server_url: str, private_key: Bytes32):
+    def __init__(
+        self, server_url: str, private_key: Bytes32, api_key: str | None = None
+    ):
         self.client = ExpressRelayClient(
-            server_url, self.opportunity_callback, self.bid_status_callback
+            server_url,
+            api_key,
+            self.opportunity_callback,
+            self.bid_status_callback,
         )
         self.private_key = private_key
         self.public_key = Account.from_key(private_key).address
@@ -85,7 +90,7 @@ class SimpleSearcher:
                 result_details = f", transaction {result}"
             if index:
                 result_details += f", index {index} of multicall"
-        logger.error(
+        logger.info(
             f"Bid status for bid {id}: {bid_status.value.replace('_', ' ')}{result_details}"
         )
 
@@ -112,6 +117,12 @@ async def main():
         required=True,
         help="Server endpoint to use for fetching opportunities and submitting bids",
     )
+    parser.add_argument(
+        "--api-key",
+        type=str,
+        required=False,
+        help="The API key of the searcher to authenticate with the server for fetching and submitting bids",
+    )
     args = parser.parse_args()
 
     logger.setLevel(logging.INFO if args.verbose == 0 else logging.DEBUG)
@@ -123,7 +134,7 @@ async def main():
     log_handler.setFormatter(formatter)
     logger.addHandler(log_handler)
 
-    simple_searcher = SimpleSearcher(args.server_url, args.private_key)
+    simple_searcher = SimpleSearcher(args.server_url, args.private_key, args.api_key)
     logger.info("Searcher address: %s", simple_searcher.public_key)
 
     await simple_searcher.client.subscribe_chains(args.chain_ids)

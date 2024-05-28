@@ -145,6 +145,19 @@ pub fn array_try_into<T, U, +TryInto<T, U>, +Drop<T>, +Drop<U>>(mut input: Array
     output
 }
 
+pub trait ResultMapErrInto<T, E1, E2> {
+    fn map_err_into(self: Result<T, E1>) -> Result<T, E2>;
+}
+
+impl ResultMapErrIntoImpl<T, E1, E2, +Into<E1, E2>> of ResultMapErrInto<T, E1, E2> {
+    fn map_err_into(self: Result<T, E1>) -> Result<T, E2> {
+        match self {
+            Result::Ok(v) => Result::Ok(v),
+            Result::Err(err) => Result::Err(err.into()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{u64_as_i64, u32_as_i32};

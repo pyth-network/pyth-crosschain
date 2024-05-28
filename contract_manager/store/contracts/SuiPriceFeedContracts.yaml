@@ -6,3 +6,7 @@
   stateId: "0x2d82612a354f0b7e52809fc2845642911c7190404620cec8688f68808f8800d8"
   wormholeStateId: "0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02"
   type: SuiPriceFeedContract
+- chain: movement_devnet_m2
+  stateId: "0xa2b4997fe170d5d7d622d5f43e54880ccdf69716df4ac4d215a69c35a0a1831f"
+  wormholeStateId: "0xcf185fbc1af3a437a600587e0b39e5fede163336ffbb7ff24dca9b6eb19d2656"
+  type: SuiPriceFeedContract
