@@ -1,10 +1,12 @@
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "@pythnetwork/xc-admin-common";
+import { WormholeContract } from "./wormhole";
 import { PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 
 type ObjectId = string;
 
@@ -403,5 +405,170 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     )
       throw new Error("Unable to fetch pyth state object");
     return result.data.content.fields;
+  }
+}
+
+export class SuiWormholeContract extends WormholeContract {
+  public static type = "SuiWormholeContract";
+  private client: SuiPythClient;
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return SuiWormholeContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: SuiWormholeContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: {
+      type: string;
+      address: string;
+      stateId: string;
+    }
+  ): SuiWormholeContract {
+    if (parsed.type !== SuiWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof SuiChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new SuiWormholeContract(chain, parsed.address, parsed.stateId);
+  }
+
+  constructor(
+    public chain: SuiChain,
+    public address: string,
+    public stateId: string
+  ) {
+    super();
+    this.client = new SuiPythClient(
+      this.chain.getProvider(),
+      // HACK:
+      // We're using the SuiPythClient to work with the Wormhole contract
+      // so there is no Pyth contract here, passing empty string to type-
+      // check.
+      "",
+      this.stateId
+    );
+  }
+
+  async getCurrentGuardianSetIndex(): Promise<number> {
+    const data = await this.getStateFields();
+    return Number(data.guardian_set_index);
+  }
+
+  // There doesn't seem to be a way to get a value out of any function call
+  // via a Sui transaction due to the linear nature of the language, this is
+  // enforced at the TransactionBlock level by only allowing you to receive
+  // receipts.
+  async getChainId(): Promise<number> {
+    return this.chain.getWormholeChainId();
+  }
+
+  // NOTE: There's no way to getChain() on the main interface, should update
+  // that interface.
+  public getChain(): SuiChain {
+    return this.chain;
+  }
+
+  async getGuardianSet(): Promise<string[]> {
+    const data = await this.getStateFields();
+    const guardian_sets = data.guardian_sets;
+    return guardian_sets;
+  }
+
+  async upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ): Promise<TxResult> {
+    const tx = new TransactionBlock();
+    const coreObjectId = this.stateId;
+    const corePackageId = await this.client.getWormholePackageId();
+    const [verifiedVaa] = tx.moveCall({
+      target: `${corePackageId}::vaa::parse_and_verify`,
+      arguments: [
+        tx.object(coreObjectId),
+        tx.pure(uint8ArrayToBCS(vaa)),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const [decreeTicket] = tx.moveCall({
+      target: `${corePackageId}::update_guardian_set::authorize_governance`,
+      arguments: [tx.object(coreObjectId)],
+    });
+
+    const [decreeReceipt] = tx.moveCall({
+      target: `${corePackageId}::governance_message::verify_vaa`,
+      arguments: [tx.object(coreObjectId), verifiedVaa, decreeTicket],
+      typeArguments: [
+        `${corePackageId}::update_guardian_set::GovernanceWitness`,
+      ],
+    });
+
+    tx.moveCall({
+      target: `${corePackageId}::update_guardian_set::update_guardian_set`,
+      arguments: [
+        tx.object(coreObjectId),
+        decreeReceipt,
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
+  }
+
+  private async getStateFields(): Promise<any> {
+    const provider = this.chain.getProvider();
+    const result = await provider.getObject({
+      id: this.stateId,
+      options: { showContent: true },
+    });
+    if (
+      !result.data ||
+      !result.data.content ||
+      result.data.content.dataType !== "moveObject"
+    )
+      throw new Error("Unable to fetch pyth state object");
+    return result.data.content.fields;
+  }
+
+  /**
+   * Given a transaction block and a keypair, sign and execute it
+   * Sets the gas budget to 2x the estimated gas cost
+   * @param tx
+   * @param keypair
+   * @private
+   */
+  private async executeTransaction(
+    tx: TransactionBlock,
+    keypair: Ed25519Keypair
+  ) {
+    const provider = this.chain.getProvider();
+    tx.setSender(keypair.toSuiAddress());
+    const dryRun = await provider.dryRunTransactionBlock({
+      transactionBlock: await tx.build({ client: provider }),
+    });
+    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
+    return provider.signAndExecuteTransactionBlock({
+      signer: keypair,
+      transactionBlock: tx,
+      options: {
+        showEffects: true,
+        showEvents: true,
+      },
+    });
   }
 }

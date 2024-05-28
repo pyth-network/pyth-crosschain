@@ -13,3 +13,8 @@
   mainnet: true
   rpcUrl: https://fullnode.mainnet.sui.io:443
   type: SuiChain
+- id: movement_devnet_m2
+  wormholeChainName: movement_devnet_m2
+  mainnet: false
+  rpcUrl: https://sui.devnet.m2.movementlabs.xyz:443
+  type: SuiChain

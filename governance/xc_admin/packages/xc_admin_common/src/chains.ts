@@ -151,7 +151,7 @@ export const RECEIVER_CHAINS = {
   orange_testnet: 50073,
   polygon_amoy: 50074,
   starknet_sepolia: 50075,
-  // sui_l2: 50076,
+  movement_devnet_m2: 50076,
   taiko_mainnet: 50077,
   sei_evm_mainnet: 50078,
 };
