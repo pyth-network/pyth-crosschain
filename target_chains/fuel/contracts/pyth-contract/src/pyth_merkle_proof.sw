@@ -37,9 +37,9 @@ fn node_hash(child_a: Bytes, child_b: Bytes) -> Bytes {
 
 pub fn validate_proof(
     encoded_proof: Bytes,
-    leaf_data: Bytes,
     ref mut proof_offset: u64,
     root: Bytes,
+    leaf_data: Bytes,
 ) -> u64 {
     let mut current_digest = leaf_hash(leaf_data);
 
@@ -51,14 +51,14 @@ pub fn validate_proof(
         let (_, slice) = encoded_proof.split_at(proof_offset);
         let (sibling_digest, _) = slice.split_at(20);
         proof_offset += 20;
-
         current_digest = node_hash(current_digest, sibling_digest);
-
         i += 1;
     }
 
-    // TODO: investigate failing require statement on the accumulator update path.
-    // require(current_digest == root, PythError::InvalidProof);
+    let current_digest_b256: b256 = current_digest.into();
+    let root_b256: b256 = root.into();
+
+    require(current_digest_b256 == root_b256, PythError::InvalidProof);
 
     proof_offset
 }
