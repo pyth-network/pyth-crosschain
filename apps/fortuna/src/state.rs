@@ -99,3 +99,30 @@ impl HashChainState {
         self.hash_chains[chain_index].reveal_ith(sequence_number - self.offsets[chain_index])
     }
 }
+
+mod test {
+
+    use {
+        crate::state::PebbleHashChain,
+        sha3::{
+            Digest,
+            Keccak256,
+        },
+    };
+
+
+    #[test]
+    fn test_hash_chain() {
+        let secret = [0u8; 32];
+        let chain = PebbleHashChain::new(secret, 100);
+
+        let mut last_val = chain.reveal_ith(0).unwrap();
+        for i in 1..chain.len() {
+            let cur_val = chain.reveal_ith(i).unwrap();
+            let expected_last_val: [u8; 32] = Keccak256::digest(cur_val).into();
+
+            assert_eq!(expected_last_val, last_val);
+            last_val = cur_val;
+        }
+    }
+}
