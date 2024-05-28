@@ -1,6 +1,7 @@
 import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
+  HeadersOptions,
 } from "openapi-fetch";
 import { Address, Hex, isAddress, isHex } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
@@ -22,17 +23,16 @@ export * from "./types";
 
 export class ClientError extends Error {}
 
-type ClientOptions = FetchClientOptions & { baseUrl: string };
+type ClientOptions = FetchClientOptions & { baseUrl: string; apiKey?: string };
 
 export interface WsOptions {
   /**
    * Max time to wait for a response from the server in milliseconds
    */
   response_timeout: number;
-  apiKey?: string;
 }
 
-export const DEFAULT_WS_OPTIONS: WsOptions = {
+const DEFAULT_WS_OPTIONS: WsOptions = {
   response_timeout: 5000,
 };
 
@@ -77,6 +77,14 @@ export class Client {
     statusUpdate: BidStatusUpdate
   ) => Promise<void>;
 
+  private getAuthorization() {
+    return this.clientOptions.apiKey
+      ? {
+          Authorization: `Bearer ${this.clientOptions.apiKey}`,
+        }
+      : {};
+  }
+
   constructor(
     clientOptions: ClientOptions,
     wsOptions?: WsOptions,
@@ -84,6 +92,10 @@ export class Client {
     bidStatusCallback?: (statusUpdate: BidStatusUpdate) => Promise<void>
   ) {
     this.clientOptions = clientOptions;
+    this.clientOptions.headers = {
+      ...(this.clientOptions.headers ?? {}),
+      ...this.getAuthorization(),
+    };
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
     this.websocketOpportunityCallback = opportunityCallback;
     this.websocketBidStatusCallback = bidStatusCallback;
@@ -96,9 +108,7 @@ export class Client {
     websocketEndpoint.pathname = "/v1/ws";
 
     this.websocket = new WebSocket(websocketEndpoint.toString(), {
-      headers: this.wsOptions.apiKey
-        ? { Authorization: `Bearer ${this.wsOptions.apiKey}` }
-        : {},
+      headers: this.getAuthorization(),
     });
     this.websocket.on("message", async (data: string) => {
       const message:

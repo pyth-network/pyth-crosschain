@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { checkHex, Client, DEFAULT_WS_OPTIONS } from "../index";
+import { checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { isHex } from "viem";
 import { BidStatusUpdate, Opportunity } from "../types";
@@ -18,9 +18,9 @@ class SimpleSearcher {
     this.client = new Client(
       {
         baseUrl: endpoint,
-        headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+        apiKey,
       },
-      apiKey ? { ...DEFAULT_WS_OPTIONS, apiKey } : undefined,
+      undefined,
       this.opportunityHandler.bind(this),
       this.bidStatusHandler.bind(this)
     );

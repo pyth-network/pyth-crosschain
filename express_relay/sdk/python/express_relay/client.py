@@ -29,6 +29,7 @@ class ExpressRelayClient:
     def __init__(
         self,
         server_url: str,
+        api_key: str | None = None,
         opportunity_callback: (
             Callable[[Opportunity], Coroutine[Any, Any, Any]] | None
         ) = None,
@@ -57,6 +58,7 @@ class ExpressRelayClient:
             raise ValueError("Invalid server URL")
 
         self.server_url = server_url
+        self.api_key = api_key
         self.ws_endpoint = parsed_url._replace(scheme=ws_scheme, path="/v1/ws").geturl()
         self.ws_msg_counter = 0
         self.ws: WebSocketClientProtocol
@@ -72,6 +74,14 @@ class ExpressRelayClient:
         self.http_options = http_options
         self.opportunity_callback = opportunity_callback
         self.bid_status_callback = bid_status_callback
+        if self.api_key:
+            authorization_header = f"Bearer {self.api_key}"
+            if "headers" not in self.http_options:
+                self.http_options["headers"] = {}
+            self.http_options["headers"]["Authorization"] = authorization_header
+            if "extra_headers" not in self.ws_options:
+                self.ws_options["extra_headers"] = {}
+            self.ws_options["extra_headers"]["Authorization"] = authorization_header
 
     async def start_ws(self):
         """
@@ -394,7 +404,9 @@ class ExpressRelayClient:
                 ._replace(path="/v1/bids")
                 .geturl(),
                 params=(
-                    {"from_time": from_time.isoformat() + "Z"} if from_time else None
+                    {"from_time": from_time.astimezone().isoformat()}
+                    if from_time
+                    else None
                 ),
             )
 

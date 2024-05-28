@@ -24,16 +24,9 @@ class SimpleSearcher:
     ):
         self.client = ExpressRelayClient(
             server_url,
+            api_key,
             self.opportunity_callback,
             self.bid_status_callback,
-            http_options=(
-                {"headers": {"Authorization": f"Bearer {api_key}"}} if api_key else None
-            ),
-            ws_options=(
-                {"extra_headers": {"Authorization": f"Bearer {api_key}"}}
-                if api_key
-                else None
-            ),
         )
         self.private_key = private_key
         self.public_key = Account.from_key(private_key).address
