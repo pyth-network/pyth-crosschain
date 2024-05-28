@@ -12,6 +12,31 @@ impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
 }
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GetPriceNoOlderThanError {
+    PriceFeedNotFound,
+    StalePrice,
+}
+
+impl GetPriceNoOlderThanErrorIntoFelt252 of Into<GetPriceNoOlderThanError, felt252> {
+    fn into(self: GetPriceNoOlderThanError) -> felt252 {
+        match self {
+            GetPriceNoOlderThanError::PriceFeedNotFound => 'price feed not found',
+            GetPriceNoOlderThanError::StalePrice => 'stale price',
+        }
+    }
+}
+
+impl GetPriceUnsafeErrorIntoGetPriceNoOlderThanError of Into<
+    GetPriceUnsafeError, GetPriceNoOlderThanError
+> {
+    fn into(self: GetPriceUnsafeError) -> GetPriceNoOlderThanError {
+        match self {
+            GetPriceUnsafeError::PriceFeedNotFound => GetPriceNoOlderThanError::PriceFeedNotFound,
+        }
+    }
+}
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceActionError {
     AccessDenied,
     Wormhole: pyth::wormhole::ParseAndVerifyVmError,
@@ -53,6 +78,23 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
             UpdatePriceFeedsError::InvalidUpdateData => 'invalid update data',
             UpdatePriceFeedsError::InvalidUpdateDataSource => 'invalid update data source',
             UpdatePriceFeedsError::InsufficientFeeAllowance => 'insufficient fee allowance',
+        }
+    }
+}
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum UpdatePriceFeedsIfNecessaryError {
+    Update: UpdatePriceFeedsError,
+    NoFreshUpdate,
+}
+
+impl UpdatePriceFeedsIfNecessaryErrorIntoFelt252 of Into<
+    UpdatePriceFeedsIfNecessaryError, felt252
+> {
+    fn into(self: UpdatePriceFeedsIfNecessaryError) -> felt252 {
+        match self {
+            UpdatePriceFeedsIfNecessaryError::Update(err) => err.into(),
+            UpdatePriceFeedsIfNecessaryError::NoFreshUpdate => 'no fresh update',
         }
     }
 }
