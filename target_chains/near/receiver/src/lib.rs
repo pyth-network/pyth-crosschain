@@ -54,9 +54,12 @@ use {
         Source,
         Vaa,
     },
-    std::io::{
-        Cursor,
-        Read,
+    std::{
+        collections::HashMap,
+        io::{
+            Cursor,
+            Read,
+        },
     },
 };
 
@@ -511,6 +514,50 @@ impl Pyth {
         })
     }
 
+    /// Batch version of `get_price`.
+    pub fn list_prices(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        self.list_prices_no_older_than(price_ids, self.stale_threshold)
+    }
+
+    /// Batch version of `get_price_unsafe`.
+    pub fn list_prices_unsafe(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        self.list_prices_no_older_than(price_ids, u64::MAX)
+    }
+
+    /// Batch version of `get_price_no_older_than`.
+    pub fn list_prices_no_older_than(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+        age: Seconds,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        price_ids
+            .into_iter()
+            .map(|price_id| {
+                if let Some(feed) = self.prices.get(&price_id) {
+                    let block_timestamp = env::block_timestamp() / 1_000_000_000;
+                    let price_timestamp = feed.price.publish_time;
+
+                    // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
+                    // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
+                    // - Any other price around the current time is considered valid.
+                    if u64::abs_diff(block_timestamp, price_timestamp.try_into().unwrap()) > age {
+                        (price_id, None)
+                    } else {
+                        (price_id, Some(feed.price))
+                    }
+                } else {
+                    (price_id, None)
+                }
+            })
+            .collect()
+    }
+
     /// EMA version of `get_price`.
     pub fn get_ema_price(&self, price_id: PriceIdentifier) -> Option<Price> {
         self.get_ema_price_no_older_than(price_id, self.get_stale_threshold())
@@ -540,6 +587,50 @@ impl Pyth {
 
             Some(feed.ema_price)
         })
+    }
+
+    /// EMA version of `list_prices`.
+    pub fn list_ema_prices(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        self.list_ema_prices_no_older_than(price_ids, self.get_stale_threshold())
+    }
+
+    /// EMA version of `list_prices_unsafe`.
+    pub fn list_ema_prices_unsafe(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        self.list_ema_prices_no_older_than(price_ids, u64::MAX)
+    }
+
+    /// EMA version of `list_prices_no_older_than`.
+    pub fn list_ema_prices_no_older_than(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+        age: Seconds,
+    ) -> HashMap<PriceIdentifier, Option<Price>> {
+        price_ids
+            .into_iter()
+            .map(|price_id| {
+                if let Some(feed) = self.prices.get(&price_id) {
+                    let block_timestamp = env::block_timestamp() / 1_000_000_000;
+                    let price_timestamp = feed.ema_price.publish_time;
+
+                    // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
+                    // - If Price newer than now by more than STALENESS_THRESHOLD, set status to Unknown.
+                    // - Any other price around the current time is considered valid.
+                    if u64::abs_diff(block_timestamp, price_timestamp.try_into().unwrap()) > age {
+                        (price_id, None)
+                    } else {
+                        (price_id, Some(feed.ema_price))
+                    }
+                } else {
+                    (price_id, None)
+                }
+            })
+            .collect()
     }
 }
 
