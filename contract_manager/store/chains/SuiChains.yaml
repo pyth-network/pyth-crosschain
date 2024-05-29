@@ -3,11 +3,6 @@
   mainnet: false
   rpcUrl: https://fullnode.testnet.sui.io:443
   type: SuiChain
-- id: sui_devnet
-  wormholeChainName: sui
-  mainnet: false
-  rpcUrl: https://fullnode.devnet.sui.io:443
-  type: SuiChain
 - id: sui_mainnet
   wormholeChainName: sui
   mainnet: true
