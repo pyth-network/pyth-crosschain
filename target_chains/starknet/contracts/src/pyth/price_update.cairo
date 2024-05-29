@@ -1,5 +1,5 @@
 use pyth::reader::{Reader, ReaderImpl};
-use pyth::pyth::UpdatePriceFeedsError;
+use pyth::pyth::{UpdatePriceFeedsError, PriceFeed, Price};
 use core::panic_with_felt252;
 use pyth::byte_array::ByteArray;
 use pyth::merkle_tree::read_and_verify_proof;
@@ -134,5 +134,25 @@ pub fn read_and_verify_message(ref reader: Reader, root_digest: u256) -> PriceFe
 
     PriceFeedMessage {
         price_id, price, conf, expo, publish_time, prev_publish_time, ema_price, ema_conf,
+    }
+}
+
+impl PriceFeedMessageIntoPriceFeed of Into<PriceFeedMessage, PriceFeed> {
+    fn into(self: PriceFeedMessage) -> PriceFeed {
+        PriceFeed {
+            id: self.price_id,
+            price: Price {
+                price: self.price,
+                conf: self.conf,
+                expo: self.expo,
+                publish_time: self.publish_time,
+            },
+            ema_price: Price {
+                price: self.ema_price,
+                conf: self.ema_conf,
+                expo: self.expo,
+                publish_time: self.publish_time,
+            },
+        }
     }
 }
