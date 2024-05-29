@@ -7,11 +7,11 @@ mod data_structures;
 mod events;
 
 use std::{
+    asset_id::AssetId,
     block::timestamp,
     bytes::Bytes,
     call_frames::msg_asset_id,
     constants::{
-        BASE_ASSET_ID,
         ZERO_B256,
     },
     context::msg_amount,
@@ -24,7 +24,6 @@ use std::{
         storage_map::StorageMap,
         storage_vec::*,
     },
-    u256::U256,
     revert::revert,
 };
 
@@ -60,8 +59,8 @@ use pyth_interface::{
     WormholeGuardians,
 };
 
-use ownership::*;
-use src5::{SRC5, State};
+use sway_libs::ownership::*;
+use standards::src5::{SRC5, State};
 
 configurable {
     DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
@@ -150,7 +149,7 @@ impl PythCore for Contract {
         update_data: Vec<Bytes>,
     ) -> Vec<PriceFeed> {
         require(
-            msg_asset_id() == BASE_ASSET_ID,
+            msg_asset_id() == AssetId::base(),
             PythError::FeesCanOnlyBePaidInTheBaseAsset,
         );
 
@@ -379,7 +378,7 @@ fn update_fee(update_data: Vec<Bytes>) -> u64 {
 #[storage(read, write), payable]
 fn update_price_feeds(update_data: Vec<Bytes>) {
     require(
-        msg_asset_id() == BASE_ASSET_ID,
+        msg_asset_id() == AssetId::base(),
         PythError::FeesCanOnlyBePaidInTheBaseAsset,
     );
 
@@ -495,7 +494,7 @@ impl PythInit for Contract {
         require(data_sources.len()  > 0, PythError::InvalidDataSourcesLength);
 
         let mut i = 0;
-        while i < data_sources.len()  {
+        while i < data_sources.len() {
             let data_source = data_sources.get(i).unwrap();
             storage.is_valid_data_source.insert(data_source, true);
             storage.valid_data_sources.push(data_source);
@@ -512,11 +511,7 @@ impl PythInit for Contract {
         let guardian_length: u8 = wormhole_guardian_set_addresses.len().try_as_u8().unwrap();
         let mut new_guardian_set = StorageGuardianSet::new(
             0,
-            StorageKey {
-                slot: sha256(("guardian_set_keys", wormhole_guardian_set_index)),
-                offset: 0,
-                field_id: ZERO_B256,
-            },
+            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", wormhole_guardian_set_index)), 0, ZERO_B256),
         );
         let mut i: u8 = 0;
         while i < guardian_length {

@@ -8,7 +8,7 @@ use std::{bytes::Bytes, hash::Hash};
 const BATCH_MAGIC: u32 = 0x50325748;
 
 pub struct BatchAttestationUpdate {
-    data: Bytes,
+    pub data: Bytes,
 }
 impl BatchAttestationUpdate {
     pub fn new(data: Bytes) -> Self {

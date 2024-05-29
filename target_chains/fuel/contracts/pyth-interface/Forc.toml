@@ -5,4 +5,4 @@ license = "Apache-2.0"
 name = "pyth_interface"
 
 [dependencies]
-src5 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.3.3" }
+standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.4.4" }

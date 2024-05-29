@@ -108,11 +108,7 @@ impl GuardianSetUpgrade {
         index += 1;
         let mut new_guardian_set: StorageGuardianSet = StorageGuardianSet::new(
             0,
-            StorageKey {
-                slot: sha256(("guardian_set_keys", new_guardian_set_index)),
-                offset: 0,
-                field_id: ZERO_B256,
-            },
+            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", new_guardian_set_index)), 0, ZERO_B256),
         );
         let mut i: u8 = 0;
         while i < guardian_length {
@@ -222,8 +218,7 @@ impl GuardianSignature {
         require(
             recovered_signer
                 .is_ok() && recovered_signer
-                .unwrap()
-                .value == guardian_set_key,
+                .unwrap().bits() == guardian_set_key,
             WormholeError::SignatureInvalid,
         );
     }

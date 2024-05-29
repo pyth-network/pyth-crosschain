@@ -2,5 +2,5 @@
 channel = "latest-aarch64-apple-darwin"
 
 [components]
-forc = "0.57.0"
+forc = "0.60.0"
 fuel-core = "0.26.0"

@@ -1,6 +1,6 @@
 [[package]]
 name = "core"
-source = "path+from-root-E59E2AC10131D713"
+source = "path+from-root-E19CE48B3E858B72"
 
 [[package]]
 name = "pyth-contract"
@@ -16,14 +16,9 @@ dependencies = [
 name = "pyth_interface"
 source = "path+from-root-555D3D27A908977B"
 dependencies = [
-    "src5",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.4#a001d3c248595112aae67e5633a06ef9bc0536ae",
     "std",
 ]
-
-[[package]]
-name = "src5"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.3.3#4198b4b07449ad16104cc8a0501f3013670fdcfd"
-dependencies = ["std"]
 
 [[package]]
 name = "standards"
@@ -37,7 +32,7 @@ dependencies = ["std"]
 
 [[package]]
 name = "std"
-source = "git+https://github.com/fuellabs/sway?tag=v0.57.0#8148817c02b0015ac3f299a8935f9a73d395a35e"
+source = "git+https://github.com/fuellabs/sway?tag=v0.60.0#2f0392ee35a1e4dd80bd8034962d5b4083dfb8b6"
 dependencies = ["core"]
 
 [[package]]
