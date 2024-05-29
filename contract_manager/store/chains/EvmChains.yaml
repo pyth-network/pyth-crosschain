@@ -594,3 +594,13 @@
   rpcUrl: https://evm-rpc.sei-apis.com
   networkId: 1329
   type: EvmChain
+- id: dela_mithreum_deperp_testnet
+  mainnet: false
+  rpcUrl: https://mithreum-rpc-sepolia.deperp.com
+  networkId: 33612
+  type: EvmChain
+- id: kakarot_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia-rpc-priority.kakarot.org
+  networkId: 1802203764
+  type: EvmChain
