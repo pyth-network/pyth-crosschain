@@ -5,7 +5,7 @@ use snforge_std::{
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
     WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
-    PriceFeedPublishTime, GetPriceNoOlderThanError, Price, PriceFeed,
+    PriceFeedPublishTime, GetPriceNoOlderThanError, Price, PriceFeed, GetPriceUnsafeError,
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
@@ -131,6 +131,19 @@ fn update_price_feeds_works() {
     assert!(last_ema_price.conf == 4096812700);
     assert!(last_ema_price.expo == -8);
     assert!(last_ema_price.publish_time == 1712589206);
+
+    let feed = pyth
+        .query_price_feed_unsafe(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        .unwrap_with_felt252();
+    assert!(feed.id == 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43);
+    assert!(feed.price.price == 7192002930010);
+    assert!(feed.price.conf == 3596501465);
+    assert!(feed.price.expo == -8);
+    assert!(feed.price.publish_time == 1712589206);
+    assert!(feed.ema_price.price == 7181868900000);
+    assert!(feed.ema_price.conf == 4096812700);
+    assert!(feed.ema_price.expo == -8);
+    assert!(feed.ema_price.publish_time == 1712589206);
 }
 
 #[test]
@@ -407,9 +420,17 @@ fn test_get_no_older_works() {
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
     let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
+    let err = pyth.get_price_unsafe(price_id).unwrap_err();
+    assert!(err == GetPriceUnsafeError::PriceFeedNotFound);
+    let err = pyth.get_ema_price_unsafe(price_id).unwrap_err();
+    assert!(err == GetPriceUnsafeError::PriceFeedNotFound);
+    let err = pyth.query_price_feed_unsafe(price_id).unwrap_err();
+    assert!(err == GetPriceUnsafeError::PriceFeedNotFound);
     let err = pyth.get_price_no_older_than(price_id, 100).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
     let err = pyth.get_ema_price_no_older_than(price_id, 100).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
+    let err = pyth.query_price_feed_no_older_than(price_id, 100).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
@@ -425,6 +446,8 @@ fn test_get_no_older_works() {
     assert!(err == GetPriceNoOlderThanError::StalePrice);
     let err = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::StalePrice);
+    let err = pyth.query_price_feed_no_older_than(price_id, 3).unwrap_err();
+    assert!(err == GetPriceNoOlderThanError::StalePrice);
 
     start_warp(CheatTarget::One(pyth.contract_address), 1712589208);
     let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
@@ -433,6 +456,9 @@ fn test_get_no_older_works() {
     let val = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_with_felt252();
     assert!(val.publish_time == 1712589206);
     assert!(val.price == 7181868900000);
+    let val = pyth.query_price_feed_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.price.publish_time == 1712589206);
+    assert!(val.price.price == 7192002930010);
 
     start_warp(CheatTarget::One(pyth.contract_address), 1712589204);
     let val = pyth.get_price_no_older_than(price_id, 3).unwrap_with_felt252();
@@ -441,6 +467,9 @@ fn test_get_no_older_works() {
     let val = pyth.get_ema_price_no_older_than(price_id, 3).unwrap_with_felt252();
     assert!(val.publish_time == 1712589206);
     assert!(val.price == 7181868900000);
+    let val = pyth.query_price_feed_no_older_than(price_id, 3).unwrap_with_felt252();
+    assert!(val.price.publish_time == 1712589206);
+    assert!(val.price.price == 7192002930010);
 
     stop_warp(CheatTarget::One(pyth.contract_address));
 }

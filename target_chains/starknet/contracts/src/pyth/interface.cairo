@@ -11,6 +11,10 @@ pub trait IPyth<T> {
         self: @T, price_id: u256, age: u64
     ) -> Result<Price, GetPriceNoOlderThanError>;
     fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
+    fn query_price_feed_no_older_than(
+        self: @T, price_id: u256, age: u64
+    ) -> Result<PriceFeed, GetPriceNoOlderThanError>;
+    fn query_price_feed_unsafe(self: @T, price_id: u256) -> Result<PriceFeed, GetPriceUnsafeError>;
     fn update_price_feeds(ref self: T, data: ByteArray);
     fn update_price_feeds_if_necessary(
         ref self: T, update: ByteArray, required_publish_times: Array<PriceFeedPublishTime>
