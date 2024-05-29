@@ -90,6 +90,10 @@ fn update_price_feeds_works() {
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
 
@@ -144,6 +148,10 @@ fn update_price_feeds_works() {
     assert!(feed.ema_price.conf == 4096812700);
     assert!(feed.ema_price.expo == -8);
     assert!(feed.ema_price.publish_time == 1712589206);
+
+    assert!(
+        pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
 }
 
 #[test]

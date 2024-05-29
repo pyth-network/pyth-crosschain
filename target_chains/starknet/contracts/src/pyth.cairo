@@ -239,6 +239,11 @@ mod pyth {
             Result::Ok(feed)
         }
 
+        fn price_feed_exists(self: @ContractState, price_id: u256) -> bool {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time != 0
+        }
+
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
