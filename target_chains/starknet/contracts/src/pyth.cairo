@@ -204,6 +204,41 @@ mod pyth {
             Result::Ok(price)
         }
 
+        fn query_price_feed_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<PriceFeed, GetPriceNoOlderThanError> {
+            let feed = self.query_price_feed_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(feed.price.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(feed)
+        }
+
+        fn query_price_feed_unsafe(
+            self: @ContractState, price_id: u256
+        ) -> Result<PriceFeed, GetPriceUnsafeError> {
+            let info = self.latest_price_info.read(price_id);
+            if info.publish_time == 0 {
+                return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
+            }
+            let feed = PriceFeed {
+                id: price_id,
+                price: Price {
+                    price: info.price,
+                    conf: info.conf,
+                    expo: info.expo,
+                    publish_time: info.publish_time,
+                },
+                ema_price: Price {
+                    price: info.ema_price,
+                    conf: info.ema_conf,
+                    expo: info.expo,
+                    publish_time: info.publish_time,
+                },
+            };
+            Result::Ok(feed)
+        }
+
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
