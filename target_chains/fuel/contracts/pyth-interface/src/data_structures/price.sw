@@ -18,7 +18,7 @@ pub struct Price {
     // Price
     pub price: u64,
     // The TAI64 timestamp describing when the price was published
-    publish_time: u64,
+    pub publish_time: u64,
 }
 
 // The `PriceFeedId` type is an alias for `b256` that represents the id for a specific Pyth price feed.

@@ -157,7 +157,7 @@ impl PythCore for Contract {
         let required_fee = update_fee(update_data);
         require(msg_amount() >= required_fee, PythError::InsufficientFee);
 
-        let mut output_price_feeds: Vec<PriceFeed> = Vec::with_capacity(target_price_feed_ids.len);
+        let mut output_price_feeds: Vec<PriceFeed> = Vec::with_capacity(target_price_feed_ids.len());
         let mut i = 0;
         while i < update_data.len()  {
             let data = update_data.get(i).unwrap();
