@@ -35,3 +35,11 @@ jobs:
         run: snforge test
       - name: Test local deployment script
         run: bash -c 'PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/local_deploy'
+      - name: Verify version
+        run: |
+          version1=$(grep version Scarb.toml | cut -d '"' -f 2)
+          version2=$(grep -A1 "fn version" src/pyth.cairo | grep "'" | cut -d "'" -f 2)
+          if [ "${version1}" != "${version2}" ]; then
+            >&2 echo Version mismatch in Scarb.toml and src/pyth.cairo
+            exit 1
+          fi
