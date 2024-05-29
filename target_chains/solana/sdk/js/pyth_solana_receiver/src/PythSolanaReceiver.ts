@@ -105,7 +105,11 @@ export class PythTransactionBuilder extends TransactionBuilder {
     config: PythTransactionBuilderConfig,
     addressLookupTable?: AddressLookupTableAccount
   ) {
-    super(pythSolanaReceiver.wallet.publicKey, pythSolanaReceiver.connection, addressLookupTable);
+    super(
+      pythSolanaReceiver.wallet.publicKey,
+      pythSolanaReceiver.connection,
+      addressLookupTable
+    );
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
     this.priceFeedIdToPriceUpdateAccount = {};
