@@ -1,5 +1,6 @@
 use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
 use pyth::byte_array::ByteArray;
+use core::starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IPyth<T> {
@@ -16,6 +17,7 @@ pub trait IPyth<T> {
     ) -> Result<PriceFeed, GetPriceNoOlderThanError>;
     fn query_price_feed_unsafe(self: @T, price_id: u256) -> Result<PriceFeed, GetPriceUnsafeError>;
     fn price_feed_exists(self: @T, price_id: u256) -> bool;
+    fn latest_price_info_publish_time(self: @T, price_id: u256) -> u64;
 
     fn update_price_feeds(ref self: T, data: ByteArray);
     fn update_price_feeds_if_necessary(
@@ -32,6 +34,17 @@ pub trait IPyth<T> {
         ref self: T, data: ByteArray, price_ids: Array<u256>, publish_time: u64, max_staleness: u64,
     ) -> Array<PriceFeed>;
     fn get_update_fee(self: @T, data: ByteArray) -> u256;
+    fn wormhole_address(self: @T) -> ContractAddress;
+    fn fee_contract_address(self: @T) -> ContractAddress;
+    fn get_single_update_fee(self: @T) -> u256;
+    fn valid_data_sources(self: @T) -> Array<DataSource>;
+    fn is_valid_data_source(self: @T, source: DataSource) -> bool;
+    fn governance_data_source(self: @T) -> DataSource;
+    fn is_valid_governance_data_source(self: @T, source: DataSource) -> bool;
+    fn last_executed_governance_sequence(self: @T) -> u64;
+    fn governance_data_source_index(self: @T) -> u32;
+    fn chain_id(self: @T) -> u16;
+
     fn execute_governance_instruction(ref self: T, data: ByteArray);
     fn version(self: @T) -> felt252;
     fn pyth_upgradable_magic(self: @T) -> u32;

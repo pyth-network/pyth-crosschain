@@ -84,6 +84,66 @@ fn decode_event(mut event: Event) -> PythEvent {
 }
 
 #[test]
+fn test_getters_work() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    assert!(pyth.wormhole_address() == wormhole.contract_address);
+    assert!(pyth.fee_contract_address() == fee_contract.contract_address);
+    assert!(pyth.get_single_update_fee() == 1000);
+    assert!(
+        pyth
+            .valid_data_sources() == array![
+                DataSource {
+                    emitter_chain_id: 26,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            ]
+    );
+    assert!(
+        pyth
+            .is_valid_data_source(
+                DataSource {
+                    emitter_chain_id: 26,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            )
+    );
+    assert!(
+        !pyth.is_valid_data_source(DataSource { emitter_chain_id: 26, emitter_address: 0xbad, })
+    );
+    assert!(
+        !pyth
+            .is_valid_data_source(
+                DataSource {
+                    emitter_chain_id: 27,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            )
+    );
+    assert!(
+        pyth.governance_data_source() == DataSource { emitter_chain_id: 1, emitter_address: 41, }
+    );
+    assert!(
+        pyth
+            .is_valid_governance_data_source(
+                DataSource { emitter_chain_id: 1, emitter_address: 41, }
+            )
+    );
+    assert!(
+        !pyth
+            .is_valid_governance_data_source(
+                DataSource { emitter_chain_id: 1, emitter_address: 42, }
+            )
+    );
+    assert!(pyth.last_executed_governance_sequence() == 0);
+    assert!(pyth.governance_data_source_index() == 0);
+    assert!(pyth.chain_id() == 60051);
+}
+
+#[test]
 fn update_price_feeds_works() {
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_mainnet_guardians();
@@ -92,6 +152,12 @@ fn update_price_feeds_works() {
 
     assert!(
         !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
     );
 
     let fee = pyth.get_update_fee(data::good_update1());
@@ -151,6 +217,12 @@ fn update_price_feeds_works() {
 
     assert!(
         pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 1712589206
     );
 }
 

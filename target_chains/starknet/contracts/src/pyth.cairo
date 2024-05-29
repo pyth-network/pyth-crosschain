@@ -1,7 +1,7 @@
 mod errors;
 mod interface;
 mod price_update;
-mod governance;
+pub mod governance;
 
 mod fake_upgrades;
 
@@ -244,6 +244,11 @@ mod pyth {
             info.publish_time != 0
         }
 
+        fn latest_price_info_publish_time(self: @ContractState, price_id: u256) -> u64 {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time
+        }
+
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
@@ -303,6 +308,54 @@ mod pyth {
                 .update_price_feeds_internal(
                     data, price_ids, publish_time, publish_time + max_staleness, true
                 )
+        }
+
+        fn wormhole_address(self: @ContractState) -> ContractAddress {
+            self.wormhole_address.read()
+        }
+
+        fn fee_contract_address(self: @ContractState) -> ContractAddress {
+            self.fee_contract_address.read()
+        }
+
+        fn get_single_update_fee(self: @ContractState) -> u256 {
+            self.single_update_fee.read()
+        }
+
+        fn valid_data_sources(self: @ContractState) -> Array<DataSource> {
+            let count = self.num_data_sources.read();
+            let mut i = 0;
+            let mut output = array![];
+            while i < count {
+                output.append(self.data_sources.read(i));
+                i += 1;
+            };
+            output
+        }
+
+        fn is_valid_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.is_valid_data_source.read(source)
+        }
+
+        fn governance_data_source(self: @ContractState) -> DataSource {
+            self.governance_data_source.read()
+        }
+
+        fn is_valid_governance_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.governance_data_source.read() == source
+        }
+
+        fn last_executed_governance_sequence(self: @ContractState) -> u64 {
+            self.last_executed_governance_sequence.read()
+        }
+
+        fn governance_data_source_index(self: @ContractState) -> u32 {
+            self.governance_data_source_index.read()
+        }
+
+        fn chain_id(self: @ContractState) -> u16 {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            wormhole.chain_id()
         }
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
