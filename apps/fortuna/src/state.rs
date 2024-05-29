@@ -11,7 +11,11 @@ use {
     },
 };
 
-/// A HashChain.
+/// A hash chain of a specific length. The hash chain has the property that
+/// hash(chain.reveal_ith(i)) == chain.reveal_ith(i - 1)
+///
+/// The implementation subsamples the elements of the chain such that it uses less memory
+/// to keep the chain around.
 #[derive(Clone)]
 pub struct PebbleHashChain {
     hash:            Vec<[u8; 32]>,
@@ -27,13 +31,12 @@ impl PebbleHashChain {
     }
 
     pub fn new_with_interval(secret: [u8; 32], length: usize, sample_interval: usize) -> Self {
+        assert!(sample_interval > 0, "Sample interval must be positive");
         let mut hash = Vec::<[u8; 32]>::with_capacity(length);
         let mut current: [u8; 32] = Keccak256::digest(secret).into();
 
-        let sampled_chain_length = (length / sample_interval) * sample_interval + 1;
-
         hash.push(current.clone());
-        for i in 1..sampled_chain_length {
+        for i in 1..length {
             current = Keccak256::digest(&current).into();
             if i % sample_interval == 0 {
                 hash.push(current);
@@ -79,9 +82,12 @@ impl PebbleHashChain {
 
     pub fn reveal_ith(&self, i: usize) -> Result<[u8; 32]> {
         ensure!(i < self.len(), "index not in range");
-        let closest_index = (i / self.sample_interval) + 1;
-        let mut i_index = closest_index * self.sample_interval;
-        let mut val = self.hash[closest_index].clone();
+
+        let index_from_end_of_subsampled_list = ((self.len() - 1) - i) / self.sample_interval;
+        let mut i_index = self.len() - 1 - index_from_end_of_subsampled_list * self.sample_interval;
+        let mut val = self.hash[self.hash.len() - 1 - index_from_end_of_subsampled_list].clone();
+
+        println!("{} {}", index_from_end_of_subsampled_list, i_index);
 
         while i_index > i {
             val = Keccak256::digest(val).into();
@@ -126,8 +132,8 @@ impl HashChainState {
     }
 }
 
+#[cfg(test)]
 mod test {
-
     use {
         crate::state::PebbleHashChain,
         sha3::{
@@ -136,31 +142,54 @@ mod test {
         },
     };
 
+    fn run_hash_chain_test(secret: [u8; 32], length: usize, sample_interval: usize) {
+        // Calculate the hash chain the naive way as a comparison point to the subsampled implementation.
+        let mut basic_chain = Vec::<[u8; 32]>::with_capacity(length);
+        let mut current: [u8; 32] = Keccak256::digest(secret).into();
+        basic_chain.push(current.clone());
+        for _ in 1..length {
+            current = Keccak256::digest(&current).into();
+            basic_chain.push(current);
+        }
 
-    #[test]
-    fn test_hash_chain() {
-        let secret = [0u8; 32];
-        let chain = PebbleHashChain::new_with_interval(secret, 100, 2);
-        let unsampled_chain = PebbleHashChain::new_with_interval(secret, 100, 1);
+        basic_chain.reverse();
+
+        let chain = PebbleHashChain::new_with_interval(secret, length, sample_interval);
+
 
         for i in 0..10 {
-            println!("{} {:?}", i, unsampled_chain.reveal_ith(i).unwrap());
+            println!("{} {:?}", i, basic_chain[i]);
         }
 
         for i in 0..10 {
-            println!("{} {:?}", i, chain.hash[i]);
+            println!("{} {:?}", i, chain.reveal_ith(i).unwrap());
         }
 
         let mut last_val = chain.reveal_ith(0).unwrap();
-        for i in 1..chain.len() {
-            println!("CHECKING {:?}", i);
-            println!("{:?}", chain.reveal_ith(i).unwrap());
-
+        for i in 1..length {
             let cur_val = chain.reveal_ith(i).unwrap();
-            let expected_last_val: [u8; 32] = Keccak256::digest(cur_val).into();
+            println!("{}", i);
+            assert_eq!(basic_chain[i], cur_val);
 
+            let expected_last_val: [u8; 32] = Keccak256::digest(cur_val).into();
             assert_eq!(expected_last_val, last_val);
             last_val = cur_val;
         }
+    }
+
+    #[test]
+    fn test_hash_chain() {
+        run_hash_chain_test([0u8; 32], 10, 1);
+        run_hash_chain_test([0u8; 32], 10, 2);
+        run_hash_chain_test([0u8; 32], 10, 3);
+        run_hash_chain_test([1u8; 32], 10, 1);
+        run_hash_chain_test([1u8; 32], 10, 2);
+        run_hash_chain_test([1u8; 32], 10, 3);
+        run_hash_chain_test([0u8; 32], 100, 1);
+        run_hash_chain_test([0u8; 32], 100, 2);
+        run_hash_chain_test([0u8; 32], 100, 3);
+        run_hash_chain_test([0u8; 32], 100, 7);
+        run_hash_chain_test([0u8; 32], 100, 50);
+        run_hash_chain_test([0u8; 32], 100, 55);
     }
 }
