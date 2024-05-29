@@ -121,7 +121,7 @@ export const RECEIVER_CHAINS = {
   zksync_sepolia: 50042,
   base_sepolia: 50043,
   movement_evm_devnet: 50044,
-  movement_move_devnet: 50045,
+  movement_m1_devnet: 50045,
   zkfair_testnet: 50046,
   blast_s2_testnet: 50047,
   hedera_testnet: 50048,
@@ -151,7 +151,7 @@ export const RECEIVER_CHAINS = {
   orange_testnet: 50073,
   polygon_amoy: 50074,
   starknet_sepolia: 50075,
-  movement_devnet_m2: 50076,
+  movement_m2_devnet: 50076,
   taiko_mainnet: 50077,
   sei_evm_mainnet: 50078,
 };
