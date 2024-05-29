@@ -233,11 +233,11 @@ mod test {
         // initialize the BlockchainStates below, but they aren't cloneable (nor do they need to be cloned).
         static ref ETH_CHAIN: Arc<HashChainState> = Arc::new(HashChainState::from_chain_at_offset(
             0,
-            PebbleHashChain::new([0u8; 32], 1000),
+            PebbleHashChain::new([0u8; 32], 1000, 1),
         ));
         static ref AVAX_CHAIN: Arc<HashChainState> = Arc::new(HashChainState::from_chain_at_offset(
             100,
-            PebbleHashChain::new([1u8; 32], 1000),
+            PebbleHashChain::new([1u8; 32], 1000, 1),
         ));
     }
 

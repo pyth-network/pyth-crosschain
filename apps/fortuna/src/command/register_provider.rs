@@ -72,6 +72,7 @@ pub async fn register_provider_from_config(
         &chain_config.contract_addr,
         &random,
         commitment_length,
+        provider_config.chain_sample_interval,
     )?;
 
     // Arguments to the contract to register our new provider.

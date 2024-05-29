@@ -159,8 +159,14 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for (chain_id, chain_config) in &config.chains {
-        let state =
-            setup_chain_state(&config.provider.address, &secret, chain_id, chain_config).await;
+        let state = setup_chain_state(
+            &config.provider.address,
+            &secret,
+            config.provider.chain_sample_interval,
+            chain_id,
+            chain_config,
+        )
+        .await;
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
@@ -211,6 +217,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 async fn setup_chain_state(
     provider: &Address,
     secret: &String,
+    chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
@@ -267,6 +274,7 @@ async fn setup_chain_state(
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
+            chain_sample_interval,
         )?;
         hash_chains.push(pebble_hash_chain);
     }

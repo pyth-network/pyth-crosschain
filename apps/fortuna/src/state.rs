@@ -56,7 +56,7 @@ impl PebbleHashChain {
         contract_address: &Address,
         random: &[u8; 32],
         chain_length: u64,
-        // sample_interval: usize,
+        sample_interval: u64,
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
         input.extend_from_slice(&hex::decode(secret.trim())?);
@@ -65,14 +65,11 @@ impl PebbleHashChain {
         input.extend_from_slice(&contract_address.as_bytes());
         input.extend_from_slice(random);
 
-        // TODO
-        let sample_interval: usize = 1;
-
         let secret: [u8; 32] = Keccak256::digest(input).into();
-        Ok(Self::new_with_interval(
+        Ok(Self::new(
             secret,
             chain_length.try_into()?,
-            sample_interval,
+            sample_interval.try_into()?,
         ))
     }
 
@@ -150,7 +147,7 @@ mod test {
 
         basic_chain.reverse();
 
-        let chain = PebbleHashChain::new_with_interval(secret, length, sample_interval);
+        let chain = PebbleHashChain::new(secret, length, sample_interval);
 
 
         for i in 0..10 {
