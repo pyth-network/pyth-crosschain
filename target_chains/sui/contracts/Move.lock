@@ -2,7 +2,7 @@
 
 [move]
 version = 0
-manifest_digest = "320300697C11C4D84BF6ED32C1DB48A4EE830B6B44F4DFDA4E89345875C5EA11"
+manifest_digest = "007F9D3846BDB01244CB4A3A030D20464097D4A818B04BB99987DC86A8CE118E"
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 
 dependencies = [
@@ -24,13 +24,13 @@ dependencies = [
 
 [[move.package]]
 name = "Wormhole"
-source = { git = "https://github.com/wormhole-foundation/wormhole.git", rev = "82d82bffd5a8566e4b5d94be4e4678ad55ab1f4f", subdir = "sui/wormhole" }
+source = { git = "https://github.com/wormhole-foundation/wormhole.git", rev = "sui-upgrade-testnet", subdir = "sui/wormhole" }
 
 dependencies = [
   { name = "Sui" },
 ]
 
 [move.toolchain-version]
-compiler-version = "1.19.1"
+compiler-version = "1.26.0"
 edition = "legacy"
 flavor = "sui"
