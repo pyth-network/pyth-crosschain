@@ -26,11 +26,7 @@ pub struct PebbleHashChain {
 impl PebbleHashChain {
     // Given a secret, we hash it with Keccak256 len times to get the final hash, this is an S/KEY
     // like protocol in which revealing the hashes in reverse proves knowledge.
-    pub fn new(secret: [u8; 32], length: usize) -> Self {
-        Self::new_with_interval(secret, length, 1)
-    }
-
-    pub fn new_with_interval(secret: [u8; 32], length: usize, sample_interval: usize) -> Self {
+    pub fn new(secret: [u8; 32], length: usize, sample_interval: usize) -> Self {
         assert!(sample_interval > 0, "Sample interval must be positive");
         let mut hash = Vec::<[u8; 32]>::with_capacity(length);
         let mut current: [u8; 32] = Keccak256::digest(secret).into();
