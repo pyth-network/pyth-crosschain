@@ -87,7 +87,7 @@ pub fn parse_and_verify_batch_attestation_header(encoded_payload: Bytes) -> (u64
     index += 2;
     require(
         encoded_payload
-            .len == index + (attestation_size * number_of_attestations)
+            .len()  == index + (attestation_size * number_of_attestations)
             .as_u64(),
         PythError::InvalidPayloadLength,
     );

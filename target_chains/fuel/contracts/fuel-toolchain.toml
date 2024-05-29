@@ -1,6 +1,6 @@
 [toolchain]
-channel = "beta-5"
+channel = "latest-aarch64-apple-darwin"
 
 [components]
-forc = "0.49.3"
-fuel-core = "0.22.4"
+forc = "0.57.0"
+fuel-core = "0.26.0"

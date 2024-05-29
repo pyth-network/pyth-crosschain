@@ -1,23 +1,15 @@
 [[package]]
 name = "core"
-source = "path+from-root-566CA1D5F8BEAFBF"
-
-[[package]]
-name = "ownership"
-source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.18.0#8d196e9379463d4596ac582a20a84ed52ff58c69"
-dependencies = [
-    "src_5",
-    "std",
-]
+source = "path+from-root-E59E2AC10131D713"
 
 [[package]]
 name = "pyth-contract"
 source = "member"
 dependencies = [
-    "ownership",
     "pyth_interface",
-    "src5",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.4#a001d3c248595112aae67e5633a06ef9bc0536ae",
     "std",
+    "sway_libs",
 ]
 
 [[package]]
@@ -34,11 +26,24 @@ source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.3.3#4198b4b07449
 dependencies = ["std"]
 
 [[package]]
-name = "src_5"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.2.2#6989cf8224b0d8aabea62f3d3c648fc754948705"
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
+dependencies = ["std"]
+
+[[package]]
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.4#a001d3c248595112aae67e5633a06ef9bc0536ae"
 dependencies = ["std"]
 
 [[package]]
 name = "std"
-source = "git+https://github.com/fuellabs/sway?tag=v0.49.3#0dc6570377ee9c4a6359ade597fa27351e02a728"
+source = "git+https://github.com/fuellabs/sway?tag=v0.57.0#8148817c02b0015ac3f299a8935f9a73d395a35e"
 dependencies = ["core"]
+
+[[package]]
+name = "sway_libs"
+source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.21.0#6a227ed34c86fe1ebd334dbdfeccf66c43e3915b"
+dependencies = [
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
+    "std",
+]

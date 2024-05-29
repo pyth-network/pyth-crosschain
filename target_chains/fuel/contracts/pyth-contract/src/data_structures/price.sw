@@ -28,7 +28,7 @@ impl Price {
 impl PriceFeedId {
     pub fn is_target(self, target_price_feed_ids: Vec<PriceFeedId>) -> bool {
         let mut i = 0;
-        while i < target_price_feed_ids.len {
+        while i < target_price_feed_ids.len()  {
             if target_price_feed_ids.get(i).unwrap() == self {
                 return true;
             }
@@ -38,7 +38,7 @@ impl PriceFeedId {
     }
     pub fn is_contained_within(self, output_price_feeds: Vec<PriceFeed>) -> bool {
         let mut i = 0;
-        while i < output_price_feeds.len {
+        while i < output_price_feeds.len()  {
             if output_price_feeds.get(i).unwrap().id == self {
                 return true;
             }
@@ -133,7 +133,7 @@ impl PriceFeed {
         offset += 8;
         require(
             offset <= encoded_price_feed
-                .len,
+                .len(),
             PythError::InvalidPriceFeedDataLength,
         );
         //convert publish_time from UNIX to TAI64
