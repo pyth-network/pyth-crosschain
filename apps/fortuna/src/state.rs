@@ -76,11 +76,11 @@ impl PebbleHashChain {
     pub fn reveal_ith(&self, i: usize) -> Result<[u8; 32]> {
         ensure!(i < self.len(), "index not in range");
 
+        // Note that subsample_interval may not perfectly divide length, in which case the uneven segment is
+        // actually at the *front* of the list. Thus, it's easier to compute indexes from the end of the list.
         let index_from_end_of_subsampled_list = ((self.len() - 1) - i) / self.sample_interval;
         let mut i_index = self.len() - 1 - index_from_end_of_subsampled_list * self.sample_interval;
         let mut val = self.hash[self.hash.len() - 1 - index_from_end_of_subsampled_list].clone();
-
-        println!("{} {}", index_from_end_of_subsampled_list, i_index);
 
         while i_index > i {
             val = Keccak256::digest(val).into();
@@ -148,15 +148,6 @@ mod test {
         basic_chain.reverse();
 
         let chain = PebbleHashChain::new(secret, length, sample_interval);
-
-
-        for i in 0..10 {
-            println!("{} {:?}", i, basic_chain[i]);
-        }
-
-        for i in 0..10 {
-            println!("{} {:?}", i, chain.reveal_ith(i).unwrap());
-        }
 
         let mut last_val = chain.reveal_ith(0).unwrap();
         for i in 1..length {
