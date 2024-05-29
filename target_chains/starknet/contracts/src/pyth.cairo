@@ -205,7 +205,7 @@ mod pyth {
         }
 
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
-            self.parse_price_feed_updates_internal(data, array![], 0, 0, false);
+            self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
 
         fn get_update_fee(self: @ContractState, data: ByteArray) -> u256 {
@@ -247,7 +247,7 @@ mod pyth {
             max_publish_time: u64
         ) -> Array<PriceFeed> {
             self
-                .parse_price_feed_updates_internal(
+                .update_price_feeds_internal(
                     data, price_ids, min_publish_time, max_publish_time, false
                 )
         }
@@ -260,7 +260,7 @@ mod pyth {
             max_staleness: u64,
         ) -> Array<PriceFeed> {
             self
-                .parse_price_feed_updates_internal(
+                .update_price_feeds_internal(
                     data, price_ids, publish_time, publish_time + max_staleness, true
                 )
         }
@@ -477,7 +477,17 @@ mod pyth {
             self.emit(event);
         }
 
-        fn parse_price_feed_updates_internal(
+        // Applies all price feed updates encoded in `data` and extracts requested information
+        // about the new updates. `price_ids` specifies price feeds of interest. The output will
+        // contain as many items as `price_ids`, with price feeds returned in the same order as
+        // specified in `price_ids`.
+        //
+        // If `unique == false`, for each price feed, the first encountered update
+        // in the specified time interval (both timestamps inclusive) will be returned.
+        // If `unique == true`, the globally unique first update will be returned, as verified by
+        // the `prev_publish_time` value of the update. Panics if a matching update was not found
+        // for any of the specified feeds.
+        fn update_price_feeds_internal(
             ref self: ContractState,
             data: ByteArray,
             price_ids: Array<u256>,
@@ -523,9 +533,6 @@ mod pyth {
             while i < num_updates {
                 let message = read_and_verify_message(ref reader, root_digest);
                 self.update_latest_price_if_necessary(@message);
-                println!("message publish_time {:?}", message.publish_time);
-                println!("message prev_publish_time {:?}", message.prev_publish_time);
-                println!("message price_id {:?}", message.price_id);
 
                 let output_index = find_index_of_price_id(price_ids2, message.price_id);
                 match output_index {
