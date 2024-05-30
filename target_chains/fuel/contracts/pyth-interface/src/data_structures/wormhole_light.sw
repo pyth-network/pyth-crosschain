@@ -1,6 +1,6 @@
 library;
 
 pub struct GuardianSet {
-    expiration_time: u64,
-    keys: Vec<b256>,
+    pub expiration_time: u64,
+    pub keys: Vec<b256>,
 }

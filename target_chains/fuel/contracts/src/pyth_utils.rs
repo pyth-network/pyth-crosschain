@@ -214,7 +214,7 @@ impl Pyth {
                 wormhole_guardian_set_index,
                 chain_id,
             )
-            .with_tx_policies(TxPolicies::default().with_gas_price(1))
+            .with_tx_policies(TxPolicies::default().with_tip(1))
             .call()
             .await
     }
@@ -223,7 +223,7 @@ impl Pyth {
         let mut rng = rand::thread_rng();
         let salt = rng.gen::<[u8; 32]>();
         let configurables = PythOracleContractConfigurables::default()
-            .with_DEPLOYER(Identity::Address(Address::from(wallet.address())));
+            .with_DEPLOYER(Identity::Address(Address::from(wallet.address())))?;
         let config = LoadConfiguration::default().with_configurables(configurables);
 
         let id = Contract::load_from(
@@ -232,7 +232,7 @@ impl Pyth {
         )?;
         let deployed_contract = id
             .with_salt(salt)
-            .deploy(&wallet, TxPolicies::default().with_gas_price(1))
+            .deploy(&wallet, TxPolicies::default().with_tip(1))
             .await?;
 
         Ok(Self {

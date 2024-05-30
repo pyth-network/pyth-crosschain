@@ -1,5 +1,6 @@
 import { AnchorProvider, IdlAccounts, Program } from "@coral-xyz/anchor";
 import {
+  AddressLookupTableAccount,
   Connection,
   Signer,
   Transaction,
@@ -101,9 +102,14 @@ export class PythTransactionBuilder extends TransactionBuilder {
 
   constructor(
     pythSolanaReceiver: PythSolanaReceiver,
-    config: PythTransactionBuilderConfig
+    config: PythTransactionBuilderConfig,
+    addressLookupTable?: AddressLookupTableAccount
   ) {
-    super(pythSolanaReceiver.wallet.publicKey, pythSolanaReceiver.connection);
+    super(
+      pythSolanaReceiver.wallet.publicKey,
+      pythSolanaReceiver.connection,
+      addressLookupTable
+    );
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
     this.priceFeedIdToPriceUpdateAccount = {};
@@ -711,13 +717,15 @@ export class PythSolanaReceiver {
    */
   async batchIntoVersionedTransactions(
     instructions: InstructionWithEphemeralSigners[],
-    priorityFeeConfig: PriorityFeeConfig
+    priorityFeeConfig: PriorityFeeConfig,
+    addressLookupTable?: AddressLookupTableAccount
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     return TransactionBuilder.batchIntoVersionedTransactions(
       this.wallet.publicKey,
       this.connection,
       instructions,
-      priorityFeeConfig
+      priorityFeeConfig,
+      addressLookupTable
     );
   }
 
