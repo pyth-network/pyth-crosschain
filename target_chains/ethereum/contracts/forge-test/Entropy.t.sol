@@ -926,6 +926,52 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Proofs[assignedSequenceNumber]
         );
     }
+
+    function testFeeManager() public {
+        address manager = address(12);
+
+        // Make sure there are some fees for provider1
+        request(user1, provider1, 42, false);
+
+        // Manager isn't authorized, so can't withdraw or set fee.
+        vm.prank(manager);
+        vm.expectRevert();
+        random.withdrawAsFeeManager(provider1, provider1FeeInWei);
+        vm.prank(manager);
+        vm.expectRevert();
+        random.setProviderFeeAsFeeManager(provider1, 1000);
+
+        // You can't set a fee manager from an address that isn't a registered provider.
+        vm.expectRevert();
+        random.setFeeManager(address(manager));
+
+        // Authorizing the fee manager as the provider enables withdrawing and setting fees.
+        vm.prank(provider1);
+        random.setFeeManager(address(manager));
+
+        // Withdrawing decrements provider's accrued fees and sends balance to the fee manager.
+        uint startingBalance = manager.balance;
+        vm.prank(manager);
+        random.withdrawAsFeeManager(provider1, provider1FeeInWei);
+        assertEq(random.getProviderInfo(provider1).accruedFeesInWei, 0);
+        assertEq(manager.balance, startingBalance + provider1FeeInWei);
+
+        // Setting provider fee updates the fee in the ProviderInfo.
+        vm.prank(manager);
+        random.setProviderFeeAsFeeManager(provider1, 10101);
+        assertEq(random.getProviderInfo(provider1).feeInWei, 10101);
+
+        // Authorizing a different manager depermissions the previous one.
+        address manager2 = address(13);
+        vm.prank(provider1);
+        random.setFeeManager(address(manager2));
+        vm.prank(manager);
+        vm.expectRevert();
+        random.withdrawAsFeeManager(provider1, provider1FeeInWei);
+        vm.prank(manager);
+        vm.expectRevert();
+        random.setProviderFeeAsFeeManager(provider1, 1000);
+    }
 }
 
 contract EntropyConsumer is IEntropyConsumer {
