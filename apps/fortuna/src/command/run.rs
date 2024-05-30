@@ -36,6 +36,10 @@ use {
             BlockNumber,
         },
     },
+    futures::{
+        future::join_all,
+        FutureExt,
+    },
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -157,19 +161,26 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
-    let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
+    let mut tasks = Vec::new();
     for (chain_id, chain_config) in &config.chains {
-        let state = setup_chain_state(
-            &config.provider.address,
-            &secret,
-            config.provider.chain_sample_interval,
-            chain_id,
-            chain_config,
-        )
-        .await;
+        tasks.push(
+            setup_chain_state(
+                &config.provider.address,
+                &secret,
+                config.provider.chain_sample_interval,
+                chain_id,
+                chain_config,
+            )
+            .map(|x| (chain_id.clone(), x)),
+        );
+    }
+    let states = join_all(tasks).await;
+
+    let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
+    for (chain_id, state) in states {
         match state {
             Ok(state) => {
-                chains.insert(chain_id.clone(), state);
+                chains.insert(state.id.clone(), state);
             }
             Err(e) => {
                 tracing::error!("Failed to setup {} {}", chain_id, e);

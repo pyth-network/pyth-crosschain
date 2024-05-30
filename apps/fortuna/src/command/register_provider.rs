@@ -65,6 +65,7 @@ pub async fn register_provider_from_config(
         .ok_or(anyhow!("Please specify a provider secret in the config"))?;
 
     let commitment_length = provider_config.chain_length;
+    tracing::info!("Generating hash chain");
     let chain = PebbleHashChain::from_config(
         &secret,
         &chain_id,
@@ -74,6 +75,7 @@ pub async fn register_provider_from_config(
         commitment_length,
         provider_config.chain_sample_interval,
     )?;
+    tracing::info!("Done generating hash chain");
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = chain_config.fee;
