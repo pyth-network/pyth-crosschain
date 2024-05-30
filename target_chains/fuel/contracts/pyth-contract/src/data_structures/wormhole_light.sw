@@ -40,8 +40,8 @@ impl GuardianSet {
 }
 
 pub struct StorageGuardianSet {
-    expiration_time: u64,
-    keys: StorageKey<StorageVec<b256>>,
+    pub expiration_time: u64,
+    pub keys: StorageKey<StorageVec<b256>>,
 }
 
 impl StorageGuardianSet {
@@ -54,11 +54,11 @@ impl StorageGuardianSet {
 }
 
 pub struct GuardianSetUpgrade {
-    action: u8,
-    chain: u16,
-    module: b256,
-    new_guardian_set: StorageGuardianSet,
-    new_guardian_set_index: u32,
+    pub action: u8,
+    pub chain: u16,
+    pub module: b256,
+    pub new_guardian_set: StorageGuardianSet,
+    pub new_guardian_set_index: u32,
 }
 
 impl GuardianSetUpgrade {
@@ -106,13 +106,9 @@ impl GuardianSetUpgrade {
         index += 4;
         let guardian_length = encoded_upgrade.get(index).unwrap();
         index += 1;
-        let mut new_guardian_set = StorageGuardianSet::new(
+        let mut new_guardian_set: StorageGuardianSet = StorageGuardianSet::new(
             0,
-            StorageKey {
-                slot: sha256(("guardian_set_keys", new_guardian_set_index)),
-                offset: 0,
-                field_id: ZERO_B256,
-            },
+            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", new_guardian_set_index)), 0, ZERO_B256),
         );
         let mut i: u8 = 0;
         while i < guardian_length {
@@ -131,7 +127,7 @@ impl GuardianSetUpgrade {
         );
         require(
             encoded_upgrade
-                .len == index,
+                .len()  == index,
             WormholeError::InvalidGuardianSetUpgradeLength,
         );
         GuardianSetUpgrade::new(
@@ -222,25 +218,24 @@ impl GuardianSignature {
         require(
             recovered_signer
                 .is_ok() && recovered_signer
-                .unwrap()
-                .value == guardian_set_key,
+                .unwrap().bits() == guardian_set_key,
             WormholeError::SignatureInvalid,
         );
     }
 }
 
 pub struct WormholeVM {
-    version: u8,
-    guardian_set_index: u32,
-    governance_action_hash: b256,
+    pub version: u8,
+    pub guardian_set_index: u32,
+    pub governance_action_hash: b256,
     // signatures: Vec<GuardianSignature>, // Shown here to represent data layout of VM, but not needed
-    timestamp: u32,
-    nonce: u32,
-    emitter_chain_id: u16,
-    emitter_address: b256,
-    sequence: u64,
-    consistency_level: u8,
-    payload: Bytes,
+    pub timestamp: u32,
+    pub nonce: u32,
+    pub emitter_chain_id: u16,
+    pub emitter_address: b256,
+    pub sequence: u64,
+    pub consistency_level: u8,
+    pub payload: Bytes,
 }
 
 impl WormholeVM {
@@ -339,7 +334,7 @@ impl WormholeVM {
         let hash_index = index + (signers_length * 66);
         require(
             hash_index < encoded_vm
-                .len,
+                .len(),
             WormholeError::InvalidSignatureLength,
         );
         let (_, slice) = encoded_vm.split_at(hash_index);
@@ -435,7 +430,7 @@ impl WormholeVM {
             WormholeError::ConsistencyLevelIrretrievable,
         );
         index += 1;
-        require(index <= encoded_vm.len, WormholeError::InvalidPayloadLength);
+        require(index <= encoded_vm.len(), WormholeError::InvalidPayloadLength);
         let (_, payload) = encoded_vm.split_at(index);
         WormholeVM::new(
             version
@@ -485,7 +480,7 @@ impl WormholeVM {
         let hash_index = index + (signers_length * 66);
         require(
             hash_index < encoded_vm
-                .len,
+                .len(),
             WormholeError::InvalidSignatureLength,
         );
         let (_, slice) = encoded_vm.split_at(hash_index);
@@ -538,7 +533,7 @@ impl WormholeVM {
             WormholeError::ConsistencyLevelIrretrievable,
         );
         index += 1;
-        require(index <= encoded_vm.len, WormholeError::InvalidPayloadLength);
+        require(index <= encoded_vm.len(), WormholeError::InvalidPayloadLength);
         let (_, payload) = encoded_vm.split_at(index);
         WormholeVM::new(
             version

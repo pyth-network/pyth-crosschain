@@ -161,11 +161,11 @@ export class TransactionBuilder {
   constructor(
     payer: PublicKey,
     connection: Connection,
-    accountLookupTable?: AddressLookupTableAccount
+    addressLookupTable?: AddressLookupTableAccount
   ) {
     this.payer = payer;
     this.connection = connection;
-    this.addressLookupTable = accountLookupTable;
+    this.addressLookupTable = addressLookupTable;
   }
 
   /**

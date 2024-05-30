@@ -5,6 +5,6 @@ license = "Apache-2.0"
 name = "pyth-contract"
 
 [dependencies]
-ownership = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.18.0" }
+sway_libs = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.21.0" }
 pyth_interface = { path = "../pyth-interface" }
-src5 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.3.3" }
+standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.4.4" }

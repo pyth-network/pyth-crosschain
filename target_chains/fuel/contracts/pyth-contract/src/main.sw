@@ -7,11 +7,11 @@ mod data_structures;
 mod events;
 
 use std::{
+    asset_id::AssetId,
     block::timestamp,
     bytes::Bytes,
     call_frames::msg_asset_id,
     constants::{
-        BASE_ASSET_ID,
         ZERO_B256,
     },
     context::msg_amount,
@@ -24,7 +24,6 @@ use std::{
         storage_map::StorageMap,
         storage_vec::*,
     },
-    u256::U256,
     revert::revert,
 };
 
@@ -60,8 +59,8 @@ use pyth_interface::{
     WormholeGuardians,
 };
 
-use ownership::*;
-use src5::{SRC5, State};
+use sway_libs::ownership::*;
+use standards::src5::{SRC5, State};
 
 configurable {
     DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
@@ -150,16 +149,16 @@ impl PythCore for Contract {
         update_data: Vec<Bytes>,
     ) -> Vec<PriceFeed> {
         require(
-            msg_asset_id() == BASE_ASSET_ID,
+            msg_asset_id() == AssetId::base(),
             PythError::FeesCanOnlyBePaidInTheBaseAsset,
         );
 
         let required_fee = update_fee(update_data);
         require(msg_amount() >= required_fee, PythError::InsufficientFee);
 
-        let mut output_price_feeds: Vec<PriceFeed> = Vec::with_capacity(target_price_feed_ids.len);
+        let mut output_price_feeds: Vec<PriceFeed> = Vec::with_capacity(target_price_feed_ids.len());
         let mut i = 0;
-        while i < update_data.len {
+        while i < update_data.len()  {
             let data = update_data.get(i).unwrap();
 
             match UpdateType::determine_type(data) {
@@ -195,7 +194,7 @@ impl PythCore for Contract {
 
                         i_2 += 1;
                     }
-                    require(offset == encoded.len, PythError::InvalidUpdateDataLength);
+                    require(offset == encoded.len(), PythError::InvalidUpdateDataLength);
                 },
                 UpdateType::BatchAttestation(batch_attestation_update) => {
                     let vm = WormholeVM::parse_and_verify_pyth_vm(
@@ -248,8 +247,8 @@ impl PythCore for Contract {
 
         require(
             target_price_feed_ids
-                .len == output_price_feeds
-                .len,
+                .len()  == output_price_feeds
+                .len(),
             PythError::PriceFeedNotFoundWithinRange,
         );
 
@@ -289,13 +288,13 @@ impl PythCore for Contract {
     ) {
         require(
             price_feed_ids
-                .len == publish_times
-                .len,
+                .len()  == publish_times
+                .len(),
             PythError::LengthOfPriceFeedIdsAndPublishTimesMustMatch,
         );
 
         let mut i = 0;
-        while i < price_feed_ids.len {
+        while i < price_feed_ids.len()  {
             if latest_publish_time(price_feed_ids.get(i).unwrap()) < publish_times.get(i).unwrap()
             {
                 update_price_feeds(update_data);
@@ -356,7 +355,7 @@ fn price_unsafe(price_feed_id: PriceFeedId) -> Price {
 fn update_fee(update_data: Vec<Bytes>) -> u64 {
     let mut total_number_of_updates = 0;
     let mut i = 0;
-    while i < update_data.len {
+    while i < update_data.len()  {
         let data = update_data.get(i).unwrap();
 
         match UpdateType::determine_type(data) {
@@ -379,7 +378,7 @@ fn update_fee(update_data: Vec<Bytes>) -> u64 {
 #[storage(read, write), payable]
 fn update_price_feeds(update_data: Vec<Bytes>) {
     require(
-        msg_asset_id() == BASE_ASSET_ID,
+        msg_asset_id() == AssetId::base(),
         PythError::FeesCanOnlyBePaidInTheBaseAsset,
     );
 
@@ -387,7 +386,7 @@ fn update_price_feeds(update_data: Vec<Bytes>) {
 
     // let mut updated_price_feeds: Vec<PriceFeedId> = Vec::new(); // TODO: requires append for Vec
     let mut i = 0;
-    while i < update_data.len {
+    while i < update_data.len()  {
         let data = update_data.get(i).unwrap();
 
         match UpdateType::determine_type(data) {
@@ -492,10 +491,10 @@ impl PythInit for Contract {
         // This function ensures that the sender is the owner. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L59-L65
         only_owner();
 
-        require(data_sources.len > 0, PythError::InvalidDataSourcesLength);
+        require(data_sources.len()  > 0, PythError::InvalidDataSourcesLength);
 
         let mut i = 0;
-        while i < data_sources.len {
+        while i < data_sources.len() {
             let data_source = data_sources.get(i).unwrap();
             storage.is_valid_data_source.insert(data_source, true);
             storage.valid_data_sources.push(data_source);
@@ -512,11 +511,7 @@ impl PythInit for Contract {
         let guardian_length: u8 = wormhole_guardian_set_addresses.len().try_as_u8().unwrap();
         let mut new_guardian_set = StorageGuardianSet::new(
             0,
-            StorageKey {
-                slot: sha256(("guardian_set_keys", wormhole_guardian_set_index)),
-                offset: 0,
-                field_id: ZERO_B256,
-            },
+            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", wormhole_guardian_set_index)), 0, ZERO_B256),
         );
         let mut i: u8 = 0;
         while i < guardian_length {
@@ -646,7 +641,7 @@ fn governance_action_is_consumed(governance_action_hash: b256) -> bool {
 
 #[storage(read, write)]
 fn submit_new_guardian_set(encoded_vm: Bytes) {
-    let vm = WormholeVM::parse_and_verify_wormhole_vm(
+    let vm: WormholeVM = WormholeVM::parse_and_verify_wormhole_vm(
         current_guardian_set_index(),
         encoded_vm,
         storage
@@ -656,7 +651,7 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
         vm.guardian_set_index == current_guardian_set_index(),
         WormholeError::NotSignedByCurrentGuardianSet,
     );
-    let current_wormhole_provider = current_wormhole_provider();
+    let current_wormhole_provider: DataSource = current_wormhole_provider();
     require(
         vm.emitter_chain_id == current_wormhole_provider
             .chain_id,
@@ -672,8 +667,8 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
         WormholeError::GovernanceActionAlreadyConsumed,
     );
 
-    let current_guardian_set_index = current_guardian_set_index();
-    let upgrade = GuardianSetUpgrade::parse_encoded_upgrade(current_guardian_set_index, vm.payload);
+    let current_guardian_set_index: u32 = current_guardian_set_index();
+    let upgrade: GuardianSetUpgrade = GuardianSetUpgrade::parse_encoded_upgrade(current_guardian_set_index, vm.payload);
 
     storage
         .wormhole_consumed_governance_actions
@@ -708,7 +703,7 @@ fn authorize_governance_data_source_transfer(payload: AuthorizeGovernanceDataSou
     let old_governance_data_source = governance_data_source();
 
     // Parse and verify the VAA contained in the payload to ensure it's valid and can manage the contract
-    let vm = WormholeVM::parse_and_verify_wormhole_vm(
+    let vm: WormholeVM = WormholeVM::parse_and_verify_wormhole_vm(
         current_guardian_set_index(),
         payload.claim_vaa,
         storage.wormhole_guardian_sets,
@@ -750,7 +745,7 @@ fn set_data_sources(payload: SetDataSourcesPayload) {
     let old_data_sources = storage.valid_data_sources.load_vec();
 
     let mut i = 0;
-    while i < old_data_sources.len {
+    while i < old_data_sources.len()  {
         let data_source = old_data_sources.get(i).unwrap();
         storage.is_valid_data_source.insert(data_source, false);
         i += 1;
@@ -761,7 +756,7 @@ fn set_data_sources(payload: SetDataSourcesPayload) {
 
     i = 0;
     // Add new data sources from the payload and mark them as valid
-    while i < payload.data_sources.len {
+    while i < payload.data_sources.len()  {
         let data_source = payload.data_sources.get(i).unwrap();
         storage.valid_data_sources.push(data_source);
         storage.is_valid_data_source.insert(data_source, true);
@@ -869,7 +864,7 @@ impl PythGovernance for Contract {
 
 #[storage(read, write)]
 fn verify_governance_vm(encoded_vm: Bytes) -> WormholeVM {
-    let vm = WormholeVM::parse_and_verify_wormhole_vm(
+    let vm: WormholeVM = WormholeVM::parse_and_verify_wormhole_vm(
         current_guardian_set_index(),
         encoded_vm,
         storage

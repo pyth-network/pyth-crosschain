@@ -16,7 +16,7 @@ pub enum UpdateType {
 impl UpdateType {
     pub fn determine_type(data: Bytes) -> Self {
         let (magic, _) = data.split_at(4); //TODO: Convert to u32 for comparison with const ACCUMULATOR_MAGIC. Use raw_ptr.read::<u32>()? Remove accumulator_magic_bytes()
-        if data.len > 4 && magic == accumulator_magic_bytes() {
+        if data.len()  > 4 && magic == accumulator_magic_bytes() {
             UpdateType::Accumulator(AccumulatorUpdate::new(data))
         } else {
             UpdateType::BatchAttestation((BatchAttestationUpdate::new(data)))
