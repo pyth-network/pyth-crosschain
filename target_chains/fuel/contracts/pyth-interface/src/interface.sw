@@ -1,5 +1,10 @@
 library;
 
+// The order of the modules is important because of the dependencies between them.
+pub mod pyth_merkle_proof;
+pub mod errors;
+pub mod utils;
+pub mod events;
 pub mod data_structures;
 
 use ::data_structures::{

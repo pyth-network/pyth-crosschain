@@ -1,6 +1,6 @@
 library;
 
-use pyth_interface::data_structures::{
+use ::data_structures::{
     data_source::DataSource,
     price::PriceFeedId,
 };

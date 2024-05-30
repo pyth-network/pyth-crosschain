@@ -2,7 +2,6 @@ library;
 
 use ::errors::PythError;
 use ::data_structures::{data_source::*, price::*, wormhole_light::{StorageGuardianSet, WormholeVM}};
-use pyth_interface::data_structures::{data_source::DataSource, price::{PriceFeed, PriceFeedId}};
 use std::{bytes::Bytes, hash::Hash};
 
 const BATCH_MAGIC: u32 = 0x50325748;
