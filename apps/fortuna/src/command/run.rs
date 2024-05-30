@@ -36,10 +36,7 @@ use {
             BlockNumber,
         },
     },
-    futures::{
-        future::join_all,
-        FutureExt,
-    },
+    futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -162,22 +159,28 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let (tx_exit, rx_exit) = watch::channel(false);
 
     let mut tasks = Vec::new();
-    for (chain_id, chain_config) in &config.chains {
-        tasks.push(
-            setup_chain_state(
+    for (chain_id, chain_config) in config.chains.clone() {
+        let secret_copy = secret.clone();
+
+        tasks.push(spawn(async move {
+            let state = setup_chain_state(
                 &config.provider.address,
-                &secret,
+                &secret_copy,
                 config.provider.chain_sample_interval,
-                chain_id,
-                chain_config,
+                &chain_id,
+                &chain_config,
             )
-            .map(|x| (chain_id.clone(), x)),
-        );
+            .await;
+
+            (chain_id, state)
+        }));
     }
     let states = join_all(tasks).await;
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
-    for (chain_id, state) in states {
+    for result in states {
+        let (chain_id, state) = result?;
+
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
