@@ -33,6 +33,12 @@ interface EntropyEvents {
 
     event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
 
+    event ProviderFeeManagerUpdated(
+        address provider,
+        address oldFeeManager,
+        address newFeeManager
+    );
+
     event Withdrawal(
         address provider,
         address recipient,

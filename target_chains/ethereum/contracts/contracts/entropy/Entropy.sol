@@ -550,7 +550,9 @@ abstract contract Entropy is IEntropy, EntropyState {
             revert EntropyErrors.NoSuchProvider();
         }
 
+        address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
+        emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
     }
 
     function constructUserCommitment(
