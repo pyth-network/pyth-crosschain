@@ -36,6 +36,7 @@ use {
             BlockNumber,
         },
     },
+    futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -157,10 +158,29 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
+    let mut tasks = Vec::new();
+    for (chain_id, chain_config) in config.chains.clone() {
+        let secret_copy = secret.clone();
+
+        tasks.push(spawn(async move {
+            let state = setup_chain_state(
+                &config.provider.address,
+                &secret_copy,
+                config.provider.chain_sample_interval,
+                &chain_id,
+                &chain_config,
+            )
+            .await;
+
+            (chain_id, state)
+        }));
+    }
+    let states = join_all(tasks).await;
+
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
-    for (chain_id, chain_config) in &config.chains {
-        let state =
-            setup_chain_state(&config.provider.address, &secret, chain_id, chain_config).await;
+    for result in states {
+        let (chain_id, state) = result?;
+
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
@@ -211,6 +231,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 async fn setup_chain_state(
     provider: &Address,
     secret: &String,
+    chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
@@ -267,6 +288,7 @@ async fn setup_chain_state(
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
+            chain_sample_interval,
         )?;
         hash_chains.push(pebble_hash_chain);
     }
