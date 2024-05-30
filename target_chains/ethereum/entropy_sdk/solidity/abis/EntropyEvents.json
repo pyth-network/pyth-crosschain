@@ -10,6 +10,31 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "oldFeeManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newFeeManager",
+        "type": "address"
+      }
+    ],
+    "name": "ProviderFeeManagerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint128",
         "name": "oldFee",
         "type": "uint128"
