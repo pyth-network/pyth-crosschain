@@ -19,7 +19,7 @@ pub(crate) async fn setup_environment() -> Result<(ContractId, Pyth), Error> {
 
     let deployer_wallet = wallets
         .pop()
-        .ok_or_else(|| Error::WalletError("No deployer wallet found".to_string()))?;
+        .ok_or_else(|| Error::Other("No deployer wallet found".to_string()))?;
 
     let pyth = Pyth::deploy(deployer_wallet).await?;
 

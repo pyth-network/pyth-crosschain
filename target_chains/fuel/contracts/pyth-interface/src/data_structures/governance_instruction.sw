@@ -3,11 +3,11 @@ library;
 use std::bytes::Bytes;
 
 pub struct GovernanceInstruction {
-    magic: u32,
-    module: GovernanceModule,
-    action: GovernanceAction,
-    target_chain_id: u16,
-    payload: Bytes,
+    pub magic: u32,
+    pub module: GovernanceModule,
+    pub action: GovernanceAction,
+    pub target_chain_id: u16,
+    pub payload: Bytes,
 }
 
 pub enum GovernanceModule {
