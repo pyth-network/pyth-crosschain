@@ -65,7 +65,7 @@ pub trait EntropyReader: Send + Sync {
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<Option<U256>>;
+    ) -> Result<U256>;
 }
 
 /// An in-flight request stored in the contract.
@@ -189,8 +189,8 @@ pub mod mock {
             sequence_number: u64,
             user_random_number: [u8; 32],
             provider_revelation: [u8; 32],
-        ) -> Result<Option<U256>> {
-            Ok(Some(U256::from(5)))
+        ) -> Result<U256> {
+            Ok(U256::from(5))
         }
     }
 }
