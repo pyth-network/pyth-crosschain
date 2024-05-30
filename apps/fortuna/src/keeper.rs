@@ -20,12 +20,8 @@ use {
         anyhow,
         Result,
     },
-    backoff::{
-        backoff::Backoff,
-        ExponentialBackoff,
-    },
+    backoff::ExponentialBackoff,
     ethers::{
-        contract::ContractError,
         providers::{
             Http,
             Middleware,
@@ -311,8 +307,9 @@ pub async fn run_keeper_threads(
 }
 
 
-#[tracing::instrument(name = "process_event", skip_all, fields(
-    sequence_number = & event.sequence_number
+/// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
+#[tracing::instrument(name = "process_event_with_backoff", skip_all, fields(
+    sequence_number = event.sequence_number
 ))]
 pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
@@ -330,8 +327,7 @@ pub async fn process_event_with_backoff(
         .inc();
     tracing::info!("Started processing event");
     let mut backoff = ExponentialBackoff::default();
-    // retry for 5 minutes
-    backoff.max_elapsed_time = Some(Duration::from_secs(300));
+    backoff.max_elapsed_time = Some(Duration::from_secs(300)); // retry for 5 minutes
     match backoff::future::retry_notify(
         backoff,
         || async {
@@ -360,7 +356,7 @@ pub async fn process_event_with_backoff(
 }
 
 
-/// Process a callback for a chain. It estimates the gas for the reveal with callback and
+/// Process a callback on a chain. It estimates the gas for the reveal with callback and
 /// submits the transaction if the gas estimate is below the gas limit.
 /// It will return a permanent or transient error depending on the error type and whether
 /// retry is possible or not.
@@ -371,7 +367,7 @@ pub async fn process_event(
     gas_limit: U256,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<(), backoff::Error<anyhow::Error>> {
-    // we do not care about events that are not for the provider
+    // ignore requests that are not for the configured provider
     if chain_config.provider_address != event.provider_address {
         return Ok(());
     }
@@ -392,6 +388,9 @@ pub async fn process_event(
         .await;
 
     let gas_estimate = gas_estimate_res.map_err(|e| {
+        // we consider the error transient even if it is a contract revert since
+        // it can be because of routing to a lagging RPC node. Retrying such errors will
+        // incur a few additional RPC calls, but it is fine.
         backoff::Error::transient(anyhow!("Error estimating gas for reveal: {:?}", e))
     })?;
 
@@ -400,7 +399,9 @@ pub async fn process_event(
 
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
-            "Gas estimate for reveal with callback is higher than the gas limit"
+            "Gas estimate for reveal with callback is higher than the gas limit {} > {}",
+            gas_estimate,
+            gas_limit
         )));
     }
 
@@ -413,15 +414,12 @@ pub async fn process_event(
         )
         .gas(gas_estimate);
 
-    let res = contract_call.send().await;
 
-
-    let pending_tx = res.map_err(|e| {
-        // if this is a permanent contract error we will retry and fail on the gas estimation
+    let pending_tx = contract_call.send().await.map_err(|e| {
         backoff::Error::transient(anyhow!("Error submitting the reveal transaction: {:?}", e))
     })?;
 
-    let res = pending_tx
+    let receipt = pending_tx
         .await
         .map_err(|e| {
             backoff::Error::transient(anyhow!("Error waiting for transaction receipt {:?}", e))
@@ -434,13 +432,13 @@ pub async fn process_event(
 
     tracing::info!(
         sequence_number = &event.sequence_number,
-        transaction_hash = &res.transaction_hash.to_string(),
-        gas_used = ?res.gas_used,
+        transaction_hash = &receipt.transaction_hash.to_string(),
+        gas_used = ?receipt.gas_used,
         "Revealed with res: {:?}",
-        res
+        receipt
     );
 
-    if let Some(gas_used) = res.gas_used {
+    if let Some(gas_used) = receipt.gas_used {
         let gas_used = gas_used.as_u128() as f64 / 1e18;
         metrics
             .total_gas_spent
