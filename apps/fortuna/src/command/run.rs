@@ -180,7 +180,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     for (chain_id, state) in states {
         match state {
             Ok(state) => {
-                chains.insert(state.id.clone(), state);
+                chains.insert(chain_id.clone(), state);
             }
             Err(e) => {
                 tracing::error!("Failed to setup {} {}", chain_id, e);
