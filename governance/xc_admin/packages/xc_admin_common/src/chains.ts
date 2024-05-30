@@ -68,6 +68,8 @@ export const RECEIVER_CHAINS = {
   iota: 60049,
   flow_previewnet: 60050,
   starknet: 60051,
+  taiko_mainnet: 50077,
+  sei_evm_mainnet: 50078,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -152,8 +154,8 @@ export const RECEIVER_CHAINS = {
   polygon_amoy: 50074,
   starknet_sepolia: 50075,
   movement_m2_devnet: 50076,
-  taiko_mainnet: 50077,
-  sei_evm_mainnet: 50078,
+  kakarot_sepolia: 50079,
+  dela_mithreum_deperp_testnet: 50080,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
