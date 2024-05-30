@@ -1,10 +1,11 @@
 library;
 
-pub mod data_structures;
-pub mod errors;
-pub mod events;
+// The order of the modules is important because of the dependencies between them.
 pub mod pyth_merkle_proof;
+pub mod errors;
 pub mod utils;
+pub mod events;
+pub mod data_structures;
 
 use ::data_structures::{
     data_source::DataSource,

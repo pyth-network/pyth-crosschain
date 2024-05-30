@@ -4,8 +4,8 @@ use std::bytes::Bytes;
 
 use ::errors::PythError;
 use ::utils::absolute_of_exponent;
-use ::pyth_merkle_proof::validate_proof;
 use ::data_structures::{wormhole_light::WormholeVM};
+use ::pyth_merkle_proof::validate_proof;
 
 const TAI64_DIFFERENCE = 4611686018427387904;
 
