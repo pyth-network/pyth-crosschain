@@ -1,6 +1,10 @@
 library;
 
 pub mod data_structures;
+pub mod errors;
+pub mod events;
+pub mod pyth_merkle_proof;
+pub mod utils;
 
 use ::data_structures::{
     data_source::DataSource,

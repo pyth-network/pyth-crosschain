@@ -1,11 +1,5 @@
 contract;
 
-mod errors;
-mod utils;
-mod pyth_merkle_proof;
-mod data_structures;
-mod events;
-
 use std::{
     asset_id::AssetId,
     block::timestamp,
@@ -27,32 +21,20 @@ use std::{
     revert::revert,
 };
 
-use ::errors::{PythError, WormholeError};
-use ::utils::{difference, total_fee};
-use ::data_structures::{
-    batch_attestation_update::parse_and_verify_batch_attestation_header,
-    data_source::*,
-    price::*,
-    update_type::UpdateType,
-    wormhole_light::*,
-    governance_instruction::*,
-};
-use ::events::{ConstructedEvent, NewGuardianSetEvent, UpdatedPriceFeedsEvent, ContractUpgradedEvent, GovernanceDataSourceSetEvent, DataSourcesSetEvent, FeeSetEvent, ValidPeriodSetEvent};
-
 use pyth_interface::{
     data_structures::{
-        data_source::DataSource,
-        price::{
-            Price,
-            PriceFeed,
-            PriceFeedId,
-        },
-        governance_payload::{UpgradeContractPayload, AuthorizeGovernanceDataSourceTransferPayload, SetDataSourcesPayload, SetFeePayload, SetValidPeriodPayload},
-        wormhole_light::{
-            GuardianSet,
-        },
-        governance_instruction::{GovernanceInstruction, GovernanceModule, GovernanceAction},
+        batch_attestation_update::*,
+        data_source::*,
+        governance_instruction::*,
+        governance_payload::*,
+        price::*,
+        update_type::UpdateType,
+        wormhole_light::*,
     },
+    errors::{PythError, WormholeError},
+    events::{ConstructedEvent, NewGuardianSetEvent, UpdatedPriceFeedsEvent, ContractUpgradedEvent, GovernanceDataSourceSetEvent, DataSourcesSetEvent, FeeSetEvent, ValidPeriodSetEvent},
+    pyth_merkle_proof::validate_proof,
+    utils::{difference, total_fee},
     PythCore,
     PythInfo,
     PythInit,

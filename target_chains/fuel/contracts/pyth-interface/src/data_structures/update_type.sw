@@ -1,6 +1,7 @@
 library;
 
 use std::{array_conversions::u32::*, bytes::Bytes};
+
 use ::data_structures::{
     accumulator_update::AccumulatorUpdate,
     batch_attestation_update::BatchAttestationUpdate,
