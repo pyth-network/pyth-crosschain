@@ -154,8 +154,8 @@ export const RECEIVER_CHAINS = {
   polygon_amoy: 50074,
   starknet_sepolia: 50075,
   movement_m2_devnet: 50076,
-  dela_mithreum_deperp_testnet: 50079,
-  kakarot_sepolia: 50080,
+  kakarot_sepolia: 50079,
+  dela_mithreum_deperp_testnet: 50080,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
