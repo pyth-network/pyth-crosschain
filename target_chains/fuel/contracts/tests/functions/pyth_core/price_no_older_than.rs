@@ -42,7 +42,9 @@ mod success {
             .await
             .value;
 
-        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes()).await;
+        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes())
+            .await
+            .unwrap();
 
         let eth_usd_price = price_no_older_than(
             &deployer.instance,
@@ -97,7 +99,8 @@ mod success {
             fee,
             test_accumulator_update_data_bytes(),
         )
-        .await;
+        .await
+        .unwrap();
 
         let eth_usd_price = price_no_older_than(
             &deployer.instance,
