@@ -105,6 +105,6 @@ contract EntropyUpgradable is
     }
 
     function version() public pure returns (string memory) {
-        return "0.3.0";
+        return "0.3.1";
     }
 }

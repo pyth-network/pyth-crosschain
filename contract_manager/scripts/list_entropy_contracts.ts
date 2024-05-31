@@ -40,8 +40,8 @@ async function main() {
         chain: contract.getChain().getId(),
         contract: contract.address,
         provider: providerInfo.uri,
-        balance,
-        keeperBalance,
+        balance: Web3.utils.fromWei(balance),
+        keeperBalance: Web3.utils.fromWei(keeperBalance),
         seq: providerInfo.sequenceNumber,
         version,
       });

@@ -689,7 +689,8 @@ export class EvmEntropyContract extends Storable {
     senderPrivateKey: PrivateKey
   ) {
     const web3 = new Web3(this.chain.getRpcUrl());
-    const contract = this.getContract();
+    // can not use `this.getContract()` because it uses another web3 instance without the wallet
+    const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const transactionObject = contract.methods.revealWithCallback(
       provider,
