@@ -45,9 +45,9 @@ contract EntropyTester is IEntropyConsumer {
 
     function entropyCallback(
         uint64 sequence,
-        address provider,
-        bytes32 randomNumber
-    ) internal override {
+        address, //provider
+        bytes32 //randomNumber
+    ) internal view override {
         if (shouldRevert[sequence]) {
             revert("Reverting");
         }
