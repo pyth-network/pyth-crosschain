@@ -31,6 +31,7 @@ pub trait IPyth<T> {
     ) -> Array<PriceFeed>;
     fn get_update_fee(self: @T, data: ByteArray) -> u256;
     fn execute_governance_instruction(ref self: T, data: ByteArray);
+    fn version(self: @T) -> felt252;
     fn pyth_upgradable_magic(self: @T) -> u32;
 }
 

@@ -351,6 +351,10 @@ mod pyth {
             }
         }
 
+        fn version(self: @ContractState) -> felt252 {
+            '0.1.0'
+        }
+
         fn pyth_upgradable_magic(self: @ContractState) -> u32 {
             0x97a6f304
         }

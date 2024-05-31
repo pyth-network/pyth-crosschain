@@ -1,0 +1,23 @@
+name: Starknet release checks
+
+on:
+  push:
+    tags:
+      - pyth-starknet-contract-v*
+jobs:
+  check:
+    name: Starknet release checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/starknet/contracts/
+    steps:
+      - uses: actions/checkout@v3
+      - name: Verify version
+        run: |
+          version1=$(grep version Scarb.toml | cut -d '"' -f 2)
+          version2=${GITHUB_REF_NAME#"pyth-starknet-contract-v"}
+          if [ "${version1}" != "${version2}" ]; then
+            >&2 echo Version mismatch in Scarb.toml and tag name
+            exit 1
+          fi
