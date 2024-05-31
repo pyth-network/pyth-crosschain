@@ -1,7 +1,7 @@
 mod errors;
 mod interface;
 mod price_update;
-mod governance;
+pub mod governance;
 
 mod fake_upgrades;
 
@@ -97,7 +97,7 @@ mod pyth {
     #[storage]
     struct Storage {
         wormhole_address: ContractAddress,
-        fee_contract_address: ContractAddress,
+        fee_token_address: ContractAddress,
         single_update_fee: u256,
         data_sources: LegacyMap<usize, DataSource>,
         num_data_sources: usize,
@@ -115,20 +115,20 @@ mod pyth {
     ///
     /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
     ///
-    /// `fee_contract_address` is the address of the ERC20 token used to pay fees to Pyth
+    /// `fee_token_address` is the address of the ERC20 token used to pay fees to Pyth
     /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
     /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
     /// available. Any other ERC20-compatible token can also be used.
     /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
     ///
-    /// `single_update_fee` is the number of tokens of `fee_contract_address` charged for a single price update.
+    /// `single_update_fee` is the number of tokens of `fee_token_address` charged for a single price update.
     ///
     /// `data_sources` is the list of Wormhole data sources accepted by this contract.
     #[constructor]
     fn constructor(
         ref self: ContractState,
         wormhole_address: ContractAddress,
-        fee_contract_address: ContractAddress,
+        fee_token_address: ContractAddress,
         single_update_fee: u256,
         data_sources: Array<DataSource>,
         governance_emitter_chain_id: u16,
@@ -136,7 +136,7 @@ mod pyth {
         governance_initial_sequence: u64,
     ) {
         self.wormhole_address.write(wormhole_address);
-        self.fee_contract_address.write(fee_contract_address);
+        self.fee_token_address.write(fee_token_address);
         self.single_update_fee.write(single_update_fee);
         self.write_data_sources(@data_sources);
         self
@@ -239,6 +239,16 @@ mod pyth {
             Result::Ok(feed)
         }
 
+        fn price_feed_exists(self: @ContractState, price_id: u256) -> bool {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time != 0
+        }
+
+        fn latest_price_info_publish_time(self: @ContractState, price_id: u256) -> u64 {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time
+        }
+
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
             self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
@@ -298,6 +308,54 @@ mod pyth {
                 .update_price_feeds_internal(
                     data, price_ids, publish_time, publish_time + max_staleness, true
                 )
+        }
+
+        fn wormhole_address(self: @ContractState) -> ContractAddress {
+            self.wormhole_address.read()
+        }
+
+        fn fee_token_address(self: @ContractState) -> ContractAddress {
+            self.fee_token_address.read()
+        }
+
+        fn get_single_update_fee(self: @ContractState) -> u256 {
+            self.single_update_fee.read()
+        }
+
+        fn valid_data_sources(self: @ContractState) -> Array<DataSource> {
+            let count = self.num_data_sources.read();
+            let mut i = 0;
+            let mut output = array![];
+            while i < count {
+                output.append(self.data_sources.read(i));
+                i += 1;
+            };
+            output
+        }
+
+        fn is_valid_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.is_valid_data_source.read(source)
+        }
+
+        fn governance_data_source(self: @ContractState) -> DataSource {
+            self.governance_data_source.read()
+        }
+
+        fn is_valid_governance_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.governance_data_source.read() == source
+        }
+
+        fn last_executed_governance_sequence(self: @ContractState) -> u64 {
+            self.last_executed_governance_sequence.read()
+        }
+
+        fn governance_data_source_index(self: @ContractState) -> u32 {
+            self.governance_data_source_index.read()
+        }
+
+        fn chain_id(self: @ContractState) -> u16 {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            wormhole.chain_id()
         }
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
@@ -555,7 +613,7 @@ mod pyth {
             let num_updates = reader.read_u8();
             let total_fee = self.get_total_fee(num_updates);
             let fee_contract = IERC20CamelDispatcher {
-                contract_address: self.fee_contract_address.read()
+                contract_address: self.fee_token_address.read()
             };
             let execution_info = get_execution_info().unbox();
             let caller = execution_info.caller_address;

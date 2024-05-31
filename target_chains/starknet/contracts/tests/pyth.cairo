@@ -84,11 +84,81 @@ fn decode_event(mut event: Event) -> PythEvent {
 }
 
 #[test]
+fn test_getters_work() {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    assert!(pyth.wormhole_address() == wormhole.contract_address);
+    assert!(pyth.fee_token_address() == fee_contract.contract_address);
+    assert!(pyth.get_single_update_fee() == 1000);
+    assert!(
+        pyth
+            .valid_data_sources() == array![
+                DataSource {
+                    emitter_chain_id: 26,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            ]
+    );
+    assert!(
+        pyth
+            .is_valid_data_source(
+                DataSource {
+                    emitter_chain_id: 26,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            )
+    );
+    assert!(
+        !pyth.is_valid_data_source(DataSource { emitter_chain_id: 26, emitter_address: 0xbad, })
+    );
+    assert!(
+        !pyth
+            .is_valid_data_source(
+                DataSource {
+                    emitter_chain_id: 27,
+                    emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
+                }
+            )
+    );
+    assert!(
+        pyth.governance_data_source() == DataSource { emitter_chain_id: 1, emitter_address: 41, }
+    );
+    assert!(
+        pyth
+            .is_valid_governance_data_source(
+                DataSource { emitter_chain_id: 1, emitter_address: 41, }
+            )
+    );
+    assert!(
+        !pyth
+            .is_valid_governance_data_source(
+                DataSource { emitter_chain_id: 1, emitter_address: 42, }
+            )
+    );
+    assert!(pyth.last_executed_governance_sequence() == 0);
+    assert!(pyth.governance_data_source_index() == 0);
+    assert!(pyth.chain_id() == 60051);
+}
+
+#[test]
 fn update_price_feeds_works() {
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_mainnet_guardians();
     let fee_contract = deploy_fee_contract(user);
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
 
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
@@ -144,6 +214,16 @@ fn update_price_feeds_works() {
     assert!(feed.ema_price.conf == 4096812700);
     assert!(feed.ema_price.expo == -8);
     assert!(feed.ema_price.publish_time == 1712589206);
+
+    assert!(
+        pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 1712589206
+    );
 }
 
 #[test]
@@ -867,11 +947,11 @@ fn test_upgrade_rejects_wrong_magic() {
 
 
 fn deploy_default(
-    wormhole_address: ContractAddress, fee_contract_address: ContractAddress
+    wormhole_address: ContractAddress, fee_token_address: ContractAddress
 ) -> IPythDispatcher {
     deploy(
         wormhole_address,
-        fee_contract_address,
+        fee_token_address,
         1000,
         array![
             DataSource {
@@ -887,7 +967,7 @@ fn deploy_default(
 
 fn deploy(
     wormhole_address: ContractAddress,
-    fee_contract_address: ContractAddress,
+    fee_token_address: ContractAddress,
     single_update_fee: u256,
     data_sources: Array<DataSource>,
     governance_emitter_chain_id: u16,
@@ -895,7 +975,7 @@ fn deploy(
     governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
-    (wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
+    (wormhole_address, fee_token_address, single_update_fee).serialize(ref args);
     (data_sources, governance_emitter_chain_id).serialize(ref args);
     (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");
