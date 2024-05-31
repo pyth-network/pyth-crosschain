@@ -91,7 +91,7 @@ fn test_getters_work() {
     let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
 
     assert!(pyth.wormhole_address() == wormhole.contract_address);
-    assert!(pyth.fee_contract_address() == fee_contract.contract_address);
+    assert!(pyth.fee_token_address() == fee_contract.contract_address);
     assert!(pyth.get_single_update_fee() == 1000);
     assert!(
         pyth
@@ -947,11 +947,11 @@ fn test_upgrade_rejects_wrong_magic() {
 
 
 fn deploy_default(
-    wormhole_address: ContractAddress, fee_contract_address: ContractAddress
+    wormhole_address: ContractAddress, fee_token_address: ContractAddress
 ) -> IPythDispatcher {
     deploy(
         wormhole_address,
-        fee_contract_address,
+        fee_token_address,
         1000,
         array![
             DataSource {
@@ -967,7 +967,7 @@ fn deploy_default(
 
 fn deploy(
     wormhole_address: ContractAddress,
-    fee_contract_address: ContractAddress,
+    fee_token_address: ContractAddress,
     single_update_fee: u256,
     data_sources: Array<DataSource>,
     governance_emitter_chain_id: u16,
@@ -975,7 +975,7 @@ fn deploy(
     governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
-    (wormhole_address, fee_contract_address, single_update_fee).serialize(ref args);
+    (wormhole_address, fee_token_address, single_update_fee).serialize(ref args);
     (data_sources, governance_emitter_chain_id).serialize(ref args);
     (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");

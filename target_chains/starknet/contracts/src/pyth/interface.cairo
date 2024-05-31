@@ -35,7 +35,7 @@ pub trait IPyth<T> {
     ) -> Array<PriceFeed>;
     fn get_update_fee(self: @T, data: ByteArray) -> u256;
     fn wormhole_address(self: @T) -> ContractAddress;
-    fn fee_contract_address(self: @T) -> ContractAddress;
+    fn fee_token_address(self: @T) -> ContractAddress;
     fn get_single_update_fee(self: @T) -> u256;
     fn valid_data_sources(self: @T) -> Array<DataSource>;
     fn is_valid_data_source(self: @T, source: DataSource) -> bool;
