@@ -70,6 +70,3 @@
 - chain: sei_evm_mainnet
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
-- chain: blast_s2_testnet
-  address: "0x4D5F8fD2D76E2b00D14697c7B279Cc0e783EC731"
-  type: EvmEntropyContract
