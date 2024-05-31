@@ -1,10 +1,18 @@
-import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import {
+  EncodingType,
+  HexString,
+  PriceFeed,
+  PriceFeedMetadataV2,
+  PriceUpdate,
+  UnixTimestamp,
+} from "@pythnetwork/price-service-sdk";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
 import { Logger } from "ts-log";
 import { ResilientWebSocket } from "./ResillientWebSocket";
 import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils";
+import EventSource from "eventsource";
 
 export type DurationInMs = number;
 
@@ -127,6 +135,116 @@ export class PriceServiceConnection {
     };
 
     this.wsEndpoint = makeWebsocketUrl(endpoint);
+  }
+
+  /**
+   * Fetch the set of available price feeds.
+   * This endpoint can be filtered by asset type and query string.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   *
+   * @param query Optional query string to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example : bitcoin
+   * @param filter Optional filter string to filter the price feeds. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive. Available values : crypto, fx, equity, metals, rates
+   * @returns Array of hex-encoded price ids.
+   */
+  async getV2PriceFeeds(
+    query?: string,
+    filter?: string
+  ): Promise<PriceFeedMetadataV2[]> {
+    const response = await this.httpClient.get("/v2/price_feeds", {
+      params: {
+        query,
+        filter,
+      },
+    });
+    return response.data;
+  }
+
+  /**
+   * Fetch the latest price updates for a set of price feed IDs.
+   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   *
+   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
+   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
+   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
+   * @returns Array of PriceFeed objects containing the latest updates.
+   */
+  async getV2LatestPriceUpdates(
+    ids: HexString[],
+    encoding?: EncodingType,
+    parsed?: boolean
+  ): Promise<PriceUpdate[]> {
+    const response = await this.httpClient.get("/v2/updates/price/latest", {
+      params: {
+        ids,
+        encoding,
+        parsed,
+      },
+    });
+    return response.data;
+  }
+
+  /**
+   * Fetch the price updates for a set of price feed IDs at a given timestamp.
+   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   *
+   * @param publishTime Unix timestamp in seconds.
+   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
+   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
+   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
+   * @returns Array of PriceFeed objects containing the latest updates.
+   */
+  async getV2TimestampPriceUpdates(
+    publishTime: UnixTimestamp,
+    ids: HexString[],
+    encoding?: EncodingType,
+    parsed?: boolean
+  ): Promise<PriceUpdate[]> {
+    const response = await this.httpClient.get(
+      `/v2/updates/price/${publishTime}`,
+      {
+        params: {
+          ids,
+          encoding,
+          parsed,
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async getV2StreamingPriceUpdates(
+    ids: HexString[],
+    encoding?: EncodingType,
+    parsed?: boolean,
+    allow_unordered?: boolean,
+    benchmarks_only?: boolean
+  ): Promise<EventSource> {
+    const url = new URL(
+      "/v2/updates/price/stream",
+      this.httpClient.defaults.baseURL
+    );
+    ids.forEach((id) => {
+      url.searchParams.append("ids[]", id);
+    });
+    const params = {
+      encoding,
+      parsed: parsed !== undefined ? String(parsed) : undefined,
+      allow_unordered:
+        allow_unordered !== undefined ? String(allow_unordered) : undefined,
+      benchmarks_only:
+        benchmarks_only !== undefined ? String(benchmarks_only) : undefined,
+    };
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value);
+      }
+    });
+
+    const eventSource = new EventSource(url.toString());
+    return eventSource;
   }
 
   /**

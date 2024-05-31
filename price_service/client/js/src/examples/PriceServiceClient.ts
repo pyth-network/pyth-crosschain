@@ -37,30 +37,32 @@ async function run() {
   });
 
   const priceIds = argv.priceIds as string[];
-  const priceFeeds = await connection.getLatestPriceFeeds(priceIds);
+
+  // Get price feeds
+  const priceFeeds = await connection.getV2PriceFeeds("btc", "crypto");
   console.log(priceFeeds);
-  console.log(priceFeeds?.at(0)?.getPriceNoOlderThan(60));
 
-  console.log("Subscribing to price feed updates.");
+  // Latest price updates
+  const priceUpdates = await connection.getV2LatestPriceUpdates(priceIds);
+  console.log(priceUpdates);
 
-  await connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {
-    console.log(
-      `Current price for ${priceFeed.id}: ${JSON.stringify(
-        priceFeed.getPriceNoOlderThan(60)
-      )}.`
-    );
-    console.log(priceFeed.getVAA());
-  });
+  // Streaming price updates
+  const eventSource = await connection.getV2StreamingPriceUpdates(priceIds);
 
-  await sleep(600000);
+  eventSource.onmessage = (event) => {
+    console.log("Received price update:", event.data);
+  };
 
-  // To close the websocket you should either unsubscribe from all
-  // price feeds or call `connection.stopWebSocket()` directly.
+  eventSource.onerror = (error) => {
+    console.error("Error receiving updates:", error);
+    eventSource.close();
+  };
 
-  console.log("Unsubscribing from price feed updates.");
-  await connection.unsubscribePriceFeedUpdates(priceIds);
+  await sleep(5000);
 
-  // connection.closeWebSocket();
+  // To stop listening to the updates, you can call eventSource.close();
+  console.log("Closing event source.");
+  eventSource.close();
 }
 
 run();

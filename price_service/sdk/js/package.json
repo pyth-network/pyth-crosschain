@@ -20,6 +20,7 @@
     "test": "jest",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
+    "generate-api-types": "openapi-typescript https://hermes.pyth.network/docs/openapi.json --output src/serverTypes.d.ts",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build && npm test && npm run lint",
@@ -43,6 +44,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "bn.js": "^5.2.1"
+    "bn.js": "^5.2.1",
+    "openapi-typescript": "^6.5.5"
   }
 }
