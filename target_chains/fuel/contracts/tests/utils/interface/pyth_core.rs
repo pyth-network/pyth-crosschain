@@ -2,6 +2,7 @@ use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{Bytes, CallParameters, TxPolicies},
     programs::call_response::FuelCallResponse,
+    types::errors::Error,
     types::Bits256,
 };
 
@@ -121,7 +122,7 @@ pub(crate) async fn update_price_feeds(
     contract: &PythOracleContract<WalletUnlocked>,
     fee: u64,
     update_data: Vec<Bytes>,
-) -> FuelCallResponse<()> {
+) -> Result<FuelCallResponse<()>, Error> {
     contract
         .methods()
         .update_price_feeds(update_data)
@@ -129,7 +130,6 @@ pub(crate) async fn update_price_feeds(
         .unwrap()
         .call()
         .await
-        .unwrap()
 }
 
 pub(crate) async fn update_price_feeds_if_necessary(

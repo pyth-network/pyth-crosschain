@@ -41,7 +41,7 @@ mod success {
             .await
             .value;
 
-        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes()).await;
+        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes()).await.unwrap();
 
         let eth_usd_price_feed = price_feed_unsafe(&deployer.instance, default_price_feed_ids()[0])
             .await
@@ -81,7 +81,7 @@ mod success {
             fee,
             test_accumulator_update_data_bytes(),
         )
-        .await;
+        .await.unwrap();
 
         let eth_usd_price_feed = price_feed_unsafe(&deployer.instance, default_price_feed_ids()[0])
             .await
