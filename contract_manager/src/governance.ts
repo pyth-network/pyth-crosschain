@@ -42,6 +42,9 @@ class InvalidTransactionError extends Error {
   }
 }
 
+// A registry of solana RPC nodes for each cluster.
+export type SolanaRpcRegistry = (cluster: PythCluster) => string;
+
 export class SubmittedWormholeMessage {
   constructor(
     public emitter: PublicKey,
@@ -58,12 +61,10 @@ export class SubmittedWormholeMessage {
    */
   static async fromTransactionSignature(
     signature: string,
-    cluster: PythCluster
+    cluster: PythCluster,
+    registry: SolanaRpcRegistry = getPythClusterApiUrl
   ): Promise<SubmittedWormholeMessage> {
-    const connection = new Connection(
-      getPythClusterApiUrl(cluster),
-      "confirmed"
-    );
+    const connection = new Connection(registry(cluster), "confirmed");
 
     const txDetails = await connection.getParsedTransaction(signature);
     const sequenceLogPrefix = "Sequence: ";
@@ -151,9 +152,12 @@ export class WormholeEmitter {
     return this.wallet.publicKey;
   }
 
-  async sendMessage(payload: Buffer) {
+  async sendMessage(
+    payload: Buffer,
+    registry: SolanaRpcRegistry = getPythClusterApiUrl
+  ) {
     const provider = new AnchorProvider(
-      new Connection(getPythClusterApiUrl(this.cluster), "confirmed"),
+      new Connection(registry(this.cluster), "confirmed"),
       this.wallet,
       {
         commitment: "confirmed",
@@ -296,11 +300,11 @@ export class Vault extends Storable {
    * The wallet should be a multisig signer of the vault
    * @param wallet
    */
-  public connect(wallet: Wallet): void {
-    this.squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(this.cluster),
-      wallet
-    );
+  public connect(
+    wallet: Wallet,
+    registry: SolanaRpcRegistry = getPythClusterApiUrl
+  ): void {
+    this.squad = SquadsMesh.endpoint(registry(this.cluster), wallet);
   }
 
   getSquadOrThrow(): SquadsMesh {
@@ -311,9 +315,9 @@ export class Vault extends Storable {
   /**
    * Gets the emitter address of the vault
    */
-  public async getEmitter() {
+  public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(this.cluster),
+      registry(this.cluster),
       new NodeWallet(Keypair.generate()) // dummy wallet
     );
     return squad.getAuthorityPDA(this.key, 1);
