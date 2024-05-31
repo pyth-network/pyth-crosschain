@@ -70,7 +70,7 @@ pub async fn withdraw_fees_for_chain(
     is_fee_manager: bool,
     retained_balance: u128,
 ) -> Result<()> {
-    tracing::info!("Fetching provider fees");
+    tracing::info!("Fetching fees for provider: {:?}", provider_address);
     let provider_info = contract.get_provider_info(provider_address).call().await?;
     let fees = provider_info.accrued_fees_in_wei;
     tracing::info!("Accrued fees: {} wei", fees);
@@ -78,7 +78,7 @@ pub async fn withdraw_fees_for_chain(
     let withdrawal_amount_wei = fees.saturating_sub(retained_balance);
     if withdrawal_amount_wei > 0 {
         tracing::info!(
-            "Withdrowing {} wei to {}...",
+            "Withdrawing {} wei to {}...",
             withdrawal_amount_wei,
             contract.wallet().address()
         );

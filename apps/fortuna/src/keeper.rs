@@ -78,6 +78,8 @@ const BLOCK_BATCH_SIZE: u64 = 100;
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
+/// Check whether we need to conduct a withdrawal at this interval.
+const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
@@ -272,11 +274,8 @@ pub async fn run_keeper_threads(
     spawn(withdraw_fees_wrapper(
         contract.clone(),
         chain_state.provider_address.clone(),
-        keeper_metrics.clone(),
-        // TODO: Make this configurable
-        TRACK_INTERVAL,
+        WITHDRAW_INTERVAL,
     ));
-
 
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
@@ -853,14 +852,12 @@ pub async fn track_provider(
 pub async fn withdraw_fees_wrapper(
     contract: Arc<SignablePythContract>,
     provider_address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
     poll_interval: Duration,
 ) {
     loop {
-        if let Err(e) =
-            withdraw_fees_if_necessary(contract.clone(), provider_address, metrics_registry.clone())
-                .in_current_span()
-                .await
+        if let Err(e) = withdraw_fees_if_necessary(contract.clone(), provider_address)
+            .in_current_span()
+            .await
         {
             tracing::error!("Withdrawing fees. error: {:?}", e);
         }
@@ -872,7 +869,6 @@ pub async fn withdraw_fees_wrapper(
 pub async fn withdraw_fees_if_necessary(
     contract: Arc<SignablePythContract>,
     provider_address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
 ) -> Result<()> {
     let provider = contract.provider();
     let wallet = contract.wallet();
@@ -904,18 +900,13 @@ pub async fn withdraw_fees_if_necessary(
             .map_err(|e| anyhow!("Error waiting for withdrawal transaction receipt: {:?}", e))?
             .ok_or_else(|| anyhow!("Can't verify the withdrawal, probably dropped from mempool"))?;
 
-        /*
         tracing::info!(
             transaction_hash = &tx_result.transaction_hash.to_string(),
             "Withdrew fees to keeper address. Receipt: {:?}",
             tx_result,
-        )
-        */
+        );
     } else if keeper_balance < min_balance {
-        // FIXME log message
-        tracing::warn!(
-            "Keeper balance is too low but provider fees are not sufficient to top-up. chain_id:",
-        )
+        tracing::warn!("Keeper balance is too low but provider fees are not sufficient to top-up.",)
     }
 
     Ok(())

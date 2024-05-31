@@ -25,7 +25,7 @@ pub struct WithdrawFeesOptions {
 
     /// If specified, only withdraw fees over the given balance from the contract.
     /// If omitted, all accrued fees are withdrawn.
-    #[arg(long = "retain-balance-wei")]
+    #[arg(long = "retain-balance")]
     #[arg(default_value = "0")]
     pub retain_balance_wei: u128,
 }

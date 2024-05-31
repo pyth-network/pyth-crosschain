@@ -18,10 +18,7 @@ use {
         Args,
         Parser,
     },
-    ethers::{
-        types::Address,
-        utils::ParseUnits,
-    },
+    ethers::types::Address,
     std::{
         collections::HashMap,
         fs,
