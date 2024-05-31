@@ -106,6 +106,7 @@ async fn setup_chain_provider(
             &chain_config.contract_addr,
             &metadata.seed,
             provider_config.chain_length,
+            provider_config.chain_sample_interval,
         )?;
         let chain_state = HashChainState {
             offsets:     vec![provider_info

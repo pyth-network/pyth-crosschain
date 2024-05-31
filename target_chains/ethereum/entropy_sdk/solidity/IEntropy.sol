@@ -22,6 +22,11 @@ interface IEntropy is EntropyEvents {
     // balance of fees in the contract).
     function withdraw(uint128 amount) external;
 
+    // Withdraw a portion of the accumulated fees for provider. The msg.sender must be the fee manager for this provider.
+    // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
+    // balance of fees in the contract).
+    function withdrawAsFeeManager(address provider, uint128 amount) external;
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -102,7 +107,18 @@ interface IEntropy is EntropyEvents {
 
     function setProviderFee(uint128 newFeeInWei) external;
 
+    function setProviderFeeAsFeeManager(
+        address provider,
+        uint128 newFeeInWei
+    ) external;
+
     function setProviderUri(bytes calldata newUri) external;
+
+    // Set manager as the fee manager for the provider msg.sender.
+    // After calling this function, manager will be able to set the provider's fees and withdraw them.
+    // Only one address can be the fee manager for a provider at a time -- calling this function again with a new value
+    // will override the previous value. Call this function with the all-zero address to disable the fee manager role.
+    function setFeeManager(address manager) external;
 
     function constructUserCommitment(
         bytes32 userRandomness

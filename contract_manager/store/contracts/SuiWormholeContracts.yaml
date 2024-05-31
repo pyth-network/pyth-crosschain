@@ -1,0 +1,3 @@
+- chain: movement_m2_devnet
+  address: "0x23a373b70e6e23a39e4846fa6896fa12beb08da061b3d4ec856bc8ead54f1e22"
+  type: SuiWormholeContract

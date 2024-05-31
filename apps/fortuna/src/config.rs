@@ -193,6 +193,15 @@ pub struct ProviderConfig {
 
     /// The length of the hash chain to generate.
     pub chain_length: u64,
+
+    /// How frequently the hash chain is sampled -- increase this value to tradeoff more
+    /// compute per request for less RAM use.
+    #[serde(default = "default_chain_sample_interval")]
+    pub chain_sample_interval: u64,
+}
+
+fn default_chain_sample_interval() -> u64 {
+    1
 }
 
 /// Configuration values for the keeper service that are shared across chains.

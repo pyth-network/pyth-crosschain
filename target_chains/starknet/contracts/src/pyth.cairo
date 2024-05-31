@@ -1,7 +1,7 @@
 mod errors;
 mod interface;
 mod price_update;
-mod governance;
+pub mod governance;
 
 mod fake_upgrades;
 
@@ -9,13 +9,19 @@ pub use pyth::{
     Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
     DataSourcesSet, FeeSet,
 };
-pub use errors::{GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError};
-pub use interface::{IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price};
+pub use errors::{
+    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError,
+    UpdatePriceFeedsIfNecessaryError, ParsePriceFeedsError,
+};
+pub use interface::{
+    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime, PriceFeed
+};
 
 #[starknet::contract]
 mod pyth {
+    use pyth::pyth::interface::IPyth;
     use super::price_update::{
-        PriceInfo, PriceFeedMessage, read_and_verify_message, read_header_and_wormhole_proof,
+        PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
         parse_wormhole_proof
     };
     use pyth::reader::{Reader, ReaderImpl};
@@ -23,17 +29,20 @@ mod pyth {
     use core::panic_with_felt252;
     use core::starknet::{
         ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
-        get_contract_address,
+        get_contract_address, get_block_timestamp,
     };
     use core::starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
-        IPythDispatcher, IPythDispatcherTrait,
+        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime, GetPriceNoOlderThanError,
+        UpdatePriceFeedsIfNecessaryError, PriceFeed, ParsePriceFeedsError,
     };
     use super::governance;
     use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
+    use pyth::util::ResultMapErrInto;
+    use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
 
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
@@ -88,7 +97,7 @@ mod pyth {
     #[storage]
     struct Storage {
         wormhole_address: ContractAddress,
-        fee_contract_address: ContractAddress,
+        fee_token_address: ContractAddress,
         single_update_fee: u256,
         data_sources: LegacyMap<usize, DataSource>,
         num_data_sources: usize,
@@ -106,20 +115,20 @@ mod pyth {
     ///
     /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
     ///
-    /// `fee_contract_address` is the address of the ERC20 token used to pay fees to Pyth
+    /// `fee_token_address` is the address of the ERC20 token used to pay fees to Pyth
     /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
     /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
     /// available. Any other ERC20-compatible token can also be used.
     /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
     ///
-    /// `single_update_fee` is the number of tokens of `fee_contract_address` charged for a single price update.
+    /// `single_update_fee` is the number of tokens of `fee_token_address` charged for a single price update.
     ///
     /// `data_sources` is the list of Wormhole data sources accepted by this contract.
     #[constructor]
     fn constructor(
         ref self: ContractState,
         wormhole_address: ContractAddress,
-        fee_contract_address: ContractAddress,
+        fee_token_address: ContractAddress,
         single_update_fee: u256,
         data_sources: Array<DataSource>,
         governance_emitter_chain_id: u16,
@@ -127,7 +136,7 @@ mod pyth {
         governance_initial_sequence: u64,
     ) {
         self.wormhole_address.write(wormhole_address);
-        self.fee_contract_address.write(fee_contract_address);
+        self.fee_token_address.write(fee_token_address);
         self.single_update_fee.write(single_update_fee);
         self.write_data_sources(@data_sources);
         self
@@ -143,6 +152,16 @@ mod pyth {
 
     #[abi(embed_v0)]
     impl PythImpl of super::IPyth<ContractState> {
+        fn get_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
+        }
+
         fn get_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
@@ -157,6 +176,16 @@ mod pyth {
                 publish_time: info.publish_time,
             };
             Result::Ok(price)
+        }
+
+        fn get_ema_price_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<Price, GetPriceNoOlderThanError> {
+            let info = self.get_ema_price_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(info.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(info)
         }
 
         fn get_ema_price_unsafe(
@@ -175,46 +204,158 @@ mod pyth {
             Result::Ok(price)
         }
 
+        fn query_price_feed_no_older_than(
+            self: @ContractState, price_id: u256, age: u64
+        ) -> Result<PriceFeed, GetPriceNoOlderThanError> {
+            let feed = self.query_price_feed_unsafe(price_id).map_err_into()?;
+            if !is_no_older_than(feed.price.publish_time, age) {
+                return Result::Err(GetPriceNoOlderThanError::StalePrice);
+            }
+            Result::Ok(feed)
+        }
+
+        fn query_price_feed_unsafe(
+            self: @ContractState, price_id: u256
+        ) -> Result<PriceFeed, GetPriceUnsafeError> {
+            let info = self.latest_price_info.read(price_id);
+            if info.publish_time == 0 {
+                return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
+            }
+            let feed = PriceFeed {
+                id: price_id,
+                price: Price {
+                    price: info.price,
+                    conf: info.conf,
+                    expo: info.expo,
+                    publish_time: info.publish_time,
+                },
+                ema_price: Price {
+                    price: info.ema_price,
+                    conf: info.ema_conf,
+                    expo: info.expo,
+                    publish_time: info.publish_time,
+                },
+            };
+            Result::Ok(feed)
+        }
+
+        fn price_feed_exists(self: @ContractState, price_id: u256) -> bool {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time != 0
+        }
+
+        fn latest_price_info_publish_time(self: @ContractState, price_id: u256) -> u64 {
+            let info = self.latest_price_info.read(price_id);
+            info.publish_time
+        }
+
         fn update_price_feeds(ref self: ContractState, data: ByteArray) {
+            self.update_price_feeds_internal(data, array![], 0, 0, false);
+        }
+
+        fn get_update_fee(self: @ContractState, data: ByteArray) -> u256 {
             let mut reader = ReaderImpl::new(data);
-            let wormhole_proof = read_header_and_wormhole_proof(ref reader);
-            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
-            let vm = wormhole.parse_and_verify_vm(wormhole_proof);
-
-            let source = DataSource {
-                emitter_chain_id: vm.emitter_chain_id, emitter_address: vm.emitter_address
-            };
-            if !self.is_valid_data_source.read(source) {
-                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateDataSource.into());
-            }
-
-            let root_digest = parse_wormhole_proof(vm.payload);
-
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            reader.skip(wormhole_proof_size.into());
             let num_updates = reader.read_u8();
-            let total_fee = self.get_total_fee(num_updates);
-            let fee_contract = IERC20CamelDispatcher {
-                contract_address: self.fee_contract_address.read()
-            };
-            let execution_info = get_execution_info().unbox();
-            let caller = execution_info.caller_address;
-            let contract = execution_info.contract_address;
-            if fee_contract.allowance(caller, contract) < total_fee {
-                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
-            }
-            if !fee_contract.transferFrom(caller, contract, total_fee) {
-                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
-            }
+            self.get_total_fee(num_updates)
+        }
 
+        fn update_price_feeds_if_necessary(
+            ref self: ContractState,
+            update: ByteArray,
+            required_publish_times: Array<PriceFeedPublishTime>
+        ) {
             let mut i = 0;
-            while i < num_updates {
-                let message = read_and_verify_message(ref reader, root_digest);
-                self.update_latest_price_if_necessary(message);
+            let mut found = false;
+            while i < required_publish_times.len() {
+                let item = required_publish_times.at(i);
+                let latest_time = self.latest_price_info.read(*item.price_id).publish_time;
+                if latest_time < *item.publish_time {
+                    self.update_price_feeds(update);
+                    found = true;
+                    break;
+                }
                 i += 1;
             };
-
-            if reader.len() != 0 {
-                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
+            if !found {
+                panic_with_felt252(UpdatePriceFeedsIfNecessaryError::NoFreshUpdate.into());
             }
+        }
+
+        fn parse_price_feed_updates(
+            ref self: ContractState,
+            data: ByteArray,
+            price_ids: Array<u256>,
+            min_publish_time: u64,
+            max_publish_time: u64
+        ) -> Array<PriceFeed> {
+            self
+                .update_price_feeds_internal(
+                    data, price_ids, min_publish_time, max_publish_time, false
+                )
+        }
+
+        fn parse_unique_price_feed_updates(
+            ref self: ContractState,
+            data: ByteArray,
+            price_ids: Array<u256>,
+            publish_time: u64,
+            max_staleness: u64,
+        ) -> Array<PriceFeed> {
+            self
+                .update_price_feeds_internal(
+                    data, price_ids, publish_time, publish_time + max_staleness, true
+                )
+        }
+
+        fn wormhole_address(self: @ContractState) -> ContractAddress {
+            self.wormhole_address.read()
+        }
+
+        fn fee_token_address(self: @ContractState) -> ContractAddress {
+            self.fee_token_address.read()
+        }
+
+        fn get_single_update_fee(self: @ContractState) -> u256 {
+            self.single_update_fee.read()
+        }
+
+        fn valid_data_sources(self: @ContractState) -> Array<DataSource> {
+            let count = self.num_data_sources.read();
+            let mut i = 0;
+            let mut output = array![];
+            while i < count {
+                output.append(self.data_sources.read(i));
+                i += 1;
+            };
+            output
+        }
+
+        fn is_valid_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.is_valid_data_source.read(source)
+        }
+
+        fn governance_data_source(self: @ContractState) -> DataSource {
+            self.governance_data_source.read()
+        }
+
+        fn is_valid_governance_data_source(self: @ContractState, source: DataSource) -> bool {
+            self.governance_data_source.read() == source
+        }
+
+        fn last_executed_governance_sequence(self: @ContractState) -> u64 {
+            self.last_executed_governance_sequence.read()
+        }
+
+        fn governance_data_source_index(self: @ContractState) -> u32 {
+            self.governance_data_source_index.read()
+        }
+
+        fn chain_id(self: @ContractState) -> u16 {
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            wormhole.chain_id()
         }
 
         fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
@@ -268,6 +409,10 @@ mod pyth {
             }
         }
 
+        fn version(self: @ContractState) -> felt252 {
+            '0.1.0'
+        }
+
         fn pyth_upgradable_magic(self: @ContractState) -> u32 {
             0x97a6f304
         }
@@ -300,30 +445,30 @@ mod pyth {
             old_data_sources
         }
 
-        fn update_latest_price_if_necessary(ref self: ContractState, message: PriceFeedMessage) {
-            let latest_publish_time = self.latest_price_info.read(message.price_id).publish_time;
-            if message.publish_time > latest_publish_time {
+        fn update_latest_price_if_necessary(ref self: ContractState, message: @PriceFeedMessage) {
+            let latest_publish_time = self.latest_price_info.read(*message.price_id).publish_time;
+            if *message.publish_time > latest_publish_time {
                 let info = PriceInfo {
-                    price: message.price,
-                    conf: message.conf,
-                    expo: message.expo,
-                    publish_time: message.publish_time,
-                    ema_price: message.ema_price,
-                    ema_conf: message.ema_conf,
+                    price: *message.price,
+                    conf: *message.conf,
+                    expo: *message.expo,
+                    publish_time: *message.publish_time,
+                    ema_price: *message.ema_price,
+                    ema_conf: *message.ema_conf,
                 };
-                self.latest_price_info.write(message.price_id, info);
+                self.latest_price_info.write(*message.price_id, info);
 
                 let event = PriceFeedUpdated {
-                    price_id: message.price_id,
-                    publish_time: message.publish_time,
-                    price: message.price,
-                    conf: message.conf,
+                    price_id: *message.price_id,
+                    publish_time: *message.publish_time,
+                    price: *message.price,
+                    conf: *message.conf,
                 };
                 self.emit(event);
             }
         }
 
-        fn get_total_fee(ref self: ContractState, num_updates: u8) -> u256 {
+        fn get_total_fee(self: @ContractState, num_updates: u8) -> u256 {
             self.single_update_fee.read() * num_updates.into()
         }
 
@@ -428,6 +573,105 @@ mod pyth {
             let event = ContractUpgraded { new_class_hash: new_implementation };
             self.emit(event);
         }
+
+        // Applies all price feed updates encoded in `data` and extracts requested information
+        // about the new updates. `price_ids` specifies price feeds of interest. The output will
+        // contain as many items as `price_ids`, with price feeds returned in the same order as
+        // specified in `price_ids`.
+        //
+        // If `unique == false`, for each price feed, the first encountered update
+        // in the specified time interval (both timestamps inclusive) will be returned.
+        // If `unique == true`, the globally unique first update will be returned, as verified by
+        // the `prev_publish_time` value of the update. Panics if a matching update was not found
+        // for any of the specified feeds.
+        fn update_price_feeds_internal(
+            ref self: ContractState,
+            data: ByteArray,
+            price_ids: Array<u256>,
+            min_publish_time: u64,
+            max_publish_time: u64,
+            unique: bool,
+        ) -> Array<PriceFeed> {
+            let mut output: Felt252Dict<Nullable<PriceFeed>> = Default::default();
+            let mut reader = ReaderImpl::new(data);
+            read_and_verify_header(ref reader);
+            let wormhole_proof_size = reader.read_u16();
+            let wormhole_proof = reader.read_byte_array(wormhole_proof_size.into());
+
+            let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
+            let vm = wormhole.parse_and_verify_vm(wormhole_proof);
+
+            let source = DataSource {
+                emitter_chain_id: vm.emitter_chain_id, emitter_address: vm.emitter_address
+            };
+            if !self.is_valid_data_source.read(source) {
+                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateDataSource.into());
+            }
+
+            let root_digest = parse_wormhole_proof(vm.payload);
+
+            let num_updates = reader.read_u8();
+            let total_fee = self.get_total_fee(num_updates);
+            let fee_contract = IERC20CamelDispatcher {
+                contract_address: self.fee_token_address.read()
+            };
+            let execution_info = get_execution_info().unbox();
+            let caller = execution_info.caller_address;
+            let contract = execution_info.contract_address;
+            if fee_contract.allowance(caller, contract) < total_fee {
+                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
+            }
+            if !fee_contract.transferFrom(caller, contract, total_fee) {
+                panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
+            }
+
+            let mut i = 0;
+            let price_ids2 = @price_ids;
+            while i < num_updates {
+                let message = read_and_verify_message(ref reader, root_digest);
+                self.update_latest_price_if_necessary(@message);
+
+                let output_index = find_index_of_price_id(price_ids2, message.price_id);
+                match output_index {
+                    Option::Some(output_index) => {
+                        if output.get(output_index.into()).is_null() {
+                            let should_output = message.publish_time >= min_publish_time
+                                && message.publish_time <= max_publish_time
+                                && (!unique || min_publish_time > message.prev_publish_time);
+                            if should_output {
+                                output
+                                    .insert(
+                                        output_index.into(), NullableTrait::new(message.into())
+                                    );
+                            }
+                        }
+                    },
+                    Option::None => {}
+                }
+
+                i += 1;
+            };
+
+            if reader.len() != 0 {
+                panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
+            }
+
+            let mut output_array = array![];
+            let mut i = 0;
+            while i < price_ids.len() {
+                let value = output.get(i.into());
+                match match_nullable(value) {
+                    FromNullableResult::Null => {
+                        panic_with_felt252(
+                            ParsePriceFeedsError::PriceFeedNotFoundWithinRange.into()
+                        )
+                    },
+                    FromNullableResult::NotNull(value) => { output_array.append(value.unbox()); }
+                }
+                i += 1;
+            };
+            output_array
+        }
     }
 
     fn apply_decimal_expo(value: u64, expo: u64) -> u256 {
@@ -438,5 +682,30 @@ mod pyth {
             i += 1;
         };
         output
+    }
+
+    fn is_no_older_than(publish_time: u64, age: u64) -> bool {
+        let current = get_block_timestamp();
+        let actual_age = if current >= publish_time {
+            current - publish_time
+        } else {
+            0
+        };
+        actual_age <= age
+    }
+
+    fn find_index_of_price_id(ids: @Array<u256>, value: u256) -> Option<usize> {
+        let mut i = 0;
+        while i < ids.len() {
+            if ids.at(i) == @value {
+                break;
+            }
+            i += 1;
+        };
+        if i == ids.len() {
+            Option::None
+        } else {
+            Option::Some(i)
+        }
     }
 }

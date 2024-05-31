@@ -584,3 +584,23 @@
   rpcUrl: https://polygon-amoy-bor-rpc.publicnode.com
   networkId: 80002
   type: EvmChain
+- id: taiko_mainnet
+  mainnet: true
+  rpcUrl: https://rpc.mainnet.taiko.xyz
+  networkId: 167000
+  type: EvmChain
+- id: sei_evm_mainnet
+  mainnet: true
+  rpcUrl: https://evm-rpc.sei-apis.com
+  networkId: 1329
+  type: EvmChain
+- id: dela_mithreum_deperp_testnet
+  mainnet: false
+  rpcUrl: https://mithreum-rpc-sepolia.deperp.com
+  networkId: 33612
+  type: EvmChain
+- id: kakarot_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia-rpc-priority.kakarot.org
+  networkId: 1802203764
+  type: EvmChain

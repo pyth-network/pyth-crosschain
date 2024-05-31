@@ -12,10 +12,14 @@ class SimpleSearcher {
   constructor(
     public endpoint: string,
     public chainId: string,
-    public privateKey: string
+    public privateKey: string,
+    public apiKey?: string
   ) {
     this.client = new Client(
-      { baseUrl: endpoint },
+      {
+        baseUrl: endpoint,
+        apiKey,
+      },
       undefined,
       this.opportunityHandler.bind(this),
       this.bidStatusHandler.bind(this)
@@ -103,6 +107,12 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: true,
   })
+  .option("api-key", {
+    description:
+      "The API key of the searcher to authenticate with the server for fetching and submitting bids",
+    type: "string",
+    demandOption: false,
+  })
   .help()
   .alias("help", "h")
   .parseSync();
@@ -116,7 +126,8 @@ async function run() {
   const searcher = new SimpleSearcher(
     argv.endpoint,
     argv.chainId,
-    argv.privateKey
+    argv.privateKey,
+    argv.apiKey
   );
   await searcher.start();
 }

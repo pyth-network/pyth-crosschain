@@ -5,10 +5,10 @@ use crate::utils::interface::{
 use crate::utils::setup::setup_environment;
 use pyth_sdk::{
     constants::{
-        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, GOVERNANCE_DATA_SOURCE,
-        TEST_ACCUMULATOR_ETH_USD_PRICE_FEED, TEST_ACCUMULATOR_USDC_USD_PRICE_FEED,
-        TEST_BATCH_ETH_USD_PRICE_FEED, TEST_BATCH_USDC_USD_PRICE_FEED,
-        WORMHOLE_GOVERNANCE_DATA_SOURCE, DUMMY_CHAIN_ID
+        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID,
+        GOVERNANCE_DATA_SOURCE, TEST_ACCUMULATOR_ETH_USD_PRICE_FEED,
+        TEST_ACCUMULATOR_USDC_USD_PRICE_FEED, TEST_BATCH_ETH_USD_PRICE_FEED,
+        TEST_BATCH_USDC_USD_PRICE_FEED, WORMHOLE_GOVERNANCE_DATA_SOURCE,
     },
     pyth_utils::{
         default_data_sources, default_price_feed_ids, guardian_set_upgrade_3_addresses,
@@ -41,7 +41,9 @@ mod success {
             .await
             .value;
 
-        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes()).await;
+        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes())
+            .await
+            .unwrap();
 
         let eth_usd_ema_price = ema_price_unsafe(&deployer.instance, default_price_feed_ids()[0])
             .await
@@ -88,7 +90,8 @@ mod success {
             fee,
             test_accumulator_update_data_bytes(),
         )
-        .await;
+        .await
+        .unwrap();
 
         let eth_usd_ema_price = ema_price_unsafe(&deployer.instance, default_price_feed_ids()[0])
             .await

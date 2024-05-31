@@ -1,5 +1,5 @@
 import { PythCluster } from '@pythnetwork/client'
-import { AccountMeta } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import {
   ExecutePostedVaa,
@@ -36,65 +36,84 @@ export const getProposalStatus = (
 }
 
 /**
- * Sorts the properties of an object by their values in ascending order.
- *
- * @param {Record<string, number>} obj - The object to sort. All property values should be numbers.
- * @returns {Record<string, number>} A new object with the same properties as the input, but ordered such that the property with the largest numerical value comes first.
- *
- * @example
- * const obj = { a: 2, b: 3, c: 1 };
- * const sortedObj = sortObjectByValues(obj);
- * console.log(sortedObj); // Outputs: { b: 3, a: 2, c: 1 }
- */
-const sortObjectByValues = (obj: Record<string, number>) => {
-  const sortedEntries = Object.entries(obj).sort(([, a], [, b]) => b - a)
-  const sortedObj: Record<string, number> = {}
-  for (const [key, value] of sortedEntries) {
-    sortedObj[key] = value
-  }
-  return sortedObj
-}
-
-/**
  * Returns a summary of the instructions in a list of multisig instructions.
  *
  * @param {MultisigInstruction[]} options.instructions - The list of multisig instructions to summarize.
  * @param {PythCluster} options.cluster - The Pyth cluster to use for parsing instructions.
  * @returns {Record<string, number>} A summary of the instructions, where the keys are the names of the instructions and the values are the number of times each instruction appears in the list.
  */
-export const getInstructionsSummary = (options: {
+export const getInstructionsSummary = ({
+  instructions,
+  cluster,
+}: {
   instructions: MultisigInstruction[]
   cluster: PythCluster
-}) => {
-  const { instructions, cluster } = options
-
-  return sortObjectByValues(
-    instructions.reduce((acc, instruction) => {
-      if (instruction instanceof WormholeMultisigInstruction) {
-        const governanceAction = instruction.governanceAction
-        if (governanceAction instanceof ExecutePostedVaa) {
-          const innerInstructions = governanceAction.instructions
-          innerInstructions.forEach((innerInstruction) => {
-            const multisigParser = MultisigParser.fromCluster(cluster)
-            const parsedInstruction = multisigParser.parseInstruction({
-              programId: innerInstruction.programId,
-              data: innerInstruction.data as Buffer,
-              keys: innerInstruction.keys as AccountMeta[],
-            })
-            acc[parsedInstruction.name] = (acc[parsedInstruction.name] ?? 0) + 1
-          })
-        } else if (governanceAction instanceof PythGovernanceActionImpl) {
-          acc[governanceAction.action] = (acc[governanceAction.action] ?? 0) + 1
-        } else if (governanceAction instanceof SetDataSources) {
-          acc[governanceAction.actionName] =
-            (acc[governanceAction.actionName] ?? 0) + 1
-        } else {
-          acc['unknown'] = (acc['unknown'] ?? 0) + 1
-        }
-      } else {
-        acc[instruction.name] = (acc[instruction.name] ?? 0) + 1
-      }
-      return acc
-    }, {} as Record<string, number>)
+}) =>
+  Object.entries(
+    getInstructionSummariesByName(
+      MultisigParser.fromCluster(cluster),
+      instructions
+    )
   )
+    .map(([name, summaries = []]) => ({
+      name,
+      count: summaries.length ?? 0,
+      summaries,
+    }))
+    .toSorted(({ count }) => count)
+
+const getInstructionSummariesByName = (
+  parser: MultisigParser,
+  instructions: MultisigInstruction[]
+) =>
+  Object.groupBy(
+    instructions.flatMap((instruction) =>
+      getInstructionSummary(parser, instruction)
+    ),
+    ({ name }) => name
+  )
+
+const getInstructionSummary = (
+  parser: MultisigParser,
+  instruction: MultisigInstruction
+) => {
+  if (instruction instanceof WormholeMultisigInstruction) {
+    const { governanceAction } = instruction
+    if (governanceAction instanceof ExecutePostedVaa) {
+      return governanceAction.instructions.map((innerInstruction) =>
+        getTransactionSummary(parser.parseInstruction(innerInstruction))
+      )
+    } else if (governanceAction instanceof PythGovernanceActionImpl) {
+      return [{ name: governanceAction.action } as const]
+    } else if (governanceAction instanceof SetDataSources) {
+      return [{ name: governanceAction.actionName } as const]
+    } else {
+      return [{ name: 'unknown' } as const]
+    }
+  } else {
+    return [getTransactionSummary(instruction)]
+  }
+}
+
+const getTransactionSummary = (instruction: MultisigInstruction) => {
+  switch (instruction.name) {
+    case 'addPublisher':
+      return {
+        name: 'addPublisher',
+        priceAccount:
+          instruction.accounts.named['priceAccount'].pubkey.toBase58(),
+        pub: (instruction.args['pub'] as PublicKey).toBase58(),
+      } as const
+    case 'delPublisher':
+      return {
+        name: 'delPublisher',
+        priceAccount:
+          instruction.accounts.named['priceAccount'].pubkey.toBase58(),
+        pub: (instruction.args['pub'] as PublicKey).toBase58(),
+      } as const
+    default:
+      return {
+        name: instruction.name,
+      } as const
+  }
 }

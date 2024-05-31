@@ -1,13 +1,10 @@
 use crate::constants::{
     BTC_USD_PRICE_FEED_ID, DEFAULT_SINGLE_UPDATE_FEE, ETH_USD_PRICE_FEED_ID,
     GUARDIAN_SET_UPGRADE_3_VAA, GUARDIAN_SET_UPGRADE_4_VAA, PYTH_CONTRACT_BINARY_PATH,
-    TEST_ACCUMULATOR_UPDATE_DATA, TEST_BATCH_UPDATE_DATA, UNI_USD_PRICE_FEED_ID,
-    USDC_USD_PRICE_FEED_ID,
+    TEST_ACCUMULATOR_UPDATE_DATA, TEST_BATCH_UPDATE_DATA,
+    TEST_CORRUPTED_PROOF_ACCUMULATOR_UPDATE_DATA, UNI_USD_PRICE_FEED_ID, USDC_USD_PRICE_FEED_ID,
 };
-use base64::{
-    engine::general_purpose,
-    prelude::{Engine, BASE64_STANDARD},
-};
+use base64::{engine::general_purpose, prelude::Engine};
 use fuels::{
     prelude::{abigen, CallParameters, Contract, LoadConfiguration, TxPolicies, WalletUnlocked},
     programs::call_response::FuelCallResponse,
@@ -82,10 +79,12 @@ pub fn test_batch_update_data_bytes() -> Vec<Bytes> {
 }
 
 pub fn test_accumulator_update_data_bytes() -> Vec<Bytes> {
+    vec![Bytes(hex::decode(TEST_ACCUMULATOR_UPDATE_DATA).unwrap())]
+}
+
+pub fn test_corrupted_proof_accumulator_update_data_bytes() -> Vec<Bytes> {
     vec![Bytes(
-        BASE64_STANDARD
-            .decode(TEST_ACCUMULATOR_UPDATE_DATA)
-            .unwrap(),
+        hex::decode(TEST_CORRUPTED_PROOF_ACCUMULATOR_UPDATE_DATA).unwrap(),
     )]
 }
 
@@ -214,7 +213,7 @@ impl Pyth {
                 wormhole_guardian_set_index,
                 chain_id,
             )
-            .with_tx_policies(TxPolicies::default().with_gas_price(1))
+            .with_tx_policies(TxPolicies::default().with_tip(1))
             .call()
             .await
     }
@@ -223,7 +222,7 @@ impl Pyth {
         let mut rng = rand::thread_rng();
         let salt = rng.gen::<[u8; 32]>();
         let configurables = PythOracleContractConfigurables::default()
-            .with_DEPLOYER(Identity::Address(Address::from(wallet.address())));
+            .with_DEPLOYER(Identity::Address(Address::from(wallet.address())))?;
         let config = LoadConfiguration::default().with_configurables(configurables);
 
         let id = Contract::load_from(
@@ -232,7 +231,7 @@ impl Pyth {
         )?;
         let deployed_contract = id
             .with_salt(salt)
-            .deploy(&wallet, TxPolicies::default().with_gas_price(1))
+            .deploy(&wallet, TxPolicies::default().with_tip(1))
             .await?;
 
         Ok(Self {

@@ -36,6 +36,7 @@ use {
             BlockNumber,
         },
     },
+    futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{
@@ -157,10 +158,29 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
 
+    let mut tasks = Vec::new();
+    for (chain_id, chain_config) in config.chains.clone() {
+        let secret_copy = secret.clone();
+
+        tasks.push(spawn(async move {
+            let state = setup_chain_state(
+                &config.provider.address,
+                &secret_copy,
+                config.provider.chain_sample_interval,
+                &chain_id,
+                &chain_config,
+            )
+            .await;
+
+            (chain_id, state)
+        }));
+    }
+    let states = join_all(tasks).await;
+
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
-    for (chain_id, chain_config) in &config.chains {
-        let state =
-            setup_chain_state(&config.provider.address, &secret, chain_id, chain_config).await;
+    for result in states {
+        let (chain_id, state) = result?;
+
         match state {
             Ok(state) => {
                 chains.insert(chain_id.clone(), state);
@@ -211,6 +231,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 async fn setup_chain_state(
     provider: &Address,
     secret: &String,
+    chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
@@ -267,6 +288,7 @@ async fn setup_chain_state(
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
+            chain_sample_interval,
         )?;
         hash_chains.push(pebble_hash_chain);
     }
@@ -301,6 +323,50 @@ pub struct ChainLabel {
     pub chain_id: String,
 }
 
+
+#[tracing::instrument(name = "block_timestamp_lag", skip_all, fields(chain_id = chain_id))]
+pub async fn check_block_timestamp_lag(
+    chain_id: String,
+    chain_config: EthereumConfig,
+    metrics: Family<ChainLabel, Gauge>,
+) {
+    let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::error!("Failed to create provider for chain id - {:?}", e);
+            return;
+        }
+    };
+
+    const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
+    let lag = match provider.get_block(BlockNumber::Latest).await {
+        Ok(block) => match block {
+            Some(block) => {
+                let block_timestamp = block.timestamp;
+                let server_timestamp = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                let lag: i64 = (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
+                lag
+            }
+            None => {
+                tracing::error!("Block is None");
+                INF_LAG
+            }
+        },
+        Err(e) => {
+            tracing::error!("Failed to get block - {:?}", e);
+            INF_LAG
+        }
+    };
+    metrics
+        .get_or_create(&ChainLabel {
+            chain_id: chain_id.clone(),
+        })
+        .set(lag);
+}
+
 /// Tracks the difference between the server timestamp and the latest block timestamp for each chain
 pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwLock<Registry>>) {
     let metrics = Family::<ChainLabel, Gauge>::default();
@@ -311,49 +377,11 @@ pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwL
     );
     loop {
         for (chain_id, chain_config) in &config.chains {
-            let chain_id = chain_id.clone();
-            let chain_config = chain_config.clone();
-            let metrics = metrics.clone();
-
-            spawn(async move {
-                let chain_id = chain_id.clone();
-                let chain_config = chain_config.clone();
-
-                let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        tracing::error!(
-                            "Failed to create provider for chain id {} - {:?}",
-                            &chain_id,
-                            e
-                        );
-                        return;
-                    }
-                };
-
-                match provider.get_block(BlockNumber::Latest).await {
-                    Ok(b) => {
-                        if let Some(block) = b {
-                            let block_timestamp = block.timestamp;
-                            let server_timestamp = SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_secs();
-                            let lag: i64 =
-                                (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
-
-                            metrics
-                                .get_or_create(&ChainLabel {
-                                    chain_id: chain_id.clone(),
-                                })
-                                .set(lag);
-                        }
-                    }
-                    Err(e) => {
-                        tracing::error!("Failed to get block for chain id {} - {:?}", &chain_id, e);
-                    }
-                };
-            });
+            spawn(check_block_timestamp_lag(
+                chain_id.clone(),
+                chain_config.clone(),
+                metrics.clone(),
+            ));
         }
 
         time::sleep(TRACK_INTERVAL).await;

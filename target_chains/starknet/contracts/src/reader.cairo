@@ -86,13 +86,15 @@ pub impl ReaderImpl of ReaderTrait {
     }
 
     // TODO: skip without calculating values
-    fn skip(ref self: Reader, mut num_bytes: u8) {
+    fn skip(ref self: Reader, mut num_bytes: usize) {
         while num_bytes > 0 {
             if num_bytes > 16 {
                 self.read_num_bytes(16);
                 num_bytes -= 16;
             } else {
-                self.read_num_bytes(num_bytes);
+                // num_bytes <= 16 so it shouldn't overflow.
+                self.read_num_bytes(num_bytes.try_into().expect(UNEXPECTED_OVERFLOW));
+                break;
             }
         }
     }

@@ -275,7 +275,7 @@ impl EntropyReader for PythContract {
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> Result<Option<U256>> {
+    ) -> Result<U256> {
         let result: Result<U256, ContractError<Provider<Http>>> = self
             .reveal_with_callback(
                 provider,
@@ -286,19 +286,6 @@ impl EntropyReader for PythContract {
             .estimate_gas()
             .await;
 
-        match result {
-            Ok(gas) => Ok(Some(gas)),
-            Err(e) => match e {
-                ContractError::ProviderError { e } => Err(anyhow!(e)),
-                _ => {
-                    tracing::info!(
-                        sequence_number = sequence_number,
-                        "Gas estimation failed. error: {:?}",
-                        e
-                    );
-                    Ok(None)
-                }
-            },
-        }
+        result.map_err(|e| e.into())
     }
 }

@@ -18,6 +18,7 @@ chains:
 provider:
   uri: http://localhost:8080/
   chain_length: 100000
+  chain_sample_interval: 10
 
   # An ethereum wallet address and private key. Generate with `cast wallet new`
   address: 0xADDRESS

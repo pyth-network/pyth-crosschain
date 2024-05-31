@@ -2253,7 +2253,7 @@ dependencies = [
  "pythnet-sdk",
  "serde",
  "serde_json",
- "serde_wormhole",
+ "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25)",
  "strum",
  "thiserror",
  "tokio",
@@ -2298,7 +2298,7 @@ dependencies = [
 
 [[package]]
 name = "pythnet-sdk"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "bincode",
  "borsh 0.10.3",
@@ -2307,13 +2307,14 @@ dependencies = [
  "fast-math",
  "hex 0.4.3",
  "libsecp256k1",
+ "rand 0.8.5",
  "rustc_version",
  "serde",
- "serde_wormhole",
+ "serde_wormhole 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha3",
  "slow_primes",
  "thiserror",
- "wormhole-sdk",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]
@@ -2720,6 +2721,19 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_wormhole"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24b022bf813578a06341fd453c3fd6e64945d9975191193d5d45e8dbd97d1d84"
+dependencies = [
+ "base64 0.13.1",
+ "itoa",
+ "serde",
+ "serde_bytes",
+ "thiserror",
 ]
 
 [[package]]
@@ -3520,9 +3534,35 @@ dependencies = [
  "bstr",
  "schemars",
  "serde",
- "serde_wormhole",
+ "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25)",
  "sha3",
  "thiserror",
+]
+
+[[package]]
+name = "wormhole-supported-chains"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f42a80a24212937cc7d7b0ab8115bb87d82f949a1a42f75d500807072c94ba4"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "wormhole-vaas-serde"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "240c5a6136dc66ecc65097bb6d159e849b5df4ecbbbb220868d0edbdcc568ed3"
+dependencies = [
+ "anyhow",
+ "bstr",
+ "schemars",
+ "serde",
+ "serde_wormhole 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sha3",
+ "thiserror",
+ "wormhole-supported-chains",
 ]
 
 [[package]]

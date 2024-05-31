@@ -20,7 +20,7 @@ scarb build
 wormhole_hash=$(starkli declare target/dev/pyth_wormhole.contract_class.json)
 
 # predeployed fee token contract in katana
-fee_contract_address=0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+fee_token_address=0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
 
 # deploying wormhole with mainnet guardians
 
@@ -63,7 +63,7 @@ pyth_hash=$(starkli declare target/dev/pyth_pyth.contract_class.json)
 ${sleep}
 pyth_address=$(starkli deploy "${pyth_hash}" \
     "${wormhole_address}" \
-    "${fee_contract_address}" \
+    "${fee_token_address}" \
     1000 0 `# fee amount` \
     1 `# num_data_sources` \
     26 `# emitter_chain_id` \
@@ -74,7 +74,7 @@ pyth_address=$(starkli deploy "${pyth_hash}" \
 )
 
 ${sleep}
-starkli invoke "${fee_contract_address}" approve "${pyth_address}" 1000 0
+starkli invoke "${fee_token_address}" approve "${pyth_address}" 1000 0
 
 ${sleep}
 starkli invoke --watch --log-traffic "${pyth_address}" update_price_feeds \

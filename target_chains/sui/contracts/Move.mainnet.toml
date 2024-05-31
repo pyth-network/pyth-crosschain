@@ -14,7 +14,7 @@ subdir = "sui/wormhole"
 rev = "sui-upgrade-mainnet"
 
 [addresses]
-pyth = "0x0"
+pyth = "0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91"
 wormhole = "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a"
 
 [dev-addresses]

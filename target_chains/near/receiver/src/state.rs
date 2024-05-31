@@ -25,7 +25,7 @@ pub type WormholeSignature = [u8; 65];
 /// Type alias for Wormhole's cross-chain 32-byte address.
 pub type WormholeAddress = [u8; 32];
 
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct PriceIdentifier(pub [u8; 32]);
 

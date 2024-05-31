@@ -3,9 +3,11 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
+        exclude: target_chains/sui/vendor/
       - id: end-of-file-fixer
+        exclude: target_chains/sui/vendor/
       - id: check-added-large-files
-        exclude: package-lock.json
+        exclude: package-lock.json,target_chains/sui/vendor/
   # Hook to format many type of files in the repo
   # including solidity contracts.
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -15,6 +17,7 @@ repos:
         additional_dependencies:
           - "prettier@2.7.1"
           - "prettier-plugin-solidity@1.0.0-rc.1"
+        exclude: target_chains/sui/vendor/
   - repo: local
     hooks:
       # Hooks for the remote executor
