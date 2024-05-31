@@ -708,6 +708,11 @@ export class EvmEntropyContract extends Storable {
     return web3.utils.randomHex(32);
   }
 
+  async getFee(provider: string): Promise<number> {
+    const contract = this.getContract();
+    return await contract.methods.getFee(provider).call();
+  }
+
   async requestRandomness(
     userRandomNumber: string,
     provider: string,

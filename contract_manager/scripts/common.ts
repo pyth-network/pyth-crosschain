@@ -79,7 +79,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   chain: {
     type: "array",
     demandOption: true,
-    desc: "Chain to upload the contract on. Can be one of the chains available in the store",
+    desc: "Chains to upload the contract on. Must be one of the chains available in the store",
   },
   "deployment-type": {
     type: "string",
