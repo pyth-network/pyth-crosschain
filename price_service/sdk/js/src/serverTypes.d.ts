@@ -3,7 +3,6 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
   "/api/get_price_feed": {
     /**
@@ -273,7 +272,6 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
-
   /**
    * **Deprecated: use /v2/updates/price/{publish_time} instead**
    * @deprecated
