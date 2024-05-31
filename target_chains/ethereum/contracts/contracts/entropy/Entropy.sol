@@ -10,6 +10,10 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./EntropyState.sol";
 
+interface IBlast {
+    function configureClaimableGas() external;
+}
+
 // Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
 //
@@ -76,6 +80,11 @@ import "./EntropyState.sol";
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
+    function configureClaimableGas() external {
+        IBlast(0x4300000000000000000000000000000000000002)
+            .configureClaimableGas();
+    }
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
