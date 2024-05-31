@@ -156,38 +156,38 @@ fn test_get_guardian_set_works() {
 
     let set0 = dispatcher.get_guardian_set(0);
     assert!(set0.keys == guardian_set0());
-    assert!(set0.expiration_time == 0);
+    assert!(set0.expiration_time.is_none());
     assert!(dispatcher.get_current_guardian_set_index() == 0);
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     let set0 = dispatcher.get_guardian_set(0);
     assert!(set0.keys == guardian_set0());
-    assert!(set0.expiration_time != 0);
+    assert!(set0.expiration_time.is_some());
     let set1 = dispatcher.get_guardian_set(1);
     assert!(set1.keys == guardian_set1());
-    assert!(set1.expiration_time == 0);
+    assert!(set1.expiration_time.is_none());
     assert!(dispatcher.get_current_guardian_set_index() == 1);
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
     let set0 = dispatcher.get_guardian_set(0);
     assert!(set0.keys == guardian_set0());
-    assert!(set0.expiration_time != 0);
+    assert!(set0.expiration_time.is_some());
     let set1 = dispatcher.get_guardian_set(1);
     assert!(set1.keys == guardian_set1());
-    assert!(set1.expiration_time != 0);
+    assert!(set1.expiration_time.is_some());
     let set2 = dispatcher.get_guardian_set(2);
     assert!(set2.keys == guardian_set2());
-    assert!(set2.expiration_time == 0);
+    assert!(set2.expiration_time.is_none());
     assert!(dispatcher.get_current_guardian_set_index() == 2);
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade3());
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade4());
     let set3 = dispatcher.get_guardian_set(3);
     assert!(set3.keys == guardian_set3());
-    assert!(set3.expiration_time != 0);
+    assert!(set3.expiration_time.is_some());
     let set4 = dispatcher.get_guardian_set(4);
     assert!(set4.keys == guardian_set4());
-    assert!(set4.expiration_time == 0);
+    assert!(set4.expiration_time.is_none());
     assert!(dispatcher.get_current_guardian_set_index() == 4);
 }
 

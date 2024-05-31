@@ -1,3 +1,4 @@
+/// Possible panic payloads for methods that execute governance instructions.
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GovernanceError {
     InvalidModule,
@@ -25,6 +26,7 @@ impl GovernanceErrorIntoFelt252 of Into<GovernanceError, felt252> {
     }
 }
 
+/// Possible panic payloads of `IWormhole::submit_new_guardian_set`.
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum SubmitNewGuardianSetError {
     Governance: GovernanceError,
@@ -33,7 +35,6 @@ pub enum SubmitNewGuardianSetError {
     InvalidGuardianKey,
     // guardian set index must increase in steps of 1
     InvalidGuardianSetSequence,
-    AccessDenied,
 }
 
 impl SubmitNewGuardianSetErrorIntoFelt252 of Into<SubmitNewGuardianSetError, felt252> {
@@ -44,12 +45,11 @@ impl SubmitNewGuardianSetErrorIntoFelt252 of Into<SubmitNewGuardianSetError, fel
             SubmitNewGuardianSetError::TooManyGuardians => 'too many guardians',
             SubmitNewGuardianSetError::InvalidGuardianKey => 'invalid guardian key',
             SubmitNewGuardianSetError::InvalidGuardianSetSequence => 'invalid guardian set sequence',
-            SubmitNewGuardianSetError::AccessDenied => 'access denied',
         }
     }
 }
 
-
+/// Possible panic payloads of `IWormhole::parse_and_verify_vm`.
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum ParseAndVerifyVmError {
     Reader: pyth::reader::Error,
@@ -77,6 +77,7 @@ impl ErrorIntoFelt252 of Into<ParseAndVerifyVmError, felt252> {
     }
 }
 
+/// Possible panic payloads of `IWormhole::get_guardian_set`.
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum GetGuardianSetError {
     InvalidIndex,

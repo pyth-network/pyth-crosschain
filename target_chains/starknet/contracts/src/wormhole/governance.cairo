@@ -31,19 +31,29 @@ impl U8TryIntoAction of TryInto<u8, Action> {
     }
 }
 
+/// Parsed header of a governance message.
 #[derive(Drop, Debug, Clone)]
 pub struct Header {
+    /// The destination module of this instruction.
     pub module: u256,
+    /// Type of action.
     pub action: Action,
+    /// The destination chain ID of this instruction,
+    /// or 0 if it's applicable to all chains.
     pub chain_id: u16,
 }
 
+/// Payload of `GuardianSetUpgrade` instruction.
 #[derive(Drop, Debug, Clone)]
 pub struct NewGuardianSet {
+    /// Index of the new set.
     pub set_index: u32,
+    /// Public keys of guardians, in order.
     pub keys: Array<EthAddress>,
 }
 
+/// Parses the header of a governance instruction and verifies the module.
+/// `GovernanceError` enumerates possible panic payloads.
 pub fn parse_header(ref reader: Reader) -> Header {
     let module = reader.read_u256();
     if module != MODULE {
@@ -55,6 +65,8 @@ pub fn parse_header(ref reader: Reader) -> Header {
     Header { module, action, chain_id }
 }
 
+/// Parses the payload of `GuardianSetUpgrade` instruction.
+/// `GovernanceError` enumerates possible panic payloads.
 pub fn parse_new_guardian_set(ref reader: Reader) -> NewGuardianSet {
     let set_index = reader.read_u32();
     let num_guardians = reader.read_u8();
