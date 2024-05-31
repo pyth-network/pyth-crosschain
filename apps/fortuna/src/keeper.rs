@@ -893,7 +893,7 @@ pub async fn withdraw_fees_if_necessary(
     let min_balance = U256::from(12345);
     if keeper_balance < min_balance && U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
-        let contract_call = contract.withdraw(fees);
+        let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
         let pending_tx = contract_call
             .send()
             .await
