@@ -9,7 +9,7 @@ use pyth::pyth::{
 };
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
-use pyth::wormhole::IWormholeDispatcherTrait;
+use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
 use core::starknet::ContractAddress;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use super::wormhole::corrupted_vm;
@@ -85,13 +85,11 @@ fn decode_event(mut event: Event) -> PythEvent {
 
 #[test]
 fn test_getters_work() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
-    assert!(pyth.wormhole_address() == wormhole.contract_address);
-    assert!(pyth.fee_token_address() == fee_contract.contract_address);
+    assert!(pyth.wormhole_address() == ctx.wormhole.contract_address);
+    assert!(pyth.fee_token_address() == ctx.fee_contract.contract_address);
     assert!(pyth.get_single_update_fee() == 1000);
     assert!(
         pyth
@@ -145,10 +143,8 @@ fn test_getters_work() {
 
 #[test]
 fn update_price_feeds_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     assert!(
         !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
@@ -162,14 +158,11 @@ fn update_price_feeds_works() {
 
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
-
-    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, fee);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    ctx.approve_fee(fee);
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
-    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
     pyth.update_price_feeds(data::good_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
 
@@ -228,21 +221,16 @@ fn update_price_feeds_works() {
 
 #[test]
 fn test_update_if_necessary_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
-
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    ctx.approve_fee(10000);
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
     let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
     assert!(pyth.get_price_unsafe(price_id).is_err());
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     let times = array![PriceFeedPublishTime { price_id, publish_time: 1715769470 }];
     pyth.update_price_feeds_if_necessary(data::test_price_update1(), times);
 
@@ -268,21 +256,16 @@ fn test_update_if_necessary_works() {
 
 #[test]
 fn test_parse_price_feed_updates_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
-
-    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, fee);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    ctx.approve_fee(1000);
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
-    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
     let output = pyth
         .parse_price_feed_updates(
             data::good_update1(),
@@ -337,38 +320,28 @@ fn test_parse_price_feed_updates_works() {
 #[test]
 #[should_panic(expected: ('price feed not found',))]
 fn test_parse_price_feed_updates_rejects_bad_price_id() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
+    ctx.approve_fee(fee);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, fee);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
     pyth.parse_price_feed_updates(data::good_update1(), array![0x14], 0, 1712589208);
 }
 
 #[test]
 #[should_panic(expected: ('price feed not found',))]
 fn test_parse_price_feed_updates_rejects_out_of_range() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     let fee = pyth.get_update_fee(data::good_update1());
     assert!(fee == 1000);
+    ctx.approve_fee(fee);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, fee);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
     pyth
         .parse_price_feed_updates(
             data::good_update1(),
@@ -380,19 +353,14 @@ fn test_parse_price_feed_updates_rejects_out_of_range() {
 
 #[test]
 fn test_parse_price_feed_updates_unique_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     let fee1 = pyth.get_update_fee(data::test_price_update2());
     assert!(fee1 == 1000);
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     let output = pyth
         .parse_unique_price_feed_updates(
             data::unique_update1(),
@@ -418,19 +386,14 @@ fn test_parse_price_feed_updates_unique_works() {
 #[test]
 #[should_panic(expected: ('price feed not found',))]
 fn test_parse_price_feed_updates_unique_rejects_non_unique() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
 
     let fee1 = pyth.get_update_fee(data::test_price_update2());
     assert!(fee1 == 1000);
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth
         .parse_unique_price_feed_updates(
             data::good_update1(),
@@ -443,16 +406,11 @@ fn test_parse_price_feed_updates_unique_rejects_non_unique() {
 #[test]
 #[should_panic(expected: ('no fresh update',))]
 fn test_update_if_necessary_rejects_empty() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds_if_necessary(data::test_price_update1(), array![]);
     stop_prank(CheatTarget::One(pyth.contract_address));
 }
@@ -460,18 +418,13 @@ fn test_update_if_necessary_rejects_empty() {
 #[test]
 #[should_panic(expected: ('no fresh update',))]
 fn test_update_if_necessary_rejects_no_fresh() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
-
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    ctx.approve_fee(10000);
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds_if_necessary(data::test_price_update1(), array![]);
 
     let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
@@ -495,10 +448,9 @@ fn test_update_if_necessary_rejects_no_fresh() {
 
 #[test]
 fn test_get_no_older_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
     let price_id = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
     let err = pyth.get_price_unsafe(price_id).unwrap_err();
     assert!(err == GetPriceUnsafeError::PriceFeedNotFound);
@@ -513,11 +465,9 @@ fn test_get_no_older_works() {
     let err = pyth.query_price_feed_no_older_than(price_id, 100).unwrap_err();
     assert!(err == GetPriceNoOlderThanError::PriceFeedNotFound);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user.try_into().unwrap());
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(pyth.contract_address), user.try_into().unwrap());
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
     pyth.update_price_feeds(data::good_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
 
@@ -556,17 +506,14 @@ fn test_get_no_older_works() {
 
 #[test]
 fn test_governance_set_fee_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    let fee_contract = ctx.fee_contract;
+    let user = ctx.user;
 
     let fee1 = pyth.get_update_fee(data::test_price_update1());
     assert!(fee1 == 1000);
-
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    ctx.approve_fee(10000);
 
     let mut balance = fee_contract.balanceOf(user);
     start_prank(CheatTarget::One(pyth.contract_address), user);
@@ -610,10 +557,8 @@ fn test_governance_set_fee_works() {
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_rejects_corrupted_governance_instruction(pos: usize, random1: usize, random2: usize) {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     let input = corrupted_vm(data::pyth_set_fee(), pos, random1, random2);
     pyth.execute_governance_instruction(input);
@@ -621,16 +566,11 @@ fn test_rejects_corrupted_governance_instruction(pos: usize, random1: usize, ran
 
 #[test]
 fn test_governance_set_data_sources_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_price_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
     let last_price = pyth
@@ -664,7 +604,7 @@ fn test_governance_set_data_sources_works() {
     };
     assert!(event == PythEvent::DataSourcesSet(expected));
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_update2_alt_emitter());
     stop_prank(CheatTarget::One(pyth.contract_address));
     let last_price = pyth
@@ -676,16 +616,11 @@ fn test_governance_set_data_sources_works() {
 #[test]
 #[should_panic(expected: ('invalid update data source',))]
 fn test_rejects_update_after_data_source_changed() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
-
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_price_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
     let last_price = pyth
@@ -695,7 +630,7 @@ fn test_rejects_update_after_data_source_changed() {
 
     pyth.execute_governance_instruction(data::pyth_set_data_sources());
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_price_update2());
     stop_prank(CheatTarget::One(pyth.contract_address));
     let last_price = pyth
@@ -715,7 +650,7 @@ fn test_governance_set_wormhole_works() {
 
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -764,16 +699,12 @@ fn test_governance_set_wormhole_works() {
 #[test]
 #[should_panic(expected: ('invalid guardian set index',))]
 fn test_rejects_price_update_without_setting_wormhole() {
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let user = 'user'.try_into().unwrap();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
-    start_prank(CheatTarget::One(fee_contract.contract_address), user);
-    fee_contract.approve(pyth.contract_address, 10000);
-    stop_prank(CheatTarget::One(fee_contract.contract_address));
+    ctx.approve_fee(10000);
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_price_update1());
     stop_prank(CheatTarget::One(pyth.contract_address));
     let last_price = pyth
@@ -781,7 +712,7 @@ fn test_rejects_price_update_without_setting_wormhole() {
         .unwrap_with_felt252();
     assert!(last_price.price == 6281060000000);
 
-    start_prank(CheatTarget::One(pyth.contract_address), user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user);
     pyth.update_price_feeds(data::test_update2_set2());
 }
 
@@ -801,7 +732,7 @@ fn test_rejects_set_wormhole_without_deploying() {
 
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
     pyth.execute_governance_instruction(data::pyth_set_wormhole());
 }
 
@@ -817,7 +748,7 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
 
     let user = 'user'.try_into().unwrap();
     let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
 
     // Address used in the governance instruction
     let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
@@ -836,10 +767,8 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
 
 #[test]
 fn test_governance_transfer_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     let mut spy = spy_events(SpyOn::One(pyth.contract_address));
 
@@ -863,10 +792,8 @@ fn test_governance_transfer_works() {
 #[test]
 #[should_panic(expected: ('invalid governance data source',))]
 fn test_set_fee_rejects_wrong_emitter() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     pyth.execute_governance_instruction(data::pyth_set_fee_alt_emitter());
 }
@@ -874,10 +801,8 @@ fn test_set_fee_rejects_wrong_emitter() {
 #[test]
 #[should_panic(expected: ('invalid governance data source',))]
 fn test_rejects_old_emitter_after_transfer() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     pyth.execute_governance_instruction(data::pyth_auth_transfer());
     pyth.execute_governance_instruction(data::pyth_set_fee());
@@ -885,10 +810,8 @@ fn test_rejects_old_emitter_after_transfer() {
 
 #[test]
 fn test_upgrade_works() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     let class = declare("pyth_fake_upgrade1");
 
@@ -912,10 +835,8 @@ fn test_upgrade_works() {
 #[should_panic]
 #[ignore] // TODO: unignore when snforge is updated
 fn test_upgrade_rejects_invalid_hash() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     pyth.execute_governance_instruction(data::pyth_upgrade_invalid_hash());
 }
@@ -924,10 +845,8 @@ fn test_upgrade_rejects_invalid_hash() {
 #[should_panic]
 #[ignore] // TODO: unignore when snforge is updated
 fn test_upgrade_rejects_not_pyth() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     declare("pyth_fake_upgrade_not_pyth");
     pyth.execute_governance_instruction(data::pyth_upgrade_not_pyth());
@@ -936,20 +855,50 @@ fn test_upgrade_rejects_not_pyth() {
 #[test]
 #[should_panic(expected: ('invalid governance message',))]
 fn test_upgrade_rejects_wrong_magic() {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_default(wormhole.contract_address, fee_contract.contract_address);
+    let ctx = deploy_test();
+    let pyth = ctx.pyth;
 
     declare("pyth_fake_upgrade_wrong_magic");
     pyth.execute_governance_instruction(data::pyth_upgrade_wrong_magic());
 }
 
+#[derive(Drop, Copy)]
+struct Context {
+    user: ContractAddress,
+    wormhole: IWormholeDispatcher,
+    fee_contract: IERC20CamelDispatcher,
+    pyth: IPythDispatcher,
+}
 
-fn deploy_default(
+#[generate_trait]
+impl ContextImpl of ContextTrait {
+    fn approve_fee(self: Context, amount: u256) {
+        start_prank(CheatTarget::One(self.fee_contract.contract_address), self.user);
+        self.fee_contract.approve(self.pyth.contract_address, amount);
+        stop_prank(CheatTarget::One(self.fee_contract.contract_address));
+    }
+}
+
+fn deploy_test() -> Context {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_test_guardian();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
+    Context { user, wormhole, fee_contract, pyth }
+}
+
+fn deploy_mainnet() -> Context {
+    let user = 'user'.try_into().unwrap();
+    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
+    let fee_contract = deploy_fee_contract(user);
+    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
+    Context { user, wormhole, fee_contract, pyth }
+}
+
+fn deploy_pyth_default(
     wormhole_address: ContractAddress, fee_token_address: ContractAddress
 ) -> IPythDispatcher {
-    deploy(
+    deploy_pyth(
         wormhole_address,
         fee_token_address,
         1000,
@@ -965,7 +914,7 @@ fn deploy_default(
     )
 }
 
-fn deploy(
+fn deploy_pyth(
     wormhole_address: ContractAddress,
     fee_token_address: ContractAddress,
     single_update_fee: u256,
