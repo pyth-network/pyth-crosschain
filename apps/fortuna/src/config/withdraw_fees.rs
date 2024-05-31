@@ -17,10 +17,15 @@ pub struct WithdrawFeesOptions {
     #[arg(long = "chain-id")]
     pub chain_id: Option<ChainId>,
 
-    /// Run the withdrawal task in "cron" mode, such that it can be repeated on a schedule.
-    /// This flag doesn't claim fees under a certain quantity (to save gas) and also rebalances
-    /// fees above a configure threshold into the keeper wallet.
-    #[arg(long = "cron")]
+    /// If provided, run the command using the keeper wallet. By default, the command uses the provider wallet.
+    /// If this option is provided, the keeper wallet must be configured and set as the fee manager for the provider.
+    #[arg(long = "keeper")]
     #[arg(default_value = "false")]
-    pub cron: bool,
+    pub keeper: bool,
+
+    /// If specified, only withdraw fees over the given balance from the contract.
+    /// If omitted, all accrued fees are withdrawn.
+    #[arg(long = "retain-balance-wei")]
+    #[arg(default_value = "0")]
+    pub retain_balance_wei: u128,
 }

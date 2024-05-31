@@ -129,6 +129,7 @@ impl SignablePythContract {
         self.client().inner().inner().inner().signer().clone()
     }
 
+    /// Get the underlying provider that communicates with the blockchain.
     pub fn provider(&self) -> Provider<Http> {
         self.client().inner().inner().inner().provider().clone()
     }

@@ -34,7 +34,6 @@ provider:
     value: abcd
     # For production, you can store the private key in a file.
     # file: secret.txt
-    #
 
   # Set this to the address of your keeper wallet if you would like the keeper wallet to
   # be able to withdraw fees from the contract.

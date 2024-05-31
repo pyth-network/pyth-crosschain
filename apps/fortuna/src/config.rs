@@ -151,11 +151,6 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
-    /// When withdrawing fees in cron mode, the amount of wei to retain in the provider wallet for
-    /// future transactions. Any amount above this is sent to the keeper wallet.
-    /// This amount serves double-duty as the minimum amount to withdraw in accrued fees.
-    pub provider_min_balance: Option<u128>,
-
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
 }
