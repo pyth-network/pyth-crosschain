@@ -129,6 +129,10 @@ impl SignablePythContract {
         self.client().inner().inner().inner().signer().clone()
     }
 
+    pub fn provider(&self) -> Provider<Http> {
+        self.client().inner().inner().inner().provider().clone()
+    }
+
     /// Submit a request for a random number to the contract.
     ///
     /// This method is a version of the autogenned `request` method that parses the emitted logs

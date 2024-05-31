@@ -268,6 +268,16 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
+    // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
+    spawn(withdraw_fees_wrapper(
+        contract.clone(),
+        chain_state.provider_address.clone(),
+        keeper_metrics.clone(),
+        // TODO: Make this configurable
+        TRACK_INTERVAL,
+    ));
+
+
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
         async move {
@@ -836,4 +846,77 @@ pub async fn track_provider(
             address:  provider_address.to_string(),
         })
         .set(end_sequence_number as i64);
+}
+
+// TODO: fields
+#[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
+pub async fn withdraw_fees_wrapper(
+    contract: Arc<SignablePythContract>,
+    provider_address: Address,
+    metrics_registry: Arc<KeeperMetrics>,
+    poll_interval: Duration,
+) {
+    loop {
+        if let Err(e) =
+            withdraw_fees_if_necessary(contract.clone(), provider_address, metrics_registry.clone())
+                .in_current_span()
+                .await
+        {
+            tracing::error!("Withdrawing fees. error: {:?}", e);
+        }
+        time::sleep(poll_interval).await;
+    }
+}
+
+/// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
+pub async fn withdraw_fees_if_necessary(
+    contract: Arc<SignablePythContract>,
+    provider_address: Address,
+    metrics_registry: Arc<KeeperMetrics>,
+) -> Result<()> {
+    let provider = contract.provider();
+    let wallet = contract.wallet();
+
+    let keeper_balance = provider
+        .get_balance(wallet.address(), None)
+        .await
+        .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
+
+    let provider_info = contract
+        .get_provider_info(provider_address)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
+
+    let fees = provider_info.accrued_fees_in_wei;
+
+    let min_balance = U256::from(12345);
+    if keeper_balance < min_balance && U256::from(fees) > min_balance {
+        tracing::info!("Claiming accrued fees...");
+        let contract_call = contract.withdraw(fees);
+        let pending_tx = contract_call
+            .send()
+            .await
+            .map_err(|e| anyhow!("Error submitting the withdrawal transaction: {:?}", e))?;
+
+        let tx_result = pending_tx
+            .await
+            .map_err(|e| anyhow!("Error waiting for withdrawal transaction receipt: {:?}", e))?
+            .ok_or_else(|| anyhow!("Can't verify the withdrawal, probably dropped from mempool"))?;
+
+        /*
+        tracing::info!(
+            transaction_hash = &tx_result.transaction_hash.to_string(),
+            "Withdrew fees to keeper address. Receipt: {:?}",
+            tx_result,
+        )
+        */
+    } else if keeper_balance < min_balance {
+        // FIXME log message
+        tracing::warn!(
+            "Keeper balance is too low but provider fees are not sufficient to top-up. chain_id:",
+        )
+    }
+
+    Ok(())
 }
