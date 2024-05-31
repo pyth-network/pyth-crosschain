@@ -112,14 +112,7 @@ export const usePyth = (): PythHookData => {
           switch (base?.type) {
             case AccountType.Product:
               const parsed = parseProductData(allPythAccounts[i].account.data)
-
-              if (!parsed.priceAccountKey) {
-                productRawConfigs[allPythAccounts[i].pubkey.toBase58()] = {
-                  priceAccounts: [],
-                  metadata: parsed.product,
-                  address: allPythAccounts[i].pubkey,
-                }
-              } else {
+              if (parsed.priceAccountKey) {
                 let priceAccountKey: string | undefined =
                   parsed.priceAccountKey.toBase58()
                 const priceAccounts = []
@@ -157,11 +150,13 @@ export const usePyth = (): PythHookData => {
               rawConfig.mappingAccounts.push({
                 next: parsed.nextMappingAccount,
                 address: allPythAccounts[i].pubkey,
-                products: parsed.productAccountKeys.map((key) => {
-                  const toAdd = productRawConfigs[key.toBase58()]
-                  delete productRawConfigs[key.toBase58()]
-                  return toAdd
-                }),
+                products: parsed.productAccountKeys
+                  .filter((key) => productRawConfigs[key.toBase58()])
+                  .map((key) => {
+                    const toAdd = productRawConfigs[key.toBase58()]
+                    delete productRawConfigs[key.toBase58()]
+                    return toAdd
+                  }),
               })
               allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1]
               allPythAccounts.pop()
