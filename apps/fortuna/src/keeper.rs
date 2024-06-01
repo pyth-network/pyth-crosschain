@@ -414,19 +414,39 @@ pub async fn process_event(
         )
         .gas(gas_estimate);
 
-
-    let pending_tx = contract_call.send().await.map_err(|e| {
-        backoff::Error::transient(anyhow!("Error submitting the reveal transaction: {:?}", e))
-    })?;
+    let client = contract.client();
+    let mut transaction = contract_call.tx.clone();
+    // manually fill the tx with the gas info, so we can log the details in case of error
+    client
+        .fill_transaction(&mut transaction, None)
+        .await
+        .map_err(|e| {
+            backoff::Error::transient(anyhow!("Error filling the reveal transaction: {:?}", e))
+        })?;
+    let pending_tx = client
+        .send_transaction(transaction.clone(), None)
+        .await
+        .map_err(|e| {
+            backoff::Error::transient(anyhow!(
+                "Error submitting the reveal transaction. Tx:{:?}, Error:{:?}",
+                transaction,
+                e
+            ))
+        })?;
 
     let receipt = pending_tx
         .await
         .map_err(|e| {
-            backoff::Error::transient(anyhow!("Error waiting for transaction receipt {:?}", e))
+            backoff::Error::transient(anyhow!(
+                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
+                transaction,
+                e
+            ))
         })?
         .ok_or_else(|| {
             backoff::Error::transient(anyhow!(
-                "Can't verify the reveal, probably dropped from mempool"
+                "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
+                transaction
             ))
         })?;
 
@@ -444,8 +464,7 @@ pub async fn process_event(
             .total_gas_spent
             .get_or_create(&AccountLabel {
                 chain_id: chain_config.id.clone(),
-                address:  contract
-                    .client()
+                address:  client
                     .inner()
                     .inner()
                     .inner()
