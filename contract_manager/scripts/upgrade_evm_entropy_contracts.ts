@@ -2,6 +2,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore, loadHotWallet, toPrivateKey } from "../src";
 import { readFileSync } from "fs";
+import { PythCluster } from "@pythnetwork/client/lib/cluster";
 
 import {
   COMMON_UPGRADE_OPTIONS,
@@ -27,6 +28,15 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
+const RPCS: Record<string, string> = {
+  "mainnet-beta":
+    "https://pyth-network.rpcpool.com/454a55fa3daeffadf2737571fc30s",
+};
+
+function registry(cluster: PythCluster): string {
+  return RPCS[cluster as string]!;
+}
+
 async function main() {
   const argv = await parser.argv;
   const cacheFile =
@@ -45,41 +55,52 @@ async function main() {
 
   console.log("Using cache file", cacheFile);
 
-  const payloads: Buffer[] = [];
+  const payloads: (Buffer | undefined)[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
       console.log("Deploying contract to", contract.chain.getId());
-      const address = await runIfNotCached(
-        `deploy-${contract.chain.getId()}`,
-        () => {
-          return contract.chain.deploy(
-            toPrivateKey(argv["private-key"]),
-            artifact["abi"],
-            artifact["bytecode"],
-            [],
-            2
-          );
-        }
-      );
-      console.log(
-        `Deployed contract at ${address} on ${contract.chain.getId()}`
-      );
-      const payload =
-        argv["contract-type"] === "executor"
-          ? await contract.generateUpgradeExecutorContractsPayload(address)
-          : await contract.generateUpgradeEntropyContractPayload(address);
+      try {
+        const address = await runIfNotCached(
+          `deploy-${contract.chain.getId()}`,
+          () => {
+            return contract.chain.deploy(
+              toPrivateKey(argv["private-key"]),
+              artifact["abi"],
+              artifact["bytecode"],
+              [],
+              2
+            );
+          }
+        );
+        console.log(
+          `Deployed contract at ${address} on ${contract.chain.getId()}`
+        );
+        const payload =
+          argv["contract-type"] === "executor"
+            ? await contract.generateUpgradeExecutorContractsPayload(address)
+            : await contract.generateUpgradeEntropyContractPayload(address);
 
-      console.log(payload.toString("hex"));
-      payloads.push(payload);
+        console.log(payload.toString("hex"));
+        payloads.push(payload);
+      } catch (e) {
+        console.log(`error deploying: ${e}`);
+        payloads.push(undefined);
+      }
+    }
+  }
+
+  for (let p of payloads) {
+    if (p == undefined) {
+      throw new Error("Some chains could not be deployed");
     }
   }
 
   console.log("Using vault at for proposal", vault.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet ", wallet.publicKey.toBase58());
-  await vault.connect(wallet);
-  const proposal = await vault.proposeWormholeMessage(payloads);
+  await vault.connect(wallet, registry);
+  const proposal = await vault.proposeWormholeMessage(payloads as Buffer[]);
   console.log("Proposal address", proposal.address.toBase58());
 }
 

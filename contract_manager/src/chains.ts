@@ -447,12 +447,18 @@ export class EvmChain extends Chain {
       );
     }
 
-    const deployedContract = await deployTx.send({
-      from: signer.address,
-      gas,
-      gasPrice: gasPrice.toString(),
-    });
-    return deployedContract.options.address;
+    let deployedContract = undefined;
+    try {
+      deployedContract = await deployTx.send({
+        from: signer.address,
+        gas,
+        gasPrice: gasPrice.toString(),
+      });
+    } catch (e: any) {
+      console.log(`Error deploying contract: ${JSON.stringify(e)}`);
+      throw e;
+    }
+    return deployedContract!.options.address;
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
