@@ -1,3 +1,7 @@
+mod exp10_;
+
+pub use exp10_::exp10;
+
 use core::integer::u128_byte_reverse;
 
 pub const ONE_SHIFT_160: u256 = 0x10000000000000000000000000000000000000000;
