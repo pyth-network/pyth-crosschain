@@ -454,7 +454,9 @@ export class EvmChain extends Chain {
         gas,
         gasPrice: gasPrice.toString(),
       });
-    } catch (e: any) {
+    } catch (e) {
+      // RPC errors often have useful information in the non-primary message field. Log the whole error
+      // to simplify identifying the problem.
       console.log(`Error deploying contract: ${JSON.stringify(e)}`);
       throw e;
     }

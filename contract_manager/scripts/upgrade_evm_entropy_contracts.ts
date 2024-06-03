@@ -29,11 +29,12 @@ const parser = yargs(hideBin(process.argv))
   });
 
 // Override these URLs to use a different RPC node for mainnet / testnet.
+// TODO: extract these RPCs to a config file (?)
 const RPCS: Record<string, string> = {
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
 };
-
+1;
 function registry(cluster: PythCluster): string {
   return RPCS[cluster as string];
 }
@@ -56,6 +57,8 @@ async function main() {
 
   console.log("Using cache file", cacheFile);
 
+  // Try to deploy on every chain, then collect any failures at the end. This logic makes it simpler to
+  // identify deployment problems (e.g., not enough gas) on every chain where they occur.
   const payloads: (Buffer | undefined)[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
