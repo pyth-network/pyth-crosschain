@@ -94,7 +94,7 @@ async function main() {
     }
   }
 
-  for (let payload of payloads) {
+  for (const payload of payloads) {
     if (payload == undefined) {
       throw new Error(
         "Some chains could not be deployed. Scroll up to see the errors from each chain."
