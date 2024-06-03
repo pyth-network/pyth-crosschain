@@ -5,7 +5,13 @@ use {
             BlockchainState,
             ChainId,
         },
-        chain::ethereum::PythContract,
+        chain::{
+            ethereum::InstrumentedPythContract,
+            traced_client::{
+                RpcMetrics,
+                TracedClient,
+            },
+        },
         command::register_provider::CommitmentMetadata,
         config::{
             Commitment,
@@ -13,7 +19,10 @@ use {
             EthereumConfig,
             RunOptions,
         },
-        keeper,
+        keeper::{
+            self,
+            KeeperMetrics,
+        },
         state::{
             HashChainState,
             PebbleHashChain,
@@ -27,10 +36,6 @@ use {
     axum::Router,
     ethers::{
         middleware::Middleware,
-        providers::{
-            Http,
-            Provider,
-        },
         types::{
             Address,
             BlockNumber,
@@ -131,8 +136,10 @@ pub async fn run_keeper(
     config: Config,
     private_key: String,
     metrics_registry: Arc<RwLock<Registry>>,
+    rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<()> {
     let mut handles = Vec::new();
+    let keeper_metrics = Arc::new(KeeperMetrics::new(metrics_registry).await);
     for (chain_id, chain_config) in chains {
         let chain_eth_config = config
             .chains
@@ -144,7 +151,8 @@ pub async fn run_keeper(
             private_key,
             chain_eth_config,
             chain_config.clone(),
-            metrics_registry.clone(),
+            keeper_metrics.clone(),
+            rpc_metrics.clone(),
         )));
     }
 
@@ -157,11 +165,13 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         "Please specify a provider secret in the config file."
     ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
+    let metrics_registry = Arc::new(RwLock::new(Registry::default()));
+    let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
         let secret_copy = secret.clone();
-
+        let rpc_metrics = rpc_metrics.clone();
         tasks.push(spawn(async move {
             let state = setup_chain_state(
                 &config.provider.address,
@@ -169,6 +179,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
                 config.provider.chain_sample_interval,
                 &chain_id,
                 &chain_config,
+                rpc_metrics,
             )
             .await;
 
@@ -207,21 +218,24 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    let metrics_registry = Arc::new(RwLock::new(Registry::default()));
-
     if let Some(keeper_private_key) = config.keeper.private_key.load()? {
         spawn(run_keeper(
             chains.clone(),
             config.clone(),
             keeper_private_key,
             metrics_registry.clone(),
+            rpc_metrics.clone(),
         ));
     } else {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
 
     // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
-    spawn(track_block_timestamp_lag(config, metrics_registry.clone()));
+    spawn(track_block_timestamp_lag(
+        config,
+        metrics_registry.clone(),
+        rpc_metrics.clone(),
+    ));
 
     run_api(opts.addr.clone(), chains, metrics_registry, rx_exit).await?;
 
@@ -234,8 +248,13 @@ async fn setup_chain_state(
     chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
+    rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<BlockchainState> {
-    let contract = Arc::new(PythContract::from_config(&chain_config)?);
+    let contract = Arc::new(InstrumentedPythContract::from_config(
+        &chain_config,
+        chain_id.clone(),
+        rpc_metrics,
+    )?);
     let mut provider_commitments = chain_config.commitments.clone().unwrap_or(Vec::new());
     provider_commitments.sort_by(|c1, c2| {
         c1.original_commitment_sequence_number
@@ -289,7 +308,8 @@ async fn setup_chain_state(
             &commitment.seed,
             commitment.chain_length,
             chain_sample_interval,
-        )?;
+        )
+        .map_err(|e| anyhow!("Failed to create hash chain: {}", e))?;
         hash_chains.push(pebble_hash_chain);
     }
 
@@ -329,14 +349,17 @@ pub async fn check_block_timestamp_lag(
     chain_id: String,
     chain_config: EthereumConfig,
     metrics: Family<ChainLabel, Gauge>,
+    rpc_metrics: Arc<RpcMetrics>,
 ) {
-    let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-        Ok(r) => r,
-        Err(e) => {
-            tracing::error!("Failed to create provider for chain id - {:?}", e);
-            return;
-        }
-    };
+    let provider =
+        match TracedClient::new(chain_id.clone(), &chain_config.geth_rpc_addr, rpc_metrics) {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::error!("Failed to create provider for chain id - {:?}", e);
+                return;
+            }
+        };
+
 
     const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
     let lag = match provider.get_block(BlockNumber::Latest).await {
@@ -368,7 +391,11 @@ pub async fn check_block_timestamp_lag(
 }
 
 /// Tracks the difference between the server timestamp and the latest block timestamp for each chain
-pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwLock<Registry>>) {
+pub async fn track_block_timestamp_lag(
+    config: Config,
+    metrics_registry: Arc<RwLock<Registry>>,
+    rpc_metrics: Arc<RpcMetrics>,
+) {
     let metrics = Family::<ChainLabel, Gauge>::default();
     metrics_registry.write().await.register(
         "block_timestamp_lag",
@@ -381,6 +408,7 @@ pub async fn track_block_timestamp_lag(config: Config, metrics_registry: Arc<RwL
                 chain_id.clone(),
                 chain_config.clone(),
                 metrics.clone(),
+                rpc_metrics.clone(),
             ));
         }
 
