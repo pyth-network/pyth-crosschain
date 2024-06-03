@@ -1030,8 +1030,8 @@ dependencies = [
  "pyth-sdk",
  "pyth-sdk-solana",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.3.0",
- "pythnet-sdk 2.1.0",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3023,8 +3023,8 @@ dependencies = [
  "common-test-utils",
  "program-simulator",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.3.0",
- "pythnet-sdk 2.1.0",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
  "serde_wormhole",
  "solana-program",
  "solana-sdk",
@@ -3071,8 +3071,8 @@ dependencies = [
  "byteorder",
  "common-test-utils",
  "program-simulator",
- "pyth-solana-receiver-sdk 0.3.0",
- "pythnet-sdk 2.1.0",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3094,8 +3094,8 @@ dependencies = [
  "clap 3.2.23",
  "hex",
  "pyth-solana-receiver",
- "pyth-solana-receiver-sdk 0.3.0",
- "pythnet-sdk 2.1.0",
+ "pyth-solana-receiver-sdk",
+ "pythnet-sdk",
  "serde_wormhole",
  "shellexpand",
  "solana-client",
@@ -3107,43 +3107,12 @@ dependencies = [
 
 [[package]]
 name = "pyth-solana-receiver-sdk"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "937c8595148fb2a9a90439daf6a371a5b3c9fcd9b636f26d36ae31d6846d4339"
-dependencies = [
- "anchor-lang",
- "hex",
- "pythnet-sdk 2.0.0",
- "solana-program",
-]
-
-[[package]]
-name = "pyth-solana-receiver-sdk"
 version = "0.3.0"
 dependencies = [
  "anchor-lang",
  "hex",
- "pythnet-sdk 2.1.0",
+ "pythnet-sdk",
  "solana-program",
-]
-
-[[package]]
-name = "pythnet-sdk"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f246dc1ea2966f811d894590014f9163942b33255fc7560fe629726a721aad1"
-dependencies = [
- "bincode",
- "borsh 0.10.3",
- "bytemuck",
- "byteorder",
- "fast-math",
- "hex",
- "rustc_version",
- "serde",
- "sha3 0.10.6",
- "slow_primes",
- "thiserror",
 ]
 
 [[package]]
@@ -3757,15 +3726,6 @@ name = "semver"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
-
-[[package]]
-name = "send-usd"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "pyth-solana-receiver-sdk 0.1.0",
- "solana-program",
-]
 
 [[package]]
 name = "serde"
