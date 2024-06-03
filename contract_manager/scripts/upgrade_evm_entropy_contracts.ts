@@ -28,13 +28,14 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
+// Override these URLs to use a different RPC node for mainnet / testnet.
 const RPCS: Record<string, string> = {
-  "mainnet-beta":
-    "https://pyth-network.rpcpool.com/454a55fa3daeffadf2737571fc30s",
+  "mainnet-beta": "https://api.mainnet-beta.solana.com",
+  testnet: "https://api.testnet.solana.com",
 };
 
 function registry(cluster: PythCluster): string {
-  return RPCS[cluster as string]!;
+  return RPCS[cluster as string];
 }
 
 async function main() {
@@ -90,9 +91,11 @@ async function main() {
     }
   }
 
-  for (let p of payloads) {
-    if (p == undefined) {
-      throw new Error("Some chains could not be deployed");
+  for (let payload of payloads) {
+    if (payload == undefined) {
+      throw new Error(
+        "Some chains could not be deployed. Scroll up to see the errors from each chain."
+      );
     }
   }
 
