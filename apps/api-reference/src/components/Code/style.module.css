@@ -1,0 +1,26 @@
+/* Enable dark mode */
+html:global(.dark) .code :global(.shiki),
+html:global(.dark) .code :global(.shiki) span {
+  @apply !bg-neutral-800;
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* Show line numbers */
+.code code {
+  counter-reset: step;
+  counter-increment: step 0;
+}
+.code code :global(.line::before) {
+  content: counter(step);
+  counter-increment: step;
+  @apply mr-4 inline-block w-4 text-right text-neutral-400;
+}
+
+/* Add some overflow, padding, rounding, smaller text, and a background color on
+   light mode */
+.code :global(.shiki) {
+  @apply overflow-x-auto rounded-xl !bg-neutral-100/25 p-5 text-sm;
+}
