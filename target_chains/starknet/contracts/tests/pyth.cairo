@@ -1080,12 +1080,12 @@ fn deploy_mainnet() -> Context {
 
 fn deploy_pyth_default(
     wormhole_address: ContractAddress,
-    fee_token_address: ContractAddress,
+    fee_token_address1: ContractAddress,
     fee_token_address2: ContractAddress
 ) -> IPythDispatcher {
     deploy_pyth(
         wormhole_address,
-        fee_token_address,
+        fee_token_address1,
         1000,
         fee_token_address2,
         2000,
@@ -1103,8 +1103,8 @@ fn deploy_pyth_default(
 
 fn deploy_pyth(
     wormhole_address: ContractAddress,
-    fee_token_address: ContractAddress,
-    single_update_fee: u256,
+    fee_token_address1: ContractAddress,
+    single_update_fee1: u256,
     fee_token_address2: ContractAddress,
     single_update_fee2: u256,
     data_sources: Array<DataSource>,
@@ -1113,7 +1113,7 @@ fn deploy_pyth(
     governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
-    (wormhole_address, fee_token_address, single_update_fee).serialize(ref args);
+    (wormhole_address, fee_token_address1, single_update_fee1).serialize(ref args);
     (fee_token_address2, single_update_fee2).serialize(ref args);
     (data_sources, governance_emitter_chain_id).serialize(ref args);
     (governance_emitter_address, governance_initial_sequence).serialize(ref args);

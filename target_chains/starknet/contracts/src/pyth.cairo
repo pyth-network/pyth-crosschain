@@ -97,9 +97,9 @@ mod pyth {
     #[storage]
     struct Storage {
         wormhole_address: ContractAddress,
-        fee_token_address: ContractAddress,
+        fee_token_address1: ContractAddress,
         fee_token_address2: ContractAddress,
-        single_update_fee: u256,
+        single_update_fee1: u256,
         single_update_fee2: u256,
         data_sources: LegacyMap<usize, DataSource>,
         num_data_sources: usize,
@@ -117,13 +117,13 @@ mod pyth {
     ///
     /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
     ///
-    /// `fee_token_address` is the address of the ERC20 token used to pay fees to Pyth
+    /// `fee_token_address1` is the address of the ERC20 token used to pay fees to Pyth
     /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
     /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
     /// available. Any other ERC20-compatible token can also be used.
     /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
     ///
-    /// `single_update_fee` is the number of tokens of `fee_token_address` charged for a single price update.
+    /// `single_update_fee1` is the number of tokens of `fee_token_address1` charged for a single price update.
     ///
     /// `fee_token_address2` and `single_update_fee2` specify the secondary fee contract and fee rate
     /// that can be used instead of the main fee token.
@@ -133,8 +133,8 @@ mod pyth {
     fn constructor(
         ref self: ContractState,
         wormhole_address: ContractAddress,
-        fee_token_address: ContractAddress,
-        single_update_fee: u256,
+        fee_token_address1: ContractAddress,
+        single_update_fee1: u256,
         fee_token_address2: ContractAddress,
         single_update_fee2: u256,
         data_sources: Array<DataSource>,
@@ -143,8 +143,8 @@ mod pyth {
         governance_initial_sequence: u64,
     ) {
         self.wormhole_address.write(wormhole_address);
-        self.fee_token_address.write(fee_token_address);
-        self.single_update_fee.write(single_update_fee);
+        self.fee_token_address1.write(fee_token_address1);
+        self.single_update_fee1.write(single_update_fee1);
         self.fee_token_address2.write(fee_token_address2);
         self.single_update_fee2.write(single_update_fee2);
         self.write_data_sources(@data_sources);
@@ -263,8 +263,8 @@ mod pyth {
         }
 
         fn get_update_fee(self: @ContractState, data: ByteArray, token: ContractAddress) -> u256 {
-            let single_update_fee = if token == self.fee_token_address.read() {
-                self.single_update_fee.read()
+            let single_update_fee = if token == self.fee_token_address1.read() {
+                self.single_update_fee1.read()
             } else if token == self.fee_token_address2.read() {
                 self.single_update_fee2.read()
             } else {
@@ -332,12 +332,12 @@ mod pyth {
         }
 
         fn fee_token_addresses(self: @ContractState) -> Array<ContractAddress> {
-            array![self.fee_token_address.read(), self.fee_token_address2.read()]
+            array![self.fee_token_address1.read(), self.fee_token_address2.read()]
         }
 
         fn get_single_update_fee(self: @ContractState, token: ContractAddress) -> u256 {
-            if token == self.fee_token_address.read() {
-                self.single_update_fee.read()
+            if token == self.fee_token_address1.read() {
+                self.single_update_fee1.read()
             } else if token == self.fee_token_address2.read() {
                 self.single_update_fee2.read()
             } else {
@@ -393,8 +393,8 @@ mod pyth {
             match instruction.payload {
                 GovernancePayload::SetFee(payload) => {
                     let new_fee = apply_decimal_expo(payload.value, payload.expo);
-                    let old_fee = self.single_update_fee.read();
-                    self.single_update_fee.write(new_fee);
+                    let old_fee = self.single_update_fee1.read();
+                    self.single_update_fee1.write(new_fee);
                     let event = FeeSet { old_fee, new_fee };
                     self.emit(event);
                 },
@@ -637,8 +637,8 @@ mod pyth {
                 num_updates,
                 caller,
                 contract,
-                self.fee_token_address.read(),
-                self.single_update_fee.read(),
+                self.fee_token_address1.read(),
+                self.single_update_fee1.read(),
             );
             if !fee1_transfered {
                 let fee2_transfered = transfer_fee(
@@ -742,9 +742,9 @@ mod pyth {
         caller: ContractAddress,
         contract: ContractAddress,
         fee_token: ContractAddress,
-        single_update_fee: u256,
+        single_update_fee1: u256,
     ) -> bool {
-        let total_fee = single_update_fee * num_updates.into();
+        let total_fee = single_update_fee1 * num_updates.into();
         let fee_contract = IERC20CamelDispatcher { contract_address: fee_token };
         if fee_contract.allowance(caller, contract) < total_fee {
             return false;
