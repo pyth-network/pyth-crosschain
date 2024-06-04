@@ -26,7 +26,7 @@ import {
   AuthorizeGovernanceDataSourceTransfer,
   RequestGovernanceDataSourceTransfer,
 } from "../governance_payload/GovernanceDataSourceTransfer";
-import { SetFee } from "../governance_payload/SetFee";
+import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
 import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
 import {
   DataSource,
@@ -192,6 +192,28 @@ test("GovernancePayload ser/de", (done) => {
       Buffer.from([
         80, 84, 71, 77, 1, 3, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
         0, 0, 8,
+      ])
+    )
+  ).toBeTruthy();
+
+  const setFeeInToken = new SetFeeInToken(
+    "starknet",
+    42n,
+    8n,
+    Buffer.from(
+      "049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+      "hex"
+    )
+  );
+  const setFeeInTokenBuffer = setFeeInToken.encode();
+  console.log(setFeeInTokenBuffer.toJSON());
+  expect(
+    setFeeInTokenBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 1, 7, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
+        0, 0, 8, 32, 4, 157, 54, 87, 13, 78, 70, 244, 142, 153, 103, 75, 211,
+        252, 200, 70, 68, 221, 214, 185, 111, 124, 116, 27, 21, 98, 184, 47,
+        158, 0, 77, 199,
       ])
     )
   ).toBeTruthy();
@@ -384,6 +406,24 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
               callData
             )
         );
+    } else if (header.action === "SetFeeInToken") {
+      return fc
+        .record({
+          value: fc.bigUintN(64),
+          expo: fc.bigUintN(64),
+          token: fc.array(fc.integer({ min: 0, max: 255 }), {
+            minLength: 0,
+            maxLength: 128,
+          }),
+        })
+        .map(({ value, expo, token }) => {
+          return new SetFeeInToken(
+            header.targetChainId,
+            value,
+            expo,
+            Buffer.from(token)
+          );
+        });
     } else {
       throw new Error("Unsupported action type");
     }

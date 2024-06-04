@@ -15,6 +15,7 @@ export const TargetAction = {
   SetValidPeriod: 4,
   RequestGovernanceDataSourceTransfer: 5,
   SetWormholeAddress: 6,
+  SetFeeInToken: 7,
 } as const;
 
 export const EvmExecutorAction = {
@@ -43,6 +44,8 @@ export function toActionName(
         return "RequestGovernanceDataSourceTransfer";
       case 6:
         return "SetWormholeAddress";
+      case 7:
+        return "SetFeeInToken";
     }
   } else if (
     deserialized.moduleId == MODULE_EVM_EXECUTOR &&
@@ -176,10 +179,13 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   ): Buffer {
     const headerBuffer = this.header().encode();
 
-    const payloadBuffer = Buffer.alloc(payloadLayout.span);
-    payloadLayout.encode(payload, payloadBuffer);
+    // XXX: there is no way to get the length before the encoding.
+    const expectedLen = payloadLayout.span < 0 ? 10000 : payloadLayout.span;
 
-    return Buffer.concat([headerBuffer, payloadBuffer]);
+    const payloadBuffer = Buffer.alloc(expectedLen);
+    const payloadLen = payloadLayout.encode(payload, payloadBuffer);
+
+    return Buffer.concat([headerBuffer, payloadBuffer.subarray(0, payloadLen)]);
   }
 
   /** Decode this action from a buffer using the given layout for the payload. */
