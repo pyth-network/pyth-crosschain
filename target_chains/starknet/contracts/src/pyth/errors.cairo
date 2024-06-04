@@ -113,3 +113,16 @@ impl ParsePriceFeedsErrorIntoFelt252 of Into<ParsePriceFeedsError, felt252> {
         }
     }
 }
+
+#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+pub enum GetSingleUpdateFeeError {
+    UnsupportedToken,
+}
+
+impl GetSingleUpdateFeeErrorIntoFelt252 of Into<GetSingleUpdateFeeError, felt252> {
+    fn into(self: GetSingleUpdateFeeError) -> felt252 {
+        match self {
+            GetSingleUpdateFeeError::UnsupportedToken => 'unsupported token',
+        }
+    }
+}

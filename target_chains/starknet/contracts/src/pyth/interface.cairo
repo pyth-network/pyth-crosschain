@@ -33,10 +33,10 @@ pub trait IPyth<T> {
     fn parse_unique_price_feed_updates(
         ref self: T, data: ByteArray, price_ids: Array<u256>, publish_time: u64, max_staleness: u64,
     ) -> Array<PriceFeed>;
-    fn get_update_fee(self: @T, data: ByteArray) -> u256;
+    fn get_update_fee(self: @T, data: ByteArray, token: ContractAddress) -> u256;
     fn wormhole_address(self: @T) -> ContractAddress;
-    fn fee_token_address(self: @T) -> ContractAddress;
-    fn get_single_update_fee(self: @T) -> u256;
+    fn fee_token_addresses(self: @T) -> Array<ContractAddress>;
+    fn get_single_update_fee(self: @T, token: ContractAddress) -> u256;
     fn valid_data_sources(self: @T) -> Array<DataSource>;
     fn is_valid_data_source(self: @T, source: DataSource) -> bool;
     fn governance_data_source(self: @T) -> DataSource;
