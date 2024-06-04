@@ -19,10 +19,14 @@ const parser = yargs(hideBin(process.argv))
       desc: "Path to the standard JSON output of the contract (build artifact)",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
-    chain: COMMON_DEPLOY_OPTIONS["chain"],
+    chain: {
+      type: "string",
+      demandOption: true,
+      desc: "Chain to upload the contract on. Must be one of the chains available in the store",
+    },
     "deploy-args": {
       type: "array",
-      desc: "Arguments to pass to the contract constructor. Each argument must begin with 0x if it's a hex string",
+      desc: "Arguments to pass to the contract constructor. They should not be prefixed with 0x.",
     },
   });
 
