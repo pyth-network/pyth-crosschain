@@ -19,7 +19,10 @@ use {
         },
         registry::Registry,
     },
-    std::sync::Arc,
+    std::{
+        str::FromStr,
+        sync::Arc,
+    },
     tokio::{
         sync::RwLock,
         time::Instant,
@@ -125,9 +128,8 @@ impl TracedClient {
         url: &str,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Provider<TracedClient>> {
-        let url = url::Url::parse(url)?;
         Ok(Provider::new(TracedClient {
-            inner: Http::new(url),
+            inner: Http::from_str(url)?,
             chain_id,
             metrics,
         }))
