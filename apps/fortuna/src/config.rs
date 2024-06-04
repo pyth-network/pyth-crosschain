@@ -113,6 +113,7 @@ impl Config {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EthereumConfig {
     /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
+    /// TODO: Change type from String to Url
     pub geth_rpc_addr: String,
 
     /// URL of a Geth RPC wss endpoint to use for subscribing to blockchain events.

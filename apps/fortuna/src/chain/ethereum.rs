@@ -1,5 +1,6 @@
 use {
     crate::{
+        api::ChainId,
         chain::{
             eth_gas_oracle::EthProviderOracle,
             reader::{
@@ -8,6 +9,10 @@ use {
                 BlockStatus,
                 EntropyReader,
                 RequestedWithCallbackEvent,
+            },
+            traced_client::{
+                RpcMetrics,
+                TracedClient,
             },
         },
         config::EthereumConfig,
@@ -22,7 +27,6 @@ use {
         abi::RawLog,
         contract::{
             abigen,
-            ContractError,
             EthLogDecode,
         },
         core::types::Address,
@@ -34,6 +38,7 @@ use {
         },
         prelude::{
             BlockId,
+            JsonRpcClient,
             PendingTransaction,
             TransactionRequest,
         },
@@ -67,15 +72,19 @@ abigen!(
     "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
 
-pub type SignablePythContract = PythRandom<
+pub type SignablePythContractInner<T> = PythRandom<
     LegacyTxMiddleware<
         GasOracleMiddleware<
-            NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-            EthProviderOracle<Provider<Http>>,
+            NonceManagerMiddleware<SignerMiddleware<Provider<T>, LocalWallet>>,
+            EthProviderOracle<Provider<T>>,
         >,
     >,
 >;
+pub type SignablePythContract = SignablePythContractInner<Http>;
+pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
+
 pub type PythContract = PythRandom<Provider<Http>>;
+pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
 
 /// Middleware that converts a transaction into a legacy transaction if use_legacy_tx is true.
 /// We can not use TransformerMiddleware because keeper calls fill_transaction first which bypasses
@@ -157,32 +166,7 @@ impl<M: Middleware> Middleware for LegacyTxMiddleware<M> {
     }
 }
 
-impl SignablePythContract {
-    pub async fn from_config(
-        chain_config: &EthereumConfig,
-        private_key: &str,
-    ) -> Result<SignablePythContract> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-        let chain_id = provider.get_chainid().await?;
-        let gas_oracle = EthProviderOracle::new(provider.clone());
-        let wallet__ = private_key
-            .parse::<LocalWallet>()?
-            .with_chain_id(chain_id.as_u64());
-
-        let address = wallet__.address();
-
-        Ok(PythRandom::new(
-            chain_config.contract_addr,
-            Arc::new(LegacyTxMiddleware::new(
-                chain_config.legacy_tx,
-                GasOracleMiddleware::new(
-                    NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
-                    gas_oracle,
-                ),
-            )),
-        ))
-    }
-
+impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
     /// Submit a request for a random number to the contract.
     ///
     /// This method is a version of the autogenned `request` method that parses the emitted logs
@@ -249,10 +233,54 @@ impl SignablePythContract {
             Err(anyhow!("Request failed").into())
         }
     }
+
+    pub async fn from_config_and_provider(
+        chain_config: &EthereumConfig,
+        private_key: &str,
+        provider: Provider<T>,
+    ) -> Result<SignablePythContractInner<T>> {
+        let chain_id = provider.get_chainid().await?;
+        let gas_oracle = EthProviderOracle::new(provider.clone());
+        let wallet__ = private_key
+            .parse::<LocalWallet>()?
+            .with_chain_id(chain_id.as_u64());
+
+        let address = wallet__.address();
+
+        Ok(PythRandom::new(
+            chain_config.contract_addr,
+            Arc::new(LegacyTxMiddleware::new(
+                chain_config.legacy_tx,
+                GasOracleMiddleware::new(
+                    NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
+                    gas_oracle,
+                ),
+            )),
+        ))
+    }
+}
+
+impl SignablePythContract {
+    pub async fn from_config(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
+        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        Self::from_config_and_provider(chain_config, private_key, provider).await
+    }
+}
+
+impl InstrumentedSignablePythContract {
+    pub async fn from_config(
+        chain_config: &EthereumConfig,
+        private_key: &str,
+        chain_id: ChainId,
+        metrics: Arc<RpcMetrics>,
+    ) -> Result<Self> {
+        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+        Self::from_config_and_provider(chain_config, private_key, provider).await
+    }
 }
 
 impl PythContract {
-    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract> {
+    pub fn from_config(chain_config: &EthereumConfig) -> Result<Self> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
 
         Ok(PythRandom::new(
@@ -262,8 +290,23 @@ impl PythContract {
     }
 }
 
+impl InstrumentedPythContract {
+    pub fn from_config(
+        chain_config: &EthereumConfig,
+        chain_id: ChainId,
+        metrics: Arc<RpcMetrics>,
+    ) -> Result<Self> {
+        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+
+        Ok(PythRandom::new(
+            chain_config.contract_addr,
+            Arc::new(provider),
+        ))
+    }
+}
+
 #[async_trait]
-impl EntropyReader for PythContract {
+impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
     async fn get_request(
         &self,
         provider_address: Address,
@@ -330,7 +373,7 @@ impl EntropyReader for PythContract {
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
     ) -> Result<U256> {
-        let result: Result<U256, ContractError<Provider<Http>>> = self
+        let result = self
             .reveal_with_callback(
                 provider,
                 sequence_number,
