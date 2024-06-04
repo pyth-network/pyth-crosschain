@@ -1,11 +1,11 @@
-name: Check Hermes
+name: Check Hermes Server
 
 on:
   pull_request:
-    paths: [apps/hermes/**]
+    paths: [apps/hermes/server/**]
   push:
     branches: [main]
-    paths: [apps/hermes/**]
+    paths: [apps/hermes/server/**]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,4 +20,4 @@ jobs:
       - name: Install protoc
         uses: arduino/setup-protoc@v3
       - name: Run executor tests
-        run: cargo test --manifest-path ./apps/hermes/Cargo.toml
+        run: cargo test --manifest-path ./apps/hermes/server/Cargo.toml
