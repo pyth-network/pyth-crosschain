@@ -51,8 +51,6 @@
   "dependencies": {
     "@pythnetwork/price-service-sdk": "*",
     "@types/ws": "^8.5.3",
-    "axios": "^1.5.1",
-    "axios-retry": "^3.8.0",
     "eventsource": "^2.0.2",
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
