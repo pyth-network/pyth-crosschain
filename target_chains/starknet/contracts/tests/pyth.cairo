@@ -254,7 +254,7 @@ fn test_accepts_secondary_fee() {
 }
 
 #[test]
-fn test_accepts_secondary_fee_if_first_unsufficient() {
+fn test_accepts_secondary_fee_if_first_allowance_insufficient() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
@@ -282,6 +282,51 @@ fn test_accepts_secondary_fee_if_first_unsufficient() {
     stop_prank(CheatTarget::One(pyth.contract_address));
     assert!(balance1 - ctx.fee_contract.balanceOf(ctx.user) == 0);
     assert!(balance2 - ctx.fee_contract2.balanceOf(ctx.user) == 2000);
+}
+
+#[test]
+fn test_accepts_secondary_fee_if_first_balance_insufficient() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+    let user2 = 'user2'.try_into().unwrap();
+
+    start_prank(CheatTarget::One(ctx.fee_contract.contract_address), ctx.user);
+    ctx.fee_contract.transfer(user2, 500);
+    stop_prank(CheatTarget::One(ctx.fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(ctx.fee_contract2.contract_address), ctx.user);
+    ctx.fee_contract2.transfer(user2, 2000);
+    stop_prank(CheatTarget::One(ctx.fee_contract2.contract_address));
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
+
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
+    assert!(fee == 1000);
+    let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
+    assert!(fee2 == 2000);
+    start_prank(CheatTarget::One(ctx.fee_contract.contract_address), user2);
+    ctx.fee_contract.approve(ctx.pyth.contract_address, fee);
+    stop_prank(CheatTarget::One(ctx.fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(ctx.fee_contract2.contract_address), user2);
+    ctx.fee_contract2.approve(ctx.pyth.contract_address, fee2);
+    stop_prank(CheatTarget::One(ctx.fee_contract2.contract_address));
+
+    let balance1 = ctx.fee_contract.balanceOf(user2);
+    let balance2 = ctx.fee_contract2.balanceOf(user2);
+    start_prank(CheatTarget::One(pyth.contract_address), user2.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(balance1 - ctx.fee_contract.balanceOf(user2) == 0);
+    assert!(balance2 - ctx.fee_contract2.balanceOf(user2) == 2000);
 }
 
 #[test]

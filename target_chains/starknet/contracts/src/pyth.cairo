@@ -749,8 +749,11 @@ mod pyth {
         if fee_contract.allowance(caller, contract) < total_fee {
             return false;
         }
+        if fee_contract.balanceOf(caller) < total_fee {
+            return false;
+        }
         if !fee_contract.transferFrom(caller, contract, total_fee) {
-            panic_with_felt252(UpdatePriceFeedsError::InsufficientFeeAllowance.into());
+            return false;
         }
         true
     }
