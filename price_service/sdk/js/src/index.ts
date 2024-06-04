@@ -17,8 +17,6 @@ export {
   parsePriceFeedMessage,
 } from "./AccumulatorUpdateData";
 
-export * from "./types";
-
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
  */

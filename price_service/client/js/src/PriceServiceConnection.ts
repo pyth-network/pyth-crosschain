@@ -1,16 +1,10 @@
-import {
-  EncodingType,
-  HexString,
-  PriceFeed,
-  PriceFeedMetadataV2,
-  PriceUpdate,
-  UnixTimestamp,
-} from "@pythnetwork/price-service-sdk";
+import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import axios, { AxiosInstance } from "axios";
+import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
 import { Logger } from "ts-log";
 import { ResilientWebSocket } from "./ResillientWebSocket";
 import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils";
-import EventSource from "eventsource";
 
 export type DurationInMs = number;
 
@@ -65,12 +59,14 @@ type ServerMessage = ServerResponse | ServerPriceUpdate;
 export type PriceFeedUpdateCallback = (priceFeed: PriceFeed) => void;
 
 export class PriceServiceConnection {
-  private baseURL: string;
-  private timeout: DurationInMs;
+  private httpClient: AxiosInstance;
+
   private priceFeedCallbacks: Map<HexString, Set<PriceFeedUpdateCallback>>;
   private wsClient: undefined | ResilientWebSocket;
   private wsEndpoint: undefined | string;
+
   private logger: Logger;
+
   private priceFeedRequestConfig: PriceFeedRequestConfig;
 
   /**
@@ -87,8 +83,14 @@ export class PriceServiceConnection {
    * @param config Optional PriceServiceConnectionConfig for custom configurations.
    */
   constructor(endpoint: string, config?: PriceServiceConnectionConfig) {
-    this.baseURL = endpoint;
-    this.timeout = config?.timeout || 5000;
+    this.httpClient = axios.create({
+      baseURL: endpoint,
+      timeout: config?.timeout || 5000,
+    });
+    axiosRetry(this.httpClient, {
+      retries: config?.httpRetries || 3,
+      retryDelay: axiosRetry.exponentialDelay,
+    });
 
     this.priceFeedRequestConfig = {
       binary: config?.priceFeedRequestConfig?.binary,
@@ -127,166 +129,6 @@ export class PriceServiceConnection {
     this.wsEndpoint = makeWebsocketUrl(endpoint);
   }
 
-  private async httpRequest(
-    url: string,
-    options?: RequestInit,
-    retries = 3,
-    backoff = 300
-  ): Promise<any> {
-    const controller = new AbortController();
-    const { signal } = controller;
-    options = { ...options, signal }; // Merge any existing options with the signal
-
-    // Set a timeout to abort the request if it takes too long
-    const timeout = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await fetch(url, options);
-      clearTimeout(timeout); // Clear the timeout if the request completes in time
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      clearTimeout(timeout);
-      if (
-        retries > 0 &&
-        !(error instanceof Error && error.name === "AbortError")
-      ) {
-        // Wait for a backoff period before retrying
-        await new Promise((resolve) => setTimeout(resolve, backoff));
-        return this.httpRequest(url, options, retries - 1, backoff * 2); // Exponential backoff
-      }
-      if (error instanceof Error) {
-        this.logger.error("HTTP Request Failed", error);
-        throw error;
-      } else {
-        // If the caught error is not an instance of Error, handle it as an unknown error.
-        this.logger.error("An unknown error occurred", error);
-        throw new Error("An unknown error occurred");
-      }
-    }
-  }
-
-  /**
-   * Fetch the set of available price feeds.
-   * This endpoint can be filtered by asset type and query string.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
-   *
-   * @param query Optional query string to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example : bitcoin
-   * @param filter Optional filter string to filter the price feeds. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive. Available values : crypto, fx, equity, metals, rates
-   * @returns Array of hex-encoded price ids.
-   */
-  async getV2PriceFeeds(
-    query?: string,
-    filter?: string
-  ): Promise<PriceFeedMetadataV2[]> {
-    const url = new URL(`${this.baseURL}/v2/price_feeds`);
-    if (query) {
-      url.searchParams.append("query", query);
-    }
-    if (filter) {
-      url.searchParams.append("filter", filter);
-    }
-    return await this.httpRequest(url.toString());
-  }
-
-  /**
-   * Fetch the latest price updates for a set of price feed IDs.
-   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
-   *
-   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @returns Array of PriceFeed objects containing the latest updates.
-   */
-  async getV2LatestPriceUpdates(
-    ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean
-  ): Promise<PriceUpdate[]> {
-    const url = new URL(`${this.baseURL}/v2/updates/price/latest`);
-    // Append parameters to the URL search parameters
-    ids.forEach((id) => url.searchParams.append("ids[]", id));
-    if (encoding) {
-      url.searchParams.append("encoding", encoding);
-    }
-    if (parsed !== undefined) {
-      url.searchParams.append("parsed", String(parsed));
-    }
-    return await this.httpRequest(url.toString());
-  }
-
-  /**
-   * Fetch the price updates for a set of price feed IDs at a given timestamp.
-   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
-   *
-   * @param publishTime Unix timestamp in seconds.
-   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @returns Array of PriceFeed objects containing the latest updates.
-   */
-  async getV2TimestampPriceUpdates(
-    publishTime: UnixTimestamp,
-    ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean
-  ): Promise<PriceUpdate[]> {
-    const url = new URL(`${this.baseURL}/v2/updates/price/${publishTime}`);
-    ids.forEach((id) => url.searchParams.append("ids[]", id));
-    if (encoding) {
-      url.searchParams.append("encoding", encoding);
-    }
-    if (parsed !== undefined) {
-      url.searchParams.append("parsed", String(parsed));
-    }
-    return await this.httpRequest(url.toString());
-  }
-
-  /**
-   * Fetch streaming price updates for a set of price feed IDs.
-   * This endpoint can be customized by specifying the encoding type, whether the results should include parsed updates,
-   * and if unordered updates or only benchmark updates are allowed.
-   * This will return an EventSource that can be used to listen to streaming updates.
-   *
-   * @param ids Array of hex-encoded price feed IDs for which streaming updates are requested.
-   * @param encoding Optional encoding type. If specified, updates are returned in the specified encoding. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @param allow_unordered Optional boolean to specify if unordered updates are allowed to be included in the stream. Default is false.
-   * @param benchmarks_only Optional boolean to specify if only benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime) should be returned. Default is false.
-   * @returns An EventSource instance for receiving streaming updates.
-   */
-  async getV2StreamingPriceUpdates(
-    ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean,
-    allow_unordered?: boolean,
-    benchmarks_only?: boolean
-  ): Promise<EventSource> {
-    const url = new URL("/v2/updates/price/stream", this.baseURL);
-    ids.forEach((id) => {
-      url.searchParams.append("ids[]", id);
-    });
-    const params = {
-      encoding,
-      parsed: parsed !== undefined ? String(parsed) : undefined,
-      allow_unordered:
-        allow_unordered !== undefined ? String(allow_unordered) : undefined,
-      benchmarks_only:
-        benchmarks_only !== undefined ? String(benchmarks_only) : undefined,
-    };
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.append(key, value);
-      }
-    });
-    const eventSource = new EventSource(url.toString());
-    return eventSource;
-  }
-
   /**
    * Fetch Latest PriceFeeds of given price ids.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
@@ -301,19 +143,15 @@ export class PriceServiceConnection {
       return [];
     }
 
-    const url = new URL(`${this.baseURL}/api/latest_price_feeds`);
-    priceIds.forEach((id) => url.searchParams.append("ids[]", id));
-    url.searchParams.append(
-      "verbose",
-      String(this.priceFeedRequestConfig.verbose)
-    );
-    url.searchParams.append(
-      "binary",
-      String(this.priceFeedRequestConfig.binary)
-    );
-
-    const priceFeedsJson = await this.httpRequest(url.toString());
-    return priceFeedsJson.map((priceFeedJson: any) =>
+    const response = await this.httpClient.get("/api/latest_price_feeds", {
+      params: {
+        ids: priceIds,
+        verbose: this.priceFeedRequestConfig.verbose,
+        binary: this.priceFeedRequestConfig.binary,
+      },
+    });
+    const priceFeedsJson = response.data as any[];
+    return priceFeedsJson.map((priceFeedJson) =>
       PriceFeed.fromJson(priceFeedJson)
     );
   }
@@ -328,11 +166,12 @@ export class PriceServiceConnection {
    * @returns Array of base64 encoded VAAs.
    */
   async getLatestVaas(priceIds: HexString[]): Promise<string[]> {
-    const url = new URL(`${this.baseURL}/api/latest_vaas`);
-    priceIds.forEach((id) => url.searchParams.append("ids[]", id));
-
-    const vaasJson = await this.httpRequest(url.toString());
-    return vaasJson as string[];
+    const response = await this.httpClient.get("/api/latest_vaas", {
+      params: {
+        ids: priceIds,
+      },
+    });
+    return response.data;
   }
 
   /**
@@ -351,12 +190,13 @@ export class PriceServiceConnection {
     priceId: HexString,
     publishTime: EpochTimeStamp
   ): Promise<[string, EpochTimeStamp]> {
-    const url = new URL(`${this.baseURL}/api/get_vaa`);
-    url.searchParams.append("id", priceId);
-    url.searchParams.append("publish_time", publishTime.toString());
-
-    const responseJson = await this.httpRequest(url.toString());
-    return [responseJson.vaa, responseJson.publishTime];
+    const response = await this.httpClient.get("/api/get_vaa", {
+      params: {
+        id: priceId,
+        publish_time: publishTime,
+      },
+    });
+    return [response.data.vaa, response.data.publishTime];
   }
 
   /**
@@ -373,20 +213,16 @@ export class PriceServiceConnection {
     priceId: HexString,
     publishTime: EpochTimeStamp
   ): Promise<PriceFeed> {
-    const url = new URL(`${this.baseURL}/api/get_price_feed`);
-    url.searchParams.append("id", priceId);
-    url.searchParams.append("publish_time", publishTime.toString());
-    url.searchParams.append(
-      "verbose",
-      String(this.priceFeedRequestConfig.verbose)
-    );
-    url.searchParams.append(
-      "binary",
-      String(this.priceFeedRequestConfig.binary)
-    );
+    const response = await this.httpClient.get("/api/get_price_feed", {
+      params: {
+        id: priceId,
+        publish_time: publishTime,
+        verbose: this.priceFeedRequestConfig.verbose,
+        binary: this.priceFeedRequestConfig.binary,
+      },
+    });
 
-    const responseJson = await this.httpRequest(url.toString());
-    return PriceFeed.fromJson(responseJson);
+    return PriceFeed.fromJson(response.data);
   }
 
   /**
@@ -396,10 +232,8 @@ export class PriceServiceConnection {
    * @returns Array of hex-encoded price ids.
    */
   async getPriceFeedIds(): Promise<HexString[]> {
-    const url = new URL(`${this.baseURL}/api/price_feed_ids`);
-
-    const responseJson = await this.httpRequest(url.toString());
-    return responseJson as HexString[];
+    const response = await this.httpClient.get("/api/price_feed_ids");
+    return response.data;
   }
 
   /**
