@@ -1,5 +1,4 @@
 import { EncodingType, PriceFeedMetadata, PriceUpdate } from "./types";
-import { Logger } from "ts-log";
 import EventSource from "eventsource";
 
 const DEFAULT_TIMEOUT: DurationInMs = 5000;
@@ -20,22 +19,12 @@ export type HermesConnectionConfig = {
    * it will timeout regardless of the retries at the configured `timeout` time.
    */
   httpRetries?: number;
-  /* Optional logger (e.g: console or any logging library) to log internal events */
-  logger?: Logger;
 };
 
 export class HermesConnection {
   private baseURL: string;
   private timeout: DurationInMs;
   private httpRetries: number;
-  private logger: Logger;
-
-  /**
-   * Custom handler for web socket errors (connection and message parsing).
-   *
-   * Default handler only logs the errors.
-   */
-  onWsError: (error: Error) => void;
 
   /**
    * Constructs a new Connection.
@@ -47,32 +36,6 @@ export class HermesConnection {
     this.baseURL = endpoint;
     this.timeout = config?.timeout || DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries || DEFAULT_HTTP_RETRIES;
-
-    // Default logger is console for only warnings and errors.
-    this.logger = config?.logger || {
-      trace: () => {},
-      debug: () => {},
-      info: () => {},
-      warn: console.warn,
-      error: console.error,
-    };
-
-    this.onWsError = (error: Error) => {
-      this.logger.error(error);
-
-      // Exit the process if it is running in node.
-      if (
-        typeof process !== "undefined" &&
-        typeof process.exit === "function"
-      ) {
-        this.logger.error("Halting the process due to the websocket error");
-        process.exit(1);
-      } else {
-        this.logger.error(
-          "Cannot halt process. Please handle the websocket error."
-        );
-      }
-    };
   }
 
   private async httpRequest(
@@ -106,11 +69,8 @@ export class HermesConnection {
         return this.httpRequest(url, options, retries - 1, backoff * 2); // Exponential backoff
       }
       if (error instanceof Error) {
-        this.logger.error("HTTP Request Failed", error);
         throw error;
       } else {
-        // If the caught error is not an instance of Error, handle it as an unknown error.
-        this.logger.error("An unknown error occurred", error);
         throw new Error("An unknown error occurred");
       }
     }
@@ -119,11 +79,11 @@ export class HermesConnection {
   /**
    * Fetch the set of available price feeds.
    * This endpoint can be filtered by asset type and query string.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param query Optional query string to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example : bitcoin
    * @param filter Optional filter string to filter the price feeds. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive. Available values : crypto, fx, equity, metals, rates
-   * @returns Array of hex-encoded price ids.
+   * @returns Array of PriceFeedMetadata objects.
    */
   async getPriceFeeds(
     query?: string,
@@ -142,12 +102,12 @@ export class HermesConnection {
   /**
    * Fetch the latest price updates for a set of price feed IDs.
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param ids Array of hex-encoded price feed IDs for which updates are requested.
    * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
    * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @returns Array of PriceFeed objects containing the latest updates.
+   * @returns Array of PriceUpdate objects containing the latest updates.
    */
   async getLatestPriceUpdates(
     ids: HexString[],
@@ -169,15 +129,15 @@ export class HermesConnection {
   /**
    * Fetch the price updates for a set of price feed IDs at a given timestamp.
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
-   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param publishTime Unix timestamp in seconds.
    * @param ids Array of hex-encoded price feed IDs for which updates are requested.
    * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
    * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @returns Array of PriceFeed objects containing the latest updates.
+   * @returns Array of PriceUpdate objects containing the updates at the specified timestamp.
    */
-  async getTimestampPriceUpdates(
+  async getPriceUpdatesAtTimestamp(
     publishTime: UnixTimestamp,
     ids: HexString[],
     encoding?: EncodingType,
@@ -199,6 +159,8 @@ export class HermesConnection {
    * This endpoint can be customized by specifying the encoding type, whether the results should include parsed updates,
    * and if unordered updates or only benchmark updates are allowed.
    * This will return an EventSource that can be used to listen to streaming updates.
+   * If an invalid hex-encoded ID is passed, it will throw an error.
+   *
    *
    * @param ids Array of hex-encoded price feed IDs for which streaming updates are requested.
    * @param encoding Optional encoding type. If specified, updates are returned in the specified encoding. Default is hex.
@@ -207,7 +169,7 @@ export class HermesConnection {
    * @param benchmarks_only Optional boolean to specify if only benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime) should be returned. Default is false.
    * @returns An EventSource instance for receiving streaming updates.
    */
-  async getStreamingPriceUpdates(
+  async getPriceUpdatesStream(
     ids: HexString[],
     encoding?: EncodingType,
     parsed?: boolean,
@@ -231,7 +193,11 @@ export class HermesConnection {
         url.searchParams.append(key, value);
       }
     });
-    const eventSource = new EventSource(url.toString());
-    return eventSource;
+    try {
+      const eventSource = new EventSource(url.toString());
+      return eventSource;
+    } catch (error) {
+      throw new Error("Failed to connect to the price service");
+    }
   }
 }

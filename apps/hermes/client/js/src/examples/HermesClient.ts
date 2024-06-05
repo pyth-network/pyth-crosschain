@@ -29,9 +29,7 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  const connection = new HermesConnection(argv.endpoint, {
-    logger: console, // Providing logger will allow the connection to log it's events.
-  });
+  const connection = new HermesConnection(argv.endpoint, {});
 
   const priceIds = argv.priceIds as string[];
 
@@ -44,7 +42,7 @@ async function run() {
   console.log(priceUpdates);
 
   // Streaming price updates
-  const eventSource = await connection.getStreamingPriceUpdates(priceIds);
+  const eventSource = await connection.getPriceUpdatesStream(priceIds);
 
   eventSource.onmessage = (event) => {
     console.log("Received price update:", event.data);
