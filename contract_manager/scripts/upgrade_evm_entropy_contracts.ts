@@ -30,13 +30,14 @@ const parser = yargs(hideBin(process.argv))
 
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
-const RPCS: Record<string, string> = {
+const RPCS = {
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
-};
-1;
+  devnet: "https://api.devnet.solana.com",
+} as Record<PythCluster, string>;
+
 function registry(cluster: PythCluster): string {
-  return RPCS[cluster as string];
+  return RPCS[cluster];
 }
 
 async function main() {
@@ -59,7 +60,8 @@ async function main() {
 
   // Try to deploy on every chain, then collect any failures at the end. This logic makes it simpler to
   // identify deployment problems (e.g., not enough gas) on every chain where they occur.
-  const payloads: (Buffer | undefined)[] = [];
+  const payloads: Buffer[] = [];
+  const failures: string[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
@@ -89,24 +91,24 @@ async function main() {
         payloads.push(payload);
       } catch (e) {
         console.log(`error deploying: ${e}`);
-        payloads.push(undefined);
+        failures.push(contract.chain.getId());
       }
     }
   }
 
-  for (const payload of payloads) {
-    if (payload == undefined) {
-      throw new Error(
-        "Some chains could not be deployed. Scroll up to see the errors from each chain."
-      );
-    }
+  if (failures.length > 0) {
+    throw new Error(
+      `Some chains could not be deployed: ${failures.join(
+        ", "
+      )}. Scroll up to see the errors from each chain.`
+    );
   }
 
   console.log("Using vault at for proposal", vault.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet ", wallet.publicKey.toBase58());
-  await vault.connect(wallet, registry);
-  const proposal = await vault.proposeWormholeMessage(payloads as Buffer[]);
+  vault.connect(wallet, registry);
+  const proposal = await vault.proposeWormholeMessage(payloads);
   console.log("Proposal address", proposal.address.toBase58());
 }
 

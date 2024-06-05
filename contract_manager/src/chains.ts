@@ -447,20 +447,19 @@ export class EvmChain extends Chain {
       );
     }
 
-    let deployedContract = undefined;
     try {
-      deployedContract = await deployTx.send({
+      const deployedContract = await deployTx.send({
         from: signer.address,
         gas,
         gasPrice: gasPrice.toString(),
       });
+      return deployedContract.options.address;
     } catch (e) {
       // RPC errors often have useful information in the non-primary message field. Log the whole error
       // to simplify identifying the problem.
       console.log(`Error deploying contract: ${JSON.stringify(e)}`);
       throw e;
     }
-    return deployedContract!.options.address;
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
