@@ -58,6 +58,7 @@ export class SubmittedWormholeMessage {
    * Inspects the transaction logs to find the sequence number
    * @param signature signature of the transaction to inspect
    * @param cluster the cluster the transaction was submitted to
+   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   static async fromTransactionSignature(
     signature: string,
@@ -152,6 +153,11 @@ export class WormholeEmitter {
     return this.wallet.publicKey;
   }
 
+  /**
+   * Send a wormhole message containing payload through wormhole.
+   * @param payload the contents of the message
+   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
+   */
   async sendMessage(
     payload: Buffer,
     registry: SolanaRpcRegistry = getPythClusterApiUrl
@@ -299,6 +305,7 @@ export class Vault extends Storable {
    * Connects the vault to a wallet that can be used to submit proposals
    * The wallet should be a multisig signer of the vault
    * @param wallet
+   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   public connect(
     wallet: Wallet,
@@ -314,6 +321,7 @@ export class Vault extends Storable {
 
   /**
    * Gets the emitter address of the vault
+   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const squad = SquadsMesh.endpoint(
