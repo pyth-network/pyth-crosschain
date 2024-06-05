@@ -161,13 +161,14 @@ export const RECEIVER_CHAINS = {
   berachain_testnet_v2: 50081,
   opbnb_testnet: 50082,
   etherlink_testnet: 50083,
+  fuel_testnet: 50084,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
 // value and that is an expected behavior.
 export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
 export declare type ChainName = keyof typeof CHAINS;
-export declare type ChainId = typeof CHAINS[ChainName];
+export declare type ChainId = (typeof CHAINS)[ChainName];
 
 export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
