@@ -12,6 +12,7 @@ pub use interface::{
 };
 pub use wormhole::{Event, GuardianSetAdded};
 
+/// Implementation of the Wormhole contract.
 #[starknet::contract]
 mod wormhole {
     use pyth::util::UnwrapWithFelt252;
@@ -30,36 +31,56 @@ mod wormhole {
     use core::panic_with_felt252;
     use pyth::util::{UNEXPECTED_OVERFLOW};
 
+    /// Events emitted by the contract.
     #[event]
     #[derive(Drop, PartialEq, starknet::Event)]
     pub enum Event {
         GuardianSetAdded: GuardianSetAdded,
     }
 
+    /// Emitted when a new guardian set is added.
     #[derive(Drop, PartialEq, starknet::Event)]
     pub struct GuardianSetAdded {
+        /// Index of the new guardian set.
         pub index: u32,
     }
 
+    /// Guardian set storage.
     #[derive(Drop, Debug, Clone, Serde, starknet::Store)]
     struct GuardianSet {
+        /// Number of guardians in this guardian set.
+        /// Guardian keys are stored separately.
         num_guardians: usize,
+        /// Timestamp of expiry, or 0 if there is no expiration time.
         // XXX: storage doesn't work if we use Option here.
         expiration_time: u64,
     }
 
     #[storage]
     struct Storage {
+        /// ID of the chain the contract is deployed on.
         chain_id: u16,
+        /// ID of the chain containing the Wormhole governance contract.
         governance_chain_id: u16,
+        /// Address of the Wormhole governance contract.
         governance_contract: u256,
+        /// Index of the last added set.
         current_guardian_set_index: u32,
+        /// For every executed governance actions, contains an entry with
+        /// key = hash of the message and value = true.
         consumed_governance_actions: LegacyMap<u256, bool>,
+        /// All known guardian sets.
         guardian_sets: LegacyMap<u32, GuardianSet>,
-        // (guardian_set_index, guardian_index) => guardian_address
+        /// Public keys of guardians in all known guardian sets.
+        /// Key = (guardian_set_index, guardian_index).
         guardian_keys: LegacyMap<(u32, u8), EthAddress>,
     }
 
+    /// Initializes the contract.
+    /// `initial_guardians` is the list of public keys of guardians.
+    /// `chain_id` is the ID of the chain the contract is being deployed on.
+    /// `governance_chain_id` is the ID of the chain containing the Wormhole governance contract.
+    /// `governance_contract` is the address of the Wormhole governance contract.
     #[constructor]
     fn constructor(
         ref self: ContractState,
@@ -136,7 +157,14 @@ mod wormhole {
                 keys.append(self.guardian_keys.read((index, i)));
                 i += 1;
             };
-            super::GuardianSet { keys, expiration_time: set.expiration_time }
+            super::GuardianSet {
+                keys,
+                expiration_time: if set.expiration_time == 0 {
+                    Option::None
+                } else {
+                    Option::Some(set.expiration_time)
+                }
+            }
         }
         fn get_current_guardian_set_index(self: @ContractState) -> u32 {
             self.current_guardian_set_index.read()
@@ -182,6 +210,8 @@ mod wormhole {
 
     #[generate_trait]
     impl PrivateImpl of PrivateImplTrait {
+        /// Validates the new guardian set and writes it to the storage.
+        /// `SubmitNewGuardianSetError` enumerates possible panic payloads.
         fn store_guardian_set(
             ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>
         ) {
@@ -214,12 +244,15 @@ mod wormhole {
             self.current_guardian_set_index.write(set_index);
         }
 
+        /// Marks the specified guardian set to expire in 24 hours.
         fn expire_guardian_set(ref self: ContractState, set_index: u32, now: u64) {
             let mut set = self.guardian_sets.read(set_index);
             set.expiration_time = now + 86400;
             self.guardian_sets.write(set_index, set);
         }
 
+        /// Checks required properties of the governance instruction.
+        /// `GovernanceError` enumerates possible panic payloads.
         fn verify_governance_vm(self: @ContractState, vm: @VerifiedVM) {
             if self.current_guardian_set_index.read() != *vm.guardian_set_index {
                 panic_with_felt252(GovernanceError::NotCurrentGuardianSet.into());

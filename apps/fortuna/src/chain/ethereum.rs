@@ -1,5 +1,6 @@
 use {
     crate::{
+        api::ChainId,
         chain::{
             eth_gas_oracle::EthProviderOracle,
             reader::{
@@ -8,6 +9,10 @@ use {
                 BlockStatus,
                 EntropyReader,
                 RequestedWithCallbackEvent,
+            },
+            traced_client::{
+                RpcMetrics,
+                TracedClient,
             },
         },
         config::EthereumConfig,
@@ -22,21 +27,21 @@ use {
         abi::RawLog,
         contract::{
             abigen,
-            ContractError,
             EthLogDecode,
         },
         core::types::Address,
         middleware::{
             gas_oracle::GasOracleMiddleware,
-            transformer::{
-                Transformer,
-                TransformerError,
-                TransformerMiddleware,
-            },
+            MiddlewareError,
             NonceManagerMiddleware,
             SignerMiddleware,
         },
-        prelude::TransactionRequest,
+        prelude::{
+            BlockId,
+            JsonRpcClient,
+            PendingTransaction,
+            TransactionRequest,
+        },
         providers::{
             Http,
             Middleware,
@@ -57,6 +62,7 @@ use {
         Keccak256,
     },
     std::sync::Arc,
+    thiserror::Error,
 };
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
@@ -66,71 +72,107 @@ abigen!(
     "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
 
-pub type SignablePythContract = PythRandom<
-    TransformerMiddleware<
+pub type SignablePythContractInner<T> = PythRandom<
+    LegacyTxMiddleware<
         GasOracleMiddleware<
-            NonceManagerMiddleware<SignerMiddleware<Provider<Http>, LocalWallet>>,
-            EthProviderOracle<Provider<Http>>,
+            NonceManagerMiddleware<SignerMiddleware<Provider<T>, LocalWallet>>,
+            EthProviderOracle<Provider<T>>,
         >,
-        LegacyTxTransformer,
     >,
 >;
-pub type PythContract = PythRandom<Provider<Http>>;
+pub type SignablePythContract = SignablePythContractInner<Http>;
+pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
 
-/// Transformer that converts a transaction into a legacy transaction if use_legacy_tx is true.
+pub type PythContract = PythRandom<Provider<Http>>;
+pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
+
+/// Middleware that converts a transaction into a legacy transaction if use_legacy_tx is true.
+/// We can not use TransformerMiddleware because keeper calls fill_transaction first which bypasses
+/// the transformer.
 #[derive(Clone, Debug)]
-pub struct LegacyTxTransformer {
+pub struct LegacyTxMiddleware<M> {
     use_legacy_tx: bool,
+    inner:         M,
 }
 
-impl Transformer for LegacyTxTransformer {
-    fn transform(&self, tx: &mut TypedTransaction) -> Result<(), TransformerError> {
-        if self.use_legacy_tx {
-            let legacy_request: TransactionRequest = (*tx).clone().into();
-            *tx = legacy_request.into();
-            Ok(())
-        } else {
-            Ok(())
+impl<M> LegacyTxMiddleware<M> {
+    pub fn new(use_legacy_tx: bool, inner: M) -> Self {
+        Self {
+            use_legacy_tx,
+            inner,
         }
     }
 }
 
-impl SignablePythContract {
-    pub async fn from_config(
-        chain_config: &EthereumConfig,
-        private_key: &str,
-    ) -> Result<SignablePythContract> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-        let chain_id = provider.get_chainid().await?;
-        let gas_oracle = EthProviderOracle::new(provider.clone());
-        let transformer = LegacyTxTransformer {
-            use_legacy_tx: chain_config.legacy_tx,
-        };
-        let wallet__ = private_key
-            .parse::<LocalWallet>()?
-            .with_chain_id(chain_id.as_u64());
+#[derive(Error, Debug)]
+pub enum LegacyTxMiddlewareError<M: Middleware> {
+    #[error("{0}")]
+    MiddlewareError(M::Error),
+}
 
-        let address = wallet__.address();
+impl<M: Middleware> MiddlewareError for LegacyTxMiddlewareError<M> {
+    type Inner = M::Error;
 
-        Ok(PythRandom::new(
-            chain_config.contract_addr,
-            Arc::new(TransformerMiddleware::new(
-                GasOracleMiddleware::new(
-                    NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
-                    gas_oracle,
-                ),
-                transformer,
-            )),
-        ))
+    fn from_err(src: M::Error) -> Self {
+        LegacyTxMiddlewareError::MiddlewareError(src)
     }
 
+    fn as_inner(&self) -> Option<&Self::Inner> {
+        match self {
+            LegacyTxMiddlewareError::MiddlewareError(e) => Some(e),
+        }
+    }
+}
+
+#[async_trait]
+impl<M: Middleware> Middleware for LegacyTxMiddleware<M> {
+    type Error = LegacyTxMiddlewareError<M>;
+    type Provider = M::Provider;
+    type Inner = M;
+    fn inner(&self) -> &M {
+        &self.inner
+    }
+
+    async fn send_transaction<T: Into<TypedTransaction> + Send + Sync>(
+        &self,
+        tx: T,
+        block: Option<BlockId>,
+    ) -> std::result::Result<PendingTransaction<'_, Self::Provider>, Self::Error> {
+        let mut tx = tx.into();
+        if self.use_legacy_tx {
+            let legacy_request: TransactionRequest = tx.into();
+            tx = legacy_request.into();
+        }
+        self.inner()
+            .send_transaction(tx, block)
+            .await
+            .map_err(MiddlewareError::from_err)
+    }
+
+    async fn fill_transaction(
+        &self,
+        tx: &mut TypedTransaction,
+        block: Option<BlockId>,
+    ) -> std::result::Result<(), Self::Error> {
+        if self.use_legacy_tx {
+            let legacy_request: TransactionRequest = (*tx).clone().into();
+            *tx = legacy_request.into();
+        }
+        self.inner()
+            .fill_transaction(tx, block)
+            .await
+            .map_err(MiddlewareError::from_err)
+    }
+}
+
+impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
     /// Get the wallet that signs transactions sent to this contract.
     pub fn wallet(&self) -> LocalWallet {
         self.client().inner().inner().inner().signer().clone()
     }
 
     /// Get the underlying provider that communicates with the blockchain.
-    pub fn provider(&self) -> Provider<Http> {
+    pub fn provider(&self) -> Provider<T> {
         self.client().inner().inner().inner().provider().clone()
     }
 
@@ -200,10 +242,54 @@ impl SignablePythContract {
             Err(anyhow!("Request failed").into())
         }
     }
+
+    pub async fn from_config_and_provider(
+        chain_config: &EthereumConfig,
+        private_key: &str,
+        provider: Provider<T>,
+    ) -> Result<SignablePythContractInner<T>> {
+        let chain_id = provider.get_chainid().await?;
+        let gas_oracle = EthProviderOracle::new(provider.clone());
+        let wallet__ = private_key
+            .parse::<LocalWallet>()?
+            .with_chain_id(chain_id.as_u64());
+
+        let address = wallet__.address();
+
+        Ok(PythRandom::new(
+            chain_config.contract_addr,
+            Arc::new(LegacyTxMiddleware::new(
+                chain_config.legacy_tx,
+                GasOracleMiddleware::new(
+                    NonceManagerMiddleware::new(SignerMiddleware::new(provider, wallet__), address),
+                    gas_oracle,
+                ),
+            )),
+        ))
+    }
+}
+
+impl SignablePythContract {
+    pub async fn from_config(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
+        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        Self::from_config_and_provider(chain_config, private_key, provider).await
+    }
+}
+
+impl InstrumentedSignablePythContract {
+    pub async fn from_config(
+        chain_config: &EthereumConfig,
+        private_key: &str,
+        chain_id: ChainId,
+        metrics: Arc<RpcMetrics>,
+    ) -> Result<Self> {
+        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+        Self::from_config_and_provider(chain_config, private_key, provider).await
+    }
 }
 
 impl PythContract {
-    pub fn from_config(chain_config: &EthereumConfig) -> Result<PythContract> {
+    pub fn from_config(chain_config: &EthereumConfig) -> Result<Self> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
 
         Ok(PythRandom::new(
@@ -213,8 +299,23 @@ impl PythContract {
     }
 }
 
+impl InstrumentedPythContract {
+    pub fn from_config(
+        chain_config: &EthereumConfig,
+        chain_id: ChainId,
+        metrics: Arc<RpcMetrics>,
+    ) -> Result<Self> {
+        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+
+        Ok(PythRandom::new(
+            chain_config.contract_addr,
+            Arc::new(provider),
+        ))
+    }
+}
+
 #[async_trait]
-impl EntropyReader for PythContract {
+impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
     async fn get_request(
         &self,
         provider_address: Address,
@@ -281,7 +382,7 @@ impl EntropyReader for PythContract {
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
     ) -> Result<U256> {
-        let result: Result<U256, ContractError<Provider<Http>>> = self
+        let result = self
             .reveal_with_callback(
                 provider,
                 sequence_number,

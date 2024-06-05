@@ -1,6 +1,6 @@
 use snforge_std::{
     declare, ContractClassTrait, start_prank, stop_prank, CheatTarget, spy_events, SpyOn, EventSpy,
-    EventFetcher, event_name_hash, Event, start_warp, stop_warp
+    EventFetcher, event_name_hash, Event, start_warp, stop_warp, ContractClass,
 };
 use pyth::pyth::{
     IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
@@ -89,8 +89,14 @@ fn test_getters_work() {
     let pyth = ctx.pyth;
 
     assert!(pyth.wormhole_address() == ctx.wormhole.contract_address);
-    assert!(pyth.fee_token_address() == ctx.fee_contract.contract_address);
-    assert!(pyth.get_single_update_fee() == 1000);
+    assert!(
+        pyth
+            .fee_token_addresses() == array![
+                ctx.fee_contract.contract_address, ctx.fee_contract2.contract_address,
+            ]
+    );
+    assert!(pyth.get_single_update_fee(ctx.fee_contract.contract_address) == 1000);
+    assert!(pyth.get_single_update_fee(ctx.fee_contract2.contract_address) == 2000);
     assert!(
         pyth
             .valid_data_sources() == array![
@@ -156,7 +162,7 @@ fn update_price_feeds_works() {
             ) == 0
     );
 
-    let fee = pyth.get_update_fee(data::good_update1());
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
     assert!(fee == 1000);
     ctx.approve_fee(fee);
 
@@ -220,6 +226,156 @@ fn update_price_feeds_works() {
 }
 
 #[test]
+fn test_accepts_secondary_fee() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
+
+    let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
+    assert!(fee2 == 2000);
+    ctx.approve_fee2(fee2);
+
+    let balance1 = ctx.fee_contract.balanceOf(ctx.user);
+    let balance2 = ctx.fee_contract2.balanceOf(ctx.user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(balance1 - ctx.fee_contract.balanceOf(ctx.user) == 0);
+    assert!(balance2 - ctx.fee_contract2.balanceOf(ctx.user) == 2000);
+}
+
+#[test]
+fn test_accepts_secondary_fee_if_first_allowance_insufficient() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
+
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
+    assert!(fee == 1000);
+    let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
+    assert!(fee2 == 2000);
+    ctx.approve_fee(500);
+    ctx.approve_fee2(fee2);
+
+    let balance1 = ctx.fee_contract.balanceOf(ctx.user);
+    let balance2 = ctx.fee_contract2.balanceOf(ctx.user);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(balance1 - ctx.fee_contract.balanceOf(ctx.user) == 0);
+    assert!(balance2 - ctx.fee_contract2.balanceOf(ctx.user) == 2000);
+}
+
+#[test]
+fn test_accepts_secondary_fee_if_first_balance_insufficient() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+    let user2 = 'user2'.try_into().unwrap();
+
+    start_prank(CheatTarget::One(ctx.fee_contract.contract_address), ctx.user);
+    ctx.fee_contract.transfer(user2, 500);
+    stop_prank(CheatTarget::One(ctx.fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(ctx.fee_contract2.contract_address), ctx.user);
+    ctx.fee_contract2.transfer(user2, 2000);
+    stop_prank(CheatTarget::One(ctx.fee_contract2.contract_address));
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
+
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
+    assert!(fee == 1000);
+    let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
+    assert!(fee2 == 2000);
+    start_prank(CheatTarget::One(ctx.fee_contract.contract_address), user2);
+    ctx.fee_contract.approve(ctx.pyth.contract_address, fee);
+    stop_prank(CheatTarget::One(ctx.fee_contract.contract_address));
+
+    start_prank(CheatTarget::One(ctx.fee_contract2.contract_address), user2);
+    ctx.fee_contract2.approve(ctx.pyth.contract_address, fee2);
+    stop_prank(CheatTarget::One(ctx.fee_contract2.contract_address));
+
+    let balance1 = ctx.fee_contract.balanceOf(user2);
+    let balance2 = ctx.fee_contract2.balanceOf(user2);
+    start_prank(CheatTarget::One(pyth.contract_address), user2.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+    assert!(balance1 - ctx.fee_contract.balanceOf(user2) == 0);
+    assert!(balance2 - ctx.fee_contract2.balanceOf(user2) == 2000);
+}
+
+#[test]
+#[should_panic(expected: ('insufficient fee allowance',))]
+fn test_rejects_if_both_fees_insufficient() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
+    assert!(
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+    );
+    assert!(
+        pyth
+            .latest_price_info_publish_time(
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+            ) == 0
+    );
+
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
+    assert!(fee == 1000);
+    let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
+    assert!(fee2 == 2000);
+    ctx.approve_fee(500);
+    ctx.approve_fee2(1500);
+
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+#[should_panic(expected: ('unsupported token',))]
+fn test_get_update_fee_rejects_unsupported_token() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
+    pyth.get_update_fee(data::good_update1(), ctx.pyth.contract_address);
+}
+
+#[test]
+#[should_panic(expected: ('unsupported token',))]
+fn test_get_single_update_fee_rejects_unsupported_token() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+
+    pyth.get_single_update_fee(ctx.pyth.contract_address);
+}
+
+#[test]
 fn test_update_if_necessary_works() {
     let ctx = deploy_test();
     let pyth = ctx.pyth;
@@ -259,7 +415,7 @@ fn test_parse_price_feed_updates_works() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
-    let fee = pyth.get_update_fee(data::good_update1());
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
     assert!(fee == 1000);
     ctx.approve_fee(1000);
 
@@ -323,7 +479,7 @@ fn test_parse_price_feed_updates_rejects_bad_price_id() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
-    let fee = pyth.get_update_fee(data::good_update1());
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
     assert!(fee == 1000);
     ctx.approve_fee(fee);
 
@@ -337,7 +493,7 @@ fn test_parse_price_feed_updates_rejects_out_of_range() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
-    let fee = pyth.get_update_fee(data::good_update1());
+    let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
     assert!(fee == 1000);
     ctx.approve_fee(fee);
 
@@ -356,7 +512,7 @@ fn test_parse_price_feed_updates_unique_works() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
-    let fee1 = pyth.get_update_fee(data::test_price_update2());
+    let fee1 = pyth.get_update_fee(data::test_price_update2(), ctx.fee_contract.contract_address);
     assert!(fee1 == 1000);
     ctx.approve_fee(10000);
 
@@ -389,7 +545,7 @@ fn test_parse_price_feed_updates_unique_rejects_non_unique() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
 
-    let fee1 = pyth.get_update_fee(data::test_price_update2());
+    let fee1 = pyth.get_update_fee(data::test_price_update2(), ctx.fee_contract.contract_address);
     assert!(fee1 == 1000);
     ctx.approve_fee(10000);
 
@@ -511,7 +667,7 @@ fn test_governance_set_fee_works() {
     let fee_contract = ctx.fee_contract;
     let user = ctx.user;
 
-    let fee1 = pyth.get_update_fee(data::test_price_update1());
+    let fee1 = pyth.get_update_fee(data::test_price_update1(), ctx.fee_contract.contract_address);
     assert!(fee1 == 1000);
     ctx.approve_fee(10000);
 
@@ -539,7 +695,7 @@ fn test_governance_set_fee_works() {
     let expected = FeeSet { old_fee: 1000, new_fee: 4200, };
     assert!(event == PythEvent::FeeSet(expected));
 
-    let fee2 = pyth.get_update_fee(data::test_price_update2());
+    let fee2 = pyth.get_update_fee(data::test_price_update2(), ctx.fee_contract.contract_address);
     assert!(fee2 == 4200);
 
     start_prank(CheatTarget::One(pyth.contract_address), user);
@@ -649,8 +805,12 @@ fn test_governance_set_wormhole_works() {
     );
 
     let user = 'user'.try_into().unwrap();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
+    let fee_class = declare("ERC20");
+    let fee_contract = deploy_fee_contract(fee_class, user);
+    let fee_contract2 = deploy_fee_contract(fee_class, user);
+    let pyth = deploy_pyth_default(
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+    );
 
     start_prank(CheatTarget::One(fee_contract.contract_address), user);
     fee_contract.approve(pyth.contract_address, 10000);
@@ -731,8 +891,12 @@ fn test_rejects_set_wormhole_without_deploying() {
     );
 
     let user = 'user'.try_into().unwrap();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
+    let fee_class = declare("ERC20");
+    let fee_contract = deploy_fee_contract(fee_class, user);
+    let fee_contract2 = deploy_fee_contract(fee_class, user);
+    let pyth = deploy_pyth_default(
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+    );
     pyth.execute_governance_instruction(data::pyth_set_wormhole());
 }
 
@@ -747,8 +911,12 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
     );
 
     let user = 'user'.try_into().unwrap();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
+    let fee_class = declare("ERC20");
+    let fee_contract = deploy_fee_contract(fee_class, user);
+    let fee_contract2 = deploy_fee_contract(fee_class, user);
+    let pyth = deploy_pyth_default(
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+    );
 
     // Address used in the governance instruction
     let wormhole2_address = 0x05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2
@@ -867,6 +1035,7 @@ struct Context {
     user: ContractAddress,
     wormhole: IWormholeDispatcher,
     fee_contract: IERC20CamelDispatcher,
+    fee_contract2: IERC20CamelDispatcher,
     pyth: IPythDispatcher,
 }
 
@@ -877,31 +1046,49 @@ impl ContextImpl of ContextTrait {
         self.fee_contract.approve(self.pyth.contract_address, amount);
         stop_prank(CheatTarget::One(self.fee_contract.contract_address));
     }
+
+    fn approve_fee2(self: Context, amount: u256) {
+        start_prank(CheatTarget::One(self.fee_contract2.contract_address), self.user);
+        self.fee_contract2.approve(self.pyth.contract_address, amount);
+        stop_prank(CheatTarget::One(self.fee_contract2.contract_address));
+    }
 }
 
 fn deploy_test() -> Context {
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
-    Context { user, wormhole, fee_contract, pyth }
+    let fee_class = declare("ERC20");
+    let fee_contract = deploy_fee_contract(fee_class, user);
+    let fee_contract2 = deploy_fee_contract(fee_class, user);
+    let pyth = deploy_pyth_default(
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+    );
+    Context { user, wormhole, fee_contract, fee_contract2, pyth }
 }
 
 fn deploy_mainnet() -> Context {
     let user = 'user'.try_into().unwrap();
     let wormhole = super::wormhole::deploy_with_mainnet_guardians();
-    let fee_contract = deploy_fee_contract(user);
-    let pyth = deploy_pyth_default(wormhole.contract_address, fee_contract.contract_address);
-    Context { user, wormhole, fee_contract, pyth }
+    let fee_class = declare("ERC20");
+    let fee_contract = deploy_fee_contract(fee_class, user);
+    let fee_contract2 = deploy_fee_contract(fee_class, user);
+    let pyth = deploy_pyth_default(
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+    );
+    Context { user, wormhole, fee_contract, fee_contract2, pyth }
 }
 
 fn deploy_pyth_default(
-    wormhole_address: ContractAddress, fee_token_address: ContractAddress
+    wormhole_address: ContractAddress,
+    fee_token_address1: ContractAddress,
+    fee_token_address2: ContractAddress
 ) -> IPythDispatcher {
     deploy_pyth(
         wormhole_address,
-        fee_token_address,
+        fee_token_address1,
         1000,
+        fee_token_address2,
+        2000,
         array![
             DataSource {
                 emitter_chain_id: 26,
@@ -916,15 +1103,18 @@ fn deploy_pyth_default(
 
 fn deploy_pyth(
     wormhole_address: ContractAddress,
-    fee_token_address: ContractAddress,
-    single_update_fee: u256,
+    fee_token_address1: ContractAddress,
+    single_update_fee1: u256,
+    fee_token_address2: ContractAddress,
+    single_update_fee2: u256,
     data_sources: Array<DataSource>,
     governance_emitter_chain_id: u16,
     governance_emitter_address: u256,
     governance_initial_sequence: u64,
 ) -> IPythDispatcher {
     let mut args = array![];
-    (wormhole_address, fee_token_address, single_update_fee).serialize(ref args);
+    (wormhole_address, fee_token_address1, single_update_fee1).serialize(ref args);
+    (fee_token_address2, single_update_fee2).serialize(ref args);
     (data_sources, governance_emitter_chain_id).serialize(ref args);
     (governance_emitter_address, governance_initial_sequence).serialize(ref args);
     let contract = declare("pyth");
@@ -938,13 +1128,12 @@ fn deploy_pyth(
     IPythDispatcher { contract_address }
 }
 
-fn deploy_fee_contract(recipient: ContractAddress) -> IERC20CamelDispatcher {
+fn deploy_fee_contract(class: ContractClass, recipient: ContractAddress) -> IERC20CamelDispatcher {
     let mut args = array![];
     let name: core::byte_array::ByteArray = "eth";
     let symbol: core::byte_array::ByteArray = "eth";
     (name, symbol, 100000_u256, recipient).serialize(ref args);
-    let contract = declare("ERC20");
-    let contract_address = match contract.deploy(@args) {
+    let contract_address = match class.deploy(@args) {
         Result::Ok(v) => { v },
         Result::Err(err) => {
             panic(err.panic_data);

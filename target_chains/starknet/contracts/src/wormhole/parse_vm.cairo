@@ -5,6 +5,8 @@ use core::starknet::secp256_trait::Signature;
 use pyth::byte_array::ByteArray;
 use core::panic_with_felt252;
 
+/// Parses information about a guardian signature within a Wormhole message.
+/// `pyth::reader::Error` enumerates possible panic payloads.
 fn parse_signature(ref reader: Reader) -> GuardianSignature {
     let guardian_index = reader.read_u8();
     let r = reader.read_u256();
@@ -14,6 +16,8 @@ fn parse_signature(ref reader: Reader) -> GuardianSignature {
     GuardianSignature { guardian_index, signature: Signature { r, s, y_parity } }
 }
 
+/// Parses a Wormhole message.
+/// `ParseAndVerifyVmError` enumerates possible panic payloads.
 pub fn parse_vm(encoded_vm: ByteArray) -> VerifiedVM {
     let mut reader = ReaderImpl::new(encoded_vm);
     let version = reader.read_u8();

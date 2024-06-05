@@ -65,6 +65,8 @@ pyth_address=$(starkli deploy "${pyth_hash}" \
     "${wormhole_address}" \
     "${fee_token_address}" \
     1000 0 `# fee amount` \
+    "${fee_token_address}" `# there is only one pre-deployed token on katana so we use it again` \
+    1000 0 `# fee amount` \
     1 `# num_data_sources` \
     26 `# emitter_chain_id` \
     58051393581875729396504816158954007153 299086580781278228892874716333010393740 `# emitter_address` \

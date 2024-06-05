@@ -3,15 +3,20 @@ use {
         api::{
             self,
             BlockchainState,
+            ChainId,
         },
         chain::{
             ethereum::{
-                PythContract,
-                SignablePythContract,
+                InstrumentedPythContract,
+                InstrumentedSignablePythContract,
             },
             reader::{
                 BlockNumber,
                 RequestedWithCallbackEvent,
+            },
+            traced_client::{
+                RpcMetrics,
+                TracedClient,
             },
         },
         config::EthereumConfig,
@@ -23,7 +28,6 @@ use {
     backoff::ExponentialBackoff,
     ethers::{
         providers::{
-            Http,
             Middleware,
             Provider,
             Ws,
@@ -211,19 +215,22 @@ pub async fn run_keeper_threads(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
-    metrics: Arc<RwLock<Registry>>,
+    metrics: Arc<KeeperMetrics>,
+    rpc_metrics: Arc<RpcMetrics>,
 ) {
-    // Register metrics
-    let keeper_metrics = Arc::new(KeeperMetrics::new(metrics.clone()).await);
-
     tracing::info!("starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
-        SignablePythContract::from_config(&chain_eth_config, &private_key)
-            .await
-            .expect("Chain config should be valid"),
+        InstrumentedSignablePythContract::from_config(
+            &chain_eth_config,
+            &private_key,
+            chain_state.id.clone(),
+            rpc_metrics.clone(),
+        )
+        .await
+        .expect("Chain config should be valid"),
     );
     let keeper_address = contract.wallet().address();
 
@@ -240,7 +247,7 @@ pub async fn run_keeper_threads(
             contract.clone(),
             gas_limit,
             chain_state.clone(),
-            keeper_metrics.clone(),
+            metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span(),
@@ -264,7 +271,7 @@ pub async fn run_keeper_threads(
             rx,
             Arc::clone(&contract),
             gas_limit,
-            keeper_metrics.clone(),
+            metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span(),
@@ -287,7 +294,18 @@ pub async fn run_keeper_threads(
             let chain_id = chain_state.id.clone();
             let chain_config = chain_eth_config.clone();
             let provider_address = chain_state.provider_address.clone();
-            let keeper_metrics = keeper_metrics.clone();
+            let keeper_metrics = metrics.clone();
+            let contract = match InstrumentedPythContract::from_config(
+                &chain_config,
+                chain_id.clone(),
+                rpc_metrics,
+            ) {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
+                    return;
+                }
+            };
 
             loop {
                 // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
@@ -296,7 +314,7 @@ pub async fn run_keeper_threads(
                 spawn(
                     track_provider(
                         chain_id.clone(),
-                        chain_config.clone(),
+                        contract.clone(),
                         provider_address.clone(),
                         keeper_metrics.clone(),
                     )
@@ -305,7 +323,7 @@ pub async fn run_keeper_threads(
                 spawn(
                     track_balance(
                         chain_id.clone(),
-                        chain_config.clone(),
+                        contract.client(),
                         keeper_address.clone(),
                         keeper_metrics.clone(),
                     )
@@ -327,7 +345,7 @@ pub async fn run_keeper_threads(
 pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
     chain_state: BlockchainState,
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
     metrics: Arc<KeeperMetrics>,
 ) {
@@ -376,7 +394,7 @@ pub async fn process_event_with_backoff(
 pub async fn process_event(
     event: &RequestedWithCallbackEvent,
     chain_config: &BlockchainState,
-    contract: &Arc<SignablePythContract>,
+    contract: &InstrumentedSignablePythContract,
     gas_limit: U256,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<(), backoff::Error<anyhow::Error>> {
@@ -427,19 +445,39 @@ pub async fn process_event(
         )
         .gas(gas_estimate);
 
-
-    let pending_tx = contract_call.send().await.map_err(|e| {
-        backoff::Error::transient(anyhow!("Error submitting the reveal transaction: {:?}", e))
-    })?;
+    let client = contract.client();
+    let mut transaction = contract_call.tx.clone();
+    // manually fill the tx with the gas info, so we can log the details in case of error
+    client
+        .fill_transaction(&mut transaction, None)
+        .await
+        .map_err(|e| {
+            backoff::Error::transient(anyhow!("Error filling the reveal transaction: {:?}", e))
+        })?;
+    let pending_tx = client
+        .send_transaction(transaction.clone(), None)
+        .await
+        .map_err(|e| {
+            backoff::Error::transient(anyhow!(
+                "Error submitting the reveal transaction. Tx:{:?}, Error:{:?}",
+                transaction,
+                e
+            ))
+        })?;
 
     let receipt = pending_tx
         .await
         .map_err(|e| {
-            backoff::Error::transient(anyhow!("Error waiting for transaction receipt {:?}", e))
+            backoff::Error::transient(anyhow!(
+                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
+                transaction,
+                e
+            ))
         })?
         .ok_or_else(|| {
             backoff::Error::transient(anyhow!(
-                "Can't verify the reveal, probably dropped from mempool"
+                "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
+                transaction
             ))
         })?;
 
@@ -457,8 +495,7 @@ pub async fn process_event(
             .total_gas_spent
             .get_or_create(&AccountLabel {
                 chain_id: chain_config.id.clone(),
-                address:  contract
-                    .client()
+                address:  client
                     .inner()
                     .inner()
                     .inner()
@@ -487,7 +524,7 @@ pub async fn process_event(
 ))]
 pub async fn process_block_range(
     block_range: BlockRange,
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -532,7 +569,7 @@ pub async fn process_block_range(
 ))]
 pub async fn process_single_block_batch(
     block_range: BlockRange,
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -706,7 +743,7 @@ pub async fn watch_blocks(
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -732,7 +769,7 @@ pub async fn process_new_blocks(
 #[tracing::instrument(skip_all)]
 pub async fn process_backlog(
     backlog_range: BlockRange,
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -758,18 +795,10 @@ pub async fn process_backlog(
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
     chain_id: String,
-    chain_config: EthereumConfig,
+    provider: Arc<Provider<TracedClient>>,
     address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
+    metrics: Arc<KeeperMetrics>,
 ) {
-    let provider = match Provider::<Http>::try_from(&chain_config.geth_rpc_addr) {
-        Ok(r) => r,
-        Err(e) => {
-            tracing::error!("Error while connecting to geth rpc. error: {:?}", e);
-            return;
-        }
-    };
-
     let balance = match provider.get_balance(address, None).await {
         // This conversion to u128 is fine as the total balance will never cross the limits
         // of u128 practically.
@@ -783,7 +812,7 @@ pub async fn track_balance(
     // The balance is in wei, so we need to divide by 1e18 to convert it to eth.
     let balance = balance as f64 / 1e18;
 
-    metrics_registry
+    metrics
         .balance
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
@@ -796,19 +825,11 @@ pub async fn track_balance(
 /// if there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
-    chain_id: String,
-    chain_config: EthereumConfig,
+    chain_id: ChainId,
+    contract: InstrumentedPythContract,
     provider_address: Address,
-    metrics_registry: Arc<KeeperMetrics>,
+    metrics: Arc<KeeperMetrics>,
 ) {
-    let contract = match PythContract::from_config(&chain_config) {
-        Ok(r) => r,
-        Err(e) => {
-            tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
-            return;
-        }
-    };
-
     let provider_info = match contract.get_provider_info(provider_address).call().await {
         Ok(info) => info,
         Err(e) => {
@@ -824,7 +845,7 @@ pub async fn track_provider(
     let current_sequence_number = provider_info.sequence_number;
     let end_sequence_number = provider_info.end_sequence_number;
 
-    metrics_registry
+    metrics
         .collected_fee
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
@@ -832,7 +853,7 @@ pub async fn track_provider(
         })
         .set(collected_fee);
 
-    metrics_registry
+    metrics
         .current_sequence_number
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
@@ -842,7 +863,7 @@ pub async fn track_provider(
         // a long time for it to cross the limits of i64.
         // currently prometheus only supports i64 for Gauge types
         .set(current_sequence_number as i64);
-    metrics_registry
+    metrics
         .end_sequence_number
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
@@ -853,7 +874,7 @@ pub async fn track_provider(
 
 #[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
 pub async fn withdraw_fees_wrapper(
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     poll_interval: Duration,
     min_balance: U256,
@@ -871,7 +892,7 @@ pub async fn withdraw_fees_wrapper(
 
 /// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
 pub async fn withdraw_fees_if_necessary(
-    contract: Arc<SignablePythContract>,
+    contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     min_balance: U256,
 ) -> Result<()> {

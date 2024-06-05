@@ -14,7 +14,7 @@ import {
 } from "./GovernanceDataSourceTransfer";
 import { SetDataSources } from "./SetDataSources";
 import { SetValidPeriod } from "./SetValidPeriod";
-import { SetFee } from "./SetFee";
+import { SetFee, SetFeeInToken } from "./SetFee";
 import {
   EvmSetWormholeAddress,
   StarknetSetWormholeAddress,
@@ -52,6 +52,8 @@ export function decodeGovernancePayload(
       return SetDataSources.decode(data);
     case "SetFee":
       return SetFee.decode(data);
+    case "SetFeeInToken":
+      return SetFeeInToken.decode(data);
     case "SetValidPeriod":
       return SetValidPeriod.decode(data);
     case "RequestGovernanceDataSourceTransfer":

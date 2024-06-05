@@ -1,6 +1,6 @@
 [package]
 name    = "fortuna"
-version = "6.2.0"
+version = "6.2.3"
 edition = "2021"
 
 [dependencies]
@@ -36,6 +36,7 @@ lazy_static = "1.4.0"
 url = "2.5.0"
 chrono = { version = "0.4.38", features = ["clock", "std"] , default-features = false}
 backoff = { version = "0.4.0", features = ["futures", "tokio"] }
+thiserror = "1.0.61"
 
 
 [dev-dependencies]
