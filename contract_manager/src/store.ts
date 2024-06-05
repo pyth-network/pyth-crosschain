@@ -3,6 +3,7 @@ import {
   Chain,
   CosmWasmChain,
   EvmChain,
+  FuelChain,
   GlobalChain,
   SuiChain,
 } from "./chains";
@@ -69,6 +70,7 @@ export class Store {
       [SuiChain.type]: SuiChain,
       [EvmChain.type]: EvmChain,
       [AptosChain.type]: AptosChain,
+      [FuelChain.type]: FuelChain,
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {

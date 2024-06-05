@@ -22,6 +22,10 @@ import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
+import { BN, Provider, Wallet } from "fuels";
+
+const FUEL_ETH_ASSET_ID =
+  "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -559,4 +563,86 @@ export class AptosChain extends Chain {
     );
     return { id: result.hash, info: result };
   }
+}
+
+export class FuelChain extends Chain {
+  static type = "FuelChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public gqlUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  async getProvider(): Promise<Provider> {
+    return await Provider.create(this.gqlUrl);
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  getType(): string {
+    return FuelChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      gqlUrl: this.gqlUrl,
+      type: FuelChain.type,
+    };
+  }
+
+  static fromJson(parsed: ChainConfig): FuelChain {
+    if (parsed.type !== FuelChain.type) throw new Error("Invalid type");
+    return new FuelChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.gqlUrl
+    );
+  }
+
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const provider = await this.getProvider();
+    const wallet = Wallet.fromPrivateKey(privateKey, provider);
+    return wallet.address.toString();
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const provider = await this.getProvider();
+    const wallet = Wallet.fromPrivateKey(privateKey, provider);
+    const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
+    return Number(balance) / 10 ** 9;
+  }
+
+  // async sendTransaction(
+  //   senderPrivateKey: PrivateKey,
+  //   txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
+  // ): Promise<TxResult> {
+  //   const client = this.getClient();
+  //   const sender = new AptosAccount(
+  //     new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+  //   );
+  //   const result = await client.generateSignSubmitWaitForTransaction(
+  //     sender,
+  //     txPayload,
+  //     {
+  //       maxGasAmount: BigInt(30000),
+  //     }
+  //   );
+  //   return { id: result.hash, info: result };
+  // }
 }
