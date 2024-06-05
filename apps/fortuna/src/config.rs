@@ -32,6 +32,7 @@ pub use {
     request_randomness::RequestRandomnessOptions,
     run::RunOptions,
     setup_provider::SetupProviderOptions,
+    withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -41,6 +42,7 @@ mod register_provider;
 mod request_randomness;
 mod run;
 mod setup_provider;
+mod withdraw_fees;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
@@ -73,6 +75,9 @@ pub enum Options {
 
     /// Get the status of a pending request for a random number.
     GetRequest(GetRequestOptions),
+
+    /// Withdraw any of the provider's accumulated fees from the contract.
+    WithdrawFees(WithdrawFeesOptions),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -140,6 +145,12 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
+    /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
+    /// manager for the provider.
+    #[serde(default)]
+    pub min_keeper_balance: u128,
+
     /// How much the provider charges for a request on this chain.
     #[serde(default)]
     pub fee: u128,
@@ -186,6 +197,10 @@ pub struct ProviderConfig {
     /// compute per request for less RAM use.
     #[serde(default = "default_chain_sample_interval")]
     pub chain_sample_interval: u64,
+
+    /// The address of the fee manager for the provider. Set this value to the keeper wallet address to
+    /// enable keeper balance top-ups.
+    pub fee_manager: Option<Address>,
 }
 
 fn default_chain_sample_interval() -> u64 {

@@ -32,7 +32,10 @@ use {
             LocalWallet,
             Signer,
         },
-        types::Bytes,
+        types::{
+            Address,
+            Bytes,
+        },
     },
     std::sync::Arc,
     tracing::Instrument,
@@ -66,7 +69,6 @@ async fn setup_chain_provider(
         "Please specify a provider private key in the config file."
     ))?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
-    let provider_fee = chain_config.fee;
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
 
@@ -130,15 +132,28 @@ async fn setup_chain_provider(
             .await
             .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
         tracing::info!("Registered");
-    } else {
-        sync_fee(&contract, &provider_info, provider_fee)
-            .in_current_span()
-            .await?;
-        let uri = get_register_uri(&provider_config.uri, &chain_id)?;
-        sync_uri(&contract, &provider_info, uri)
-            .in_current_span()
-            .await?;
     }
+
+
+    let provider_info = contract.get_provider_info(provider_address).call().await?;
+
+    sync_fee(&contract, &provider_info, chain_config.fee)
+        .in_current_span()
+        .await?;
+
+    let uri = get_register_uri(&provider_config.uri, &chain_id)?;
+    sync_uri(&contract, &provider_info, uri)
+        .in_current_span()
+        .await?;
+
+    sync_fee_manager(
+        &contract,
+        &provider_info,
+        provider_config.fee_manager.unwrap_or(Address::zero()),
+    )
+    .in_current_span()
+    .await?;
+
     Ok(())
 }
 
@@ -176,6 +191,20 @@ async fn sync_fee(
             .await?
         {
             tracing::info!("Updated provider fee: {:?}", r);
+        }
+    }
+    Ok(())
+}
+
+async fn sync_fee_manager(
+    contract: &Arc<SignablePythContract>,
+    provider_info: &ProviderInfo,
+    fee_manager: Address,
+) -> Result<()> {
+    if provider_info.fee_manager != fee_manager {
+        tracing::info!("Updating provider fee manager to {:?}", fee_manager);
+        if let Some(receipt) = contract.set_fee_manager(fee_manager).send().await?.await? {
+            tracing::info!("Updated provider fee manager: {:?}", receipt);
         }
     }
     Ok(())

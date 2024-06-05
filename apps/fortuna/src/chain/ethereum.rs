@@ -104,7 +104,6 @@ impl<M> LegacyTxMiddleware<M> {
     }
 }
 
-
 #[derive(Error, Debug)]
 pub enum LegacyTxMiddlewareError<M: Middleware> {
     #[error("{0}")]
@@ -167,6 +166,16 @@ impl<M: Middleware> Middleware for LegacyTxMiddleware<M> {
 }
 
 impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
+    /// Get the wallet that signs transactions sent to this contract.
+    pub fn wallet(&self) -> LocalWallet {
+        self.client().inner().inner().inner().signer().clone()
+    }
+
+    /// Get the underlying provider that communicates with the blockchain.
+    pub fn provider(&self) -> Provider<T> {
+        self.client().inner().inner().inner().provider().clone()
+    }
+
     /// Submit a request for a random number to the contract.
     ///
     /// This method is a version of the autogenned `request` method that parses the emitted logs

@@ -82,6 +82,8 @@ const BLOCK_BATCH_SIZE: u64 = 100;
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
+/// Check whether we need to conduct a withdrawal at this interval.
+const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
@@ -230,7 +232,7 @@ pub async fn run_keeper_threads(
         .await
         .expect("Chain config should be valid"),
     );
-    let keeper_address = contract.client().inner().inner().inner().signer().address();
+    let keeper_address = contract.wallet().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
 
@@ -271,6 +273,17 @@ pub async fn run_keeper_threads(
             gas_limit,
             metrics.clone(),
             fulfilled_requests_cache.clone(),
+        )
+        .in_current_span(),
+    );
+
+    // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
+    spawn(
+        withdraw_fees_wrapper(
+            contract.clone(),
+            chain_state.provider_address.clone(),
+            WITHDRAW_INTERVAL,
+            U256::from(chain_eth_config.min_keeper_balance),
         )
         .in_current_span(),
     );
@@ -857,4 +870,73 @@ pub async fn track_provider(
             address:  provider_address.to_string(),
         })
         .set(end_sequence_number as i64);
+}
+
+#[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
+pub async fn withdraw_fees_wrapper(
+    contract: Arc<InstrumentedSignablePythContract>,
+    provider_address: Address,
+    poll_interval: Duration,
+    min_balance: U256,
+) {
+    loop {
+        if let Err(e) = withdraw_fees_if_necessary(contract.clone(), provider_address, min_balance)
+            .in_current_span()
+            .await
+        {
+            tracing::error!("Withdrawing fees. error: {:?}", e);
+        }
+        time::sleep(poll_interval).await;
+    }
+}
+
+/// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
+pub async fn withdraw_fees_if_necessary(
+    contract: Arc<InstrumentedSignablePythContract>,
+    provider_address: Address,
+    min_balance: U256,
+) -> Result<()> {
+    let provider = contract.provider();
+    let wallet = contract.wallet();
+
+    let keeper_balance = provider
+        .get_balance(wallet.address(), None)
+        .await
+        .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
+
+    let provider_info = contract
+        .get_provider_info(provider_address)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
+
+    if provider_info.fee_manager != wallet.address() {
+        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", provider, provider_info.fee_manager, wallet.address()));
+    }
+
+    let fees = provider_info.accrued_fees_in_wei;
+
+    if keeper_balance < min_balance && U256::from(fees) > min_balance {
+        tracing::info!("Claiming accrued fees...");
+        let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
+        let pending_tx = contract_call
+            .send()
+            .await
+            .map_err(|e| anyhow!("Error submitting the withdrawal transaction: {:?}", e))?;
+
+        let tx_result = pending_tx
+            .await
+            .map_err(|e| anyhow!("Error waiting for withdrawal transaction receipt: {:?}", e))?
+            .ok_or_else(|| anyhow!("Can't verify the withdrawal, probably dropped from mempool"))?;
+
+        tracing::info!(
+            transaction_hash = &tx_result.transaction_hash.to_string(),
+            "Withdrew fees to keeper address. Receipt: {:?}",
+            tx_result,
+        );
+    } else if keeper_balance < min_balance {
+        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance)
+    }
+
+    Ok(())
 }

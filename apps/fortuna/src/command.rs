@@ -5,6 +5,7 @@ mod register_provider;
 mod request_randomness;
 mod run;
 mod setup_provider;
+mod withdraw_fees;
 
 pub use {
     generate::generate,
@@ -14,4 +15,5 @@ pub use {
     request_randomness::request_randomness,
     run::run,
     setup_provider::setup_provider,
+    withdraw_fees::withdraw_fees,
 };

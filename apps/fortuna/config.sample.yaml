@@ -6,9 +6,12 @@ chains:
     # Keeper configuration for the chain
     reveal_delay_blocks: 0
     gas_limit: 500000
+    min_keeper_balance: 100000000000000000
 
     # Provider configuration
+    # How much to charge in fees
     fee: 1500000000000000
+
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore
@@ -34,6 +37,10 @@ provider:
     value: abcd
     # For production, you can store the private key in a file.
     # file: secret.txt
+
+  # Set this to the address of your keeper wallet if you would like the keeper wallet to
+  # be able to withdraw fees from the contract.
+  fee_manager: 0xADDRESS
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
   # This does not have to be the same key as the provider's key above.
