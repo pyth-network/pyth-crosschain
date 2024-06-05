@@ -1,7 +1,7 @@
 # Hermes Client
 
 [Pyth Network](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities.
-These prices are available either via HTTP or WebSocket from [Hermes](/apps/hermes).
+These prices are available either via HTTP or Streaming from [Hermes](/apps/hermes).
 This library is a client for interacting with Hermes, allowing your application to consume Pyth real-time prices in on- and off-chain Javascript/Typescript applications.
 
 ## Installation

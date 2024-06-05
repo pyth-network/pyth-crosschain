@@ -29,7 +29,7 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  const connection = new HermesConnection(argv.endpoint, {});
+  const connection = new HermesConnection(argv.endpoint);
 
   const priceIds = argv.priceIds as string[];
 

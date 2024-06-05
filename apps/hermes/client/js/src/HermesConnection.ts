@@ -38,12 +38,12 @@ export class HermesConnection {
     this.httpRetries = config?.httpRetries || DEFAULT_HTTP_RETRIES;
   }
 
-  private async httpRequest(
+  private async httpRequest<ResponseData>(
     url: string,
     options?: RequestInit,
     retries = this.httpRetries,
     backoff = 300
-  ): Promise<any> {
+  ): Promise<ResponseData> {
     const controller = new AbortController();
     const { signal } = controller;
     options = { ...options, signal }; // Merge any existing options with the signal
@@ -96,7 +96,7 @@ export class HermesConnection {
     if (filter) {
       url.searchParams.append("filter", filter);
     }
-    return await this.httpRequest(url.toString());
+    return await this.httpRequest<PriceFeedMetadata[]>(url.toString());
   }
 
   /**
@@ -123,7 +123,7 @@ export class HermesConnection {
     if (parsed !== undefined) {
       url.searchParams.append("parsed", String(parsed));
     }
-    return await this.httpRequest(url.toString());
+    return await this.httpRequest<PriceUpdate[]>(url.toString());
   }
 
   /**
@@ -151,7 +151,7 @@ export class HermesConnection {
     if (parsed !== undefined) {
       url.searchParams.append("parsed", String(parsed));
     }
-    return await this.httpRequest(url.toString());
+    return await this.httpRequest<PriceUpdate[]>(url.toString());
   }
 
   /**
@@ -193,11 +193,6 @@ export class HermesConnection {
         url.searchParams.append(key, value);
       }
     });
-    try {
-      const eventSource = new EventSource(url.toString());
-      return eventSource;
-    } catch (error) {
-      throw new Error("Failed to connect to the price service");
-    }
+    return new EventSource(url.toString());
   }
 }

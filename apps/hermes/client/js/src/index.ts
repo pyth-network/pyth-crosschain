@@ -1,3 +1,5 @@
+export * from "./types";
+
 export {
   DurationInMs,
   DurationInSeconds,
@@ -6,5 +8,3 @@ export {
   HexString,
   UnixTimestamp,
 } from "./HermesConnection";
-
-export * from "./types";
