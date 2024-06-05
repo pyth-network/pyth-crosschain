@@ -24,12 +24,12 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function main() {
-  const argv = await parser.argv;
-  const chain = argv.chain;
-  const fee = argv.fee;
-  const exponent = argv.exponent;
+  const { chain, fee, exponent } = await parser.argv;
 
-  const chain_obj: Chain = DefaultStore.chains[chain];
+  const chain_obj = DefaultStore.chains[chain];
+  if (!chain_obj) {
+    throw new Error(`Chain with ID '${chain}' does not exist.`);
+  }
 
   const payload = chain_obj.generateGovernanceSetFeePayload(fee, exponent);
   console.log(
