@@ -9,26 +9,26 @@ const parser = yargs(hideBin(process.argv))
   .options({
     cluster: {
       type: "string",
+      choices: ["mainnet-beta", "testnet"],
       demandOption: true,
       describe: "The Pyth cluster to use for sending the message",
     },
     walletPath: {
       type: "string",
       demandOption: true,
-      describe: "Path to the wallet file to use for sending the message",
+      describe:
+        "Path to the wallet file to use for sending the message (e.g. ./walletPath.json)",
     },
     message: {
       type: "string",
       demandOption: true,
-      describe: "The message to send to the wormhole",
+      describe:
+        "The message in hex with no leading 0x to send to the wormhole",
     },
   });
 
 async function main() {
-  const argv = await parser.argv;
-  const cluster = argv.cluster;
-  const walletPath = argv.walletPath;
-  const message = argv.message;
+  const { cluster, walletPath, message } = await parser.argv;
 
   const wallet = await loadHotWallet(walletPath);
   const emitter = new WormholeEmitter(cluster, wallet);
