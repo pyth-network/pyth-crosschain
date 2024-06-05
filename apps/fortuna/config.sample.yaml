@@ -6,9 +6,12 @@ chains:
     # Keeper configuration for the chain
     reveal_delay_blocks: 0
     gas_limit: 500000
+    min_keeper_balance: 100000000000000000
 
     # Provider configuration
+    # How much to charge in fees
     fee: 1500000000000000
+
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore

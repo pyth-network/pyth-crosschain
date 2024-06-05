@@ -271,11 +271,15 @@ pub async fn run_keeper_threads(
     );
 
     // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    spawn(withdraw_fees_wrapper(
-        contract.clone(),
-        chain_state.provider_address.clone(),
-        WITHDRAW_INTERVAL,
-    ));
+    spawn(
+        withdraw_fees_wrapper(
+            contract.clone(),
+            chain_state.provider_address.clone(),
+            WITHDRAW_INTERVAL,
+            U256::from(chain_eth_config.min_keeper_balance),
+        )
+        .in_current_span(),
+    );
 
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
@@ -847,15 +851,15 @@ pub async fn track_provider(
         .set(end_sequence_number as i64);
 }
 
-// TODO: fields
 #[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
 pub async fn withdraw_fees_wrapper(
     contract: Arc<SignablePythContract>,
     provider_address: Address,
     poll_interval: Duration,
+    min_balance: U256,
 ) {
     loop {
-        if let Err(e) = withdraw_fees_if_necessary(contract.clone(), provider_address)
+        if let Err(e) = withdraw_fees_if_necessary(contract.clone(), provider_address, min_balance)
             .in_current_span()
             .await
         {
@@ -869,6 +873,7 @@ pub async fn withdraw_fees_wrapper(
 pub async fn withdraw_fees_if_necessary(
     contract: Arc<SignablePythContract>,
     provider_address: Address,
+    min_balance: U256,
 ) -> Result<()> {
     let provider = contract.provider();
     let wallet = contract.wallet();
@@ -884,9 +889,12 @@ pub async fn withdraw_fees_if_necessary(
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
+    if provider_info.fee_manager != wallet.address() {
+        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", provider, provider_info.fee_manager, wallet.address()));
+    }
+
     let fees = provider_info.accrued_fees_in_wei;
 
-    let min_balance = U256::from(12345);
     if keeper_balance < min_balance && U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
         let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);

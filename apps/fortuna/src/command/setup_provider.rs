@@ -149,9 +149,7 @@ async fn setup_chain_provider(
     sync_fee_manager(
         &contract,
         &provider_info,
-        provider_config
-            .fee_manager
-            .unwrap_or(Address::from([0u8; 20])),
+        provider_config.fee_manager.unwrap_or(Address::zero()),
     )
     .in_current_span()
     .await?;

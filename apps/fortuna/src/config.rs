@@ -144,6 +144,12 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
+    /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
+    /// manager for the provider.
+    #[serde(default)]
+    pub min_keeper_balance: u128,
+
     /// How much the provider charges for a request on this chain.
     #[serde(default)]
     pub fee: u128,

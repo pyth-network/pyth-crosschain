@@ -12,10 +12,7 @@ use {
     },
     ethers::{
         signers::Signer,
-        types::{
-            Address,
-            TransactionReceipt,
-        },
+        types::Address,
     },
 };
 
@@ -27,7 +24,7 @@ pub async fn withdraw_fees(opts: &WithdrawFeesOptions) -> Result<()> {
         config.keeper.private_key.load()?.ok_or(anyhow!("Please specify a keeper private key in the config or omit the --keeper option to use the provider private key"))?
     } else {
         config.provider.private_key.load()?.ok_or(anyhow!(
-            "Please specify a provider private key in the config or provide the --keeper option to use the keeper private key instead. "
+            "Please specify a provider private key in the config or provide the --keeper option to use the keeper private key instead."
         ))?
     };
 
@@ -83,33 +80,21 @@ pub async fn withdraw_fees_for_chain(
             contract.wallet().address()
         );
 
-        if is_fee_manager {
-            let tx_result = contract
-                .withdraw_as_fee_manager(provider_address, withdrawal_amount_wei)
-                .send()
-                .await?
-                .await?;
-            log_tx_hash(&tx_result);
-        } else {
-            let tx_result = contract
-                .withdraw(withdrawal_amount_wei)
-                .send()
-                .await?
-                .await?;
-            log_tx_hash(&tx_result);
+        let call = match is_fee_manager {
+            true => contract.withdraw_as_fee_manager(provider_address, withdrawal_amount_wei),
+            false => contract.withdraw(withdrawal_amount_wei),
+        };
+        let tx_result = call.send().await?.await?;
+
+        match &tx_result {
+            Some(receipt) => {
+                tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash);
+            }
+            None => {
+                tracing::warn!("No transaction receipt. Unclear what happened to the transaction");
+            }
         }
     }
 
     Ok(())
-}
-
-fn log_tx_hash(receipt: &Option<TransactionReceipt>) {
-    match &receipt {
-        Some(receipt) => {
-            tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash);
-        }
-        None => {
-            tracing::warn!("No transaction receipt. Unclear what happened to the transaction");
-        }
-    }
 }
