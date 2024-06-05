@@ -12,15 +12,15 @@ RUN rustup default nightly-2024-03-26
 
 # Build
 WORKDIR /src
-COPY apps/hermes apps/hermes
+COPY apps/hermes/server apps/hermes/server
 COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
 
 
-WORKDIR /src/apps/hermes
+WORKDIR /src/apps/hermes/server
 
 RUN --mount=type=cache,target=/root/.cargo/registry cargo build --release
 
 FROM rust:1.77.0
 
 # Copy artifacts from other images
-COPY --from=build /src/apps/hermes/target/release/hermes /usr/local/bin/
+COPY --from=build /src/apps/hermes/server/target/release/hermes /usr/local/bin/
