@@ -935,7 +935,7 @@ pub async fn withdraw_fees_if_necessary(
             tx_result,
         );
     } else if keeper_balance < min_balance {
-        tracing::warn!("Keeper balance is too low but provider fees are not sufficient to top-up.",)
+        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance)
     }
 
     Ok(())
