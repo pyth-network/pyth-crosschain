@@ -22,8 +22,7 @@ const parser = yargs(hideBin(process.argv))
     message: {
       type: "string",
       demandOption: true,
-      describe:
-        "The message in hex with no leading 0x to send to the wormhole",
+      describe: "The message in hex with no leading 0x to send to the wormhole",
     },
   });
 
