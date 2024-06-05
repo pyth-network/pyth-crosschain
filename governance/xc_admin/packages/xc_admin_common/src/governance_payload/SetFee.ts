@@ -1,4 +1,7 @@
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
+import {
+  PythGovernanceActionImpl,
+  PythGovernanceHeader,
+} from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 import { ChainName } from "../chains";
@@ -53,17 +56,11 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
       newFeeValue: bigint;
       newFeeExpo: bigint;
       tokenLen: number;
-      token: number[];
     }>
   > = BufferLayout.struct([
     BufferLayoutExt.u64be("newFeeValue"),
     BufferLayoutExt.u64be("newFeeExpo"),
-    BufferLayout.u8("len"),
-    BufferLayout.seq(
-      BufferLayout.u8(),
-      BufferLayout.offset(BufferLayout.u8("len"), -1),
-      "token"
-    ),
+    BufferLayout.u8("tokenLen"),
   ]);
 
   constructor(
@@ -76,28 +73,38 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
   }
 
   static decode(data: Buffer): SetFeeInToken | undefined {
-    console.log("SetFeeInToken.decode");
-    const decoded = PythGovernanceActionImpl.decodeWithPayload(
-      data,
-      "SetFeeInToken",
-      SetFeeInToken.layout
-    );
-    if (!decoded) return undefined;
+    const header = PythGovernanceHeader.decode(data);
+    if (!header || header.action !== "SetFeeInToken") {
+      return undefined;
+    }
 
+    let index = PythGovernanceHeader.span;
+    const fields = SetFeeInToken.layout.decode(data, index);
+    index += SetFeeInToken.layout.span;
     return new SetFeeInToken(
-      decoded[0].targetChainId,
-      decoded[1].newFeeValue,
-      decoded[1].newFeeExpo,
-      Buffer.from(decoded[1].token)
+      header.targetChainId,
+      fields.newFeeValue,
+      fields.newFeeExpo,
+      data.subarray(index)
     );
   }
 
   encode(): Buffer {
-    return super.encodeWithPayload(SetFeeInToken.layout, {
-      newFeeValue: this.newFeeValue,
-      newFeeExpo: this.newFeeExpo,
-      tokenLen: this.token.length,
-      token: [...this.token],
-    });
+    const headerBuffer = new PythGovernanceHeader(
+      this.targetChainId,
+      "SetFeeInToken"
+    ).encode();
+
+    const fieldsBuf = Buffer.alloc(SetFeeInToken.layout.span);
+    SetFeeInToken.layout.encode(
+      {
+        newFeeValue: this.newFeeValue,
+        newFeeExpo: this.newFeeExpo,
+        tokenLen: this.token.length,
+      },
+      fieldsBuf
+    );
+
+    return Buffer.concat([headerBuffer, fieldsBuf, this.token]);
   }
 }

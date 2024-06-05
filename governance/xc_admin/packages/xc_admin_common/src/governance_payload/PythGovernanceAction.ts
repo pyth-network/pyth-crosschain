@@ -179,13 +179,10 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   ): Buffer {
     const headerBuffer = this.header().encode();
 
-    // XXX: there is no way to get the length before the encoding.
-    const expectedLen = payloadLayout.span < 0 ? 10000 : payloadLayout.span;
+    const payloadBuffer = Buffer.alloc(payloadLayout.span);
+    payloadLayout.encode(payload, payloadBuffer);
 
-    const payloadBuffer = Buffer.alloc(expectedLen);
-    const payloadLen = payloadLayout.encode(payload, payloadBuffer);
-
-    return Buffer.concat([headerBuffer, payloadBuffer.subarray(0, payloadLen)]);
+    return Buffer.concat([headerBuffer, payloadBuffer]);
   }
 
   /** Decode this action from a buffer using the given layout for the payload. */
