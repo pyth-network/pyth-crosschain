@@ -2,6 +2,9 @@ import { EncodingType, PriceFeedMetadata, PriceUpdate } from "./types";
 import { Logger } from "ts-log";
 import EventSource from "eventsource";
 
+const DEFAULT_TIMEOUT: DurationInMs = 5000;
+const DEFAULT_HTTP_RETRIES = 3;
+
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
 export type HexString = string;
@@ -42,8 +45,8 @@ export class HermesConnection {
    */
   constructor(endpoint: string, config?: HermesConnectionConfig) {
     this.baseURL = endpoint;
-    this.timeout = config?.timeout || 5000;
-    this.httpRetries = config?.httpRetries || 3;
+    this.timeout = config?.timeout || DEFAULT_TIMEOUT;
+    this.httpRetries = config?.httpRetries || DEFAULT_HTTP_RETRIES;
 
     // Default logger is console for only warnings and errors.
     this.logger = config?.logger || {
