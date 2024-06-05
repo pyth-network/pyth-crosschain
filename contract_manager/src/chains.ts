@@ -627,22 +627,4 @@ export class FuelChain extends Chain {
     const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
     return Number(balance) / 10 ** 9;
   }
-
-  // async sendTransaction(
-  //   senderPrivateKey: PrivateKey,
-  //   txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
-  // ): Promise<TxResult> {
-  //   const client = this.getClient();
-  //   const sender = new AptosAccount(
-  //     new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
-  //   );
-  //   const result = await client.generateSignSubmitWaitForTransaction(
-  //     sender,
-  //     txPayload,
-  //     {
-  //       maxGasAmount: BigInt(30000),
-  //     }
-  //   );
-  //   return { id: result.hash, info: result };
-  // }
 }
