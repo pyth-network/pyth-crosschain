@@ -28,9 +28,9 @@ async function main() {
           guardianSetIndex: index,
           chainId: chainId,
         });
-        console.log(`Fetched version for ${contract.getId()}`);
+        console.log(`Fetched contract for ${contract.getId()}`);
       } catch (e) {
-        console.error(`Error fetching version for ${contract.getId()}`, e);
+        console.error(`Error fetching contract for ${contract.getId()}`, e);
       }
     }
   }
