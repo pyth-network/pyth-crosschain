@@ -19,6 +19,7 @@ use {
         WormholeMerkleState,
     },
     crate::{
+        api::types::RpcPriceIdentifier,
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
@@ -870,7 +871,7 @@ mod test {
         // Add a dummy price feeds metadata
         state
             .store_price_feeds_metadata(&[PriceFeedMetadata {
-                id:         PriceIdentifier::new([100; 32]),
+                id:         RpcPriceIdentifier::new([100; 32]),
                 attributes: Default::default(),
             }])
             .await

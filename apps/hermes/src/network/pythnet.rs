@@ -4,7 +4,10 @@
 
 use {
     crate::{
-        api::types::PriceFeedMetadata,
+        api::types::{
+            PriceFeedMetadata,
+            RpcPriceIdentifier,
+        },
         config::RunOptions,
         network::wormhole::{
             BridgeData,
@@ -30,7 +33,6 @@ use {
     },
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
-    pyth_sdk::PriceIdentifier,
     pyth_sdk_solana::state::{
         load_mapping_account,
         load_product_account,
@@ -442,7 +444,7 @@ async fn fetch_price_feeds_metadata(
                             .expect("Invalid length for PriceIdentifier");
 
                         let price_feed_metadata = PriceFeedMetadata {
-                            id: PriceIdentifier::new(px_pkey_array),
+                            id: RpcPriceIdentifier::new(px_pkey_array),
                             attributes,
                         };
 
