@@ -23,7 +23,7 @@
     "test": "jest --testPathIgnorePatterns=.*.e2e.test.ts --passWithNoTests",
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
     "build": "tsc",
-    "generate-hermes-api-types": "openapi-typescript https://hermes.pyth.network/docs/openapi.json --output src/serverTypes.d.ts",
+    "generate-hermes-api-types": "openapi-typescript https://hermes.pyth.network/docs/openapi.json --output src/serverTypes.d.ts && prettier --write src/serverTypes.d.ts",
     "check-hermes-api-types": "git diff --exit-code src/serverTypes.d.ts",
     "example": "npm run build && node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",

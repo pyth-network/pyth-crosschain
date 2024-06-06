@@ -3,7 +3,6 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
   "/api/get_price_feed": {
     /**
@@ -204,7 +203,7 @@ export interface components {
        * Format: int64
        * @description When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
        * seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
-       * @example 1714670176
+       * @example 1717632000
        */
       publish_time: number;
     };
@@ -227,12 +226,12 @@ export interface components {
       emitter_chain: number;
       /**
        * Format: int64
-       * @example 1714670176
+       * @example 1717632000
        */
       prev_publish_time?: number | null;
       /**
        * Format: int64
-       * @example 1714670176
+       * @example 1717632000
        */
       price_service_receive_time?: number | null;
       /**
@@ -244,12 +243,12 @@ export interface components {
     RpcPriceFeedMetadataV2: {
       /**
        * Format: int64
-       * @example 1714670176
+       * @example 1717632000
        */
       prev_publish_time?: number | null;
       /**
        * Format: int64
-       * @example 1714670176
+       * @example 1717632000
        */
       proof_available_time?: number | null;
       /**
@@ -273,7 +272,6 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
-
   /**
    * **Deprecated: use /v2/updates/price/{publish_time} instead**
    * @deprecated
@@ -291,7 +289,7 @@ export interface operations {
         /**
          * @description The unix timestamp in seconds. This endpoint will return the first update whose
          * publish_time is >= the provided value.
-         * @example 1714670176
+         * @example 1717632000
          */
         publish_time: number;
         /**
@@ -530,7 +528,7 @@ export interface operations {
          * @example e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
          */
         "ids[]": components["schemas"]["PriceIdInput"][];
-        /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`. */
+        /** @description Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is `hex`. */
         encoding?: components["schemas"]["EncodingType"];
         /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`. */
         parsed?: boolean;
@@ -570,7 +568,7 @@ export interface operations {
          * @example e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
          */
         "ids[]": components["schemas"]["PriceIdInput"][];
-        /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`. */
+        /** @description Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is `hex`. */
         encoding?: components["schemas"]["EncodingType"];
         /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`. */
         parsed?: boolean;
@@ -616,7 +614,7 @@ export interface operations {
          * @example e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
          */
         "ids[]": components["schemas"]["PriceIdInput"][];
-        /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `hex`. */
+        /** @description Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is `hex`. */
         encoding?: components["schemas"]["EncodingType"];
         /** @description If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`. */
         parsed?: boolean;
@@ -625,7 +623,7 @@ export interface operations {
         /**
          * @description The unix timestamp in seconds. This endpoint will return the first update whose
          * publish_time is >= the provided value.
-         * @example 1714670176
+         * @example 1717632000
          */
         publish_time: number;
       };
