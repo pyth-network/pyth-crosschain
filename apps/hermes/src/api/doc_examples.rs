@@ -13,17 +13,8 @@ pub fn price_feed_id_example() -> &'static str {
 
 /// Example value for a unix timestamp
 pub fn timestamp_example() -> UnixTimestamp {
-    use std::time::{
-        SystemTime,
-        UNIX_EPOCH,
-    };
-
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-
-    since_the_epoch.as_secs() as UnixTimestamp
+    const STATIC_UNIX_TIMESTAMP: UnixTimestamp = 1717632000; // Thursday, 6 June 2024 00:00:00 GMT
+    STATIC_UNIX_TIMESTAMP
 }
 
 /// Example value for a VAA
