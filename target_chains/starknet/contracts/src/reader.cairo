@@ -101,7 +101,7 @@ pub impl ReaderImpl of ReaderTrait {
 
     /// Reads the specified number of bytes as a new byte array.
     fn read_byte_array(ref self: Reader, num_bytes: usize) -> ByteArray {
-        let mut array: Array<bytes31> = array![];
+        let mut array: Array<felt252> = array![];
         let mut num_last_bytes = 0;
         let mut num_remaining_bytes = num_bytes;
         loop {
@@ -173,26 +173,26 @@ impl ReaderPrivateImpl of ReaderPrivateTrait {
 
     // Moved out from `read_bytes` because we cannot use `return` or `?` within a loop.
     fn read_bytes_iteration(
-        ref self: Reader, num_bytes: usize, ref array: Array<bytes31>
+        ref self: Reader, num_bytes: usize, ref array: Array<felt252>
     ) -> (usize, bool) {
         if num_bytes >= 31 {
             let high = self.read_num_bytes(15);
             let low = self.read_num_bytes(16);
             let value: felt252 = u256 { high, low }.try_into().expect(UNEXPECTED_OVERFLOW);
-            array.append(value.try_into().expect(UNEXPECTED_OVERFLOW));
+            array.append(value);
             (31, false)
         } else if num_bytes > 16 {
             // num_bytes < 31
             let high = self.read_num_bytes((num_bytes - 16).try_into().expect(UNEXPECTED_OVERFLOW));
             let low = self.read_num_bytes(16);
             let value: felt252 = u256 { high, low }.try_into().expect(UNEXPECTED_OVERFLOW);
-            array.append(value.try_into().expect(UNEXPECTED_OVERFLOW));
+            array.append(value);
             (num_bytes, true)
         } else {
             // bytes < 16
             let low = self.read_num_bytes(num_bytes.try_into().expect(UNEXPECTED_OVERFLOW));
             let value: felt252 = low.try_into().expect(UNEXPECTED_OVERFLOW);
-            array.append(value.try_into().expect(UNEXPECTED_OVERFLOW));
+            array.append(value);
             (num_bytes, true)
         }
     }

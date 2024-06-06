@@ -66,10 +66,7 @@ pub fn print_as_cairo_fn(data: &[u8], name: impl Display, comment: impl Display)
         println!("        {item},");
     }
     println!("    ];");
-    println!(
-        "    ByteArrayImpl::new(array_try_into(bytes), {})",
-        data.num_last_bytes
-    );
+    println!("    ByteArrayImpl::new(bytes, {})", data.num_last_bytes);
     println!("}}");
 }
 

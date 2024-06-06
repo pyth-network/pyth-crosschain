@@ -8,7 +8,7 @@ use pyth::wormhole::{
 };
 use pyth::reader::ReaderImpl;
 use pyth::byte_array::{ByteArray, ByteArrayImpl};
-use pyth::util::{UnwrapWithFelt252, array_try_into};
+use pyth::util::{UnwrapWithFelt252, array_try_into, one_shift_left_bytes_u256};
 use core::starknet::{ContractAddress, EthAddress};
 use core::panic_with_felt252;
 use super::data;
@@ -352,16 +352,18 @@ pub fn corrupted_vm(
     ByteArrayImpl::new(new_data, num_last_bytes)
 }
 
-// Returns a `bytes31` value with 2 bytes changed. We need to change at least 2 bytes
+// Returns an item of ByteArray data with 2 bytes changed. We need to change at least 2 bytes
 // because a single byte can be a recovery id, where only 1 bit matters so
 // a modification of recovery id can result in a valid VM.
-fn corrupted_bytes(input: bytes31, index: usize, random1: usize, random2: usize) -> bytes31 {
+fn corrupted_bytes(input: felt252, index: usize, random1: usize, random2: usize) -> felt252 {
     let index2 = (index + 1) % 31;
+    let input: u256 = input.into();
 
     let mut value: u256 = 0;
-    let mut i = 0;
+    let mut i: usize = 0;
     while i < 31 {
-        let real_byte = input.at(30 - i);
+        let real_byte = (input / one_shift_left_bytes_u256(30 - i.try_into().unwrap())) % 0x100;
+        let real_byte: u8 = real_byte.try_into().unwrap();
         let new_byte = if i == index {
             corrupted_byte(real_byte, random1)
         } else if i == index2 {
