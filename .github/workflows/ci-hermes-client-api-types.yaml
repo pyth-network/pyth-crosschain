@@ -1,0 +1,23 @@
+name: Check Hermes Client API Types
+
+on:
+  pull_request:
+    paths: [apps/hermes/client/**]
+  push:
+    branches: [main]
+    paths: [apps/hermes/client/**]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+      - name: Install deps
+        run: npm ci
+      - name: Generate API Types
+        run: npx lerna run generate-api-types
+      - name: Check API Types
+        run: npx lerna run check-api-types
