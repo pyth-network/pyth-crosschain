@@ -200,6 +200,29 @@ fn main() {
         "A Pyth governance instruction to set fee signed by the test guardian #1.",
     );
 
+    let pyth_set_fee_in_token_payload = vec![
+        80, 84, 71, 77, 1, 7, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 2, 32, 4,
+        157, 54, 87, 13, 78, 70, 244, 142, 153, 103, 75, 211, 252, 200, 70, 68, 221, 214, 185, 111,
+        124, 116, 27, 21, 98, 184, 47, 158, 0, 77, 199,
+    ];
+    let pyth_set_fee_in_token = serialize_vaa(guardians.sign_vaa(
+        &[0],
+        VaaBody {
+            timestamp: 1,
+            nonce: 2,
+            emitter_chain: 1,
+            emitter_address: u256_to_be(41.into()).into(),
+            sequence: 1.try_into().unwrap(),
+            consistency_level: 6,
+            payload: PayloadKind::Binary(pyth_set_fee_in_token_payload.clone()),
+        },
+    ));
+    print_as_cairo_fn(
+        &pyth_set_fee_in_token,
+        "pyth_set_fee_in_token",
+        "A Pyth governance instruction to set fee signed by the test guardian #1.",
+    );
+
     let pyth_set_data_sources = serialize_vaa(guardians.sign_vaa(
         &[0],
         VaaBody {
