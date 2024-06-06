@@ -93,48 +93,52 @@ export class HermesConnection {
    * This endpoint can be filtered by asset type and query string.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param query Optional query string to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example : bitcoin
-   * @param filter Optional filter string to filter the price feeds. If provided, the results will be filtered by asset type. Possible values are crypto, equity, fx, metal, rates. Filter string is case insensitive. Available values : crypto, fx, equity, metals, rates
+   * @param options Optional parameters:
+   *        - query: String to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example: "bitcoin".
+   *        - filter: String to filter the price feeds by asset type. Possible values are "crypto", "equity", "fx", "metal", "rates". Filter string is case insensitive.
+   *
    * @returns Array of PriceFeedMetadata objects.
    */
-  async getPriceFeeds(
-    query?: string,
-    filter?: string
-  ): Promise<PriceFeedMetadata[]> {
+  async getPriceFeeds(options?: {
+    query?: string;
+    filter?: string;
+  }): Promise<PriceFeedMetadata[]> {
     const url = new URL(`${this.baseURL}/v2/price_feeds`);
-    if (query) {
-      url.searchParams.append("query", query);
+    if (options) {
+      this.appendUrlSearchParams(url, options);
     }
-    if (filter) {
-      url.searchParams.append("filter", filter);
-    }
+
     return await this.httpRequest<PriceFeedMetadata[]>(url.toString());
   }
 
   /**
    * Fetch the latest price updates for a set of price feed IDs.
-   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
+   * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update using the options object.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
+   * @param options Optional parameters:
+   *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
+   *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *
    * @returns Array of PriceUpdate objects containing the latest updates.
    */
   async getLatestPriceUpdates(
     ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean
+    options?: {
+      encoding?: EncodingType;
+      parsed?: boolean;
+    }
   ): Promise<PriceUpdate[]> {
     const url = new URL(`${this.baseURL}/v2/updates/price/latest`);
-    // Append parameters to the URL search parameters
-    ids.forEach((id) => url.searchParams.append("ids[]", id));
-    if (encoding) {
-      url.searchParams.append("encoding", encoding);
+    for (const id of ids) {
+      url.searchParams.append("ids[]", id);
     }
-    if (parsed !== undefined) {
-      url.searchParams.append("parsed", String(parsed));
+
+    if (options) {
+      this.appendUrlSearchParams(url, options);
     }
+
     return await this.httpRequest<PriceUpdate[]>(url.toString());
   }
 
@@ -145,24 +149,29 @@ export class HermesConnection {
    *
    * @param publishTime Unix timestamp in seconds.
    * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param encoding Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
+   * @param options Optional parameters:
+   *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
+   *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *
    * @returns Array of PriceUpdate objects containing the updates at the specified timestamp.
    */
   async getPriceUpdatesAtTimestamp(
     publishTime: UnixTimestamp,
     ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean
+    options?: {
+      encoding?: EncodingType;
+      parsed?: boolean;
+    }
   ): Promise<PriceUpdate[]> {
     const url = new URL(`${this.baseURL}/v2/updates/price/${publishTime}`);
-    ids.forEach((id) => url.searchParams.append("ids[]", id));
-    if (encoding) {
-      url.searchParams.append("encoding", encoding);
+    for (const id of ids) {
+      url.searchParams.append("ids[]", id);
     }
-    if (parsed !== undefined) {
-      url.searchParams.append("parsed", String(parsed));
+
+    if (options) {
+      this.appendUrlSearchParams(url, options);
     }
+
     return await this.httpRequest<PriceUpdate[]>(url.toString());
   }
 
@@ -183,28 +192,30 @@ export class HermesConnection {
    */
   async getPriceUpdatesStream(
     ids: HexString[],
-    encoding?: EncodingType,
-    parsed?: boolean,
-    allow_unordered?: boolean,
-    benchmarks_only?: boolean
+    options?: {
+      encoding?: EncodingType;
+      parsed?: boolean;
+      allow_unordered?: boolean;
+      benchmarks_only?: boolean;
+    }
   ): Promise<EventSource> {
     const url = new URL("/v2/updates/price/stream", this.baseURL);
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
-    const params = {
-      encoding,
-      parsed: parsed !== undefined ? String(parsed) : undefined,
-      allow_unordered:
-        allow_unordered !== undefined ? String(allow_unordered) : undefined,
-      benchmarks_only:
-        benchmarks_only !== undefined ? String(benchmarks_only) : undefined,
-    };
+
+    if (options) {
+      this.appendUrlSearchParams(url, options);
+    }
+
+    return new EventSource(url.toString());
+  }
+
+  private appendUrlSearchParams(url: URL, params: Record<string, any>) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        url.searchParams.append(key, value);
+        url.searchParams.append(key, String(value));
       }
     });
-    return new EventSource(url.toString());
   }
 }
