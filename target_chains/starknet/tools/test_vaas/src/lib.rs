@@ -9,8 +9,8 @@ use libsecp256k1::{sign, Message, PublicKey, SecretKey};
 use primitive_types::U256;
 use wormhole_vaas::{keccak256, GuardianSetSig, Readable, Vaa, VaaBody, VaaHeader, Writeable};
 
-/// A data format compatible with `pyth::byte_array::ByteArray`.
-struct CairoByteArrayData {
+/// A data format compatible with `pyth::byte_buffer::ByteBuffer`.
+struct CairoByteBufferData {
     // Number of bytes stored in the last item of `self.data` (or 0 if it's empty).
     num_last_bytes: usize,
     // Bytes in big endian. Each item except the last one stores 31 bytes.
@@ -18,8 +18,8 @@ struct CairoByteArrayData {
     data: Vec<U256>,
 }
 
-/// Converts bytes into a format compatible with `pyth::byte_array::ByteArray`.
-fn to_cairo_byte_array_data(data: &[u8]) -> CairoByteArrayData {
+/// Converts bytes into a format compatible with `pyth::byte_buffer::ByteBuffer`.
+fn to_cairo_byte_array_data(data: &[u8]) -> CairoByteBufferData {
     let mut pos = 0;
     let mut r = Vec::new();
     while pos < data.len() {
@@ -32,14 +32,14 @@ fn to_cairo_byte_array_data(data: &[u8]) -> CairoByteArrayData {
             let len = data.len() - pos;
             buf[32 - len..].copy_from_slice(&data[pos..]);
             r.push(U256::from_big_endian(&buf));
-            return CairoByteArrayData {
+            return CairoByteBufferData {
                 num_last_bytes: len,
                 data: r,
             };
         }
         pos += 31;
     }
-    CairoByteArrayData {
+    CairoByteBufferData {
         num_last_bytes: 0,
         data: r,
     }
@@ -60,13 +60,13 @@ pub fn print_as_cairo_fn(data: &[u8], name: impl Display, comment: impl Display)
     println!();
     println!("// {comment}");
     let data = to_cairo_byte_array_data(data);
-    println!("pub fn {name}() -> ByteArray {{");
+    println!("pub fn {name}() -> ByteBuffer {{");
     println!("    let bytes = array![");
     for item in data.data {
         println!("        {item},");
     }
     println!("    ];");
-    println!("    ByteArrayImpl::new(bytes, {})", data.num_last_bytes);
+    println!("    ByteBufferImpl::new(bytes, {})", data.num_last_bytes);
     println!("}}");
 }
 

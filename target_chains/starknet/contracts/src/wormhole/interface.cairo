@@ -1,5 +1,5 @@
 use super::errors::SubmitNewGuardianSetError;
-use pyth::byte_array::ByteArray;
+use pyth::byte_buffer::ByteBuffer;
 use core::starknet::secp256_trait::Signature;
 use core::starknet::EthAddress;
 
@@ -13,7 +13,7 @@ pub trait IWormhole<T> {
     /// Parses and returns the contents of the message. Panics if there was a
     /// parsing error or if signature verification failed.
     /// `ParseAndVerifyVmError` enumerates possible panic payloads.
-    fn parse_and_verify_vm(self: @T, encoded_vm: ByteArray) -> VerifiedVM;
+    fn parse_and_verify_vm(self: @T, encoded_vm: ByteBuffer) -> VerifiedVM;
 
     /// Returns the list of guardians at the specified index.
     /// `GetGuardianSetError` enumerates possible panic payloads.
@@ -44,7 +44,7 @@ pub trait IWormhole<T> {
     /// Executes a governance instruction to add a new guardian set. The new set becomes
     /// active immediately. The previous guardian set will be available for 24 hours and then expire.
     /// `SubmitNewGuardianSetError` enumerates possible panic payloads.
-    fn submit_new_guardian_set(ref self: T, encoded_vm: ByteArray);
+    fn submit_new_guardian_set(ref self: T, encoded_vm: ByteBuffer);
 }
 
 /// Information about a guardian's signature within a message.
@@ -78,7 +78,7 @@ pub struct VerifiedVM {
     /// Observed consistency level (specific to the sender's chain).
     pub consistency_level: u8,
     /// The data attached to the message.
-    pub payload: ByteArray,
+    pub payload: ByteBuffer,
     /// Double keccak256 hash of all fields of the message, excluding `version`,
     /// `guardian_set_index` and `signatures`.
     pub hash: u256,

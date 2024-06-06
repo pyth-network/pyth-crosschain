@@ -7,7 +7,7 @@ use pyth::wormhole::{
     GuardianSetAdded
 };
 use pyth::reader::ReaderImpl;
-use pyth::byte_array::{ByteArray, ByteArrayImpl};
+use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
 use pyth::util::{UnwrapWithFelt252, array_try_into, one_shift_left_bytes_u256};
 use core::starknet::{ContractAddress, EthAddress};
 use core::panic_with_felt252;
@@ -317,8 +317,8 @@ pub fn deploy_declared_with_test_guardian_at(
 }
 
 pub fn corrupted_vm(
-    mut real_data: ByteArray, pos: usize, random1: usize, random2: usize
-) -> ByteArray {
+    mut real_data: ByteBuffer, pos: usize, random1: usize, random2: usize
+) -> ByteBuffer {
     let mut new_data = array![];
 
     // Make sure we select a position not on the last item because
@@ -346,10 +346,10 @@ pub fn corrupted_vm(
         }
         i += 1;
     };
-    ByteArrayImpl::new(new_data, num_last_bytes)
+    ByteBufferImpl::new(new_data, num_last_bytes)
 }
 
-// Returns an item of ByteArray data with 2 bytes changed. We need to change at least 2 bytes
+// Returns an item of ByteBuffer data with 2 bytes changed. We need to change at least 2 bytes
 // because a single byte can be a recovery id, where only 1 bit matters so
 // a modification of recovery id can result in a valid VM.
 fn corrupted_bytes(input: felt252, index: usize, random1: usize, random2: usize) -> felt252 {

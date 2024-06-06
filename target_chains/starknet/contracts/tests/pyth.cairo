@@ -7,7 +7,7 @@ use pyth::pyth::{
     WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
     PriceFeedPublishTime, GetPriceNoOlderThanError, Price, PriceFeed, GetPriceUnsafeError,
 };
-use pyth::byte_array::{ByteArray, ByteArrayImpl};
+use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
 use pyth::util::{array_try_into, UnwrapWithFelt252};
 use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
 use core::starknet::ContractAddress;
@@ -1127,8 +1127,8 @@ fn deploy_pyth(
 
 fn deploy_fee_contract(class: ContractClass, recipient: ContractAddress) -> IERC20CamelDispatcher {
     let mut args = array![];
-    let name: core::byte_array::ByteArray = "eth";
-    let symbol: core::byte_array::ByteArray = "eth";
+    let name: ByteArray = "eth";
+    let symbol: ByteArray = "eth";
     (name, symbol, 100000_u256, recipient).serialize(ref args);
     let contract_address = match class.deploy(@args) {
         Result::Ok(v) => { v },

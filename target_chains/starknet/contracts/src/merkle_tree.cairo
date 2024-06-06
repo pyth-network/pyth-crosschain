@@ -1,6 +1,6 @@
 use super::hash::{Hasher, HasherImpl};
 use super::reader::{Reader, ReaderImpl};
-use super::byte_array::ByteArray;
+use super::byte_buffer::ByteBuffer;
 use super::util::ONE_SHIFT_96;
 use core::cmp::{min, max};
 use core::panic_with_felt252;
@@ -49,7 +49,7 @@ fn node_hash(a: u256, b: u256) -> u256 {
     hasher.finalize() / ONE_SHIFT_96
 }
 
-pub fn read_and_verify_proof(root_digest: u256, message: @ByteArray, ref reader: Reader) {
+pub fn read_and_verify_proof(root_digest: u256, message: @ByteBuffer, ref reader: Reader) {
     let mut message_reader = ReaderImpl::new(message.clone());
     let mut current_hash = leaf_hash(message_reader.clone());
 
