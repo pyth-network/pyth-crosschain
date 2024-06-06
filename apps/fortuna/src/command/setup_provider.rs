@@ -54,7 +54,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 /// 3. Re-register if there is a mismatch in generated hash chain.
 /// 4. Update provider fee if there is a mismatch with the fee set on contract.
 /// 5. Update provider uri if there is a mismatch with the uri set on contract.
-#[tracing::instrument(name="setup_chain_provider", skip_all, fields(chain_id=chain_id))]
+#[tracing::instrument(name = "setup_chain_provider", skip_all, fields(chain_id = chain_id))]
 async fn setup_chain_provider(
     config: &Config,
     chain_id: &ChainId,
@@ -95,32 +95,38 @@ async fn setup_chain_provider(
                         e
                     )
                 })?;
-
-        let secret = provider_config.secret.load()?.ok_or(anyhow!(
-            "Please specify a provider secret in the config file."
-        ))?;
-        let hash_chain = PebbleHashChain::from_config(
-            &secret,
-            &chain_id,
-            &provider_address,
-            &chain_config.contract_addr,
-            &metadata.seed,
-            provider_config.chain_length,
-            provider_config.chain_sample_interval,
-        )?;
-        let chain_state = HashChainState {
-            offsets:     vec![provider_info
-                .original_commitment_sequence_number
-                .try_into()?],
-            hash_chains: vec![hash_chain],
-        };
-
-
-        if chain_state.reveal(provider_info.original_commitment_sequence_number)?
-            != provider_info.original_commitment
-        {
-            tracing::info!("The root of the generated hash chain does not match the commitment",);
+        if metadata.chain_length != provider_config.chain_length {
+            tracing::info!("Chain length mismatch");
             register = true;
+        } else {
+            let secret = provider_config.secret.load()?.ok_or(anyhow!(
+                "Please specify a provider secret in the config file."
+            ))?;
+            let hash_chain = PebbleHashChain::from_config(
+                &secret,
+                &chain_id,
+                &provider_address,
+                &chain_config.contract_addr,
+                &metadata.seed,
+                provider_config.chain_length,
+                provider_config.chain_sample_interval,
+            )?;
+            let chain_state = HashChainState {
+                offsets:     vec![provider_info
+                    .original_commitment_sequence_number
+                    .try_into()?],
+                hash_chains: vec![hash_chain],
+            };
+
+
+            if chain_state.reveal(provider_info.original_commitment_sequence_number)?
+                != provider_info.original_commitment
+            {
+                tracing::info!(
+                    "The root of the generated hash chain does not match the commitment",
+                );
+                register = true;
+            }
         }
     }
 
