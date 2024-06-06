@@ -48,7 +48,7 @@ pub fn good_update1() -> ByteArray {
         226866843267230707879834616967256711063296411939069440476882347301771901839,
         95752383404870925303422787,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 11)
+    ByteArrayImpl::new(bytes, 11)
 }
 
 // A wormhole VAA from a random update pulled from Hermes.
@@ -86,7 +86,7 @@ pub fn good_vm1() -> ByteArray {
         52685537088250779930155363779405986390839624071318818148325576008719597568,
         14615204155786886573933667335033405822686404253588533,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 22)
+    ByteArrayImpl::new(bytes, 22)
 }
 
 // A first update for a certain timestamp pulled from Hermes.
@@ -134,7 +134,7 @@ pub fn unique_update1() -> ByteArray {
         28583007876111384456149499846085318299326698960792831530075402396150538907,
         126290914008245563820443505,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 11)
+    ByteArrayImpl::new(bytes, 11)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
@@ -159,7 +159,7 @@ pub fn mainnet_guardian_set_upgrade1() -> ByteArray {
         55852237138651071644815135002358067220635692701051811455610533875912981641,
         190413173566657072516608762222993749133,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 16)
+    ByteArrayImpl::new(bytes, 16)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
@@ -210,7 +210,7 @@ pub fn mainnet_guardian_set_upgrade2() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 2)
+    ByteArrayImpl::new(bytes, 2)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
@@ -261,7 +261,7 @@ pub fn mainnet_guardian_set_upgrade3() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 2)
+    ByteArrayImpl::new(bytes, 2)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
@@ -312,7 +312,7 @@ pub fn mainnet_guardian_set_upgrade4() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 2)
+    ByteArrayImpl::new(bytes, 2)
 }
 
 pub const TEST_GUARDIAN_ADDRESS1: felt252 = 0x686b9ea8e3237110eaaba1f1b7467559a3273819;
@@ -328,7 +328,7 @@ pub fn empty_set_upgrade() -> ByteArray {
         1131377253,
         210141960835432704,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // A wormhole guardian set upgrade instruction with emitter not expected by the test.
@@ -341,7 +341,7 @@ pub fn wrong_emitter_upgrade() -> ByteArray {
         1131377253,
         307122819832911374634462256129025725147663742791077927773782095897,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 28)
+    ByteArrayImpl::new(bytes, 28)
 }
 
 // A wormhole guardian set upgrade instruction with set index = 3 not expected by the test.
@@ -354,7 +354,7 @@ pub fn wrong_index_upgrade() -> ByteArray {
         1131377253,
         210624583337115497886730203944140689990237281548333499058561169433,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 28)
+    ByteArrayImpl::new(bytes, 28)
 }
 
 // A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test guardian #2 as the new guardian set.
@@ -367,7 +367,7 @@ pub fn upgrade_to_test2() -> ByteArray {
         1131377253,
         210624583337114749311237613435643962969294824395451022190048752713,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 28)
+    ByteArrayImpl::new(bytes, 28)
 }
 
 // A Pyth governance instruction to set fee signed by the test guardian #1.
@@ -379,7 +379,7 @@ pub fn pyth_set_fee() -> ByteArray {
         49565958604199796163020368,
         8072278384728444780182694421117884443886221966887092226,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 23)
+    ByteArrayImpl::new(bytes, 23)
 }
 
 // A Pyth governance instruction to set data sources signed by the test guardian #1.
@@ -393,7 +393,7 @@ pub fn pyth_set_data_sources() -> ByteArray {
         223938022913800988696085410923418445187967252047785407181969631814277398528,
         301,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 14)
+    ByteArrayImpl::new(bytes, 14)
 }
 
 // A Pyth governance instruction to set wormhole address signed by the test guardian #1.
@@ -406,7 +406,7 @@ pub fn pyth_set_wormhole() -> ByteArray {
         148907253456057279176930315687485033494639386197985334929728922792833758561,
         3789456330195130818,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to request governance data source transfer signed by the test guardian #1.
@@ -418,7 +418,7 @@ pub fn pyth_request_transfer() -> ByteArray {
         51983810243429054512432720,
         101886477340929157123538945,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 11)
+    ByteArrayImpl::new(bytes, 11)
 }
 
 // A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.
@@ -434,7 +434,7 @@ pub fn pyth_auth_transfer() -> ByteArray {
         721420288,
         20782639266000304984163621011457,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 18)
+    ByteArrayImpl::new(bytes, 18)
 }
 
 // A Pyth governance instruction to set fee with alternative emitter signed by the test guardian #1.
@@ -446,7 +446,7 @@ pub fn pyth_set_fee_alt_emitter() -> ByteArray {
         51983810243429054512498256,
         8072278384728444780182694421117884443886221966887092226,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 23)
+    ByteArrayImpl::new(bytes, 23)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
@@ -459,7 +459,7 @@ pub fn pyth_upgrade_fake1() -> ByteArray {
         148907253453589022320407306335457538262203456299261498528172020674942501293,
         9624434269354675143,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
@@ -472,7 +472,7 @@ pub fn pyth_upgrade_not_pyth() -> ByteArray {
         148907253453589022305803196061110108233921773465491227564264876752079119569,
         6736708290019375278,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
@@ -485,7 +485,7 @@ pub fn pyth_upgrade_wrong_magic() -> ByteArray {
         148907253453589022340563264373887392414227070562033595690783947835630084766,
         5698494087895763928,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
@@ -498,7 +498,7 @@ pub fn pyth_upgrade_invalid_hash() -> ByteArray {
         148907253453589022218037939353255655322518022029545083499057126097303896064,
         505,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 8)
+    ByteArrayImpl::new(bytes, 8)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1.
@@ -520,7 +520,7 @@ pub fn test_price_update1() -> ByteArray {
         87135893730137265929093180553063146337041045646221968026289709394440932141,
         245333243912241114598596888050489286502591033459250287888834,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 25)
+    ByteArrayImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1.
@@ -542,7 +542,7 @@ pub fn test_price_update2() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 25)
+    ByteArrayImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1 with another emitter address.
@@ -564,7 +564,7 @@ pub fn test_update2_alt_emitter() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 25)
+    ByteArrayImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #2.
@@ -586,5 +586,5 @@ pub fn test_update2_set2() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(array_try_into(bytes), 25)
+    ByteArrayImpl::new(bytes, 25)
 }
