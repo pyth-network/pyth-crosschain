@@ -442,7 +442,7 @@ async fn fetch_price_feeds_metadata(
                             .expect("Invalid length for PriceIdentifier");
 
                         let price_feed_metadata = PriceFeedMetadata {
-                            id: PriceIdentifier::new(px_pkey_array),
+                            id: RpcPriceIdentifier::new(px_pkey_array),
                             attributes,
                         };
 
