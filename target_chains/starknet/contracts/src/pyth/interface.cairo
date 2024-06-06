@@ -2,6 +2,8 @@ use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
 use pyth::byte_buffer::ByteBuffer;
 use pyth::wormhole::VerifiedVM;
 use core::starknet::ContractAddress;
+use core::fmt::{Debug, Formatter};
+use pyth::util::write_i64;
 
 #[starknet::interface]
 pub trait IPyth<T> {
@@ -55,7 +57,7 @@ pub trait IPyth<T> {
     fn pyth_upgradable_magic(self: @T) -> u32;
 }
 
-#[derive(Drop, Debug, Clone, Copy, PartialEq, Hash, Default, Serde, starknet::Store)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash, Default, starknet::Store)]
 pub struct DataSource {
     pub emitter_chain_id: u16,
     pub emitter_address: u256,
@@ -73,7 +75,7 @@ impl GetDataSourceFromVerifiedVM of GetDataSource<VerifiedVM> {
     }
 }
 
-#[derive(Drop, Copy, PartialEq, Serde)]
+#[derive(Drop, Copy, PartialEq, Serde, Hash, starknet::Store)]
 pub struct Price {
     pub price: i64,
     pub conf: u64,
@@ -81,14 +83,40 @@ pub struct Price {
     pub publish_time: u64,
 }
 
-#[derive(Drop, Clone, Serde)]
+// TODO: use derives after upgrading cairo
+impl DebugPrice of Debug<Price> {
+    fn fmt(self: @Price, ref f: Formatter) -> Result<(), core::fmt::Error> {
+        write!(f, "Price {{ price: ")?;
+        write_i64(ref f, *self.price)?;
+        write!(f, ", conf: {}, expo: ", self.conf)?;
+        write_i64(ref f, (*self.expo).into())?;
+        write!(f, ", publish_time: {} }}", self.publish_time)
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_debug_price() {
+    let value = Price { price: 2, conf: 3, expo: -4, publish_time: 5, };
+    let expected = "Price { price: 2, conf: 3, expo: -4, publish_time: 5 }";
+    let actual = format!("{:?}", value);
+    assert!(actual == expected);
+}
+
+impl DefaultPrice of Default<Price> {
+    fn default() -> Price {
+        Price { price: 0, conf: 0, expo: 0, publish_time: 0 }
+    }
+}
+
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash, starknet::Store)]
 pub struct PriceFeedPublishTime {
     pub price_id: u256,
     pub publish_time: u64,
 }
 
 // PriceFeed represents a current aggregate price from pyth publisher feeds.
-#[derive(Drop, Copy, PartialEq, Serde)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash, starknet::Store)]
 pub struct PriceFeed {
     // The price ID.
     pub id: u256,

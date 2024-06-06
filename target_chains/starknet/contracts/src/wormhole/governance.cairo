@@ -7,7 +7,7 @@ use core::starknet::EthAddress;
 // "Core" (left padded)
 const MODULE: u256 = 0x00000000000000000000000000000000000000000000000000000000436f7265;
 
-#[derive(Drop, Debug, Copy, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum Action {
     ContractUpgrade,
     GuardianSetUpgrade,
@@ -32,7 +32,7 @@ impl U8TryIntoAction of TryInto<u8, Action> {
 }
 
 /// Parsed header of a governance message.
-#[derive(Drop, Debug, Clone)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub struct Header {
     /// The destination module of this instruction.
     pub module: u256,
@@ -44,7 +44,7 @@ pub struct Header {
 }
 
 /// Payload of `GuardianSetUpgrade` instruction.
-#[derive(Drop, Debug, Clone)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct NewGuardianSet {
     /// Index of the new set.
     pub set_index: u32,

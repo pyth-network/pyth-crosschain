@@ -6,7 +6,7 @@ use core::fmt::{Debug, Formatter};
 use pyth::util::{UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u128};
 use super::byte_buffer::{ByteBuffer, ByteBufferImpl};
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum Error {
     UnexpectedEndOfInput,
 }
@@ -22,7 +22,7 @@ impl ErrorIntoFelt252 of Into<Error, felt252> {
 /// Allows to read data from a byte array as big endian integers.
 /// All methods return `EOF` error if attempted to
 /// read more bytes than is available.
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct Reader {
     // Input array.
     array: ByteBuffer,
@@ -33,6 +33,12 @@ pub struct Reader {
     // Next value to read from (in big endian). This is needed because
     // `array.pop_front()` returns up to 31 bytes which require two u128 to store.
     next: Option<u128>,
+}
+
+impl DefaultReader of Default<Reader> {
+    fn default() -> Reader {
+        ReaderImpl::new(Default::default())
+    }
 }
 
 #[generate_trait]

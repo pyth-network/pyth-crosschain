@@ -46,9 +46,9 @@ fn decode_event(mut event: Event) -> PythEvent {
     let output = if key0 == event_name_hash('PriceFeedUpdated') {
         let event = PriceFeedUpdated {
             price_id: event.keys.pop_u256(),
-            publish_time: event.data.pop(),
             price: event.data.pop(),
             conf: event.data.pop(),
+            publish_time: event.data.pop(),
         };
         PythEvent::PriceFeedUpdated(event)
     } else if key0 == event_name_hash('FeeSet') {

@@ -48,7 +48,7 @@ pub trait IWormhole<T> {
 }
 
 /// Information about a guardian's signature within a message.
-#[derive(Drop, Debug, Clone, Serde)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash, starknet::Store)]
 pub struct GuardianSignature {
     /// Index of this guardian within the guardian set.
     pub guardian_index: u8,
@@ -57,7 +57,7 @@ pub struct GuardianSignature {
 }
 
 /// A verified Wormhole message.
-#[derive(Drop, Debug, Clone, Serde)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct VerifiedVM {
     /// Version of the encoding format.
     pub version: u8,
@@ -91,7 +91,7 @@ pub fn quorum(num_guardians: usize) -> usize {
 }
 
 /// Information about a guardian set.
-#[derive(Drop, Debug, Clone, Serde)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct GuardianSet {
     /// Public keys of guardians, in order.
     pub keys: Array<EthAddress>,

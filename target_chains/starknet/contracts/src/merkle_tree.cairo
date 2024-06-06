@@ -9,7 +9,7 @@ const MERKLE_LEAF_PREFIX: u8 = 0;
 const MERKLE_NODE_PREFIX: u8 = 1;
 const MERKLE_EMPTY_LEAF_PREFIX: u8 = 2;
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum MerkleVerificationError {
     Reader: super::reader::Error,
     DigestMismatch,

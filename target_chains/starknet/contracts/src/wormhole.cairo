@@ -33,20 +33,20 @@ mod wormhole {
 
     /// Events emitted by the contract.
     #[event]
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub enum Event {
         GuardianSetAdded: GuardianSetAdded,
     }
 
     /// Emitted when a new guardian set is added.
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct GuardianSetAdded {
         /// Index of the new guardian set.
         pub index: u32,
     }
 
     /// Guardian set storage.
-    #[derive(Drop, Debug, Clone, Serde, starknet::Store)]
+    #[derive(Drop, Copy, Debug, PartialEq, Serde, Hash, starknet::Store)]
     struct GuardianSet {
         /// Number of guardians in this guardian set.
         /// Guardian keys are stored separately.
