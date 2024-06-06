@@ -1,5 +1,3 @@
-export * from "./types";
-
 export {
   DurationInMs,
   DurationInSeconds,
@@ -7,4 +5,14 @@ export {
   HermesConnectionConfig,
   HexString,
   UnixTimestamp,
+  AssetType,
+  BinaryPriceUpdate,
+  EncodingType,
+  GetVaaCcipInput,
+  GetVaaCcipResponse,
+  GetVaaResponse,
+  ParsedPriceUpdate,
+  PriceFeedMetadata,
+  PriceIdInput,
+  PriceUpdate,
 } from "./HermesConnection";

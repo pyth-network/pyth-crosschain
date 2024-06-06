@@ -34,7 +34,7 @@ async function run() {
   const priceIds = argv.priceIds as string[];
 
   // Get price feeds
-  const priceFeeds = await connection.getPriceFeeds("btc", "crypto");
+  const priceFeeds = await connection.getPriceFeeds("btc", "crypto"); // "btc" is the symbol filter and "crypto" is the asset type filter
   console.log(priceFeeds);
 
   // Latest price updates

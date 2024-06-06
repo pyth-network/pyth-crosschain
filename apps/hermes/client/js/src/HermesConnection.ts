@@ -1,5 +1,17 @@
-import { EncodingType, PriceFeedMetadata, PriceUpdate } from "./types";
 import EventSource from "eventsource";
+import { components } from "./serverTypes";
+
+// Accessing schema objects
+export type AssetType = components["schemas"]["AssetType"];
+export type BinaryPriceUpdate = components["schemas"]["BinaryPriceUpdate"];
+export type EncodingType = components["schemas"]["EncodingType"];
+export type GetVaaCcipInput = components["schemas"]["GetVaaCcipInput"];
+export type GetVaaCcipResponse = components["schemas"]["GetVaaCcipResponse"];
+export type GetVaaResponse = components["schemas"]["GetVaaResponse"];
+export type ParsedPriceUpdate = components["schemas"]["ParsedPriceUpdate"];
+export type PriceFeedMetadata = components["schemas"]["PriceFeedMetadata"];
+export type PriceIdInput = components["schemas"]["PriceIdInput"];
+export type PriceUpdate = components["schemas"]["PriceUpdate"];
 
 const DEFAULT_TIMEOUT: DurationInMs = 5000;
 const DEFAULT_HTTP_RETRIES = 3;
@@ -42,7 +54,7 @@ export class HermesConnection {
     url: string,
     options?: RequestInit,
     retries = this.httpRetries,
-    backoff = 300
+    backoff = 100 + Math.floor(Math.random() * 100) // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
   ): Promise<ResponseData> {
     const controller = new AbortController();
     const { signal } = controller;
