@@ -487,6 +487,7 @@ interface EntropyProviderInfo {
   sequenceNumber: string;
   currentCommitment: string;
   currentCommitmentSequenceNumber: string;
+  feeManager: string;
 }
 
 interface EntropyRequest {
@@ -499,6 +500,15 @@ interface EntropyRequest {
   useBlockhash: boolean;
   isRequestWithCallback: boolean;
 }
+
+export const ENTROPY_DEFAULT_PROVIDER = {
+  mainnet: "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
+  testnet: "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344",
+};
+export const ENTROPY_DEFAULT_KEEPER = {
+  mainnet: "0xbcab779fca45290288c35f5e231c37f9fa87b130",
+  testnet: "0xa5A68ed167431Afe739846A22597786ba2da85df",
+};
 
 export class EvmEntropyContract extends Storable {
   static type = "EvmEntropyContract";

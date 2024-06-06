@@ -4,6 +4,8 @@ import { EvmChain } from "../src/chains";
 import { DefaultStore } from "../src/store";
 import {
   DeploymentType,
+  ENTROPY_DEFAULT_KEEPER,
+  ENTROPY_DEFAULT_PROVIDER,
   EvmEntropyContract,
   getDefaultDeploymentConfig,
   toDeploymentType,
@@ -24,10 +26,6 @@ interface DeploymentConfig extends BaseDeployConfig {
 }
 
 const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
-const ENTROPY_DEFAULT_PROVIDER = {
-  mainnet: "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
-  testnet: "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344",
-};
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_entropy_contracts.ts")
@@ -125,34 +123,42 @@ async function deployEntropyContracts(
   );
 }
 
-async function topupProviderIfNecessary(
+async function topupAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: DeploymentConfig
 ) {
-  const provider = chain.isMainnet()
-    ? ENTROPY_DEFAULT_PROVIDER.mainnet
-    : ENTROPY_DEFAULT_PROVIDER.testnet;
-  const web3 = new Web3(chain.getRpcUrl());
-  const balance = Number(
-    web3.utils.fromWei(await web3.eth.getBalance(provider), "ether")
-  );
-  const MIN_BALANCE = 0.01;
-  console.log(`Provider balance: ${balance} ETH`);
-  if (balance < MIN_BALANCE) {
-    console.log(
-      `Balance is less than ${MIN_BALANCE}. Topping up the provider address...`
+  for (const [accountName, defaultAddresses] of [
+    ["keeper", ENTROPY_DEFAULT_KEEPER],
+    ["provider", ENTROPY_DEFAULT_PROVIDER],
+  ] as const) {
+    const accountAddress = chain.isMainnet()
+      ? defaultAddresses.mainnet
+      : defaultAddresses.testnet;
+    const web3 = new Web3(chain.getRpcUrl());
+    const balance = Number(
+      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
     );
-    const signer = web3.eth.accounts.privateKeyToAccount(
-      deploymentConfig.privateKey
-    );
-    web3.eth.accounts.wallet.add(signer);
-    const tx = await web3.eth.sendTransaction({
-      from: signer.address,
-      to: provider,
-      gas: 30000,
-      value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
-    });
-    console.log("Topped up the provider address. Tx: ", tx.transactionHash);
+    const MIN_BALANCE = 0.01;
+    console.log(`${accountName} balance: ${balance} ETH`);
+    if (balance < MIN_BALANCE) {
+      console.log(
+        `Balance is less than ${MIN_BALANCE}. Topping up the ${accountName} address...`
+      );
+      const signer = web3.eth.accounts.privateKeyToAccount(
+        deploymentConfig.privateKey
+      );
+      web3.eth.accounts.wallet.add(signer);
+      const tx = await web3.eth.sendTransaction({
+        from: signer.address,
+        to: accountAddress,
+        gas: 30000,
+        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+      });
+      console.log(
+        `Topped up the ${accountName} address. Tx: `,
+        tx.transactionHash
+      );
+    }
   }
 }
 
@@ -182,7 +188,7 @@ async function main() {
     CACHE_FILE
   );
 
-  await topupProviderIfNecessary(chain, deploymentConfig);
+  await topupAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
     `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
