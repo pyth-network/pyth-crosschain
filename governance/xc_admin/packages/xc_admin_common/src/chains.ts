@@ -70,6 +70,8 @@ export const RECEIVER_CHAINS = {
   starknet: 60051,
   taiko_mainnet: 50077,
   sei_evm_mainnet: 50078,
+  opbnb: 60052,
+  gravity: 60053,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -157,6 +159,7 @@ export const RECEIVER_CHAINS = {
   kakarot_sepolia: 50079,
   dela_mithreum_deperp_testnet: 50080,
   berachain_testnet_v2: 50081,
+  opbnb_testnet: 50082,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

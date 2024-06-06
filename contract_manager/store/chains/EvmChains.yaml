@@ -609,3 +609,18 @@
   rpcUrl: https://evm-rpc-bera.rhino-apis.com/
   networkId: 80084
   type: EvmChain
+- id: opbnb
+  mainnet: true
+  rpcUrl: https://opbnb-mainnet-rpc.bnbchain.org
+  networkId: 204
+  type: EvmChain
+- id: opbnb_testnet
+  mainnet: false
+  rpcUrl: https://opbnb-testnet-rpc.bnbchain.org
+  networkId: 5611
+  type: EvmChain
+- id: gravity
+  mainnet: true
+  rpcUrl: https://rpc.gravity.xyz/
+  networkId: 1625
+  type: EvmChain
