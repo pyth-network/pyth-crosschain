@@ -16,9 +16,10 @@ async function main() {
   const argv = await parser.argv;
   const entries = [];
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
-    if (contract instanceof EvmWormholeContract) {
-      if (contract.getChain().isMainnet() === argv.testnet) continue;
-
+    if (
+      contract instanceof EvmWormholeContract &&
+      contract.getChain().isMainnet() !== argv.testnet
+    ) {
       try {
         const index = await contract.getCurrentGuardianSetIndex();
         const chainId = await contract.getChainId();
