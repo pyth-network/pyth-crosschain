@@ -19,6 +19,7 @@ use {
         WormholeMerkleState,
     },
     crate::{
+        api::types::RpcPriceIdentifier,
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,

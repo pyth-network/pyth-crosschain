@@ -4,7 +4,10 @@
 
 use {
     crate::{
-        api::types::PriceFeedMetadata,
+        api::types::{
+            PriceFeedMetadata,
+            RpcPriceIdentifier,
+        },
         config::RunOptions,
         network::wormhole::{
             BridgeData,
@@ -30,7 +33,6 @@ use {
     },
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
-    pyth_sdk::PriceIdentifier,
     pyth_sdk_solana::state::{
         load_mapping_account,
         load_product_account,
