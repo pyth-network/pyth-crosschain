@@ -26,7 +26,7 @@ mod pyth {
         parse_wormhole_proof
     };
     use pyth::reader::{Reader, ReaderImpl};
-    use pyth::byte_array::{ByteArray, ByteArrayImpl};
+    use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
     use core::panic_with_felt252;
     use core::starknet::{
         ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
@@ -260,11 +260,11 @@ mod pyth {
             info.publish_time
         }
 
-        fn update_price_feeds(ref self: ContractState, data: ByteArray) {
+        fn update_price_feeds(ref self: ContractState, data: ByteBuffer) {
             self.update_price_feeds_internal(data, array![], 0, 0, false);
         }
 
-        fn get_update_fee(self: @ContractState, data: ByteArray, token: ContractAddress) -> u256 {
+        fn get_update_fee(self: @ContractState, data: ByteBuffer, token: ContractAddress) -> u256 {
             let single_update_fee = if token == self.fee_token_address1.read() {
                 self.single_update_fee1.read()
             } else if token == self.fee_token_address2.read() {
@@ -283,7 +283,7 @@ mod pyth {
 
         fn update_price_feeds_if_necessary(
             ref self: ContractState,
-            update: ByteArray,
+            update: ByteBuffer,
             required_publish_times: Array<PriceFeedPublishTime>
         ) {
             let mut i = 0;
@@ -305,7 +305,7 @@ mod pyth {
 
         fn parse_price_feed_updates(
             ref self: ContractState,
-            data: ByteArray,
+            data: ByteBuffer,
             price_ids: Array<u256>,
             min_publish_time: u64,
             max_publish_time: u64
@@ -318,7 +318,7 @@ mod pyth {
 
         fn parse_unique_price_feed_updates(
             ref self: ContractState,
-            data: ByteArray,
+            data: ByteBuffer,
             price_ids: Array<u256>,
             publish_time: u64,
             max_staleness: u64,
@@ -383,7 +383,7 @@ mod pyth {
             wormhole.chain_id()
         }
 
-        fn execute_governance_instruction(ref self: ContractState, data: ByteArray) {
+        fn execute_governance_instruction(ref self: ContractState, data: ByteBuffer) {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(data.clone());
             self.verify_governance_vm(@vm);
@@ -510,7 +510,7 @@ mod pyth {
         }
 
         fn check_new_wormhole(
-            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteArray
+            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteBuffer
         ) {
             let wormhole = IWormholeDispatcher { contract_address: wormhole_address };
             let vm = wormhole.parse_and_verify_vm(vm);
@@ -545,7 +545,7 @@ mod pyth {
             }
         }
 
-        fn authorize_governance_transfer(ref self: ContractState, claim_vaa: ByteArray) {
+        fn authorize_governance_transfer(ref self: ContractState, claim_vaa: ByteBuffer) {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let claim_vm = wormhole.parse_and_verify_vm(claim_vaa.clone());
             // Note: no verify_governance_vm() because claim_vaa is signed by the new data source
@@ -604,7 +604,7 @@ mod pyth {
         // for any of the specified feeds.
         fn update_price_feeds_internal(
             ref self: ContractState,
-            data: ByteArray,
+            data: ByteBuffer,
             price_ids: Array<u256>,
             min_publish_time: u64,
             max_publish_time: u64,

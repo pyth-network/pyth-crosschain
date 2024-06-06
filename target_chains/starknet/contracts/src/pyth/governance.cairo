@@ -1,7 +1,7 @@
 use pyth::reader::ReaderTrait;
 use core::array::ArrayTrait;
 use pyth::reader::{Reader, ReaderImpl};
-use pyth::byte_array::ByteArray;
+use pyth::byte_buffer::ByteBuffer;
 use pyth::pyth::errors::GovernanceActionError;
 use core::panic_with_felt252;
 use core::starknet::{ContractAddress, ClassHash};
@@ -82,7 +82,7 @@ pub struct AuthorizeGovernanceDataSourceTransfer {
     // Transfer governance control over this contract to another data source.
     // The claim_vaa field is a VAA created by the new data source; using a VAA prevents mistakes
     // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
-    pub claim_vaa: ByteArray,
+    pub claim_vaa: ByteBuffer,
 }
 
 #[derive(Drop, Debug)]
@@ -94,7 +94,7 @@ pub struct UpgradeContract {
     pub new_implementation: ClassHash,
 }
 
-pub fn parse_instruction(payload: ByteArray) -> GovernanceInstruction {
+pub fn parse_instruction(payload: ByteBuffer) -> GovernanceInstruction {
     let mut reader = ReaderImpl::new(payload);
     let magic = reader.read_u32();
     if magic != MAGIC {

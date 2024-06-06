@@ -4,7 +4,7 @@ use core::keccak::cairo_keccak;
 use core::integer::u128_byte_reverse;
 use core::fmt::{Debug, Formatter};
 use pyth::util::{UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u128};
-use super::byte_array::{ByteArray, ByteArrayImpl};
+use super::byte_buffer::{ByteBuffer, ByteBufferImpl};
 
 #[derive(Copy, Drop, Debug, Serde, PartialEq)]
 pub enum Error {
@@ -25,7 +25,7 @@ impl ErrorIntoFelt252 of Into<Error, felt252> {
 #[derive(Drop, Clone)]
 pub struct Reader {
     // Input array.
-    array: ByteArray,
+    array: ByteBuffer,
     // Current value to read from (in big endian).
     current: u128,
     // Number of remaining bytes in `self.current`.
@@ -37,7 +37,7 @@ pub struct Reader {
 
 #[generate_trait]
 pub impl ReaderImpl of ReaderTrait {
-    fn new(array: ByteArray) -> Reader {
+    fn new(array: ByteBuffer) -> Reader {
         Reader { array, current: 0, num_current_bytes: 0, next: Option::None }
     }
 
@@ -100,7 +100,7 @@ pub impl ReaderImpl of ReaderTrait {
     }
 
     /// Reads the specified number of bytes as a new byte array.
-    fn read_byte_array(ref self: Reader, num_bytes: usize) -> ByteArray {
+    fn read_byte_array(ref self: Reader, num_bytes: usize) -> ByteBuffer {
         let mut array: Array<felt252> = array![];
         let mut num_last_bytes = 0;
         let mut num_remaining_bytes = num_bytes;
@@ -114,7 +114,7 @@ pub impl ReaderImpl of ReaderTrait {
         };
         // num_last_bytes < 31
         let num_last_bytes = num_last_bytes.try_into().expect(UNEXPECTED_OVERFLOW);
-        ByteArrayImpl::new(array, num_last_bytes)
+        ByteBufferImpl::new(array, num_last_bytes)
     }
 
     /// Returns number of remaining bytes to read.

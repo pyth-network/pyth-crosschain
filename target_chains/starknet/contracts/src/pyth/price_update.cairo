@@ -1,7 +1,7 @@
 use pyth::reader::{Reader, ReaderImpl};
 use pyth::pyth::{UpdatePriceFeedsError, PriceFeed, Price};
 use core::panic_with_felt252;
-use pyth::byte_array::ByteArray;
+use pyth::byte_buffer::ByteBuffer;
 use pyth::merkle_tree::read_and_verify_proof;
 use pyth::util::{u32_as_i32, u64_as_i64};
 
@@ -88,7 +88,7 @@ pub fn read_and_verify_header(ref reader: Reader) {
     }
 }
 
-pub fn parse_wormhole_proof(payload: ByteArray) -> u256 {
+pub fn parse_wormhole_proof(payload: ByteBuffer) -> u256 {
     let mut reader = ReaderImpl::new(payload);
     if reader.read_u32() != ACCUMULATOR_WORMHOLE_MAGIC {
         panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());

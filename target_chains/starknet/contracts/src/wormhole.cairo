@@ -25,7 +25,7 @@ mod wormhole {
     use super::governance;
     use super::parse_vm::parse_vm;
     use pyth::reader::{Reader, ReaderImpl};
-    use pyth::byte_array::ByteArray;
+    use pyth::byte_buffer::ByteBuffer;
     use core::starknet::{get_block_timestamp, EthAddress};
     use core::starknet::eth_signature::is_eth_signature_valid;
     use core::panic_with_felt252;
@@ -98,7 +98,7 @@ mod wormhole {
 
     #[abi(embed_v0)]
     impl WormholeImpl of IWormhole<ContractState> {
-        fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteArray) -> VerifiedVM {
+        fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteBuffer) -> VerifiedVM {
             let vm = parse_vm(encoded_vm);
             let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
             if guardian_set.num_guardians == 0 {
@@ -182,7 +182,7 @@ mod wormhole {
             self.governance_contract.read()
         }
 
-        fn submit_new_guardian_set(ref self: ContractState, encoded_vm: ByteArray) {
+        fn submit_new_guardian_set(ref self: ContractState, encoded_vm: ByteBuffer) {
             let vm = self.parse_and_verify_vm(encoded_vm);
             self.verify_governance_vm(@vm);
             let mut reader = ReaderImpl::new(vm.payload);

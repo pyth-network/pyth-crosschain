@@ -2,7 +2,7 @@ use pyth::reader::{Reader, ReaderImpl};
 use pyth::hash::{Hasher, HasherImpl};
 use super::{VerifiedVM, GuardianSignature, ParseAndVerifyVmError};
 use core::starknet::secp256_trait::Signature;
-use pyth::byte_array::ByteArray;
+use pyth::byte_buffer::ByteBuffer;
 use core::panic_with_felt252;
 
 /// Parses information about a guardian signature within a Wormhole message.
@@ -18,7 +18,7 @@ fn parse_signature(ref reader: Reader) -> GuardianSignature {
 
 /// Parses a Wormhole message.
 /// `ParseAndVerifyVmError` enumerates possible panic payloads.
-pub fn parse_vm(encoded_vm: ByteArray) -> VerifiedVM {
+pub fn parse_vm(encoded_vm: ByteBuffer) -> VerifiedVM {
     let mut reader = ReaderImpl::new(encoded_vm);
     let version = reader.read_u8();
     if version != 1 {

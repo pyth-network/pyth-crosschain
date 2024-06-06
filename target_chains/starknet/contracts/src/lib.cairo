@@ -1,12 +1,12 @@
 pub mod pyth;
 pub mod wormhole;
-pub mod byte_array;
+pub mod byte_buffer;
 pub mod reader;
 pub mod hash;
 pub mod util;
 pub mod merkle_tree;
 
-pub use byte_array::{ByteArray, ByteArrayTrait};
+pub use byte_buffer::{ByteBuffer, ByteBufferTrait};
 pub use pyth::{
     Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
     DataSourcesSet, FeeSet, GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError,

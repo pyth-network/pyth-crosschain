@@ -10,7 +10,7 @@ use wormhole_vaas::{PayloadKind, VaaBody};
 
 fn main() {
     println!("// Generated with generate_test_data.rs, do not edit\n");
-    println!("use pyth::byte_array::{{ByteArray, ByteArrayImpl}};");
+    println!("use pyth::byte_buffer::{{ByteBuffer, ByteBufferImpl}};");
     println!("use pyth::util::array_try_into;");
 
     // A random update pulled from Hermes.

@@ -11,7 +11,7 @@ pub trait IFakePyth<T> {
 #[starknet::contract]
 mod pyth_fake_upgrade1 {
     use pyth::pyth::{GetPriceUnsafeError, DataSource, Price};
-    use pyth::byte_array::ByteArray;
+    use pyth::byte_buffer::ByteBuffer;
 
     #[storage]
     struct Storage {}
@@ -36,7 +36,7 @@ mod pyth_fake_upgrade1 {
 #[starknet::contract]
 mod pyth_fake_upgrade_wrong_magic {
     use pyth::pyth::{GetPriceUnsafeError, DataSource, Price};
-    use pyth::byte_array::ByteArray;
+    use pyth::byte_buffer::ByteBuffer;
 
     #[storage]
     struct Storage {}

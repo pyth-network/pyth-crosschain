@@ -1,10 +1,10 @@
 // Generated with generate_test_data.rs, do not edit
 
-use pyth::byte_array::{ByteArray, ByteArrayImpl};
+use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
 use pyth::util::array_try_into;
 
 // A random update pulled from Hermes.
-pub fn good_update1() -> ByteArray {
+pub fn good_update1() -> ByteBuffer {
     let bytes = array![
         141887862745809943100717722154781668316147089807066324001213790862261653767,
         451230040559159019530944948086670994623010697390864133264612902902585665886,
@@ -48,11 +48,11 @@ pub fn good_update1() -> ByteArray {
         226866843267230707879834616967256711063296411939069440476882347301771901839,
         95752383404870925303422787,
     ];
-    ByteArrayImpl::new(bytes, 11)
+    ByteBufferImpl::new(bytes, 11)
 }
 
 // A wormhole VAA from a random update pulled from Hermes.
-pub fn good_vm1() -> ByteArray {
+pub fn good_vm1() -> ByteBuffer {
     let bytes = array![
         1766847066033410293701000231337210964058791470455465385734308943533652138,
         250126301534699068413432844632573953364878937343368310395142095034982913232,
@@ -86,11 +86,11 @@ pub fn good_vm1() -> ByteArray {
         52685537088250779930155363779405986390839624071318818148325576008719597568,
         14615204155786886573933667335033405822686404253588533,
     ];
-    ByteArrayImpl::new(bytes, 22)
+    ByteBufferImpl::new(bytes, 22)
 }
 
 // A first update for a certain timestamp pulled from Hermes.
-pub fn unique_update1() -> ByteArray {
+pub fn unique_update1() -> ByteBuffer {
     let bytes = array![
         141887862745809943100717722154781668656425228150258363002663887732857548075,
         399793171101922163607717906910020156439802651815166374105600343045575931912,
@@ -134,11 +134,11 @@ pub fn unique_update1() -> ByteArray {
         28583007876111384456149499846085318299326698960792831530075402396150538907,
         126290914008245563820443505,
     ];
-    ByteArrayImpl::new(bytes, 11)
+    ByteBufferImpl::new(bytes, 11)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
-pub fn mainnet_guardian_set_upgrade1() -> ByteArray {
+pub fn mainnet_guardian_set_upgrade1() -> ByteBuffer {
     let bytes = array![
         1766847064779994277746302277072294871108550301449637470263976489521154979,
         374953657095152923031303770743522269007103499920836805761143506434463979495,
@@ -159,11 +159,11 @@ pub fn mainnet_guardian_set_upgrade1() -> ByteArray {
         55852237138651071644815135002358067220635692701051811455610533875912981641,
         190413173566657072516608762222993749133,
     ];
-    ByteArrayImpl::new(bytes, 16)
+    ByteBufferImpl::new(bytes, 16)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
-pub fn mainnet_guardian_set_upgrade2() -> ByteArray {
+pub fn mainnet_guardian_set_upgrade2() -> ByteBuffer {
     let bytes = array![
         1766847065210651126944505525521222069599854288126726949998063840465138797,
         39054013088470866893599813322035661048501117089555726788687392536164861911,
@@ -210,11 +210,11 @@ pub fn mainnet_guardian_set_upgrade2() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(bytes, 2)
+    ByteBufferImpl::new(bytes, 2)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
-pub fn mainnet_guardian_set_upgrade3() -> ByteArray {
+pub fn mainnet_guardian_set_upgrade3() -> ByteBuffer {
     let bytes = array![
         1766847065622031860560134801367788401015571316785630090767859240961980367,
         408239335069601434456324970231880063141100099721451058487412176729277688481,
@@ -261,11 +261,11 @@ pub fn mainnet_guardian_set_upgrade3() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(bytes, 2)
+    ByteBufferImpl::new(bytes, 2)
 }
 
 // An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
-pub fn mainnet_guardian_set_upgrade4() -> ByteArray {
+pub fn mainnet_guardian_set_upgrade4() -> ByteBuffer {
     let bytes = array![
         1766847066033426987337757245669159273063358729535478806850006662056807068,
         191023158244075433218055661747029015323596061316379687901032561397223546211,
@@ -312,14 +312,14 @@ pub fn mainnet_guardian_set_upgrade4() -> ByteArray {
         75218391584551901010047495874303520775865073092730040058902770251005073864,
         13453,
     ];
-    ByteArrayImpl::new(bytes, 2)
+    ByteBufferImpl::new(bytes, 2)
 }
 
 pub const TEST_GUARDIAN_ADDRESS1: felt252 = 0x686b9ea8e3237110eaaba1f1b7467559a3273819;
 pub const TEST_GUARDIAN_ADDRESS2: felt252 = 0x363598f080a817e633fc2d8f2b92e6e637f8b449;
 
 // An invalid wormhole guardian set upgrade instruction containing no new guardians.
-pub fn empty_set_upgrade() -> ByteArray {
+pub fn empty_set_upgrade() -> ByteBuffer {
     let bytes = array![
         1766847064779992178996580835909277664613661950847933439396875833330622292,
         364268459763994160238907315760635322263304542127720162879870384990884673431,
@@ -328,11 +328,11 @@ pub fn empty_set_upgrade() -> ByteArray {
         1131377253,
         210141960835432704,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // A wormhole guardian set upgrade instruction with emitter not expected by the test.
-pub fn wrong_emitter_upgrade() -> ByteArray {
+pub fn wrong_emitter_upgrade() -> ByteBuffer {
     let bytes = array![
         1766847064779994286935846877901139612104608837038764127758248269325228906,
         418887508807350452965708560347030276949211978189626151402664101079839557558,
@@ -341,11 +341,11 @@ pub fn wrong_emitter_upgrade() -> ByteArray {
         1131377253,
         307122819832911374634462256129025725147663742791077927773782095897,
     ];
-    ByteArrayImpl::new(bytes, 28)
+    ByteBufferImpl::new(bytes, 28)
 }
 
 // A wormhole guardian set upgrade instruction with set index = 3 not expected by the test.
-pub fn wrong_index_upgrade() -> ByteArray {
+pub fn wrong_index_upgrade() -> ByteBuffer {
     let bytes = array![
         1766847064779996028795173168119917022867471281757617479529431178557452389,
         193283302630366040376283958080462867566389017166937293916301423178932756308,
@@ -354,11 +354,11 @@ pub fn wrong_index_upgrade() -> ByteArray {
         1131377253,
         210624583337115497886730203944140689990237281548333499058561169433,
     ];
-    ByteArrayImpl::new(bytes, 28)
+    ByteBufferImpl::new(bytes, 28)
 }
 
 // A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test guardian #2 as the new guardian set.
-pub fn upgrade_to_test2() -> ByteArray {
+pub fn upgrade_to_test2() -> ByteBuffer {
     let bytes = array![
         1766847064779995287375101177319600239435018729139341591012343354326614060,
         152103705464783935682610402914146418697934830197930803919710856925871578605,
@@ -367,11 +367,11 @@ pub fn upgrade_to_test2() -> ByteArray {
         1131377253,
         210624583337114749311237613435643962969294824395451022190048752713,
     ];
-    ByteArrayImpl::new(bytes, 28)
+    ByteBufferImpl::new(bytes, 28)
 }
 
 // A Pyth governance instruction to set fee signed by the test guardian #1.
-pub fn pyth_set_fee() -> ByteArray {
+pub fn pyth_set_fee() -> ByteBuffer {
     let bytes = array![
         1766847064779993955862540543984267022910717161432209540262366788014689913,
         322968519187498395396360816568387642032723484530650782503164941848016432477,
@@ -379,11 +379,11 @@ pub fn pyth_set_fee() -> ByteArray {
         49565958604199796163020368,
         8072278384728444780182694421117884443886221966887092226,
     ];
-    ByteArrayImpl::new(bytes, 23)
+    ByteBufferImpl::new(bytes, 23)
 }
 
 // A Pyth governance instruction to set data sources signed by the test guardian #1.
-pub fn pyth_set_data_sources() -> ByteArray {
+pub fn pyth_set_data_sources() -> ByteBuffer {
     let bytes = array![
         1766847064779993795984967344618836356750759980724568847727566676204733945,
         319252252405206634291073190903653114488682078063415369176250618646860635118,
@@ -393,11 +393,11 @@ pub fn pyth_set_data_sources() -> ByteArray {
         223938022913800988696085410923418445187967252047785407181969631814277398528,
         301,
     ];
-    ByteArrayImpl::new(bytes, 14)
+    ByteBufferImpl::new(bytes, 14)
 }
 
 // A Pyth governance instruction to set wormhole address signed by the test guardian #1.
-pub fn pyth_set_wormhole() -> ByteArray {
+pub fn pyth_set_wormhole() -> ByteBuffer {
     let bytes = array![
         1766847064779993746734475762358060494055703996306832791834621971457521573,
         304597972750688370688620483915336485865968448355388067310514768529150663948,
@@ -406,11 +406,11 @@ pub fn pyth_set_wormhole() -> ByteArray {
         148907253456057279176930315687485033494639386197985334929728922792833758561,
         3789456330195130818,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to request governance data source transfer signed by the test guardian #1.
-pub fn pyth_request_transfer() -> ByteArray {
+pub fn pyth_request_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779995673162446580588349917525470038054832932592992288867429640,
         324153743158695484170440096219469152425935271630646363385677281984034639103,
@@ -418,11 +418,11 @@ pub fn pyth_request_transfer() -> ByteArray {
         51983810243429054512432720,
         101886477340929157123538945,
     ];
-    ByteArrayImpl::new(bytes, 11)
+    ByteBufferImpl::new(bytes, 11)
 }
 
 // A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.
-pub fn pyth_auth_transfer() -> ByteArray {
+pub fn pyth_auth_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779996877169354131457289870145133774197236214231189828595607612,
         135397929264511926704016137904543076941936590450380629211164830069940259166,
@@ -434,11 +434,11 @@ pub fn pyth_auth_transfer() -> ByteArray {
         721420288,
         20782639266000304984163621011457,
     ];
-    ByteArrayImpl::new(bytes, 18)
+    ByteBufferImpl::new(bytes, 18)
 }
 
 // A Pyth governance instruction to set fee with alternative emitter signed by the test guardian #1.
-pub fn pyth_set_fee_alt_emitter() -> ByteArray {
+pub fn pyth_set_fee_alt_emitter() -> ByteBuffer {
     let bytes = array![
         1766847064779994296698028907175740560793090837330420619723848454331748383,
         249896185465136242775777270873107292725618014836270803491051657047070145541,
@@ -446,11 +446,11 @@ pub fn pyth_set_fee_alt_emitter() -> ByteArray {
         51983810243429054512498256,
         8072278384728444780182694421117884443886221966887092226,
     ];
-    ByteArrayImpl::new(bytes, 23)
+    ByteBufferImpl::new(bytes, 23)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
-pub fn pyth_upgrade_fake1() -> ByteArray {
+pub fn pyth_upgrade_fake1() -> ByteBuffer {
     let bytes = array![
         1766847064779994791169214817472264547450542145364282319310439743685771618,
         175385590228001769706203572954671062839210335359545531991708252078677402742,
@@ -459,11 +459,11 @@ pub fn pyth_upgrade_fake1() -> ByteArray {
         148907253453589022320407306335457538262203456299261498528172020674942501293,
         9624434269354675143,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
-pub fn pyth_upgrade_not_pyth() -> ByteArray {
+pub fn pyth_upgrade_not_pyth() -> ByteBuffer {
     let bytes = array![
         1766847064779994185568390976518139178339359117743780499979078006447412818,
         312550937452923367391560946919832045570249370029901542796468563830775031789,
@@ -472,11 +472,11 @@ pub fn pyth_upgrade_not_pyth() -> ByteArray {
         148907253453589022305803196061110108233921773465491227564264876752079119569,
         6736708290019375278,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
-pub fn pyth_upgrade_wrong_magic() -> ByteArray {
+pub fn pyth_upgrade_wrong_magic() -> ByteBuffer {
     let bytes = array![
         1766847064779993581380818181711092803131812037068363180730038764700119064,
         43179698701133869693008541869474965453366967663087320291846878688486859828,
@@ -485,11 +485,11 @@ pub fn pyth_upgrade_wrong_magic() -> ByteArray {
         148907253453589022340563264373887392414227070562033595690783947835630084766,
         5698494087895763928,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
-pub fn pyth_upgrade_invalid_hash() -> ByteArray {
+pub fn pyth_upgrade_invalid_hash() -> ByteBuffer {
     let bytes = array![
         1766847064779994789591381079184882258862460741769249190705097785479185254,
         41574146205389297059177705721481778703981276127215462116602633512315608382,
@@ -498,11 +498,11 @@ pub fn pyth_upgrade_invalid_hash() -> ByteArray {
         148907253453589022218037939353255655322518022029545083499057126097303896064,
         505,
     ];
-    ByteArrayImpl::new(bytes, 8)
+    ByteBufferImpl::new(bytes, 8)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1.
-pub fn test_price_update1() -> ByteArray {
+pub fn test_price_update1() -> ByteBuffer {
     let bytes = array![
         141887862745809943100421399774809552050876420277163116849842965275903806689,
         210740906737592158039211995620336526131859667363627655742687286503264782608,
@@ -520,11 +520,11 @@ pub fn test_price_update1() -> ByteArray {
         87135893730137265929093180553063146337041045646221968026289709394440932141,
         245333243912241114598596888050489286502591033459250287888834,
     ];
-    ByteArrayImpl::new(bytes, 25)
+    ByteBufferImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1.
-pub fn test_price_update2() -> ByteArray {
+pub fn test_price_update2() -> ByteBuffer {
     let bytes = array![
         141887862745809943100421399774809552050874823427618844548942380383465221086,
         106893583704677921907497845070624642590618427233243792006390965895909696183,
@@ -542,11 +542,11 @@ pub fn test_price_update2() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(bytes, 25)
+    ByteBufferImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #1 with another emitter address.
-pub fn test_update2_alt_emitter() -> ByteArray {
+pub fn test_update2_alt_emitter() -> ByteBuffer {
     let bytes = array![
         141887862745809943100421399774809552050876183715022494587482285730295850458,
         359963320496358929787450247990998878269668655936959553372924597144593948268,
@@ -564,11 +564,11 @@ pub fn test_update2_alt_emitter() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(bytes, 25)
+    ByteBufferImpl::new(bytes, 25)
 }
 
 // An update pulled from Hermes and re-signed by the test guardian #2.
-pub fn test_update2_set2() -> ByteArray {
+pub fn test_update2_set2() -> ByteBuffer {
     let bytes = array![
         141887862745809943100421399774809552391157901121219476151849805356757998433,
         22927445661989480418689320204846867835510434886542566099417398893061382455,
@@ -586,5 +586,5 @@ pub fn test_update2_set2() -> ByteArray {
         370855179649505412564259994413632062925303311800103998016489412083011059699,
         1182295126766215829784496273374889928477877265080355104888778,
     ];
-    ByteArrayImpl::new(bytes, 25)
+    ByteBufferImpl::new(bytes, 25)
 }
