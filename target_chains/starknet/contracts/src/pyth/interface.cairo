@@ -1,5 +1,6 @@
 use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
 use pyth::byte_array::ByteArray;
+use pyth::wormhole::VerifiedVM;
 use core::starknet::ContractAddress;
 
 #[starknet::interface]
@@ -54,6 +55,18 @@ pub trait IPyth<T> {
 pub struct DataSource {
     pub emitter_chain_id: u16,
     pub emitter_address: u256,
+}
+
+pub trait GetDataSource<T> {
+    fn data_source(self: @T) -> DataSource;
+}
+
+impl GetDataSourceFromVerifiedVM of GetDataSource<VerifiedVM> {
+    fn data_source(self: @VerifiedVM) -> DataSource {
+        DataSource {
+            emitter_chain_id: *self.emitter_chain_id, emitter_address: *self.emitter_address
+        }
+    }
 }
 
 #[derive(Drop, Copy, PartialEq, Serde)]

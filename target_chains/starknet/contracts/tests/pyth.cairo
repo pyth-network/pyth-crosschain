@@ -1120,10 +1120,7 @@ fn deploy_pyth(
     let contract = declare("pyth");
     let contract_address = match contract.deploy(@args) {
         Result::Ok(v) => { v },
-        Result::Err(err) => {
-            panic(err.panic_data);
-            0.try_into().unwrap()
-        },
+        Result::Err(err) => { panic(err.panic_data) },
     };
     IPythDispatcher { contract_address }
 }
@@ -1135,10 +1132,7 @@ fn deploy_fee_contract(class: ContractClass, recipient: ContractAddress) -> IERC
     (name, symbol, 100000_u256, recipient).serialize(ref args);
     let contract_address = match class.deploy(@args) {
         Result::Ok(v) => { v },
-        Result::Err(err) => {
-            panic(err.panic_data);
-            0.try_into().unwrap()
-        },
+        Result::Err(err) => { panic(err.panic_data) },
     };
     IERC20CamelDispatcher { contract_address }
 }
