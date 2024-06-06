@@ -18,6 +18,6 @@ jobs:
       - name: Install deps
         run: npm ci
       - name: Generate API Types
-        run: npx lerna run generate-api-types
+        run: npx lerna run generate-hermes-api-types
       - name: Check API Types
-        run: npx lerna run check-api-types
+        run: npx lerna run check-hermes-api-types
