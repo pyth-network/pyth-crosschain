@@ -14,7 +14,8 @@ pub use errors::{
     UpdatePriceFeedsIfNecessaryError, ParsePriceFeedsError, GetSingleUpdateFeeError,
 };
 pub use interface::{
-    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, Price, PriceFeedPublishTime, PriceFeed
+    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, GetDataSource, Price,
+    PriceFeedPublishTime, PriceFeed
 };
 
 #[starknet::contract]
@@ -34,9 +35,10 @@ mod pyth {
     use core::starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
-        DataSource, UpdatePriceFeedsError, GovernanceActionError, Price, GetPriceUnsafeError,
-        IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime, GetPriceNoOlderThanError,
-        UpdatePriceFeedsIfNecessaryError, PriceFeed, ParsePriceFeedsError, GetSingleUpdateFeeError,
+        DataSource, GetDataSource, UpdatePriceFeedsError, GovernanceActionError, Price,
+        GetPriceUnsafeError, IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime,
+        GetPriceNoOlderThanError, UpdatePriceFeedsIfNecessaryError, PriceFeed, ParsePriceFeedsError,
+        GetSingleUpdateFeeError,
     };
     use super::governance;
     use super::governance::GovernancePayload;
@@ -547,7 +549,7 @@ mod pyth {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let claim_vm = wormhole.parse_and_verify_vm(claim_vaa.clone());
             // Note: no verify_governance_vm() because claim_vaa is signed by the new data source
-            let instruction = governance::parse_instruction(claim_vm.payload);
+            let instruction = governance::parse_instruction(claim_vm.payload.clone());
             if instruction.target_chain_id != 0
                 && instruction.target_chain_id != wormhole.chain_id() {
                 panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
@@ -565,10 +567,7 @@ mod pyth {
             }
             self.governance_data_source_index.write(request_payload.governance_data_source_index);
             let old_data_source = self.governance_data_source.read();
-            let new_data_source = DataSource {
-                emitter_chain_id: claim_vm.emitter_chain_id,
-                emitter_address: claim_vm.emitter_address,
-            };
+            let new_data_source = claim_vm.data_source();
             self.governance_data_source.write(new_data_source);
             // Setting the last executed governance to the claimVaa sequence to avoid
             // using older sequences.
@@ -620,10 +619,7 @@ mod pyth {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(wormhole_proof);
 
-            let source = DataSource {
-                emitter_chain_id: vm.emitter_chain_id, emitter_address: vm.emitter_address
-            };
-            if !self.is_valid_data_source.read(source) {
+            if !self.is_valid_data_source.read(vm.data_source()) {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateDataSource.into());
             }
 

@@ -261,10 +261,7 @@ pub fn deploy_declared_at(
     };
     let contract_address = match result {
         Result::Ok(v) => { v },
-        Result::Err(err) => {
-            panic(err.panic_data);
-            0.try_into().unwrap()
-        },
+        Result::Err(err) => { panic(err.panic_data) },
     };
     IWormholeDispatcher { contract_address }
 }
