@@ -46,17 +46,18 @@ export class HermesConnection {
    */
   constructor(endpoint: string, config?: HermesConnectionConfig) {
     this.baseURL = endpoint;
-    this.timeout = config?.timeout || DEFAULT_TIMEOUT;
-    this.httpRetries = config?.httpRetries || DEFAULT_HTTP_RETRIES;
+    this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
+    this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
   }
 
   private async httpRequest<ResponseData>(
     url: string,
     options?: RequestInit,
     retries = this.httpRetries,
-    backoff = 100 + Math.floor(Math.random() * 100) // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
+    backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
+    externalAbortController?: AbortController
   ): Promise<ResponseData> {
-    const controller = new AbortController();
+    const controller = externalAbortController || new AbortController();
     const { signal } = controller;
     options = { ...options, signal }; // Merge any existing options with the signal
 
@@ -103,7 +104,7 @@ export class HermesConnection {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const url = new URL(`${this.baseURL}/v2/price_feeds`);
+    const url = new URL("/v2/price_feeds", this.baseURL);
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
