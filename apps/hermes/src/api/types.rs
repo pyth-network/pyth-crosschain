@@ -327,7 +327,7 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceFeedMetadata {
-    pub id:         PriceIdentifier,
+    pub id:         RpcPriceIdentifier,
     // BTreeMap is used to automatically sort the keys to ensure consistent ordering of attributes in the JSON response.
     // This enhances user experience by providing a predictable structure, avoiding confusion from varying orders in different responses.
     pub attributes: BTreeMap<String, String>,
