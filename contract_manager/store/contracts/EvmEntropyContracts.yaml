@@ -70,3 +70,12 @@
 - chain: sei_evm_mainnet
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
+- chain: merlin
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+  type: EvmEntropyContract
+- chain: taiko_mainnet
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmEntropyContract
+- chain: merlin_testnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
