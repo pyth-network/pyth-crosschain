@@ -3,6 +3,7 @@
  * Do not make direct changes to the file.
  */
 
+
 export interface paths {
   "/api/get_price_feed": {
     /**
@@ -203,7 +204,7 @@ export interface components {
        * Format: int64
        * @description When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
        * seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
-       * @example 1714670211
+       * @example 1714670176
        */
       publish_time: number;
     };
@@ -226,12 +227,12 @@ export interface components {
       emitter_chain: number;
       /**
        * Format: int64
-       * @example 1714670211
+       * @example 1714670176
        */
       prev_publish_time?: number | null;
       /**
        * Format: int64
-       * @example 1714670211
+       * @example 1714670176
        */
       price_service_receive_time?: number | null;
       /**
@@ -243,12 +244,12 @@ export interface components {
     RpcPriceFeedMetadataV2: {
       /**
        * Format: int64
-       * @example 1714670211
+       * @example 1714670176
        */
       prev_publish_time?: number | null;
       /**
        * Format: int64
-       * @example 1714670211
+       * @example 1714670176
        */
       proof_available_time?: number | null;
       /**
@@ -272,6 +273,7 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
+
   /**
    * **Deprecated: use /v2/updates/price/{publish_time} instead**
    * @deprecated
@@ -289,7 +291,7 @@ export interface operations {
         /**
          * @description The unix timestamp in seconds. This endpoint will return the first update whose
          * publish_time is >= the provided value.
-         * @example 1714670211
+         * @example 1714670176
          */
         publish_time: number;
         /**
@@ -623,7 +625,7 @@ export interface operations {
         /**
          * @description The unix timestamp in seconds. This endpoint will return the first update whose
          * publish_time is >= the provided value.
-         * @example 1714670211
+         * @example 1714670176
          */
         publish_time: number;
       };
