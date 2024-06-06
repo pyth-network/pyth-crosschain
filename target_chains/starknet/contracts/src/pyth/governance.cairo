@@ -10,7 +10,7 @@ use super::DataSource;
 const MAGIC: u32 = 0x5054474d;
 const MODULE_TARGET: u8 = 1;
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum GovernanceAction {
     UpgradeContract,
     AuthorizeGovernanceDataSourceTransfer,
@@ -37,13 +37,13 @@ impl U8TryIntoGovernanceAction of TryInto<u8, GovernanceAction> {
     }
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct GovernanceInstruction {
     pub target_chain_id: u16,
     pub payload: GovernancePayload,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub enum GovernancePayload {
     UpgradeContract: UpgradeContract,
     AuthorizeGovernanceDataSourceTransfer: AuthorizeGovernanceDataSourceTransfer,
@@ -54,30 +54,30 @@ pub enum GovernancePayload {
     SetWormholeAddress: SetWormholeAddress,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct SetFee {
     pub value: u64,
     pub expo: u64,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct SetDataSources {
     pub sources: Array<DataSource>,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct SetWormholeAddress {
     pub address: ContractAddress,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct RequestGovernanceDataSourceTransfer {
     // Index is used to prevent replay attacks
     // So a claimVaa cannot be used twice.
     pub governance_data_source_index: u32,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct AuthorizeGovernanceDataSourceTransfer {
     // Transfer governance control over this contract to another data source.
     // The claim_vaa field is a VAA created by the new data source; using a VAA prevents mistakes
@@ -85,7 +85,7 @@ pub struct AuthorizeGovernanceDataSourceTransfer {
     pub claim_vaa: ByteBuffer,
 }
 
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct UpgradeContract {
     // Class hash of the new contract class. The contract class must already be deployed on the network
     // (e.g. with `starkli declare`). Class hash is a Poseidon hash of all properties

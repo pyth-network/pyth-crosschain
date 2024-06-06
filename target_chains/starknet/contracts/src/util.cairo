@@ -3,6 +3,7 @@ mod exp10_;
 pub use exp10_::exp10;
 
 use core::integer::u128_byte_reverse;
+use core::fmt::Formatter;
 
 pub const ONE_SHIFT_160: u256 = 0x10000000000000000000000000000000000000000;
 pub const ONE_SHIFT_96: u256 = 0x1000000000000000000000000;
@@ -52,7 +53,6 @@ pub fn one_shift_left_bytes_u256(n_bytes: u8) -> u256 {
         _ => core::panic_with_felt252('n_bytes too big'),
     }
 }
-
 
 // Returns 1 << (8 * `n_bytes`) as u128.
 //
@@ -109,7 +109,7 @@ pub trait UnwrapWithFelt252<T, E> {
     fn unwrap_with_felt252(self: Result<T, E>) -> T;
 }
 
-pub impl UnwrapWithFelt252Impl<T, E, +Into<E, felt252>> of UnwrapWithFelt252<T, E> {
+impl UnwrapWithFelt252Impl<T, E, +Into<E, felt252>> of UnwrapWithFelt252<T, E> {
     fn unwrap_with_felt252(self: Result<T, E>) -> T {
         match self {
             Result::Ok(v) => v,
@@ -135,6 +135,17 @@ pub fn u32_as_i32(value: u32) -> i32 {
     } else {
         let value: i64 = value.into();
         (value - 0x100000000).try_into().unwrap()
+    }
+}
+
+pub fn write_i64(ref f: Formatter, value: i64) -> Result<(), core::fmt::Error> {
+    if value >= 0 {
+        let value: u128 = value.try_into().unwrap();
+        write!(f, "{}", value)
+    } else {
+        let value: i128 = value.into();
+        let value: u128 = (-value).try_into().unwrap();
+        write!(f, "-{}", value)
     }
 }
 

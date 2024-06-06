@@ -1,4 +1,4 @@
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum GetPriceUnsafeError {
     PriceFeedNotFound,
 }
@@ -11,7 +11,7 @@ impl GetPriceUnsafeErrorIntoFelt252 of Into<GetPriceUnsafeError, felt252> {
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum GetPriceNoOlderThanError {
     PriceFeedNotFound,
     StalePrice,
@@ -36,7 +36,7 @@ impl GetPriceUnsafeErrorIntoGetPriceNoOlderThanError of Into<
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum GovernanceActionError {
     Wormhole: pyth::wormhole::ParseAndVerifyVmError,
     InvalidGovernanceDataSource,
@@ -59,7 +59,7 @@ impl GovernanceActionErrorIntoFelt252 of Into<GovernanceActionError, felt252> {
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum UpdatePriceFeedsError {
     Reader: pyth::reader::Error,
     Wormhole: pyth::wormhole::ParseAndVerifyVmError,
@@ -80,7 +80,7 @@ impl UpdatePriceFeedsErrorIntoFelt252 of Into<UpdatePriceFeedsError, felt252> {
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum UpdatePriceFeedsIfNecessaryError {
     Update: UpdatePriceFeedsError,
     NoFreshUpdate,
@@ -97,7 +97,7 @@ impl UpdatePriceFeedsIfNecessaryErrorIntoFelt252 of Into<
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum ParsePriceFeedsError {
     Update: UpdatePriceFeedsError,
     PriceFeedNotFoundWithinRange,
@@ -112,7 +112,7 @@ impl ParsePriceFeedsErrorIntoFelt252 of Into<ParsePriceFeedsError, felt252> {
     }
 }
 
-#[derive(Copy, Drop, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 pub enum GetSingleUpdateFeeError {
     UnsupportedToken,
 }

@@ -3,7 +3,8 @@ use pyth::pyth::{UpdatePriceFeedsError, PriceFeed, Price};
 use core::panic_with_felt252;
 use pyth::byte_buffer::ByteBuffer;
 use pyth::merkle_tree::read_and_verify_proof;
-use pyth::util::{u32_as_i32, u64_as_i64};
+use pyth::util::{u32_as_i32, u64_as_i64, write_i64};
+use core::fmt::{Debug, Formatter};
 
 // Stands for PNAU (Pyth Network Accumulator Update)
 const ACCUMULATOR_MAGIC: u32 = 0x504e4155;
@@ -12,7 +13,7 @@ const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
 const MAJOR_VERSION: u8 = 1;
 const MINIMUM_ALLOWED_MINOR_VERSION: u8 = 0;
 
-#[derive(Drop, Clone, Serde, starknet::Store)]
+#[derive(Drop, Copy, PartialEq, Serde, Hash, starknet::Store)]
 pub struct PriceInfo {
     pub price: i64,
     pub conf: u64,
@@ -22,7 +23,38 @@ pub struct PriceInfo {
     pub ema_conf: u64,
 }
 
-#[derive(Drop)]
+// TODO: use derives after upgrading cairo
+impl DebugPriceInfo of Debug<PriceInfo> {
+    fn fmt(self: @PriceInfo, ref f: Formatter) -> Result<(), core::fmt::Error> {
+        write!(f, "PriceInfo {{ price: ")?;
+        write_i64(ref f, *self.price)?;
+        write!(f, ", conf: {}, expo: ", self.conf)?;
+        write_i64(ref f, (*self.expo).into())?;
+        write!(f, ", publish_time: {}, ema_price: ", self.publish_time)?;
+        write_i64(ref f, *self.ema_price)?;
+        write!(f, ", ema_conf: {} }}", self.ema_conf)
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_debug_price_info() {
+    let value = PriceInfo {
+        price: 2, conf: 3, expo: -4, publish_time: 5, ema_price: 7, ema_conf: 8
+    };
+    let expected =
+        "PriceInfo { price: 2, conf: 3, expo: -4, publish_time: 5, ema_price: 7, ema_conf: 8 }";
+    let actual = format!("{:?}", value);
+    assert!(actual == expected);
+}
+
+impl DefaultPriceInfo of Default<PriceInfo> {
+    fn default() -> PriceInfo {
+        PriceInfo { price: 0, conf: 0, expo: 0, publish_time: 0, ema_price: 0, ema_conf: 0 }
+    }
+}
+
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 enum UpdateType {
     WormholeMerkle
 }
@@ -37,7 +69,7 @@ impl U8TryIntoUpdateType of TryInto<u8, UpdateType> {
     }
 }
 
-#[derive(Drop)]
+#[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 enum MessageType {
     PriceFeed
 }
@@ -52,7 +84,7 @@ impl U8TryIntoMessageType of TryInto<u8, MessageType> {
     }
 }
 
-#[derive(Drop)]
+#[derive(Drop, Copy, PartialEq, Serde, Hash, starknet::Store)]
 pub struct PriceFeedMessage {
     pub price_id: u256,
     pub price: i64,
@@ -62,6 +94,58 @@ pub struct PriceFeedMessage {
     pub prev_publish_time: u64,
     pub ema_price: i64,
     pub ema_conf: u64,
+}
+
+// TODO: use derives after upgrading cairo
+impl DebugPriceFeedMessage of Debug<PriceFeedMessage> {
+    fn fmt(self: @PriceFeedMessage, ref f: Formatter) -> Result<(), core::fmt::Error> {
+        write!(f, "PriceFeedMessage {{ price_id: {}, price: ", self.price_id)?;
+        write_i64(ref f, *self.price)?;
+        write!(f, ", conf: {}, expo: ", self.conf)?;
+        write_i64(ref f, (*self.expo).into())?;
+        write!(
+            f,
+            ", publish_time: {}, prev_publish_time: {}, ema_price: ",
+            self.publish_time,
+            self.prev_publish_time
+        )?;
+        write_i64(ref f, *self.ema_price)?;
+        write!(f, ", ema_conf: {} }}", self.ema_conf)
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_debug_price_feed_message() {
+    let value = PriceFeedMessage {
+        price_id: 1,
+        price: 2,
+        conf: 3,
+        expo: -4,
+        publish_time: 5,
+        prev_publish_time: 6,
+        ema_price: 7,
+        ema_conf: 8
+    };
+    let expected =
+        "PriceFeedMessage { price_id: 1, price: 2, conf: 3, expo: -4, publish_time: 5, prev_publish_time: 6, ema_price: 7, ema_conf: 8 }";
+    let actual = format!("{:?}", value);
+    assert!(actual == expected);
+}
+
+impl DefaultPriceFeedMessage of Default<PriceFeedMessage> {
+    fn default() -> PriceFeedMessage {
+        PriceFeedMessage {
+            price_id: 0,
+            price: 0,
+            conf: 0,
+            expo: 0,
+            publish_time: 0,
+            prev_publish_time: 0,
+            ema_price: 0,
+            ema_conf: 0
+        }
+    }
 }
 
 pub fn read_and_verify_header(ref reader: Reader) {

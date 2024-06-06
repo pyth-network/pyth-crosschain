@@ -4,7 +4,7 @@ use super::util::one_shift_left_bytes_u256;
 
 /// A byte array with storage format similar to `core::ByteArray`, but
 /// suitable for reading data from it.
-#[derive(Drop, Clone, Serde)]
+#[derive(Drop, Clone, PartialEq, Serde)]
 pub struct ByteBuffer {
     // Number of bytes stored in the last item of `self.data` (or 0 if it's empty).
     num_last_bytes: u8,
@@ -24,6 +24,12 @@ impl DebugByteBuffer of Debug<ByteBuffer> {
             }
         };
         write!(f, "]}}")
+    }
+}
+
+impl DefaultByteBuffer of Default<ByteBuffer> {
+    fn default() -> ByteBuffer {
+        ByteBufferImpl::new(array![], 0)
     }
 }
 

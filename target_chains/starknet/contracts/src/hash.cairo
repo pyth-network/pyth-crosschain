@@ -8,7 +8,7 @@ use pyth::util::{
 
 /// Allows to push data as big endian to a buffer and apply
 /// the keccak256 hash.
-#[derive(Drop, Debug)]
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct Hasher {
     // Inputs in little endian.
     inputs_le: Array<u64>,

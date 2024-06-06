@@ -43,11 +43,12 @@ mod pyth {
     use super::governance;
     use super::governance::GovernancePayload;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
-    use pyth::util::ResultMapErrInto;
+    use pyth::util::{ResultMapErrInto, write_i64};
     use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
+    use core::fmt::{Debug, Formatter};
 
     #[event]
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub enum Event {
         PriceFeedUpdated: PriceFeedUpdated,
         FeeSet: FeeSet,
@@ -57,41 +58,60 @@ mod pyth {
         ContractUpgraded: ContractUpgraded,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, PartialEq, Serde, starknet::Event)]
     pub struct PriceFeedUpdated {
         #[key]
         pub price_id: u256,
-        pub publish_time: u64,
         pub price: i64,
         pub conf: u64,
+        pub publish_time: u64,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    // TODO: use derives after upgrading cairo
+    impl DebugPriceFeedUpdated of Debug<PriceFeedUpdated> {
+        fn fmt(self: @PriceFeedUpdated, ref f: Formatter) -> Result<(), core::fmt::Error> {
+            write!(f, "PriceFeedUpdated {{ price_id: {}, price: ", self.price_id)?;
+            write_i64(ref f, *self.price)?;
+            write!(f, ", conf: {}, publish_time: {} }}", self.conf, self.publish_time)
+        }
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn test_debug_price_feed_updated() {
+        let value = PriceFeedUpdated { price_id: 1, price: 2, conf: 3, publish_time: 5, };
+        let expected = "PriceFeedUpdated { price_id: 1, price: 2, conf: 3, publish_time: 5 }";
+        let actual = format!("{:?}", value);
+        assert!(actual == expected);
+    }
+
+
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct FeeSet {
         pub old_fee: u256,
         pub new_fee: u256,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct DataSourcesSet {
         pub old_data_sources: Array<DataSource>,
         pub new_data_sources: Array<DataSource>,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct WormholeAddressSet {
         pub old_address: ContractAddress,
         pub new_address: ContractAddress,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct GovernanceDataSourceSet {
         pub old_data_source: DataSource,
         pub new_data_source: DataSource,
         pub last_executed_governance_sequence: u64,
     }
 
-    #[derive(Drop, PartialEq, starknet::Event)]
+    #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
     pub struct ContractUpgraded {
         pub new_class_hash: ClassHash,
     }
