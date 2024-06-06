@@ -17,7 +17,7 @@ repos:
         additional_dependencies:
           - "prettier@2.7.1"
           - "prettier-plugin-solidity@1.0.0-rc.1"
-        exclude: target_chains/sui/vendor/
+        exclude: target_chains/sui/vendor/|apps/hermes/client/js/src/serverTypes.d.ts
   - repo: local
     hooks:
       # Hooks for the remote executor
