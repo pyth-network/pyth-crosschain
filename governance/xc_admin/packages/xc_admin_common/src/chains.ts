@@ -156,6 +156,7 @@ export const RECEIVER_CHAINS = {
   movement_m2_devnet: 50076,
   kakarot_sepolia: 50079,
   dela_mithreum_deperp_testnet: 50080,
+  berachain_testnet_v2: 50081,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
