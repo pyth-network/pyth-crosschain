@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src";
+import { DefaultStore, ENTROPY_DEFAULT_KEEPER } from "../src";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
@@ -13,15 +13,11 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-const KEEPER_ADDRESS = {
-  mainnet: "0xBcAb779fCa45290288C35F5E231c37F9fA87b130",
-  testnet: "0xa5A68ed167431Afe739846A22597786ba2da85df",
-};
-
 async function main() {
   const argv = await parser.argv;
   const entries = [];
-  const keeperAddress = KEEPER_ADDRESS[argv.testnet ? "testnet" : "mainnet"];
+  const keeperAddress =
+    ENTROPY_DEFAULT_KEEPER[argv.testnet ? "testnet" : "mainnet"];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     try {
@@ -40,6 +36,7 @@ async function main() {
         chain: contract.getChain().getId(),
         contract: contract.address,
         provider: providerInfo.uri,
+        feeManager: providerInfo.feeManager,
         balance: Web3.utils.fromWei(balance),
         keeperBalance: Web3.utils.fromWei(keeperBalance),
         seq: providerInfo.sequenceNumber,
