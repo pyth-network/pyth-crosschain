@@ -604,3 +604,8 @@
   rpcUrl: https://sepolia-rpc-priority.kakarot.org
   networkId: 1802203764
   type: EvmChain
+- id: berachain_testnet_v2
+  mainnet: false
+  rpcUrl: https://evm-rpc-bera.rhino-apis.com/
+  networkId: 80084
+  type: EvmChain
