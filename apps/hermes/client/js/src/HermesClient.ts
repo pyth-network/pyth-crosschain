@@ -55,7 +55,7 @@ export class HermesClient {
     backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
     externalAbortController?: AbortController
   ): Promise<ResponseData> {
-    const controller = externalAbortController || new AbortController();
+    const controller = externalAbortController ?? new AbortController();
     const { signal } = controller;
     options = { ...options, signal }; // Merge any existing options with the signal
 
