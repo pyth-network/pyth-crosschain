@@ -6,8 +6,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/HermesClient.js",
+  "types": "lib/HermesClient.d.ts",
   "files": [
     "lib/**/*"
   ],
@@ -23,8 +23,8 @@
     "test": "jest --testPathIgnorePatterns=.*.e2e.test.ts --passWithNoTests",
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
     "build": "tsc",
-    "generate-hermes-api-types": "openapi-typescript https://hermes.pyth.network/docs/openapi.json --output src/serverTypes.d.ts && prettier --write src/serverTypes.d.ts",
-    "check-hermes-api-types": "git diff --exit-code src/serverTypes.d.ts",
+    "generate-hermes-api-types": "openapi-zod-client https://hermes.pyth.network/docs/openapi.json --output src/zodSchemas.ts && prettier --write src/zodSchemas.ts",
+    "check-hermes-api-types": "git diff --exit-code src/zodSchemas.ts",
     "example": "npm run build && node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "eventsource": "^2.0.2",
-    "openapi-typescript": "^6.5.5"
+    "openapi-zod-client": "^1.18.1",
+    "zod": "^3.23.8"
   }
 }

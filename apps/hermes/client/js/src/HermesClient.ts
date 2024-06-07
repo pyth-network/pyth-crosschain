@@ -1,17 +1,14 @@
 import EventSource from "eventsource";
-import { components } from "./serverTypes";
+import { schemas } from "./zodSchemas";
+import { z } from "zod";
 
 // Accessing schema objects
-export type AssetType = components["schemas"]["AssetType"];
-export type BinaryPriceUpdate = components["schemas"]["BinaryPriceUpdate"];
-export type EncodingType = components["schemas"]["EncodingType"];
-export type GetVaaCcipInput = components["schemas"]["GetVaaCcipInput"];
-export type GetVaaCcipResponse = components["schemas"]["GetVaaCcipResponse"];
-export type GetVaaResponse = components["schemas"]["GetVaaResponse"];
-export type ParsedPriceUpdate = components["schemas"]["ParsedPriceUpdate"];
-export type PriceFeedMetadata = components["schemas"]["PriceFeedMetadata"];
-export type PriceIdInput = components["schemas"]["PriceIdInput"];
-export type PriceUpdate = components["schemas"]["PriceUpdate"];
+export type AssetType = z.infer<typeof schemas.AssetType>;
+export type BinaryPriceUpdate = z.infer<typeof schemas.BinaryPriceUpdate>;
+export type EncodingType = z.infer<typeof schemas.EncodingType>;
+export type PriceFeedMetadata = z.infer<typeof schemas.PriceFeedMetadata>;
+export type PriceIdInput = z.infer<typeof schemas.PriceIdInput>;
+export type PriceUpdate = z.infer<typeof schemas.PriceUpdate>;
 
 const DEFAULT_TIMEOUT: DurationInMs = 5000;
 const DEFAULT_HTTP_RETRIES = 3;
@@ -52,6 +49,7 @@ export class HermesConnection {
 
   private async httpRequest<ResponseData>(
     url: string,
+    schema: z.ZodSchema<ResponseData>,
     options?: RequestInit,
     retries = this.httpRetries,
     backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
@@ -70,7 +68,8 @@ export class HermesConnection {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      return schema.parse(data);
     } catch (error) {
       clearTimeout(timeout);
       if (
@@ -79,13 +78,9 @@ export class HermesConnection {
       ) {
         // Wait for a backoff period before retrying
         await new Promise((resolve) => setTimeout(resolve, backoff));
-        return this.httpRequest(url, options, retries - 1, backoff * 2); // Exponential backoff
+        return this.httpRequest(url, schema, options, retries - 1, backoff * 2); // Exponential backoff
       }
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error("An unknown error occurred");
-      }
+      throw error;
     }
   }
 
@@ -108,8 +103,10 @@ export class HermesConnection {
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
-
-    return await this.httpRequest<PriceFeedMetadata[]>(url.toString());
+    return await this.httpRequest<PriceFeedMetadata[]>(
+      url.toString(),
+      schemas.PriceFeedMetadata.array()
+    );
   }
 
   /**
@@ -140,7 +137,10 @@ export class HermesConnection {
       this.appendUrlSearchParams(url, options);
     }
 
-    return await this.httpRequest<PriceUpdate[]>(url.toString());
+    return this.httpRequest<PriceUpdate[]>(
+      url.toString(),
+      schemas.PriceUpdate.array()
+    );
   }
 
   /**
@@ -173,7 +173,10 @@ export class HermesConnection {
       this.appendUrlSearchParams(url, options);
     }
 
-    return await this.httpRequest<PriceUpdate[]>(url.toString());
+    return this.httpRequest<PriceUpdate[]>(
+      url.toString(),
+      schemas.PriceUpdate.array()
+    );
   }
 
   /**
@@ -212,7 +215,10 @@ export class HermesConnection {
     return new EventSource(url.toString());
   }
 
-  private appendUrlSearchParams(url: URL, params: Record<string, any>) {
+  private appendUrlSearchParams(
+    url: URL,
+    params: Record<string, string | boolean>
+  ) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         url.searchParams.append(key, String(value));
