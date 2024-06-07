@@ -18,7 +18,7 @@ export type DurationInSeconds = number;
 export type HexString = string;
 export type DurationInMs = number;
 
-export type HermesConnectionConfig = {
+export type HermesClientConfig = {
   /* Timeout of each request (for all of retries). Default: 5000ms */
   timeout?: DurationInMs;
   /**
@@ -30,7 +30,7 @@ export type HermesConnectionConfig = {
   httpRetries?: number;
 };
 
-export class HermesConnection {
+export class HermesClient {
   private baseURL: string;
   private timeout: DurationInMs;
   private httpRetries: number;
@@ -39,9 +39,9 @@ export class HermesConnection {
    * Constructs a new Connection.
    *
    * @param endpoint endpoint URL to the price service. Example: https://website/example/
-   * @param config Optional HermesConnectionConfig for custom configurations.
+   * @param config Optional HermesClientConfig for custom configurations.
    */
-  constructor(endpoint: string, config?: HermesConnectionConfig) {
+  constructor(endpoint: string, config?: HermesClientConfig) {
     this.baseURL = endpoint;
     this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;

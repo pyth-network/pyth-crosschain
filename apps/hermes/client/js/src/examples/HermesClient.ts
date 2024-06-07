@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { HermesConnection } from "../index";
+import { HermesClient } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -29,7 +29,7 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  const connection = new HermesConnection(argv.endpoint);
+  const connection = new HermesClient(argv.endpoint);
 
   const priceIds = argv.priceIds as string[];
 
