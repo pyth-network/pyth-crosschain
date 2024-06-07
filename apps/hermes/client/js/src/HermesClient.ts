@@ -103,7 +103,7 @@ export class HermesClient {
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
-    return await this.httpRequest<PriceFeedMetadata[]>(
+    return await this.httpRequest(
       url.toString(),
       schemas.PriceFeedMetadata.array()
     );
@@ -119,7 +119,7 @@ export class HermesClient {
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
    *
-   * @returns Array of PriceUpdate objects containing the latest updates.
+   * @returns PriceUpdate object containing the latest updates.
    */
   async getLatestPriceUpdates(
     ids: HexString[],
@@ -127,7 +127,7 @@ export class HermesClient {
       encoding?: EncodingType;
       parsed?: boolean;
     }
-  ): Promise<PriceUpdate[]> {
+  ): Promise<PriceUpdate> {
     const url = new URL(`${this.baseURL}/v2/updates/price/latest`);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
@@ -137,10 +137,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest<PriceUpdate[]>(
-      url.toString(),
-      schemas.PriceUpdate.array()
-    );
+    return this.httpRequest(url.toString(), schemas.PriceUpdate);
   }
 
   /**
@@ -154,7 +151,7 @@ export class HermesClient {
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
    *
-   * @returns Array of PriceUpdate objects containing the updates at the specified timestamp.
+   * @returns PriceUpdate object containing the updates at the specified timestamp.
    */
   async getPriceUpdatesAtTimestamp(
     publishTime: UnixTimestamp,
@@ -163,7 +160,7 @@ export class HermesClient {
       encoding?: EncodingType;
       parsed?: boolean;
     }
-  ): Promise<PriceUpdate[]> {
+  ): Promise<PriceUpdate> {
     const url = new URL(`${this.baseURL}/v2/updates/price/${publishTime}`);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
@@ -173,10 +170,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest<PriceUpdate[]>(
-      url.toString(),
-      schemas.PriceUpdate.array()
-    );
+    return this.httpRequest(url.toString(), schemas.PriceUpdate);
   }
 
   /**
