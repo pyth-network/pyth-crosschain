@@ -582,6 +582,11 @@ export class FuelChain extends Chain {
     return await Provider.create(this.gqlUrl);
   }
 
+  async getWallet(privateKey: PrivateKey): Wallet {
+    const provider = await this.getProvider();
+    return Wallet.fromPrivateKey(privateKey, provider);
+  }
+
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
@@ -616,14 +621,12 @@ export class FuelChain extends Chain {
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const provider = await this.getProvider();
-    const wallet = Wallet.fromPrivateKey(privateKey, provider);
+    const wallet = await this.getWallet(privateKey);
     return wallet.address.toString();
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const provider = await this.getProvider();
-    const wallet = Wallet.fromPrivateKey(privateKey, provider);
+    const wallet = await this.getWallet(privateKey);
     const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
     return Number(balance) / 10 ** 9;
   }
