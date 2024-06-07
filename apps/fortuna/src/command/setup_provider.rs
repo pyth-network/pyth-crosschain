@@ -37,17 +37,46 @@ use {
             Bytes,
         },
     },
+    futures::future::join_all,
     std::sync::Arc,
+    tokio::spawn,
     tracing::Instrument,
 };
 
 /// Setup provider for all the chains.
 pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    for (chain_id, chain_config) in &config.chains {
-        setup_chain_provider(&config, &chain_id, &chain_config).await?;
+    let setup_tasks = config
+        .chains
+        .clone()
+        .into_iter()
+        .map(|(chain_id, chain_config)| {
+            let config = config.clone();
+            spawn(async move {
+                (
+                    setup_chain_provider(&config, &chain_id, &chain_config).await,
+                    chain_id,
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    let join_results = join_all(setup_tasks).await;
+    let mut all_ok = true;
+    for join_result in join_results {
+        let (setup_result, chain_id) = join_result?;
+        match setup_result {
+            Ok(()) => {}
+            Err(e) => {
+                tracing::error!("Failed to setup {} {}", chain_id, e);
+                all_ok = false;
+            }
+        }
     }
-    Ok(())
+
+    match all_ok {
+        true => Ok(()),
+        false => Err(anyhow!("Failed to setup provider for all chains")),
+    }
 }
 
 
@@ -57,7 +86,7 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
 /// 3. Re-register if there is a mismatch in generated hash chain.
 /// 4. Update provider fee if there is a mismatch with the fee set on contract.
 /// 5. Update provider uri if there is a mismatch with the uri set on contract.
-#[tracing::instrument(name="setup_chain_provider", skip_all, fields(chain_id=chain_id))]
+#[tracing::instrument(name = "setup_chain_provider", skip_all, fields(chain_id = chain_id))]
 async fn setup_chain_provider(
     config: &Config,
     chain_id: &ChainId,
@@ -101,31 +130,41 @@ async fn setup_chain_provider(
         let secret = provider_config.secret.load()?.ok_or(anyhow!(
             "Please specify a provider secret in the config file."
         ))?;
-        let hash_chain = PebbleHashChain::from_config(
-            &secret,
-            &chain_id,
-            &provider_address,
-            &chain_config.contract_addr,
-            &metadata.seed,
-            provider_config.chain_length,
-            provider_config.chain_sample_interval,
-        )?;
-        let chain_state = HashChainState {
-            offsets:     vec![provider_info
-                .original_commitment_sequence_number
-                .try_into()?],
-            hash_chains: vec![hash_chain],
-        };
-
-
-        if chain_state.reveal(provider_info.original_commitment_sequence_number)?
-            != provider_info.original_commitment
-        {
-            tracing::info!("The root of the generated hash chain does not match the commitment",);
+        if metadata.chain_length != provider_config.chain_length {
+            tracing::info!(
+                "Chain length mismatch. metadata.chain_length={}, provider_config.chain_length={}",
+                metadata.chain_length,
+                provider_config.chain_length
+            );
             register = true;
+        } else {
+            let hash_chain = PebbleHashChain::from_config(
+                &secret,
+                &chain_id,
+                &provider_address,
+                &chain_config.contract_addr,
+                &metadata.seed,
+                provider_config.chain_length,
+                provider_config.chain_sample_interval,
+            )?;
+            let chain_state = HashChainState {
+                offsets:     vec![provider_info
+                    .original_commitment_sequence_number
+                    .try_into()?],
+                hash_chains: vec![hash_chain],
+            };
+
+
+            if chain_state.reveal(provider_info.original_commitment_sequence_number)?
+                != provider_info.original_commitment
+            {
+                tracing::info!(
+                    "The root of the generated hash chain does not match the commitment",
+                );
+                register = true;
+            }
         }
     }
-
     if register {
         tracing::info!("Registering");
         register_provider_from_config(&provider_config, &chain_id, &chain_config)
