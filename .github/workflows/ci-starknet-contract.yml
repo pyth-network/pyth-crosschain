@@ -34,7 +34,7 @@ jobs:
       - name: Run tests
         run: snforge test
       - name: Test local deployment script
-        run: bash -c 'PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/local_deploy'
+        run: bash -c 'PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/deploy.sh'
       - name: Verify version
         run: |
           version1=$(grep version Scarb.toml | cut -d '"' -f 2)
