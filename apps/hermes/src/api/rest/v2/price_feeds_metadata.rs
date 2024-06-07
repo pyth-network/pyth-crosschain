@@ -41,7 +41,7 @@ pub struct PriceFeedsMetadataQueryParams {
     get,
     path = "/v2/price_feeds",
     responses(
-        (status = 200, description = "Price feeds metadata retrieved successfully", body = Vec<RpcPriceIdentifier>)
+        (status = 200, description = "Price feeds metadata retrieved successfully", body = Vec<PriceFeedMetadata>)
     ),
     params(
         PriceFeedsMetadataQueryParams
