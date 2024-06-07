@@ -23,7 +23,7 @@ $ yarn add @pythnetwork/hermes-client
 Typical usage of the connection is along the following lines:
 
 ```typescript
-const connection = new HermesConnection("https://hermes.pyth.network", {}); // See Hermes endpoints section below for other endpoints
+const connection = new HermesClient("https://hermes.pyth.network", {}); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
   // You can find the ids of prices at https://pyth.network/developers/price-feed-ids
@@ -40,7 +40,7 @@ const priceUpdates = await connection.getLatestPriceUpdates(priceIds);
 console.log(priceUpdates);
 ```
 
-`HermesConnection` also allows subscribing to real-time price updates over a Server-Sent Events (SSE) connection:
+`HermesClient` also allows subscribing to real-time price updates over a Server-Sent Events (SSE) connection:
 
 ```typescript
 // Streaming price updates
