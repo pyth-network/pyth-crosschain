@@ -1,0 +1,21 @@
+name: Publish Hermes Client package
+
+on:
+  push:
+    tags:
+      - hermes-client-v*
+jobs:
+  publish-js:
+    name: Publish Hermes Client to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+      - run: npx lerna run build --no-private
+      - run: npx lerna publish from-git --yes --no-private --no-git-tag-version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

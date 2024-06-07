@@ -2,7 +2,6 @@
 members = [
     "programs/pyth-push-oracle",
     "programs/pyth-solana-receiver",
-    "examples/send_usd/program",
 ]
 
 [features]
