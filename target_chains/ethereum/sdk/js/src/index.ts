@@ -109,7 +109,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   mumbai: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
   neon_devnet: "0x0708325268dF9F66270F1401206434524814508b",
   olive_testnet: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
-  opbnb_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  opbnb_testnet: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
   optimism_celestia_raspberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   optimism_goerli: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
   optimism_sepolia: "0x0708325268dF9F66270F1401206434524814508b",
