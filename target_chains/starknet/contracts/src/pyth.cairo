@@ -90,6 +90,7 @@ mod pyth {
     pub struct FeeSet {
         pub old_fee: u256,
         pub new_fee: u256,
+        pub token: ContractAddress,
     }
 
     #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
@@ -414,11 +415,10 @@ mod pyth {
             }
             match instruction.payload {
                 GovernancePayload::SetFee(payload) => {
-                    let new_fee = apply_decimal_expo(payload.value, payload.expo);
-                    let old_fee = self.single_update_fee1.read();
-                    self.single_update_fee1.write(new_fee);
-                    let event = FeeSet { old_fee, new_fee };
-                    self.emit(event);
+                    self.set_fee(payload.value, payload.expo, self.fee_token_address1.read());
+                },
+                GovernancePayload::SetFeeInToken(payload) => {
+                    self.set_fee(payload.value, payload.expo, payload.token);
                 },
                 GovernancePayload::SetDataSources(payload) => {
                     let new_data_sources = payload.sources;
@@ -715,6 +715,23 @@ mod pyth {
                 i += 1;
             };
             output_array
+        }
+
+        fn set_fee(ref self: ContractState, value: u64, expo: u64, token: ContractAddress) {
+            let new_fee = apply_decimal_expo(value, expo);
+            let old_fee = if token == self.fee_token_address1.read() {
+                let old_fee = self.single_update_fee1.read();
+                self.single_update_fee1.write(new_fee);
+                old_fee
+            } else if token == self.fee_token_address2.read() {
+                let old_fee = self.single_update_fee2.read();
+                self.single_update_fee2.write(new_fee);
+                old_fee
+            } else {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into())
+            };
+            let event = FeeSet { old_fee, new_fee, token };
+            self.emit(event);
         }
     }
 

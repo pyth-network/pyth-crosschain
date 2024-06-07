@@ -382,6 +382,19 @@ pub fn pyth_set_fee() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 23)
 }
 
+// A Pyth governance instruction to set fee signed by the test guardian #1.
+pub fn pyth_set_fee_in_token() -> ByteBuffer {
+    let bytes = array![
+        1766847064779994694408617232155063622446317599437785683244896979152308796,
+        41831183904504604246915376354509245030219494606222324288494126672855141875,
+        245200731728170526984869527586075617087934630006881191137945784647849869312,
+        49565958604199796163020368,
+        148907253456468655193350049927026865683852796092680336764850032905682767430,
+        1535109346439504966152199052711447625482878604913825938427335,
+    ];
+    ByteBufferImpl::new(bytes, 25)
+}
+
 // A Pyth governance instruction to set data sources signed by the test guardian #1.
 pub fn pyth_set_data_sources() -> ByteBuffer {
     let bytes = array![

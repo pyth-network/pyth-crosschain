@@ -19,6 +19,7 @@ pub enum GovernanceAction {
     SetValidPeriod,
     RequestGovernanceDataSourceTransfer,
     SetWormholeAddress,
+    SetFeeInToken,
 }
 
 impl U8TryIntoGovernanceAction of TryInto<u8, GovernanceAction> {
@@ -31,6 +32,7 @@ impl U8TryIntoGovernanceAction of TryInto<u8, GovernanceAction> {
             4 => GovernanceAction::SetValidPeriod,
             5 => GovernanceAction::RequestGovernanceDataSourceTransfer,
             6 => GovernanceAction::SetWormholeAddress,
+            7 => GovernanceAction::SetFeeInToken,
             _ => { return Option::None; }
         };
         Option::Some(v)
@@ -52,12 +54,20 @@ pub enum GovernancePayload {
     // SetValidPeriod is unsupported
     RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
     SetWormholeAddress: SetWormholeAddress,
+    SetFeeInToken: SetFeeInToken,
 }
 
 #[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct SetFee {
     pub value: u64,
     pub expo: u64,
+}
+
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
+pub struct SetFeeInToken {
+    pub value: u64,
+    pub expo: u64,
+    pub token: ContractAddress,
 }
 
 #[derive(Drop, Clone, Debug, PartialEq, Serde)]
@@ -154,6 +164,22 @@ pub fn parse_instruction(payload: ByteBuffer) -> GovernanceInstruction {
             let value = reader.read_u64();
             let expo = reader.read_u64();
             GovernancePayload::SetFee(SetFee { value, expo })
+        },
+        GovernanceAction::SetFeeInToken => {
+            let value = reader.read_u64();
+            let expo = reader.read_u64();
+            let token_len = reader.read_u8();
+            if token_len != 32 {
+                panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
+            }
+            let token: felt252 = reader
+                .read_u256()
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            let token = token
+                .try_into()
+                .expect(GovernanceActionError::InvalidGovernanceMessage.into());
+            GovernancePayload::SetFeeInToken(SetFeeInToken { value, expo, token })
         },
         GovernanceAction::SetValidPeriod => { panic_with_felt252('unimplemented') },
         GovernanceAction::SetWormholeAddress => {
