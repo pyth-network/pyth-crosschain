@@ -1,33 +1,6 @@
 {
   "name": "root",
-  "workspaces": [
-    "apps/price_pusher",
-    "apps/hermes/client/js",
-    "express_relay/examples/easy_lend",
-    "express_relay/sdk/js",
-    "express_relay/sdk/solidity",
-    "governance/xc_admin/packages/*",
-    "governance/multisig_wh_message_builder",
-    "price_service/sdk/js",
-    "price_service/client/js",
-    "pythnet/message_buffer",
-    "target_chains/aptos/sdk/js",
-    "target_chains/cosmwasm/tools",
-    "target_chains/cosmwasm/deploy-scripts",
-    "target_chains/ethereum/contracts",
-    "target_chains/ethereum/abi_generator",
-    "target_chains/ethereum/entropy_sdk/solidity",
-    "target_chains/ethereum/sdk/js",
-    "target_chains/ethereum/sdk/solidity",
-    "target_chains/ethereum/examples/coin_flip/app",
-    "target_chains/ethereum/examples/oracle_swap/app",
-    "target_chains/sui/sdk/js",
-    "target_chains/sui/cli",
-    "target_chains/solana/sdk/js/solana_utils",
-    "target_chains/solana/sdk/js/pyth_solana_receiver",
-    "target_chains/solana/examples/send_usd/app",
-    "contract_manager"
-  ],
+  "packageManager": "pnpm@8.15.5",
   "dependencies": {
     "pre-commit": "^1.2.2",
     "prettier": "2.7.1"
@@ -38,5 +11,14 @@
   "engines": {
     "node": ">=18.0.0 <19.0.0"
   },
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "pnpm": {
+    "overrides": {
+      "@injectivelabs/sdk-ts@1.10.72>@injectivelabs/token-metadata": "1.10.42",
+      "eslint-config-next>@typescript-eslint/parser": "^7.0.0"
+    },
+    "patchedDependencies": {
+      "eccrypto@1.1.6": "patches/eccrypto@1.1.6.patch"
+    }
+  }
 }

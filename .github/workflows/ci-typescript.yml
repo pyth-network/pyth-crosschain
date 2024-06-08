@@ -24,19 +24,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: "npm"
-      - name: Install deps
-        run: npm ci
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
       - name: Build
-        run: npx lerna run build
+        run: pnpm exec lerna run build
       - name: Test
-        run: npx lerna run test
+        run: pnpm exec lerna run test
       - name: Lint
-        run: npx lerna run lint
+        run: pnpm exec lerna run lint
       - name: Generate ABIs
-        run: npx lerna run generate-abi
+        run: pnpm exec lerna run generate-abi
       - name: Check ABIs
-        run: npx lerna run check-abi
+        run: pnpm exec lerna run check-abi

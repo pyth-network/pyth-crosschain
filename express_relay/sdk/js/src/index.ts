@@ -1,7 +1,6 @@
 import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
-  HeadersOptions,
 } from "openapi-fetch";
 import { Address, Hex, isAddress, isHex } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";

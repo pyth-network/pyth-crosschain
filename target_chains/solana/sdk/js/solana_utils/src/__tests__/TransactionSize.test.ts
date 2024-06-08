@@ -1,3 +1,7 @@
+import crypto from "crypto";
+// @ts-expect-error
+globalThis.crypto = crypto;
+
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,

@@ -30,7 +30,7 @@ COPY --from=base --chown=1000:1000 /home/node ./
 
 RUN --mount=type=cache,uid=1000,gid=1000,id=lerna,target=/home/node/.npm \
   --mount=type=cache,uid=1000,gid=1000,id=lerna,target=/home/node/node_modules \
-  npm ci && cp -r node_modules node_modules_cache
+    pnpm i && cp -r node_modules node_modules_cache
 
 # Folders in the cache are not visible in the container that's why we copy
 # them and then move them back.

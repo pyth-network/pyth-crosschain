@@ -10,7 +10,7 @@
     "build": "tsc",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
-    "monitor": "npm run build && node tslib/monitor.js",
+    "monitor": "pnpm run build && node tslib/monitor.js",
     "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git --no-commit"
   },
   "author": "",
@@ -23,6 +23,7 @@
     "@openzeppelin/contracts": "^4.5.0",
     "@pythnetwork/express-relay-evm-js": "*",
     "@pythnetwork/express-relay-sdk-solidity": "*",
+    "@pythnetwork/price-service-client": "workspace:^",
     "@pythnetwork/pyth-evm-js": "*",
     "@pythnetwork/pyth-sdk-solidity": "*",
     "ts-node": "^10.9.1",

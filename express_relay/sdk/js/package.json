@@ -15,13 +15,13 @@
   "scripts": {
     "build": "tsc",
     "test": "jest src/ --passWithNoTests",
-    "simple-searcher": "npm run build && node lib/examples/simpleSearcher.js",
+    "simple-searcher": "pnpm run build && node lib/examples/simpleSearcher.js",
     "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/serverTypes.d.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",
@@ -45,8 +45,8 @@
     "@pythnetwork/pyth-evm-js": "*",
     "@types/node": "^20.12.7",
     "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.56.0",
     "jest": "^27.5.1",
     "prettier": "^2.6.2",

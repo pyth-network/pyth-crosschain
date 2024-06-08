@@ -29,6 +29,7 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@injectivelabs/sdk-ts": "^1.10.72",
     "@injectivelabs/token-metadata": "~1.10.42",
+    "@project-serum/anchor": "^0.25.0",
     "@pythnetwork/client": "^2.17.0",
     "@pythnetwork/pyth-solana-receiver": "*",
     "@pythnetwork/solana-utils": "*",
@@ -38,6 +39,7 @@
     "bigint-buffer": "^1.1.5",
     "ethers": "^5.7.2",
     "lodash": "^4.17.21",
+    "message_buffer": "workspace:^",
     "typescript": "^4.9.4"
   },
   "devDependencies": {

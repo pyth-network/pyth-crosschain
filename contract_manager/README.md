@@ -20,8 +20,8 @@ Each of these entities has a specialized class for each supported chain (EVM/Cos
 
 # Docs
 
-You can generate the docs by running `npx typedoc src/index.ts` from this directory. Open the docs by opening `docs/index.html` in your browser.
+You can generate the docs by running `pnpm exec typedoc src/index.ts` from this directory. Open the docs by opening `docs/index.html` in your browser.
 
 # Scripts
 
-You can run the scripts by executing `npx ts-node scripts/<script_name>.ts` from this directory.
+You can run the scripts by executing `pnpm exec ts-node scripts/<script_name>.ts` from this directory.

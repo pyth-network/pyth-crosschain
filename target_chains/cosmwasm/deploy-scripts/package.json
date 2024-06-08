@@ -12,13 +12,19 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@pythnetwork/cosmwasm-deploy-tools": "*",
+    "@cosmjs/crypto": "^0.32.3",
+    "@ltd/j-toml": "^1.38.0",
     "@pythnetwork/contract-manager": "*",
+    "@pythnetwork/cosmwasm-deploy-tools": "*",
+    "@pythnetwork/xc-admin-common": "workspace:^",
+    "adm-zip": "^0.5.10",
+    "node-downloader-helper": "^2.1.7",
     "rimraf": "^5.0.0",
     "typescript": "^5.3.3",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.0",
     "@types/yargs": "^17.0.18"
   }
 }

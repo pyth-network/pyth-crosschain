@@ -23,12 +23,12 @@
     "test": "jest --testPathIgnorePatterns=.*.e2e.test.ts --passWithNoTests",
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
     "build": "tsc",
-    "example": "npm run build && node lib/examples/PriceServiceClient.js",
+    "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",
@@ -51,7 +51,7 @@
     "@pythnetwork/price-service-sdk": "*",
     "@types/ws": "^8.5.3",
     "axios": "^1.5.1",
-    "axios-retry": "^3.8.0",
+    "axios-retry": "^4.0.0",
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"

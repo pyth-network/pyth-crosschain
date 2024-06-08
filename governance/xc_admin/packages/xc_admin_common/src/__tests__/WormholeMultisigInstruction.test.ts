@@ -1,3 +1,7 @@
+import crypto from "crypto";
+// @ts-expect-error
+globalThis.crypto = crypto;
+
 import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {

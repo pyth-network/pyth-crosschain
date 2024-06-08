@@ -9,7 +9,7 @@ test = 'forge-test'
 
 libs = [
     'lib',
-    '../../../node_modules',
+    'node_modules',
 ]
 
 # This doesn't work on ../../../node_modules alone because the sources from
@@ -19,6 +19,6 @@ libs = [
 # make sure that the CI runs successfully.
 ignored_warnings_from = [
     "lib",
-    "../../../node_modules/",
+    "node_modules/",
     "/home/runner/work/pyth-crosschain/pyth-crosschain/node_modules"
 ]

@@ -84,7 +84,7 @@ To run the price pusher, please run the following commands, replacing the comman
 ```sh
 # Please run the two following commands once from the root of the repo to build the code.
 npm install
-npx lerna run build --scope @pythnetwork/price-pusher --include-dependencies
+pnpm exec lerna run build --scope @pythnetwork/price-pusher --include-dependencies
 
 # Navigate to the price_pusher folder
 cd apps/price_pusher

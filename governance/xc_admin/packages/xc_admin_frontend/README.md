@@ -5,8 +5,8 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 First, run the development server:
 
 ```bash
-pyth-crosschain % npm install
-pyth-crosschain % npx lerna run build --scope @pythnetwork/xc-admin-frontend --include-dependencies
+pyth-crosschain % pnpm i
+pyth-crosschain % pnpm exec lerna run build --scope @pythnetwork/xc-admin-frontend --include-dependencies
 pyth-crosschain % cd governance/xc_admin/packages/xc_admin_frontend
 xc_admin_frontend % npm run dev
 ```

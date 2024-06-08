@@ -10,4 +10,4 @@ done
 
 sleep 2
 
-npm run deploy
+pnpm run deploy

@@ -22,12 +22,12 @@
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
-    "example-relay": "npm run build && node lib/examples/AptosRelay.js",
+    "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",

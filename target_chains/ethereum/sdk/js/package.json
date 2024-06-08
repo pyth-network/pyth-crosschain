@@ -22,14 +22,14 @@
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
-    "example-client": "npm run build && node lib/examples/EvmPriceServiceClient.js",
-    "example-relay": "npm run build && node lib/examples/EvmRelay.js",
-    "example-benchmark": "npm run build && node lib/examples/EvmBenchmark.js",
+    "example-client": "pnpm run build && node lib/examples/EvmPriceServiceClient.js",
+    "example-relay": "pnpm run build && node lib/examples/EvmRelay.js",
+    "example-benchmark": "pnpm run build && node lib/examples/EvmBenchmark.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",

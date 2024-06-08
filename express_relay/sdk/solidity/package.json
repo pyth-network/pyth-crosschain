@@ -11,8 +11,8 @@
     "access": "public"
   },
   "scripts": {
-    "format": "npx prettier --write .",
-    "generate-abi": "npx generate-abis IExpressRelay IExpressRelayFeeReceiver",
+    "format": "prettier --write .",
+    "generate-abi": "generate-abis IExpressRelay IExpressRelayFeeReceiver",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [

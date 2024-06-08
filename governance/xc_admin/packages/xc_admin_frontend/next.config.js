@@ -6,7 +6,7 @@ const nextConfig = {
   experimental: {
     externalDir: true,
   },
-  webpack(config) {
+  webpack(config, { isServer }) {
     config.experiments = { asyncWebAssembly: true }
     config.resolve.fallback = { fs: false }
     const fileLoaderRule = config.module.rules.find(

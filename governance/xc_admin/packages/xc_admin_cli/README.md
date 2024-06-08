@@ -26,8 +26,8 @@ Note:
 To activate a transaction:
 
 ```
-npm install
-npx lerna run build --scope "@pythnetwork/xc-admin-common"  --include-dependencies
-npx ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet|testnet] -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
+pnpm i
+pnpm exec lerna run build --scope "@pythnetwork/xc-admin-common"  --include-dependencies
+pnpm exec ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet|testnet] -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
 
 ```

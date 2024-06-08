@@ -7,8 +7,8 @@ The coin flip example demonstrates how to use Pyth Entropy to flip a fair coin.
 To try the example, first run the following commands from the root of the `pyth-crosschain` repository:
 
 ```shell
-npm install
-npx lerna run build
+pnpm i
+pnpm exec lerna run build
 ```
 
 These commands will build dependencies for the typescript project.

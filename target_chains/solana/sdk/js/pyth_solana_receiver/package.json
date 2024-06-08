@@ -21,9 +21,9 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
     "test": "jest src/ --passWithNoTests",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",
