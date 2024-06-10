@@ -9,35 +9,43 @@ import Youtube from '@images/icons/youtube.inline.svg'
 const SocialLinks = () => {
   return (
     <div className="flex items-center">
-      <Link href="https://twitter.com/PythNetwork">
-        <a target="_blank" className="mr-6">
-          <Twitter />
-        </a>
+      <Link
+        href="https://twitter.com/PythNetwork"
+        target="_blank"
+        className="mr-6"
+      >
+        <Twitter />
       </Link>
-      <Link href="https://discord.gg/invite/PythNetwork">
-        <a target="_blank" className="mr-6">
-          <Discord />
-        </a>
+      <Link
+        href="https://discord.gg/invite/PythNetwork"
+        target="_blank"
+        className="mr-6"
+      >
+        <Discord />
       </Link>
-      <Link href="https://t.me/Pyth_Network">
-        <a target="_blank" className="mr-6">
-          <Telegram />
-        </a>
+      <Link href="https://t.me/Pyth_Network" target="_blank" className="mr-6">
+        <Telegram />
       </Link>
-      <Link href="https://www.linkedin.com/company/pyth-network">
-        <a target="_blank" className="mr-6">
-          <LinkedIn />
-        </a>
+      <Link
+        href="https://www.linkedin.com/company/pyth-network"
+        target="_blank"
+        className="mr-6"
+      >
+        <LinkedIn />
       </Link>
-      <Link href="https://github.com/pyth-network">
-        <a target="_blank" className="mr-6">
-          <Github />
-        </a>
+      <Link
+        href="https://github.com/pyth-network"
+        target="_blank"
+        className="mr-6"
+      >
+        <Github />
       </Link>
-      <Link href="https://www.youtube.com/@pythnetwork">
-        <a target="_blank" className="">
-          <Youtube />
-        </a>
+      <Link
+        href="https://www.youtube.com/@pythnetwork"
+        target="_blank"
+        className=""
+      >
+        <Youtube />
       </Link>
     </div>
   )

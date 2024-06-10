@@ -73,21 +73,20 @@ const Header = () => {
     <>
       <header
         className={`left-0 top-0 z-40 w-full px-1 transition-all lg:px-10
-        ${isSticky || headerState.opened ? 'fixed' : 'absolute'}
-        ${isSticky && !headerState.opened ? 'bg-darkGray shadow-black' : ''}
-        `}
+      ${isSticky || headerState.opened ? 'fixed' : 'absolute'}
+      ${isSticky && !headerState.opened ? 'bg-darkGray shadow-black' : ''}
+      `}
       >
         <div
           className={`relative flex items-center justify-between ${
             isSticky ? 'lg:py-4' : 'before:gradient-border md:py-6'
           } px-4 py-3 lg:px-10 lg:py-6`}
         >
-          <Link href="/">
-            <a
-              className={`flex min-h-[45px] basis-[180px] cursor-pointer items-center`}
-            >
-              <Pyth />
-            </a>
+          <Link
+            href="/"
+            className={`flex min-h-[45px] basis-[180px] cursor-pointer items-center`}
+          >
+            <Pyth />
           </Link>
           <nav>
             <ul
@@ -97,16 +96,15 @@ const Header = () => {
             >
               {navigation.map((item) => (
                 <li key={item.name}>
-                  <Link href={item.href}>
-                    <a
-                      className={
-                        router.pathname == item.href
-                          ? 'nav-link font-bold'
-                          : 'nav-link'
-                      }
-                    >
-                      {item.name}
-                    </a>
+                  <Link
+                    href={item.href}
+                    className={
+                      router.pathname == item.href
+                        ? 'nav-link font-bold'
+                        : 'nav-link'
+                    }
+                  >
+                    {item.name}
                   </Link>
                 </li>
               ))}
@@ -124,7 +122,7 @@ const Header = () => {
                   ? 'relative top-0 right-5 left-0 basis-7'
                   : 'lg:hidden'
               }
-              `}
+            `}
               onClick={handleToggleMenu}
             >
               <button
