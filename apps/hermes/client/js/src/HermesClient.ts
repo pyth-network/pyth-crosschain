@@ -1,6 +1,7 @@
 import EventSource from "eventsource";
 import { schemas } from "./zodSchemas";
 import { z } from "zod";
+import { camelToSnakeCaseObject } from "./utils";
 
 // Accessing schema objects
 export type AssetType = z.infer<typeof schemas.AssetType>;
@@ -29,20 +30,6 @@ export type HermesClientConfig = {
    */
   httpRetries?: number;
 };
-
-function camelToSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-}
-
-function camelToSnakeCaseObject(
-  obj: Record<string, string | boolean>
-): Record<string, string | boolean> {
-  const result: Record<string, string | boolean> = {};
-  Object.keys(obj).forEach((key) => {
-    result[camelToSnakeCase(key)] = obj[key];
-  });
-  return result;
-}
 
 export class HermesClient {
   private baseURL: string;
