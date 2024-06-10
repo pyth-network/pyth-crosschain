@@ -30,6 +30,20 @@ export type HermesClientConfig = {
   httpRetries?: number;
 };
 
+function camelToSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+function camelToSnakeCaseObject(
+  obj: Record<string, string | boolean>
+): Record<string, string | boolean> {
+  const result: Record<string, string | boolean> = {};
+  Object.keys(obj).forEach((key) => {
+    result[camelToSnakeCase(key)] = obj[key];
+  });
+  return result;
+}
+
 export class HermesClient {
   private baseURL: string;
   private timeout: DurationInMs;
@@ -193,8 +207,8 @@ export class HermesClient {
     options?: {
       encoding?: EncodingType;
       parsed?: boolean;
-      allow_unordered?: boolean;
-      benchmarks_only?: boolean;
+      allowUnordered?: boolean;
+      benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
     const url = new URL("/v2/updates/price/stream", this.baseURL);
@@ -203,8 +217,10 @@ export class HermesClient {
     });
 
     if (options) {
-      this.appendUrlSearchParams(url, options);
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
     }
+    console.log(url.toString());
 
     return new EventSource(url.toString());
   }

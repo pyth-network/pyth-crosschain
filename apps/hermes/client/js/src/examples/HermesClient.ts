@@ -45,7 +45,12 @@ async function run() {
   console.log(priceUpdates);
 
   // Streaming price updates
-  const eventSource = await connection.getPriceUpdatesStream(priceIds);
+  const eventSource = await connection.getPriceUpdatesStream(priceIds, {
+    encoding: "base64",
+    parsed: true,
+    allowUnordered: true,
+    benchmarksOnly: true,
+  });
 
   eventSource.onmessage = (event) => {
     console.log("Received price update:", event.data);
