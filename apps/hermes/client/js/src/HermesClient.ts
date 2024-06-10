@@ -1,6 +1,7 @@
 import EventSource from "eventsource";
 import { schemas } from "./zodSchemas";
 import { z } from "zod";
+import { camelToSnakeCaseObject } from "./utils";
 
 // Accessing schema objects
 export type AssetType = z.infer<typeof schemas.AssetType>;
@@ -193,8 +194,8 @@ export class HermesClient {
     options?: {
       encoding?: EncodingType;
       parsed?: boolean;
-      allow_unordered?: boolean;
-      benchmarks_only?: boolean;
+      allowUnordered?: boolean;
+      benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
     const url = new URL("/v2/updates/price/stream", this.baseURL);
@@ -203,7 +204,8 @@ export class HermesClient {
     });
 
     if (options) {
-      this.appendUrlSearchParams(url, options);
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
     }
 
     return new EventSource(url.toString());
