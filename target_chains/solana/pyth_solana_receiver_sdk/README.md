@@ -15,7 +15,7 @@ Price update accounts can be closed by whoever wrote them to recover the rent.
 
 When using price update accounts, you should check that the accounts are owned by the Pyth Solana Receiver contract to avoid impersonation attacks. This SDK checks this if you use Anchor's `Account` struct (ex: `Account<'info, PriceUpdateV2>`).
 
-You should also check the `verification_level` of the account. Read more about this [here](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs) in the documentation for `VerificationLevel`.
+You should also check the `verification_level` of the account. Read more about this [here](./src/price_update.rs) in the documentation for `VerificationLevel`.
 
 ## Example use
 
