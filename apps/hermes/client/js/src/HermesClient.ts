@@ -220,7 +220,6 @@ export class HermesClient {
       const transformedOptions = camelToSnakeCaseObject(options);
       this.appendUrlSearchParams(url, transformedOptions);
     }
-    console.log(url.toString());
 
     return new EventSource(url.toString());
   }
