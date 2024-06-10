@@ -22,7 +22,7 @@ import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
-import { BN, Provider, Wallet } from "fuels";
+import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 
 const FUEL_ETH_ASSET_ID =
   "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
@@ -582,7 +582,7 @@ export class FuelChain extends Chain {
     return await Provider.create(this.gqlUrl);
   }
 
-  async getWallet(privateKey: PrivateKey): Wallet {
+  async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
     const provider = await this.getProvider();
     return Wallet.fromPrivateKey(privateKey, provider);
   }

@@ -17,6 +17,7 @@ import {
   EvmWormholeContract,
   SuiPriceFeedContract,
   SuiWormholeContract,
+  FuelWormholeContract,
   WormholeContract,
 } from "./contracts";
 import { Token } from "./token";
@@ -131,6 +132,7 @@ export class Store {
       [AptosWormholeContract.type]: AptosWormholeContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
       [EvmWormholeContract.type]: EvmWormholeContract,
+      [FuelWormholeContract.type]: FuelWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));

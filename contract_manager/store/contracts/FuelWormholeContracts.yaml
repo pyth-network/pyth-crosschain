@@ -1,0 +1,3 @@
+- chain: fuel_testnet
+  address: "0x8be7ef0cc1ba3accf37c3d6ef6d64c41a338a9f835c7ce770f553227ce808444"
+  type: FuelWormholeContract
