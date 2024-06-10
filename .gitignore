@@ -19,3 +19,4 @@ tsconfig.tsbuildinfo
 */*.sui.log*
 __pycache__
 .DS_Store
+.vercel
