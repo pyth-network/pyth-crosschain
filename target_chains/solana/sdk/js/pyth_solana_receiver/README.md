@@ -177,9 +177,9 @@ You can run these examples by performing the following steps.
 First, install and build any necessary typescript dependencies:
 
 1. Clone the `pyth-crosschain` git repo
-2. Run `npm install` in the root of the repo
-3. Run `npx lerna run build` anywhere in the repo
-4. From the `pyth_solana_receiver` directory, run `npx ts-node examples/<example filename>.ts`
+2. Run `pnpm i` in the root of the repo
+3. Run `pnpm exec lerna run build` anywhere in the repo
+4. From the `pyth_solana_receiver` directory, run `pnpm exec ts-node examples/<example filename>.ts`
 
 The examples require a Solana keypair with SOL to send Solana transactions.
 By default, the examples will use the same Solana keypair used by the Solana CLI (at `~/.config/solana/id.json`).

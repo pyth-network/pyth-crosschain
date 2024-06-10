@@ -65,7 +65,8 @@ export class SolanaPricePusher implements IPricePusher {
 
   async updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: number[]
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _pubTimesToPush: number[]
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -122,7 +123,8 @@ export class SolanaPricePusherJito implements IPricePusher {
 
   async updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: number[]
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _pubTimesToPush: number[]
   ): Promise<void> {
     let priceFeedUpdateData: string[];
     try {

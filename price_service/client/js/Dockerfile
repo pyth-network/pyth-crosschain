@@ -10,8 +10,8 @@ USER 1000
 COPY --chown=1000:1000 price_service/client/js price_service/client/js
 COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
 
-RUN npx lerna run build --scope="@pythnetwork/price-service-client" --include-dependencies
+RUN pnpm exec lerna run build --scope="@pythnetwork/price-service-client" --include-dependencies
 
 WORKDIR /home/node/price_service/client/js
 
-ENTRYPOINT ["npm"]
+ENTRYPOINT ["pnpm"]

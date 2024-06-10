@@ -71,19 +71,19 @@ Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow 
 
 All of the typescript / javascript packages in this repository are part of a lerna monorepo.
 This setup allows each package to reference the current version of the others.
-You can install dependencies using `npm ci` from the repository root.
-You can build all of the packages using `npx lerna run build` and test with `npx lerna run test`.
+You can install dependencies using `pnpm i` from the repository root.
+You can build all of the packages using `pnpm exec lerna run build` and test with `pnpm exec lerna run test`.
 
 Lerna has some common failure modes that you may encounter:
 
-1. `npm ci` fails with a typescript compilation error about a missing package.
+1. `pnpm i` fails with a typescript compilation error about a missing package.
    This error likely means that the failing package has a `prepare` entry compiling the typescript in its `package.json`.
    Fix this error by moving that logic to the `prepublishOnly` entry.
 2. The software builds locally but fails in CI, or vice-versa.
    This error likely means that some local build caches need to be cleaned.
    The build error may not indicate that this is a caching issue, e.g., it may appear that the packages are being built in the wrong order.
    Delete `node_modules/`, `lib/` and `tsconfig.tsbuildinfo` from each package's subdirectory. then try again.
-3. `npm ci` fails due to wrong node version. Make sure to be using `v18`. Node version `v21` is not supported and known to cause issues.
+3. `pnpm i` fails due to wrong node version. Make sure to be using `v18`. Node version `v21` is not supported and known to cause issues.
 
 ## Audit / Feature Status
 

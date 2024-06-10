@@ -21,9 +21,9 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
     "test": "jest src/ --passWithNoTests",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",
@@ -45,7 +45,7 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@noble/hashes": "^1.4.0",
     "@pythnetwork/price-service-sdk": ">=1.6.0",
-    "@pythnetwork/solana-utils": "*",
+    "@pythnetwork/solana-utils": "workspace:*",
     "@solana/web3.js": "^1.90.0"
   }
 }

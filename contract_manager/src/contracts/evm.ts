@@ -1,4 +1,5 @@
 import Web3 from "web3";
+import type { Contract } from "web3-eth-contract";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import { PriceFeedContract, PrivateKey, Storable } from "../base";
@@ -424,7 +425,7 @@ export class EvmWormholeContract extends WormholeContract {
   constructor(public chain: EvmChain, public address: string) {
     super();
   }
-  getContract() {
+  getContract(): Contract {
     const web3 = new Web3(this.chain.getRpcUrl());
     return new web3.eth.Contract(WORMHOLE_ABI, this.address);
   }

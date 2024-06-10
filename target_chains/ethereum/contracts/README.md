@@ -9,8 +9,8 @@ The contracts are built and tested using Foundry. Follow the [Foundry installati
 Next, run the following command from the repo root to install required dependencies for the contract:
 
 ```
-npm ci
-npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+pnpm i
+pnpm exec lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
 ```
 
 Next, from the `contracts` directory, run the following command to install forge dependencies:
@@ -41,13 +41,13 @@ There is a separate test suite executed by truffle for testing governance messag
 1. Spawn a new network on a seperate terminal (do not close it while running tests):
 
 ```bash
-npx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0
+pnpm dlx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0
 ```
 
 2. deploy the contracts:
 
 ```bash
-cp .env.test .env && npx truffle compile --all && npx truffle migrate --network development
+cp .env.test .env && pnpm exec truffle compile --all && pnpm exec truffle migrate --network development
 ```
 
 3. Run the test suite:

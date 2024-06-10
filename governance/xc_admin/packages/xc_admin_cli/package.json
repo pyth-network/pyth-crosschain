@@ -17,18 +17,20 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "cli": "npm run build && node lib/cli.js"
+    "cli": "pnpm run build && node lib/cli.js"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@ledgerhq/hw-transport": "^6.27.10",
     "@ledgerhq/hw-transport-node-hid": "^6.27.10",
     "@pythnetwork/client": "^2.9.0",
+    "@pythnetwork/pyth-solana-receiver": "workspace:*",
+    "@pythnetwork/solana-utils": "workspace:^",
+    "@pythnetwork/xc-admin-common": "workspace:*",
+    "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "commander": "^9.5.0",
-    "typescript": "^4.9.4",
-    "@pythnetwork/xc-admin-common": "*",
-    "@pythnetwork/pyth-solana-receiver": "*"
+    "typescript": "^4.9.4"
   }
 }

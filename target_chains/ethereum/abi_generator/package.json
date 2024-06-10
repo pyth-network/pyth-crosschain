@@ -18,7 +18,7 @@
     "generate-abis": "src/generate.js"
   },
   "scripts": {
-    "format": "npx prettier --write .",
+    "format": "prettier --write .",
     "generate": "node src/generate.js"
   },
   "devDependencies": {

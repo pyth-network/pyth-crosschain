@@ -11,8 +11,8 @@
     "access": "public"
   },
   "scripts": {
-    "format": "npx prettier --write .",
-    "generate-abi": "npx generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs",
+    "format": "prettier --write .",
+    "generate-abi": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
@@ -29,6 +29,6 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "abi_generator": "*"
+    "abi_generator": "workspace:*"
   }
 }

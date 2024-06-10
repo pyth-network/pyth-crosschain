@@ -9,8 +9,8 @@ const Footer = () => {
           © 2024 Pyth Data Association
         </span>
         <div className="py-10 lg:py-0">
-          <Link href="https://pyth.network/">
-            <a target="_blank">Pyth Network</a>
+          <Link href="https://pyth.network/" target="_blank">
+            Pyth Network
           </Link>{' '}
         </div>
         <SocialLinks />

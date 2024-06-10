@@ -16,7 +16,7 @@ bigtable-writer.json
 tsconfig.tsbuildinfo
 *~
 *mnemonic*
-.envrc
 */*.sui.log*
 __pycache__
 .DS_Store
+.vercel

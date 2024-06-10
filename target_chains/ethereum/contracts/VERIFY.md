@@ -71,7 +71,7 @@ Some chains might require users to verify with hardhat. Here are the additional 
 - Run :
 
 ```
-MNEMONIC=... npx hardhat verify 0x354bF866A4B006C9AF9d9e06d9364217A8616E12 --network shimmer_testnet
+MNEMONIC=... pnpm exec hardhat verify 0x354bF866A4B006C9AF9d9e06d9364217A8616E12 --network shimmer_testnet
 ```
 
 This process is somehow flaky. After running it, check the explorer as sometimes it will work even when it says it failed.

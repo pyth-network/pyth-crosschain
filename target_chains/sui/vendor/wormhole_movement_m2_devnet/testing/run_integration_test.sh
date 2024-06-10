@@ -25,7 +25,7 @@ cd testing
 
 ## run contract tests here
 echo "$(date) :: running tests"
-npx ts-mocha -t 1000000 $TEST_DIR/js/*.ts
+pnpm exec ts-mocha -t 1000000 $TEST_DIR/js/*.ts
 
 # nuke
 echo "$(date) :: done"

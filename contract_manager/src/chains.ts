@@ -21,7 +21,6 @@ import {
 import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { TransactionObject } from "web3/eth/types";
 import { TokenId } from "./token";
 
 export type ChainConfig = Record<string, string> & {
@@ -52,7 +51,7 @@ export abstract class Chain extends Storable {
     if (toChainId(this.wormholeChainName) === undefined)
       throw new Error(
         `Invalid chain name ${wormholeChainName}.
-        Try rebuilding @pythnetwork/xc-admin-common: npx lerna run build --scope @pythnetwork/xc-admin-common`
+        Try rebuilding @pythnetwork/xc-admin-common: pnpm exec lerna run build --scope @pythnetwork/xc-admin-common`
       );
   }
 
@@ -398,7 +397,7 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: TransactionObject<any>,
+    transactionObject: any,
     txParams: { from?: string; value?: string }
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;

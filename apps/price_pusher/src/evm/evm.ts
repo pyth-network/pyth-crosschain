@@ -10,6 +10,7 @@ import { addLeading0x, DurationInSeconds, removeLeading0x } from "../utils";
 import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.json";
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import Web3 from "web3";
+import { HttpProvider, WebsocketProvider } from "web3-core";
 import { isWsEndpoint } from "../utils";
 import {
   PriceServiceConnection,
@@ -17,8 +18,8 @@ import {
   UnixTimestamp,
 } from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
-import { Provider } from "web3/providers";
 import { PushAttempt } from "../common";
+import { ProviderOrUrl } from "@truffle/hdwallet-provider/dist/constructor/types";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -356,7 +357,7 @@ export class PythContractFactory {
     return isWsEndpoint(this.endpoint);
   }
 
-  createWeb3Provider() {
+  createWeb3Provider(): HttpProvider | WebsocketProvider {
     if (isWsEndpoint(this.endpoint)) {
       Web3.providers.WebsocketProvider.prototype.sendAsync =
         Web3.providers.WebsocketProvider.prototype.send;
@@ -387,7 +388,7 @@ export class PythContractFactory {
       mnemonic: {
         phrase: this.mnemonic,
       },
-      providerOrUrl: this.createWeb3Provider() as Provider,
+      providerOrUrl: this.createWeb3Provider() as ProviderOrUrl,
     });
   }
 }

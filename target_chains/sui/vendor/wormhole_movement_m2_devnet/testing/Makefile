@@ -5,7 +5,7 @@ clean:
 	rm -rf node_modules
 
 node_modules:
-	npm ci
+	pnpm i
 
 .PHONY: test
 ## Run tests

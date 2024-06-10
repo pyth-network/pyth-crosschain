@@ -12,7 +12,7 @@
 set -euo pipefail
 
 echo "=========== Building dependencies ==========="
-npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+pnpm exec lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
 
 echo "=========== Compiling ==========="
 
@@ -23,10 +23,10 @@ fi
 
 echo "Building the contracts..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build && npx truffle compile --all
+rm -rf build && pnpm exec truffle compile --all
 
 echo "Deploying the contracts..."
 
 pushd ../../../contract_manager/
 
-npx ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"
+pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"

@@ -14,20 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup tool
-        run: npm ci
+        run: pnpm i
       - name: Build generic cosmwasm contract
         run: |
-          npm run build-contract -- --cosmwasm
+          pnpm run build-contract -- --cosmwasm
           mv ../artifacts ../cosmwasm
           zip -r cosmwasm.zip ../cosmwasm
       - name: Build injective cosmwasm contract
         run: |
-          npm run build-contract -- --injective
+          pnpm run build-contract -- --injective
           mv ../artifacts ../injective
           zip -r injective.zip ../injective
       - name: Build osmosis cosmwasm contract
         run: |
-          npm run build-contract -- --osmosis
+          pnpm run build-contract -- --osmosis
           mv ../artifacts ../osmosis
           zip -r osmosis.zip ../osmosis
 

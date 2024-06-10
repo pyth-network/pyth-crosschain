@@ -17,7 +17,7 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NEXT_PUBLIC_RPC_POOL_TOKEN $NEXT_PUBLIC_RPC_POOL_TOKEN
 
-RUN npx lerna run build --scope="@pythnetwork/xc-admin-frontend" --include-dependencies
+RUN pnpm exec lerna run build --scope="@pythnetwork/xc-admin-frontend" --include-dependencies
 
 WORKDIR /home/node/governance/xc_admin/packages/xc_admin_frontend
 
@@ -25,4 +25,4 @@ EXPOSE 3000
 
 ENV PORT 3000
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]

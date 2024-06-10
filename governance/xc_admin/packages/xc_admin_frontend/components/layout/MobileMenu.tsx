@@ -59,25 +59,22 @@ const MobileMenu = ({ headerState }: MenuProps) => {
         <Image
           src={orb}
           alt=""
-          layout="fill"
-          objectFit="cover"
-          objectPosition="bottom center"
+          className="w-full h-full object-cover object-bottom"
         />
         <div className="sm:after:gradient-border relative flex px-14 pt-16 sm:flex-1 sm:items-center md:px-28 ">
           <div className="grid w-full sm:grid-cols-2">
             <ul className="list-none pt-5 sm:pt-10">
               {navigation.map((item) => (
                 <li key={item.name} className="mb-5 sm:mb-10">
-                  <Link href={item.href}>
-                    <a
-                      target={item.target}
-                      className=" inline-block font-body  text-4xl leading-none tracking-wide transition-colors hover:text-white"
-                      aria-current={
-                        router.pathname === item.href ? 'page' : undefined
-                      }
-                    >
-                      {item.name}
-                    </a>
+                  <Link
+                    href={item.href}
+                    target={item.target}
+                    className=" inline-block font-body  text-4xl leading-none tracking-wide transition-colors hover:text-white"
+                    aria-current={
+                      router.pathname === item.href ? 'page' : undefined
+                    }
+                  >
+                    {item.name}
                   </Link>
                 </li>
               ))}
