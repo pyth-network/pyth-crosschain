@@ -46,7 +46,7 @@ async function run() {
 
   // Streaming price updates
   const eventSource = await connection.getPriceUpdatesStream(priceIds, {
-    encoding: "base64",
+    encoding: "hex",
     parsed: true,
     allowUnordered: true,
     benchmarksOnly: true,
