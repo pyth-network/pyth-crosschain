@@ -297,6 +297,9 @@ abi PythInfo {
 
     #[storage(read)]
     fn valid_data_sources() -> Vec<DataSource>;
+
+    #[storage(read)]
+    fn chain_id() -> u16;
 }
 
 abi WormholeGuardians {
