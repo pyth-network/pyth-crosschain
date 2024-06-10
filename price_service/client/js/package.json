@@ -48,7 +48,7 @@
     "yargs": "^17.4.1"
   },
   "dependencies": {
-    "@pythnetwork/price-service-sdk": "*",
+    "@pythnetwork/price-service-sdk": "workspace:*",
     "@types/ws": "^8.5.3",
     "axios": "^1.5.1",
     "axios-retry": "^4.0.0",

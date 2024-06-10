@@ -14,8 +14,8 @@
   "dependencies": {
     "@cosmjs/crypto": "^0.32.3",
     "@ltd/j-toml": "^1.38.0",
-    "@pythnetwork/contract-manager": "*",
-    "@pythnetwork/cosmwasm-deploy-tools": "*",
+    "@pythnetwork/contract-manager": "workspace:*",
+    "@pythnetwork/cosmwasm-deploy-tools": "workspace:*",
     "@pythnetwork/xc-admin-common": "workspace:^",
     "adm-zip": "^0.5.10",
     "node-downloader-helper": "^2.1.7",

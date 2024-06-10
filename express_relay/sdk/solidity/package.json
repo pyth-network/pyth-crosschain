@@ -29,6 +29,6 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
-    "abi_generator": "*"
+    "abi_generator": "workspace:*"
   }
 }

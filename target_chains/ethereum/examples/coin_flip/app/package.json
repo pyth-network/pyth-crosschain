@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@pythnetwork/pyth-evm-js": "*",
-    "@pythnetwork/pyth-sdk-solidity": "*",
+    "@pythnetwork/pyth-evm-js": "workspace:*",
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@truffle/hdwallet-provider": "^2.1.15",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.11.64",

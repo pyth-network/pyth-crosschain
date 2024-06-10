@@ -13,7 +13,7 @@
     "@headlessui/react": "^1.7.7",
     "@pythnetwork/client": "^2.21.0",
     "@pythnetwork/solana-utils": "workspace:^",
-    "@pythnetwork/xc-admin-common": "*",
+    "@pythnetwork/xc-admin-common": "workspace:*",
     "@radix-ui/react-label": "^2.0.0",
     "@radix-ui/react-tooltip": "^1.0.3",
     "@solana/spl-token": "^0.3.7",

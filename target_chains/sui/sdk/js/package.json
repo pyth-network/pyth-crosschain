@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@mysten/sui.js": "^0.49.1",
-    "@pythnetwork/price-service-client": "*",
+    "@pythnetwork/price-service-client": "workspace:*",
     "buffer": "^6.0.3"
   }
 }

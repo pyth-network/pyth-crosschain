@@ -21,7 +21,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@pythnetwork/client": "^2.17.0",
-    "@pythnetwork/xc-admin-common": "*",
+    "@pythnetwork/xc-admin-common": "workspace:*",
     "@solana/web3.js": "^1.76.0",
     "@sqds/mesh": "^1.0.6",
     "@types/cors": "^2.8.17",

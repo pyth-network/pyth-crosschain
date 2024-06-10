@@ -34,10 +34,10 @@
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
-    "@pythnetwork/pyth-multisig-wh-message-builder": "*",
+    "@pythnetwork/pyth-multisig-wh-message-builder": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "^3.0.0",
-    "@pythnetwork/entropy-sdk-solidity": "*",
-    "@pythnetwork/contract-manager": "*",
+    "@pythnetwork/entropy-sdk-solidity": "workspace:*",
+    "@pythnetwork/contract-manager": "workspace:*",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
     "ethers": "^5.7.2",
@@ -52,7 +52,7 @@
     "web3": "^1.2.2",
     "web3-eth-abi": "^1.2.2",
     "web3-utils": "^1.2.2",
-    "@pythnetwork/xc-admin-common": "*",
+    "@pythnetwork/xc-admin-common": "workspace:*",
     "zksync-web3": "^0.13.4"
   }
 }

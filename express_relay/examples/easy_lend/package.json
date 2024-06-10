@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
-    "@pythnetwork/express-relay-evm-js": "*",
-    "@pythnetwork/express-relay-sdk-solidity": "*",
+    "@pythnetwork/express-relay-evm-js": "workspace:*",
+    "@pythnetwork/express-relay-sdk-solidity": "workspace:*",
     "@pythnetwork/price-service-client": "workspace:^",
-    "@pythnetwork/pyth-evm-js": "*",
-    "@pythnetwork/pyth-sdk-solidity": "*",
+    "@pythnetwork/pyth-evm-js": "workspace:*",
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3",
     "viem": "^2.7.6"

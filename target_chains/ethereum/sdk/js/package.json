@@ -37,7 +37,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@pythnetwork/pyth-sdk-solidity": "*",
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
@@ -55,7 +55,7 @@
     "yargs": "^17.4.1"
   },
   "dependencies": {
-    "@pythnetwork/price-service-client": "*",
+    "@pythnetwork/price-service-client": "workspace:*",
     "buffer": "^6.0.3"
   }
 }
