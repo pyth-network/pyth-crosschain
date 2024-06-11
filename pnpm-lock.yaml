@@ -501,7 +501,11 @@ importers:
         version: 1.0.6
       ts-node:
         specifier: ^10.9.1
-        version: 10.9.1(@types/node@20.14.2)(typescript@4.9.5)
+        version: 10.9.1(@types/node@20.14.2)(typescript@5.4.5)
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
 
   governance/xc_admin/packages/proposer_server:
     dependencies:
@@ -528,11 +532,14 @@ importers:
         version: 2.8.5
       ts-node:
         specifier: ^10.9.1
-        version: 10.9.1(@types/node@20.14.2)(typescript@4.9.5)
+        version: 10.9.1(@types/node@20.14.2)(typescript@5.4.5)
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
 
   governance/xc_admin/packages/xc_admin_cli:
     dependencies:
