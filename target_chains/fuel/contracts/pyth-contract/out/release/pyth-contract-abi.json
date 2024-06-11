@@ -1464,6 +1464,23 @@
       ]
     },
     {
+      "inputs": [],
+      "name": "last_executed_governance_sequence",
+      "output": {
+        "name": "",
+        "type": 40,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
+    },
+    {
       "inputs": [
         {
           "name": "price_feed_id",
@@ -1881,7 +1898,7 @@
         "type": 6,
         "typeArguments": []
       },
-      "offset": 129160
+      "offset": 129528
     }
   ]
 }

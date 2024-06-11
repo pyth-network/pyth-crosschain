@@ -108,7 +108,7 @@ impl GuardianSetUpgrade {
         index += 1;
         let mut new_guardian_set: StorageGuardianSet = StorageGuardianSet::new(
             0,
-            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", new_guardian_set_index)), 0, ZERO_B256),
+            StorageKey::<StorageVec<b256>>::new(ZERO_B256, 0, sha256(("guardian_set_keys", new_guardian_set_index))),
         );
         let mut i: u8 = 0;
         while i < guardian_length {
