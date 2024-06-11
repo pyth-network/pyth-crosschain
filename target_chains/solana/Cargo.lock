@@ -3113,7 +3113,7 @@ checksum = "937c8595148fb2a9a90439daf6a371a5b3c9fcd9b636f26d36ae31d6846d4339"
 dependencies = [
  "anchor-lang",
  "hex",
- "pythnet-sdk 2.0.0",
+ "pythnet-sdk 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-program",
 ]
 
@@ -3125,25 +3125,6 @@ dependencies = [
  "hex",
  "pythnet-sdk 2.1.0",
  "solana-program",
-]
-
-[[package]]
-name = "pythnet-sdk"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f246dc1ea2966f811d894590014f9163942b33255fc7560fe629726a721aad1"
-dependencies = [
- "bincode",
- "borsh 0.10.3",
- "bytemuck",
- "byteorder",
- "fast-math",
- "hex",
- "rustc_version",
- "serde",
- "sha3 0.10.6",
- "slow_primes",
- "thiserror",
 ]
 
 [[package]]
@@ -3168,6 +3149,25 @@ dependencies = [
  "solana-program",
  "thiserror",
  "wormhole-vaas-serde",
+]
+
+[[package]]
+name = "pythnet-sdk"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bbbc0456f9f27c9ad16b6c3bf1b2a7fea61eebf900f4d024a0468b9a84fe0c1"
+dependencies = [
+ "bincode",
+ "borsh 0.10.3",
+ "bytemuck",
+ "byteorder",
+ "fast-math",
+ "hex",
+ "rustc_version",
+ "serde",
+ "sha3 0.10.6",
+ "slow_primes",
+ "thiserror",
 ]
 
 [[package]]

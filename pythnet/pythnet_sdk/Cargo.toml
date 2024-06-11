@@ -33,7 +33,7 @@ wormhole-vaas-serde = {version = "0.1.0", optional = true}
 libsecp256k1 = {version ="0.7.1", optional = true}
 rand = {version = "0.8.5", optional = true}
 solana-program = {version = ">=1.13.6", optional = true}
-anchor-lang  = {version = ">=0.28.0", optional = true}
+anchor-lang  = {version = ">=0.26.0", optional = true}
 proc-macro2 = {version = "=1.0.79", optional = true} # pinned to 1.0.79 to compilation errors with newer versions, remove this if it compiles fine without
 
 [dev-dependencies]
