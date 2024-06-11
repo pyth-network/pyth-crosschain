@@ -221,7 +221,6 @@ pub fn read_and_verify_message(ref reader: Reader, root_digest: u256) -> PriceFe
     }
 }
 
-// test
 impl PriceFeedMessageIntoPriceFeed of Into<PriceFeedMessage, PriceFeed> {
     fn into(self: PriceFeedMessage) -> PriceFeed {
         PriceFeed {
