@@ -16,7 +16,7 @@
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
-    "@pythnetwork/xc-admin-common": "^0.0.0",
+    "@pythnetwork/xc-admin-common": "workspace:*",
     "prettier": "^2.8.7",
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
