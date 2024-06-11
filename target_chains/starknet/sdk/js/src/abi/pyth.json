@@ -686,6 +686,11 @@
         "name": "new_fee",
         "type": "core::integer::u256",
         "kind": "data"
+      },
+      {
+        "name": "token",
+        "type": "core::starknet::contract_address::ContractAddress",
+        "kind": "data"
       }
     ]
   },
