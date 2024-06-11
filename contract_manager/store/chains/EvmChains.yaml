@@ -624,3 +624,8 @@
   rpcUrl: https://rpc.gravity.xyz/
   networkId: 1625
   type: EvmChain
+- id: etherlink_testnet
+  mainnet: false
+  rpcUrl: https://node.ghostnet.etherlink.com/
+  networkId: 128123
+  type: EvmChain

@@ -160,6 +160,7 @@ export const RECEIVER_CHAINS = {
   dela_mithreum_deperp_testnet: 50080,
   berachain_testnet_v2: 50081,
   opbnb_testnet: 50082,
+  etherlink_testnet: 50083,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
