@@ -560,6 +560,11 @@ impl PythInfo for Contract {
     }
 
     #[storage(read)]
+    fn last_executed_governance_sequence() -> u64 {
+        last_executed_governance_sequence()
+    }
+
+    #[storage(read)]
     fn chain_id() -> u16 {
         chain_id()
     }

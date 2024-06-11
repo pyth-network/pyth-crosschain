@@ -299,6 +299,9 @@ abi PythInfo {
     fn valid_data_sources() -> Vec<DataSource>;
 
     #[storage(read)]
+    fn last_executed_governance_sequence() -> u64;
+
+    #[storage(read)]
     fn chain_id() -> u16;
 }
 
