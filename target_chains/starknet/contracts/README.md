@@ -29,4 +29,4 @@ Run `scarb fmt` to automatically format the source code.
 
 1. Install Starkli (a cli tool for Starknet) by following [the installation instructions](https://github.com/xJonathanLEI/starkli).
 2. Install Katana (a local Starknet node) by following [the installation instructions](https://book.starknet.io/ch02-04-katana.html).
-3. Run the `deploy/local_deploy` setup script.
+3. Run the `deploy/deploy.sh` setup script.
