@@ -12,9 +12,13 @@ use {
         price_feeds_metadata::PriceFeedMetaState,
         wormhole::WormholeState,
     },
+    aggregate::Slot,
     prometheus_client::registry::Registry,
     reqwest::Url,
-    std::sync::Arc,
+    std::{
+        sync::Arc,
+        time::Duration,
+    },
     tokio::sync::broadcast::Sender,
 };
 
@@ -64,13 +68,20 @@ pub fn new(
     update_tx: Sender<AggregationEvent>,
     cache_size: u64,
     benchmarks_endpoint: Option<Url>,
+    readiness_staleness_threshold: Duration,
+    readiness_max_allowed_slot_lag: Slot,
 ) -> Arc<impl Metrics + Wormhole> {
     let mut metrics_registry = Registry::default();
     Arc::new(State {
         cache:           CacheState::new(cache_size),
         benchmarks:      BenchmarksState::new(benchmarks_endpoint),
         price_feed_meta: PriceFeedMetaState::new(),
-        aggregates:      AggregateState::new(update_tx, &mut metrics_registry),
+        aggregates:      AggregateState::new(
+            update_tx,
+            readiness_staleness_threshold,
+            readiness_max_allowed_slot_lag,
+            &mut metrics_registry,
+        ),
         wormhole:        WormholeState::new(),
         metrics:         MetricsState::new(metrics_registry),
     })
@@ -85,7 +96,10 @@ pub mod test {
             Wormhole,
         },
         crate::network::wormhole::GuardianSet,
-        std::sync::Arc,
+        std::{
+            sync::Arc,
+            time::Duration,
+        },
         tokio::sync::broadcast::Receiver,
     };
 
@@ -93,7 +107,7 @@ pub mod test {
         cache_size: u64,
     ) -> (Arc<impl Aggregates>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::broadcast::channel(1000);
-        let state = super::new(update_tx, cache_size, None);
+        let state = super::new(update_tx, cache_size, None, Duration::from_secs(30), 10);
 
         // Add an initial guardian set with public key 0
         Wormhole::update_guardian_set(
