@@ -1,5 +1,5 @@
-# Defined in Dockerfile.builder
-FROM builder AS xc-admin-frontend-builder
+# Defined in Dockerfile.node
+FROM builder-base AS xc-admin-frontend-builder
 ARG NEXT_PUBLIC_RPC_POOL_TOKEN
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV BUILD_STANDALONE true
@@ -8,8 +8,8 @@ RUN pnpm exec lerna run build --scope="@pythnetwork/xc-admin-frontend" --include
 
 
 # See https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
-# Defined in Dockerfile.runner
-FROM runner as xc-admin-frontend
+# Defined in Dockerfile.node
+FROM runner-base as xc-admin-frontend
 COPY --from=xc-admin-frontend-builder --chown=pyth:pyth /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/.next/standalone ./
 COPY --from=xc-admin-frontend-builder --chown=pyth:pyth /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/.next/static ./governance/xc_admin/packages/xc_admin_frontend/.next/static
 COPY --from=xc-admin-frontend-builder /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/public ./governance/xc_admin/packages/xc_admin_frontend/public

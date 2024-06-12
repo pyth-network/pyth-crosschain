@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "start": "node lib/index.js",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {

@@ -28,8 +28,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build docker image
         run: |
-          DOCKER_BUILDKIT=1 docker build -t builder -f Dockerfile.builder .
-          DOCKER_BUILDKIT=1 docker build -t runner -f Dockerfile.runner .
+          DOCKER_BUILDKIT=1 docker build -t builder-base --target builder-base -f Dockerfile.node .
+          DOCKER_BUILDKIT=1 docker build -t runner-base --target runner-base -f Dockerfile.node .
           DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             --build-arg NEXT_PUBLIC_RPC_POOL_TOKEN=${{ secrets.NEXT_PUBLIC_RPC_POOL_TOKEN }} \
             -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .

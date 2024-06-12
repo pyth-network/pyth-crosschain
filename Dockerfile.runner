@@ -1,5 +1,0 @@
-FROM node:18.20-alpine@sha256:6937be95129321422103452e2883021cc4a96b63c32d7947187fcb25df84fc3f as runner
-WORKDIR /srv
-ENV NODE_ENV production
-RUN addgroup --system --gid 1001 pyth && adduser --system --uid 1001 pyth -g pyth && chown pyth:pyth .
-USER pyth

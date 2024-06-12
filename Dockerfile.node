@@ -1,0 +1,26 @@
+FROM node:18.20-slim@sha256:1da7652745e9ba5de396e436aa086588ea50d532540fa3147fbc1957c43a46ab as builder-base
+WORKDIR /usr/src/pyth
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN apt-get update && apt-get install -y git python3 make gcc g++ && corepack enable
+COPY ./ .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+
+FROM node:18.20-alpine@sha256:6937be95129321422103452e2883021cc4a96b63c32d7947187fcb25df84fc3f as runner-base
+WORKDIR /srv
+ENV NODE_ENV production
+RUN addgroup --system --gid 1001 pyth && adduser --system --uid 1001 pyth -g pyth && chown pyth:pyth .
+USER pyth
+
+
+FROM builder-base AS builder
+ARG package
+RUN pnpm exec lerna run build --scope="$package" --include-dependencies
+RUN pnpm deploy --filter $package --prod /srv/$package
+
+
+FROM runner-base AS runner
+ARG package
+COPY --from=builder --chown=pyth:pyth /srv/${package} ./
+CMD [ "npm", "start" ]
