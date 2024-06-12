@@ -39,7 +39,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v1
         id: ecr_login
       - run: |
-          DOCKER_BUILDKIT=1 docker build -t lerna -f Dockerfile.lerna .
+          DOCKER_BUILDKIT=1 docker build -t builder -f Dockerfile.builder .
+          DOCKER_BUILDKIT=1 docker build -t runner -f Dockerfile.runner .
           DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f apps/price_pusher/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:

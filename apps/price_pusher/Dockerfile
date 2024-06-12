@@ -1,22 +1,11 @@
-# Defined in Dockerfile.lerna
-FROM lerna:latest
-
-USER root
-
-WORKDIR /home/node/
-USER 1000
-
-# local dependencies
-COPY --chown=1000:1000 target_chains/ethereum/sdk/solidity target_chains/ethereum/sdk/solidity
-COPY --chown=1000:1000 target_chains/sui/sdk/js target_chains/sui/sdk/js
-COPY --chown=1000:1000 price_service/client/js price_service/client/js
-COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
-COPY --chown=1000:1000 target_chains/solana/sdk/js target_chains/solana/sdk/js
-
-COPY --chown=1000:1000 apps/price_pusher apps/price_pusher
-
+# Defined in Dockerfile.builder
+FROM builder AS price-pusher-builder
+RUN apt-get update && apt-get install -y git
 RUN pnpm exec lerna run build --scope="@pythnetwork/price-pusher" --include-dependencies
+RUN pnpm deploy --filter @pythnetwork/price-pusher --prod /srv/price-pusher
 
-WORKDIR /home/node/apps/price_pusher
 
-ENTRYPOINT [ "pnpm", "run", "start" ]
+# Defined in Dockerfile.runner
+FROM runner as price-pusher
+COPY --from=price-pusher-builder --chown=pyth:pyth /srv/price-pusher ./
+CMD [ "node", "lib/index.js" ]

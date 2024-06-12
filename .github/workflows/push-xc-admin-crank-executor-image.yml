@@ -29,8 +29,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build docker image
         run: |
-          DOCKER_BUILDKIT=1 docker build -t lerna -f Dockerfile.lerna .
-          DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -f governance/xc_admin/Dockerfile .
+          DOCKER_BUILDKIT=1 docker build -t builder -f Dockerfile.builder .
+          DOCKER_BUILDKIT=1 docker build -t runner -f Dockerfile.runner .
+          DOCKER_BUILDKIT=1 docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -f governance/xc_admin/packages/crank_executor/Dockerfile .
       - name: Push docker image
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}

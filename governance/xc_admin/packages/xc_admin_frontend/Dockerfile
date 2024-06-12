@@ -1,28 +1,20 @@
-# Defined in Dockerfile.lerna
-FROM lerna
-
-USER root
-
-WORKDIR /home/node/
-USER 1000
-
+# Defined in Dockerfile.builder
+FROM builder AS xc-admin-frontend-builder
 ARG NEXT_PUBLIC_RPC_POOL_TOKEN
-
-COPY --chown=1000:1000 target_chains/solana/sdk/js target_chains/solana/sdk/js
-COPY --chown=1000:1000 governance/xc_admin governance/xc_admin
-COPY --chown=1000:1000 pythnet/message_buffer pythnet/message_buffer
-COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
-
-ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV BUILD_STANDALONE true
 ENV NEXT_PUBLIC_RPC_POOL_TOKEN $NEXT_PUBLIC_RPC_POOL_TOKEN
-
 RUN pnpm exec lerna run build --scope="@pythnetwork/xc-admin-frontend" --include-dependencies
 
-WORKDIR /home/node/governance/xc_admin/packages/xc_admin_frontend
 
-EXPOSE 3000
-
+# See https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
+# Defined in Dockerfile.runner
+FROM runner as xc-admin-frontend
+COPY --from=xc-admin-frontend-builder --chown=pyth:pyth /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/.next/standalone ./
+COPY --from=xc-admin-frontend-builder --chown=pyth:pyth /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/.next/static ./governance/xc_admin/packages/xc_admin_frontend/.next/static
+COPY --from=xc-admin-frontend-builder /usr/src/pyth/governance/xc_admin/packages/xc_admin_frontend/public ./governance/xc_admin/packages/xc_admin_frontend/public
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV HOSTNAME 0.0.0.0
 ENV PORT 3000
-
-CMD ["pnpm", "start"]
+EXPOSE $PORT
+CMD [ "node", "governance/xc_admin/packages/xc_admin_frontend/server.js" ]
