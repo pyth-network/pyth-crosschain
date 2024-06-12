@@ -148,12 +148,19 @@ async function topupAccountsIfNecessary(
         deploymentConfig.privateKey
       );
       web3.eth.accounts.wallet.add(signer);
+      const estimatedGas = await web3.eth.estimateGas({
+        from: signer.address,
+        to: accountAddress,
+        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+      });
+
       const tx = await web3.eth.sendTransaction({
         from: signer.address,
         to: accountAddress,
-        gas: 30000,
+        gas: estimatedGas * deploymentConfig.gasMultiplier,
         value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
       });
+
       console.log(
         `Topped up the ${accountName} address. Tx: `,
         tx.transactionHash
