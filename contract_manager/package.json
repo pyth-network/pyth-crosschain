@@ -12,7 +12,8 @@
     "build": "tsc",
     "shell": "ts-node ./src/shell.ts",
     "lint": "eslint src/ scripts/",
-    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
+    "generate-fuel-types": "pnpm fuels typegen -i ../target_chains/fuel/contracts/pyth-contract/out/release/*-abi.json -o ./src/types/fuel"
   },
   "author": "",
   "license": "Apache-2.0",
