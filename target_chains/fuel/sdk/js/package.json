@@ -1,0 +1,45 @@
+{
+  "name": "@pythnetwork/pyth-fuel-js",
+  "version": "1.0.0",
+  "description": "Pyth Network Fuel Utils in JS",
+  "homepage": "https://pyth.network",
+  "author": {
+    "name": "Pyth Data Association"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "target_chains/fuel/sdk/js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "usage-example": "ts-node src/examples/usage.ts",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@pythnetwork/hermes-client": "workspace:*",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "fuels": "^0.89.2"
+  }
+}
