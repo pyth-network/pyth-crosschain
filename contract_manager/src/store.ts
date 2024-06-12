@@ -19,6 +19,7 @@ import {
   SuiWormholeContract,
   FuelWormholeContract,
   WormholeContract,
+  FuelPriceFeedContract,
 } from "./contracts";
 import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
@@ -132,6 +133,7 @@ export class Store {
       [AptosWormholeContract.type]: AptosWormholeContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
       [EvmWormholeContract.type]: EvmWormholeContract,
+      [FuelPriceFeedContract.type]: FuelPriceFeedContract,
       [FuelWormholeContract.type]: FuelWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
