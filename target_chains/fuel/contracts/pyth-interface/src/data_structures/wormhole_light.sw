@@ -122,8 +122,8 @@ impl GuardianSetUpgrade {
         require(
             new_guardian_set
                 .keys
-                .len() > 0,
-            WormholeError::NewGuardianSetIsEmpty,
+                .len() == guardian_length.as_u64(),
+            WormholeError::GuardianSetKeysLengthNotEqual,
         );
         require(
             encoded_upgrade

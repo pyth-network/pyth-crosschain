@@ -363,6 +363,11 @@
           "typeArguments": null
         },
         {
+          "name": "GuardianSetKeysLengthNotEqual",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
           "name": "GuardianSetNotFound",
           "type": 0,
           "typeArguments": null
@@ -1833,7 +1838,7 @@
         "type": 6,
         "typeArguments": []
       },
-      "offset": 129528
+      "offset": 129616
     }
   ]
 }
