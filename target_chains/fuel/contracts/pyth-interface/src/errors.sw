@@ -45,6 +45,7 @@ pub enum WormholeError {
     GuardianIndexIrretrievable: (),
     GuardianSetHasExpired: (),
     GuardianSetKeyIrretrievable: (),
+    GuardianSetKeysLengthNotEqual: (),
     GuardianSetNotFound: (),
     InvalidGovernanceAction: (),
     InvalidGovernanceChain: (),

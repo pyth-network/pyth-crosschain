@@ -95,8 +95,11 @@ export class FuelWormholeContract extends WormholeContract {
     const contract = await this.getContract(wallet);
     const tx = await contract.functions
       .submit_new_guardian_set(arrayify(vaa))
-      .call(); // you might get `Error updating Guardianset for fuel_testnet_{address} TypeError: response.body.getReader is not a function` but the tx could still be successful, this could be due to fuel-ts bug
-    return { id: tx.transactionId, info: tx.transactionResponse };
+      .call(); // you might get `Error updating Guardianset for fuel_testnet_{address} TypeError: response.body.getReader is not a function` but the tx could still be successful, this is due to fuels using native fetch but some other packages in the monorepo is using node-fetch which overrides the fetch here
+    return {
+      id: tx.transactionId,
+      info: JSON.stringify(tx.transactionResponse),
+    };
   }
 }
 
