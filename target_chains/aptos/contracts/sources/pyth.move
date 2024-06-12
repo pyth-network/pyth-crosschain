@@ -30,6 +30,13 @@ module pyth::pyth {
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u64 = 1096111958;
 
+    struct PriceFeedUpdate {
+        id: PriceIdentifier,
+        price: u64,
+        conf: u64,
+        expo: i32,
+        publish_time: u64,
+    }
 
     // -----------------------------------------------------------------------------
     // Initialisation functions
@@ -155,6 +162,70 @@ module pyth::pyth {
         let fee = coin::withdraw<AptosCoin>(account, update_fee);
         coin::deposit(@pyth, fee);
     }
+
+    // -----------------------------------------------------------------------------
+    // Parse price feed updates 
+    //
+    public fun parse_price_feed_updates(
+        update_data: vector<vector<u8>>, 
+        price_ids: vector<PriceIdentifier>, 
+        min_publish_time: u64, 
+        max_publish_time: u64
+    ): vector<PriceFeedUpdate> {
+        let updates: vector<PriceFeedUpdate> = vector::empty<PriceFeedUpdate>();
+        let i = 0;
+
+        while (i < vector::length(&update_data)) {
+            let data = vector::borrow(&update_data, i);
+            let parsed_updates = parse_single_update(data, &price_ids, min_publish_time, max_publish_time);
+            let j = 0;
+
+            while (j < vector::length(&parsed_updates)) {
+                let update = vector::borrow(&parsed_updates, j);
+                vector::push_back(&mut updates, *update);
+                j = j + 1;
+            }
+            i = i + 1;
+        }
+
+        updates
+    }
+
+    fun parse_single_update(
+        data: &vector<u8>, 
+        price_ids: &vector<PriceIdentifier>, 
+        min_publish_time: u64, 
+        max_publish_time: u64
+    ): vector<PriceFeedUpdate> {
+        let updates: vector<PriceFeedUpdate> = vector::empty<PriceFeedUpdate>();
+        let cursor = 0;
+
+        while (cursor < vector::length(data)) {
+            let price_id = PriceIdentifier::deserialize(data, &cursor);
+            let price = PriceInfo::deserialize(data, &cursor);
+            let conf = PriceInfo::deserialize(data, &cursor);
+            let expo = PriceInfo::deserialize(data, &cursor);
+            let publish_time = PriceInfo::deserialize(data, &cursor);
+
+            if (publish_time >= min_publish_time && publish_time <= max_publish_time) {
+                if (vector::contains(price_ids, &price_id)) {
+                    let update = PriceFeedUpdate {
+                        id: price_id,
+                        price: price,
+                        conf: conf,
+                        expo: expo,
+                        publish_time: publish_time,
+                    };
+                    vector::push_back(&mut updates, update);
+                }
+            }
+
+            cursor = cursor + 1;
+        }
+
+        updates
+    }
+
 
     /// Update the cached price feeds with the data in the given VAAs.
     /// The vaas argument is a vector of VAAs encoded as bytes.
