@@ -15,4 +15,4 @@
 
 .git
 
-!apps/hermes/src/state/cache.rs
+!apps/hermes/server/src/state/cache.rs
