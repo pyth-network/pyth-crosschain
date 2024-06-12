@@ -10,9 +10,11 @@ import {
   InvocationCallResult,
 } from "fuels";
 import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
-import { PriceFeedOutput } from "../types/PythContractAbi";
+import {
+  PriceFeedOutput,
+  DataSourceOutput,
+} from "../types/fuel/PythContractAbi";
 import { TokenQty } from "../token";
-import { DataSourceOutput } from "../types/PythContractAbi";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export class FuelWormholeContract extends WormholeContract {
