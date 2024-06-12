@@ -51,7 +51,13 @@ async fn init() -> Result<()> {
             let (update_tx, _) = tokio::sync::broadcast::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let state = state::new(update_tx.clone(), 1000, opts.benchmarks.endpoint.clone());
+            let state = state::new(
+                update_tx.clone(),
+                1000,
+                opts.benchmarks.endpoint.clone(),
+                opts.aggregate.readiness_staleness_threshold.into(),
+                opts.aggregate.readiness_max_allowed_slot_lag,
+            );
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {

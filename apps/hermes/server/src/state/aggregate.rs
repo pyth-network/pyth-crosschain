@@ -19,7 +19,6 @@ use {
         WormholeMerkleState,
     },
     crate::{
-        api::types::RpcPriceIdentifier,
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
@@ -123,17 +122,29 @@ pub struct AggregateStateData {
     /// probes.
     pub latest_observed_slot: Option<Slot>,
 
+    /// The duration of no aggregation after which the readiness of the state is considered stale.
+    pub readiness_staleness_threshold: Duration,
+
+    /// The maximum allowed slot lag between the latest observed slot and the latest completed slot.
+    pub readiness_max_allowed_slot_lag: Slot,
+
     /// Aggregate Specific Metrics
     pub metrics: metrics::Metrics,
 }
 
 impl AggregateStateData {
-    pub fn new(metrics_registry: &mut Registry) -> Self {
+    pub fn new(
+        readiness_staleness_threshold: Duration,
+        readiness_max_allowed_slot_lag: Slot,
+        metrics_registry: &mut Registry,
+    ) -> Self {
         Self {
-            latest_completed_slot:      None,
+            latest_completed_slot: None,
             latest_completed_update_at: None,
-            latest_observed_slot:       None,
-            metrics:                    metrics::Metrics::new(metrics_registry),
+            latest_observed_slot: None,
+            metrics: metrics::Metrics::new(metrics_registry),
+            readiness_staleness_threshold,
+            readiness_max_allowed_slot_lag,
         }
     }
 }
@@ -144,9 +155,18 @@ pub struct AggregateState {
 }
 
 impl AggregateState {
-    pub fn new(update_tx: Sender<AggregationEvent>, metrics_registry: &mut Registry) -> Self {
+    pub fn new(
+        update_tx: Sender<AggregationEvent>,
+        readiness_staleness_threshold: Duration,
+        readiness_max_allowed_slot_lag: Slot,
+        metrics_registry: &mut Registry,
+    ) -> Self {
         Self {
-            data:          RwLock::new(AggregateStateData::new(metrics_registry)),
+            data:          RwLock::new(AggregateStateData::new(
+                readiness_staleness_threshold,
+                readiness_max_allowed_slot_lag,
+                metrics_registry,
+            )),
             api_update_tx: update_tx,
         }
     }
@@ -192,12 +212,6 @@ pub struct PriceFeedsWithUpdateData {
     pub price_feeds: Vec<PriceFeedUpdate>,
     pub update_data: Vec<Vec<u8>>,
 }
-
-const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
-
-/// The maximum allowed slot lag between the latest observed slot and the latest completed slot.
-/// 10 slots is almost 5 seconds.
-const READINESS_MAX_ALLOWED_SLOT_LAG: Slot = 10;
 
 #[async_trait::async_trait]
 pub trait Aggregates
@@ -388,24 +402,25 @@ where
     }
 
     async fn is_ready(&self) -> bool {
-        let metadata = self.into().data.read().await;
+        let state_data = self.into().data.read().await;
         let price_feeds_metadata = PriceFeedMeta::retrieve_price_feeds_metadata(self)
             .await
             .unwrap();
 
-        let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
+        let has_completed_recently = match state_data.latest_completed_update_at.as_ref() {
             Some(latest_completed_update_time) => {
-                latest_completed_update_time.elapsed() < READINESS_STALENESS_THRESHOLD
+                latest_completed_update_time.elapsed() < state_data.readiness_staleness_threshold
             }
             None => false,
         };
 
         let is_not_behind = match (
-            metadata.latest_completed_slot,
-            metadata.latest_observed_slot,
+            state_data.latest_completed_slot,
+            state_data.latest_observed_slot,
         ) {
             (Some(latest_completed_slot), Some(latest_observed_slot)) => {
-                latest_observed_slot - latest_completed_slot <= READINESS_MAX_ALLOWED_SLOT_LAG
+                latest_observed_slot - latest_completed_slot
+                    <= state_data.readiness_max_allowed_slot_lag
             }
             _ => false,
         };
@@ -512,7 +527,10 @@ mod test {
     use {
         super::*,
         crate::{
-            api::types::PriceFeedMetadata,
+            api::types::{
+                PriceFeedMetadata,
+                RpcPriceIdentifier,
+            },
             state::test::setup_state,
         },
         futures::future::join_all,
@@ -881,8 +899,9 @@ mod test {
         assert!(state.is_ready().await);
 
         // Advance the clock to make the prices stale
-        MockClock::advance_system_time(READINESS_STALENESS_THRESHOLD);
-        MockClock::advance(READINESS_STALENESS_THRESHOLD);
+        let staleness_threshold = Duration::from_secs(30);
+        MockClock::advance_system_time(staleness_threshold);
+        MockClock::advance(staleness_threshold);
         // Check the state is not ready
         assert!(!state.is_ready().await);
     }

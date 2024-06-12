@@ -7,6 +7,7 @@ use clap::{
     Parser,
 };
 
+mod aggregate;
 mod benchmarks;
 mod metrics;
 mod pythnet;
@@ -30,9 +31,17 @@ pub enum Options {
 
 #[derive(Args, Clone, Debug)]
 pub struct RunOptions {
-    /// Wormhole Options.
+    /// Aggregate Options
     #[command(flatten)]
-    pub wormhole: wormhole::Options,
+    pub aggregate: aggregate::Options,
+
+    /// Benchmarks Options
+    #[command(flatten)]
+    pub benchmarks: benchmarks::Options,
+
+    /// Metrics Options
+    #[command(flatten)]
+    pub metrics: metrics::Options,
 
     /// PythNet Options
     #[command(flatten)]
@@ -42,13 +51,9 @@ pub struct RunOptions {
     #[command(flatten)]
     pub rpc: rpc::Options,
 
-    /// Benchmarks Options
+    /// Wormhole Options.
     #[command(flatten)]
-    pub benchmarks: benchmarks::Options,
-
-    /// Metrics Options
-    #[command(flatten)]
-    pub metrics: metrics::Options,
+    pub wormhole: wormhole::Options,
 }
 
 #[derive(Args, Clone, Debug)]
