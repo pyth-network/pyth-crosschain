@@ -79,7 +79,6 @@ export class FuelWormholeContract extends WormholeContract {
   async getGuardianSet(): Promise<string[]> {
     const contract = await this.getContract();
     const guardianSetIndex = await this.getCurrentGuardianSetIndex();
-    console.log("Guardian Set Index:", guardianSetIndex);
     const guardianSet = (
       await contract.functions.guardian_set(guardianSetIndex).get()
     ).value;
