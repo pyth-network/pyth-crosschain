@@ -1,16 +1,15 @@
 services:
   price-pusher:
-    # Use this to build the price pusher from source. The pusher docker image
-    # depends on the pyth-crosschain monorepo builder and runner docker
-    # images. Build the images using the following commands from the repo root:
-    # `docker buildx build -f Dockerfile.builder -t builder .`
-    # `docker buildx build -f Dockerfile.runner -t runner .`
+    # Use this to build the price pusher from source.
     #
     # Please note that the docker build from source only works in x86_64 platforms
     # and doesn't work on arm platforms (like Apple M1/M2).
     #
     # build:
-    #   context: .
+    #   context: ../..
+    #   dockerfile: Dockerfile.node
+    #   args:
+    #     package: "@pythnetwork/price-pusher"
 
     # Replace <version> with the latest released image of the price pusher from here:
     # https://gallery.ecr.aws/pyth-network/xc-price-pusher
