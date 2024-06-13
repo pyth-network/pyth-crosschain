@@ -23,9 +23,7 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
-
-export const FUEL_ETH_ASSET_ID =
-  "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;

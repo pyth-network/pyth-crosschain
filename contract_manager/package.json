@@ -34,6 +34,7 @@
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
+    "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",

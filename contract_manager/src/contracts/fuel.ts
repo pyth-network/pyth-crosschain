@@ -1,6 +1,12 @@
-import { Chain, FUEL_ETH_ASSET_ID, FuelChain } from "../chains";
+import { Chain, FuelChain } from "../chains";
 import { WormholeContract } from "./wormhole";
-import FuelContractAbi from "../../../target_chains/fuel/contracts/pyth-contract/out/release/pyth-contract-abi.json";
+import {
+  PYTH_CONTRACT_ABI as FuelContractAbi,
+  FUEL_ETH_ASSET_ID,
+  PriceFeedOutput,
+  DataSourceOutput,
+} from "@pythnetwork/pyth-fuel-js";
+
 import {
   Account,
   Contract,
@@ -10,10 +16,7 @@ import {
   InvocationCallResult,
 } from "fuels";
 import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
-import {
-  PriceFeedOutput,
-  DataSourceOutput,
-} from "../types/fuel/PythContractAbi";
+
 import { TokenQty } from "../token";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 
