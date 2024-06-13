@@ -1,0 +1,38 @@
+name: Build and Push Cross Chain Admin
+on:
+  push:
+    tags:
+      - xc-admin-v*
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+env:
+  REGISTRY: ghcr.io
+jobs:
+  xc-admin-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set image tag to version of the git tag
+        if: ${{ startsWith(github.ref, 'refs/tags/xc-admin-v') }}
+        run: |
+          PREFIX="refs/tags/xc-admin-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
+          echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build docker image
+        run: |
+          DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-crank-executor" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-executor:${{ env.IMAGE_TAG }} -f Dockerfile.node .
+          DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-crank-pythnet-relayer" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-pythnet-relayer:${{ env.IMAGE_TAG }} -f Dockerfile.node .
+          DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-proposer-server" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-proposer-server:${{ env.IMAGE_TAG }} -f Dockerfile.node .
+      - name: Push docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-executor:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-pythnet-relayer:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-proposer-server:${{ env.IMAGE_TAG }}
