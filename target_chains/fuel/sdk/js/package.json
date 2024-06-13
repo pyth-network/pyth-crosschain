@@ -25,7 +25,7 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepublishOnly": "pnpm run build && pnpm run lint",
+    "prepublishOnly": "pnpm run build && pnpm run test && pnpm run lint",
     "preversion": "pnpm run lint",
     "version": "pnpm run format && git add -A src",
     "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types"
