@@ -72,6 +72,7 @@ export const RECEIVER_CHAINS = {
   sei_evm_mainnet: 50078,
   opbnb: 60052,
   gravity: 60053,
+  polynomial: 60054,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

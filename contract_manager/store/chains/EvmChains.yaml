@@ -629,3 +629,8 @@
   rpcUrl: https://node.ghostnet.etherlink.com/
   networkId: 128123
   type: EvmChain
+- id: polynomial
+  mainnet: true
+  rpcUrl: https://rpc.polynomial.fi/
+  networkId: 8008
+  type: EvmChain
