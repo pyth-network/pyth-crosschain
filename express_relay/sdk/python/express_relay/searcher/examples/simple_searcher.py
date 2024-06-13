@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import secrets
 from eth_account.account import Account
 from express_relay.client import ExpressRelayClient, sign_bid
 from express_relay.express_relay_types import (
@@ -47,7 +48,9 @@ class SimpleSearcher:
         Returns:
             If the opportunity is deemed worthwhile, this function can return an OpportunityBid object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        opportunity_bid = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
+        opportunity_bid = sign_bid(
+            opp, NAIVE_BID, secrets.randbits(64), VALID_UNTIL_MAX, self.private_key
+        )
 
         return opportunity_bid
 

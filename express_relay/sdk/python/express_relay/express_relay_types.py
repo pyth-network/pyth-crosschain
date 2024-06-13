@@ -74,6 +74,17 @@ SignedMessageString = Annotated[
 ]
 
 
+class TokenPermissions(BaseModel):
+    """
+    Attributes:
+        token: The address of the token contract.
+        amount: The amount of the token.
+    """
+
+    token: Address
+    amount: IntString
+
+
 class TokenAmount(BaseModel):
     """
     Attributes:
@@ -229,6 +240,7 @@ class OpportunityBid(BaseModel):
     Attributes:
         opportunity_id: The ID of the opportunity.
         amount: The amount of the bid in wei.
+        nonce: The nonce used to created the bid signature.
         executor: The address of the executor.
         permission_key: The permission key to bid on.
         signature: The signature of the bid.
@@ -237,6 +249,7 @@ class OpportunityBid(BaseModel):
 
     opportunity_id: UUIDString
     amount: IntString
+    nonce: IntString
     executor: Address
     permission_key: HexString
     signature: SignedMessageString
@@ -280,10 +293,10 @@ class OpportunityParams(BaseModel):
 
 
 class EIP712Domain(BaseModel):
-    name: str
-    version: str
-    chain_id: IntString
-    verifying_contract: Address
+    name: str | None
+    version: str | None
+    chain_id: IntString | None
+    verifying_contract: Address | None
 
 
 class Opportunity(BaseModel):
@@ -390,6 +403,7 @@ class PostOpportunityBidMessageParams(BaseModel):
         method: A string literal "post_opportunity_bid".
         opportunity_id: The ID of the opportunity.
         amount: The amount of the bid in wei.
+        nonce: The nonce used to created the bid signature.
         executor: The address of the executor.
         permission_key: The permission key to bid on.
         signature: The signature of the bid.
@@ -399,6 +413,7 @@ class PostOpportunityBidMessageParams(BaseModel):
     method: Literal["post_opportunity_bid"]
     opportunity_id: UUIDString
     amount: IntString
+    nonce: IntString
     executor: Address
     permission_key: HexString
     signature: SignedMessageString

@@ -3,7 +3,7 @@ from asyncio import Task
 from datetime import datetime
 import json
 import urllib.parse
-from typing import Callable, Any
+from typing import Callable, Any, List
 from collections.abc import Coroutine
 from uuid import UUID
 import httpx
@@ -11,6 +11,7 @@ import websockets
 from websockets.client import WebSocketClientProtocol
 from eth_account.account import Account
 from express_relay.express_relay_types import (
+    Address,
     BidResponse,
     Opportunity,
     BidStatusUpdate,
@@ -18,7 +19,29 @@ from express_relay.express_relay_types import (
     Bid,
     OpportunityBid,
     OpportunityParams,
+    TokenAmount,
+    TokenPermissions,
 )
+
+
+class ChainConfig:
+    def __init__(
+        self,
+        _weth_address: Address,
+        _opportunity_adapter_address: Address,
+    ):
+        """
+        Args:
+            weth_address: The address of the WETH contract on the chain.
+            opportunity_adapter_address: The address of the opportunity adapter contract on the chain.
+        """
+        self.weth_address = _weth_address
+        self.opportunity_adapter_address = _opportunity_adapter_address
+
+
+_CHAIN_CONFIG = {
+    "op_sepolia": ChainConfig("0x0", "0x0"),  # TODO fill in the addresses
+}
 
 
 class ExpressRelayClientException(Exception):
@@ -142,6 +165,7 @@ class ExpressRelayClient:
                 "opportunity_id": msg["params"]["opportunity_id"],
                 "opportunity_bid": {
                     "amount": msg["params"]["amount"],
+                    "nonce": msg["params"]["nonce"],
                     "executor": msg["params"]["executor"],
                     "permission_key": msg["params"]["permission_key"],
                     "signature": msg["params"]["signature"],
@@ -272,6 +296,7 @@ class ExpressRelayClient:
                 "method": "post_opportunity_bid",
                 "opportunity_id": opportunity_bid.opportunity_id,
                 "amount": opportunity_bid.amount,
+                "nonce": opportunity_bid.nonce,
                 "executor": opportunity_bid.executor,
                 "permission_key": opportunity_bid.permission_key,
                 "signature": opportunity_bid.signature,
@@ -421,9 +446,35 @@ class ExpressRelayClient:
         return bids
 
 
+def _get_permitted_tokens(
+    sell_tokens: list[TokenAmount],
+    bid_amount: int,
+    call_value: int,
+    weth_address: Address,
+) -> list[TokenPermissions]:
+    permitted_tokens: List[TokenPermissions] = [
+        TokenPermissions(token=token.token, amount=token.amount)
+        for token in sell_tokens
+    ]
+
+    weth_amount = call_value + bid_amount
+    for token in permitted_tokens:
+        if token.token == weth_address:
+            token.amount += weth_amount
+            return permitted_tokens
+
+    if weth_amount > 0:
+        permitted_tokens.append(
+            TokenPermissions(token=weth_address, amount=weth_amount)
+        )
+
+    return permitted_tokens
+
+
 def sign_bid(
     opportunity: Opportunity,
     bid_amount: int,
+    nonce: int,
     valid_until: int,
     private_key: str,
 ) -> OpportunityBid:
@@ -446,45 +497,66 @@ def sign_bid(
         "chainId": opportunity.eip_712_domain.chain_id,
         "verifyingContract": opportunity.eip_712_domain.verifying_contract,
     }
+    domain_data = {k: v for k, v in domain_data.items() if v is not None}
     message_types = {
-        "ExecutionParams": [
-            {"name": "sellTokens", "type": "TokenAmount[]"},
+        "PermitBatchWitnessTransferFrom": [
+            {"name": "permitted", "type": "TokenPermissions[]"},
+            {"name": "spender", "type": "address"},
+            {"name": "nonce", "type": "uint256"},
+            {"name": "deadline", "type": "uint256"},
+            {"name": "witness", "type": "OpportunityWitness"},
+        ],
+        "OpportunityWitness": [
             {"name": "buyTokens", "type": "TokenAmount[]"},
             {"name": "executor", "type": "address"},
             {"name": "targetContract", "type": "address"},
             {"name": "targetCalldata", "type": "bytes"},
             {"name": "targetCallValue", "type": "uint256"},
-            {"name": "validUntil", "type": "uint256"},
             {"name": "bidAmount", "type": "uint256"},
         ],
         "TokenAmount": [
             {"name": "token", "type": "address"},
             {"name": "amount", "type": "uint256"},
         ],
+        "TokenPermissions": [
+            {"name": "token", "type": "address"},
+            {"name": "amount", "type": "uint256"},
+        ],
     }
 
-    # the data to be signed
+    permitted_tokens = _get_permitted_tokens(
+        opportunity.sell_tokens,
+        bid_amount,
+        opportunity.target_call_value,
+        _CHAIN_CONFIG[opportunity.chain_id].weth_address,
+    )
     message_data = {
-        "sellTokens": [
+        "permitted": [
             {
                 "token": token.token,
                 "amount": int(token.amount),
             }
-            for token in opportunity.sell_tokens
+            for token in permitted_tokens
         ],
-        "buyTokens": [
-            {
-                "token": token.token,
-                "amount": int(token.amount),
-            }
-            for token in opportunity.buy_tokens
-        ],
-        "executor": executor,
-        "targetContract": opportunity.target_contract,
-        "targetCalldata": bytes.fromhex(opportunity.target_calldata.replace("0x", "")),
-        "targetCallValue": opportunity.target_call_value,
-        "validUntil": valid_until,
-        "bidAmount": bid_amount,
+        "spender": _CHAIN_CONFIG[opportunity.chain_id].opportunity_adapter_address,
+        "nonce": nonce,
+        "deadline": valid_until,
+        "witness": {
+            "buyTokens": [
+                {
+                    "token": token.token,
+                    "amount": int(token.amount),
+                }
+                for token in opportunity.buy_tokens
+            ],
+            "executor": executor,
+            "targetContract": opportunity.target_contract,
+            "targetCalldata": bytes.fromhex(
+                opportunity.target_calldata.replace("0x", "")
+            ),
+            "targetCallValue": opportunity.target_call_value,
+            "bidAmount": bid_amount,
+        },
     }
 
     signed_typed_data = Account.sign_typed_data(
@@ -495,6 +567,7 @@ def sign_bid(
         opportunity_id=opportunity.opportunity_id,
         permission_key=opportunity.permission_key,
         amount=bid_amount,
+        nonce=nonce,
         valid_until=valid_until,
         executor=executor,
         signature=signed_typed_data,
