@@ -52,6 +52,7 @@ class SimpleSearcher {
     // here for simplicity we are using a constant bid and 24 hours of validity
     const bidParams = {
       amount: bid,
+      nonce: BigInt(Math.floor(Math.random() * 2 ** 50)),
       validUntil: BigInt(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
     };
     const opportunityBid = await this.client.signOpportunityBid(

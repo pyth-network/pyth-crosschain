@@ -164,12 +164,12 @@ export interface components {
        * @description The network chain id parameter for EIP712 domain.
        * @example 31337
        */
-      chain_id: string;
+      chain_id?: string | null;
       /**
        * @description The name parameter for the EIP712 domain.
        * @example OpportunityAdapter
        */
-      name: string;
+      name?: string | null;
       /**
        * @description The verifying contract address parameter for the EIP712 domain.
        * @example 0xcA11bde05977b3631167028862bE2a173976CA11
@@ -179,7 +179,7 @@ export interface components {
        * @description The version parameter for the EIP712 domain.
        * @example 1
        */
-      version: string;
+      version?: string | null;
     };
     ErrorBodyResponse: {
       error: string;
@@ -195,6 +195,11 @@ export interface components {
        * @example 0x5FbDB2315678afecb367f032d93F642f64180aa2
        */
       executor: string;
+      /**
+       * @description The nonce of the bid permit signature
+       * @example 123
+       */
+      nonce: string;
       /**
        * @description The opportunity permission key
        * @example 0xdeadbeefcafe

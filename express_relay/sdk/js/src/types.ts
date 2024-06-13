@@ -19,6 +19,10 @@ export type BidParams = {
    */
   amount: bigint;
   /**
+   * The nonce used to sign the bid
+   */
+  nonce: bigint;
+  /**
    * Unix timestamp for when the bid is no longer valid in seconds
    */
   validUntil: bigint;
@@ -30,7 +34,7 @@ export type EIP712Domain = {
   /**
    * The network chain id for the EIP712 domain.
    */
-  chainId: bigint;
+  chainId?: bigint;
   /**
    * The verifying contract address for the EIP712 domain.
    */
@@ -38,11 +42,11 @@ export type EIP712Domain = {
   /**
    * The name parameter for the EIP712 domain.
    */
-  name: string;
+  name?: string;
   /**
    * The version parameter for the EIP712 domain.
    */
-  version: string;
+  version?: string;
 };
 /**
  * Represents a valid opportunity ready to be executed
