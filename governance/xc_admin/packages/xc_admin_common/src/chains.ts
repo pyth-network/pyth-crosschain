@@ -73,6 +73,7 @@ export const RECEIVER_CHAINS = {
   opbnb: 60052,
   gravity: 60053,
   polynomial: 60054,
+  etherlink: 60055,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
