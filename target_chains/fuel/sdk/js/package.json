@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/pyth-starknet-js",
-  "version": "1.4.2",
-  "description": "Pyth Network Starknet Utilities",
+  "name": "@pythnetwork/pyth-fuel-js",
+  "version": "1.0.0",
+  "description": "Pyth Network Fuel Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
@@ -14,20 +14,21 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/starknet/sdk/js"
+    "directory": "target_chains/fuel/sdk/js"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "test": "jest --passWithNoTests",
-    "build": "tsc",
     "usage-example": "ts-node src/examples/usage.ts",
+    "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
+    "prepublishOnly": "pnpm run build && pnpm run lint",
     "preversion": "pnpm run lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types"
   },
   "keywords": [
     "pyth",
@@ -35,17 +36,17 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0",
-    "jest": "^29.4.1",
-    "prettier": "^2.6.2",
-    "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3",
+    "@pythnetwork/hermes-client": "workspace:*",
     "ts-node": "^10.9.2",
-    "@pythnetwork/price-service-client": "^1.9.0",
-    "starknet": "^6.9.0"
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "prettier": "^2.6.2",
+    "@typescript-eslint/parser": "^5.21.0",
+    "jest": "^29.4.1",
+    "ts-jest": "^29.0.5",
+    "eslint": "^8.14.0",
+    "typescript": "^4.6.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "fuels": "^0.89.2"
+  }
 }
