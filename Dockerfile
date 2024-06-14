@@ -1,10 +1,8 @@
 FROM public.ecr.aws/bitnami/node:18
 RUN apt-get update && apt-get install -y git python3 make gcc g++ && corepack enable
 ENV NODE_ENV=production
-RUN npm install -g yarn
 RUN npm install -g typescript
 RUN npm install -g ts-node
-RUN npm install -g pnpm
 WORKDIR /app
 COPY . .
 RUN pnpm install
