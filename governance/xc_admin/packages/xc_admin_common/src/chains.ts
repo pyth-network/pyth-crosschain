@@ -161,6 +161,7 @@ export const RECEIVER_CHAINS = {
   berachain_testnet_v2: 50081,
   opbnb_testnet: 50082,
   etherlink_testnet: 50083,
+  fuel_testnet: 50084,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

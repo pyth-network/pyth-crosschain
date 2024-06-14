@@ -22,6 +22,8 @@ import { Network } from "@injectivelabs/networks";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
+import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -558,5 +560,73 @@ export class AptosChain extends Chain {
       }
     );
     return { id: result.hash, info: result };
+  }
+}
+
+export class FuelChain extends Chain {
+  static type = "FuelChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public gqlUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  async getProvider(): Promise<Provider> {
+    return await Provider.create(this.gqlUrl);
+  }
+
+  async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
+    const provider = await this.getProvider();
+    return Wallet.fromPrivateKey(privateKey, provider);
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    // This might throw an error because the Fuel contract doesn't support upgrades yet (blocked on Fuel releasing Upgradeability standard)
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  getType(): string {
+    return FuelChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      gqlUrl: this.gqlUrl,
+      type: FuelChain.type,
+    };
+  }
+
+  static fromJson(parsed: ChainConfig): FuelChain {
+    if (parsed.type !== FuelChain.type) throw new Error("Invalid type");
+    return new FuelChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.gqlUrl
+    );
+  }
+
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const wallet = await this.getWallet(privateKey);
+    return wallet.address.toString();
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const wallet = await this.getWallet(privateKey);
+    const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
+    return Number(balance) / 10 ** 9;
   }
 }

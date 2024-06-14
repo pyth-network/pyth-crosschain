@@ -212,6 +212,9 @@ importers:
       '@pythnetwork/price-service-client':
         specifier: workspace:*
         version: link:../price_service/client/js
+      '@pythnetwork/pyth-fuel-js':
+        specifier: workspace:*
+        version: link:../target_chains/fuel/sdk/js
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:^
         version: link:../target_chains/ethereum/sdk/solidity
@@ -239,6 +242,15 @@ importers:
       bs58:
         specifier: ^5.0.0
         version: 5.0.0
+      extract-files:
+        specifier: ^13.0.0
+        version: 13.0.0
+      fuels:
+        specifier: ^0.89.2
+        version: 0.89.2
+      ramda:
+        specifier: ^0.30.1
+        version: 0.30.1
       ts-node:
         specifier: ^10.9.1
         version: 10.9.1(@types/node@20.14.2)(typescript@5.4.5)
@@ -1365,6 +1377,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^5.21.0
         version: 5.49.0(eslint@8.56.0)(typescript@4.9.5)
+      copyfiles:
+        specifier: ^2.4.1
+        version: 2.4.1
       eslint:
         specifier: ^8.14.0
         version: 8.56.0
@@ -7145,7 +7160,7 @@ packages:
       chalk: 4.1.2
       ci-info: 3.9.0
       exit: 0.1.2
-      graceful-fs: 4.2.11
+      graceful-fs: 4.2.10
       jest-changed-files: 29.7.0
       jest-config: 29.7.0(@types/node@20.14.2)(ts-node@10.9.1)
       jest-haste-map: 29.7.0
@@ -7159,7 +7174,7 @@ packages:
       jest-util: 29.7.0
       jest-validate: 29.7.0
       jest-watcher: 29.7.0
-      micromatch: 4.0.7
+      micromatch: 4.0.5
       pretty-format: 29.7.0
       slash: 3.0.0
       strip-ansi: 6.0.1
@@ -7188,7 +7203,7 @@ packages:
       chalk: 4.1.2
       ci-info: 3.9.0
       exit: 0.1.2
-      graceful-fs: 4.2.11
+      graceful-fs: 4.2.10
       jest-changed-files: 29.7.0
       jest-config: 29.7.0(@types/node@20.14.2)(ts-node@10.9.2)
       jest-haste-map: 29.7.0
@@ -7202,7 +7217,7 @@ packages:
       jest-util: 29.7.0
       jest-validate: 29.7.0
       jest-watcher: 29.7.0
-      micromatch: 4.0.7
+      micromatch: 4.0.5
       pretty-format: 29.7.0
       slash: 3.0.0
       strip-ansi: 6.0.1
@@ -13653,7 +13668,7 @@ packages:
       '@typescript-eslint/scope-manager': 5.49.0
       '@typescript-eslint/types': 5.49.0
       '@typescript-eslint/typescript-estree': 5.49.0(typescript@4.9.5)
-      debug: 4.3.5
+      debug: 4.3.4(supports-color@8.1.1)
       eslint: 8.56.0
       typescript: 4.9.5
     transitivePeerDependencies:
@@ -17322,7 +17337,6 @@ packages:
       through2: 2.0.5
       untildify: 4.0.0
       yargs: 16.2.0
-    dev: false
 
   /core-js-compat@3.27.2:
     resolution: {integrity: sha512-welaYuF7ZtbYKGrIy7y3eb40d37rG1FvzEOfe7hSLd2iD6duMDqUhRfSvCGyC46HhR6Y8JXXdZ2lnRUMkPBpvg==}
@@ -19703,6 +19717,13 @@ packages:
       tmp: 0.0.33
     dev: true
 
+  /extract-files@13.0.0:
+    resolution: {integrity: sha512-FXD+2Tsr8Iqtm3QZy1Zmwscca7Jx3mMC5Crr+sEP1I303Jy1CYMuYCm7hRTplFNg3XdUavErkxnTzpaqdSoi6g==}
+    engines: {node: ^14.17.0 || ^16.0.0 || >= 18.0.0}
+    dependencies:
+      is-plain-obj: 4.1.0
+    dev: false
+
   /extract-files@9.0.0:
     resolution: {integrity: sha512-CvdFfHkC95B4bBBk36hcEmvdR2awOdhhVUYH6S/zrVj3477zven/fJMYg7121h4T1xHZC+tetUpubpAhxwI7hQ==}
     engines: {node: ^10.17.0 || ^12.0.0 || >= 13.7.0}
@@ -21520,6 +21541,11 @@ packages:
   /is-plain-obj@2.1.0:
     resolution: {integrity: sha512-YWnfyRwxL/+SsrWYfOpUtz5b3YD+nyfkHvjbcanzk8zgyO4ASD67uVMRt8k5bM4lLMDnXfriRhOpemw+NfT1eA==}
     engines: {node: '>=8'}
+
+  /is-plain-obj@4.1.0:
+    resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
+    engines: {node: '>=12'}
+    dev: false
 
   /is-plain-object@2.0.4:
     resolution: {integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==}
@@ -25822,7 +25848,6 @@ packages:
     dependencies:
       inherits: 2.0.4
       readable-stream: 1.0.34
-    dev: false
 
   /nopt@5.0.0:
     resolution: {integrity: sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==}
@@ -27661,6 +27686,10 @@ packages:
 
   /ramda@0.29.1:
     resolution: {integrity: sha512-OfxIeWzd4xdUNxlWhgFazxsA/nl3mS4/jGZI5n00uWOoSSFRhC1b6gl6xvmzUamgmqELraWp0J/qqVlXYPDPyA==}
+    dev: false
+
+  /ramda@0.30.1:
+    resolution: {integrity: sha512-tEF5I22zJnuclswcZMc8bDIrwRHRzf+NqVEmqg50ShAZMP7MWeR/RGDthfM/p+BlqvF2fXAzpn8i+SJcYD3alw==}
     dev: false
 
   /randombytes@2.1.0:
@@ -31063,7 +31092,6 @@ packages:
   /untildify@4.0.0:
     resolution: {integrity: sha512-KK8xQ1mkzZeg9inewmFVDNkg3l5LUhoq9kN6iWYB/CC9YMG8HA+c1Q8HwDe6dEX7kErrEVNVBO3fWsVq5iDgtw==}
     engines: {node: '>=8'}
-    dev: false
 
   /untun@0.1.3:
     resolution: {integrity: sha512-4luGP9LMYszMRZwsvyUd9MrxgEGZdZuZgpVQHEEX0lCYFESasVRvZd0EYpCkOIbJKHMuv0LskpXc/8Un+MJzEQ==}

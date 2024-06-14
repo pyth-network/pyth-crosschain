@@ -558,6 +558,16 @@ impl PythInfo for Contract {
     fn is_valid_data_source(data_source: DataSource) -> bool {
         data_source.is_valid_data_source(storage.is_valid_data_source)
     }
+
+    #[storage(read)]
+    fn last_executed_governance_sequence() -> u64 {
+        last_executed_governance_sequence()
+    }
+
+    #[storage(read)]
+    fn chain_id() -> u16 {
+        chain_id()
+    }
 }
 
 /// PythInfo Private Functions ///
