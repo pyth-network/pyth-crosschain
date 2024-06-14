@@ -5,6 +5,6 @@ RUN npm install -g lerna
 RUN npm install -g ts-node
 WORKDIR /app
 COPY . .
-RUN npm install
+RUN pnpm install
 RUN pnpm exec lerna run build --scope @pythnetwork/price-pusher --include-dependencies
 CMD ["npm", "run"]
