@@ -26,6 +26,7 @@ pub use {
     },
 };
 
+
 // Proof Format (V1)
 // --------------------------------------------------------------------------------
 // The definitions within each module can be updated with append-only data without requiring a new
@@ -40,15 +41,22 @@ pub mod v1 {
             hashers::keccak256_160::Keccak160,
             require,
         },
-        borsh::{
-            BorshDeserialize,
-            BorshSerialize,
-        },
         serde::{
             Deserialize,
             Serialize,
         },
     };
+    #[cfg(feature = "solana-program")]
+use anchor_lang::{
+    AnchorDeserialize,
+    AnchorSerialize,
+};
+#[cfg(not(feature = "solana-program"))]
+use borsh::{
+    BorshDeserialize,
+    BorshSerialize,
+};
+
     pub const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: &[u8; 4] = b"PNAU";
     pub const CURRENT_MINOR_VERSION: u8 = 0;
 
@@ -104,8 +112,13 @@ pub mod v1 {
     }
 
     #[derive(
-        Clone, Debug, Hash, PartialEq, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+        Clone, Debug, Hash, PartialEq, Serialize, Deserialize,
     )]
+    #[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    not(feature = "solana-program"),
+    derive(BorshSerialize, BorshDeserialize)
+)]
     pub struct MerklePriceUpdate {
         pub message: PrefixedVec<u16, u8>,
         pub proof:   MerklePath<Keccak160>,
