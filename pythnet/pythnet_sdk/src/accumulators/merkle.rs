@@ -8,14 +8,19 @@ use {
             Hasher,
         },
     },
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
     serde::{
         Deserialize,
         Serialize,
     },
+};
+#[cfg(feature = "solana-program")]
+use anchor_lang::{
+    AnchorDeserialize,
+    AnchorSerialize,
+};
+use borsh::{
+    BorshDeserialize,
+    BorshSerialize,
 };
 
 // We need to discern between leaf and intermediate nodes to prevent trivial second pre-image
@@ -45,8 +50,11 @@ const NULL_PREFIX: &[u8] = &[2];
     Eq,
     Serialize,
     Deserialize,
-    BorshSerialize,
-    BorshDeserialize,
+)]
+#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    not(feature = "solana-program"),
+    derive(BorshSerialize, BorshDeserialize)
 )]
 pub struct MerklePath<H: Hasher>(Vec<H::Hash>);
 

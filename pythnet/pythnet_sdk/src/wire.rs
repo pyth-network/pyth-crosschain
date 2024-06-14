@@ -57,6 +57,7 @@ use borsh::{
     BorshSerialize,
 };
 
+
     pub const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: &[u8; 4] = b"PNAU";
     pub const CURRENT_MINOR_VERSION: u8 = 0;
 
