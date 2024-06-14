@@ -111,9 +111,7 @@ export default {
     );
 
     const wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii")))
-      )
+      loadKeypair(fs.readFileSync(keypairFile, "ascii"))
     );
 
     const pythSolanaReceiver = new PythSolanaReceiver({
@@ -175,3 +173,21 @@ export const onBundleResult = (c: SearcherClient) => {
     }
   );
 };
+
+export function loadKeypair(privateKey: string): Keypair {
+	// try to load privateKey as a filepath
+	let loadedKey: Uint8Array;
+	if (fs.existsSync(privateKey)) {
+		privateKey = fs.readFileSync(privateKey).toString();
+	}
+
+	if (privateKey.includes('[') && privateKey.includes(']')) {
+		loadedKey = Uint8Array.from(JSON.parse(privateKey));
+	} else {
+		loadedKey = Uint8Array.from(
+			privateKey.split(',').map((val) => Number(val))
+		);
+	}
+
+	return Keypair.fromSecretKey(Uint8Array.from(loadedKey));
+}
