@@ -7,4 +7,4 @@ WORKDIR /app
 COPY . .
 RUN pnpm install
 RUN pnpm exec lerna run build --scope @pythnetwork/price-pusher --include-dependencies
-WORKDIR /app/apps/price_pusher
+CMD ["npm", "run"]
