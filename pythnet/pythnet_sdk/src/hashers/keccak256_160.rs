@@ -9,6 +9,7 @@ use {
     crate::hashers::Hasher,
     serde::Serialize,
 };
+#[cfg(feature = "solana-program")]
 use anchor_lang::{
     AnchorDeserialize,
     AnchorSerialize,

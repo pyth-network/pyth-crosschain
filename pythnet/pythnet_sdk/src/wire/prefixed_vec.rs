@@ -13,6 +13,11 @@ use {
         Serialize,
     },
 };
+#[cfg(feature = "solana-program")]
+use anchor_lang::{
+    AnchorDeserialize,
+    AnchorSerialize,
+};
 
 /// PrefixlessVec overrides the serialization to _not_ write a length prefix.
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
@@ -105,7 +110,13 @@ where
 ///
 /// For non-Pyth formats this results in a struct which is the correct way to interpret our
 /// data on chain anyway.
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    not(feature = "solana-program"),
+    derive(BorshSerialize, BorshDeserialize)
+)]
+
 pub struct PrefixedVec<L, T> {
     __phantom: std::marker::PhantomData<L>,
     data:      PrefixlessVec<T>,
