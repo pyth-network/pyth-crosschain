@@ -457,15 +457,15 @@ def _get_permitted_tokens(
         for token in sell_tokens
     ]
 
-    weth_amount = call_value + bid_amount
+    extra_weth_amount = call_value + bid_amount
     for token in permitted_tokens:
         if token.token == weth_address:
-            token.amount += weth_amount
+            token.amount += extra_weth_amount
             return permitted_tokens
 
-    if weth_amount > 0:
+    if extra_weth_amount > 0:
         permitted_tokens.append(
-            TokenPermissions(token=weth_address, amount=weth_amount)
+            TokenPermissions(token=weth_address, amount=extra_weth_amount)
         )
 
     return permitted_tokens

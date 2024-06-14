@@ -327,8 +327,8 @@ export class Client {
     const permittedTokens = sellTokens.map((token) => ({
       ...token,
     }));
-    const wethAmount = bidAmount + value;
-    if (wethAmount <= 0) {
+    const extraWethAmount = bidAmount + value;
+    if (extraWethAmount <= 0) {
       return permittedTokens;
     }
 
@@ -337,11 +337,11 @@ export class Client {
     );
     if (wethIndex >= 0) {
       permittedTokens[wethIndex].amount =
-        permittedTokens[wethIndex].amount + wethAmount;
+        permittedTokens[wethIndex].amount + extraWethAmount;
     } else {
       permittedTokens.push({
         token: wethAddress,
-        amount: wethAmount,
+        amount: extraWethAmount,
       });
     }
     return permittedTokens;
