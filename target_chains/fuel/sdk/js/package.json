@@ -36,7 +36,6 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@pythnetwork/hermes-client": "workspace:*",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "copyfiles": "^2.4.1",
