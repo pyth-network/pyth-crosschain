@@ -20,7 +20,12 @@ use anchor_lang::{
 };
 
 /// PrefixlessVec overrides the serialization to _not_ write a length prefix.
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    not(feature = "solana-program"),
+    derive(BorshSerialize, BorshDeserialize)
+)]
 struct PrefixlessVec<T> {
     inner: Vec<T>,
 }
