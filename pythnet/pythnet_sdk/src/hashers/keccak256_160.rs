@@ -9,9 +9,13 @@ use {
     crate::hashers::Hasher,
     serde::Serialize,
 };
-
+use anchor_lang::{
+    AnchorDeserialize,
+    AnchorSerialize,
+};
 
 #[derive(Clone, Default, Debug, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
 pub struct Keccak160 {}
 
 impl Hasher for Keccak160 {
