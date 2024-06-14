@@ -10,5 +10,4 @@ export const FUEL_ETH_ASSET_ID =
 
 export { PYTH_CONTRACT_ABI };
 export * from "./types";
-// Doing this is not ideal, but it's the only way to get the types to work
 export * from "./types/PythContractAbi";

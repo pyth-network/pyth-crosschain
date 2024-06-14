@@ -590,6 +590,7 @@ export class FuelChain extends Chain {
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
+    // This might throw an error because the Fuel contract doesn't support upgrades yet (blocked on Fuel releasing Upgradeability standard)
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
   }
 
