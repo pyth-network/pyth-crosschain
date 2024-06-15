@@ -122,9 +122,7 @@ export default {
 
     let solanaPricePusher;
     if (jitoTipLamports) {
-      const jitoKeypair = Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii")))
-      );
+      const jitoKeypair = loadKeypair(fs.readFileSync(jitoKeypairFile, "ascii"));
 
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
