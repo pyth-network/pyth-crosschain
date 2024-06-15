@@ -31,7 +31,7 @@ module pyth::pyth {
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u64 = 1096111958;
 
     struct PriceFeedUpdate {
-        id: PriceIdentifier,
+        id: vector<u8>,
         price: u64,
         conf: u64,
         expo: i32,
@@ -166,20 +166,35 @@ module pyth::pyth {
     // -----------------------------------------------------------------------------
     // Parse price feed updates 
     //
+    /// Parses a batch of price feed update data, verifies the provided fee, and updates the state.
+    /// The user must provide a sufficient fee to cover the processing costs.
+    //
     public fun parse_price_feed_updates(
+        account: &signer,
         update_data: vector<vector<u8>>, 
         price_ids: vector<PriceIdentifier>, 
         min_publish_time: u64, 
         max_publish_time: u64
     ): vector<PriceFeedUpdate> {
+        // Calculate the total fee based on the number of updates
+        let total_updates = vector::length(&update_data);
+        let update_fee = state::get_base_update_fee() * total_updates;
+
+        // Withdraw and deposit the fee
+        let fee_coin = coin::withdraw<AptosCoin>(account, update_fee);
+        assert!(update_fee <= coin::value(&fee), error::insufficient_fee());
+        coin::deposit(@pyth, fee_coin);
+
         let updates: vector<PriceFeedUpdate> = vector::empty<PriceFeedUpdate>();
         let i = 0;
 
+        // Iterate over the update data
         while (i < vector::length(&update_data)) {
             let data = vector::borrow(&update_data, i);
             let parsed_updates = parse_single_update(data, &price_ids, min_publish_time, max_publish_time);
             let j = 0;
 
+            // Add the parsed updates to the updates vector
             while (j < vector::length(&parsed_updates)) {
                 let update = vector::borrow(&parsed_updates, j);
                 vector::push_back(&mut updates, *update);
@@ -188,9 +203,10 @@ module pyth::pyth {
             i = i + 1;
         }
 
-        updates
+        updates 
     }
 
+    // Parse a single update data item
     fun parse_single_update(
         data: &vector<u8>, 
         price_ids: &vector<PriceIdentifier>, 
@@ -200,6 +216,7 @@ module pyth::pyth {
         let updates: vector<PriceFeedUpdate> = vector::empty<PriceFeedUpdate>();
         let cursor = 0;
 
+        // Iterate over the data to extract updates
         while (cursor < vector::length(data)) {
             let price_id = PriceIdentifier::deserialize(data, &cursor);
             let price = PriceInfo::deserialize(data, &cursor);
@@ -207,6 +224,7 @@ module pyth::pyth {
             let expo = PriceInfo::deserialize(data, &cursor);
             let publish_time = PriceInfo::deserialize(data, &cursor);
 
+            // Check if the publish time is within the specified range
             if (publish_time >= min_publish_time && publish_time <= max_publish_time) {
                 if (vector::contains(price_ids, &price_id)) {
                     let update = PriceFeedUpdate {
