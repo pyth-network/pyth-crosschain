@@ -6,7 +6,7 @@ use std::{bytes::Bytes, hash::Hash};
 use std::math::*;
 use std::primitive_conversions::{u32::*, u64::*};
 
-pub const MAGIC: u32 = 0x5054474d;
+pub const MAGIC: u32 = 0x5054474d; // MAGIC is `PTGM` encoded as a 4 byte data: Pyth Governance Message
 
 pub struct GovernanceInstruction {
     pub magic: u32,

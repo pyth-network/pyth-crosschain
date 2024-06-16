@@ -4,7 +4,8 @@ use ::errors::PythError;
 use ::data_structures::{data_source::*, price::*, wormhole_light::{StorageGuardianSet, WormholeVM}};
 use std::{bytes::Bytes, hash::Hash};
 
-const BATCH_MAGIC: u32 = 0x50325748;
+const BATCH_MAGIC: u32 = 0x50325748; // "P2WH" (Pyth2Wormhole) raw ASCII bytes
+const MAJOR_VERSION: u16 = 3;
 
 pub struct BatchAttestationUpdate {
     pub data: Bytes,
@@ -59,7 +60,7 @@ pub fn parse_and_verify_batch_attestation_header(encoded_payload: Bytes) -> (u64
     require(magic == BATCH_MAGIC, PythError::InvalidMagic);
     index += 4;
     let major_version = u16::from_be_bytes([encoded_payload.get(index).unwrap(), encoded_payload.get(index + 1).unwrap()]);
-    require(major_version == 3, PythError::InvalidMajorVersion);
+    require(major_version == MAJOR_VERSION, PythError::InvalidMajorVersion);
     // addtionally skip minor_version(2 bytes) as unused
     index += 4;
     let header_size = u16::from_be_bytes([encoded_payload.get(index).unwrap(), encoded_payload.get(index + 1).unwrap()]);

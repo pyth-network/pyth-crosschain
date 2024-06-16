@@ -1,7 +1,7 @@
 use crate::pyth_utils::{DataSource, Price, PriceFeed};
 use fuels::types::Bits256;
 
-pub const MAGIC: u32 = 0x5054474d;
+pub const MAGIC: u32 = 0x5054474d; // MAGIC is `PTGM` encoded as a 4 byte data: Pyth Governance Message
 
 pub const GOVERNANCE_DATA_SOURCE: DataSource = DataSource {
     chain_id: 1,
