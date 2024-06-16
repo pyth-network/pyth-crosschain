@@ -36,6 +36,7 @@ pub enum PythError {
     /// Emitted when a PriceFeed could not be retrieved.
     PriceFeedNotFound: (),
     PriceFeedNotFoundWithinRange: (),
+    PriceFeedPublishTimeInTheFuture: (),
     WormholeGovernanceActionNotFound: (),
 }
 
