@@ -537,12 +537,35 @@ module pyth::pyth {
         max_publish_time: u64,
         fee: Coin<AptosCoin>
     ): vector<ParsePriceFeed> {
-        //if fee provided is sufficient then proceed
-        //else give insufficient_fee error message
+        // Check if the fee provided is sufficient
+        // If not, abort with an insufficient_fee error
         let required_fee = get_update_fee(&update_data);
         assert!(coin::value(&fee) <= required_fee, error::insufficient_fee());
 
+        // Create an empty vector to store ParsePriceFeed structs
         let price_feeds = vector::empty<ParsePriceFeed>();
+
+        let i = 0;
+        while (i < vector::length(&update_data)) {
+            let data = vector::borrow(&update_data, i);
+            let cur = cursor::init(*vector::borrow(&update_data, i));
+            let header: u64 = deserialize::deserialize_u32(&mut cur);
+            
+            //Check if the provided data is valid (length > 4) &&
+            //header matches the expected ACCUMULATOR_UPDATE_MAGIC value
+            if (vector::length(data) > 4 && header == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+
+                let updates = parse_updates(*data, &price_ids, min_publish_time, max_publish_time);
+                let j = 0;
+                while (j < vector::length(&updates)) {
+                    let update = vector::borrow(&updates, j);
+                    vector::push_back(&mut updates, *update);
+                    j = j + 1;
+                };
+            };
+            cursor::rest(cur);
+            i = i + 1;
+        };
 
         coin::deposit(@pyth, fee);
         price_feeds
