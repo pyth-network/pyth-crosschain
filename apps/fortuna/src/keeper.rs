@@ -966,6 +966,7 @@ pub async fn adjust_fee_wrapper(
     min_fee: u128,
 ) {
     let mut high_water_pnl: Option<U256> = None;
+    let mut last_sequence_number: Option<u64> = None;
     loop {
         if let Err(e) = adjust_fee_if_necessary(
             contract.clone(),
@@ -974,6 +975,7 @@ pub async fn adjust_fee_wrapper(
             gas_limit,
             min_fee,
             &mut high_water_pnl,
+            &mut last_sequence_number,
         )
         .in_current_span()
         .await
@@ -992,6 +994,7 @@ pub async fn adjust_fee_if_necessary(
     gas_limit: u64,
     min_fee: u128,
     high_water_pnl: &mut Option<U256>,
+    last_sequence_number: &mut Option<u64>,
 ) -> Result<()> {
     let provider = contract.provider();
     let wallet = contract.wallet();
@@ -1027,8 +1030,14 @@ pub async fn adjust_fee_if_necessary(
 
     // FIXME
     // Don't adjust the fee on chains that are inactive. This check avoids spending keeper gas on chains
-    // where there's no
-    let is_chain_active: bool = false;
+    // where there's no activity.
+    let is_chain_active: bool = match last_sequence_number {
+        Some(n) => provider_info.sequence_number > *n,
+        None => {
+            *last_sequence_number = Some(provider_info.sequence_number);
+            false
+        }
+    };
 
     if is_chain_active
         && high_water_pnl.is_some()
@@ -1058,6 +1067,8 @@ pub async fn adjust_fee_if_necessary(
             "Set provider fee. Receipt: {:?}",
             tx_result,
         );
+
+        *last_sequence_number = Some(provider_info.sequence_number);
     } else {
         tracing::warn!(
             "Skipping fee adjustment. Current: {:?} Target: {:?}",
@@ -1065,6 +1076,8 @@ pub async fn adjust_fee_if_necessary(
             target_fee
         )
     }
+
+    *high_water_pnl = Some(current_pnl);
 
     Ok(())
 }
