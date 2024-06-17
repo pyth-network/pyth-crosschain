@@ -85,6 +85,8 @@ const POLL_INTERVAL: Duration = Duration::from_secs(2);
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 /// Check whether we need to conduct a withdrawal at this interval.
 const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
+/// Check whether we need to adjust the fee at this interval.
+const ADJUST_FEE_INTERVAL: Duration = Duration::from_secs(30);
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
@@ -294,7 +296,7 @@ pub async fn run_keeper_threads(
         adjust_fee_wrapper(
             contract.clone(),
             chain_state.provider_address.clone(),
-            WITHDRAW_INTERVAL,
+            ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
             chain_eth_config.gas_limit,
             chain_eth_config.min_profit_pct,
@@ -1040,7 +1042,7 @@ pub async fn adjust_fee_if_necessary(
         min_fee,
     );
 
-    // Calculate current P&L and update high water mark
+    // Calculate current P&L to determine if we can reduce fees.
     let current_keeper_balance = contract
         .provider()
         .get_balance(contract.wallet().address(), None)
@@ -1053,19 +1055,12 @@ pub async fn adjust_fee_if_necessary(
         Some(x) => current_pnl >= *x,
         None => false,
     };
-    *high_water_pnl = Some(std::cmp::max(
-        current_pnl,
-        high_water_pnl.unwrap_or(U256::from(0)),
-    ));
-
 
     // Determine if the chain has seen activity since the last fee update.
     let is_chain_active: bool = match sequence_number_of_last_fee_update {
         Some(n) => provider_info.sequence_number > *n,
         None => {
-            // We don't want to adjust the fees on server start for unused chains, hence
-            // the first "fee update" is the first observed sequence number.
-            *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
+            // We don't want to adjust the fees on server start for unused chains, hence false here.
             false
         }
     };
@@ -1100,12 +1095,31 @@ pub async fn adjust_fee_if_necessary(
 
         *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
     } else {
-        tracing::warn!(
-            "Skipping fee adjustment. Current: {:?} Target: {:?}",
+        tracing::info!(
+            "Skipping fee adjustment. Current: {:?} Target: {:?} Current Sequence Number: {:?} Last updated sequence number {:?} Current pnl: {:?} High water pnl: {:?}",
             provider_fee,
-            target_fee
+            target_fee,
+            provider_info.sequence_number,
+            sequence_number_of_last_fee_update,
+            current_pnl,
+            high_water_pnl
         )
     }
+
+    // Update high water pnl
+    *high_water_pnl = Some(std::cmp::max(
+        current_pnl,
+        high_water_pnl.unwrap_or(U256::from(0)),
+    ));
+
+    // Update sequence number on server start.
+    match sequence_number_of_last_fee_update {
+        Some(_) => (),
+        None => {
+            *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
+        }
+    };
+
 
     Ok(())
 }
