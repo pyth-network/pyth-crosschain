@@ -6,6 +6,7 @@ use {
             ChainId,
         },
         chain::{
+            eth_gas_oracle::eip1559_default_estimator,
             ethereum::{
                 InstrumentedPythContract,
                 InstrumentedSignablePythContract,
@@ -287,6 +288,20 @@ pub async fn run_keeper_threads(
         )
         .in_current_span(),
     );
+
+    // Spawn a thread that periodically adjusts the provider fee.
+    spawn(
+        adjust_fee_wrapper(
+            contract.clone(),
+            chain_state.provider_address.clone(),
+            WITHDRAW_INTERVAL,
+            chain_eth_config.legacy_tx,
+            chain_eth_config.gas_limit,
+            chain_eth_config.fee,
+        )
+        .in_current_span(),
+    );
+
 
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
@@ -939,4 +954,145 @@ pub async fn withdraw_fees_if_necessary(
     }
 
     Ok(())
+}
+
+#[tracing::instrument(name = "adjust_fee", skip_all, fields())]
+pub async fn adjust_fee_wrapper(
+    contract: Arc<InstrumentedSignablePythContract>,
+    provider_address: Address,
+    poll_interval: Duration,
+    legacy_tx: bool,
+    gas_limit: u64,
+    min_fee: u128,
+) {
+    let mut high_water_pnl: Option<U256> = None;
+    loop {
+        if let Err(e) = adjust_fee_if_necessary(
+            contract.clone(),
+            provider_address,
+            legacy_tx,
+            gas_limit,
+            min_fee,
+            &mut high_water_pnl,
+        )
+        .in_current_span()
+        .await
+        {
+            tracing::error!("Withdrawing fees. error: {:?}", e);
+        }
+        time::sleep(poll_interval).await;
+    }
+}
+
+/// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
+pub async fn adjust_fee_if_necessary(
+    contract: Arc<InstrumentedSignablePythContract>,
+    provider_address: Address,
+    legacy_tx: bool,
+    gas_limit: u64,
+    min_fee: u128,
+    high_water_pnl: &mut Option<U256>,
+) -> Result<()> {
+    let provider = contract.provider();
+    let wallet = contract.wallet();
+
+    let provider_info = contract
+        .get_provider_info(provider_address)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
+
+    if provider_info.fee_manager != wallet.address() {
+        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", provider, provider_info.fee_manager, wallet.address()));
+    }
+
+    let provider_fee: u128 = provider_info.fee_in_wei;
+
+    let target_fee: u128 = std::cmp::max(
+        estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+            .await
+            .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?,
+        min_fee,
+    );
+    // FIXME: needs configured
+    let target_fee_min: u128 = target_fee * 80 / 100;
+    let target_fee_max: u128 = target_fee * 120 / 100;
+
+    let current_keeper_balance = provider
+        .get_balance(wallet.address(), None)
+        .await
+        .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
+    let current_keeper_fees = U256::from(provider_info.accrued_fees_in_wei);
+    let current_pnl = current_keeper_balance + current_keeper_fees;
+
+    // FIXME
+    // Don't adjust the fee on chains that are inactive. This check avoids spending keeper gas on chains
+    // where there's no
+    let is_chain_active: bool = false;
+
+    if is_chain_active
+        && high_water_pnl.is_some()
+        && ((provider_fee > target_fee_max && current_pnl >= (*high_water_pnl).unwrap())
+            || provider_fee < target_fee_min)
+    {
+        tracing::info!(
+            "Adjusting fees. Current: {:?} Target: {:?}",
+            provider_fee,
+            target_fee
+        );
+        let contract_call = contract.set_provider_fee_as_fee_manager(provider_address, target_fee);
+        let pending_tx = contract_call
+            .send()
+            .await
+            .map_err(|e| anyhow!("Error submitting the set fee transaction: {:?}", e))?;
+
+        let tx_result = pending_tx
+            .await
+            .map_err(|e| anyhow!("Error waiting for set fee transaction receipt: {:?}", e))?
+            .ok_or_else(|| {
+                anyhow!("Can't verify the set fee transaction, probably dropped from mempool")
+            })?;
+
+        tracing::info!(
+            transaction_hash = &tx_result.transaction_hash.to_string(),
+            "Set provider fee. Receipt: {:?}",
+            tx_result,
+        );
+    } else {
+        tracing::warn!(
+            "Skipping fee adjustment. Current: {:?} Target: {:?}",
+            provider_fee,
+            target_fee
+        )
+    }
+
+    Ok(())
+}
+
+pub async fn estimate_tx_cost(
+    contract: Arc<InstrumentedSignablePythContract>,
+    use_legacy_tx: bool,
+    gas_used: u128,
+) -> Result<u128> {
+    let middleware = contract.client();
+
+    // let gas_oracle = EthProviderOracle::new(self.clone());
+    if use_legacy_tx {
+        let gas_price: u128 = middleware
+            .get_gas_price()
+            .await
+            .map_err(|e| anyhow!("Failed to fetch gas price. error: {:?}", e))?
+            .try_into()
+            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?;
+
+        Ok(gas_used * gas_price)
+    } else {
+        let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
+            .estimate_eip1559_fees(Some(eip1559_default_estimator))
+            .await?;
+        let gas_price: u128 = (max_fee_per_gas + max_priority_fee_per_gas)
+            .try_into()
+            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?;
+        Ok(gas_price * gas_used)
+    }
 }
