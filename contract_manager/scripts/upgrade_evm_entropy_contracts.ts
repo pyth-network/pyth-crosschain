@@ -31,8 +31,7 @@ const parser = yargs(hideBin(process.argv))
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
 const RPCS = {
-  "mainnet-beta":
-    "https://pyth-network.rpcpool.com/454a55fa3daeffadf2737571fc30",
+  "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
   devnet: "https://api.devnet.solana.com",
 } as Record<PythCluster, string>;
