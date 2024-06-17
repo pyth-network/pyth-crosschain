@@ -529,6 +529,25 @@ module pyth::pyth {
         publish_time: u64
     }
 
+
+    fun parse_price_feed_updates_internal(
+        update_data: vector<vector<u8>>,
+        price_ids: vector<PriceIdentifier>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+        fee: Coin<AptosCoin>
+    ): vector<ParsePriceFeed> {
+        //if fee provided is sufficient then proceed
+        //else give insufficient_fee error message
+        let required_fee = get_update_fee(&update_data);
+        assert!(coin::value(&fee) <= required_fee, error::insufficient_fee());
+
+        let price_feeds = vector::empty<ParsePriceFeed>();
+
+        coin::deposit(@pyth, fee);
+        price_feeds
+    }
+
     public fun parse_price_feed_updates(
         update_data: vector<vector<u8>>,
         price_ids: vector<PriceIdentifier>,
