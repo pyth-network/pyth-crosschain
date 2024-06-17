@@ -26,11 +26,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: "package.json"
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          run_install: "args: [--frozen-lockfile]"
+          run_install: true
       - name: Build
         run: pnpm exec lerna run build
       - name: Test
