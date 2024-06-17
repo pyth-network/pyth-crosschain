@@ -521,6 +521,14 @@ module pyth::pyth {
         state::get_base_update_fee() * total_updates
     }
 
+    struct ParsePriceFeed has copy, drop {
+        price_identifier: PriceIdentifier,
+        price: u64,
+        conf: u64,
+        expo: u64,
+        publish_time: u64
+    }
+
     public fun parse_price_feed_updates(
         update_data: vector<vector<u8>>,
         price_ids: vector<PriceIdentifier>,
