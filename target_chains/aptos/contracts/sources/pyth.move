@@ -538,6 +538,41 @@ module pyth::pyth {
         // Create an empty vector to store ParsePriceFeed structs
         let updates: vector<ParsePriceFeed> = vector::empty<ParsePriceFeed>();
         
+        let i = 0;
+        while (i < vector::length(&data)) {
+            let message_cur = cursor::init(data);
+            let message_type = deserialize::deserialize_u8(&mut message_cur);
+
+            // Deserialize the price identifier, price, conf, expo, publish_time, and previous_publish_time
+            let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(&mut message_cur, 32));
+            let price = deserialize::deserialize_u64(&mut message_cur);
+            let conf = deserialize::deserialize_u64(&mut message_cur);
+            let expo = deserialize::deserialize_u32(&mut message_cur);
+            let publish_time = deserialize::deserialize_u64(&mut message_cur);
+            let prev_publish_time = deserialize::deserialize_u64(&mut message_cur);
+            // let ema_price = deserialize::deserialize_i64(&mut message_cur);
+            // let ema_conf = deserialize::deserialize_u64(&mut message_cur);
+
+            //check if caller has requested for this data
+            if (vector::contains(price_ids, &price_identifier)) {
+                // Check the publish_time of the price is within the given range
+                // and the min_publish_time is greater than the previous_publish_time 
+                if (publish_time >= min_publish_time && publish_time <= max_publish_time && min_publish_time > prev_publish_time) {
+                    let update = ParsePriceFeed {
+                        price_identifier: price_identifier,
+                        price: price,
+                        conf: conf,
+                        expo: expo,
+                        publish_time: publish_time
+                    };
+                    vector::push_back(&mut updates, update);
+                };
+
+            };
+            cursor::rest(message_cur);
+            i = i + 1;
+        };
+
         updates
     }
 
