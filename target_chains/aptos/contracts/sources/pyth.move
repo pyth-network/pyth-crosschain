@@ -529,6 +529,17 @@ module pyth::pyth {
         publish_time: u64
     }
 
+    fun parse_updates(
+        data: vector<u8>, 
+        price_ids: &vector<PriceIdentifier>, 
+        min_publish_time: u64, 
+        max_publish_time: u64
+    ): vector<ParsePriceFeed> {
+        // Create an empty vector to store ParsePriceFeed structs
+        let updates: vector<ParsePriceFeed> = vector::empty<ParsePriceFeed>();
+        
+        updates
+    }
 
     fun parse_price_feed_updates_internal(
         update_data: vector<vector<u8>>,
