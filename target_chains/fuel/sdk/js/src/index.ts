@@ -10,4 +10,4 @@ export const FUEL_ETH_ASSET_ID =
 
 export { PYTH_CONTRACT_ABI };
 export * from "./types";
-export * from "./types/PythContractAbi";
+export type * from "./types/PythContractAbi";
