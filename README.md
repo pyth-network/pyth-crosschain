@@ -1,7 +1,7 @@
 # Pyth Crosschain
 
 This repository acts as a monorepo for the various components that make up
-Pyth Crosschain.
+Pyth protocols.
 
 Within this monorepo you will find the following subprojects:
 
@@ -28,6 +28,12 @@ However, most users will interact with the price service via a chain-specific SD
 
 For a guide on utilising this service in your project, see the chain-specific SDK
 and examples for your blockchain runtime in the `target_chains` directory.
+
+## Fortuna
+
+> [fortuna](./apps/fortuna/)
+
+Fortuna is an off-chain service which can be used by [Entropy](https://pyth.network/entropy) providers.
 
 ## Development
 
