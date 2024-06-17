@@ -1028,7 +1028,6 @@ pub async fn adjust_fee_if_necessary(
     let current_keeper_fees = U256::from(provider_info.accrued_fees_in_wei);
     let current_pnl = current_keeper_balance + current_keeper_fees;
 
-    // FIXME
     // Don't adjust the fee on chains that are inactive. This check avoids spending keeper gas on chains
     // where there's no activity.
     let is_chain_active: bool = match last_sequence_number {
