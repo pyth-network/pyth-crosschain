@@ -145,6 +145,16 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// The minimum percentage profit to earn as a function of the callback cost.
+    /// For example, 20 means a profit of 20% over the cost of the callback.
+    pub min_profit_pct: u64,
+
+    /// The maximum percentage profit to earn as a function of the callback cost.
+    /// For example, 100 means a profit of 100% over the cost of the callback.
+    /// The fee will be lowered if it is more profitable than specified here.
+    /// Must be larger than min_profit_pct.
+    pub max_profit_pct: u64,
+
     /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
     /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
     /// manager for the provider.

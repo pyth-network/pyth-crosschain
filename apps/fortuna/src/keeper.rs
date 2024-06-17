@@ -297,6 +297,8 @@ pub async fn run_keeper_threads(
             WITHDRAW_INTERVAL,
             chain_eth_config.legacy_tx,
             chain_eth_config.gas_limit,
+            chain_eth_config.min_profit_pct,
+            chain_eth_config.max_profit_pct,
             chain_eth_config.fee,
         )
         .in_current_span(),
@@ -963,19 +965,25 @@ pub async fn adjust_fee_wrapper(
     poll_interval: Duration,
     legacy_tx: bool,
     gas_limit: u64,
+    min_profit_pct: u64,
+    max_profit_pct: u64,
     min_fee: u128,
 ) {
+    // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
-    let mut last_sequence_number: Option<u64> = None;
+    // The sequence number where the keeper last updated the on-chain fee. None if we haven't observed it yet.
+    let mut sequence_number_of_last_fee_update: Option<u64> = None;
     loop {
         if let Err(e) = adjust_fee_if_necessary(
             contract.clone(),
             provider_address,
             legacy_tx,
             gas_limit,
+            min_profit_pct,
+            max_profit_pct,
             min_fee,
             &mut high_water_pnl,
-            &mut last_sequence_number,
+            &mut sequence_number_of_last_fee_update,
         )
         .in_current_span()
         .await
@@ -986,62 +994,85 @@ pub async fn adjust_fee_wrapper(
     }
 }
 
-/// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
+/// Adjust the fee charged by the provider to ensure that it is profitable at the prevailing gas price.
+/// This method targets a fee as a function of the maximum cost of the callback,
+/// c = (gas_limit) * (current gas price), with min_fee as a lower bound on the fee.
+///
+/// The method then updates the on-chain fee if all of the following are satisfied:
+/// - the on-chain fee does not fall into an interval [c*min_profit, c*max_profit]. The tolerance
+///   factor prevents the on-chain fee from changing with every single gas price fluctuation.
+///   Profit scalars are specified in percentage units, min_profit = (min_profit_pct + 100) / 100
+/// - either the fee is increasing or the keeper is earning a profit -- i.e., fees only decrease when the keeper is profitable
+/// - at least one random number has been requested since the last fee update
+///
+/// These conditions are designed to prevent the
 pub async fn adjust_fee_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     legacy_tx: bool,
     gas_limit: u64,
+    min_profit_pct: u64,
+    max_profit_pct: u64,
     min_fee: u128,
     high_water_pnl: &mut Option<U256>,
-    last_sequence_number: &mut Option<u64>,
+    sequence_number_of_last_fee_update: &mut Option<u64>,
 ) -> Result<()> {
-    let provider = contract.provider();
-    let wallet = contract.wallet();
-
     let provider_info = contract
         .get_provider_info(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    if provider_info.fee_manager != wallet.address() {
-        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", provider, provider_info.fee_manager, wallet.address()));
+    if provider_info.fee_manager != contract.wallet().address() {
+        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", contract.provider(), provider_info.fee_manager, contract.wallet().address()));
     }
 
-    let provider_fee: u128 = provider_info.fee_in_wei;
-
-    let target_fee: u128 = std::cmp::max(
-        estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
-            .await
-            .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?,
+    // Calculate target window for the on-chain fee.
+    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+        .await
+        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let target_fee = std::cmp::max(
+        (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
         min_fee,
     );
-    // FIXME: needs configured
-    let target_fee_min: u128 = target_fee * 80 / 100;
-    let target_fee_max: u128 = target_fee * 120 / 100;
+    let target_fee_max = std::cmp::max(
+        (max_callback_cost * (100 + u128::from(max_profit_pct))) / 100,
+        min_fee,
+    );
 
-    let current_keeper_balance = provider
-        .get_balance(wallet.address(), None)
+    // Calculate current P&L and update high water mark
+    let current_keeper_balance = contract
+        .provider()
+        .get_balance(contract.wallet().address(), None)
         .await
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
     let current_keeper_fees = U256::from(provider_info.accrued_fees_in_wei);
     let current_pnl = current_keeper_balance + current_keeper_fees;
 
-    // Don't adjust the fee on chains that are inactive. This check avoids spending keeper gas on chains
-    // where there's no activity.
-    let is_chain_active: bool = match last_sequence_number {
+    let can_reduce_fees = match high_water_pnl {
+        Some(x) => current_pnl >= *x,
+        None => false,
+    };
+    *high_water_pnl = Some(std::cmp::max(
+        current_pnl,
+        high_water_pnl.unwrap_or(U256::from(0)),
+    ));
+
+
+    // Determine if the chain has seen activity since the last fee update.
+    let is_chain_active: bool = match sequence_number_of_last_fee_update {
         Some(n) => provider_info.sequence_number > *n,
         None => {
-            *last_sequence_number = Some(provider_info.sequence_number);
+            // We don't want to adjust the fees on server start for unused chains, hence
+            // the first "fee update" is the first observed sequence number.
+            *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
             false
         }
     };
 
+    let provider_fee: u128 = provider_info.fee_in_wei;
     if is_chain_active
-        && high_water_pnl.is_some()
-        && ((provider_fee > target_fee_max && current_pnl >= (*high_water_pnl).unwrap())
-            || provider_fee < target_fee_min)
+        && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee)
     {
         tracing::info!(
             "Adjusting fees. Current: {:?} Target: {:?}",
@@ -1067,7 +1098,7 @@ pub async fn adjust_fee_if_necessary(
             tx_result,
         );
 
-        *last_sequence_number = Some(provider_info.sequence_number);
+        *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
     } else {
         tracing::warn!(
             "Skipping fee adjustment. Current: {:?} Target: {:?}",
@@ -1076,11 +1107,10 @@ pub async fn adjust_fee_if_necessary(
         )
     }
 
-    *high_water_pnl = Some(current_pnl);
-
     Ok(())
 }
 
+/// Estimate the cost (in wei) of a transaction consuming gas_used gas.
 pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
     use_legacy_tx: bool,

@@ -12,6 +12,12 @@ chains:
     # How much to charge in fees
     fee: 1500000000000000
 
+    # Configuration for dynamic fees under high gas prices. The keeper will set
+    # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
+    # cost in profit per transaction.
+    min_profit_pct: 10
+    max_profit_pct: 100
+
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore
