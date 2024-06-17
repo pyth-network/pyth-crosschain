@@ -1132,7 +1132,6 @@ pub async fn estimate_tx_cost(
 ) -> Result<u128> {
     let middleware = contract.client();
 
-    // let gas_oracle = EthProviderOracle::new(self.clone());
     if use_legacy_tx {
         let gas_price: u128 = middleware
             .get_gas_price()
