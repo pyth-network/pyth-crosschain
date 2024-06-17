@@ -18,6 +18,7 @@ import {
   SearcherClient,
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
+import express from 'express';
 
 export default {
   command: "solana",
@@ -160,6 +161,8 @@ export default {
     );
 
     controller.start();
+
+    startServer(controller);
   },
 };
 
@@ -188,4 +191,21 @@ export function loadKeypair(privateKey: string): Keypair {
 	}
 
 	return Keypair.fromSecretKey(Uint8Array.from(loadedKey));
+}
+
+function startServer(controller: Controller): void {
+  const app = express();
+
+  app.get('/startup', (_req, res) => {
+    res.writeHead(200);
+    res.end('OK');
+  });
+
+  app.get('/health', (_req, res) => {      
+    controller.handleHealthCheck()(_req, res);
+  });
+
+  app.listen(8080, () => {
+    console.log('Health server is running on port 8080');
+  });
 }

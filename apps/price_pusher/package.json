@@ -40,6 +40,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/ethereum-protocol": "^1.0.2",
+    "@types/express": "^4.17.21",
     "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -57,6 +58,7 @@
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
+    "express": "^4.19.2",
     "jito-ts": "^3.0.1",
     "joi": "^17.6.0",
     "yaml": "^2.1.1",

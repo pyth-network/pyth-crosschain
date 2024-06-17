@@ -2,9 +2,11 @@ import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
 import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
+import { Request, Response } from "express";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
+  private lastPushTimes: Map<string, UnixTimestamp> = new Map();
   constructor(
     private priceConfigs: PriceConfig[],
     private sourcePriceListener: IPriceListener,
@@ -15,6 +17,9 @@ export class Controller {
     }
   ) {
     this.pushingFrequency = config.pushingFrequency;
+    for (const priceConfig of this.priceConfigs) {
+      this.lastPushTimes.set(priceConfig.id, Date.now());
+    }
   }
 
   async start() {
@@ -39,6 +44,8 @@ export class Controller {
 
         const targetLatestPrice =
           this.targetPriceListener.getLatestPriceInfo(priceId);
+        this.lastPushTimes.set(priceId, targetLatestPrice?.publishTime || 0);
+
         const sourceLatestPrice =
           this.sourcePriceListener.getLatestPriceInfo(priceId);
 
@@ -76,4 +83,22 @@ export class Controller {
       await sleep(this.pushingFrequency * 1000);
     }
   }
+
+  handleHealthCheck = () => {
+    return (_req: Request, res: Response,) => {
+      const now = Date.now();
+      
+      let healthy = true;
+      for (const priceConfig of this.priceConfigs) {
+        healthy = (now - this.lastPushTimes.get(priceConfig.id)!) > 2 * priceConfig.timeDifference
+      }
+      if (healthy) {
+        res.writeHead(200);
+        res.end("Healthy");
+      } else {
+        res.writeHead(500);
+        res.end("Unhealthy");
+      }
+      return;
+  }};
 }
