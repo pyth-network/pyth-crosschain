@@ -520,6 +520,23 @@ module pyth::pyth {
         };
         state::get_base_update_fee() * total_updates
     }
+
+    public fun parse_price_feed_updates(
+        update_data: vector<vector<u8>>,
+        price_ids: vector<PriceIdentifier>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+        fee: Coin<AptosCoin>
+    ): vector<ParsePriceFeed> {
+        parse_price_feed_updates_internal(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+            fee
+        )
+    }
+
 }
 
 // -----------------------------------------------------------------------------
