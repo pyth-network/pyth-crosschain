@@ -34,7 +34,6 @@
     "@openzeppelin/contracts": "=4.8.1",
     "@openzeppelin/contracts-upgradeable": "=4.8.1",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
-    "@pythnetwork/pyth-multisig-wh-message-builder": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "^3.0.0",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
     "@pythnetwork/contract-manager": "workspace:*",

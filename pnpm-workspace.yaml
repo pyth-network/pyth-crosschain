@@ -5,7 +5,6 @@ packages:
   - "express_relay/sdk/js"
   - "express_relay/sdk/solidity"
   - "governance/xc_admin/packages/*"
-  - "governance/multisig_wh_message_builder"
   - "price_service/sdk/js"
   - "price_service/client/js"
   - "pythnet/message_buffer"
