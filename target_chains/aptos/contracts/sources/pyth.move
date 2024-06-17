@@ -521,6 +521,9 @@ module pyth::pyth {
         state::get_base_update_fee() * total_updates
     }
 
+    ///////////////////////////////////////////////////////
+    //Parse Pyth Benchmark Prices
+    ///////////////////////////////////////////////////////
     struct ParsePriceFeed has copy, drop {
         price_identifier: PriceIdentifier,
         price: u64,
