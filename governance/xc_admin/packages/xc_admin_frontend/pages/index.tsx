@@ -21,7 +21,7 @@ const readPublisherKeyToNameMapping = (filename: string) => {
       return acc
     })
   } else {
-    return {}
+    return {} as { string: string }
   }
 }
 
