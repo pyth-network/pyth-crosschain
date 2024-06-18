@@ -1,4 +1,5 @@
 import YAML from 'yaml'
+import { z } from 'zod'
 import { Tab } from '@headlessui/react'
 import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
@@ -14,12 +15,16 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 import '../mappings/signers.json'
 
+const keyToNameMappingSchema = z.array(
+  z.object({ key: z.string(), name: z.string() })
+)
+
 const readPublisherKeyToNameMapping = async (filename: string) => {
   try {
     await fs.promises.access(filename)
-    const arr = YAML.parse(await fs.promises.readFile(filename, 'utf8')).map(
-      (key: string, name: string) => [key, name]
-    )
+    const arr = keyToNameMappingSchema
+      .parse(YAML.parse(await fs.promises.readFile(filename, 'utf8')))
+      .map((key, name) => [key, name])
     return Object.fromEntries(arr)
   } catch {
     return {}

@@ -677,6 +677,9 @@ importers:
       yaml:
         specifier: ^2.1.1
         version: 2.4.5
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@svgr/webpack':
         specifier: ^6.3.1
