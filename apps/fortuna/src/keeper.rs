@@ -971,7 +971,7 @@ pub async fn adjust_fee_wrapper(
     min_profit_pct: u64,
     target_profit_pct: u64,
     max_profit_pct: u64,
-    min_fee: u128,
+    min_fee_wei: u128,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -986,7 +986,7 @@ pub async fn adjust_fee_wrapper(
             min_profit_pct,
             target_profit_pct,
             max_profit_pct,
-            min_fee,
+            min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
         )
@@ -1001,7 +1001,7 @@ pub async fn adjust_fee_wrapper(
 
 /// Adjust the fee charged by the provider to ensure that it is profitable at the prevailing gas price.
 /// This method targets a fee as a function of the maximum cost of the callback,
-/// c = (gas_limit) * (current gas price), with min_fee as a lower bound on the fee.
+/// c = (gas_limit) * (current gas price), with min_fee_wei as a lower bound on the fee.
 ///
 /// The method then updates the on-chain fee if all of the following are satisfied:
 /// - the on-chain fee does not fall into an interval [c*min_profit, c*max_profit]. The tolerance
@@ -1020,7 +1020,7 @@ pub async fn adjust_fee_if_necessary(
     min_profit_pct: u64,
     target_profit_pct: u64,
     max_profit_pct: u64,
-    min_fee: u128,
+    min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
 ) -> Result<()> {
@@ -1040,15 +1040,15 @@ pub async fn adjust_fee_if_necessary(
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
-        min_fee,
+        min_fee_wei,
     );
     let target_fee = std::cmp::max(
         (max_callback_cost * (100 + u128::from(target_profit_pct))) / 100,
-        min_fee,
+        min_fee_wei,
     );
     let target_fee_max = std::cmp::max(
         (max_callback_cost * (100 + u128::from(max_profit_pct))) / 100,
-        min_fee,
+        min_fee_wei,
     );
 
     // Calculate current P&L to determine if we can reduce fees.
