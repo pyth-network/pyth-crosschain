@@ -158,6 +158,12 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
+            "current_fee",
+            "Current fee charged by the provider",
+            keeper_metrics.current_fee.clone(),
+        );
+
+        writable_registry.register(
             "total_gas_spent",
             "Total gas spent revealing requests",
             keeper_metrics.total_gas_spent.clone(),
