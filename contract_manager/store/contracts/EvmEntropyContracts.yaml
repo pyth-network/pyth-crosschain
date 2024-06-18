@@ -58,9 +58,6 @@
 - chain: base
   address: "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb"
   type: EvmEntropyContract
-- chain: sei_evm_devnet
-  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
-  type: EvmEntropyContract
 - chain: taiko_hekla
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
@@ -87,4 +84,7 @@
   type: EvmEntropyContract
 - chain: etherlink
   address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmEntropyContract
+- chain: sei_evm_testnet
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
   type: EvmEntropyContract

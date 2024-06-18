@@ -199,9 +199,6 @@
 - chain: zetachain
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: sei_evm_devnet
-  address: "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7"
-  type: EvmWormholeContract
 - chain: lightlink_pegasus_testnet
   address: "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb"
   type: EvmWormholeContract
@@ -338,5 +335,8 @@
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
 - chain: etherlink
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: sei_evm_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
