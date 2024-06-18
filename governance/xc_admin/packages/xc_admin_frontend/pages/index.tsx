@@ -14,13 +14,14 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 import '../mappings/signers.json'
 
-const readPublisherKeyToNameMapping = (filename: string) => {
-  if (fs.existsSync(filename)) {
-    const arr = YAML.parse(fs.readFileSync(filename, 'utf8')).map(
+const readPublisherKeyToNameMapping = async (filename: string) => {
+  try {
+    await fs.promises.access(filename)
+    const arr = YAML.parse(await fs.promises.readFile(filename, 'utf8')).map(
       (key: string, name: string) => [key, name]
     )
     return Object.fromEntries(arr)
-  } else {
+  } catch {
     return {}
   }
 }
@@ -31,8 +32,12 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythtest/publishers.yaml`
 
   const publisherKeyToNameMapping = {
-    pythnet: readPublisherKeyToNameMapping(PUBLISHER_PYTHNET_MAPPING_PATH),
-    pythtest: readPublisherKeyToNameMapping(PUBLISHER_PYTHTEST_MAPPING_PATH),
+    pythnet: await readPublisherKeyToNameMapping(
+      PUBLISHER_PYTHNET_MAPPING_PATH
+    ),
+    pythtest: await readPublisherKeyToNameMapping(
+      PUBLISHER_PYTHTEST_MAPPING_PATH
+    ),
   }
   const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
