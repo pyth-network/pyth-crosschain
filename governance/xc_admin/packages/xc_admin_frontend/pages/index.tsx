@@ -16,12 +16,15 @@ import '../mappings/signers.json'
 
 const readPublisherKeyToNameMapping = (filename: string) => {
   if (fs.existsSync(filename)) {
-    return YAML.parse(fs.readFileSync(filename, 'utf8')).reduce((acc, rec) => {
-      acc[rec.key] = rec.name
-      return acc
-    })
+    return YAML.parse(fs.readFileSync(filename, 'utf8')).reduce(
+      (acc: { [key: string]: string }, rec: { key: string; name: string }) => {
+        acc[rec.key] = rec.name
+        return acc
+      },
+      {}
+    )
   } else {
-    return {} as { string: string }
+    return {}
   }
 }
 
