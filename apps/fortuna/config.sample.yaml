@@ -15,7 +15,8 @@ chains:
     # Configuration for dynamic fees under high gas prices. The keeper will set
     # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
     # cost in profit per transaction.
-    min_profit_pct: 10
+    min_profit_pct: 0
+    target_profit_pct: 20
     max_profit_pct: 100
 
     # Historical commitments -- delete this block for local development purposes

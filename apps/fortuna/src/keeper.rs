@@ -300,6 +300,7 @@ pub async fn run_keeper_threads(
             chain_eth_config.legacy_tx,
             chain_eth_config.gas_limit,
             chain_eth_config.min_profit_pct,
+            chain_eth_config.target_profit_pct,
             chain_eth_config.max_profit_pct,
             chain_eth_config.fee,
         )
@@ -960,7 +961,7 @@ pub async fn withdraw_fees_if_necessary(
     Ok(())
 }
 
-#[tracing::instrument(name = "adjust_fee", skip_all, fields())]
+#[tracing::instrument(name = "adjust_fee", skip_all)]
 pub async fn adjust_fee_wrapper(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
@@ -968,6 +969,7 @@ pub async fn adjust_fee_wrapper(
     legacy_tx: bool,
     gas_limit: u64,
     min_profit_pct: u64,
+    target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee: u128,
 ) {
@@ -982,6 +984,7 @@ pub async fn adjust_fee_wrapper(
             legacy_tx,
             gas_limit,
             min_profit_pct,
+            target_profit_pct,
             max_profit_pct,
             min_fee,
             &mut high_water_pnl,
@@ -1007,13 +1010,15 @@ pub async fn adjust_fee_wrapper(
 /// - either the fee is increasing or the keeper is earning a profit -- i.e., fees only decrease when the keeper is profitable
 /// - at least one random number has been requested since the last fee update
 ///
-/// These conditions are designed to prevent the
+/// These conditions are intended to make sure that the keeper is profitable while also minimizing the number of fee
+/// update transactions.
 pub async fn adjust_fee_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     legacy_tx: bool,
     gas_limit: u64,
     min_profit_pct: u64,
+    target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee: u128,
     high_water_pnl: &mut Option<U256>,
@@ -1033,8 +1038,12 @@ pub async fn adjust_fee_if_necessary(
     let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
         .await
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
-    let target_fee = std::cmp::max(
+    let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
+        min_fee,
+    );
+    let target_fee = std::cmp::max(
+        (max_callback_cost * (100 + u128::from(target_profit_pct))) / 100,
         min_fee,
     );
     let target_fee_max = std::cmp::max(
@@ -1067,7 +1076,7 @@ pub async fn adjust_fee_if_necessary(
 
     let provider_fee: u128 = provider_info.fee_in_wei;
     if is_chain_active
-        && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee)
+        && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee_min)
     {
         tracing::info!(
             "Adjusting fees. Current: {:?} Target: {:?}",
@@ -1096,9 +1105,11 @@ pub async fn adjust_fee_if_necessary(
         *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
     } else {
         tracing::info!(
-            "Skipping fee adjustment. Current: {:?} Target: {:?} Current Sequence Number: {:?} Last updated sequence number {:?} Current pnl: {:?} High water pnl: {:?}",
+            "Skipping fee adjustment. Current: {:?} Target: {:?} [{:?}, {:?}] Current Sequence Number: {:?} Last updated sequence number {:?} Current pnl: {:?} High water pnl: {:?}",
             provider_fee,
             target_fee,
+            target_fee_min,
+            target_fee_max,
             provider_info.sequence_number,
             sequence_number_of_last_fee_update,
             current_pnl,
@@ -1132,22 +1143,22 @@ pub async fn estimate_tx_cost(
 ) -> Result<u128> {
     let middleware = contract.client();
 
-    if use_legacy_tx {
-        let gas_price: u128 = middleware
+    let gas_price: u128 = if use_legacy_tx {
+        middleware
             .get_gas_price()
             .await
             .map_err(|e| anyhow!("Failed to fetch gas price. error: {:?}", e))?
             .try_into()
-            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?;
-
-        Ok(gas_used * gas_price)
+            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     } else {
         let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
             .estimate_eip1559_fees(Some(eip1559_default_estimator))
             .await?;
-        let gas_price: u128 = (max_fee_per_gas + max_priority_fee_per_gas)
+
+        (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
-            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?;
-        Ok(gas_price * gas_used)
-    }
+            .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
+    };
+
+    Ok(gas_price * gas_used)
 }

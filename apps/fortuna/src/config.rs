@@ -147,7 +147,13 @@ pub struct EthereumConfig {
 
     /// The minimum percentage profit to earn as a function of the callback cost.
     /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// The fee will be raised if the profit is less than this number.
     pub min_profit_pct: u64,
+
+    /// The target percentage profit to earn as a function of the callback cost.
+    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// The fee will be set to this target whenever it falls outside the min/max bounds.
+    pub target_profit_pct: u64,
 
     /// The maximum percentage profit to earn as a function of the callback cost.
     /// For example, 100 means a profit of 100% over the cost of the callback.
