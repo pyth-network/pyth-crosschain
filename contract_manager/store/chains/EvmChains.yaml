@@ -484,10 +484,10 @@
   rpcUrl: https://replicator.phoenix.lightlink.io/rpc/v1
   networkId: 1890
   type: EvmChain
-- id: sei_evm_devnet
+- id: sei_evm_testnet
   mainnet: false
-  rpcUrl: https://evm-rpc-arctic-1.sei-apis.com
-  networkId: 713715
+  rpcUrl: https://evm-rpc-testnet.sei-apis.com
+  networkId: 1328
   type: EvmChain
 - id: fantom_sonic_testnet
   mainnet: false
