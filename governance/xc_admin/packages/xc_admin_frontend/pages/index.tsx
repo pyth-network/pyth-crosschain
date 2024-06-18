@@ -1,3 +1,4 @@
+import YAML from 'yaml'
 import { Tab } from '@headlessui/react'
 import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
@@ -13,26 +14,25 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 import '../mappings/signers.json'
 
+const readPublisherKeyToNameMapping = (filename: string) => {
+  if (fs.existsSync(filename)) {
+    return YAML.parse(fs.readFileSync(filename, 'utf8')).reduce((acc, rec) => {
+      acc[rec.key] = rec.name
+      return acc
+    })
+  } else {
+    return {}
+  }
+}
+
 export const getServerSideProps: GetServerSideProps = async () => {
   const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || 'mappings'
-  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
-  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
+  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythnet/publishers.yaml`
+  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythtest/publishers.yaml`
 
   const publisherKeyToNameMapping = {
-    pythnet: fs.existsSync(PUBLISHER_PYTHNET_MAPPING_PATH)
-      ? JSON.parse(
-          (
-            await fs.promises.readFile(PUBLISHER_PYTHNET_MAPPING_PATH)
-          ).toString()
-        )
-      : {},
-    pythtest: fs.existsSync(PUBLISHER_PYTHTEST_MAPPING_PATH)
-      ? JSON.parse(
-          (
-            await fs.promises.readFile(PUBLISHER_PYTHTEST_MAPPING_PATH)
-          ).toString()
-        )
-      : {},
+    pythnet: readPublisherKeyToNameMapping(PUBLISHER_PYTHNET_MAPPING_PATH)
+    pythtest: readPublisherKeyToNameMapping(PUBLISHER_PYTHNET_MAPPING_PATH)
   }
   const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(

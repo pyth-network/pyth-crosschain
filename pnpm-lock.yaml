@@ -674,6 +674,9 @@ importers:
       web3:
         specifier: ^4.8.0
         version: 4.8.0(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8)
+      yaml:
+        specifier: ^2.1.1
+        version: 2.4.5
     devDependencies:
       '@svgr/webpack':
         specifier: ^6.3.1
@@ -32436,7 +32439,7 @@ snapshots:
 
   openapi3-ts@3.1.0:
     dependencies:
-      yaml: 2.4.3
+      yaml: 2.4.5
 
   optimism@0.16.2:
     dependencies:
@@ -33265,7 +33268,7 @@ snapshots:
       unicode-properties: 1.4.1
       urijs: 1.19.11
       wordwrap: 1.0.0
-      yaml: 2.4.3
+      yaml: 2.4.5
     transitivePeerDependencies:
       - encoding
 
