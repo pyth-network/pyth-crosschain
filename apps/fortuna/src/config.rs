@@ -104,6 +104,16 @@ impl Config {
         // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;
         let config: Config = serde_yaml::from_str(&yaml_content)?;
+
+        // Run correctness checks for the config and fail if there are any issues.
+        for (chain_id, config) in config.chains.iter() {
+            if !(config.min_profit_pct <= config.target_profit_pct
+                && config.target_profit_pct <= config.max_profit_pct)
+            {
+                return Err(anyhow!("chain id {:?} configuration is invalid. Config must satisfy min_profit_pct <= target_profit_pct <= max_profit_pct.", chain_id));
+            }
+        }
+
         Ok(config)
     }
 

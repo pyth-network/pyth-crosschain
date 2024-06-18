@@ -102,6 +102,7 @@ pub struct KeeperMetrics {
     pub end_sequence_number:     Family<AccountLabel, Gauge>,
     pub balance:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub collected_fee:           Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub current_fee:             Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub total_gas_spent:         Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub requests:                Family<AccountLabel, Counter>,
     pub requests_processed:      Family<AccountLabel, Counter>,
@@ -861,6 +862,7 @@ pub async fn track_provider(
     // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
     // The fee is in wei, so we divide by 1e18 to convert it to eth.
     let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
+    let current_fee: f64 = provider_info.fee_in_wei as f64 / 1e18;
 
     let current_sequence_number = provider_info.sequence_number;
     let end_sequence_number = provider_info.end_sequence_number;
@@ -872,6 +874,14 @@ pub async fn track_provider(
             address:  provider_address.to_string(),
         })
         .set(collected_fee);
+
+    metrics
+        .current_fee
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address:  provider_address.to_string(),
+        })
+        .set(current_fee);
 
     metrics
         .current_sequence_number
