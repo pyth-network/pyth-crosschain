@@ -20,15 +20,17 @@ const keyToNameMappingSchema = z.array(
 )
 
 const readPublisherKeyToNameMapping = async (filename: string) => {
+  let data = ''
   try {
-    await fs.promises.access(filename)
-    const arr = keyToNameMappingSchema
-      .parse(YAML.parse(await fs.promises.readFile(filename, 'utf8')))
-      .map((key, name) => [key, name])
-    return Object.fromEntries(arr)
+    data = await fs.promises.readFile(filename, 'utf8')
   } catch {
     return {}
   }
+
+  const yaml = YAML.parse(data)
+
+  const arr = await keyToNameMappingSchema.parseAsync(yaml)
+  return Object.fromEntries(arr.map((key, name) => [key, name]))
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -36,14 +38,13 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythnet/publishers.yaml`
   const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythtest/publishers.yaml`
 
-  const publisherKeyToNameMapping = {
-    pythnet: await readPublisherKeyToNameMapping(
-      PUBLISHER_PYTHNET_MAPPING_PATH
-    ),
-    pythtest: await readPublisherKeyToNameMapping(
-      PUBLISHER_PYTHTEST_MAPPING_PATH
-    ),
-  }
+  const [pythnet, pythtest] = await Promise.all(
+    [PUBLISHER_PYTHNET_MAPPING_PATH, PUBLISHER_PYTHTEST_MAPPING_PATH].map(
+      (path) => readPublisherKeyToNameMapping(path)
+    )
+  )
+  const publisherKeyToNameMapping = { pythnet, pythtest }
+
   const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
     MULTISIG_SIGNER_MAPPING_PATH
