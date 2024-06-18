@@ -104,6 +104,16 @@ impl Config {
         // TODO: the default serde deserialization doesn't enforce unique keys
         let yaml_content = fs::read_to_string(path)?;
         let config: Config = serde_yaml::from_str(&yaml_content)?;
+
+        // Run correctness checks for the config and fail if there are any issues.
+        for (chain_id, config) in config.chains.iter() {
+            if !(config.min_profit_pct <= config.target_profit_pct
+                && config.target_profit_pct <= config.max_profit_pct)
+            {
+                return Err(anyhow!("chain id {:?} configuration is invalid. Config must satisfy min_profit_pct <= target_profit_pct <= max_profit_pct.", chain_id));
+            }
+        }
+
         Ok(config)
     }
 
@@ -144,6 +154,22 @@ pub struct EthereumConfig {
 
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
+
+    /// The minimum percentage profit to earn as a function of the callback cost.
+    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// The fee will be raised if the profit is less than this number.
+    pub min_profit_pct: u64,
+
+    /// The target percentage profit to earn as a function of the callback cost.
+    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// The fee will be set to this target whenever it falls outside the min/max bounds.
+    pub target_profit_pct: u64,
+
+    /// The maximum percentage profit to earn as a function of the callback cost.
+    /// For example, 100 means a profit of 100% over the cost of the callback.
+    /// The fee will be lowered if it is more profitable than specified here.
+    /// Must be larger than min_profit_pct.
+    pub max_profit_pct: u64,
 
     /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
     /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
