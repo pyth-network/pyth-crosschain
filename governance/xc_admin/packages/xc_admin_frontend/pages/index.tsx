@@ -32,7 +32,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
   const publisherKeyToNameMapping = {
     pythnet: readPublisherKeyToNameMapping(PUBLISHER_PYTHNET_MAPPING_PATH),
-    pythtest: readPublisherKeyToNameMapping(PUBLISHER_PYTHNET_MAPPING_PATH),
+    pythtest: readPublisherKeyToNameMapping(PUBLISHER_PYTHTEST_MAPPING_PATH),
   }
   const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
