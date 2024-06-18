@@ -3,7 +3,7 @@ name = "express-relay"
 version = "0.6.0"
 description = "Utilities for searchers and protocols to interact with the Express Relay protocol."
 authors = ["dourolabs"]
-license = "Proprietary"
+license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]

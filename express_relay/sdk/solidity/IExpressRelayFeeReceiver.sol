@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (C) 2024 Lavra Holdings Limited - All Rights Reserved
+// SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
 interface IExpressRelayFeeReceiver {

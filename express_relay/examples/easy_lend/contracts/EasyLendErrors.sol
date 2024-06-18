@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Lavra Holdings Limited - All Rights Reserved
+// SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.13;
 
 // Signature: 0xe922edfd
