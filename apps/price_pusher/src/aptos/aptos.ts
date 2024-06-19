@@ -7,17 +7,19 @@ import {
 import { AptosAccount, AptosClient } from "aptos";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { Logger } from "../logger";
 
 export class AptosPriceListener extends ChainPriceListener {
   constructor(
     private pythModule: string,
     private endpoint: string,
     priceItems: PriceItem[],
+    private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("aptos", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
@@ -46,7 +48,7 @@ export class AptosPriceListener extends ChainPriceListener {
       const price =
         multiplier * Number(priceItemRes.price_feed.price.price.magnitude);
 
-      console.log(
+      this.logger.debug(
         `Polled an Aptos on-chain price for feed ${this.priceIdToAlias.get(
           priceId
         )} (${priceId}).`
@@ -57,11 +59,11 @@ export class AptosPriceListener extends ChainPriceListener {
         conf: priceItemRes.price_feed.price.conf,
         publishTime: Number(priceItemRes.price_feed.price.timestamp),
       };
-    } catch (e) {
-      console.error(
-        `Polling Aptos on-chain price for ${priceId} failed. Error:`
+    } catch (err) {
+      this.logger.error(
+        err,
+        `Polling Aptos on-chain price for ${priceId} failed.`
       );
-      console.error(e);
       return undefined;
     }
   }
@@ -88,6 +90,7 @@ export class AptosPricePusher implements IPricePusher {
 
   constructor(
     private priceServiceConnection: PriceServiceConnection,
+    private logger: Logger,
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
@@ -126,9 +129,8 @@ export class AptosPricePusher implements IPricePusher {
     try {
       // get the latest VAAs for updatePriceFeed and then push them
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (e) {
-      console.error("Error fetching the latest vaas to push");
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, "Error fetching the latest vaas to push.");
       return;
     }
 
@@ -158,7 +160,10 @@ export class AptosPricePusher implements IPricePusher {
       const signedTx = await client.signTransaction(account, rawTx);
       const pendingTx = await client.submitTransaction(signedTx);
 
-      console.log("Successfully broadcasted txHash:", pendingTx.hash);
+      this.logger.debug(
+        { hash: pendingTx.hash },
+        "Successfully broadcasted tx."
+      );
 
       // Sometimes broadcasted txs don't make it on-chain and they cause our sequence number
       // to go out of sync. Missing transactions are rare and we don't want this check to block
@@ -167,9 +172,8 @@ export class AptosPricePusher implements IPricePusher {
       this.waitForTransactionConfirmation(client, pendingTx.hash);
 
       return;
-    } catch (e: any) {
-      console.error("Error executing messages");
-      console.error(e);
+    } catch (err: any) {
+      this.logger.error(err, "Error executing messages");
 
       // Reset the sequence number to re-sync it (in case that was the issue)
       this.lastSequenceNumber = undefined;
@@ -189,10 +193,12 @@ export class AptosPricePusher implements IPricePusher {
         timeoutSecs: 10,
       });
 
-      console.log(`Transaction with txHash "${txHash}" confirmed.`);
-    } catch (e) {
-      console.error(`Transaction with txHash "${txHash}" failed to confirm.`);
-      console.error(e);
+      this.logger.info({ hash: txHash }, `Transaction confirmed.`);
+    } catch (err) {
+      this.logger.error(
+        { err, hash: txHash },
+        `Transaction failed to confirm.`
+      );
 
       this.lastSequenceNumber = undefined;
     }
@@ -218,7 +224,7 @@ export class AptosPricePusher implements IPricePusher {
           this.lastSequenceNumber = Number(
             (await client.getAccount(account.address())).sequence_number
           );
-          console.log(
+          this.logger.debug(
             `Fetched account sequence number: ${this.lastSequenceNumber}`
           );
           return this.lastSequenceNumber;

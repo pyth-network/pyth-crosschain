@@ -19,6 +19,7 @@ import {
   TxResponse,
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
+import { Logger } from "../logger";
 import { Account } from "@injectivelabs/sdk-ts/dist/cjs/client/chain/types/auth";
 
 const DEFAULT_GAS_PRICE = 500000000;
@@ -46,11 +47,12 @@ export class InjectivePriceListener extends ChainPriceListener {
     private pythContractAddress: string,
     private grpcEndpoint: string,
     priceItems: PriceItem[],
+    private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("Injective", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(
@@ -66,13 +68,12 @@ export class InjectivePriceListener extends ChainPriceListener {
 
       const json = Buffer.from(data).toString();
       priceQueryResponse = JSON.parse(json);
-    } catch (e) {
-      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, `Polling on-chain price for ${priceId} failed.`);
       return undefined;
     }
 
-    console.log(
+    this.logger.debug(
       `Polled an Injective on chain price for feed ${this.priceIdToAlias.get(
         priceId
       )} (${priceId}).`
@@ -100,6 +101,7 @@ export class InjectivePricePusher implements IPricePusher {
     private priceServiceConnection: PriceServiceConnection,
     private pythContractAddress: string,
     private grpcEndpoint: string,
+    private logger: Logger,
     mnemonic: string,
     chainConfig?: Partial<InjectiveConfig>
   ) {
@@ -207,9 +209,8 @@ export class InjectivePricePusher implements IPricePusher {
     try {
       // get the latest VAAs for updatePriceFeed and then push them
       priceFeedUpdateObject = await this.getPriceFeedUpdateObject(priceIds);
-    } catch (e) {
-      console.error("Error fetching the latest vaas to push");
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, "Error fetching the latest vaas to push");
       return;
     }
 
@@ -229,9 +230,8 @@ export class InjectivePricePusher implements IPricePusher {
 
       const json = Buffer.from(data).toString();
       updateFeeQueryResponse = JSON.parse(json);
-    } catch (e) {
-      console.error("Error fetching update fee");
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, "Error fetching update fee");
       return;
     }
 
@@ -244,22 +244,21 @@ export class InjectivePricePusher implements IPricePusher {
       });
 
       const rs = await this.signAndBroadcastMsg(executeMsg);
-      console.log("Succesfully broadcasted txHash:", rs.txHash);
-    } catch (e: any) {
-      if (e.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
-        console.error(e);
+      this.logger.info({ hash: rs.txHash }, "Succesfully broadcasted txHash");
+    } catch (err: any) {
+      if (err.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
+        this.logger.error(err, "Account not found");
         throw new Error("Please check the mnemonic");
       }
 
       if (
-        e.message.match(/insufficient/) !== null &&
-        e.message.match(/funds/) !== null
+        err.message.match(/insufficient/) !== null &&
+        err.message.match(/funds/) !== null
       ) {
-        console.error(e);
+        this.logger.error(err, "Insufficient funds");
         throw new Error("Insufficient funds");
       }
-      console.error("Error executing messages");
-      console.log(e);
+      this.logger.error(err, "Error executing messages");
     }
   }
 }

@@ -5,6 +5,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
+import { createLogger, createPriceServiceConnectionLogger } from "../logger";
 
 export default {
   command: "near",
@@ -36,6 +37,8 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logFormat,
+    ...options.logLevel,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -49,20 +52,19 @@ export default {
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
+      logLevel,
+      logFormat,
     } = argv;
+
+    const logger = createLogger(logLevel, logFormat);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: createPriceServiceConnectionLogger(
+          logger.child({ module: "PriceServiceConnection" })
+        ),
       }
     );
 
@@ -70,7 +72,8 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger
     );
 
     const nearAccount = new NearAccount(
@@ -81,17 +84,27 @@ export default {
       pythContractAddress
     );
 
-    const nearListener = new NearPriceListener(nearAccount, priceItems, {
-      pollingFrequency,
-    });
+    const nearListener = new NearPriceListener(
+      nearAccount,
+      priceItems,
+      logger.child({ module: "NearPriceListener" }),
+      {
+        pollingFrequency,
+      }
+    );
 
-    const nearPusher = new NearPricePusher(nearAccount, priceServiceConnection);
+    const nearPusher = new NearPricePusher(
+      nearAccount,
+      priceServiceConnection,
+      logger.child({ module: "NearPricePusher" })
+    );
 
     const controller = new Controller(
       priceConfigs,
       pythListener,
       nearListener,
       nearPusher,
+      logger.child({ module: "Controller" }),
       { pushingFrequency }
     );
 

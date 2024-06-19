@@ -2,6 +2,7 @@ import { HexString } from "@pythnetwork/price-service-client";
 import Joi from "joi";
 import YAML from "yaml";
 import fs from "fs";
+import { Logger } from "./logger";
 import { DurationInSeconds, PctNumber, removeLeading0x } from "./utils";
 import { PriceInfo } from "./interface";
 
@@ -90,7 +91,8 @@ export enum UpdateCondition {
 export function shouldUpdate(
   priceConfig: PriceConfig,
   sourceLatestPrice: PriceInfo | undefined,
-  targetLatestPrice: PriceInfo | undefined
+  targetLatestPrice: PriceInfo | undefined,
+  logger: Logger
 ): UpdateCondition {
   const priceId = priceConfig.id;
 
@@ -101,7 +103,7 @@ export function shouldUpdate(
 
   // It means that price never existed there. So we should push the latest price feed.
   if (targetLatestPrice === undefined) {
-    console.log(
+    logger.info(
       `${priceConfig.alias} (${priceId}) is not available on the target network. Pushing the price.`
     );
     return UpdateCondition.YES;
@@ -125,13 +127,10 @@ export function shouldUpdate(
     (Number(sourceLatestPrice.conf) / Number(sourceLatestPrice.price)) * 100
   );
 
-  console.log(`Analyzing price ${priceConfig.alias} (${priceId})`);
-
-  console.log("Source latest price: ", sourceLatestPrice);
-  console.log("Target latest price: ", targetLatestPrice);
-
-  console.log(
-    `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}? / early: < ${priceConfig.earlyUpdateTimeDifference}) OR ` +
+  logger.info(
+    { sourcePrice: sourceLatestPrice, targetPrice: targetLatestPrice },
+    `Analyzing price ${priceConfig.alias} (${priceId}). ` +
+      `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}? / early: < ${priceConfig.earlyUpdateTimeDifference}) OR ` +
       `Price deviation: ${priceDeviationPct.toFixed(5)}% (< ${
         priceConfig.priceDeviation
       }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?) OR ` +

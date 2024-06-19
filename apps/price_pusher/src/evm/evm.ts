@@ -11,6 +11,7 @@ import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.js
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import Web3 from "web3";
 import { HttpProvider, WebsocketProvider } from "web3-core";
+import { Logger } from "../logger";
 import { isWsEndpoint } from "../utils";
 import {
   PriceServiceConnection,
@@ -24,28 +25,33 @@ import { ProviderOrUrl } from "@truffle/hdwallet-provider/dist/constructor/types
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
   private pythContract: Contract;
+  private logger: Logger;
 
   constructor(
     pythContractFactory: PythContractFactory,
     priceItems: PriceItem[],
+    logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("Evm", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
 
     this.pythContractFactory = pythContractFactory;
     this.pythContract = this.pythContractFactory.createPythContract();
+    this.logger = logger;
   }
 
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
     if (this.pythContractFactory.hasWebsocketProvider()) {
-      console.log("Subscribing to the target network pyth contract events...");
+      this.logger.info(
+        "Subscribing to the target network pyth contract events..."
+      );
       this.startSubscription();
     } else {
-      console.log(
+      this.logger.info(
         "The target network RPC endpoint is not Websocket. " +
           "Listening for updates only via polling...."
       );
@@ -71,12 +77,15 @@ export class EvmPriceListener extends ChainPriceListener {
 
   private onPriceFeedUpdate(err: Error | null, event: EventData) {
     if (err !== null) {
-      console.error("PriceFeedUpdate EventEmitter received an error..");
+      this.logger.error(
+        err,
+        "PriceFeedUpdate EventEmitter received an error.."
+      );
       throw err;
     }
 
     const priceId = removeLeading0x(event.returnValues.id);
-    console.log(
+    this.logger.debug(
       `Received a new Evm PriceFeedUpdate event for price feed ${this.priceIdToAlias.get(
         priceId
       )} (${priceId}).`
@@ -99,13 +108,12 @@ export class EvmPriceListener extends ChainPriceListener {
       priceRaw = await this.pythContract.methods
         .getPriceUnsafe(addLeading0x(priceId))
         .call();
-    } catch (e) {
-      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, `Polling on-chain price for ${priceId} failed.`);
       return undefined;
     }
 
-    console.log(
+    this.logger.debug(
       `Polled an EVM on chain price for feed ${this.priceIdToAlias.get(
         priceId
       )} (${priceId}).`
@@ -129,6 +137,7 @@ export class EvmPricePusher implements IPricePusher {
   constructor(
     private connection: PriceServiceConnection,
     pythContractFactory: PythContractFactory,
+    private logger: Logger,
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
@@ -163,8 +172,6 @@ export class EvmPricePusher implements IPricePusher {
       priceIdsWith0x
     );
 
-    console.log("Pushing ", priceIdsWith0x);
-
     let updateFee;
 
     try {
@@ -172,10 +179,11 @@ export class EvmPricePusher implements IPricePusher {
         .getUpdateFee(priceFeedUpdateData)
         .call();
       updateFee = Number(updateFee) * (this.updateFeeMultiplier || 1);
-      console.log(`Update fee: ${updateFee}`);
+      this.logger.debug(`Update fee: ${updateFee}`);
     } catch (e: any) {
-      console.error(
-        "An unidentified error has occured when getting the update fee:"
+      this.logger.error(
+        e,
+        "An unidentified error has occured when getting the update fee."
       );
       throw e;
     }
@@ -213,7 +221,7 @@ export class EvmPricePusher implements IPricePusher {
 
     const txNonce = lastExecutedNonce + 1;
 
-    console.log(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
+    this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
 
     this.pythContract.methods
       .updatePriceFeedsIfNecessary(
@@ -228,7 +236,7 @@ export class EvmPricePusher implements IPricePusher {
         gasLimit: this.gasLimit,
       })
       .on("transactionHash", (hash: string) => {
-        console.log(`Successful. Tx hash: ${hash}`);
+        this.logger.info({ hash }, "Price update successful");
       })
       .on("error", (err: Error, receipt?: TransactionReceipt) => {
         if (err.message.includes("revert")) {
@@ -236,7 +244,8 @@ export class EvmPricePusher implements IPricePusher {
           // doesn't return any information why the call has reverted. Assuming that
           // the update data is valid there is no possible rejection cause other than
           // the target chain price being already updated.
-          console.log(
+          this.logger.info(
+            { err, receipt },
             "Execution reverted. With high probability, the target chain price " +
               "has already updated, Skipping this push."
           );
@@ -248,7 +257,8 @@ export class EvmPricePusher implements IPricePusher {
           err.message.includes("nonce too low") ||
           err.message.includes("invalid nonce")
         ) {
-          console.log(
+          this.logger.info(
+            { err, receipt },
             "The nonce is incorrect (are multiple users using this account?). Skipping this push."
           );
           return;
@@ -259,7 +269,8 @@ export class EvmPricePusher implements IPricePusher {
           // LastPushAttempt was stored with the class
           // Next time the update will be executing, it will check the last attempt
           // and increase the gas price accordingly.
-          console.log(
+          this.logger.info(
+            { err, receipt },
             "The transaction failed with error: max fee per gas less than block base fee "
           );
           return;
@@ -268,12 +279,16 @@ export class EvmPricePusher implements IPricePusher {
         if (
           err.message.includes("sender doesn't have enough funds to send tx.")
         ) {
-          console.error("Payer is out of balance, please top it up.");
+          this.logger.error(
+            { err, receipt },
+            "Payer is out of balance, please top it up."
+          );
           throw err;
         }
 
         if (err.message.includes("transaction underpriced")) {
-          console.error(
+          this.logger.error(
+            { err, receipt },
             "The gas price of the transaction is too low. Skipping this push. " +
               "You might want to use a custom gas station or increase the override gas price " +
               "multiplier to increase the likelihood of the transaction landing on-chain."
@@ -282,14 +297,17 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         if (err.message.includes("could not replace existing tx")) {
-          console.log(
+          this.logger.error(
+            { err, receipt },
             "A transaction with the same nonce has been mined and this one is no longer needed."
           );
           return;
         }
 
-        console.error("An unidentified error has occured:");
-        console.error(receipt);
+        this.logger.error(
+          { err, receipt },
+          "An unidentified error has occured."
+        );
         throw err;
       });
 

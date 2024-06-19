@@ -1,12 +1,13 @@
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import fs from "fs";
+import { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
-import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { Options } from "yargs";
 import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { getCustomGasStation } from "./custom-gas-station";
+import { createLogger, createPriceServiceConnectionLogger } from "../logger";
 
 export default {
   command: "evm",
@@ -72,6 +73,8 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logFormat,
+    ...options.logLevel,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -89,29 +92,30 @@ export default {
       overrideGasPriceMultiplierCap,
       gasLimit,
       updateFeeMultiplier,
+      logFormat,
+      logLevel,
     } = argv;
+
+    const logger = createLogger(logLevel, logFormat);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: createPriceServiceConnectionLogger(
+          logger.child({ module: "PriceServiceConnection" })
+        ),
       }
     );
+
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger.child({ module: "PythPriceListener" })
     );
 
     const pythContractFactory = new PythContractFactory(
@@ -119,20 +123,30 @@ export default {
       mnemonic,
       pythContractAddress
     );
-    console.log(
+    logger.info(
       `Pushing updates from wallet address: ${pythContractFactory
         .createWeb3PayerProvider()
         .getAddress()}`
     );
 
-    const evmListener = new EvmPriceListener(pythContractFactory, priceItems, {
-      pollingFrequency,
-    });
+    const evmListener = new EvmPriceListener(
+      pythContractFactory,
+      priceItems,
+      logger.child({ module: "EvmPriceListener" }),
+      {
+        pollingFrequency,
+      }
+    );
 
-    const gasStation = getCustomGasStation(customGasStation, txSpeed);
+    const gasStation = getCustomGasStation(
+      logger.child({ module: "CustomGasStation" }),
+      customGasStation,
+      txSpeed
+    );
     const evmPusher = new EvmPricePusher(
       priceServiceConnection,
       pythContractFactory,
+      logger.child({ module: "EvmPricePusher" }),
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
@@ -145,6 +159,7 @@ export default {
       pythListener,
       evmListener,
       evmPusher,
+      logger.child({ module: "Controller" }),
       { pushingFrequency }
     );
 
