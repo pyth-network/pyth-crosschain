@@ -7,7 +7,7 @@ import { Controller } from "../controller";
 import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { createLogger, createPriceServiceConnectionLogger } from "../logger";
+import pino from "pino";
 
 export default {
   command: "sui",
@@ -69,7 +69,6 @@ export default {
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
-    ...options.logFormat,
     ...options.logLevel,
   },
   handler: async function (argv: any) {
@@ -86,18 +85,19 @@ export default {
       ignoreGasObjects,
       gasBudget,
       accountIndex,
-      logFormat,
       logLevel,
     } = argv;
 
-    const logger = createLogger(logLevel, logFormat);
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: createPriceServiceConnectionLogger(
-          logger.child({ module: "PriceServiceConnection" })
+        // Swtich to warn level if log level is info to reduce the noise
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: logLevel === "info" ? "warn" : logLevel }
         ),
         priceFeedRequestConfig: {
           binary: true,

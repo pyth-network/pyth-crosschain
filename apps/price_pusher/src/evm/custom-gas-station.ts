@@ -6,7 +6,7 @@ import {
   txSpeeds,
   customGasChainIds,
 } from "../utils";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<string | undefined>>;
 

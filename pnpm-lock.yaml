@@ -256,9 +256,6 @@ importers:
       pino:
         specifier: ^9.2.0
         version: 9.2.0
-      pino-pretty:
-        specifier: ^11.2.1
-        version: 11.2.1
       ts-log:
         specifier: ^2.2.4
         version: 2.2.5
@@ -299,6 +296,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.14.2)(ts-node@10.9.1(@types/node@20.14.2)(typescript@5.4.5))
+      pino-pretty:
+        specifier: ^11.2.1
+        version: 11.2.1
       prettier:
         specifier: ^2.6.2
         version: 2.8.8

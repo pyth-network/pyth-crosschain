@@ -11,7 +11,7 @@ import {
   APTOS_ACCOUNT_HD_PATH,
 } from "./aptos";
 import { AptosAccount } from "aptos";
-import { createLogger, createPriceServiceConnectionLogger } from "../logger";
+import pino from "pino";
 
 export default {
   command: "aptos",
@@ -38,7 +38,6 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
-    ...options.logFormat,
     ...options.logLevel,
   },
   handler: function (argv: any) {
@@ -53,20 +52,22 @@ export default {
       pollingFrequency,
       overrideGasPriceMultiplier,
       logLevel,
-      logFormat,
     } = argv;
 
-    const logger = createLogger(logLevel, logFormat);
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: createPriceServiceConnectionLogger(
-          logger.child({ module: "PriceServiceConnection" })
+        // Swtich to warn level if log level is info to reduce the noise
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: logLevel === "info" ? "warn" : logLevel }
         ),
       }
     );
+
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,

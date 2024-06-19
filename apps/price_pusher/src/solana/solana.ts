@@ -13,7 +13,7 @@ import {
 } from "@pythnetwork/solana-utils";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(

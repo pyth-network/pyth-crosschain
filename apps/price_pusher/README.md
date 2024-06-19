@@ -83,14 +83,14 @@ To run the price pusher, please run the following commands, replacing the comman
 
 ```sh
 # Please run the two following commands once from the root of the repo to build the code.
-npm install
+pnpm install
 pnpm exec lerna run build --scope @pythnetwork/price-pusher --include-dependencies
 
 # Navigate to the price_pusher folder
 cd apps/price_pusher
 
 # For EVM
-npm run start -- evm --endpoint wss://example-rpc.com \
+pnpm run start evm --endpoint wss://example-rpc.com \
     --pyth-contract-address 0xff1a0f4744e8582DF...... \
     --price-service-endpoint https://example-hermes-rpc.com \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
@@ -100,7 +100,7 @@ npm run start -- evm --endpoint wss://example-rpc.com \
     [--override-gas-price-multiplier 1.1]
 
 # For Injective
-npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
+pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-hermes-rpc.com" \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
@@ -110,7 +110,7 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     [--polling-frequency 5]
 
 # For Aptos
-npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
+pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 \
     --price-service-endpoint "https://example-hermes-rpc.com" \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
@@ -119,7 +119,7 @@ npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     [--polling-frequency 5]
 
 # For Sui
-npm run start -- sui \
+pnpm run start sui \
   --endpoint https://sui-testnet-rpc.allthatnode.com \
   --pyth-package-id 0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44 \
   --pyth-state-id 0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a \
@@ -134,7 +134,7 @@ npm run start -- sui \
   [--num-gas-objects 30]
 
 # For Near
-npm run start -- near \
+pnpm run start near \
   --node-url https://rpc.testnet.near.org \
   --network testnet \
   --account-id payer.testnet \
@@ -146,7 +146,7 @@ npm run start -- near \
   [--polling-frequency 5]
 
 # For Solana, using Jito (recommended)
-npm run start -- solana \
+pnpm run start solana \
   --endpoint https://api.mainnet-beta.solana.com \
   --keypair-file ./id.json \
   --shard-id 1 \
@@ -161,7 +161,7 @@ npm run start -- solana \
   [--polling-frequency 5]
 
 # For Solana, using Solana RPC
-npm run start -- solana \
+pnpm run start solana \
   --endpoint https://api.devnet.solana.com \
   --keypair-file ./id.json \
   --shard-id 1 \
@@ -184,23 +184,30 @@ docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-argu
 To know more about the arguments the price-pusher accepts. You can run:
 
 ```sh
-npm run start -- --help
+pnpm run start --help
 
 # for specific network run
-npm run start -- {network} --help
+pnpm run start {network} --help
 ```
+
+### Logging
+
+By default, the logging is set to `info`. You can change the logging level by passing the argument `--log-level` with the desired level.
+The available levels are `error`, `warn`, `info`, `debug`, and `trace`. Also, the logs have JSON format. If you wish to run the code with
+human-readable logs, you can pipe the output of the program to `pino-pretty`. See the example below for more information on how to do this.
 
 ### Example
 
 For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the following command:
 
 ```sh
-npm run dev -- evm \
+pnpm run dev evm \
   --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
   --pyth-contract-address 0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb \
   --price-service-endpoint https://hermes.pyth.network \
   --mnemonic-file "./mnemonic" \
-  --price-config-file "./price-config.stable.sample.yaml"
+  --price-config-file "./price-config.stable.sample.yaml" \
+  | pnpm exec pino-pretty # Make logs human-readable
 ```
 
 [`price-config.stable.sample.yaml`](./price-config.stable.sample.yaml) contains configuration for `BTC/USD`
@@ -210,7 +217,7 @@ contains the same configuration for `BTC/USD` and `BNB/USD` on Pyth beta data so
 You can also provide a config file instead of providing command line options, run the following command:
 
 ```sh
-npm run start -- injective --config "./config.injective.sample.json"
+pnpm run start injective --config "./config.injective.sample.json"
 ```
 
 [`config.injective.sample.json`](./config.injective.sample.json) contains configuration to publish on Injective testnet.

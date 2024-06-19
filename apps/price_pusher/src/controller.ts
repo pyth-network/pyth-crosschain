@@ -2,7 +2,7 @@ import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
 import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
-import { Logger } from "./logger";
+import { Logger } from "pino";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;

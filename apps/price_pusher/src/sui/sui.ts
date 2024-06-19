@@ -10,7 +10,7 @@ import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui.js/client";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config

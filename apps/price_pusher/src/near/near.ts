@@ -21,7 +21,7 @@ import {
   FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 
 export class NearPriceListener extends ChainPriceListener {
   constructor(

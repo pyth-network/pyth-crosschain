@@ -7,7 +7,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { getCustomGasStation } from "./custom-gas-station";
-import { createLogger, createPriceServiceConnectionLogger } from "../logger";
+import pino from "pino";
 
 export default {
   command: "evm",
@@ -73,7 +73,6 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
-    ...options.logFormat,
     ...options.logLevel,
   },
   handler: function (argv: any) {
@@ -92,18 +91,19 @@ export default {
       overrideGasPriceMultiplierCap,
       gasLimit,
       updateFeeMultiplier,
-      logFormat,
       logLevel,
     } = argv;
 
-    const logger = createLogger(logLevel, logFormat);
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: createPriceServiceConnectionLogger(
-          logger.child({ module: "PriceServiceConnection" })
+        // Swtich to warn level if log level is info to reduce the noise
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: logLevel === "info" ? "warn" : logLevel }
         ),
       }
     );

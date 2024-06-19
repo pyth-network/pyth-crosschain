@@ -66,13 +66,3 @@ export const logLevel = {
     choices: ["trace", "debug", "info", "warn", "error"],
   } as Options,
 };
-
-export const logFormat = {
-  "log-format": {
-    description: "Log format",
-    type: "string",
-    required: false,
-    default: "json",
-    choices: ["json", "pretty"],
-  } as Options,
-};

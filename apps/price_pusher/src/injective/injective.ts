@@ -19,7 +19,7 @@ import {
   TxResponse,
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 import { Account } from "@injectivelabs/sdk-ts/dist/cjs/client/chain/types/auth";
 
 const DEFAULT_GAS_PRICE = 500000000;

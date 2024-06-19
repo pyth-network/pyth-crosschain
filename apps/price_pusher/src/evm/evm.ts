@@ -11,7 +11,7 @@ import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.js
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import Web3 from "web3";
 import { HttpProvider, WebsocketProvider } from "web3-core";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 import { isWsEndpoint } from "../utils";
 import {
   PriceServiceConnection,

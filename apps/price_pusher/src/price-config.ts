@@ -2,7 +2,7 @@ import { HexString } from "@pythnetwork/price-service-client";
 import Joi from "joi";
 import YAML from "yaml";
 import fs from "fs";
-import { Logger } from "./logger";
+import { Logger } from "pino";
 import { DurationInSeconds, PctNumber, removeLeading0x } from "./utils";
 import { PriceInfo } from "./interface";
 

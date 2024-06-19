@@ -7,7 +7,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { getNetworkInfo } from "@injectivelabs/networks";
-import { createLogger, createPriceServiceConnectionLogger } from "../logger";
+import pino from "pino";
 
 export default {
   command: "injective",
@@ -36,7 +36,6 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
-    ...options.logFormat,
     ...options.logLevel,
   },
   handler: function (argv: any) {
@@ -52,10 +51,9 @@ export default {
       pollingFrequency,
       network,
       logLevel,
-      logFormat,
     } = argv;
 
-    const logger = createLogger(logLevel, logFormat);
+    const logger = pino({ level: logLevel });
 
     if (network !== "testnet" && network !== "mainnet") {
       throw new Error("Please specify network. One of [testnet, mainnet]");
@@ -65,8 +63,10 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: createPriceServiceConnectionLogger(
-          logger.child({ module: "PriceServiceConnection" })
+        // Swtich to warn level if log level is info to reduce the noise
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: logLevel === "info" ? "warn" : logLevel }
         ),
       }
     );

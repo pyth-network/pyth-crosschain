@@ -7,7 +7,7 @@ import {
 import { AptosAccount, AptosClient } from "aptos";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { Logger } from "../logger";
+import { Logger } from "pino";
 
 export class AptosPriceListener extends ChainPriceListener {
   constructor(

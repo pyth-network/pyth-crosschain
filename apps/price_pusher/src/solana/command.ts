@@ -18,8 +18,8 @@ import {
   SearcherClient,
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
-import { Logger } from "../logger";
-import { createLogger, createPriceServiceConnectionLogger } from "../logger";
+import pino from "pino";
+import { Logger } from "pino";
 
 export default {
   command: "solana",
@@ -71,7 +71,6 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
-    ...options.logFormat,
     ...options.logLevel,
   },
   handler: function (argv: any) {
@@ -90,18 +89,19 @@ export default {
       jitoTipLamports,
       jitoBundleSize,
       logLevel,
-      logFormat,
     } = argv;
 
-    const logger = createLogger(logLevel, logFormat);
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: createPriceServiceConnectionLogger(
-          logger.child({ module: "PriceServiceConnection" })
+        // Swtich to warn level if log level is info to reduce the noise
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: logLevel === "info" ? "warn" : logLevel }
         ),
       }
     );
