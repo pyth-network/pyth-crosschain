@@ -63,6 +63,7 @@
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
+    "@solana/web3.js": "^1.93.0",
     "@truffle/hdwallet-provider": "^2.1.3",
     "@types/pino": "^7.0.5",
     "aptos": "^1.8.5",
