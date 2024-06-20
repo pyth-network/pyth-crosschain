@@ -1,2 +1,15 @@
 pnpm-lock.yaml
 patches/
+
+# This app has it's own prettier config that uses a later version of prettier
+#
+# TODO(cprussin): eventually I'll figure out how to upgrade prettier everywhere
+# and hook it in to pre-commit.  For now, I don't want to downgrade prettier in
+# the pcakage that's using the later version, and pre-commit doesn't support
+# later versions of prettier directly.
+#
+# Ideally, we should probably hook up a pre-commit script to run auto-fixes in a
+# generic way that packages can hook into by defining lifecycle scripts, or by
+# using the nx task graph.  Then, packages can use their own formatters /
+# formatter versions and can also hook up other auto-fixes like eslint, etc.
+apps/api-reference
