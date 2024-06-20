@@ -21,7 +21,9 @@ export class ByteBuffer {
   data: string[] = [];
 
   /** Create a `ByteBuffer` from an array of `bytes31`.
-   * Use `ByteBuffer::fromHex` to create `ByteBuffer` from HEX representation of binary data.
+   * - Use `ByteBuffer::fromBuffer` to create `ByteBuffer` from a `Buffer`.
+   * - Use `ByteBuffer::fromBase64` to create `ByteBuffer` from Base64 representation of binary data.
+   * - Use `ByteBuffer::fromHex` to create `ByteBuffer` from HEX representation of binary data.
    */
   constructor(num_last_bytes: number, data: string[]) {
     this.num_last_bytes = num_last_bytes;
@@ -30,8 +32,16 @@ export class ByteBuffer {
 
   /** Create a `ByteBuffer` from HEX representation of binary data. */
   public static fromHex(hexData: string): ByteBuffer {
-    const buffer = Buffer.from(hexData, "base64");
+    return ByteBuffer.fromBuffer(Buffer.from(hexData, "hex"));
+  }
 
+  /** Create a `ByteBuffer` from Base64 representation of binary data. */
+  public static fromBase64(hexData: string): ByteBuffer {
+    return ByteBuffer.fromBuffer(Buffer.from(hexData, "base64"));
+  }
+
+  /** Create a `ByteBuffer` from a `Buffer`. */
+  public static fromBuffer(buffer: Buffer): ByteBuffer {
     let pos = 0;
     const data = [];
     while (pos < buffer.length) {
