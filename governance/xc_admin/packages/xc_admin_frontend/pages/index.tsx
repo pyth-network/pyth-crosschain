@@ -1,3 +1,5 @@
+import YAML from 'yaml'
+import { z } from 'zod'
 import { Tab } from '@headlessui/react'
 import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
@@ -13,27 +15,36 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 import '../mappings/signers.json'
 
+const keyToNameMappingSchema = z.array(
+  z.object({ key: z.string(), name: z.string() })
+)
+
+const readPublisherKeyToNameMapping = async (filename: string) => {
+  let data = ''
+  try {
+    data = await fs.promises.readFile(filename, 'utf8')
+  } catch {
+    return {}
+  }
+
+  const yaml = YAML.parse(data)
+
+  const arr = await keyToNameMappingSchema.parseAsync(yaml)
+  return Object.fromEntries(arr.map((key, name) => [key, name]))
+}
+
 export const getServerSideProps: GetServerSideProps = async () => {
   const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || 'mappings'
-  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
-  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
+  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythnet/publishers.yaml`
+  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/pythtest/publishers.yaml`
 
-  const publisherKeyToNameMapping = {
-    pythnet: fs.existsSync(PUBLISHER_PYTHNET_MAPPING_PATH)
-      ? JSON.parse(
-          (
-            await fs.promises.readFile(PUBLISHER_PYTHNET_MAPPING_PATH)
-          ).toString()
-        )
-      : {},
-    pythtest: fs.existsSync(PUBLISHER_PYTHTEST_MAPPING_PATH)
-      ? JSON.parse(
-          (
-            await fs.promises.readFile(PUBLISHER_PYTHTEST_MAPPING_PATH)
-          ).toString()
-        )
-      : {},
-  }
+  const [pythnet, pythtest] = await Promise.all(
+    [PUBLISHER_PYTHNET_MAPPING_PATH, PUBLISHER_PYTHTEST_MAPPING_PATH].map(
+      (path) => readPublisherKeyToNameMapping(path)
+    )
+  )
+  const publisherKeyToNameMapping = { pythnet, pythtest }
+
   const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
     MULTISIG_SIGNER_MAPPING_PATH
