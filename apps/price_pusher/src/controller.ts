@@ -2,6 +2,7 @@ import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
 import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
+import { Logger } from "pino";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
@@ -10,6 +11,7 @@ export class Controller {
     private sourcePriceListener: IPriceListener,
     private targetPriceListener: IPriceListener,
     private targetChainPricePusher: IPricePusher,
+    private logger: Logger,
     config: {
       pushingFrequency: DurationInSeconds;
     }
@@ -45,7 +47,8 @@ export class Controller {
         const priceShouldUpdate = shouldUpdate(
           priceConfig,
           sourceLatestPrice,
-          targetLatestPrice
+          targetLatestPrice,
+          this.logger
         );
         if (priceShouldUpdate == UpdateCondition.YES) {
           pushThresholdMet = true;
@@ -60,17 +63,21 @@ export class Controller {
         }
       }
       if (pushThresholdMet) {
-        console.log(
-          "Some of the above values passed the threshold. Will push the price."
+        this.logger.info(
+          {
+            priceIds: pricesToPush.map((priceConfig) => ({
+              id: priceConfig.id,
+              alias: priceConfig.alias,
+            })),
+          },
+          "Some of the checks triggered pushing update. Will push the updates for some feeds."
         );
 
         // note that the priceIds are without leading "0x"
         const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
         this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
       } else {
-        console.log(
-          "None of the above values passed the threshold. No push needed."
-        );
+        this.logger.info("None of the checks were triggered. No push needed.");
       }
 
       await sleep(this.pushingFrequency * 1000);

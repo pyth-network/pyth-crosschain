@@ -10,6 +10,7 @@ import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui.js/client";
+import { Logger } from "pino";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
@@ -22,23 +23,26 @@ type SuiAddress = string;
 export class SuiPriceListener extends ChainPriceListener {
   private pythClient: SuiPythClient;
   private provider: SuiClient;
+  private logger: Logger;
 
   constructor(
     pythStateId: ObjectId,
     wormholeStateId: ObjectId,
     endpoint: string,
     priceItems: PriceItem[],
+    logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("sui", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
     this.provider = new SuiClient({ url: endpoint });
     this.pythClient = new SuiPythClient(
       this.provider,
       pythStateId,
       wormholeStateId
     );
+    this.logger = logger;
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
@@ -78,9 +82,11 @@ export class SuiPriceListener extends ChainPriceListener {
         conf,
         publishTime: Number(timestamp),
       };
-    } catch (e) {
-      console.error(`Polling Sui on-chain price for ${priceId} failed. Error:`);
-      console.error(e);
+    } catch (err) {
+      this.logger.error(
+        err,
+        `Polling Sui on-chain price for ${priceId} failed.`
+      );
       return undefined;
     }
   }
@@ -104,6 +110,7 @@ export class SuiPricePusher implements IPricePusher {
   constructor(
     private readonly signer: Ed25519Keypair,
     private readonly provider: SuiClient,
+    private logger: Logger,
     private priceServiceConnection: PriceServiceConnection,
     private pythPackageId: string,
     private pythStateId: string,
@@ -157,6 +164,7 @@ export class SuiPricePusher implements IPricePusher {
    */
   static async createWithAutomaticGasPool(
     priceServiceConnection: PriceServiceConnection,
+    logger: Logger,
     pythStateId: string,
     wormholeStateId: string,
     endpoint: string,
@@ -185,7 +193,8 @@ export class SuiPricePusher implements IPricePusher {
       keypair,
       provider,
       numGasObjects,
-      ignoreGasObjects
+      ignoreGasObjects,
+      logger
     );
 
     const pythClient = new SuiPythClient(
@@ -197,6 +206,7 @@ export class SuiPricePusher implements IPricePusher {
     return new SuiPricePusher(
       keypair,
       provider,
+      logger,
       priceServiceConnection,
       pythPackageId,
       pythStateId,
@@ -222,7 +232,7 @@ export class SuiPricePusher implements IPricePusher {
       throw new Error("Invalid arguments");
 
     if (this.gasPool.length === 0) {
-      console.warn("Skipping update: no available gas coin.");
+      this.logger.warn("Skipping update: no available gas coin.");
       return;
     }
 
@@ -266,7 +276,7 @@ export class SuiPricePusher implements IPricePusher {
   private async sendTransactionBlock(tx: TransactionBlock): Promise<void> {
     const gasObject = this.gasPool.shift();
     if (gasObject === undefined) {
-      console.warn("No available gas coin. Skipping push.");
+      this.logger.warn("No available gas coin. Skipping push.");
       return;
     }
 
@@ -286,30 +296,28 @@ export class SuiPricePusher implements IPricePusher {
         ?.map((obj) => obj.reference)
         .find((ref) => ref.objectId === gasObject.objectId);
 
-      console.log(
-        "Successfully updated price with transaction digest ",
-        result.digest
+      this.logger.info(
+        { hash: result.digest },
+        "Successfully updated price with transaction digest"
       );
-    } catch (e: any) {
-      console.log("Error when signAndExecuteTransactionBlock");
+    } catch (err: any) {
       if (
-        String(e).includes("Balance of gas object") ||
-        String(e).includes("GasBalanceTooLow")
+        String(err).includes("Balance of gas object") ||
+        String(err).includes("GasBalanceTooLow")
       ) {
+        this.logger.error(err, "Insufficient gas balance");
         // If the error is caused by insufficient gas, we should panic
-        throw e;
+        throw err;
       } else {
+        this.logger.error(
+          err,
+          "Failed to update price. Trying to refresh gas object references."
+        );
         // Refresh the coin object here in case the error is caused by an object version mismatch.
         nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
           this.provider,
           gasObject
         );
-      }
-      console.error(e);
-
-      if ("data" in e) {
-        console.error("Error has .data field:");
-        console.error(JSON.stringify(e.data));
       }
     }
 
@@ -326,20 +334,24 @@ export class SuiPricePusher implements IPricePusher {
     signer: Ed25519Keypair,
     provider: SuiClient,
     numGasObjects: number,
-    ignoreGasObjects: string[]
+    ignoreGasObjects: string[],
+    logger: Logger
   ): Promise<SuiObjectRef[]> {
     const signerAddress = await signer.toSuiAddress();
 
     if (ignoreGasObjects.length > 0) {
-      console.log("Ignoring some gas objects for coin merging:");
-      console.log(ignoreGasObjects);
+      logger.info(
+        { ignoreGasObjects },
+        "Ignoring some gas objects for coin merging"
+      );
     }
 
     const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
       signer,
       provider,
       signerAddress,
-      ignoreGasObjects
+      ignoreGasObjects,
+      logger
     );
     const coinResult = await provider.getObject({
       id: consolidatedCoin.objectId,
@@ -366,7 +378,7 @@ export class SuiPricePusher implements IPricePusher {
       numGasObjects,
       consolidatedCoin
     );
-    console.log("Gas pool is filled with coins: ", gasPool);
+    logger.info({ gasPool }, "Gas pool is filled with coins");
     return gasPool;
   }
 
@@ -470,7 +482,8 @@ export class SuiPricePusher implements IPricePusher {
     signer: Ed25519Keypair,
     provider: SuiClient,
     owner: SuiAddress,
-    initialLockedAddresses: string[]
+    initialLockedAddresses: string[],
+    logger: Logger
   ): Promise<SuiObjectRef> {
     const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin
@@ -500,17 +513,15 @@ export class SuiPricePusher implements IPricePusher {
           transactionBlock: mergeTx,
           options: { showEffects: true },
         });
-      } catch (e) {
-        console.log("Merge transaction failed with error:");
-        console.log(e);
-        console.log((e as any).data);
-        console.log(JSON.stringify(e));
+      } catch (err) {
+        logger.error(err, "Merge transaction failed with error");
+
         if (
-          String(e).includes(
+          String(err).includes(
             "quorum of validators because of locked objects. Retried a conflicting transaction"
           )
         ) {
-          Object.values((e as any).data).forEach((lockedObjects: any) => {
+          Object.values((err as any).data).forEach((lockedObjects: any) => {
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
             });
@@ -519,7 +530,7 @@ export class SuiPricePusher implements IPricePusher {
           i--;
           continue;
         }
-        throw e;
+        throw err;
       }
       const error = mergeResult?.effects?.status.error;
       if (error) {

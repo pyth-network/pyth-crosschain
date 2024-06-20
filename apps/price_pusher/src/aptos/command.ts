@@ -11,6 +11,7 @@ import {
   APTOS_ACCOUNT_HD_PATH,
 } from "./aptos";
 import { AptosAccount } from "aptos";
+import pino from "pino";
 
 export default {
   command: "aptos",
@@ -37,6 +38,9 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -49,44 +53,50 @@ export default {
       pushingFrequency,
       pollingFrequency,
       overrideGasPriceMultiplier,
+      logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
+
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: priceServiceConnectionLogLevel }
+        ),
       }
     );
+
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,
       mnemonic
     );
-    console.log(`Pushing from account address: ${account.address()}`);
+    logger.info(`Pushing from account address: ${account.address()}`);
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger.child({ module: "PythPriceListener" })
     );
 
     const aptosListener = new AptosPriceListener(
       pythContractAddress,
       endpoint,
       priceItems,
+      logger.child({ module: "AptosPriceListener" }),
       { pollingFrequency }
     );
+
     const aptosPusher = new AptosPricePusher(
       priceServiceConnection,
+      logger.child({ module: "AptosPricePusher" }),
       pythContractAddress,
       endpoint,
       mnemonic,
@@ -98,6 +108,7 @@ export default {
       pythListener,
       aptosListener,
       aptosPusher,
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 

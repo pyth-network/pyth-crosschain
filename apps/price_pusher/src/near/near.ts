@@ -21,23 +21,25 @@ import {
   FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
+import { Logger } from "pino";
 
 export class NearPriceListener extends ChainPriceListener {
   constructor(
     private account: NearAccount,
     priceItems: PriceItem[],
+    private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("near", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
     try {
       const priceRaw = await this.account.getPriceUnsafe(priceId);
 
-      console.log(
+      this.logger.debug(
         `Polled a NEAR on chain price for feed ${this.priceIdToAlias.get(
           priceId
         )} (${priceId}) ${JSON.stringify(priceRaw)}.`
@@ -52,9 +54,8 @@ export class NearPriceListener extends ChainPriceListener {
       } else {
         return undefined;
       }
-    } catch (e) {
-      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
-      console.error(e);
+    } catch (err) {
+      this.logger.error(err, `Polling on-chain price for ${priceId} failed.:`);
       return undefined;
     }
   }
@@ -63,7 +64,8 @@ export class NearPriceListener extends ChainPriceListener {
 export class NearPricePusher implements IPricePusher {
   constructor(
     private account: NearAccount,
-    private connection: PriceServiceConnection
+    private connection: PriceServiceConnection,
+    private logger: Logger
   ) {}
 
   async updatePriceFeed(
@@ -80,20 +82,18 @@ export class NearPricePusher implements IPricePusher {
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (e: any) {
-      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+    } catch (err: any) {
+      this.logger.error(err, "getPriceFeedsUpdateData failed");
       return;
     }
-
-    console.log("Pushing ", priceIds);
 
     for (const data of priceFeedUpdateData) {
       let updateFee;
       try {
         updateFee = await this.account.getUpdateFeeEstimate(data);
-        console.log(`Update fee: ${updateFee}`);
-      } catch (e: any) {
-        console.error(new Date(), "getUpdateFeeEstimate failed:", e);
+        this.logger.debug(`Update fee: ${updateFee}`);
+      } catch (err: any) {
+        this.logger.error(err, "getUpdateFeeEstimate failed");
         continue;
       }
 
@@ -116,20 +116,15 @@ export class NearPricePusher implements IPricePusher {
           true
         );
         if (is_success) {
-          console.log(
-            new Date(),
-            "updatePriceFeeds successful. Tx hash: ",
-            outcome["transaction"]["hash"]
+          this.logger.info(
+            { hash: outcome["transaction"]["hash"] },
+            "updatePriceFeeds successful."
           );
         } else {
-          console.error(
-            new Date(),
-            "updatePriceFeeds failed:",
-            JSON.stringify(failureMessages, undefined, 2)
-          );
+          this.logger.error({ failureMessages }, "updatePriceFeeds failed");
         }
-      } catch (e: any) {
-        console.error(new Date(), "updatePriceFeeds failed:", e);
+      } catch (err: any) {
+        this.logger.error(err, "updatePriceFeeds failed");
       }
     }
   }

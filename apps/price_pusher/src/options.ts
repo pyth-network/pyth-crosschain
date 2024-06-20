@@ -56,3 +56,33 @@ export const mnemonicFile = {
     required: true,
   } as Options,
 };
+
+export const logLevel = {
+  "log-level": {
+    description: "Log level",
+    type: "string",
+    required: false,
+    default: "info",
+    choices: ["trace", "debug", "info", "warn", "error"],
+  } as Options,
+};
+
+export const priceServiceConnectionLogLevel = {
+  "price-service-connection-log-level": {
+    description: "Log level for the price service connection.",
+    type: "string",
+    required: false,
+    default: "warn",
+    choices: ["trace", "debug", "info", "warn", "error"],
+  } as Options,
+};
+
+export const controllerLogLevel = {
+  "controller-log-level": {
+    description: "Log level for the controller.",
+    type: "string",
+    required: false,
+    default: "info",
+    choices: ["trace", "debug", "info", "warn", "error"],
+  } as Options,
+};

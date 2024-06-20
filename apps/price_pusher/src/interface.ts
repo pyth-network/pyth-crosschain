@@ -23,7 +23,6 @@ export abstract class ChainPriceListener implements IPriceListener {
   protected priceIdToAlias: Map<HexString, string>;
 
   constructor(
-    private chain: string,
     private pollingFrequency: DurationInSeconds,
     protected priceItems: PriceItem[]
   ) {
@@ -34,9 +33,6 @@ export abstract class ChainPriceListener implements IPriceListener {
   }
 
   async start() {
-    console.log(
-      `Polling the prices on ${this.chain} every ${this.pollingFrequency} seconds...`
-    );
     setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
 
     await this.pollPrices();

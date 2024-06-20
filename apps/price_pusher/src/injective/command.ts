@@ -7,6 +7,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { getNetworkInfo } from "@injectivelabs/networks";
+import pino from "pino";
 
 export default {
   command: "injective",
@@ -35,6 +36,9 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -48,7 +52,12 @@ export default {
       pushingFrequency,
       pollingFrequency,
       network,
+      logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
+
+    const logger = pino({ level: logLevel });
 
     if (network !== "testnet" && network !== "mainnet") {
       throw new Error("Please specify network. One of [testnet, mainnet]");
@@ -58,14 +67,10 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: priceServiceConnectionLogLevel }
+        ),
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
@@ -74,13 +79,15 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger.child({ module: "PythPriceListener" })
     );
 
     const injectiveListener = new InjectivePriceListener(
       pythContractAddress,
       grpcEndpoint,
       priceItems,
+      logger.child({ module: "InjectivePriceListener" }),
       {
         pollingFrequency,
       }
@@ -89,6 +96,7 @@ export default {
       priceServiceConnection,
       pythContractAddress,
       grpcEndpoint,
+      logger.child({ module: "InjectivePricePusher" }),
       mnemonic,
       {
         chainId: getNetworkInfo(network).chainId,
@@ -101,6 +109,7 @@ export default {
       pythListener,
       injectiveListener,
       injectivePusher,
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 

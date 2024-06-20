@@ -13,17 +13,19 @@ import {
 } from "@pythnetwork/solana-utils";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
+import { Logger } from "pino";
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private shardId: number,
     priceItems: PriceItem[],
+    private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super("solana", config.pollingFrequency, priceItems);
+    super(config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
@@ -33,7 +35,7 @@ export class SolanaPriceListener extends ChainPriceListener {
           this.shardId,
           Buffer.from(priceId, "hex")
         );
-      console.log(
+      this.logger.debug(
         `Polled a Solana on chain price for feed ${this.priceIdToAlias.get(
           priceId
         )} (${priceId}).`
@@ -47,9 +49,8 @@ export class SolanaPriceListener extends ChainPriceListener {
       } else {
         return undefined;
       }
-    } catch (e) {
-      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
-      console.error(e);
+    } catch (err) {
+      this.logger.error({ err, priceId }, `Polling on-chain price failed.`);
       return undefined;
     }
   }
@@ -59,6 +60,7 @@ export class SolanaPricePusher implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private priceServiceConnection: PriceServiceConnection,
+    private logger: Logger,
     private shardId: number,
     private computeUnitPriceMicroLamports: number
   ) {}
@@ -77,8 +79,8 @@ export class SolanaPricePusher implements IPricePusher {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
         priceIds
       );
-    } catch (e: any) {
-      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+    } catch (err: any) {
+      this.logger.error(err, "getPriceFeedsUpdateData failed:");
       return;
     }
 
@@ -96,14 +98,14 @@ export class SolanaPricePusher implements IPricePusher {
     });
 
     try {
-      await sendTransactions(
+      const signatures = await sendTransactions(
         transactions,
         this.pythSolanaReceiver.connection,
         this.pythSolanaReceiver.wallet
       );
-      console.log(new Date(), "updatePriceFeed successful");
-    } catch (e: any) {
-      console.error(new Date(), "updatePriceFeed failed", e);
+      this.logger.info({ signatures }, "updatePriceFeed successful");
+    } catch (err: any) {
+      this.logger.error(err, "updatePriceFeed failed");
       return;
     }
   }
@@ -115,6 +117,7 @@ export class SolanaPricePusherJito implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private priceServiceConnection: PriceServiceConnection,
+    private logger: Logger,
     private shardId: number,
     private jitoTipLamports: number,
     private searcherClient: SearcherClient,
@@ -131,8 +134,8 @@ export class SolanaPricePusherJito implements IPricePusher {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
         priceIds
       );
-    } catch (e: any) {
-      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+    } catch (err: any) {
+      this.logger.error(err, "getPriceFeedsUpdateData failed");
       return;
     }
 

@@ -7,6 +7,7 @@ import { Controller } from "../controller";
 import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import pino from "pino";
 
 export default {
   command: "sui",
@@ -68,6 +69,9 @@ export default {
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
     const {
@@ -83,20 +87,21 @@ export default {
       ignoreGasObjects,
       gasBudget,
       accountIndex,
+      logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
+
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: priceServiceConnectionLogLevel }
+        ),
         priceFeedRequestConfig: {
           binary: true,
         },
@@ -107,7 +112,7 @@ export default {
       mnemonic,
       `m/44'/784'/${accountIndex}'/0'/0'`
     );
-    console.log(
+    logger.info(
       `Pushing updates from wallet address: ${keypair
         .getPublicKey()
         .toSuiAddress()}`
@@ -117,7 +122,8 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger.child({ module: "PythPriceListener" })
     );
 
     const suiListener = new SuiPriceListener(
@@ -125,10 +131,12 @@ export default {
       wormholeStateId,
       endpoint,
       priceItems,
+      logger.child({ module: "SuiPriceListener" }),
       { pollingFrequency }
     );
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
       priceServiceConnection,
+      logger.child({ module: "SuiPricePusher" }),
       pythStateId,
       wormholeStateId,
       endpoint,
@@ -143,6 +151,7 @@ export default {
       pythListener,
       suiListener,
       suiPusher,
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 

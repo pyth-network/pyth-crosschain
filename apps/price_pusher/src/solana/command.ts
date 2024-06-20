@@ -18,6 +18,8 @@ import {
   SearcherClient,
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
+import pino from "pino";
+import { Logger } from "pino";
 
 export default {
   command: "solana",
@@ -69,6 +71,9 @@ export default {
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
+    ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
     const {
@@ -85,21 +90,22 @@ export default {
       jitoKeypairFile,
       jitoTipLamports,
       jitoBundleSize,
+      logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
+
+    const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: {
-          // Log only warnings and errors from the price service client
-          info: () => undefined,
-          warn: console.warn,
-          error: console.error,
-          debug: () => undefined,
-          trace: () => undefined,
-        },
+        logger: logger.child(
+          { module: "PriceServiceConnection" },
+          { level: priceServiceConnectionLogLevel }
+        ),
       }
     );
 
@@ -107,7 +113,8 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceItems
+      priceItems,
+      logger.child({ module: "PythPriceListener" })
     );
 
     const wallet = new NodeWallet(
@@ -132,17 +139,19 @@ export default {
       solanaPricePusher = new SolanaPricePusherJito(
         pythSolanaReceiver,
         priceServiceConnection,
+        logger.child({ module: "SolanaPricePusherJito" }),
         shardId,
         jitoTipLamports,
         jitoClient,
         jitoBundleSize
       );
 
-      onBundleResult(jitoClient);
+      onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
         priceServiceConnection,
+        logger.child({ module: "SolanaPricePusher" }),
         shardId,
         computeUnitPriceMicroLamports
       );
@@ -152,6 +161,7 @@ export default {
       pythSolanaReceiver,
       shardId,
       priceItems,
+      logger.child({ module: "SolanaPriceListener" }),
       { pollingFrequency }
     );
 
@@ -160,6 +170,7 @@ export default {
       pythListener,
       solanaPriceListener,
       solanaPricePusher,
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 
@@ -167,11 +178,11 @@ export default {
   },
 };
 
-export const onBundleResult = (c: SearcherClient) => {
+export const onBundleResult = (c: SearcherClient, logger: Logger) => {
   c.onBundleResult(
     () => undefined,
-    (e) => {
-      console.log("Error in bundle result: ", e);
+    (err) => {
+      logger.error(err, "Error in bundle result");
     }
   );
 };
