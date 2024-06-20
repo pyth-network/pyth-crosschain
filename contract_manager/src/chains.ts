@@ -24,6 +24,7 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
+import { RpcProvider } from "starknet";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -628,5 +629,64 @@ export class FuelChain extends Chain {
     const wallet = await this.getWallet(privateKey);
     const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
     return Number(balance) / 10 ** 9;
+  }
+}
+
+export class StarknetChain extends Chain {
+  static type = "StarknetChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName, undefined);
+  }
+
+  getType(): string {
+    return StarknetChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: StarknetChain.type,
+    };
+  }
+
+  static fromJson(parsed: ChainConfig): StarknetChain {
+    if (parsed.type !== StarknetChain.type) throw new Error("Invalid type");
+    return new StarknetChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.rpcUrl
+    );
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the felt252 class hash of the new contract class extended to uint256 in BE
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  // Account address derivation on Starknet depends
+  // on the wallet application and constructor arguments used.
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    throw new Error("Unsupported");
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    throw new Error("Unsupported");
+  }
+
+  getProvider(): RpcProvider {
+    return new RpcProvider({ nodeUrl: this.rpcUrl });
   }
 }
