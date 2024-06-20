@@ -196,6 +196,11 @@ By default, the logging is set to `info`. You can change the logging level by pa
 The available levels are `error`, `warn`, `info`, `debug`, and `trace`. Also, the logs have JSON format. If you wish to run the code with
 human-readable logs, you can pipe the output of the program to `pino-pretty`. See the example below for more information on how to do this.
 
+You can configure the log level of some of the modules of the price pusher as well. The available modules are PriceServiceConnection, which
+is responsible for connecting to the Hermes price service, and Controller, which is responsible for checking the prices from the Hermes
+and the on-chain Pyth contract and deciding whether to push a new price. You can configure the log level of these modules by passing the
+`--price-service-connection-log-level` and `--controller-log-level` arguments, respectively.
+
 ### Example
 
 For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the following command:

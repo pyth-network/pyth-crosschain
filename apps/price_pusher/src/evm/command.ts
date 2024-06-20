@@ -74,6 +74,8 @@ export default {
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -92,6 +94,8 @@ export default {
       gasLimit,
       updateFeeMultiplier,
       logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -100,10 +104,9 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        // Swtich to warn level if log level is info to reduce the noise
         logger: logger.child(
           { module: "PriceServiceConnection" },
-          { level: logLevel === "info" ? "warn" : logLevel }
+          { level: priceServiceConnectionLogLevel }
         ),
       }
     );
@@ -159,7 +162,7 @@ export default {
       pythListener,
       evmListener,
       evmPusher,
-      logger.child({ module: "Controller" }),
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 

@@ -70,6 +70,8 @@ export default {
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
+    ...options.priceServiceConnectionLogLevel,
+    ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
     const {
@@ -86,6 +88,8 @@ export default {
       gasBudget,
       accountIndex,
       logLevel,
+      priceServiceConnectionLogLevel,
+      controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -94,10 +98,9 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        // Swtich to warn level if log level is info to reduce the noise
         logger: logger.child(
           { module: "PriceServiceConnection" },
-          { level: logLevel === "info" ? "warn" : logLevel }
+          { level: priceServiceConnectionLogLevel }
         ),
         priceFeedRequestConfig: {
           binary: true,
@@ -148,7 +151,7 @@ export default {
       pythListener,
       suiListener,
       suiPusher,
-      logger.child({ module: "Controller" }),
+      logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       { pushingFrequency }
     );
 

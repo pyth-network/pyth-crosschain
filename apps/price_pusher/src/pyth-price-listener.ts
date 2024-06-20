@@ -4,7 +4,7 @@ import {
   PriceServiceConnection,
 } from "@pythnetwork/price-service-client";
 import { PriceInfo, IPriceListener, PriceItem } from "./interface";
-import { Logger } from "ts-log";
+import { Logger } from "pino";
 
 export class PythPriceListener implements IPriceListener {
   private connection: PriceServiceConnection;
