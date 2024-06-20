@@ -155,7 +155,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const tokenContract = new Contract(tokenClassData.abi, feeToken, provider);
     tokenContract.connect(account);
 
-    const updateData = ByteBuffer.fromHex(vaa.toString("base64"));
+    const updateData = ByteBuffer.fromBuffer(vaa);
     const feeAmount = await contract.get_update_fee(updateData, feeToken);
     const feeTx = await tokenContract.approve(this.address, feeAmount);
     await provider.waitForTransaction(feeTx.transaction_hash);
@@ -193,7 +193,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     );
     contract.connect(account);
 
-    const updateData = ByteBuffer.fromHex(vaa.toString("base64"));
+    const updateData = ByteBuffer.fromBuffer(vaa);
     const tx = await contract.execute_governance_instruction(updateData);
     const info = await provider.waitForTransaction(tx.transaction_hash);
     return { id: tx.transaction_hash, info };

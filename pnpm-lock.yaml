@@ -354,8 +354,8 @@ importers:
         specifier: workspace:^
         version: link:../target_chains/ethereum/sdk/solidity
       '@pythnetwork/pyth-starknet-js':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       '@pythnetwork/pyth-sui-js':
         specifier: workspace:*
         version: link:../target_chains/sui/sdk/js
@@ -5211,8 +5211,8 @@ packages:
   '@pythnetwork/pyth-sdk-solidity@3.1.0':
     resolution: {integrity: sha512-NgtEPUTL9r0qqMpIOEtSdUVjrF08fHK6wa7eM8hdjhjzMOti4o053B9oFqpm4lkzJW6eELXuP4sRJOABGmNTUg==}
 
-  '@pythnetwork/pyth-starknet-js@0.1.0':
-    resolution: {integrity: sha512-ObuxpHf5xwRO1Cc4TkDUFwGr8ORYTLUHiMyihez5WyS/WBqc6nb8mA3MXGyiv8I6dEEoqz+Hsw7Syx7q49wc4w==}
+  '@pythnetwork/pyth-starknet-js@0.2.0':
+    resolution: {integrity: sha512-wJocXpuVWcEkTpniN8UYf8Jd/GOaSu/C/H53AMd24jbpu/WAkDLgm2Q4CVtCFn8tpGNJFE+MUkHcoRSYzpnfuA==}
 
   '@radix-ui/primitive@1.0.0':
     resolution: {integrity: sha512-3e7rn8FDMin4CgeL7Z/49smCA3rFYY3Ha2rUQ7HRWFadS5iCRw08ZgVT1LaNTCNqgvrUiyczLflrVrF0SRQtNA==}
@@ -24439,7 +24439,7 @@ snapshots:
 
   '@pythnetwork/pyth-sdk-solidity@3.1.0': {}
 
-  '@pythnetwork/pyth-starknet-js@0.1.0': {}
+  '@pythnetwork/pyth-starknet-js@0.2.0': {}
 
   '@radix-ui/primitive@1.0.0':
     dependencies:
