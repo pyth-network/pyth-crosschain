@@ -9,6 +9,7 @@ library PythUtils {
     /// @dev Function will lose precision if targetDecimals is less than the Pyth price decimals.
     /// This method will truncate any digits that cannot be represented by the targetDecimals.
     /// e.g. If the price is 0.000123 and the targetDecimals is 2, the result will be 0
+    
     function convertToUint(
         int256 price,
         int32 expo,
