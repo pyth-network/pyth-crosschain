@@ -27,7 +27,10 @@ import { PriceFeedContract, Storable } from "./base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
-import { StarknetPriceFeedContract } from "./contracts/starknet";
+import {
+  StarknetPriceFeedContract,
+  StarknetWormholeContract,
+} from "./contracts/starknet";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
@@ -139,6 +142,7 @@ export class Store {
       [FuelPriceFeedContract.type]: FuelPriceFeedContract,
       [FuelWormholeContract.type]: FuelWormholeContract,
       [StarknetPriceFeedContract.type]: StarknetPriceFeedContract,
+      [StarknetWormholeContract.type]: StarknetWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));

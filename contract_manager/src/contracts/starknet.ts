@@ -10,6 +10,88 @@ import {
 import { Chain, StarknetChain } from "../chains";
 import { Account, Contract, shortString } from "starknet";
 import { ByteBuffer } from "@pythnetwork/pyth-starknet-js";
+import { WormholeContract } from "./wormhole";
+
+export class StarknetWormholeContract extends WormholeContract {
+  static type = "StarknetWormholeContract";
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return StarknetWormholeContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: StarknetWormholeContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: {
+      type: string;
+      address: string;
+    }
+  ): StarknetWormholeContract {
+    if (parsed.type !== StarknetWormholeContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof StarknetChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new StarknetWormholeContract(chain, parsed.address);
+  }
+
+  constructor(public chain: StarknetChain, public address: string) {
+    super();
+  }
+
+  async getContractClient(): Promise<Contract> {
+    const provider = this.chain.getProvider();
+    const classData = await provider.getClassAt(this.address);
+    return new Contract(classData.abi, this.address, provider);
+  }
+
+  async getCurrentGuardianSetIndex(): Promise<number> {
+    const contract = await this.getContractClient();
+    return Number(await contract.get_current_guardian_set_index());
+  }
+
+  async getChainId(): Promise<number> {
+    const contract = await this.getContractClient();
+    return Number(await contract.chain_id());
+  }
+
+  async getGuardianSet(): Promise<string[]> {
+    const contract = await this.getContractClient();
+    const setIndex = await contract.get_current_guardian_set_index();
+    const set = await contract.get_guardian_set(setIndex);
+    return set.keys.map((key: bigint) => key.toString(16).padStart(40, "0"));
+  }
+
+  async upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ): Promise<TxResult> {
+    const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
+    const provider = this.chain.getProvider();
+    const contract = await this.getContractClient();
+    const account = new Account(
+      provider,
+      "0x" + senderAddress,
+      "0x" + senderPrivateKey
+    );
+    contract.connect(account);
+
+    const updateData = ByteBuffer.fromBuffer(vaa);
+    const tx = await contract.submit_new_guardian_set(updateData);
+    const info = await provider.waitForTransaction(tx.transaction_hash);
+    return { id: tx.transaction_hash, info };
+  }
+}
 
 export class StarknetPriceFeedContract extends PriceFeedContract {
   static type = "StarknetPriceFeedContract";
@@ -111,7 +193,6 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const contract = await this.getContractClient();
     const result = await contract.query_price_feed_unsafe("0x" + feedId);
-    console.log(result);
     if (result.Ok !== undefined) {
       return {
         price: convertPrice(result.Ok.price),
