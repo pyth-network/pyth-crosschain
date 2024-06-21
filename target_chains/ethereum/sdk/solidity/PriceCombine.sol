@@ -67,7 +67,8 @@ library PriceCombine {
         }
     }
 
-    // Helper functions
+    /// Get a copy of this struct where the price and confidence
+    /// have been normalized to be between `MIN_PD_V_I64` and `MAX_PD_V_I64`.
     function normalize(PythStructs.Price memory self) public  pure returns (PythStructs.Price memory) {
         (uint64 price, int64 sign) = toUnsigned(self.price);
         uint64 conf = self.conf;
@@ -87,6 +88,13 @@ library PriceCombine {
             });
     }
 
+    /// Scale this price/confidence so that its exponent is `target_expo`.
+    ///
+    /// Return `Zero` if this number is outside the range of numbers representable in `target_expo`,
+    /// which will happen if `target_expo` is too small.
+    ///
+    /// Warning: if `target_expo` is significantly larger than the current exponent, this
+    /// function will return 0 +- 0.
     function scaleToExponent(PythStructs.Price memory self, int32 targetExpo) public pure returns (PythStructs.Price memory) {
         int32 delta = targetExpo - self.expo;
         int64 price = self.price;
@@ -118,6 +126,8 @@ library PriceCombine {
         }
     }
 
+    /// Helper function to convert signed integers to unsigned and a sign bit, which simplifies
+    /// some of the computations above.
     function toUnsigned(int64 x) public pure returns (uint64, int64) {
         if (x == type(int64).min) {
             return (uint64(type(int64).max) + 1, -1);
