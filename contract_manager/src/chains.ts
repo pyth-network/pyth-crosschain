@@ -24,7 +24,7 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
-import { RpcProvider } from "starknet";
+import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -676,14 +676,43 @@ export class StarknetChain extends Chain {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
   }
 
-  // Account address derivation on Starknet depends
-  // on the wallet application and constructor arguments used.
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    throw new Error("Unsupported");
+    const ARGENT_CLASS_HASH =
+      "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
+    const ADDR_BOUND =
+      0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00n;
+
+    function computeHashOnElements(elements: string[]): string {
+      let hash = "0";
+      for (const item of elements) {
+        hash = ec.starkCurve.pedersen(hash, item);
+      }
+      return ec.starkCurve.pedersen(hash, elements.length);
+    }
+
+    const publicKey = await new Signer("0x" + privateKey).getPubKey();
+
+    const value = computeHashOnElements([
+      shortString.encodeShortString("STARKNET_CONTRACT_ADDRESS"),
+      "0",
+      publicKey,
+      ARGENT_CLASS_HASH,
+      computeHashOnElements([publicKey, "0"]),
+    ]);
+    return (BigInt(value) % ADDR_BOUND).toString(16).padStart(64, "0");
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    throw new Error("Unsupported");
+    const ETH =
+      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+
+    const address = await this.getAccountAddress(privateKey);
+    const provider = this.getProvider();
+    const tokenClassData = await provider.getClassAt(ETH);
+    const tokenContract = new Contract(tokenClassData.abi, ETH, provider);
+    const decimals = await tokenContract.decimals();
+    const amount = await tokenContract.balanceOf("0x" + address);
+    return Number(amount) / Number(10n ** decimals);
   }
 
   getProvider(): RpcProvider {
