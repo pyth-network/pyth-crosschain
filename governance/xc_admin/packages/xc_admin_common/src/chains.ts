@@ -74,6 +74,7 @@ export const RECEIVER_CHAINS = {
   gravity: 60053,
   polynomial: 60054,
   etherlink: 60055,
+  klaytn: 60056,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -165,6 +166,7 @@ export const RECEIVER_CHAINS = {
   etherlink_testnet: 50083,
   fuel_testnet: 50084,
   sei_evm_testnet: 50085,
+  klaytn_testnet: 50086,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
