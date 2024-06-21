@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 library PythUtils {
@@ -11,10 +10,10 @@ library PythUtils {
     /// This method will truncate any digits that cannot be represented by the targetDecimals.
     /// e.g. If the price is 0.000123 and the targetDecimals is 2, the result will be 0
     function convertToUint(
-        int64 price,
+        int256 price,
         int32 expo,
         uint8 targetDecimals
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         if (price < 0 || expo > 0 || expo < -255) {
             revert();
         }
@@ -23,11 +22,11 @@ library PythUtils {
 
         if (targetDecimals >= priceDecimals) {
             return
-                uint(uint64(price)) *
+                uint(uint256(price)) *
                 10 ** uint32(targetDecimals - priceDecimals);
         } else {
             return
-                uint(uint64(price)) /
+                uint(uint256(price)) /
                 10 ** uint32(priceDecimals - targetDecimals);
         }
     }
