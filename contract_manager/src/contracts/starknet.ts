@@ -62,7 +62,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     return sources.map((source) => {
       return {
         emitterChain: Number(source.emitter_chain_id),
-        emitterAddress: source.emitter_address.toString(16),
+        emitterAddress: source.emitter_address.toString(16).padStart(64, "0"),
       };
     });
   }
@@ -82,7 +82,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
   async getFeeTokenAddresses(): Promise<string[]> {
     const contract = await this.getContractClient();
     const tokens: bigint[] = await contract.fee_token_addresses();
-    return tokens.map((t) => t.toString(16));
+    return tokens.map((t) => t.toString(16).padStart(64, "0"));
   }
 
   /**
@@ -126,21 +126,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     senderPrivateKey: PrivateKey,
     vaas: Buffer[]
   ): Promise<TxResult> {
-    // We need the account address to send transactions.
-    throw new Error("Use executeUpdatePriceFeedWithAddress instead");
-  }
-
-  /**
-   * Executes the update instructions contained in the VAAs using the sender credentials
-   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
-   * @param senderAddress address of the sender's account in hex format without 0x prefix
-   * @param vaa VAA containing price update messages to execute
-   */
-  async executeUpdatePriceFeedWithAddress(
-    senderPrivateKey: PrivateKey,
-    senderAddress: string,
-    vaa: Buffer
-  ): Promise<TxResult> {
+    const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const provider = this.chain.getProvider();
     const contract = await this.getContractClient();
     const account = new Account(
@@ -155,35 +141,27 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const tokenContract = new Contract(tokenClassData.abi, feeToken, provider);
     tokenContract.connect(account);
 
-    const updateData = ByteBuffer.fromBuffer(vaa);
-    const feeAmount = await contract.get_update_fee(updateData, feeToken);
-    const feeTx = await tokenContract.approve(this.address, feeAmount);
-    await provider.waitForTransaction(feeTx.transaction_hash);
+    const ids = [];
+    const infos = [];
+    for (const vaa of vaas) {
+      const updateData = ByteBuffer.fromBuffer(vaa);
+      const feeAmount = await contract.get_update_fee(updateData, feeToken);
+      const feeTx = await tokenContract.approve(this.address, feeAmount);
+      await provider.waitForTransaction(feeTx.transaction_hash);
 
-    const tx = await contract.update_price_feeds(updateData);
-    const info = await provider.waitForTransaction(tx.transaction_hash);
-    return { id: tx.transaction_hash, info };
+      const tx = await contract.update_price_feeds(updateData);
+      const info = await provider.waitForTransaction(tx.transaction_hash);
+      ids.push(tx.transaction_hash);
+      infos.push(info);
+    }
+    return { id: ids.join(","), info: infos };
   }
 
-  executeGovernanceInstruction(
+  async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
     vaa: Buffer
   ): Promise<TxResult> {
-    // We need the account address to send transactions.
-    throw new Error("Use executeGovernanceInstructionWithAddress instead");
-  }
-
-  /**
-   * Executes the governance instruction contained in the VAA using the sender credentials
-   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
-   * @param senderAddress address of the sender's account in hex format without 0x prefix
-   * @param vaa the VAA to execute
-   */
-  async executeGovernanceInstructionWithAddress(
-    senderPrivateKey: PrivateKey,
-    senderAddress: string,
-    vaa: Buffer
-  ): Promise<TxResult> {
+    const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const provider = this.chain.getProvider();
     const contract = await this.getContractClient();
     const account = new Account(
@@ -205,7 +183,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
       await contract.governance_data_source();
     return {
       emitterChain: Number(source.emitter_chain_id),
-      emitterAddress: source.emitter_address.toString(16),
+      emitterAddress: source.emitter_address.toString(16).padStart(64, "0"),
     };
   }
 
