@@ -1,10 +1,10 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentProps } from "react";
 
-import { apis } from "../../../../apis";
-import { EvmCall } from "../../../../components/EvmCall";
+import * as apis from "../../../../apis";
+import { EvmApi } from "../../../../components/EvmApi";
 
 type Props = {
   params: {
@@ -14,22 +14,27 @@ type Props = {
   children: ReactNode;
 };
 
-const Page = ({ params, children }: Props) => {
+const Layout = ({ params, children }: Props) => {
   const chain: (typeof apis)[keyof typeof apis] | undefined = isKeyOf(
     params.chain,
     apis,
   )
-    ? apis[params.chain]
+    ? // eslint-disable-next-line import/namespace
+      apis[params.chain]
     : undefined;
   const api =
     chain && isKeyOf(params.method, chain) ? chain[params.method] : undefined;
   if (api) {
-    return <EvmCall {...api}>{children}</EvmCall>;
+    return (
+      <EvmApi {...(api as unknown as ComponentProps<typeof EvmApi>)}>
+        {children}
+      </EvmApi>
+    );
   } else {
     notFound();
   }
 };
-export default Page;
+export default Layout;
 
 const isKeyOf = <T extends Record<string, unknown>>(
   value: unknown,

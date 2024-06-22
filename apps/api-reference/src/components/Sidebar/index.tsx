@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { type HTMLAttributes, useState, type ComponentProps } from "react";
 
-import { apis } from "../../apis";
+import * as apis from "../../apis";
 import { Select } from "../Select";
 
 type Chain = keyof typeof apis;
