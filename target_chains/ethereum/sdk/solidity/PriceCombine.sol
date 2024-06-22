@@ -9,7 +9,7 @@ uint64 constant PD_SCALE = 1_000_000_000;
 uint64 constant MAX_PD_V_U64 = (1 << 28) - 1;
 
 library PriceCombine {
-    function getPriceInQuote(PythStructs.Price memory self, PythStructs.Price memory quote, int32 resultExpo) public pure returns (PythStructs.Price memory) {
+    function getPriceInQuote(PythStructs.Price memory self, PythStructs.Price memory quote, int32 resultExpo) public view returns (PythStructs.Price memory) {
         PythStructs.Price memory result = div(self, quote);
         //return zero price so the error can be gracefully handeded by the caller
         if (result.price == 0 && result.conf == 0) {
@@ -23,7 +23,7 @@ library PriceCombine {
         return scaleToExponent(result, resultExpo);
     }
 
-    function div(PythStructs.Price memory self, PythStructs.Price memory other) public pure returns (PythStructs.Price memory) {
+    function div(PythStructs.Price memory self, PythStructs.Price memory other) public view returns (PythStructs.Price memory) {
         PythStructs.Price memory base = normalize(self);
         other = normalize(other);
 
@@ -69,7 +69,7 @@ library PriceCombine {
 
     /// Get a copy of this struct where the price and confidence
     /// have been normalized to be between `MIN_PD_V_I64` and `MAX_PD_V_I64`.
-    function normalize(PythStructs.Price memory self) public  pure returns (PythStructs.Price memory) {
+    function normalize(PythStructs.Price memory self) public view returns (PythStructs.Price memory) {
         (uint64 price, int64 sign) = toUnsigned(self.price);
         uint64 conf = self.conf;
         int32 expo = self.expo;
