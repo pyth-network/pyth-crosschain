@@ -2,10 +2,14 @@ import argparse
 import asyncio
 import logging
 from eth_account.account import Account
+from secrets import randbits
+
 from express_relay.client import ExpressRelayClient, sign_bid
 from express_relay.express_relay_types import (
     Opportunity,
     OpportunityBid,
+    OpportunityBidParams,
+    OpportunityAdapterConfig,
     Bytes32,
     BidStatus,
     BidStatusUpdate,
@@ -13,9 +17,9 @@ from express_relay.express_relay_types import (
 
 logger = logging.getLogger(__name__)
 
-NAIVE_BID = 10
-# Set validity (naively) to max uint256
-VALID_UNTIL_MAX = 2**256 - 1
+NAIVE_BID = int(2e16)
+# Set deadline (naively) to max uint256
+DEADLINE_MAX = 2**256 - 1
 
 
 class SimpleSearcher:
@@ -28,8 +32,21 @@ class SimpleSearcher:
             self.opportunity_callback,
             self.bid_status_callback,
         )
+        self.opportunity_adapter_configs: dict[str, OpportunityAdapterConfig] = {}
         self.private_key = private_key
         self.public_key = Account.from_key(private_key).address
+
+    async def query_opportunity_adapter_config(self, chain_id: str):
+        """
+        Gets the opportunity adapter config for the given chain ID from the server and caches it in the searcher's state.
+
+        Args:
+            chain_id: The chain ID for which to get the opportunity adapter config.
+        """
+        opportunity_adapter_config = await self.client.get_opportunity_adapter_config(
+            chain_id
+        )
+        self.opportunity_adapter_configs[chain_id] = opportunity_adapter_config
 
     def assess_opportunity(
         self,
@@ -41,13 +58,29 @@ class SimpleSearcher:
         This function determines whether the given opportunity is worthwhile to execute.
         There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of the tokens spent.
         Individual searchers will have their own methods to determine market impact and the profitability of executing an opportunity. This function can use external prices to perform this evaluation.
-        In this simple searcher, the function always (naively) returns an OpportunityBid object with a default bid and valid_until timestamp.
+        In this simple searcher, the function (naively) returns an OpportunityBid object with a default bid and deadline timestamp.
         Args:
             opp: An object representing a single opportunity.
         Returns:
             If the opportunity is deemed worthwhile, this function can return an OpportunityBid object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
-        opportunity_bid = sign_bid(opp, NAIVE_BID, VALID_UNTIL_MAX, self.private_key)
+
+        # TODO: generate nonce more intelligently?
+        bid_params = OpportunityBidParams(
+            amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
+        )
+
+        if opp.chain_id not in self.opportunity_adapter_configs:
+            logger.error(
+                "Opportunity adapter config not found for chain %d", opp.chain_id
+            )
+            return None
+
+        opportunity_adapter_config = self.opportunity_adapter_configs[opp.chain_id]
+
+        opportunity_bid = sign_bid(
+            opp, opportunity_adapter_config, bid_params, self.private_key
+        )
 
         return opportunity_bid
 
@@ -138,6 +171,9 @@ async def main():
     logger.info("Searcher address: %s", simple_searcher.public_key)
 
     await simple_searcher.client.subscribe_chains(args.chain_ids)
+
+    for chain_id in args.chain_ids:
+        await simple_searcher.query_opportunity_adapter_config(chain_id)
 
     task = await simple_searcher.client.get_ws_loop()
     await task
