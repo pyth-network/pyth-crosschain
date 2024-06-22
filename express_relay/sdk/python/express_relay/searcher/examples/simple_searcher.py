@@ -65,7 +65,7 @@ class SimpleSearcher:
             If the opportunity is deemed worthwhile, this function can return an OpportunityBid object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
 
-        # TODO: generate nonce more intelligently?
+        # TODO: generate nonce more intelligently, to reduce gas costs
         bid_params = OpportunityBidParams(
             amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
         )
