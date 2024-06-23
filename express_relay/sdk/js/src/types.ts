@@ -8,6 +8,13 @@ export type TokenAmount = {
   token: Address;
   amount: bigint;
 };
+/**
+ * TokenPermissions struct for permit2
+ */
+export type TokenPermissions = {
+  token: Address;
+  amount: bigint;
+};
 export type BidId = string;
 export type ChainId = string;
 /**
@@ -19,31 +26,17 @@ export type BidParams = {
    */
   amount: bigint;
   /**
+   * Bid nonce
+   */
+  nonce: bigint;
+  /**
    * Unix timestamp for when the bid is no longer valid in seconds
    */
-  validUntil: bigint;
+  deadline: bigint;
 };
-/**
- * Represents the configuration for signing an opportunity
- */
-export type EIP712Domain = {
-  /**
-   * The network chain id for the EIP712 domain.
-   */
-  chainId: bigint;
-  /**
-   * The verifying contract address for the EIP712 domain.
-   */
-  verifyingContract: Address;
-  /**
-   * The name parameter for the EIP712 domain.
-   */
-  name: string;
-  /**
-   * The version parameter for the EIP712 domain.
-   */
-  version: string;
-};
+
+export type OpportunityAdapterConfig =
+  components["schemas"]["OpportunityAdapterConfig"];
 /**
  * Represents a valid opportunity ready to be executed
  */
@@ -81,18 +74,11 @@ export type Opportunity = {
    * Tokens to receive after the opportunity is executed
    */
   buyTokens: TokenAmount[];
-  /**
-   * The data required to sign the opportunity
-   */
-  eip712Domain: EIP712Domain;
 };
 /**
  * All the parameters necessary to represent an opportunity
  */
-export type OpportunityParams = Omit<
-  Opportunity,
-  "opportunityId" | "eip712Domain"
->;
+export type OpportunityParams = Omit<Opportunity, "opportunityId">;
 /**
  * Represents a bid for an opportunity
  */
