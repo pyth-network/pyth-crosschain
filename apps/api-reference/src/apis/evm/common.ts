@@ -35,21 +35,27 @@ export const ETHUSD =
 const HERMES_URL = "https://hermes.pyth.network";
 
 export const getLatestPriceFeed = async (feedId: string) => {
-  const url = new URL("/api/latest_price_feeds", HERMES_URL);
+  const url = new URL("/v2/updates/price/latest", HERMES_URL);
   url.searchParams.set("ids[]", feedId);
   url.searchParams.set("target_chain", "evm");
   url.searchParams.set("binary", "true");
   return safeFetch(priceFeedSchema, url);
 };
 
-const priceFeedSchema = singletonArray(
-  z.object({
-    vaa: z.string().transform((value) => toZeroXPrefixedHex(value)),
-    price: z.object({
-      publish_time: z.number(),
-    }),
+const priceFeedSchema = z.object({
+  binary: z.object({
+    data: singletonArray(z.string()).transform((value) =>
+      toZeroXPrefixedHex(value),
+    ),
   }),
-);
+  parsed: singletonArray(
+    z.object({
+      price: z.object({
+        publish_time: z.number(),
+      }),
+    }),
+  ),
+});
 
 const toZeroXPrefixedHex = (value: string) =>
   `0x${Buffer.from(value, "base64").toString("hex")}`;

@@ -9,6 +9,7 @@ import {
   Field,
   Label,
 } from "@headlessui/react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
@@ -32,6 +33,7 @@ import { ParameterInput } from "./parameter-input";
 import { type EvmApiType, RunButton } from "./run-button";
 import { useIsMounted } from "../../use-is-mounted";
 import { type SupportedLanguage, Code } from "../Code";
+import { ErrorTooltip } from "../ErrorTooltip";
 import { InlineLink } from "../InlineLink";
 import { Select } from "../Select";
 
@@ -258,9 +260,12 @@ const Example = <ParameterName extends string>({
   setParamValues,
 }: ExampleProps<ParameterName>) => {
   const config = useConfig();
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
 
   const updateValues = useCallback(() => {
     if (typeof example.parameters === "function") {
+      setError(undefined);
       const address = getContractAddress(config.state.chainId);
       if (!address) {
         throw new Error(
@@ -272,12 +277,18 @@ const Example = <ParameterName extends string>({
           readContract(config, { abi, address, functionName, args }),
       });
       if (params instanceof Promise) {
+        setLoading(true);
         params
           .then((paramsResolved) => {
             setParamValues(paramsResolved);
           })
           .catch(() => {
-            /* TODO add some UI when this errors */
+            setError(
+              "An error occurred while fetching data for this example, please try again",
+            );
+          })
+          .finally(() => {
+            setLoading(false);
           });
       } else {
         setParamValues(params);
@@ -289,13 +300,17 @@ const Example = <ParameterName extends string>({
   const Icon = example.icon;
 
   return (
-    <InlineLink
-      as="button"
-      onClick={updateValues}
-      className="flex flex-row items-center gap-2"
-    >
-      {Icon && <Icon className="h-4" />}
-      <span>{example.name}</span>
-    </InlineLink>
+    <div className="flex flex-row items-center gap-2">
+      <InlineLink
+        as="button"
+        onClick={updateValues}
+        className="flex flex-row items-center gap-2"
+      >
+        {Icon && <Icon className="h-4" />}
+        <span>{example.name}</span>
+      </InlineLink>
+      {error && <ErrorTooltip className="size-4">{error}</ErrorTooltip>}
+      {loading && <ArrowPathIcon className="size-4 animate-spin" />}
+    </div>
   );
 };

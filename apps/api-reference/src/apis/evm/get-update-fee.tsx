@@ -63,5 +63,5 @@ const [feeAmount] = await contract.getUpdateFee(updateData);
 
 const getParams = async (feedId: string) => {
   const feed = await getLatestPriceFeed(feedId);
-  return { updateData: feed.vaa };
+  return { updateData: feed.binary.data };
 };

@@ -115,15 +115,15 @@ const getParams = async (
   },
 ) => {
   const feed = await getLatestPriceFeed(priceId);
-  const fee = await ctx.readContract("getUpdateFee", [[feed.vaa]]);
+  const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");
   }
   return {
-    updateData: feed.vaa,
+    updateData: feed.binary.data,
     priceId,
-    minPublishTime: (feed.price.publish_time - 5).toString(),
-    maxPublishTime: (feed.price.publish_time + 5).toString(),
+    minPublishTime: (feed.parsed.price.publish_time - 5).toString(),
+    maxPublishTime: (feed.parsed.price.publish_time + 5).toString(),
     fee: fee.toString(),
   };
 };
