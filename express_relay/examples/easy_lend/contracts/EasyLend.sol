@@ -115,8 +115,8 @@ contract EasyLend is IExpressRelayFeeReceiver {
     function _getVaultHealth(
         Vault memory vault
     ) internal view returns (uint256) {
-        uint256 priceCollateral = _getPrice(vault.tokenIdCollateral);
-        uint256 priceDebt = _getPrice(vault.tokenIdDebt);
+        uint256 priceCollateral = _getPrice(vault.tokenPriceFeedIdCollateral);
+        uint256 priceDebt = _getPrice(vault.tokenPriceFeedIdDebt);
 
         if (priceCollateral < 0) {
             revert NegativePrice();
@@ -140,8 +140,8 @@ contract EasyLend is IExpressRelayFeeReceiver {
      * @param amountDebt: amount of debt tokens in the vault
      * @param minHealthRatio: minimum health ratio of the vault, 10**18 is 100%
      * @param minPermissionlessHealthRatio: minimum health ratio of the vault before permissionless liquidations are allowed. This should be less than minHealthRatio
-     * @param tokenIdCollateral: price feed Id of the collateral token
-     * @param tokenIdDebt: price feed Id of the debt token
+     * @param tokenPriceFeedIdCollateral: price feed Id of the collateral token
+     * @param tokenPriceFeedIdDebt: price feed Id of the debt token
      * @param updateData: data to update price feeds with
      */
     function createVault(
@@ -151,8 +151,8 @@ contract EasyLend is IExpressRelayFeeReceiver {
         uint256 amountDebt,
         uint256 minHealthRatio,
         uint256 minPermissionlessHealthRatio,
-        bytes32 tokenIdCollateral,
-        bytes32 tokenIdDebt,
+        bytes32 tokenPriceFeedIdCollateral,
+        bytes32 tokenPriceFeedIdDebt,
         bytes[] calldata updateData
     ) public payable returns (uint256) {
         _updatePriceFeeds(updateData);
@@ -163,8 +163,8 @@ contract EasyLend is IExpressRelayFeeReceiver {
             amountDebt,
             minHealthRatio,
             minPermissionlessHealthRatio,
-            tokenIdCollateral,
-            tokenIdDebt
+            tokenPriceFeedIdCollateral,
+            tokenPriceFeedIdDebt
         );
         if (minPermissionlessHealthRatio > minHealthRatio) {
             revert InvalidHealthRatios();
