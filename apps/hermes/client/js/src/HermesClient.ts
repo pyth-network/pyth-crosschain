@@ -100,7 +100,7 @@ export class HermesClient {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const url = new URL("/v2/price_feeds", this.baseURL);
+    const url = new URL(`${this.baseURL}/v2/price_feeds`);
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -198,7 +198,7 @@ export class HermesClient {
       benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
-    const url = new URL("/v2/updates/price/stream", this.baseURL);
+    const url = new URL(`${this.baseURL}/v2/updates/price/stream`);
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
