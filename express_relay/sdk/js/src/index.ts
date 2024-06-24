@@ -89,7 +89,7 @@ function getPermittedTokens(
   callValue: bigint,
   weth: Address
 ): TokenPermissions[] {
-  let permitted: TokenPermissions[] = [];
+  const permitted: TokenPermissions[] = [];
 
   for (let i = 0; i < tokens.length; i++) {
     permitted.push({ token: tokens[i].token, amount: tokens[i].amount });

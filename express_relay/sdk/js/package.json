@@ -37,7 +37,7 @@
     "isomorphic-ws": "^5.0.0",
     "openapi-client-axios": "^7.5.4",
     "openapi-fetch": "^0.8.2",
-    "openapi-typescript": "^6.5.5",
+    "openapi-typescript": "6.5.5",
     "viem": "^2.7.6",
     "ws": "^8.16.0"
   },

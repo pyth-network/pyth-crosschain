@@ -488,7 +488,7 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
       openapi-typescript:
-        specifier: ^6.5.5
+        specifier: 6.5.5
         version: 6.5.5
       viem:
         specifier: ^2.7.6
