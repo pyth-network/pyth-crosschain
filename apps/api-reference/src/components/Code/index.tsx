@@ -3,6 +3,7 @@ import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useMemo, useCallback, type HTMLAttributes } from "react";
 import { useRef, useEffect, useState } from "react";
+import type { OffsetOrPosition } from "shiki";
 
 import type { Highlighter, SupportedLanguage } from "./shiki";
 import style from "./style.module.css";
@@ -14,9 +15,10 @@ export type { SupportedLanguage } from "./shiki";
 type CodeProps = {
   language: SupportedLanguage;
   children: string;
+  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };
 
-export const Code = ({ language, children }: CodeProps) => {
+export const Code = ({ language, children, dimRange }: CodeProps) => {
   const chompedCode = useMemo(() => chomp(children), [children]);
 
   return (
@@ -24,7 +26,11 @@ export const Code = ({ language, children }: CodeProps) => {
       <CopyButton className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
         {chompedCode}
       </CopyButton>
-      <HighlightedCode language={language} className={style.code}>
+      <HighlightedCode
+        language={language}
+        className={style.code}
+        dimRange={dimRange}
+      >
         {chompedCode}
       </HighlightedCode>
     </div>
@@ -108,14 +114,16 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
 type HighlightedCodeProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
   language: SupportedLanguage;
   children: string;
+  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };
 
 const HighlightedCode = ({
   language,
   children,
+  dimRange,
   ...props
 }: HighlightedCodeProps) => {
-  const highlightedCode = useHighlightedCode(language, children);
+  const highlightedCode = useHighlightedCode(language, children, dimRange);
 
   return highlightedCode ? (
     <div dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
@@ -134,15 +142,36 @@ const HighlightedCode = ({
   );
 };
 
-const useHighlightedCode = (language: SupportedLanguage, code: string) => {
+const useHighlightedCode = (
+  language: SupportedLanguage,
+  code: string,
+  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined,
+) => {
   const [highlightedCode, setHighlightedCode] = useState<string | undefined>(
     undefined,
   );
   const highlighter = useRef<Highlighter | undefined>(undefined);
+  const decorations = useMemo(
+    () =>
+      dimRange
+        ? [
+            {
+              start: dimRange[0],
+              end: dimRange[1],
+              properties: {
+                class: "opacity-40 group-hover:opacity-100 transition",
+              },
+            },
+          ]
+        : undefined,
+    [dimRange],
+  );
 
   useEffect(() => {
     if (highlighter.current) {
-      setHighlightedCode(highlighter.current.highlight(language, code));
+      setHighlightedCode(
+        highlighter.current.highlight(language, code, { decorations }),
+      );
       return;
     } else {
       const { cancel, load } = createShikiLoader();
@@ -150,7 +179,9 @@ const useHighlightedCode = (language: SupportedLanguage, code: string) => {
         .then((newHighlighter) => {
           if (newHighlighter) {
             highlighter.current = newHighlighter;
-            setHighlightedCode(newHighlighter.highlight(language, code));
+            setHighlightedCode(
+              newHighlighter.highlight(language, code, { decorations }),
+            );
           }
         })
         .catch((error: unknown) => {
@@ -159,7 +190,7 @@ const useHighlightedCode = (language: SupportedLanguage, code: string) => {
         });
       return cancel;
     }
-  }, [code, language]);
+  }, [code, language, decorations]);
 
   return highlightedCode;
 };

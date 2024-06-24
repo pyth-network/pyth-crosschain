@@ -8,8 +8,9 @@ import {
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
-import { createElement, useState, useEffect } from "react";
+import { createElement } from "react";
 
+import { useIsMounted } from "../../use-is-mounted";
 import { Select } from "../Select";
 
 const VALID_THEMES = ["system", "light", "dark"] as const;
@@ -30,7 +31,7 @@ const buttonClasses =
   "grid place-content-center w-12 h-10 px-3 rounded text-neutral-500";
 
 export const ColorThemeSelector = () => {
-  const [mounted, setMounted] = useState(false);
+  const isMounted = useIsMounted();
   const {
     theme: themeFromNextThemes,
     setTheme,
@@ -43,11 +44,7 @@ export const ColorThemeSelector = () => {
     ? resolvedThemeFromNextThemes
     : "system";
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  return mounted ? (
+  return isMounted ? (
     <Select
       value={theme}
       onChange={setTheme}

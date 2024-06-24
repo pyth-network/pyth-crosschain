@@ -8,6 +8,6 @@ struct Vault {
     uint256 amountDebt;
     uint256 minHealthRatio; // 10**18 is 100%
     uint256 minPermissionlessHealthRatio;
-    bytes32 tokenIdCollateral;
-    bytes32 tokenIdDebt;
+    bytes32 tokenPriceFeedIdCollateral;
+    bytes32 tokenPriceFeedIdDebt;
 }

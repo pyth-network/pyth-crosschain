@@ -1,0 +1,3 @@
+- chain: starknet_sepolia
+  address: "0x07fa5a689a768982ecb60ed05f39ca8f6efe623dd32ee6f3608662e3452a104c"
+  type: StarknetWormholeContract
