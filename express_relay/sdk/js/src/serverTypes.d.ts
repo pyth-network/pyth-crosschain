@@ -31,10 +31,6 @@ export interface paths {
      */
     post: operations["post_opportunity"];
   };
-  "/v1/opportunities/{chain_id}/config": {
-    /** Fetch the opportunity adapter config for a chain. */
-    get: operations["get_opportunity_config"];
-  };
   "/v1/opportunities/{opportunity_id}/bids": {
     /** Bid on opportunity */
     post: operations["opportunity_bid"];
@@ -187,34 +183,6 @@ export interface components {
     };
     ErrorBodyResponse: {
       error: string;
-    };
-    OpportunityAdapterConfig: {
-      /**
-       * Format: int64
-       * @description The chain id as a u64
-       * @example 31337
-       */
-      chain_id: number;
-      /**
-       * @description The opportunity factory address
-       * @example 0x0AFA3E194ca60B13a3f455b63Ed16Df044c9AeD4
-       */
-      opportunity_adapter_factory: string;
-      /**
-       * @description The hash of the bytecode used to initialize the opportunity adapter
-       * @example 0x5fd31c9d02e2fc69cc09dfea1a9b726391e0e0862624757c0373f66c3bb8920e
-       */
-      opportunity_adapter_init_bytecode_hash: string;
-      /**
-       * @description The permit2 address
-       * @example 0x92ab27f3559c8f18bB86E2b2bBfA15631dE45718
-       */
-      permit2: string;
-      /**
-       * @description The weth address
-       * @example 0xE1408BbF3076A40C0c30F6E243f0Bc43e4f51850
-       */
-      weth: string;
     };
     OpportunityBid: {
       /**
@@ -412,38 +380,6 @@ export interface components {
         };
       };
     };
-    OpportunityAdapterConfig: {
-      content: {
-        "application/json": {
-          /**
-           * Format: int64
-           * @description The chain id as a u64
-           * @example 31337
-           */
-          chain_id: number;
-          /**
-           * @description The opportunity factory address
-           * @example 0x0AFA3E194ca60B13a3f455b63Ed16Df044c9AeD4
-           */
-          opportunity_adapter_factory: string;
-          /**
-           * @description The hash of the bytecode used to initialize the opportunity adapter
-           * @example 0x5fd31c9d02e2fc69cc09dfea1a9b726391e0e0862624757c0373f66c3bb8920e
-           */
-          opportunity_adapter_init_bytecode_hash: string;
-          /**
-           * @description The permit2 address
-           * @example 0x92ab27f3559c8f18bB86E2b2bBfA15631dE45718
-           */
-          permit2: string;
-          /**
-           * @description The weth address
-           * @example 0xE1408BbF3076A40C0c30F6E243f0Bc43e4f51850
-           */
-          weth: string;
-        };
-      };
-    };
     /** @description Similar to OpportunityParams, but with the opportunity id included. */
     OpportunityParamsWithMetadata: {
       content: {
@@ -595,30 +531,6 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["OpportunityParamsWithMetadata"];
-        };
-      };
-      400: components["responses"]["ErrorBodyResponse"];
-      /** @description Chain id was not found */
-      404: {
-        content: {
-          "application/json": components["schemas"]["ErrorBodyResponse"];
-        };
-      };
-    };
-  };
-  /** Fetch the opportunity adapter config for a chain. */
-  get_opportunity_config: {
-    parameters: {
-      path: {
-        /** @description Chain id to get opportunity config for */
-        chain_id: string;
-      };
-    };
-    responses: {
-      /** @description The opportunity config for the specified chain ID */
-      200: {
-        content: {
-          "application/json": components["schemas"]["OpportunityAdapterConfig"];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];

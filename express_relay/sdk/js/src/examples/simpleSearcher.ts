@@ -1,9 +1,13 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { checkHex, Client } from "../index";
+import { checkHex, Client, OPPORTUNITY_ADAPTER_CONFIGS } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { isHex } from "viem";
-import { BidStatusUpdate, Opportunity } from "../types";
+import {
+  BidStatusUpdate,
+  Opportunity,
+  OpportunityAdapterConfig,
+} from "../types";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -57,8 +61,8 @@ class SimpleSearcher {
       nonce: nonce,
       deadline: BigInt(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
     };
-    const opportunityAdapterConfig =
-      await this.client.getOpportunityAdapterConfig(opportunity.chainId);
+    const opportunityAdapterConfig: OpportunityAdapterConfig =
+      OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
     const opportunityBid = await this.client.signOpportunityBid(
       opportunity,
       bidParams,

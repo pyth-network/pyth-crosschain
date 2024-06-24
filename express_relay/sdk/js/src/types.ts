@@ -35,8 +35,28 @@ export type BidParams = {
   deadline: bigint;
 };
 
-export type OpportunityAdapterConfig =
-  components["schemas"]["OpportunityAdapterConfig"];
+export type OpportunityAdapterConfig = {
+  /**
+   * The chain id as a u64
+   */
+  chain_id: number;
+  /**
+   * The opportunity factory address
+   */
+  opportunity_adapter_factory: Address;
+  /**
+   * The hash of the bytecode used to initialize the opportunity adapter
+   */
+  opportunity_adapter_init_bytecode_hash: Hex;
+  /**
+   * The permit2 address
+   */
+  permit2: Address;
+  /**
+   * The weth address
+   */
+  weth: Address;
+};
 /**
  * Represents a valid opportunity ready to be executed
  */

@@ -60,6 +60,21 @@ export function checkTokenQty(token: {
   };
 }
 
+// TODO: update, remove "development" and replace with real chains
+export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
+  string,
+  OpportunityAdapterConfig
+> = {
+  development: {
+    chain_id: 31337,
+    opportunity_adapter_factory: "0x610178da211fef7d417bc0e6fed39f05609ad788",
+    opportunity_adapter_init_bytecode_hash:
+      "0x126a3490f7fac65732396d617d2b728c25235e2cdc9f1e99faea1d24a9fba89c",
+    permit2: "0x8a791620dd6260079bf849dc5567adc3f2fdc318",
+    weth: "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+  },
+};
+
 /**
  * Converts sellTokens, bidAmount, and callValue to permitted tokens
  * @param tokens List of sellTokens
@@ -326,27 +341,6 @@ export class Client {
     if (response.error) {
       throw new ClientError(response.error.error);
     }
-  }
-
-  /**
-   * Fetches the opportunity adapter config for the specified chainId
-   * @param chainId Chain id to fetch the opportunity adapter config for
-   * @returns Opportunity adapter config
-   */
-  async getOpportunityAdapterConfig(
-    chainId: string
-  ): Promise<OpportunityAdapterConfig> {
-    const client = createClient<paths>(this.clientOptions);
-    const opportunityAdapterConfig = await client.GET(
-      "/v1/opportunities/{chain_id}/config",
-      {
-        params: { path: { chain_id: chainId } },
-      }
-    );
-    if (opportunityAdapterConfig.data === undefined) {
-      throw new ClientError("No opportunities found");
-    }
-    return opportunityAdapterConfig.data;
   }
 
   /**

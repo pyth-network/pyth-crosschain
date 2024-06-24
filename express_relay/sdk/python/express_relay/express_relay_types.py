@@ -446,23 +446,3 @@ class OpportunityAdapterConfig(BaseModel):
     opportunity_adapter_init_bytecode_hash: Bytes32
     permit2: Address
     weth: Address
-
-    @classmethod
-    def process_opportunity_adapter_config_dict(
-        cls, opportunity_adapter_config_dict: dict
-    ):
-        """
-        Processes an opportunity adapter config dictionary and converts to a class object.
-
-        Args:
-            opportunity_adapter_config_dict: The opportunity adapter config dictionary to convert.
-
-        Returns:
-            The opportunity adapter config as a class object.
-        """
-
-        try:
-            return cls.model_validate(opportunity_adapter_config_dict)
-        except UnsupportedOpportunityVersionException as e:
-            warnings.warn(str(e))
-            return None

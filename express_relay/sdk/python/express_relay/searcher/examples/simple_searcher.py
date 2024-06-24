@@ -4,12 +4,15 @@ import logging
 from eth_account.account import Account
 from secrets import randbits
 
-from express_relay.client import ExpressRelayClient, sign_bid
+from express_relay.client import (
+    ExpressRelayClient,
+    sign_bid,
+    OPPORTUNITY_ADAPTER_CONFIGS,
+)
 from express_relay.express_relay_types import (
     Opportunity,
     OpportunityBid,
     OpportunityBidParams,
-    OpportunityAdapterConfig,
     Bytes32,
     BidStatus,
     BidStatusUpdate,
@@ -32,21 +35,8 @@ class SimpleSearcher:
             self.opportunity_callback,
             self.bid_status_callback,
         )
-        self.opportunity_adapter_configs: dict[str, OpportunityAdapterConfig] = {}
         self.private_key = private_key
         self.public_key = Account.from_key(private_key).address
-
-    async def query_opportunity_adapter_config(self, chain_id: str):
-        """
-        Gets the opportunity adapter config for the given chain ID from the server and caches it in the searcher's state.
-
-        Args:
-            chain_id: The chain ID for which to get the opportunity adapter config.
-        """
-        opportunity_adapter_config = await self.client.get_opportunity_adapter_config(
-            chain_id
-        )
-        self.opportunity_adapter_configs[chain_id] = opportunity_adapter_config
 
     def assess_opportunity(
         self,
@@ -70,13 +60,7 @@ class SimpleSearcher:
             amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
         )
 
-        if opp.chain_id not in self.opportunity_adapter_configs:
-            logger.error(
-                "Opportunity adapter config not found for chain %d", opp.chain_id
-            )
-            return None
-
-        opportunity_adapter_config = self.opportunity_adapter_configs[opp.chain_id]
+        opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS[opp.chain_id]
 
         opportunity_bid = sign_bid(
             opp, opportunity_adapter_config, bid_params, self.private_key
@@ -171,9 +155,6 @@ async def main():
     logger.info("Searcher address: %s", simple_searcher.public_key)
 
     await simple_searcher.client.subscribe_chains(args.chain_ids)
-
-    for chain_id in args.chain_ids:
-        await simple_searcher.query_opportunity_adapter_config(chain_id)
 
     task = await simple_searcher.client.get_ws_loop()
     await task
