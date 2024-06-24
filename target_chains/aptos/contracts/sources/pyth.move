@@ -30,13 +30,6 @@ module pyth::pyth {
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u64 = 1096111958;
 
-    struct ParseConfig has copy, drop {
-        min_publish_time: u64,
-        max_publish_time: u64,
-        check_uniqueness: bool,
-    }
-
-
     // -----------------------------------------------------------------------------
     // Initialisation functions
 
@@ -1723,9 +1716,5 @@ module pyth::pyth_test {
         
         cleanup_test(burn_capability, mint_capability);
     }
-
-    
-
-
    
 }
