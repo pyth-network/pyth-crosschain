@@ -1,3 +1,1 @@
-import { evm } from "./evm";
-
-export const apis = { evm };
+export * as evm from "./evm";

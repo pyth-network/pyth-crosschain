@@ -9,7 +9,7 @@ import { MaxWidth } from "../MaxWidth";
 
 export const Home = () => (
   <main className="grid size-full place-content-center py-16 text-center">
-    <h1 className="mb-24 text-6xl font-semibold text-pythpurple-600 dark:text-pythpurple-400">
+    <h1 className="mb-16 text-4xl font-semibold text-pythpurple-600 dark:text-pythpurple-400">
       Pyth Network API Reference
     </h1>
     <MaxWidth>
@@ -62,7 +62,8 @@ const ProductLink = ({
   <Button
     as={Link}
     href={href}
-    className="flex flex-col items-center gap-6 p-6 text-left sm:flex-row"
+    gradient
+    className="flex flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
   >
     <Icon className="h-24 p-3 text-pythpurple-600 dark:text-pythpurple-400" />
     <div className="flex flex-col gap-2">

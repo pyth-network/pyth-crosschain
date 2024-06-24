@@ -2,7 +2,7 @@ import { evaluate } from "@mdx-js/mdx";
 import { notFound } from "next/navigation";
 import * as runtime from "react/jsx-runtime";
 
-import { apis } from "../../../../apis";
+import * as apis from "../../../../apis";
 import { useMDXComponents } from "../../../../mdx-components";
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
 
 const Page = async ({ params }: Props) => {
   const mdxComponents = useMDXComponents({});
+  // eslint-disable-next-line import/namespace
   const chain = isKeyOf(params.chain, apis) ? apis[params.chain] : undefined;
   const api =
     chain && isKeyOf(params.method, chain) ? chain[params.method] : undefined;
