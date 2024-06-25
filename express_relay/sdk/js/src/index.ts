@@ -2,7 +2,14 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import { Address, Hex, isAddress, isHex, keccak256 } from "viem";
+import {
+  Address,
+  Hex,
+  isAddress,
+  isHex,
+  keccak256,
+  getContractAddress,
+} from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 import {
@@ -69,7 +76,7 @@ export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
     chain_id: 31337,
     opportunity_adapter_factory: "0x610178da211fef7d417bc0e6fed39f05609ad788",
     opportunity_adapter_init_bytecode_hash:
-      "0x126a3490f7fac65732396d617d2b728c25235e2cdc9f1e99faea1d24a9fba89c",
+      "0xfd1080f6c2d71672806f31108cb2f7d7709878e613b8d6bf028482184dcd70a4",
     permit2: "0x8a791620dd6260079bf849dc5567adc3f2fdc318",
     weth: "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
   },
@@ -344,32 +351,6 @@ export class Client {
   }
 
   /**
-   * Computes the create2 address for an opportunity adapter
-   * @param searcher Address of the searcher
-   * @param opportunityAdapterFactory Address of the opportunity adapter factory
-   * @param opportunityAdapterInitBytecodeHash Keccak256 hash of the opportunity adapter init bytecode
-   * @returns Create2 address of the opportunity adapter contract of the searcher
-   */
-  public computeCreate2Address(
-    searcher: Address,
-    opportunityAdapterFactory: Address,
-    opportunityAdapterInitBytecodeHash: Hex
-  ): Address {
-    const saltHex = searcher.replace("0x", "").padStart(64, "0");
-    const create2Address = `0x${keccak256(
-      `0x${[
-        "ff",
-        opportunityAdapterFactory,
-        saltHex,
-        opportunityAdapterInitBytecodeHash,
-      ]
-        .map((x) => x.replace(/0x/, ""))
-        .join("")}`
-    ).slice(-40)}`.toLowerCase();
-    return checkAddress(create2Address);
-  }
-
-  /**
    * Creates a signed bid for an opportunity
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
@@ -410,6 +391,14 @@ export class Client {
     };
 
     const account = privateKeyToAccount(privateKey);
+    const create2Address = getContractAddress({
+      bytecodeHash:
+        opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
+      from: opportunityAdapterConfig.opportunity_adapter_factory,
+      opcode: "CREATE2",
+      salt: `0x${account.address.replace("0x", "").padStart(64, "0")}`,
+    });
+
     const signature = await signTypedData({
       privateKey,
       domain: {
@@ -426,13 +415,7 @@ export class Client {
           opportunity.targetCallValue,
           checkAddress(opportunityAdapterConfig.weth)
         ),
-        spender: this.computeCreate2Address(
-          account.address,
-          checkAddress(opportunityAdapterConfig.opportunity_adapter_factory),
-          checkHex(
-            opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash
-          )
-        ),
+        spender: create2Address,
         nonce: bidParams.nonce,
         deadline: bidParams.deadline,
         witness: {

@@ -32,7 +32,7 @@ OPPORTUNITY_ADAPTER_CONFIGS = {
     "development": OpportunityAdapterConfig(
         chain_id=31337,
         opportunity_adapter_factory="0x610178da211fef7d417bc0e6fed39f05609ad788",
-        opportunity_adapter_init_bytecode_hash="0x126a3490f7fac65732396d617d2b728c25235e2cdc9f1e99faea1d24a9fba89c",
+        opportunity_adapter_init_bytecode_hash="0xfd1080f6c2d71672806f31108cb2f7d7709878e613b8d6bf028482184dcd70a4",
         permit2="0x8a791620dd6260079bf849dc5567adc3f2fdc318",
         weth="0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
     )
