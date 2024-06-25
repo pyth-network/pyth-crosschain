@@ -1,0 +1,76 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "int64",
+				"name": "basePrice",
+				"type": "int64"
+			},
+			{
+				"internalType": "uint64",
+				"name": "baseConf",
+				"type": "uint64"
+			},
+			{
+				"internalType": "int32",
+				"name": "baseExpo",
+				"type": "int32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "basePublishTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "int64",
+				"name": "quotePrice",
+				"type": "int64"
+			},
+			{
+				"internalType": "uint64",
+				"name": "quoteConf",
+				"type": "uint64"
+			},
+			{
+				"internalType": "int32",
+				"name": "quoteExpo",
+				"type": "int32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "quotePublishTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "int32",
+				"name": "resultExpo",
+				"type": "int32"
+			}
+		],
+		"name": "testGetPriceInQuote",
+		"outputs": [
+			{
+				"internalType": "int64",
+				"name": "",
+				"type": "int64"
+			},
+			{
+				"internalType": "uint64",
+				"name": "",
+				"type": "uint64"
+			},
+			{
+				"internalType": "int32",
+				"name": "",
+				"type": "int32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	}
+]
