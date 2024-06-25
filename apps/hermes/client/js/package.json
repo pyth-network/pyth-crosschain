@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/hermes-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Pyth Hermes Client",
   "author": {
     "name": "Pyth Data Association"
