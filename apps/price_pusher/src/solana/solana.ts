@@ -35,14 +35,14 @@ export class SolanaPriceListener extends ChainPriceListener {
     const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
       slot
     );
-    if (blockTime !== undefined || blockTime < Date.now() / 1000 - 30) {
+    if (blockTime === null || blockTime < Date.now() / 1000 - 30) {
       throw new Error("Solana connection is unhealthy");
     }
   }
 
   async start() {
     // Frequently check the RPC connection to ensure it is healthy
-    setInterval(() => this.checkHealth.bind(this), 5000);
+    setInterval(this.checkHealth.bind(this), 5000);
 
     await super.start();
   }
@@ -125,6 +125,7 @@ export class SolanaPricePusher implements IPricePusher {
       this.logger.info({ signatures }, "updatePriceFeed successful");
     } catch (err: any) {
       this.logger.error(err, "updatePriceFeed failed");
+      return;
     }
   }
 }
