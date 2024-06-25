@@ -17,7 +17,7 @@ const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
-const SOLANA_RPC = process.env.SOLANA_RPC; 
+const SOLANA_RPC = process.env.SOLANA_RPC;
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
 const COMPUTE_UNIT_PRICE_MICROLAMPORTS: number | undefined = process.env
@@ -27,7 +27,10 @@ const COMPUTE_UNIT_PRICE_MICROLAMPORTS: number | undefined = process.env
 
 async function run() {
   const squad = new SquadsMesh({
-    connection: new Connection(SOLANA_RPC ?? getPythClusterApiUrl(CLUSTER), COMMITMENT),
+    connection: new Connection(
+      SOLANA_RPC ?? getPythClusterApiUrl(CLUSTER),
+      COMMITMENT
+    ),
     wallet: new NodeWallet(KEYPAIR),
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,
   });
