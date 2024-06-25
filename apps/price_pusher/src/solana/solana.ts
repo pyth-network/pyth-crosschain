@@ -103,10 +103,13 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.connection,
         this.pythSolanaReceiver.wallet
       );
-      this.logger.info({ signatures }, "updatePriceFeed successful");
+      this.logger.info(
+        { signatures },
+        "broadcasted updatePriceFeed transactions"
+      );
     } catch (err: any) {
       this.logger.error(err, "updatePriceFeed failed");
-      return;
+      throw err;
     }
   }
 }

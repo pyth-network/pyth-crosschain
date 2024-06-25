@@ -23,14 +23,14 @@ export class AptosPriceListener extends ChainPriceListener {
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
+    const client = new AptosClient(this.endpoint);
+
+    const res = await client.getAccountResource(
+      this.pythModule,
+      `${this.pythModule}::state::LatestPriceInfo`
+    );
+
     try {
-      const client = new AptosClient(this.endpoint);
-
-      const res = await client.getAccountResource(
-        this.pythModule,
-        `${this.pythModule}::state::LatestPriceInfo`
-      );
-
       // This depends upon the pyth contract storage on Aptos and should not be undefined.
       // If undefined, there has been some change and we would need to update accordingly.
       const handle = (res.data as any).info.handle;
@@ -134,29 +134,26 @@ export class AptosPricePusher implements IPricePusher {
       return;
     }
 
+    const account = AptosAccount.fromDerivePath(
+      APTOS_ACCOUNT_HD_PATH,
+      this.mnemonic
+    );
+    const client = new AptosClient(this.endpoint);
+
+    const sequenceNumber = await this.tryGetNextSequenceNumber(client, account);
+    const rawTx = await client.generateTransaction(
+      account.address(),
+      {
+        function: `${this.pythContractAddress}::pyth::update_price_feeds_with_funder`,
+        type_arguments: [],
+        arguments: [priceFeedUpdateData],
+      },
+      {
+        sequence_number: sequenceNumber.toFixed(),
+      }
+    );
+
     try {
-      const account = AptosAccount.fromDerivePath(
-        APTOS_ACCOUNT_HD_PATH,
-        this.mnemonic
-      );
-      const client = new AptosClient(this.endpoint);
-
-      const sequenceNumber = await this.tryGetNextSequenceNumber(
-        client,
-        account
-      );
-      const rawTx = await client.generateTransaction(
-        account.address(),
-        {
-          function: `${this.pythContractAddress}::pyth::update_price_feeds_with_funder`,
-          type_arguments: [],
-          arguments: [priceFeedUpdateData],
-        },
-        {
-          sequence_number: sequenceNumber.toFixed(),
-        }
-      );
-
       const signedTx = await client.signTransaction(account, rawTx);
       const pendingTx = await client.submitTransaction(signedTx);
 

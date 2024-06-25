@@ -363,8 +363,7 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   // Attempt to refresh the version of the provided object reference to point to the current version
-  // of the object. Return the provided object reference if an error occurs or the object could not
-  // be retrieved.
+  // of the object. Throws an error if the object cannot be refreshed.
   private static async tryRefreshObjectReference(
     provider: SuiClient,
     ref: SuiObjectRef
@@ -378,10 +377,10 @@ export class SuiPricePusher implements IPricePusher {
           version: objectResponse.data!.version,
         };
       } else {
-        return ref;
+        throw new Error("Failed to refresh object reference");
       }
-    } catch (error) {
-      return ref;
+    } catch (err) {
+      throw err;
     }
   }
 
