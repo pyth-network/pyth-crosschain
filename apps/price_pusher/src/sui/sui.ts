@@ -368,19 +368,15 @@ export class SuiPricePusher implements IPricePusher {
     provider: SuiClient,
     ref: SuiObjectRef
   ): Promise<SuiObjectRef> {
-    try {
-      const objectResponse = await provider.getObject({ id: ref.objectId });
-      if (objectResponse.data !== undefined) {
-        return {
-          digest: objectResponse.data!.digest,
-          objectId: objectResponse.data!.objectId,
-          version: objectResponse.data!.version,
-        };
-      } else {
-        throw new Error("Failed to refresh object reference");
-      }
-    } catch (err) {
-      throw err;
+    const objectResponse = await provider.getObject({ id: ref.objectId });
+    if (objectResponse.data !== undefined) {
+      return {
+        digest: objectResponse.data!.digest,
+        objectId: objectResponse.data!.objectId,
+        version: objectResponse.data!.version,
+      };
+    } else {
+      throw new Error("Failed to refresh object reference");
     }
   }
 
