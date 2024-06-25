@@ -100,7 +100,7 @@ export class HermesClient {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const url = new URL("/v2/price_feeds", this.baseURL);
+    const url = new URL("v2/price_feeds", this.baseURL);
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -129,7 +129,7 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`${this.baseURL}/v2/updates/price/latest`);
+    const url = new URL(`v2/updates/price/latest`, this.baseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -162,7 +162,7 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`${this.baseURL}/v2/updates/price/${publishTime}`);
+    const url = new URL(`v2/updates/price/${publishTime}`, this.baseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -198,7 +198,7 @@ export class HermesClient {
       benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
-    const url = new URL("/v2/updates/price/stream", this.baseURL);
+    const url = new URL("v2/updates/price/stream", this.baseURL);
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
