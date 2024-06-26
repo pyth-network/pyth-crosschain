@@ -22,7 +22,11 @@ export interface paths {
     get: operations["bid_status"];
   };
   "/v1/opportunities": {
-    /** Fetch all opportunities ready to be exectued. */
+    /**
+     * Fetch opportunities ready for execution or historical opportunities
+     * @description depending on the mode. You need to provide `chain_id` for historical mode.
+     * Opportunities are sorted by creation time in ascending order in historical mode.
+     */
     get: operations["get_opportunities"];
     /**
      * Submit an opportunity ready to be executed.
@@ -159,28 +163,6 @@ export interface components {
     ClientRequest: components["schemas"]["ClientMessage"] & {
       id: string;
     };
-    EIP712Domain: {
-      /**
-       * @description The network chain id parameter for EIP712 domain.
-       * @example 31337
-       */
-      chain_id: string;
-      /**
-       * @description The name parameter for the EIP712 domain.
-       * @example OpportunityAdapter
-       */
-      name: string;
-      /**
-       * @description The verifying contract address parameter for the EIP712 domain.
-       * @example 0xcA11bde05977b3631167028862bE2a173976CA11
-       */
-      verifying_contract: string;
-      /**
-       * @description The version parameter for the EIP712 domain.
-       * @example 1
-       */
-      version: string;
-    };
     ErrorBodyResponse: {
       error: string;
     };
@@ -191,10 +173,20 @@ export interface components {
        */
       amount: string;
       /**
+       * @description The latest unix timestamp in seconds until which the bid is valid
+       * @example 1000000000000000000
+       */
+      deadline: string;
+      /**
        * @description Executor address
        * @example 0x5FbDB2315678afecb367f032d93F642f64180aa2
        */
       executor: string;
+      /**
+       * @description The nonce of the bid permit signature
+       * @example 123
+       */
+      nonce: string;
       /**
        * @description The opportunity permission key
        * @example 0xdeadbeefcafe
@@ -202,12 +194,9 @@ export interface components {
       permission_key: string;
       /** @example 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12 */
       signature: string;
-      /**
-       * @description The latest unix timestamp in seconds until which the bid is valid
-       * @example 1000000000000000000
-       */
-      valid_until: string;
     };
+    /** @enum {string} */
+    OpportunityMode: "live" | "historical";
     OpportunityParams: components["schemas"]["OpportunityParamsV1"] & {
       /** @enum {string} */
       version: "v1";
@@ -257,7 +246,6 @@ export interface components {
        * @example 1700000000000000
        */
       creation_time: number;
-      eip_712_domain: components["schemas"]["EIP712Domain"];
       /**
        * @description The opportunity unique id
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
@@ -306,6 +294,11 @@ export interface components {
        * @example op_sepolia
        */
       chain_id: string;
+      /**
+       * @description The gas limit for the contract call.
+       * @example 2000000
+       */
+      gas_limit: string;
       /**
        * @description The unique id for bid.
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
@@ -388,7 +381,6 @@ export interface components {
            * @example 1700000000000000
            */
           creation_time: number;
-          eip_712_domain: components["schemas"]["EIP712Domain"];
           /**
            * @description The opportunity unique id
            * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
@@ -488,12 +480,28 @@ export interface operations {
       };
     };
   };
-  /** Fetch all opportunities ready to be exectued. */
+  /**
+   * Fetch opportunities ready for execution or historical opportunities
+   * @description depending on the mode. You need to provide `chain_id` for historical mode.
+   * Opportunities are sorted by creation time in ascending order in historical mode.
+   */
   get_opportunities: {
     parameters: {
       query?: {
         /** @example op_sepolia */
         chain_id?: string | null;
+        /** @description Get opportunities in live or historical mode */
+        mode?: components["schemas"]["OpportunityMode"];
+        /**
+         * @description The permission key to filter the opportunities by. Used only in historical mode.
+         * @example 0xdeadbeef
+         */
+        permission_key?: string | null;
+        /**
+         * @description The time to get the opportunities from. Used only in historical mode.
+         * @example 2024-05-23T21:26:57.329954Z
+         */
+        from_time?: string | null;
       };
     };
     responses: {

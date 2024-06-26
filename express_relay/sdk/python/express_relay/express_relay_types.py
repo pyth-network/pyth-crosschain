@@ -181,6 +181,7 @@ class BidResponse(BaseModel):
         status: The latest status for bid.
         initiation_time: The time server received the bid formatted in rfc3339.
         profile_id: The profile id for the bid owner.
+        gas_limit: The gas limit for the bid.
     """
 
     id: UUIDString
@@ -192,6 +193,7 @@ class BidResponse(BaseModel):
     status: BidStatusUpdate
     initiation_time: datetime
     profile_id: str | None = Field(default=None)
+    gas_limit: IntString
 
     @classmethod
     def process_bid_response_dict(cls, bid_response_dict: dict):
@@ -224,6 +226,19 @@ class BidResponse(BaseModel):
             return None
 
 
+class OpportunityBidParams(BaseModel):
+    """
+    Attributes:
+        amount: The amount of the bid in wei.
+        nonce: The nonce of the bid.
+        deadline: The unix timestamp after which the bid becomes invalid.
+    """
+
+    amount: IntString
+    nonce: IntString
+    deadline: IntString
+
+
 class OpportunityBid(BaseModel):
     """
     Attributes:
@@ -232,7 +247,8 @@ class OpportunityBid(BaseModel):
         executor: The address of the executor.
         permission_key: The permission key to bid on.
         signature: The signature of the bid.
-        valid_until: The unix timestamp after which the bid becomes invalid.
+        deadline: The unix timestamp after which the bid becomes invalid.
+        nonce: The nonce of the bid.
     """
 
     opportunity_id: UUIDString
@@ -240,7 +256,8 @@ class OpportunityBid(BaseModel):
     executor: Address
     permission_key: HexString
     signature: SignedMessageString
-    valid_until: IntString
+    deadline: IntString
+    nonce: IntString
 
     model_config = {
         "arbitrary_types_allowed": True,
@@ -279,13 +296,6 @@ class OpportunityParams(BaseModel):
     params: Union[OpportunityParamsV1] = Field(..., discriminator="version")
 
 
-class EIP712Domain(BaseModel):
-    name: str
-    version: str
-    chain_id: IntString
-    verifying_contract: Address
-
-
 class Opportunity(BaseModel):
     """
     Attributes:
@@ -299,7 +309,6 @@ class Opportunity(BaseModel):
         version: The version of the opportunity.
         creation_time: The creation time of the opportunity.
         opportunity_id: The ID of the opportunity.
-        eip_712_domain: The EIP712 domain data needed for signing.
     """
 
     target_calldata: HexString
@@ -312,7 +321,6 @@ class Opportunity(BaseModel):
     version: str
     creation_time: IntString
     opportunity_id: UUIDString
-    eip_712_domain: EIP712Domain
 
     supported_versions: ClassVar[list[str]] = ["v1"]
 
@@ -393,7 +401,8 @@ class PostOpportunityBidMessageParams(BaseModel):
         executor: The address of the executor.
         permission_key: The permission key to bid on.
         signature: The signature of the bid.
-        valid_until: The unix timestamp after which the bid becomes invalid.
+        deadline: The unix timestamp after which the bid becomes invalid.
+        nonce: The nonce of the bid.
     """
 
     method: Literal["post_opportunity_bid"]
@@ -402,7 +411,8 @@ class PostOpportunityBidMessageParams(BaseModel):
     executor: Address
     permission_key: HexString
     signature: SignedMessageString
-    valid_until: IntString
+    deadline: IntString
+    nonce: IntString
 
     model_config = {
         "arbitrary_types_allowed": True,
@@ -421,3 +431,20 @@ class ClientMessage(BaseModel):
         PostBidMessageParams,
         PostOpportunityBidMessageParams,
     ] = Field(..., discriminator="method")
+
+
+class OpportunityAdapterConfig(BaseModel):
+    """
+    Attributes:
+        chain_id: The chain ID.
+        opportunity_adapter_factory: The address of the opportunity adapter factory contract.
+        opportunity_adapter_init_bytecode_hash: The hash of the init bytecode of the opportunity adapter.
+        permit2: The address of the permit2 contract.
+        weth: The address of the WETH contract.
+    """
+
+    chain_id: int
+    opportunity_adapter_factory: Address
+    opportunity_adapter_init_bytecode_hash: Bytes32
+    permit2: Address
+    weth: Address

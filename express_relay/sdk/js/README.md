@@ -78,3 +78,5 @@ npm run simple-searcher -- \
   --chain-id op_sepolia \
   --private-key <YOUR-PRIVATE-KEY>
 ```
+
+Note that if you are using a localhost server at `http://127.0.0.1`, you should specify `--endpoint http://127.0.0.1:{PORT}` rather than `http://localhost:{PORT}`, as Typescript maps `localhost` to `::1` in line with IPv6 rather than to `127.0.0.1` as with IPv4.

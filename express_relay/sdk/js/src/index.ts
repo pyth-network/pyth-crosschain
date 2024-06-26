@@ -2,7 +2,7 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import { Address, Hex, isAddress, isHex } from "viem";
+import { Address, Hex, isAddress, isHex, getContractAddress } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 import {
@@ -11,11 +11,12 @@ import {
   BidParams,
   BidStatusUpdate,
   Opportunity,
-  EIP712Domain,
+  OpportunityAdapterConfig,
   OpportunityBid,
   OpportunityParams,
   TokenAmount,
   BidsResponse,
+  TokenPermissions,
 } from "./types";
 
 export * from "./types";
@@ -57,6 +58,50 @@ export function checkTokenQty(token: {
     token: checkAddress(token.token),
     amount: BigInt(token.amount),
   };
+}
+
+export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
+  string,
+  OpportunityAdapterConfig
+> = {
+  op_sepolia: {
+    chain_id: 11155420,
+    opportunity_adapter_factory: "0xfA119693864b2F185742A409c66f04865c787754",
+    opportunity_adapter_init_bytecode_hash:
+      "0x3d71516d94b96a8fdca4e3a5825a6b41c9268a8e94610367e69a8462cc543533",
+    permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    weth: "0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
+  },
+};
+
+/**
+ * Converts sellTokens, bidAmount, and callValue to permitted tokens
+ * @param tokens List of sellTokens
+ * @param bidAmount
+ * @param callValue
+ * @param weth
+ * @returns List of permitted tokens
+ */
+function getPermittedTokens(
+  tokens: TokenAmount[],
+  bidAmount: bigint,
+  callValue: bigint,
+  weth: Address
+): TokenPermissions[] {
+  const permitted: TokenPermissions[] = tokens.map(({ token, amount }) => ({
+    token,
+    amount,
+  }));
+  const wethIndex = permitted.findIndex(({ token }) => token === weth);
+  const extraWethNeeded = bidAmount + callValue;
+  if (wethIndex !== -1) {
+    permitted[wethIndex].amount += extraWethNeeded;
+    return permitted;
+  }
+  if (extraWethNeeded > 0) {
+    permitted.push({ token: weth, amount: extraWethNeeded });
+  }
+  return permitted;
 }
 
 export class Client {
@@ -145,21 +190,11 @@ export class Client {
     });
   }
 
-  private convertEIP712Domain(
-    eip712Domain: components["schemas"]["EIP712Domain"]
-  ): EIP712Domain {
-    return {
-      name: eip712Domain.name,
-      version: eip712Domain.version,
-      verifyingContract: checkAddress(eip712Domain.verifying_contract),
-      chainId: BigInt(eip712Domain.chain_id),
-    };
-  }
-
   /**
    * Converts an opportunity from the server to the client format
    * Returns undefined if the opportunity version is not supported
    * @param opportunity
+   * @returns Opportunity in the converted client format
    */
   private convertOpportunity(
     opportunity: components["schemas"]["OpportunityParamsWithMetadata"]
@@ -179,7 +214,6 @@ export class Client {
       targetCallValue: BigInt(opportunity.target_call_value),
       sellTokens: opportunity.sell_tokens.map(checkTokenQty),
       buyTokens: opportunity.buy_tokens.map(checkTokenQty),
-      eip712Domain: this.convertEIP712Domain(opportunity.eip_712_domain),
     };
   }
 
@@ -256,6 +290,7 @@ export class Client {
   /**
    * Fetches opportunities
    * @param chainId Chain id to fetch opportunities for. e.g: sepolia
+   * @returns List of opportunities
    */
   async getOpportunities(chainId?: string): Promise<Opportunity[]> {
     const client = createClient<paths>(this.clientOptions);
@@ -308,6 +343,7 @@ export class Client {
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with
+   * @returns Signed opportunity bid
    */
   async signOpportunityBid(
     opportunity: Opportunity,
@@ -315,40 +351,69 @@ export class Client {
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const types = {
-      ExecutionParams: [
-        { name: "sellTokens", type: "TokenAmount[]" },
+      PermitBatchWitnessTransferFrom: [
+        { name: "permitted", type: "TokenPermissions[]" },
+        { name: "spender", type: "address" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "witness", type: "OpportunityWitness" },
+      ],
+      OpportunityWitness: [
         { name: "buyTokens", type: "TokenAmount[]" },
         { name: "executor", type: "address" },
         { name: "targetContract", type: "address" },
         { name: "targetCalldata", type: "bytes" },
         { name: "targetCallValue", type: "uint256" },
-        { name: "validUntil", type: "uint256" },
         { name: "bidAmount", type: "uint256" },
       ],
       TokenAmount: [
         { name: "token", type: "address" },
         { name: "amount", type: "uint256" },
       ],
+      TokenPermissions: [
+        { name: "token", type: "address" },
+        { name: "amount", type: "uint256" },
+      ],
     };
 
     const account = privateKeyToAccount(privateKey);
+    const opportunityAdapterConfig =
+      OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
+    const create2Address = getContractAddress({
+      bytecodeHash:
+        opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
+      from: opportunityAdapterConfig.opportunity_adapter_factory,
+      opcode: "CREATE2",
+      salt: `0x${account.address.replace("0x", "").padStart(64, "0")}`,
+    });
+
     const signature = await signTypedData({
       privateKey,
       domain: {
-        ...opportunity.eip712Domain,
-        chainId: Number(opportunity.eip712Domain.chainId),
+        name: "Permit2",
+        verifyingContract: checkAddress(opportunityAdapterConfig.permit2),
+        chainId: opportunityAdapterConfig.chain_id,
       },
       types,
-      primaryType: "ExecutionParams",
+      primaryType: "PermitBatchWitnessTransferFrom",
       message: {
-        sellTokens: opportunity.sellTokens,
-        buyTokens: opportunity.buyTokens,
-        executor: account.address,
-        targetContract: opportunity.targetContract,
-        targetCalldata: opportunity.targetCalldata,
-        targetCallValue: opportunity.targetCallValue,
-        validUntil: bidParams.validUntil,
-        bidAmount: bidParams.amount,
+        permitted: getPermittedTokens(
+          opportunity.sellTokens,
+          bidParams.amount,
+          opportunity.targetCallValue,
+          checkAddress(opportunityAdapterConfig.weth)
+        ),
+        spender: create2Address,
+        nonce: bidParams.nonce,
+        deadline: bidParams.deadline,
+        witness: {
+          buyTokens: opportunity.buyTokens,
+          executor: account.address,
+          targetContract: opportunity.targetContract,
+          targetCalldata: opportunity.targetCalldata,
+          targetCallValue: opportunity.targetCallValue,
+          bidAmount: bidParams.amount,
+        },
       },
     });
 
@@ -369,7 +434,8 @@ export class Client {
       executor: bid.executor,
       permission_key: bid.permissionKey,
       signature: bid.signature,
-      valid_until: bid.bid.validUntil.toString(),
+      deadline: bid.bid.deadline.toString(),
+      nonce: bid.bid.nonce.toString(),
     };
   }
 
