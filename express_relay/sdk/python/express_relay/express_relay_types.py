@@ -181,6 +181,7 @@ class BidResponse(BaseModel):
         status: The latest status for bid.
         initiation_time: The time server received the bid formatted in rfc3339.
         profile_id: The profile id for the bid owner.
+        gas_limit: The gas limit for the bid.
     """
 
     id: UUIDString
@@ -192,6 +193,7 @@ class BidResponse(BaseModel):
     status: BidStatusUpdate
     initiation_time: datetime
     profile_id: str | None = Field(default=None)
+    gas_limit: IntString
 
     @classmethod
     def process_bid_response_dict(cls, bid_response_dict: dict):

@@ -2,14 +2,7 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import {
-  Address,
-  Hex,
-  isAddress,
-  isHex,
-  keccak256,
-  getContractAddress,
-} from "viem";
+import { Address, Hex, isAddress, isHex, getContractAddress } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 import {
@@ -67,18 +60,17 @@ export function checkTokenQty(token: {
   };
 }
 
-// TODO: update, remove "development" and replace with real chains
 export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
   string,
   OpportunityAdapterConfig
 > = {
-  development: {
-    chain_id: 31337,
-    opportunity_adapter_factory: "0x610178da211fef7d417bc0e6fed39f05609ad788",
+  op_sepolia: {
+    chain_id: 11155420,
+    opportunity_adapter_factory: "0xd4Ec02d31bb8dD26FF74E41871DA9C11B27DDa08",
     opportunity_adapter_init_bytecode_hash:
       "0xfd1080f6c2d71672806f31108cb2f7d7709878e613b8d6bf028482184dcd70a4",
-    permit2: "0x8a791620dd6260079bf849dc5567adc3f2fdc318",
-    weth: "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+    permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    weth: "0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
   },
 };
 
@@ -96,23 +88,19 @@ function getPermittedTokens(
   callValue: bigint,
   weth: Address
 ): TokenPermissions[] {
-  const permitted: TokenPermissions[] = [];
-
-  for (let i = 0; i < tokens.length; i++) {
-    permitted.push({ token: tokens[i].token, amount: tokens[i].amount });
+  const permitted: TokenPermissions[] = tokens.map(({ token, amount }) => ({
+    token,
+    amount,
+  }));
+  const wethIndex = permitted.findIndex(({ token }) => token === weth);
+  const extraWethNeeded = bidAmount + callValue;
+  if (wethIndex !== -1) {
+    permitted[wethIndex].amount += extraWethNeeded;
+    return permitted;
   }
-
-  for (let i = 0; i < permitted.length; i++) {
-    if (permitted[i].token === weth) {
-      permitted[i].amount = permitted[i].amount + bidAmount + callValue;
-      return permitted;
-    }
+  if (extraWethNeeded > 0) {
+    permitted.push({ token: weth, amount: extraWethNeeded });
   }
-
-  if (bidAmount + callValue > 0) {
-    permitted.push({ token: weth, amount: bidAmount + callValue });
-  }
-
   return permitted;
 }
 
@@ -354,14 +342,12 @@ export class Client {
    * Creates a signed bid for an opportunity
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
-   * @param opportunityAdapterConfig Opportunity adapter config
    * @param privateKey Private key to sign the bid with
    * @returns Signed opportunity bid
    */
   async signOpportunityBid(
     opportunity: Opportunity,
     bidParams: BidParams,
-    opportunityAdapterConfig: OpportunityAdapterConfig,
     privateKey: Hex
   ): Promise<OpportunityBid> {
     const types = {
@@ -391,6 +377,8 @@ export class Client {
     };
 
     const account = privateKeyToAccount(privateKey);
+    const opportunityAdapterConfig =
+      OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
     const create2Address = getContractAddress({
       bytecodeHash:
         opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,

@@ -27,14 +27,13 @@ from express_relay.express_relay_types import (
     OpportunityAdapterConfig,
 )
 
-## TODO: update, remove "development" and replace with real chains
 OPPORTUNITY_ADAPTER_CONFIGS = {
-    "development": OpportunityAdapterConfig(
-        chain_id=31337,
-        opportunity_adapter_factory="0x610178da211fef7d417bc0e6fed39f05609ad788",
+    "op_sepolia": OpportunityAdapterConfig(
+        chain_id=11155420,
+        opportunity_adapter_factory="0xd4Ec02d31bb8dD26FF74E41871DA9C11B27DDa08",
         opportunity_adapter_init_bytecode_hash="0xfd1080f6c2d71672806f31108cb2f7d7709878e613b8d6bf028482184dcd70a4",
-        permit2="0x8a791620dd6260079bf849dc5567adc3f2fdc318",
-        weth="0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+        permit2="0x000000000022D473030F116dDEE9F6B43aC78BA3",
+        weth="0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
     )
 }
 
@@ -513,7 +512,6 @@ def compute_create2_address(
 
 def sign_bid(
     opportunity: Opportunity,
-    opportunity_adapter_config: OpportunityAdapterConfig,
     bid_params: OpportunityBidParams,
     private_key: str,
 ) -> OpportunityBid:
@@ -522,12 +520,12 @@ def sign_bid(
 
     Args:
         opportunity: An object representing the opportunity, of type Opportunity.
-        opportunity_adapter_config: An object representing the opportunity adapter configuration.
         bid_params: An object representing the bid parameters, of type OpportunityBidParams.
         private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
         A OpportunityBid object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
+    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chain_id]
     domain_data = {
         "name": "Permit2",
         "chainId": opportunity_adapter_config.chain_id,

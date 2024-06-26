@@ -295,6 +295,11 @@ export interface components {
        */
       chain_id: string;
       /**
+       * @description The gas limit for the contract call.
+       * @example 2000000
+       */
+      gas_limit: string;
+      /**
        * @description The unique id for bid.
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */

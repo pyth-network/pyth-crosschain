@@ -26,7 +26,8 @@ export type BidParams = {
    */
   amount: bigint;
   /**
-   * Bid nonce, used to prevent replay of a submitted signature--this can be set to a random uint256 when creating a new signature
+   * Bid nonce, used to prevent replay of a submitted signature.
+   * This can be set to a random uint256 when creating a new signature
    */
   nonce: bigint;
   /**

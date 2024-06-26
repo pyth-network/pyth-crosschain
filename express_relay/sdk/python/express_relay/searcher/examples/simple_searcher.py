@@ -7,7 +7,6 @@ from secrets import randbits
 from express_relay.client import (
     ExpressRelayClient,
     sign_bid,
-    OPPORTUNITY_ADAPTER_CONFIGS,
 )
 from express_relay.express_relay_types import (
     Opportunity,
@@ -43,7 +42,8 @@ class SimpleSearcher:
         opp: Opportunity,
     ) -> OpportunityBid | None:
         """
-        Assesses whether an opportunity is worth executing; if so, returns an OpportunityBid object. Otherwise returns None.
+        Assesses whether an opportunity is worth executing; if so, returns an OpportunityBid object.
+        Otherwise, returns None.
 
         This function determines whether the given opportunity is worthwhile to execute.
         There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of the tokens spent.
@@ -60,11 +60,7 @@ class SimpleSearcher:
             amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
         )
 
-        opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS[opp.chain_id]
-
-        opportunity_bid = sign_bid(
-            opp, opportunity_adapter_config, bid_params, self.private_key
-        )
+        opportunity_bid = sign_bid(opp, bid_params, self.private_key)
 
         return opportunity_bid
 
