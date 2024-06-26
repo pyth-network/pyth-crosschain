@@ -29,4 +29,22 @@ Run `scarb fmt` to automatically format the source code.
 
 1. Install Starkli (a cli tool for Starknet) by following [the installation instructions](https://github.com/xJonathanLEI/starkli).
 2. Install Katana (a local Starknet node) by following [the installation instructions](https://book.starknet.io/ch02-04-katana.html).
-3. Run the `deploy/deploy.sh` setup script.
+3. Run the deployment script:
+
+```bash
+deploy/deploy.sh > ~/pyth.env
+```
+
+This generates `~/pyth.env` file that should contain the address of the deployed contract, for example:
+
+```bash
+$ cat ~/pyth.env
+PYTH_WORMHOLE_ADDRESS=0x07fa5a689a768982ecb60ed05f39ca8f6efe623dd32ee6f3608662e3452a104c
+PYTH_CONTRACT_ADDRESS=0x00f61bf0314a478bfc865c71d33cc53c77d0f994ea4a228ccf888d14435a8821
+```
+
+Apply these variables to your current shell with:
+
+```bash
+export $(xargs < ~/pyth.env)
+```
