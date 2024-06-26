@@ -112,12 +112,6 @@ export class SuiPricePusher implements IPricePusher {
     private readonly provider: SuiClient,
     private logger: Logger,
     private priceServiceConnection: PriceServiceConnection,
-    private pythPackageId: string,
-    private pythStateId: string,
-    private wormholePackageId: string,
-    private wormholeStateId: string,
-    endpoint: string,
-    keypair: Ed25519Keypair,
     private gasBudget: number,
     private gasPool: SuiObjectRef[],
     private pythClient: SuiPythClient
@@ -180,14 +174,6 @@ export class SuiPricePusher implements IPricePusher {
     }
 
     const provider = new SuiClient({ url: endpoint });
-    const pythPackageId = await SuiPricePusher.getPackageId(
-      provider,
-      pythStateId
-    );
-    const wormholePackageId = await SuiPricePusher.getPackageId(
-      provider,
-      wormholeStateId
-    );
 
     const gasPool = await SuiPricePusher.initializeGasPool(
       keypair,
@@ -208,12 +194,6 @@ export class SuiPricePusher implements IPricePusher {
       provider,
       logger,
       priceServiceConnection,
-      pythPackageId,
-      pythStateId,
-      wormholePackageId,
-      wormholeStateId,
-      endpoint,
-      keypair,
       gasBudget,
       gasPool,
       pythClient
@@ -337,7 +317,7 @@ export class SuiPricePusher implements IPricePusher {
     ignoreGasObjects: string[],
     logger: Logger
   ): Promise<SuiObjectRef[]> {
-    const signerAddress = await signer.toSuiAddress();
+    const signerAddress = signer.toSuiAddress();
 
     if (ignoreGasObjects.length > 0) {
       logger.info(
@@ -383,25 +363,20 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   // Attempt to refresh the version of the provided object reference to point to the current version
-  // of the object. Return the provided object reference if an error occurs or the object could not
-  // be retrieved.
+  // of the object. Throws an error if the object cannot be refreshed.
   private static async tryRefreshObjectReference(
     provider: SuiClient,
     ref: SuiObjectRef
   ): Promise<SuiObjectRef> {
-    try {
-      const objectResponse = await provider.getObject({ id: ref.objectId });
-      if (objectResponse.data !== undefined) {
-        return {
-          digest: objectResponse.data!.digest,
-          objectId: objectResponse.data!.objectId,
-          version: objectResponse.data!.version,
-        };
-      } else {
-        return ref;
-      }
-    } catch (error) {
-      return ref;
+    const objectResponse = await provider.getObject({ id: ref.objectId });
+    if (objectResponse.data !== undefined) {
+      return {
+        digest: objectResponse.data!.digest,
+        objectId: objectResponse.data!.objectId,
+        version: objectResponse.data!.version,
+      };
+    } else {
+      throw new Error("Failed to refresh object reference");
     }
   }
 

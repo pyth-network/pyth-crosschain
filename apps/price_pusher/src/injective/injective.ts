@@ -232,7 +232,8 @@ export class InjectivePricePusher implements IPricePusher {
       updateFeeQueryResponse = JSON.parse(json);
     } catch (err) {
       this.logger.error(err, "Error fetching update fee");
-      return;
+      // Throwing an error because it is likely an RPC issue
+      throw err;
     }
 
     try {

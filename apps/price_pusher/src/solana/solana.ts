@@ -28,6 +28,25 @@ export class SolanaPriceListener extends ChainPriceListener {
     super(config.pollingFrequency, priceItems);
   }
 
+  // Checking the health of the Solana connection by checking the last block time
+  // and ensuring it is not older than 30 seconds.
+  private async checkHealth() {
+    const slot = await this.pythSolanaReceiver.connection.getSlot();
+    const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
+      slot
+    );
+    if (blockTime === null || blockTime < Date.now() / 1000 - 30) {
+      throw new Error("Solana connection is unhealthy");
+    }
+  }
+
+  async start() {
+    // Frequently check the RPC connection to ensure it is healthy
+    setInterval(this.checkHealth.bind(this), 5000);
+
+    await super.start();
+  }
+
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
     try {
       const priceFeedAccount =

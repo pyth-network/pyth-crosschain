@@ -6,12 +6,15 @@ import {
 import { PriceInfo, IPriceListener, PriceItem } from "./interface";
 import { Logger } from "pino";
 
+type TimestampInMs = number & { readonly _: unique symbol };
+
 export class PythPriceListener implements IPriceListener {
   private connection: PriceServiceConnection;
   private priceIds: HexString[];
   private priceIdToAlias: Map<HexString, string>;
   private latestPriceInfo: Map<HexString, PriceInfo>;
   private logger: Logger;
+  private lastUpdated: TimestampInMs | undefined;
 
   constructor(
     connection: PriceServiceConnection,
@@ -46,6 +49,17 @@ export class PythPriceListener implements IPriceListener {
         publishTime: latestAvailablePrice.publishTime,
       });
     });
+
+    // Check health of the price feeds 5 second. If the price feeds are not updating
+    // for more than 30s, throw an error.
+    setInterval(() => {
+      if (
+        this.lastUpdated === undefined ||
+        this.lastUpdated < Date.now() - 30 * 1000
+      ) {
+        throw new Error("Hermes Price feeds are not updating.");
+      }
+    }, 5000);
   }
 
   private onNewPriceFeed(priceFeed: PriceFeed) {
@@ -68,6 +82,7 @@ export class PythPriceListener implements IPriceListener {
     };
 
     this.latestPriceInfo.set(priceFeed.id, priceInfo);
+    this.lastUpdated = Date.now() as TimestampInMs;
   }
 
   getLatestPriceInfo(priceId: string): PriceInfo | undefined {
