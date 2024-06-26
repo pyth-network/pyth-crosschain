@@ -30,8 +30,8 @@ from express_relay.express_relay_types import (
 OPPORTUNITY_ADAPTER_CONFIGS = {
     "op_sepolia": OpportunityAdapterConfig(
         chain_id=11155420,
-        opportunity_adapter_factory="0xd4Ec02d31bb8dD26FF74E41871DA9C11B27DDa08",
-        opportunity_adapter_init_bytecode_hash="0xfd1080f6c2d71672806f31108cb2f7d7709878e613b8d6bf028482184dcd70a4",
+        opportunity_adapter_factory="0xfA119693864b2F185742A409c66f04865c787754",
+        opportunity_adapter_init_bytecode_hash="0x3d71516d94b96a8fdca4e3a5825a6b41c9268a8e94610367e69a8462cc543533",
         permit2="0x000000000022D473030F116dDEE9F6B43aC78BA3",
         weth="0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
     )
