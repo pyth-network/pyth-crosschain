@@ -452,8 +452,6 @@ pub async fn process_event(
         backoff::Error::transient(anyhow!("Error estimating gas for reveal: {:?}", e))
     })?;
 
-    // Pad the gas estimate by 33%
-    let gas_estimate = gas_estimate.saturating_mul(4.into()) / 3;
 
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
@@ -462,6 +460,9 @@ pub async fn process_event(
             gas_limit
         )));
     }
+
+    // Pad the gas estimate by 25% after checking it against the gas limit
+    let gas_estimate = gas_estimate.saturating_mul(5.into()) / 4;
 
     let contract_call = contract
         .reveal_with_callback(
