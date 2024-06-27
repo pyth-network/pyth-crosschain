@@ -31,7 +31,7 @@ OPPORTUNITY_ADAPTER_CONFIGS = {
     "op_sepolia": OpportunityAdapterConfig(
         chain_id=11155420,
         opportunity_adapter_factory="TBD",
-        opportunity_adapter_init_bytecode_hash="TBD",
+        opportunity_adapter_init_bytecode_hash="0x1173052289873da0c0ff2af917801f14a16aff7a8d76b229ca02eed0605740c8",
         permit2="0x000000000022D473030F116dDEE9F6B43aC78BA3",
         weth="0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
     )
