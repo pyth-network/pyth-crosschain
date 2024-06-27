@@ -19,7 +19,7 @@ from express_relay.express_relay_types import (
 
 logger = logging.getLogger(__name__)
 
-NAIVE_BID = int(2e16)
+NAIVE_BID = int(6e17)
 # Set deadline (naively) to max uint256
 DEADLINE_MAX = 2**256 - 1
 
