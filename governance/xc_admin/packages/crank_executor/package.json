@@ -20,8 +20,9 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.9",
+    "@certusone/wormhole-sdk": "^0.10.15",
     "@coral-xyz/anchor": "^0.29.0",
+    "@injectivelabs/sdk-ts": "^1.10.72",
     "@project-serum/anchor": "^0.25.0",
     "@pythnetwork/client": "^2.21.1",
     "@pythnetwork/xc-admin-common": "workspace:*",
