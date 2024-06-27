@@ -235,18 +235,24 @@ export class TransactionBuilder {
 
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
+        // Sometimes an instruction is so big that it can only be in a transaction by itself, so we can't add the compute budget instructions
+        const singleBigInstruction =
+          instructions.length === 1 &&
+          getSizeOfTransaction(instructions, true, this.addressLookupTable) >
+            PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET;
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
         if (
-          computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
-          args.tightComputeBudget
+          (computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
+            args.tightComputeBudget) &&
+          singleBigInstruction
         ) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
           );
         }
-        if (args.computeUnitPriceMicroLamports) {
+        if (args.computeUnitPriceMicroLamports && !singleBigInstruction) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
@@ -286,9 +292,16 @@ export class TransactionBuilder {
 
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
+        // Sometimes an instruction is so big that it can only be in a transaction by itself, so we can't add the compute budget instructions
+        const singleBigInstruction =
+          instructions.length === 1 &&
+          getSizeOfTransaction(instructions, false) >
+            PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET;
+
         const instructionsWithComputeBudget: TransactionInstruction[] = [
           ...instructions,
         ];
+
         if (
           computeUnits > DEFAULT_COMPUTE_BUDGET_UNITS * instructions.length ||
           args.tightComputeBudget
@@ -297,13 +310,14 @@ export class TransactionBuilder {
             ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits })
           );
         }
-        if (args.computeUnitPriceMicroLamports) {
+        if (args.computeUnitPriceMicroLamports && !singleBigInstruction) {
           instructionsWithComputeBudget.push(
             ComputeBudgetProgram.setComputeUnitPrice({
               microLamports: args.computeUnitPriceMicroLamports,
             })
           );
         }
+
         if (args.jitoTipLamports && index % jitoBundleSize === 0) {
           instructionsWithComputeBudget.push(
             buildJitoTipInstruction(this.payer, args.jitoTipLamports)
@@ -329,6 +343,7 @@ export class TransactionBuilder {
       PublicKey.unique(),
       new Connection("http://placeholder.placeholder")
     ); // We only need wallet and connection for `VersionedTransaction` so we can put placeholders here
+
     for (const instruction of instructions) {
       transactionBuilder.addInstruction({ instruction, signers: [] });
     }
