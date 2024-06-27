@@ -26,6 +26,7 @@ use {
     solana_program::{
         keccak,
         pubkey::Pubkey,
+        pubkey,
         rent::Rent,
     },
     solana_program_test::ProgramTest,
@@ -41,10 +42,11 @@ use {
             Header,
             ProcessingStatus,
         },
-        ID as BRIDGE_ID,
     },
     wormhole_sdk::Vaa,
 };
+
+pub const BRIDGE_ID : Pubkey = pubkey!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");
 
 pub const DEFAULT_GUARDIAN_SET_INDEX: u32 = 0;
 pub const WRONG_GUARDIAN_SET_INDEX: u32 = 1;

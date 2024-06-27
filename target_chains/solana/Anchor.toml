@@ -9,7 +9,7 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-pyth_solana_receiver = "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ"
+pyth_solana_receiver = "G6EoTTTgpkNBtVXo96EQp2m6uwwVh2Kt6YidjkmQqoha"
 
 [registry]
 url = "https://api.apr.dev"

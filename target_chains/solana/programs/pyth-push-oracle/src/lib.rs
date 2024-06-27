@@ -1,6 +1,7 @@
 use {
     anchor_lang::prelude::*,
     pyth_solana_receiver_sdk::{
+        cpi::accounts::InitPriceUpdate,
         cpi::accounts::PostUpdate,
         price_update::PriceUpdateV2,
         program::PythSolanaReceiver,
@@ -35,6 +36,32 @@ pub enum PushOracleError {
 pub mod pyth_push_oracle {
     use super::*;
 
+    pub fn init_price_feed(
+        ctx: Context<InitPriceFeed>,
+        shard_id: u16,
+        feed_id: FeedId,
+    ) -> Result<()> {
+        let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
+        let cpi_accounts = InitPriceUpdate {
+            payer:                ctx.accounts.payer.to_account_info().clone(),
+            price_update_account: ctx.accounts.price_feed_account.to_account_info().clone(),
+            system_program:       ctx.accounts.system_program.to_account_info().clone(),
+            write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
+        };
+
+        let seeds = &[
+            &shard_id.to_le_bytes(),
+            feed_id.as_ref(),
+            &[*ctx.bumps.get("price_feed_account").unwrap()],
+        ];
+        let signer_seeds = &[&seeds[..]];
+        let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+
+        pyth_solana_receiver_sdk::cpi::init_price_update(cpi_context)?;
+
+        Ok(())
+    }
+
     pub fn update_price_feed(
         ctx: Context<UpdatePriceFeed>,
         params: PostUpdateParams,
@@ -45,10 +72,7 @@ pub mod pyth_push_oracle {
         let cpi_accounts = PostUpdate {
             payer:                ctx.accounts.payer.to_account_info().clone(),
             encoded_vaa:          ctx.accounts.encoded_vaa.to_account_info().clone(),
-            config:               ctx.accounts.config.to_account_info().clone(),
-            treasury:             ctx.accounts.treasury.to_account_info().clone(),
             price_update_account: ctx.accounts.price_feed_account.to_account_info().clone(),
-            system_program:       ctx.accounts.system_program.to_account_info().clone(),
             write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
         };
 
@@ -108,6 +132,18 @@ pub mod pyth_push_oracle {
 }
 
 #[derive(Accounts)]
+#[instruction(shard_id : u16, feed_id : FeedId)]
+pub struct InitPriceFeed<'info> {
+    #[account(mut)]
+    pub payer:                Signer<'info>,
+    pub pyth_solana_receiver: Program<'info, PythSolanaReceiver>,
+    /// CHECK: This account's seeds are checked
+    #[account(mut, seeds = [&shard_id.to_le_bytes(), &feed_id], bump)]
+    pub price_feed_account:   AccountInfo<'info>,
+    pub system_program:       Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(params : PostUpdateParams, shard_id : u16, feed_id : FeedId)]
 pub struct UpdatePriceFeed<'info> {
     #[account(mut)]
@@ -115,11 +151,6 @@ pub struct UpdatePriceFeed<'info> {
     pub pyth_solana_receiver: Program<'info, PythSolanaReceiver>,
     /// CHECK: Checked by CPI into the Pyth Solana Receiver
     pub encoded_vaa:          AccountInfo<'info>,
-    /// CHECK: Checked by CPI into the Pyth Solana Receiver
-    pub config:               AccountInfo<'info>,
-    /// CHECK: Checked by CPI into the Pyth Solana Receiver
-    #[account(mut)]
-    pub treasury:             AccountInfo<'info>,
     /// CHECK: This account's seeds are checked
     #[account(mut, seeds = [&shard_id.to_le_bytes(), &feed_id], bump)]
     pub price_feed_account:   AccountInfo<'info>,

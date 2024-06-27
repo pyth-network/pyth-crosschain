@@ -7,6 +7,7 @@ use {
     },
     program_simulator::into_transaction_error,
     pyth_push_oracle::{
+        instruction::InitPriceFeed,
         instruction::UpdatePriceFeed,
         sdk::get_price_feed_address,
         PushOracleError,
@@ -31,10 +32,13 @@ use {
         rent::Rent,
         signer::Signer,
     },
+    solana_program::{pubkey, pubkey::Pubkey}
 };
 
 const DEFAULT_SHARD: u16 = 0;
 const SECOND_SHARD: u16 = 1;
+
+pub const PYTHNET_PUBKEY : Pubkey = pubkey!("G9LV2mp9ua1znRAfYwZz5cPiJMAbo1T6mbjdQsDZuMJg");
 
 #[tokio::test]
 async fn test_update_price_feed() {
@@ -69,6 +73,20 @@ async fn test_update_price_feed() {
 
     let poster = program_simulator.get_funded_keypair().await.unwrap();
 
+    // init update
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            InitPriceFeed::populate(
+                poster.pubkey(),
+                DEFAULT_SHARD,
+                feed_id,
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
+
     // post one update
     program_simulator
         .process_ix_with_default_compute_limit(
@@ -77,7 +95,6 @@ async fn test_update_price_feed() {
                 encoded_vaa_addresses[0],
                 DEFAULT_SHARD,
                 feed_id,
-                DEFAULT_TREASURY_ID,
                 merkle_price_updates[0].clone(),
             ),
             &vec![&poster],
@@ -85,13 +102,6 @@ async fn test_update_price_feed() {
         )
         .await
         .unwrap();
-
-    assert_treasury_balance(
-        &mut program_simulator,
-        Rent::default().minimum_balance(0),
-        DEFAULT_TREASURY_ID,
-    )
-    .await;
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -123,7 +133,6 @@ async fn test_update_price_feed() {
                 encoded_vaa_addresses[0],
                 DEFAULT_SHARD,
                 feed_id,
-                DEFAULT_TREASURY_ID,
                 merkle_price_updates[1].clone(),
             ),
             &vec![&poster],
@@ -131,13 +140,6 @@ async fn test_update_price_feed() {
         )
         .await
         .unwrap();
-
-    assert_treasury_balance(
-        &mut program_simulator,
-        Rent::default().minimum_balance(0) + 1,
-        DEFAULT_TREASURY_ID,
-    )
-    .await;
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -169,7 +171,6 @@ async fn test_update_price_feed() {
                 encoded_vaa_addresses[0],
                 DEFAULT_SHARD,
                 feed_id,
-                DEFAULT_TREASURY_ID,
                 merkle_price_updates[0].clone(),
             ),
             &vec![&poster],
@@ -177,13 +178,6 @@ async fn test_update_price_feed() {
         )
         .await
         .unwrap();
-
-    assert_treasury_balance(
-        &mut program_simulator,
-        Rent::default().minimum_balance(0) + 1,
-        DEFAULT_TREASURY_ID,
-    )
-    .await;
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -207,6 +201,20 @@ async fn test_update_price_feed() {
         program_simulator.get_clock().await.unwrap().slot
     );
 
+    // init second share
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            InitPriceFeed::populate(
+                poster.pubkey(),
+                SECOND_SHARD,
+                feed_id,
+            ),
+            &vec![&poster],
+            None,
+        )
+        .await
+        .unwrap();
+
     // works if you change the shard
     program_simulator
         .process_ix_with_default_compute_limit(
@@ -215,7 +223,6 @@ async fn test_update_price_feed() {
                 encoded_vaa_addresses[0],
                 SECOND_SHARD,
                 feed_id,
-                DEFAULT_TREASURY_ID,
                 merkle_price_updates[0].clone(),
             ),
             &vec![&poster],
@@ -223,13 +230,6 @@ async fn test_update_price_feed() {
         )
         .await
         .unwrap();
-
-    assert_treasury_balance(
-        &mut program_simulator,
-        Rent::default().minimum_balance(0) + 2,
-        DEFAULT_TREASURY_ID,
-    )
-    .await;
 
     let price_feed_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(get_price_feed_address(DEFAULT_SHARD, feed_id))
@@ -284,7 +284,6 @@ async fn test_update_price_feed() {
                     encoded_vaa_addresses[0],
                     DEFAULT_SHARD,
                     feed_id,
-                    DEFAULT_TREASURY_ID,
                     merkle_price_updates[2].clone(),
                 ),
                 &vec![&poster],

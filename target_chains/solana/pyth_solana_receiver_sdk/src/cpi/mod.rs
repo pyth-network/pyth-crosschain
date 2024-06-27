@@ -1,5 +1,6 @@
 use {
     self::accounts::{
+        InitPriceUpdate,
         PostUpdate,
         PostUpdateAtomic,
     },
@@ -13,6 +14,23 @@ use {
 pub mod accounts;
 
 // This implementation comes from the expanded macros of programs/pyth-solana-receiver/src/lib.rs
+pub fn init_price_update<'info>(
+    ctx: anchor_lang::context::CpiContext<'_, '_, '_, 'info, InitPriceUpdate<'info>>
+) -> anchor_lang::Result<()> {
+    let ix = {
+        let data = [22, 25, 222, 233, 20, 77, 103, 161].to_vec();
+        let accounts = ctx.to_account_metas(None);
+        anchor_lang::solana_program::instruction::Instruction {
+            program_id: crate::ID,
+            accounts,
+            data,
+        }
+    };
+    let acc_infos = ctx.to_account_infos();
+    anchor_lang::solana_program::program::invoke_signed(&ix, &acc_infos, ctx.signer_seeds)
+        .map_or_else(|e| Err(Into::into(e)), |_| Ok(()))
+}
+
 pub fn post_update<'info>(
     ctx: anchor_lang::context::CpiContext<'_, '_, '_, 'info, PostUpdate<'info>>,
     params: PostUpdateParams,

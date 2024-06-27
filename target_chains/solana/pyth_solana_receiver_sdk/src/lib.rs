@@ -17,9 +17,9 @@ pub mod pda;
 pub mod price_update;
 pub mod program;
 
-declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
+declare_id!("G6EoTTTgpkNBtVXo96EQp2m6uwwVh2Kt6YidjkmQqoha");
 
-pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
+pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("Bt56KjMCV2Ao7DCCffQ7RqGPt6E2zVRoS32hgzkEfEyZ");
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct PostUpdateAtomicParams {
