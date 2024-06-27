@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/express-relay-evm-js",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Utilities for interacting with the express relay protocol",
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/express_relay/sdk/js",
   "author": "Douro Labs",
@@ -35,23 +35,23 @@
   },
   "dependencies": {
     "isomorphic-ws": "^5.0.0",
-    "openapi-client-axios": "^7.5.4",
+    "openapi-client-axios": "^7.5.5",
     "openapi-fetch": "^0.8.2",
-    "openapi-typescript": "^6.5.5",
-    "viem": "^2.7.6",
-    "ws": "^8.16.0"
+    "viem": "^2.16.2",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@pythnetwork/pyth-evm-js": "workspace:*",
-    "@types/node": "^20.12.7",
-    "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.56.0",
+    "@types/node": "^20.14.9",
+    "@types/yargs": "^17.0.32",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
     "jest": "^27.5.1",
-    "prettier": "^2.6.2",
-    "typescript": "^5.3.3",
-    "yargs": "^17.4.1"
+    "openapi-typescript": "6.5.5",
+    "prettier": "^2.8.8",
+    "typescript": "^5.5.2",
+    "yargs": "^17.7.2"
   },
   "license": "Apache-2.0"
 }
