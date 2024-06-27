@@ -21,12 +21,14 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "@injectivelabs/sdk-ts": "^1.10.72",
     "@pythnetwork/client": "^2.21.1",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@solana/web3.js": "^1.76.0",
     "@sqds/mesh": "^1.0.6",
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
+    "express": "^4.19.2",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
