@@ -48,6 +48,18 @@ export class HermesClient {
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
   }
 
+  private extractCredentials(url: URL): { headers: HeadersInit; url: URL } {
+    const headers: HeadersInit = {};
+    if (url.username && url.password) {
+      headers["Authorization"] = `Basic ${btoa(
+        `${url.username}:${url.password}`
+      )}`;
+      url.username = "";
+      url.password = "";
+    }
+    return { headers, url };
+  }
+
   private async httpRequest<ResponseData>(
     url: string,
     schema: z.ZodSchema<ResponseData>,
@@ -100,13 +112,16 @@ export class HermesClient {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const url = new URL("v2/price_feeds", this.baseURL);
+    const baseURL = new URL(this.baseURL);
+    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
+    const url = new URL("v2/price_feeds", cleanedBaseURL);
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
     return await this.httpRequest(
       url.toString(),
-      schemas.PriceFeedMetadata.array()
+      schemas.PriceFeedMetadata.array(),
+      { headers }
     );
   }
 
@@ -129,7 +144,9 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`v2/updates/price/latest`, this.baseURL);
+    const baseURL = new URL(this.baseURL);
+    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
+    const url = new URL("v2/updates/price/latest", cleanedBaseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -138,7 +155,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest(url.toString(), schemas.PriceUpdate);
+    return this.httpRequest(url.toString(), schemas.PriceUpdate, { headers });
   }
 
   /**
@@ -162,7 +179,9 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`v2/updates/price/${publishTime}`, this.baseURL);
+    const baseURL = new URL(this.baseURL);
+    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
+    const url = new URL(`v2/updates/price/${publishTime}`, cleanedBaseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -171,7 +190,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest(url.toString(), schemas.PriceUpdate);
+    return this.httpRequest(url.toString(), schemas.PriceUpdate, { headers });
   }
 
   /**
@@ -198,7 +217,9 @@ export class HermesClient {
       benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
-    const url = new URL("v2/updates/price/stream", this.baseURL);
+    const baseURL = new URL(this.baseURL);
+    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
+    const url = new URL("v2/updates/price/stream", cleanedBaseURL);
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
@@ -208,7 +229,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
-    return new EventSource(url.toString());
+    return new EventSource(url.toString(), { headers });
   }
 
   private appendUrlSearchParams(
