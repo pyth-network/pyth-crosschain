@@ -259,7 +259,7 @@ export class TransactionBuilder {
           );
         }
 
-        // This handles an edge case where a single instruction needs to be by itself without any compute budget instructions or jito tips
+        // This handles an edge case where a single instruction is too big and therefore needs to be by itself without any compute budget instructions or jito tips
         const instructionsToSend: TransactionInstruction[] = [];
         for (const instruction of instructionsWithComputeBudget) {
           const sizeWithInstruction = getSizeOfTransaction(
@@ -324,7 +324,7 @@ export class TransactionBuilder {
           );
         }
 
-        // This handles an edge case where a single instruction needs to be by itself without any compute budget instructions or jito tips
+        // This handles an edge case where a single instruction is too big and therefore needs to be by itself without any compute budget instructions or jito tips
         const instructionsToSend: TransactionInstruction[] = [];
         for (const instruction of instructionsWithComputeBudget) {
           const sizeWithInstruction = getSizeOfTransaction(
