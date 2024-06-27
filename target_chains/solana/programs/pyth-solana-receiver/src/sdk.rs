@@ -180,7 +180,6 @@ impl instruction::PostUpdate {
             data:       instruction::PostUpdate {
                 params: PostUpdateParams {
                     merkle_price_update,
-                    treasury_id: 0,
                 },
             }
             .data(),
@@ -214,7 +213,6 @@ impl instruction::PostUpdateAtomic {
                 params: PostUpdateAtomicParams {
                     vaa,
                     merkle_price_update,
-                    treasury_id: 0,
                 },
             }
             .data(),

@@ -25,11 +25,9 @@ pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("Bt56KjMCV2Ao7DCCffQ7RqGPt6E2zVR
 pub struct PostUpdateAtomicParams {
     pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id:         u8,
 }
 
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct PostUpdateParams {
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id:         u8,
 }

@@ -95,7 +95,6 @@ impl instruction::UpdatePriceFeed {
             data:       instruction::UpdatePriceFeed {
                 params: PostUpdateParams {
                     merkle_price_update,
-                    treasury_id: 0,
                 },
                 shard_id,
                 feed_id,
