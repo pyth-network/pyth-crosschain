@@ -305,7 +305,7 @@ pub struct AcceptGovernanceAuthorityTransfer<'info> {
 pub struct InitPriceUpdate<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(init_if_needed, payer = payer, space = PriceUpdateV2::LEN)]
+    #[account(init, payer = payer, space = PriceUpdateV2::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
     pub system_program: Program<'info, System>,
     #[account(mut)]
