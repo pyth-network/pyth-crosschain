@@ -44,6 +44,8 @@ use pyth_interface::{
 use sway_libs::ownership::*;
 use standards::src5::{SRC5, State};
 
+const ONE_DAY_IN_SECONDS: u64 = 86400;
+
 configurable {
     DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
 }
@@ -670,7 +672,7 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
     let current_guardian_set = storage.wormhole_guardian_sets.get(current_guardian_set_index).try_read();
     if current_guardian_set.is_some() {
         let mut current_guardian_set = current_guardian_set.unwrap();
-        current_guardian_set.expiration_time = timestamp() + 86400;
+        current_guardian_set.expiration_time = timestamp() + ONE_DAY_IN_SECONDS;
         storage
             .wormhole_guardian_sets
             .insert(current_guardian_set_index, current_guardian_set);

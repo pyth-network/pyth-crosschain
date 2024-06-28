@@ -1,6 +1,6 @@
 library;
 
-use std::bytes::Bytes;
+use std::{block::timestamp, bytes::Bytes};
 
 use ::errors::PythError;
 use ::utils::absolute_of_exponent;
@@ -174,6 +174,12 @@ impl PriceFeed {
         );
         //convert publish_time from UNIX to TAI64
         publish_time += TAI64_DIFFERENCE;
+
+        // If a quorum of Wormhole Guardians were to be compromised or malicious they could sign a price update far out into the future (say u64::max()) , preventing any further updates since no new price can have a later `publish_time`, so we check here that the `publish_time` is not a future timestamp
+        require(
+            timestamp() >= publish_time,
+            PythError::PriceFeedPublishTimeInTheFuture,
+        );
 
         PriceFeed::new(
             Price::new(ema_confidence, exponent, ema_price, publish_time),
