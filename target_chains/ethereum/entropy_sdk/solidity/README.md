@@ -101,3 +101,46 @@ This method will combine the user and provider's random numbers, along with the 
 
 The [Coin Flip](/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
 interacts with Pyth Entropy as well as a typescript client for that application.
+
+## PRNG Library
+
+The PRNG (Pseudorandom Number Generation) Library is a library designed to work seamlessly with Pyth Entropy.
+
+### Features
+
+- **Pyth Entropy Integration**: Utilizes Pyth Entropy as a secure seed source
+- **Versatile Random Generation**: Includes functions for generating random bytes, integers within specified ranges, and permutations.
+- **Randomness Expansion**: Ability to expand a single seed into multiple random values.
+- **Type Conversion Utilities**: Helper functions to convert random bytes32 values to various integer types.
+
+### Key Functions
+
+- `randomByte(bytes32 seed) -> uint8`: Generate a random byte.
+- `randomBytes(bytes32 seed, uint256 length) -> bytes`: Generate a sequence of random bytes.
+- `randInt(bytes32 seed, uint256 min, uint256 max) -> uint256`: Generate a random integer within a range.
+- `expandRandomness(bytes32 seed, uint256 numHashes) -> bytes32[]`: Expand a seed into multiple random values.
+- `randomPermutation(bytes32 seed, uint256 length) -> uint256[]`: Generate a random permutation of a sequence.
+
+### Usage
+
+To use the PRNG library in your smart contracts:
+
+1. Import the library in your Solidity file:
+
+```solidity
+import "./PRNG.sol";
+```
+
+2. Use the library functions in your contract:
+
+```solidity
+contract PRNGExampleContract {
+  using PRNG for bytes32;
+
+  function getRandomIntWithinRange(
+    bytes32 pythEntropySeed
+  ) public view returns (uint256) {
+    return pythEntropySeed.randInt(1, 100);
+  }
+}
+```
