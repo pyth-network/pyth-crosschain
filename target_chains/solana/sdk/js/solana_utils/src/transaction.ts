@@ -259,11 +259,25 @@ export class TransactionBuilder {
           );
         }
 
+        // This handles an edge case where a single instruction is too big and therefore needs to be by itself without any compute budget instructions or jito tips
+        const instructionsToSend: TransactionInstruction[] = [];
+        for (const instruction of instructionsWithComputeBudget) {
+          const sizeWithInstruction = getSizeOfTransaction(
+            [...instructionsToSend, instruction],
+            true,
+            this.addressLookupTable
+          );
+          if (sizeWithInstruction > PACKET_DATA_SIZE) {
+            break;
+          }
+          instructionsToSend.push(instruction);
+        }
+
         return {
           tx: new VersionedTransaction(
             new TransactionMessage({
               recentBlockhash: blockhash,
-              instructions: instructionsWithComputeBudget,
+              instructions: instructionsToSend,
               payerKey: this.payer,
             }).compileToV0Message(
               this.addressLookupTable ? [this.addressLookupTable] : []
@@ -310,8 +324,21 @@ export class TransactionBuilder {
           );
         }
 
+        // This handles an edge case where a single instruction is too big and therefore needs to be by itself without any compute budget instructions or jito tips
+        const instructionsToSend: TransactionInstruction[] = [];
+        for (const instruction of instructionsWithComputeBudget) {
+          const sizeWithInstruction = getSizeOfTransaction(
+            [...instructionsToSend, instruction],
+            false
+          );
+          if (sizeWithInstruction > PACKET_DATA_SIZE) {
+            break;
+          }
+          instructionsToSend.push(instruction);
+        }
+
         return {
-          tx: new Transaction().add(...instructionsWithComputeBudget),
+          tx: new Transaction().add(...instructionsToSend),
           signers: signers,
         };
       }
