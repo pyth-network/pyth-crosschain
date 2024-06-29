@@ -38,6 +38,7 @@
     "openapi-client-axios": "^7.5.5",
     "openapi-fetch": "^0.8.2",
     "viem": "^2.16.2",
+    "web3": "^4.10.0",
     "ws": "^8.17.1"
   },
   "devDependencies": {

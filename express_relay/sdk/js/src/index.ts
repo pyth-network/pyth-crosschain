@@ -4,6 +4,7 @@ import createClient, {
 } from "openapi-fetch";
 import { Address, Hex, isAddress, isHex, getContractAddress } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
+import Web3 from "web3";
 import WebSocket from "isomorphic-ws";
 import {
   Bid,
@@ -17,6 +18,7 @@ import {
   TokenAmount,
   BidsResponse,
   TokenPermissions,
+  executeOpportunityAbi,
 } from "./types";
 
 export * from "./types";
@@ -339,17 +341,52 @@ export class Client {
   }
 
   /**
+   * Constructs the calldata for the opportunity adapter contract.
+   * @param opportunity Opportunity to bid on
+   * @param permitted Permitted tokens
+   * @param executor Address of the searcher's wallet
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param signature Searcher's signature for opportunity params and bidParams
+   * @returns Calldata for the opportunity adapter contract
+   */
+  private makeAdapterCalldata(
+    opportunity: Opportunity,
+    permitted: TokenPermissions[],
+    executor: Address,
+    bidParams: BidParams,
+    signature: Hex
+  ): Hex {
+    const web3 = new Web3();
+    return web3.eth.abi.encodeFunctionCall(executeOpportunityAbi, [
+      [
+        [permitted, bidParams.nonce, bidParams.deadline],
+        [
+          opportunity.buyTokens,
+          executor,
+          opportunity.targetContract,
+          opportunity.targetCalldata,
+          opportunity.targetCallValue,
+          bidParams.amount,
+        ],
+      ],
+      signature,
+    ]) as Hex;
+  }
+
+  /**
    * Creates a signed bid for an opportunity
    * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount and valid until timestamp
+   * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
+   * @param returnOpportunityBid If true, returns an OpportunityBid object, otherwise returns a Bid object.
    * @returns Signed opportunity bid
    */
-  async signOpportunityBid(
+  async signBid(
     opportunity: Opportunity,
     bidParams: BidParams,
-    privateKey: Hex
-  ): Promise<OpportunityBid> {
+    privateKey: Hex,
+    returnOpportunityBid: boolean = false
+  ): Promise<Bid | OpportunityBid> {
     const types = {
       PermitBatchWitnessTransferFrom: [
         { name: "permitted", type: "TokenPermissions[]" },
@@ -377,8 +414,15 @@ export class Client {
     };
 
     const account = privateKeyToAccount(privateKey);
+    const executor = account.address;
     const opportunityAdapterConfig =
       OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
+    const permitted = getPermittedTokens(
+      opportunity.sellTokens,
+      bidParams.amount,
+      opportunity.targetCallValue,
+      checkAddress(opportunityAdapterConfig.weth)
+    );
     const create2Address = getContractAddress({
       bytecodeHash:
         opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
@@ -397,12 +441,7 @@ export class Client {
       types,
       primaryType: "PermitBatchWitnessTransferFrom",
       message: {
-        permitted: getPermittedTokens(
-          opportunity.sellTokens,
-          bidParams.amount,
-          opportunity.targetCallValue,
-          checkAddress(opportunityAdapterConfig.weth)
-        ),
+        permitted: permitted,
         spender: create2Address,
         nonce: bidParams.nonce,
         deadline: bidParams.deadline,
@@ -417,12 +456,30 @@ export class Client {
       },
     });
 
+    if (returnOpportunityBid) {
+      return {
+        permissionKey: opportunity.permissionKey,
+        bid: bidParams,
+        executor: executor,
+        signature,
+        opportunityId: opportunity.opportunityId,
+      };
+    }
+
+    const calldata = this.makeAdapterCalldata(
+      opportunity,
+      permitted,
+      executor,
+      bidParams,
+      signature
+    );
+
     return {
+      amount: bidParams.amount,
+      targetCalldata: calldata,
+      chainId: opportunity.chainId,
+      targetContract: opportunityAdapterConfig.opportunity_adapter_factory,
       permissionKey: opportunity.permissionKey,
-      bid: bidParams,
-      executor: account.address,
-      signature,
-      opportunityId: opportunity.opportunityId,
     };
   }
 
