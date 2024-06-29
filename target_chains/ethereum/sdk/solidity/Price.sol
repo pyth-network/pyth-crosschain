@@ -49,7 +49,7 @@ library Price {
         uint64 rate_discount_initial,
         uint64 rate_discount_final,
         int32 discount_exponent
-    ) internal pure returns (PythStructs.Price memory) {
+    ) public pure returns (PythStructs.Price memory) {
         // rate_discount_initial should be >= rate_discount_final
         if (rate_discount_initial < rate_discount_final) {
             revert InvalidDiscount();
@@ -110,7 +110,7 @@ library Price {
         uint64 rate_premium_initial,
         uint64 rate_premium_final,
         int32 premium_exponent
-    ) internal pure returns (PythStructs.Price memory) {
+    ) public pure returns (PythStructs.Price memory) {
         // Valuation price should not decrease as amount of borrow grows, so rate_premium_initial
         // should <= rate_premium_final
         if (rate_premium_initial > rate_premium_final) {
