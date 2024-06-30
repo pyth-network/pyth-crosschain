@@ -520,6 +520,122 @@ module pyth::pyth {
         };
         state::get_base_update_fee() * total_updates
     }
+
+    ///////////////////////////////////////////////////////
+    //Parse Pyth Benchmark Prices
+    ///////////////////////////////////////////////////////
+    struct ParsePriceFeed has copy, drop {
+        price_identifier: PriceIdentifier,
+        price: u64,
+        conf: u64,
+        expo: u64,
+        publish_time: u64
+    }
+
+    fun parse_updates(
+        data: vector<u8>, 
+        price_ids: &vector<PriceIdentifier>, 
+        min_publish_time: u64, 
+        max_publish_time: u64
+    ): vector<ParsePriceFeed> {
+        // Create an empty vector to store ParsePriceFeed structs
+        let updates: vector<ParsePriceFeed> = vector::empty<ParsePriceFeed>();
+        
+        let i = 0;
+        while (i < vector::length(&data)) {
+            let message_cur = cursor::init(data);
+            let message_type = deserialize::deserialize_u8(&mut message_cur);
+
+            // Deserialize the price identifier, price, conf, expo, publish_time, and previous_publish_time
+            let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(&mut message_cur, 32));
+            let price = deserialize::deserialize_u64(&mut message_cur);
+            let conf = deserialize::deserialize_u64(&mut message_cur);
+            let expo = deserialize::deserialize_u32(&mut message_cur);
+            let publish_time = deserialize::deserialize_u64(&mut message_cur);
+            let prev_publish_time = deserialize::deserialize_u64(&mut message_cur);
+            // let ema_price = deserialize::deserialize_i64(&mut message_cur);
+            // let ema_conf = deserialize::deserialize_u64(&mut message_cur);
+
+            //check if caller has requested for this data
+            if (vector::contains(price_ids, &price_identifier)) {
+                // Check the publish_time of the price is within the given range
+                // and the min_publish_time is greater than the previous_publish_time 
+                if (publish_time >= min_publish_time && publish_time <= max_publish_time && min_publish_time > prev_publish_time) {
+                    let update = ParsePriceFeed {
+                        price_identifier: price_identifier,
+                        price: price,
+                        conf: conf,
+                        expo: expo,
+                        publish_time: publish_time
+                    };
+                    vector::push_back(&mut updates, update);
+                };
+
+            };
+            cursor::rest(message_cur);
+            i = i + 1;
+        };
+
+        updates
+    }
+
+    fun parse_price_feed_updates_internal(
+        update_data: vector<vector<u8>>,
+        price_ids: vector<PriceIdentifier>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+        fee: Coin<AptosCoin>
+    ): vector<ParsePriceFeed> {
+        // Check if the fee provided is sufficient
+        // If not, abort with an insufficient_fee error
+        let required_fee = get_update_fee(&update_data);
+        assert!(coin::value(&fee) <= required_fee, error::insufficient_fee());
+
+        // Create an empty vector to store ParsePriceFeed structs
+        let price_feeds = vector::empty<ParsePriceFeed>();
+
+        let i = 0;
+        while (i < vector::length(&update_data)) {
+            let data = vector::borrow(&update_data, i);
+            let cur = cursor::init(*vector::borrow(&update_data, i));
+            let header: u64 = deserialize::deserialize_u32(&mut cur);
+            
+            //Check if the provided data is valid (length > 4) &&
+            //header matches the expected ACCUMULATOR_UPDATE_MAGIC value
+            if (vector::length(data) > 4 && header == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+
+                let updates = parse_updates(*data, &price_ids, min_publish_time, max_publish_time);
+                let j = 0;
+                while (j < vector::length(&updates)) {
+                    let update = vector::borrow(&updates, j);
+                    vector::push_back(&mut updates, *update);
+                    j = j + 1;
+                };
+            };
+            cursor::rest(cur);
+            i = i + 1;
+        };
+
+        coin::deposit(@pyth, fee);
+        price_feeds
+    }
+
+    public fun parse_price_feed_updates(
+        update_data: vector<vector<u8>>,
+        price_ids: vector<PriceIdentifier>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+        fee: Coin<AptosCoin>
+    ): vector<ParsePriceFeed> {
+        parse_price_feed_updates_internal(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+            fee
+        )
+    }
+
 }
 
 // -----------------------------------------------------------------------------
