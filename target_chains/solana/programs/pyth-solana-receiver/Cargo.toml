@@ -24,6 +24,7 @@ wormhole-core-bridge-solana = {workspace = true}
 wormhole-raw-vaas = {version = "0.1.3", features = ["ruint", "on-chain"], default-features = false }
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
 rand = "0.8.5"
+serde_with =  "3.8.1"
 
 [dev-dependencies]
 solana-sdk = { workspace = true }
@@ -32,3 +33,4 @@ program-simulator = { path = "../../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 common-test-utils = { path = "../../common_test_utils" }
+# pyth_solana_receiver = { path = "../pyth-solana-receiver/src/programs/pyth_solana_receiver" }  # Update this line
