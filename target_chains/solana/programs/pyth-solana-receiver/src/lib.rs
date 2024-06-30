@@ -254,6 +254,49 @@ pub mod pyth_solana_receiver {
     pub fn reclaim_rent(_ctx: Context<ReclaimRent>) -> Result<()> {
         Ok(())
     }
+    
+    // New function to initialize a PriceUpdateV2 account without verifications (for testing)
+    pub fn initialize_price_update_v2(
+        ctx: Context<InitializePriceUpdateV2>,
+        price: i64,
+        conf: u64,
+        exponent: i32,
+        feed_id: [u8; 32],
+        publish_time: u64,
+        prev_publish_time: u64,
+    ) -> Result<()> {
+        let price_update_account = &mut ctx.accounts.price_update_account;
+        price_update_account.price = price;
+        price_update_account.conf = conf;
+        price_update_account.exponent = exponent;
+        price_update_account.feed_id = feed_id;
+        price_update_account.publish_time = publish_time;
+        price_update_account.prev_publish_time = prev_publish_time;
+        price_update_account.is_initialized = true;
+        Ok(())
+    }
+
+    // New function to update a PriceUpdateV2 account without verifications (for testing)
+    pub fn update_price_update_v2(
+        ctx: Context<UpdatePriceUpdateV2>,
+        price: i64,
+        conf: u64,
+        exponent: i32,
+        feed_id: [u8; 32],
+        publish_time: u64,
+        prev_publish_time: u64,
+    ) -> Result<()> {
+        let price_update_account = &mut ctx.accounts.price_update_account;
+        require!(price_update_account.is_initialized, ReceiverError::UninitializedAccount);
+
+        price_update_account.price = price;
+        price_update_account.conf = conf;
+        price_update_account.exponent = exponent;
+        price_update_account.feed_id = feed_id;
+        price_update_account.publish_time = publish_time;
+        price_update_account.prev_publish_time = prev_publish_time;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -338,6 +381,24 @@ pub struct ReclaimRent<'info> {
     pub payer:                Signer<'info>,
     #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
+}
+
+// New context for initializing PriceUpdateV2 without verifications
+#[derive(Accounts)]
+pub struct InitializePriceUpdateV2<'info> {
+    #[account(init, payer = user, space = PriceUpdateV2::LEN)]
+    pub price_update_account: Account<'info, PriceUpdateV2>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+// New context for updating PriceUpdateV2 without verifications
+#[derive(Accounts)]
+pub struct UpdatePriceUpdateV2<'info> {
+    #[account(mut)]
+    pub price_update_account: Account<'info, PriceUpdateV2>,
+    pub user: Signer<'info>,
 }
 
 fn deserialize_guardian_set_checked(
