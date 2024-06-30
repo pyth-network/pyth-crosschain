@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "generate-abi": "generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors PythUtils",
     "check-abi": "git diff --exit-code abis",
-    "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
+    "build": "solcjs --bin MockPyth.sol --base-path . -o build/",
+    "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git --no-commit"
   },
   "keywords": [
     "pyth",
