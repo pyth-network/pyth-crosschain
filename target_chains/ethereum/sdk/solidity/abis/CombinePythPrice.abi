@@ -1,0 +1,218 @@
+[
+  {
+    "type": "function",
+    "name": "div",
+    "inputs": [
+      {
+        "name": "self",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "other",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "getPriceInQuote",
+    "inputs": [
+      {
+        "name": "self",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "quote",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "targetExpo",
+        "type": "int32",
+        "internalType": "int32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "tuple",
+        "internalType": "struct PythStructs.Price",
+        "components": [
+          {
+            "name": "price",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "conf",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expo",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "publishTime",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "error",
+    "name": "AddingPricesOfDifferentExponents",
+    "inputs": [
+      {
+        "name": "expo1",
+        "type": "int32",
+        "internalType": "int32"
+      },
+      {
+        "name": "expo2",
+        "type": "int32",
+        "internalType": "int32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "DivisionByZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExceedingComputationalRange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MathErrorWhileScaling",
+    "inputs": []
+  }
+]
