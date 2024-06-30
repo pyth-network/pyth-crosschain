@@ -19,6 +19,7 @@ import {
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import express from 'express';
+import { DriftClient } from "@drift-labs/sdk";
 
 export default {
   command: "solana",
@@ -65,13 +66,18 @@ export default {
       type: "number",
       default: 2,
     } as Options,
+    "address-lookup-table": {
+      description: "Look up table for solana accounts",
+      type: "string",
+      optional: false,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     const {
       endpoint,
       keypairFile,
@@ -86,6 +92,7 @@ export default {
       jitoKeypairFile,
       jitoTipLamports,
       jitoBundleSize,
+      addressLookupTablePubKey
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -115,6 +122,11 @@ export default {
       loadKeypair(fs.readFileSync(keypairFile, "ascii"))
     );
 
+    const driftClient = new DriftClient({
+      connection: new Connection(endpoint, "processed"),
+      wallet,
+    });
+
     const pythSolanaReceiver = new PythSolanaReceiver({
       connection: new Connection(endpoint, "processed"),
       wallet,
@@ -127,21 +139,28 @@ export default {
 
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
+        driftClient,
         pythSolanaReceiver,
         priceServiceConnection,
         shardId,
         jitoTipLamports,
         jitoClient,
-        jitoBundleSize
+        jitoBundleSize,
+        addressLookupTablePubKey
       );
 
       onBundleResult(jitoClient);
     } else {
+      const addressLookupTable = (await pythSolanaReceiver.connection.getAddressLookupTable(
+        new PublicKey(addressLookupTablePubKey)
+      )).value!;
       solanaPricePusher = new SolanaPricePusher(
+        driftClient,
         pythSolanaReceiver,
         priceServiceConnection,
         shardId,
-        computeUnitPriceMicroLamports
+        computeUnitPriceMicroLamports,
+        addressLookupTable
       );
     }
 

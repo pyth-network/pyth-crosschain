@@ -85,4 +85,8 @@ export interface IPricePusher {
     priceIds: string[],
     pubTimesToPush: UnixTimestamp[]
   ): Promise<void>;
+
+ pushPriceUpdatesAtomic(
+    priceIds: string[],
+  ): Promise<void>
 }
