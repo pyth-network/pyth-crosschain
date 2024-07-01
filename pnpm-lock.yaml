@@ -17209,6 +17209,10 @@ packages:
     resolution: {integrity: sha512-sN1AkhTAFI89anOeCaO0c3GtiGeWtOGVc2tmTdQs2Rd14HuxLyDuLIF3/WwjtkDFRM2189uYy8HJJSWJvW2mYA==}
     engines: {node: '>=14', npm: '>=6.12.0'}
 
+  web3-core@4.5.0:
+    resolution: {integrity: sha512-Q8LIAqmF7vkRydBPiU+OC7wI44nEU6JEExolFaOakqrjMtQ1CWFHRUQMNJRDsk5bRirjyShuAsuqLeYByvvXhg==}
+    engines: {node: '>=14', npm: '>=6.12.0'}
+
   web3-errors@1.1.4:
     resolution: {integrity: sha512-WahtszSqILez+83AxGecVroyZsMuuRT+KmQp4Si5P4Rnqbczno1k748PCrZTS1J4UCPmXMG2/Vt+0Bz2zwXkwQ==}
     engines: {node: '>=14', npm: '>=6.12.0'}
@@ -17333,6 +17337,10 @@ packages:
     resolution: {integrity: sha512-gqlWq4Xjz+yKL2MdxQ+BgR3F4CRo4AXWDXzftb3LDzvauEfjk/yRyoxkMSK4S9RIG96ylRImS172cV6cYzcukw==}
     engines: {node: '>=14', npm: '>=6.12.0'}
 
+  web3-eth@4.8.0:
+    resolution: {integrity: sha512-fobkdpwN9SH785/0LSLfxOMH4rZNAD/EvTKIHdpl4ZVz5XdKehX+xPMpSGDGwMlAQ7yXByjZDX3opzoqEQLWxg==}
+    engines: {node: '>=14', npm: '>=6.12.0'}
+
   web3-net@1.10.0:
     resolution: {integrity: sha512-NLH/N3IshYWASpxk4/18Ge6n60GEvWBVeM8inx2dmZJVmRI6SJIlUxbL8jySgiTn3MMZlhbdvrGo8fpUW7a1GA==}
     engines: {node: '>=8.0.0'}
@@ -17428,6 +17436,10 @@ packages:
 
   web3-types@1.6.0:
     resolution: {integrity: sha512-qgOtADqlD5hw+KPKBUGaXAcdNLL0oh6qTeVgXwewCfbL/lG9R+/GrgMQB1gbTJ3cit8hMwtH8KX2Em6OwO0HRw==}
+    engines: {node: '>=14', npm: '>=6.12.0'}
+
+  web3-types@1.7.0:
+    resolution: {integrity: sha512-nhXxDJ7a5FesRw9UG5SZdP/C/3Q2EzHGnB39hkAV+YGXDMgwxBXFWebQLfEzZzuArfHnvC0sQqkIHNwSKcVjdA==}
     engines: {node: '>=14', npm: '>=6.12.0'}
 
   web3-utils@1.10.0:
@@ -18225,10 +18237,10 @@ snapshots:
       '@babel/helpers': 7.24.7
       '@babel/parser': 7.24.7
       '@babel/template': 7.24.7
-      '@babel/traverse': 7.24.7(supports-color@5.5.0)
+      '@babel/traverse': 7.24.7
       '@babel/types': 7.24.7
       convert-source-map: 2.0.0
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -18447,6 +18459,13 @@ snapshots:
     dependencies:
       '@babel/types': 7.24.0
 
+  '@babel/helper-module-imports@7.24.7':
+    dependencies:
+      '@babel/traverse': 7.24.7
+      '@babel/types': 7.24.7
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-module-imports@7.24.7(supports-color@5.5.0)':
     dependencies:
       '@babel/traverse': 7.24.7(supports-color@5.5.0)
@@ -18480,7 +18499,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.24.7
       '@babel/helper-environment-visitor': 7.24.7
-      '@babel/helper-module-imports': 7.24.7(supports-color@5.5.0)
+      '@babel/helper-module-imports': 7.24.7
       '@babel/helper-simple-access': 7.24.7
       '@babel/helper-split-export-declaration': 7.24.7
       '@babel/helper-validator-identifier': 7.24.7
@@ -18571,7 +18590,7 @@ snapshots:
 
   '@babel/helper-simple-access@7.24.7':
     dependencies:
-      '@babel/traverse': 7.24.7(supports-color@5.5.0)
+      '@babel/traverse': 7.24.7
       '@babel/types': 7.24.7
     transitivePeerDependencies:
       - supports-color
@@ -20552,6 +20571,21 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/traverse@7.24.7':
+    dependencies:
+      '@babel/code-frame': 7.24.7
+      '@babel/generator': 7.24.7
+      '@babel/helper-environment-visitor': 7.24.7
+      '@babel/helper-function-name': 7.24.7
+      '@babel/helper-hoist-variables': 7.24.7
+      '@babel/helper-split-export-declaration': 7.24.7
+      '@babel/parser': 7.24.7
+      '@babel/types': 7.24.7
+      debug: 4.3.5
+      globals: 11.12.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/traverse@7.24.7(supports-color@5.5.0)':
     dependencies:
       '@babel/code-frame': 7.24.7
@@ -21510,7 +21544,7 @@ snapshots:
       eth-ens-namehash: 2.0.8
       solc: 0.4.26
       testrpc: 0.0.1
-      web3-utils: 1.8.2
+      web3-utils: 1.10.0
 
   '@ensdomains/ensjs@2.1.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
     dependencies:
@@ -21629,7 +21663,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
       espree: 9.6.1
       globals: 13.20.0
       ignore: 5.3.1
@@ -22354,7 +22388,7 @@ snapshots:
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -26277,7 +26311,7 @@ snapshots:
     dependencies:
       '@noble/curves': 1.3.0
       '@noble/hashes': 1.3.3
-      '@scure/base': 1.1.6
+      '@scure/base': 1.1.7
 
   '@scure/bip32@1.4.0':
     dependencies:
@@ -27589,7 +27623,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.24.7
       base64url: 3.0.1
-      keccak: 3.0.3
+      keccak: 3.0.4
       randombytes: 2.1.0
 
   '@toruslabs/openlogin-utils@4.7.0(@babel/runtime@7.24.7)':
@@ -28398,7 +28432,7 @@ snapshots:
       '@typescript-eslint/type-utils': 6.21.0(eslint@8.57.0)(typescript@5.5.2)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.0)(typescript@5.5.2)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       eslint: 8.57.0
       graphemer: 1.4.0
       ignore: 5.3.1
@@ -28511,7 +28545,7 @@ snapshots:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.5.2)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       eslint: 8.57.0
     optionalDependencies:
       typescript: 5.5.2
@@ -28627,7 +28661,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.5.2)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.0)(typescript@5.5.2)
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       eslint: 8.57.0
       ts-api-utils: 1.3.0(typescript@5.5.2)
     optionalDependencies:
@@ -28718,7 +28752,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -29977,7 +30011,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
     transitivePeerDependencies:
       - supports-color
 
@@ -30533,7 +30567,7 @@ snapshots:
 
   axios@1.7.2:
     dependencies:
-      follow-redirects: 1.15.6(debug@4.3.4)
+      follow-redirects: 1.15.6
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -32238,11 +32272,19 @@ snapshots:
     optionalDependencies:
       supports-color: 8.1.1
 
+  debug@4.3.4:
+    dependencies:
+      ms: 2.1.2
+
   debug@4.3.4(supports-color@8.1.1):
     dependencies:
       ms: 2.1.2
     optionalDependencies:
       supports-color: 8.1.1
+
+  debug@4.3.5:
+    dependencies:
+      ms: 2.1.2
 
   debug@4.3.5(supports-color@5.5.0):
     dependencies:
@@ -33398,7 +33440,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -34275,6 +34317,8 @@ snapshots:
 
   flow-parser@0.238.2: {}
 
+  follow-redirects@1.15.6: {}
+
   follow-redirects@1.15.6(debug@4.3.4):
     optionalDependencies:
       debug: 4.3.4(supports-color@8.1.1)
@@ -35116,7 +35160,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
     transitivePeerDependencies:
       - supports-color
 
@@ -35151,7 +35195,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
     transitivePeerDependencies:
       - supports-color
 
@@ -35614,7 +35658,7 @@ snapshots:
 
   istanbul-lib-source-maps@4.0.1:
     dependencies:
-      debug: 4.3.5(supports-color@5.5.0)
+      debug: 4.3.5
       istanbul-lib-coverage: 3.2.2
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -36879,7 +36923,7 @@ snapshots:
       '@babel/core': 7.24.7
       '@babel/generator': 7.24.7
       '@babel/plugin-syntax-typescript': 7.24.7(@babel/core@7.24.7)
-      '@babel/traverse': 7.24.7(supports-color@5.5.0)
+      '@babel/traverse': 7.24.7
       '@babel/types': 7.24.7
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
@@ -42905,7 +42949,7 @@ snapshots:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 20.14.9
-      acorn: 8.11.3
+      acorn: 8.12.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
@@ -43315,7 +43359,7 @@ snapshots:
 
   utf-8-validate@5.0.10:
     dependencies:
-      node-gyp-build: 4.6.0
+      node-gyp-build: 4.8.1
 
   utf-8-validate@5.0.7:
     dependencies:
@@ -43786,13 +43830,30 @@ snapshots:
       - encoding
       - utf-8-validate
 
+  web3-core@4.5.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10):
+    dependencies:
+      web3-errors: 1.2.0
+      web3-eth-accounts: 4.1.2
+      web3-eth-iban: 4.0.7
+      web3-providers-http: 4.1.0(encoding@0.1.13)
+      web3-providers-ws: 4.0.7(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      web3-types: 1.7.0
+      web3-utils: 4.3.0
+      web3-validator: 2.0.6
+    optionalDependencies:
+      web3-providers-ipc: 4.0.7
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   web3-errors@1.1.4:
     dependencies:
       web3-types: 1.6.0
 
   web3-errors@1.2.0:
     dependencies:
-      web3-types: 1.6.0
+      web3-types: 1.7.0
 
   web3-eth-abi@1.10.0:
     dependencies:
@@ -43824,7 +43885,7 @@ snapshots:
     dependencies:
       abitype: 0.7.1(typescript@5.4.5)(zod@3.23.8)
       web3-errors: 1.2.0
-      web3-types: 1.6.0
+      web3-types: 1.7.0
       web3-utils: 4.3.0
       web3-validator: 2.0.6
     transitivePeerDependencies:
@@ -43885,10 +43946,10 @@ snapshots:
       '@ethereumjs/rlp': 4.0.1
       crc-32: 1.2.2
       ethereum-cryptography: 2.1.3
-      web3-errors: 1.1.4
-      web3-types: 1.6.0
+      web3-errors: 1.2.0
+      web3-types: 1.7.0
       web3-utils: 4.3.0
-      web3-validator: 2.0.5
+      web3-validator: 2.0.6
 
   web3-eth-contract@1.10.0(encoding@0.1.13):
     dependencies:
@@ -44025,10 +44086,10 @@ snapshots:
 
   web3-eth-iban@4.0.7:
     dependencies:
-      web3-errors: 1.1.4
-      web3-types: 1.6.0
+      web3-errors: 1.2.0
+      web3-types: 1.7.0
       web3-utils: 4.3.0
-      web3-validator: 2.0.5
+      web3-validator: 2.0.6
 
   web3-eth-personal@1.10.0(encoding@0.1.13):
     dependencies:
@@ -44068,12 +44129,12 @@ snapshots:
 
   web3-eth-personal@4.0.8(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8):
     dependencies:
-      web3-core: 4.4.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-eth: 4.7.0(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8)
-      web3-rpc-methods: 1.2.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-types: 1.6.0
+      web3-core: 4.5.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-eth: 4.8.0(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8)
+      web3-rpc-methods: 1.3.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-types: 1.7.0
       web3-utils: 4.3.0
-      web3-validator: 2.0.5
+      web3-validator: 2.0.6
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -44155,6 +44216,26 @@ snapshots:
       - utf-8-validate
       - zod
 
+  web3-eth@4.8.0(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8):
+    dependencies:
+      setimmediate: 1.0.5
+      web3-core: 4.5.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-errors: 1.2.0
+      web3-eth-abi: 4.2.2(typescript@5.4.5)(zod@3.23.8)
+      web3-eth-accounts: 4.1.2
+      web3-net: 4.1.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-providers-ws: 4.0.7(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      web3-rpc-methods: 1.3.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-types: 1.7.0
+      web3-utils: 4.3.0
+      web3-validator: 2.0.6
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
+      - zod
+
   web3-net@1.10.0(encoding@0.1.13):
     dependencies:
       web3-core: 1.10.0(encoding@0.1.13)
@@ -44195,9 +44276,9 @@ snapshots:
 
   web3-net@4.1.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10):
     dependencies:
-      web3-core: 4.4.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-core: 4.5.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       web3-rpc-methods: 1.3.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-types: 1.6.0
+      web3-types: 1.7.0
       web3-utils: 4.3.0
     transitivePeerDependencies:
       - bufferutil
@@ -44341,8 +44422,8 @@ snapshots:
 
   web3-rpc-methods@1.3.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10):
     dependencies:
-      web3-core: 4.4.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-types: 1.6.0
+      web3-core: 4.5.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3-types: 1.7.0
       web3-validator: 2.0.6
     transitivePeerDependencies:
       - bufferutil
@@ -44380,6 +44461,8 @@ snapshots:
       - supports-color
 
   web3-types@1.6.0: {}
+
+  web3-types@1.7.0: {}
 
   web3-utils@1.10.0:
     dependencies:
@@ -44424,7 +44507,7 @@ snapshots:
       ethereum-cryptography: 2.1.3
       eventemitter3: 5.0.1
       web3-errors: 1.2.0
-      web3-types: 1.6.0
+      web3-types: 1.7.0
       web3-validator: 2.0.6
 
   web3-validator@2.0.5:
@@ -44440,7 +44523,7 @@ snapshots:
       ethereum-cryptography: 2.1.3
       util: 0.12.5
       web3-errors: 1.2.0
-      web3-types: 1.6.0
+      web3-types: 1.7.0
       zod: 3.23.8
 
   web3@1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10):

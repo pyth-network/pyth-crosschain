@@ -10,7 +10,7 @@ from express_relay.client import (
 )
 from express_relay.express_relay_types import (
     Opportunity,
-    OpportunityBid,
+    Bid,
     OpportunityBidParams,
     Bytes32,
     BidStatus,
@@ -19,7 +19,7 @@ from express_relay.express_relay_types import (
 
 logger = logging.getLogger(__name__)
 
-NAIVE_BID = int(2e16)
+NAIVE_BID = int(6e17)
 # Set deadline (naively) to max uint256
 DEADLINE_MAX = 2**256 - 1
 
@@ -40,19 +40,19 @@ class SimpleSearcher:
     def assess_opportunity(
         self,
         opp: Opportunity,
-    ) -> OpportunityBid | None:
+    ) -> Bid | None:
         """
-        Assesses whether an opportunity is worth executing; if so, returns an OpportunityBid object.
+        Assesses whether an opportunity is worth executing; if so, returns a Bid object.
         Otherwise, returns None.
 
         This function determines whether the given opportunity is worthwhile to execute.
         There are many ways to evaluate this, but the most common way is to check that the value of the tokens the searcher will receive from execution exceeds the value of the tokens spent.
         Individual searchers will have their own methods to determine market impact and the profitability of executing an opportunity. This function can use external prices to perform this evaluation.
-        In this simple searcher, the function (naively) returns an OpportunityBid object with a default bid and deadline timestamp.
+        In this simple searcher, the function (naively) returns a Bid object with a default bid and deadline timestamp.
         Args:
             opp: An object representing a single opportunity.
         Returns:
-            If the opportunity is deemed worthwhile, this function can return an OpportunityBid object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
+            If the opportunity is deemed worthwhile, this function can return a Bid object, whose contents can be submitted to the auction server. If the opportunity is not deemed worthwhile, this function can return None.
         """
 
         # TODO: generate nonce more intelligently, to reduce gas costs
@@ -60,9 +60,9 @@ class SimpleSearcher:
             amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
         )
 
-        opportunity_bid = sign_bid(opp, bid_params, self.private_key)
+        bid = sign_bid(opp, bid_params, self.private_key)
 
-        return opportunity_bid
+        return bid
 
     async def opportunity_callback(self, opp: Opportunity):
         """
@@ -71,16 +71,16 @@ class SimpleSearcher:
         Args:
             opp: An object representing a single opportunity.
         """
-        opportunity_bid = self.assess_opportunity(opp)
-        if opportunity_bid:
+        bid = self.assess_opportunity(opp)
+        if bid:
             try:
-                await self.client.submit_opportunity_bid(opportunity_bid)
+                await self.client.submit_bid(bid)
                 logger.info(
-                    f"Submitted bid amount {opportunity_bid.amount} for opportunity {str(opportunity_bid.opportunity_id)}"
+                    f"Submitted bid amount {bid.amount} for opportunity {str(opp.opportunity_id)}"
                 )
             except Exception as e:
                 logger.error(
-                    f"Error submitting bid amount {opportunity_bid.amount} for opportunity {str(opportunity_bid.opportunity_id)}: {e}"
+                    f"Error submitting bid amount {bid.amount} for opportunity {str(opp.opportunity_id)}: {e}"
                 )
 
     async def bid_status_callback(self, bid_status_update: BidStatusUpdate):
