@@ -66,7 +66,7 @@ export default {
       type: "number",
       default: 2,
     } as Options,
-    "address-lookup-table": {
+    "address-lookup-table-pubkey": {
       description: "Look up table for solana accounts",
       type: "string",
       optional: false,
@@ -92,7 +92,7 @@ export default {
       jitoKeypairFile,
       jitoTipLamports,
       jitoBundleSize,
-      addressLookupTablePubKey
+      addressLookupTablePubkey
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -146,13 +146,13 @@ export default {
         jitoTipLamports,
         jitoClient,
         jitoBundleSize,
-        addressLookupTablePubKey
+        addressLookupTablePubkey
       );
 
       onBundleResult(jitoClient);
     } else {
       const addressLookupTable = (await pythSolanaReceiver.connection.getAddressLookupTable(
-        new PublicKey(addressLookupTablePubKey)
+        new PublicKey(addressLookupTablePubkey)
       )).value!;
       solanaPricePusher = new SolanaPricePusher(
         driftClient,
