@@ -1,46 +1,58 @@
 // SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
-interface IEntropyConsumer {
-    function _entropyCallback(
-        uint64 sequenceNumber,
-        address provider,
-        bytes32 randomNumber
-    ) external;
-}
+import {IEntropyConsumer} from "./IEntropyConsumer.sol";
 
 contract MockEntropy {
-    uint64 public sequenceNumber;
-    uint128 public constant FEE = 0.000015 ether;
+    uint256 public fee;
+
+    mapping(uint256 => address) public callbackRequests;
+    uint64 public currentSequenceNumber;
+
+    constructor(uint256 _fee) {
+        fee = _fee;
+    }
 
     function getDefaultProvider() external view returns (address) {
         return address(this);
     }
 
-    function getFee(address provider) external pure returns (uint128) {
-        require(provider != address(0), "Invalid provider address");
-        return FEE;
+    function getFee(
+        address _provider
+    ) external view isProvider(_provider) returns (uint256) {
+        return fee;
+    }
+
+    function setFee(uint256 _fee) external {
+        fee = _fee;
     }
 
     function requestWithCallback(
-        address provider,
-        bytes32 userRandomNumber
-    ) external payable returns (uint64) {
-        require(provider != address(0), "Invalid provider address");
-        require(msg.value >= FEE, "Not enough ether sent for fee");
-        return sequenceNumber++;
+        address _provider,
+        bytes32 _userRandomNumber
+    ) external payable isProvider(_provider) returns (uint64) {
+        require(msg.value >= fee, "Not enough ether sent for fee");
+        callbackRequests[currentSequenceNumber] = msg.sender;
+        return currentSequenceNumber++;
     }
 
     function triggerCallback(
-        uint64 _sequenceNumber,
         uint256 _randomNumber,
-        address _callbackAddress
+        uint64 _sequenceNumber
     ) external {
+        address callbackAddress = callbackRequests[_sequenceNumber];
+        require(callbackAddress != address(0), "No pending request");
         bytes32 randomNumberBytes = bytes32(_randomNumber);
-        IEntropyConsumer(_callbackAddress)._entropyCallback(
+        IEntropyConsumer(callbackAddress)._entropyCallback(
             _sequenceNumber,
-            _callbackAddress,
+            callbackAddress,
             randomNumberBytes
         );
+        callbackRequests[_sequenceNumber] = address(0);
+    }
+
+    modifier isProvider(address _provider) {
+        require(_provider == address(this), "Invalid provider address");
+        _;
     }
 }
