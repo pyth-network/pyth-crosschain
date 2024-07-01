@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { isHex } from "viem";
-import { BidStatusUpdate, Opportunity, Bid } from "../types";
+import { BidStatusUpdate, Opportunity } from "../types";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
