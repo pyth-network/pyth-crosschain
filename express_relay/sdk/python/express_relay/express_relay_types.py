@@ -74,15 +74,6 @@ SignedMessageString = Annotated[
 ]
 
 
-PERMIT_BATCH_TRANSFER_FROM_TYPESTRING = "((address,uint256)[],uint256,uint256)"
-EXECUTION_WITNESS_TYPESTRING = (
-    "((address,uint256)[],address,address,bytes,uint256,uint256)"
-)
-EXECUTION_PARAMS_TYPESTRING = (
-    f"({PERMIT_BATCH_TRANSFER_FROM_TYPESTRING},{EXECUTION_WITNESS_TYPESTRING})"
-)
-
-
 class TokenAmount(BaseModel):
     """
     Attributes:

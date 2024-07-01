@@ -3,7 +3,6 @@ import asyncio
 import logging
 from eth_account.account import Account
 from secrets import randbits
-from typing import cast
 
 from express_relay.client import (
     ExpressRelayClient,
@@ -61,9 +60,9 @@ class SimpleSearcher:
             amount=NAIVE_BID, nonce=randbits(64), deadline=DEADLINE_MAX
         )
 
-        bid = sign_bid(opp, bid_params, self.private_key, return_opportunity_bid=False)
+        bid = sign_bid(opp, bid_params, self.private_key)
 
-        return cast(Bid, bid)
+        return bid
 
     async def opportunity_callback(self, opp: Opportunity):
         """

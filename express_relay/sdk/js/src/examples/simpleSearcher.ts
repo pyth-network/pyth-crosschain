@@ -60,11 +60,10 @@ class SimpleSearcher {
     const bid = await this.client.signBid(
       opportunity,
       bidParams,
-      checkHex(argv.privateKey),
-      false
+      checkHex(argv.privateKey)
     );
     try {
-      const bidId = await this.client.submitBid(bid as Bid);
+      const bidId = await this.client.submitBid(bid);
       console.log(
         `Successful bid. Opportunity id ${opportunity.opportunityId} Bid id ${bidId}`
       );
