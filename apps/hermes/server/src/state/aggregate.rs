@@ -434,7 +434,7 @@ where
             state_data.latest_observed_slot,
         ) {
             (Some(latest_completed_slot), Some(latest_observed_slot)) => {
-                latest_observed_slot - latest_completed_slot
+                latest_observed_slot.saturating_sub(latest_completed_slot)
                     <= state_data.readiness_max_allowed_slot_lag
             }
             _ => false,
