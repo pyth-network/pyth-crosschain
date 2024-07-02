@@ -10,6 +10,7 @@ use {
             IntoResponse,
             Response,
         },
+        Json,
     },
 };
 
@@ -19,7 +20,7 @@ where
 {
     let state = &*state.state;
     match Aggregates::is_ready(state).await {
-        true => (StatusCode::OK, "OK").into_response(),
-        false => (StatusCode::SERVICE_UNAVAILABLE, "Service Unavailable").into_response(),
+        (true, _) => (StatusCode::OK, "OK").into_response(),
+        (false, metadata) => (StatusCode::SERVICE_UNAVAILABLE, Json(metadata)).into_response(),
     }
 }
