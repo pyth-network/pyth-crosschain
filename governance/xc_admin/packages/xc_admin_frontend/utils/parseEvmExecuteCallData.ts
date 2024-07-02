@@ -33,6 +33,19 @@ const ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    type: 'function',
+    name: 'setRelayer',
+    inputs: [
+      {
+        name: 'relayer',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
 ]
 
 type Input = {

@@ -1,373 +1,17 @@
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
-import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource, EvmExecute } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { TokenQty } from "../token";
-
-// Just to make sure tx gas limit is enough
-const EXTENDED_ENTROPY_ABI = [
-  {
-    inputs: [],
-    name: "acceptOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "acceptAdmin",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "pendingOwner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "version",
-    outputs: [
-      {
-        internalType: "string",
-        name: "",
-        type: "string",
-      },
-    ],
-    stateMutability: "pure",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-    ],
-    name: "upgradeTo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  ...EntropyAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-const EXTENDED_PYTH_ABI = [
-  {
-    inputs: [],
-    name: "wormhole",
-    outputs: [
-      {
-        internalType: "contract IWormhole",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "governanceDataSource",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint16",
-            name: "chainId",
-            type: "uint16",
-          },
-          {
-            internalType: "bytes32",
-            name: "emitterAddress",
-            type: "bytes32",
-          },
-        ],
-        internalType: "struct PythInternalStructs.DataSource",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "encodedVM",
-        type: "bytes",
-      },
-    ],
-    name: "executeGovernanceInstruction",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "version",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "pure",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "singleUpdateFeeInWei",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "validDataSources",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint16",
-            name: "chainId",
-            type: "uint16",
-          },
-          {
-            internalType: "bytes32",
-            name: "emitterAddress",
-            type: "bytes32",
-          },
-        ],
-        internalType: "struct PythInternalStructs.DataSource[]",
-        name: "",
-        type: "tuple[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [],
-    name: "lastExecutedGovernanceSequence",
-    outputs: [
-      {
-        internalType: "uint64",
-        name: "",
-        type: "uint64",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "id",
-        type: "bytes32",
-      },
-    ],
-    name: "priceFeedExists",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  ...PythInterfaceAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-const WORMHOLE_ABI = [
-  {
-    inputs: [],
-    name: "getCurrentGuardianSetIndex",
-    outputs: [
-      {
-        internalType: "uint32",
-        name: "",
-        type: "uint32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "chainId",
-    outputs: [
-      {
-        internalType: "uint16",
-        name: "",
-        type: "uint16",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint32",
-        name: "index",
-        type: "uint32",
-      },
-    ],
-    name: "getGuardianSet",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address[]",
-            name: "keys",
-            type: "address[]",
-          },
-          {
-            internalType: "uint32",
-            name: "expirationTime",
-            type: "uint32",
-          },
-        ],
-        internalType: "struct Structs.GuardianSet",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "_vm",
-        type: "bytes",
-      },
-    ],
-    name: "submitNewGuardianSet",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "messageFee",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
-const EXECUTOR_ABI = [
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "encodedVm",
-        type: "bytes",
-      },
-    ],
-    name: "execute",
-    outputs: [
-      {
-        internalType: "bytes",
-        name: "response",
-        type: "bytes",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getOwnerChainId",
-    outputs: [
-      {
-        internalType: "uint64",
-        name: "",
-        type: "uint64",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getOwnerEmitterAddress",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getLastExecutedSequence",
-    outputs: [
-      {
-        internalType: "uint64",
-        name: "",
-        type: "uint64",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+import {
+  EXECUTOR_ABI,
+  EXPRESS_RELAY_ABI,
+  EXTENDED_ENTROPY_ABI,
+  EXTENDED_PYTH_ABI,
+  WORMHOLE_ABI,
+} from "./evm_abis";
 
 /**
  * Returns the keccak256 digest of the contract bytecode at the given address after replacing
@@ -546,34 +190,18 @@ export class EvmEntropyContract extends Storable {
     return new EvmEntropyContract(chain, parsed.address);
   }
 
-  // Generate a payload for the given executor address and calldata.
-  // `executor` and `calldata` should be hex strings.
-  generateExecutorPayload(
-    executor: string,
-    callAddress: string,
-    calldata: string
-  ) {
-    return new EvmExecute(
-      this.chain.wormholeChainName,
-      executor.replace("0x", ""),
-      callAddress.replace("0x", ""),
-      0n,
-      Buffer.from(calldata.replace("0x", ""), "hex")
-    ).encode();
-  }
-
   // Generates a payload for the newAdmin to call acceptAdmin on the entropy contracts
   generateAcceptAdminPayload(newAdmin: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptAdmin().encodeABI();
-    return this.generateExecutorPayload(newAdmin, this.address, data);
+    return this.chain.generateExecutorPayload(newAdmin, this.address, data);
   }
 
   // Generates a payload for newOwner to call acceptOwnership on the entropy contracts
   generateAcceptOwnershipPayload(newOwner: string): Buffer {
     const contract = this.getContract();
     const data = contract.methods.acceptOwnership().encodeABI();
-    return this.generateExecutorPayload(newOwner, this.address, data);
+    return this.chain.generateExecutorPayload(newOwner, this.address, data);
   }
 
   async generateUpgradeEntropyContractPayload(
@@ -581,7 +209,7 @@ export class EvmEntropyContract extends Storable {
   ): Promise<Buffer> {
     const contract = this.getContract();
     const data = contract.methods.upgradeTo(newImplementation).encodeABI();
-    return this.generateExecutorPayload(
+    return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
       data
@@ -597,7 +225,7 @@ export class EvmEntropyContract extends Storable {
     const web3 = new Web3(this.chain.getRpcUrl());
     const executor = new web3.eth.Contract(EXECUTOR_ABI, executorAddr);
     const data = executor.methods.upgradeTo(newImplementation).encodeABI();
-    return this.generateExecutorPayload(executorAddr, executorAddr, data);
+    return this.chain.generateExecutorPayload(executorAddr, executorAddr, data);
   }
 
   async getOwner(): Promise<string> {
@@ -776,6 +404,90 @@ export class EvmEntropyContract extends Storable {
     return this.chain.estiamteAndSendTransaction(transactionObject, {
       from: address,
     });
+  }
+}
+
+export class EvmExpressRelayContract extends Storable {
+  static type = "EvmExpressRelayContract";
+
+  constructor(public chain: EvmChain, public address: string) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getChain(): EvmChain {
+    return this.chain;
+  }
+
+  getType(): string {
+    return EvmExpressRelayContract.type;
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.version().call();
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmExpressRelayContract {
+    if (parsed.type !== EvmExpressRelayContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmExpressRelayContract(chain, parsed.address);
+  }
+
+  async generateSetRelayerPayload(relayer: string): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.setRelayer(relayer).encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data
+    );
+  }
+
+  async getOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
+  }
+
+  async getExecutorContract(): Promise<EvmExecutorContract> {
+    const owner = await this.getOwner();
+    return new EvmExecutorContract(this.chain, owner);
+  }
+
+  async getPendingOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.pendingOwner().call();
+  }
+
+  async getRelayer(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getRelayer().call();
+  }
+
+  async getRelayerSubwallets(): Promise<string[]> {
+    const contract = this.getContract();
+    return contract.methods.getRelayerSubwallets().call();
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmExpressRelayContract.type,
+    };
+  }
+
+  getContract() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return new web3.eth.Contract(EXPRESS_RELAY_ABI, this.address);
   }
 }
 
