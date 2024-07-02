@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IEntropyConsumer} from "./IEntropyConsumer.sol";
+import "./EntropyErrors.sol";
 
 contract MockEntropy {
     uint256 public fee;
@@ -18,8 +19,8 @@ contract MockEntropy {
     }
 
     function getFee(
-        address _provider
-    ) external view isProvider(_provider) returns (uint256) {
+        address provider
+    ) external view isProvider(provider) returns (uint256) {
         return fee;
     }
 
@@ -28,31 +29,37 @@ contract MockEntropy {
     }
 
     function requestWithCallback(
-        address _provider,
-        bytes32 _userRandomNumber
-    ) external payable isProvider(_provider) returns (uint64) {
-        require(msg.value >= fee, "Not enough ether sent for fee");
+        address provider,
+        bytes32 userRandomNumber
+    ) external payable isProvider(provider) returns (uint64) {
+        if (msg.value < fee) {
+            revert EntropyErrors.InsufficientFee();
+        }
         callbackRequests[currentSequenceNumber] = msg.sender;
         return currentSequenceNumber++;
     }
 
     function triggerCallback(
-        uint256 _randomNumber,
-        uint64 _sequenceNumber
+        uint256 randomNumber,
+        uint64 sequenceNumber
     ) external {
-        address callbackAddress = callbackRequests[_sequenceNumber];
-        require(callbackAddress != address(0), "No pending request");
-        bytes32 randomNumberBytes = bytes32(_randomNumber);
+        address callbackAddress = callbackRequests[sequenceNumber];
+        if (callbackAddress == address(0)) {
+            revert EntropyErrors.NoSuchRequest();
+        }
+        bytes32 randomNumberBytes = bytes32(randomNumber);
         IEntropyConsumer(callbackAddress)._entropyCallback(
-            _sequenceNumber,
-            callbackAddress,
+            sequenceNumber,
+            address(this),
             randomNumberBytes
         );
-        callbackRequests[_sequenceNumber] = address(0);
+        callbackRequests[sequenceNumber] = address(0);
     }
 
-    modifier isProvider(address _provider) {
-        require(_provider == address(this), "Invalid provider address");
+    modifier isProvider(address provider) {
+        if (provider != address(this)) {
+            revert EntropyErrors.NoSuchProvider();
+        }
         _;
     }
 }
