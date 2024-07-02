@@ -102,45 +102,40 @@ This method will combine the user and provider's random numbers, along with the 
 The [Coin Flip](/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
 interacts with Pyth Entropy as well as a typescript client for that application.
 
-## PRNG Library
+## PRNG Contract
 
-The PRNG (Pseudorandom Number Generation) Library is a library designed to work seamlessly with Pyth Entropy.
+The PRNG (Pseudorandom Number Generation) Contract is designed to work seamlessly with Pyth Entropy.
 
 ### Features
 
 - **Pyth Entropy Integration**: Utilizes Pyth Entropy as a secure seed source
-- **Versatile Random Generation**: Includes functions for generating random bytes, integers within specified ranges, and permutations.
-- **Randomness Expansion**: Ability to expand a single seed into multiple random values.
-- **Type Conversion Utilities**: Helper functions to convert random bytes32 values to various integer types.
+- **Stateful Randomness**: Maintains an internal state to ensure unique random numbers on each call
+- **Versatile Random Generation**: Includes functions for generating random uint256, uint64, integers within specified ranges, and permutations
+- **Random Bytes Generation**: Ability to generate random byte sequences of specified length
 
 ### Key Functions
 
-- `randomByte(bytes32 seed) -> uint8`: Generate a random byte.
-- `randomBytes(bytes32 seed, uint256 length) -> bytes`: Generate a sequence of random bytes.
-- `randInt(bytes32 seed, uint256 min, uint256 max) -> uint256`: Generate a random integer within a range.
-- `expandRandomness(bytes32 seed, uint256 numHashes) -> bytes32[]`: Expand a seed into multiple random values.
-- `randomPermutation(bytes32 seed, uint256 length) -> uint256[]`: Generate a random permutation of a sequence.
+- `randUint() -> uint256`: Generate a random uint256 value
+- `randUint64() -> uint64`: Generate a random uint64 value
+- `randUintRange(uint256 min, uint256 max) -> uint256`: Generate a random integer within a specified range
+- `randomBytes(uint256 length) -> bytes`: Generate a sequence of random bytes
+- `randomPermutation(uint256 length) -> uint256[]`: Generate a random permutation of a sequence
 
 ### Usage
 
-To use the PRNG library in your smart contracts:
+To use the PRNG contract in your project:
 
-1. Import the library in your Solidity file:
+1. Deploy the PRNG contract with a seed from Pyth Entropy:
 
 ```solidity
-import "./PRNG.sol";
+bytes32 pythEntropySeed = ...; // Get this from Pyth Entropy
+PRNG prng = new PRNG(pythEntropySeed);
 ```
 
-2. Use the library functions in your contract:
+2. Use the contract functions to generate random numbers:
 
 ```solidity
-contract PRNGExampleContract {
-  using PRNG for bytes32;
-
-  function getRandomIntWithinRange(
-    bytes32 pythEntropySeed
-  ) public view returns (uint256) {
-    return pythEntropySeed.randInt(1, 100);
-  }
-}
+uint256 randomNumber = prng.randUint();
+uint64 randomSmallNumber = prng.randUint64();
+uint256 randomInRange = prng.randUintRange(1, 100);
 ```
