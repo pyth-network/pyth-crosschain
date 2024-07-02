@@ -29,12 +29,17 @@ export type HermesClientConfig = {
    * it will timeout regardless of the retries at the configured `timeout` time.
    */
   httpRetries?: number;
+  /**
+   * Optional headers to be included in every request.
+   */
+  headers?: HeadersInit;
 };
 
 export class HermesClient {
   private baseURL: string;
   private timeout: DurationInMs;
   private httpRetries: number;
+  private headers: HeadersInit;
 
   /**
    * Constructs a new Connection.
@@ -46,18 +51,7 @@ export class HermesClient {
     this.baseURL = endpoint;
     this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
-  }
-
-  private extractCredentials(url: URL): { headers: HeadersInit; url: URL } {
-    const headers: HeadersInit = {};
-    if (url.username && url.password) {
-      headers["Authorization"] = `Basic ${btoa(
-        `${url.username}:${url.password}`
-      )}`;
-      url.username = "";
-      url.password = "";
-    }
-    return { headers, url };
+    this.headers = config?.headers ?? {};
   }
 
   private async httpRequest<ResponseData>(
@@ -70,7 +64,11 @@ export class HermesClient {
   ): Promise<ResponseData> {
     const controller = externalAbortController ?? new AbortController();
     const { signal } = controller;
-    options = { ...options, signal }; // Merge any existing options with the signal
+    options = {
+      ...options,
+      signal,
+      headers: { ...this.headers, ...options?.headers },
+    }; // Merge any existing options with the signal and headers
 
     // Set a timeout to abort the request if it takes too long
     const timeout = setTimeout(() => controller.abort(), this.timeout);
@@ -112,16 +110,13 @@ export class HermesClient {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const baseURL = new URL(this.baseURL);
-    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
-    const url = new URL("v2/price_feeds", cleanedBaseURL);
+    const url = new URL("v2/price_feeds", this.baseURL);
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
     return await this.httpRequest(
       url.toString(),
-      schemas.PriceFeedMetadata.array(),
-      { headers }
+      schemas.PriceFeedMetadata.array()
     );
   }
 
@@ -144,9 +139,7 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const baseURL = new URL(this.baseURL);
-    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
-    const url = new URL("v2/updates/price/latest", cleanedBaseURL);
+    const url = new URL("v2/updates/price/latest", this.baseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -155,7 +148,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest(url.toString(), schemas.PriceUpdate, { headers });
+    return this.httpRequest(url.toString(), schemas.PriceUpdate);
   }
 
   /**
@@ -179,9 +172,7 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const baseURL = new URL(this.baseURL);
-    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
-    const url = new URL(`v2/updates/price/${publishTime}`, cleanedBaseURL);
+    const url = new URL(`v2/updates/price/${publishTime}`, this.baseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -190,7 +181,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, options);
     }
 
-    return this.httpRequest(url.toString(), schemas.PriceUpdate, { headers });
+    return this.httpRequest(url.toString(), schemas.PriceUpdate);
   }
 
   /**
@@ -217,9 +208,7 @@ export class HermesClient {
       benchmarksOnly?: boolean;
     }
   ): Promise<EventSource> {
-    const baseURL = new URL(this.baseURL);
-    const { headers, url: cleanedBaseURL } = this.extractCredentials(baseURL);
-    const url = new URL("v2/updates/price/stream", cleanedBaseURL);
+    const url = new URL("v2/updates/price/stream", this.baseURL);
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
@@ -229,7 +218,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
-    return new EventSource(url.toString(), { headers });
+    return new EventSource(url.toString(), { headers: this.headers });
   }
 
   private appendUrlSearchParams(
