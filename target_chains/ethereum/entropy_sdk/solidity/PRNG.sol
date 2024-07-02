@@ -17,6 +17,13 @@ contract PRNG {
         nonce = 0;
     }
 
+    /// @notice Set a new seed and reset the nonce
+    /// @param _newSeed The new seed (bytes32)
+    function setSeed(bytes32 _newSeed) public {
+        seed = _newSeed;
+        nonce = 0;
+    }
+
     /// @notice Generate the next random bytes32 value and update the state
     /// @return The next random bytes32 value
     function nextBytes32() private returns (bytes32) {
