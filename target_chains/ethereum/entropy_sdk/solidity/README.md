@@ -125,17 +125,22 @@ The PRNG (Pseudorandom Number Generation) Contract is designed to work seamlessl
 
 To use the PRNG contract in your project:
 
-1. Deploy the PRNG contract with a seed from Pyth Entropy:
+1. Create a contract that inherits from PRNG and uses its internal functions with a seed from Pyth Entropy:
 
 ```solidity
-bytes32 pythEntropySeed = ...; // Get this from Pyth Entropy
-PRNG prng = new PRNG(pythEntropySeed);
+contract MyContract is PRNG {
+  constructor(bytes32 _seed) {
+    PRNG(_seed);
+  }
+}
 ```
 
 2. Use the contract functions to generate random numbers:
 
 ```solidity
-uint256 randomNumber = prng.randUint();
-uint64 randomSmallNumber = prng.randUint64();
-uint256 randomInRange = prng.randUintRange(1, 100);
+bytes32 pythEntropySeed = ...; // Get this from Pyth Entropy
+setSeed(pythEntropySeed)
+uint256 randomNumber = randUint();
+uint64 randomSmallNumber = randUint64();
+uint256 randomInRange = randUintRange(1, 100);
 ```
