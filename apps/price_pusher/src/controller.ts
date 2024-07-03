@@ -73,7 +73,7 @@ export class Controller {
 
         // note that the priceIds are without leading "0x"
         const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
-        this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+        this.targetChainPricePusher.pushPriceUpdatesAtomic(priceIds);
       } else {
         console.log(
           "None of the above values passed the threshold. No push needed."

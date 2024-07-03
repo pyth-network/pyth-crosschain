@@ -19,6 +19,7 @@ import {
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import express from 'express';
+import { DriftClient } from "@drift-labs/sdk";
 
 export default {
   command: "solana",
@@ -32,11 +33,6 @@ export default {
     "keypair-file": {
       description: "Path to a keypair file",
       type: "string",
-      required: true,
-    } as Options,
-    "shard-id": {
-      description: "Shard ID",
-      type: "number",
       required: true,
     } as Options,
     "compute-unit-price-micro-lamports": {
@@ -65,27 +61,30 @@ export default {
       type: "number",
       default: 2,
     } as Options,
+    "address-lookup-table-pubkey": {
+      description: "Look up table for solana accounts",
+      type: "string",
+      optional: false,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
-    ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     const {
       endpoint,
       keypairFile,
-      shardId,
       computeUnitPriceMicroLamports,
       priceConfigFile,
       priceServiceEndpoint,
-      pythContractAddress,
       pushingFrequency,
       pollingFrequency,
       jitoEndpoint,
       jitoKeypairFile,
       jitoTipLamports,
       jitoBundleSize,
+      addressLookupTablePubkey
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -115,10 +114,9 @@ export default {
       loadKeypair(fs.readFileSync(keypairFile, "ascii"))
     );
 
-    const pythSolanaReceiver = new PythSolanaReceiver({
+    const driftClient = new DriftClient({
       connection: new Connection(endpoint, "processed"),
       wallet,
-      pushOracleProgramId: new PublicKey(pythContractAddress),
     });
 
     let solanaPricePusher;
@@ -127,27 +125,28 @@ export default {
 
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
-        pythSolanaReceiver,
+        driftClient,
         priceServiceConnection,
-        shardId,
         jitoTipLamports,
-        jitoClient,
-        jitoBundleSize
+        jitoBundleSize,
+        addressLookupTablePubkey
       );
 
       onBundleResult(jitoClient);
     } else {
+      const addressLookupTable = (await driftClient.connection.getAddressLookupTable(
+        new PublicKey(addressLookupTablePubkey)
+      )).value!;
       solanaPricePusher = new SolanaPricePusher(
-        pythSolanaReceiver,
+        driftClient,
         priceServiceConnection,
-        shardId,
-        computeUnitPriceMicroLamports
+        computeUnitPriceMicroLamports,
+        addressLookupTable
       );
     }
 
     const solanaPriceListener = new SolanaPriceListener(
-      pythSolanaReceiver,
-      shardId,
+      driftClient,
       priceItems,
       { pollingFrequency }
     );
