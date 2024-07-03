@@ -58,7 +58,7 @@ declare_id!(pyth_solana_receiver_sdk::ID);
 
 pub const WORMHOLE_ID: Pubkey = pubkey!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");
 
-pub const MINIMUM_SIGNERS : u8 = 3;
+pub const MINIMUM_SIGNERS : u8 = 2;
 
 pub const VALID_DATA_SOURCES : [DataSource; 1] = [
     DataSource {
