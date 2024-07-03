@@ -21,6 +21,7 @@ import {
   FuelWormholeContract,
   WormholeContract,
   FuelPriceFeedContract,
+  EvmExpressRelayContract,
 } from "./contracts";
 import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
@@ -37,6 +38,7 @@ export class Store {
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
+  public express_relay_contracts: Record<string, EvmExpressRelayContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
 
@@ -138,6 +140,7 @@ export class Store {
       [AptosPriceFeedContract.type]: AptosPriceFeedContract,
       [AptosWormholeContract.type]: AptosWormholeContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
+      [EvmExpressRelayContract.type]: EvmExpressRelayContract,
       [EvmWormholeContract.type]: EvmWormholeContract,
       [FuelPriceFeedContract.type]: FuelPriceFeedContract,
       [FuelWormholeContract.type]: FuelWormholeContract,
@@ -165,6 +168,8 @@ export class Store {
           );
         if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof EvmExpressRelayContract) {
+          this.express_relay_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof WormholeContract) {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else {

@@ -107,7 +107,7 @@ export const COMMON_DEPLOY_OPTIONS = {
     desc: "Save the contract to the store",
   },
 } as const;
-export const COMMON_UPGRADE_OPTIONS = {
+export const CHAIN_SELECTION_OPTIONS = {
   testnet: {
     type: "boolean",
     default: false,
@@ -123,6 +123,9 @@ export const COMMON_UPGRADE_OPTIONS = {
     string: true,
     desc: "Chains to upgrade the contract on",
   },
+} as const;
+export const COMMON_UPGRADE_OPTIONS = {
+  ...CHAIN_SELECTION_OPTIONS,
   "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   "ops-key-path": {
     type: "string",
