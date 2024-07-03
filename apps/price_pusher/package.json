@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.0",
+    "@drift-labs/sdk": "2.86.0-beta.1",
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",

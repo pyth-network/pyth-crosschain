@@ -81,11 +81,6 @@ export abstract class ChainPriceListener implements IPriceListener {
 }
 
 export interface IPricePusher {
-  updatePriceFeed(
-    priceIds: string[],
-    pubTimesToPush: UnixTimestamp[]
-  ): Promise<void>;
-
  pushPriceUpdatesAtomic(
     priceIds: string[],
   ): Promise<void>

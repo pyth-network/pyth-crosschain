@@ -35,11 +35,6 @@ export default {
       type: "string",
       required: true,
     } as Options,
-    "shard-id": {
-      description: "Shard ID",
-      type: "number",
-      required: true,
-    } as Options,
     "compute-unit-price-micro-lamports": {
       description: "Priority fee per compute unit",
       type: "number",
@@ -73,7 +68,6 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
-    ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
   },
@@ -81,11 +75,9 @@ export default {
     const {
       endpoint,
       keypairFile,
-      shardId,
       computeUnitPriceMicroLamports,
       priceConfigFile,
       priceServiceEndpoint,
-      pythContractAddress,
       pushingFrequency,
       pollingFrequency,
       jitoEndpoint,
@@ -127,12 +119,6 @@ export default {
       wallet,
     });
 
-    const pythSolanaReceiver = new PythSolanaReceiver({
-      connection: new Connection(endpoint, "processed"),
-      wallet,
-      pushOracleProgramId: new PublicKey(pythContractAddress),
-    });
-
     let solanaPricePusher;
     if (jitoTipLamports) {
       const jitoKeypair = loadKeypair(fs.readFileSync(jitoKeypairFile, "ascii"));
@@ -140,33 +126,27 @@ export default {
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
         driftClient,
-        pythSolanaReceiver,
         priceServiceConnection,
-        shardId,
         jitoTipLamports,
-        jitoClient,
         jitoBundleSize,
         addressLookupTablePubkey
       );
 
       onBundleResult(jitoClient);
     } else {
-      const addressLookupTable = (await pythSolanaReceiver.connection.getAddressLookupTable(
+      const addressLookupTable = (await driftClient.connection.getAddressLookupTable(
         new PublicKey(addressLookupTablePubkey)
       )).value!;
       solanaPricePusher = new SolanaPricePusher(
         driftClient,
-        pythSolanaReceiver,
         priceServiceConnection,
-        shardId,
         computeUnitPriceMicroLamports,
         addressLookupTable
       );
     }
 
     const solanaPriceListener = new SolanaPriceListener(
-      pythSolanaReceiver,
-      shardId,
+      driftClient,
       priceItems,
       { pollingFrequency }
     );
