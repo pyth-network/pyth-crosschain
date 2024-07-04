@@ -28,8 +28,35 @@ const argv = yargs(hideBin(process.argv))
   })
   .parseSync();
 
+/**
+ * Extracts the endpoint and basic authorization headers from a given URL string.
+ *
+ * @param {string} urlString - The URL string containing the endpoint and optional basic auth credentials.
+ * @returns {{ endpoint: string; headers: HeadersInit }} An object containing the endpoint URL and headers.
+ */
+function extractBasicAuthorizationHeadersFromUrl(urlString: string): {
+  endpoint: string;
+  headers: HeadersInit;
+} {
+  const url = new URL(urlString);
+  const headers: HeadersInit = {};
+
+  if (url.username && url.password) {
+    headers["Authorization"] = `Basic ${btoa(
+      `${url.username}:${url.password}`
+    )}`;
+    url.username = "";
+    url.password = "";
+  }
+
+  return { endpoint: url.toString(), headers };
+}
+
 async function run() {
-  const connection = new HermesClient(argv.endpoint);
+  const { endpoint, headers } = extractBasicAuthorizationHeadersFromUrl(
+    argv.endpoint
+  );
+  const connection = new HermesClient(endpoint, { headers });
 
   const priceIds = argv.priceIds as string[];
 
