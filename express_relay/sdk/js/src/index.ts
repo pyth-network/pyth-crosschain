@@ -40,7 +40,7 @@ export interface WsOptions {
 }
 
 const DEFAULT_WS_OPTIONS: WsOptions = {
-  response_timeout: 5000,
+  response_timeout: 10000,
 };
 
 export function checkHex(hex: string): Hex {
