@@ -1,11 +1,13 @@
 import asyncio
 from asyncio import Task
 from datetime import datetime
+from eth_abi import encode
 import json
 import urllib.parse
 from typing import Callable, Any, Union, cast
 from collections.abc import Coroutine
 from uuid import UUID
+from hexbytes import HexBytes
 import httpx
 import websockets
 from websockets.client import WebSocketClientProtocol
@@ -18,24 +20,16 @@ from express_relay.express_relay_types import (
     BidStatusUpdate,
     ClientMessage,
     Bid,
-    OpportunityBid,
     OpportunityParams,
     Address,
     Bytes32,
     TokenAmount,
     OpportunityBidParams,
-    OpportunityAdapterConfig,
 )
-
-OPPORTUNITY_ADAPTER_CONFIGS = {
-    "op_sepolia": OpportunityAdapterConfig(
-        chain_id=11155420,
-        opportunity_adapter_factory="0xfA119693864b2F185742A409c66f04865c787754",
-        opportunity_adapter_init_bytecode_hash="0x3d71516d94b96a8fdca4e3a5825a6b41c9268a8e94610367e69a8462cc543533",
-        permit2="0x000000000022D473030F116dDEE9F6B43aC78BA3",
-        weth="0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
-    )
-}
+from express_relay.constants import (
+    OPPORTUNITY_ADAPTER_CONFIGS,
+    EXECUTION_PARAMS_TYPESTRING,
+)
 
 
 def _get_permitted_tokens(
@@ -196,19 +190,6 @@ class ExpressRelayClient:
                 }
             }
             msg["params"] = params
-        elif method == "post_opportunity_bid":
-            params = {
-                "opportunity_id": msg["params"]["opportunity_id"],
-                "opportunity_bid": {
-                    "amount": msg["params"]["amount"],
-                    "executor": msg["params"]["executor"],
-                    "permission_key": msg["params"]["permission_key"],
-                    "signature": msg["params"]["signature"],
-                    "deadline": msg["params"]["deadline"],
-                    "nonce": msg["params"]["nonce"],
-                },
-            }
-            msg["params"] = params
 
         msg["method"] = method
 
@@ -305,51 +286,6 @@ class ExpressRelayClient:
                     ._replace(path="/v1/bids")
                     .geturl(),
                     json=bid_dict,
-                )
-
-            resp.raise_for_status()
-            bid_id = UUID(resp.json().get("id"))
-
-        return bid_id
-
-    async def submit_opportunity_bid(
-        self,
-        opportunity_bid: OpportunityBid,
-        subscribe_to_updates: bool = True,
-    ) -> UUID:
-        """
-        Submits a bid on an opportunity to the server via websocket.
-
-        Args:
-            opportunity_bid: An object representing the bid to submit on an opportunity.
-            subscribe_to_updates: A boolean indicating whether to subscribe to the bid status updates.
-        Returns:
-            The ID of the submitted bid.
-        """
-        opportunity_bid_dict = opportunity_bid.model_dump()
-        if subscribe_to_updates:
-            params = {
-                "method": "post_opportunity_bid",
-                "opportunity_id": opportunity_bid.opportunity_id,
-                "amount": opportunity_bid.amount,
-                "executor": opportunity_bid.executor,
-                "permission_key": opportunity_bid.permission_key,
-                "signature": opportunity_bid.signature,
-                "deadline": opportunity_bid.deadline,
-                "nonce": opportunity_bid.nonce,
-            }
-            client_msg = ClientMessage.model_validate({"params": params})
-            result = await self.send_ws_msg(client_msg)
-            bid_id = UUID(result.get("id"))
-        else:
-            async with httpx.AsyncClient(**self.http_options) as client:
-                resp = await client.post(
-                    urllib.parse.urlparse(self.server_url)
-                    ._replace(
-                        path=f"/v1/opportunities/{opportunity_bid.opportunity_id}/bids"
-                    )
-                    .geturl(),
-                    json=opportunity_bid_dict,
                 )
 
             resp.raise_for_status()
@@ -510,22 +446,70 @@ def compute_create2_address(
     return to_checksum_address(result[12:].hex())
 
 
-def sign_bid(
+def make_adapter_calldata(
     opportunity: Opportunity,
+    permitted: list[dict[str, Union[str, int]]],
+    executor: Address,
     bid_params: OpportunityBidParams,
-    private_key: str,
-) -> OpportunityBid:
+    signature: HexBytes,
+):
     """
-    Constructs a signature for a searcher's bid and returns the OpportunityBid object to be submitted to the server.
+    Constructs the calldata for the opportunity adapter contract.
+
+    Args:
+        opportunity: An object representing the opportunity, of type Opportunity.
+        permitted: A list of dictionaries representing the permitted tokens, in the format outputted by _get_permitted_tokens.
+        executor: The address of the searcher's wallet.
+        bid_params: An object representing the bid parameters, of type OpportunityBidParams.
+        signature: The signature of the searcher's bid, as a HexBytes object.
+    """
+    function_selector = web3.Web3.solidity_keccak(
+        ["string"], [f"executeOpportunity({EXECUTION_PARAMS_TYPESTRING},bytes)"]
+    )[:4]
+    function_args = encode(
+        [EXECUTION_PARAMS_TYPESTRING, "bytes"],
+        [
+            (
+                (
+                    [(token["token"], token["amount"]) for token in permitted],
+                    bid_params.nonce,
+                    bid_params.deadline,
+                ),
+                (
+                    [(token.token, token.amount) for token in opportunity.buy_tokens],
+                    executor,
+                    opportunity.target_contract,
+                    bytes.fromhex(opportunity.target_calldata.replace("0x", "")),
+                    opportunity.target_call_value,
+                    bid_params.amount,
+                ),
+            ),
+            signature,
+        ],
+    )
+    calldata = f"0x{(function_selector + function_args).hex().replace('0x', '')}"
+    return calldata
+
+
+def sign_bid(
+    opportunity: Opportunity, bid_params: OpportunityBidParams, private_key: str
+) -> Bid:
+    """
+    Constructs a signature for a searcher's bid and returns the Bid object to be submitted to the server.
 
     Args:
         opportunity: An object representing the opportunity, of type Opportunity.
         bid_params: An object representing the bid parameters, of type OpportunityBidParams.
         private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
-        A OpportunityBid object, representing the transaction to submit to the server. This object contains the searcher's signature.
+        A Bid object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
-    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chain_id]
+
+    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS.get(opportunity.chain_id)
+    if not opportunity_adapter_config:
+        raise ExpressRelayClientException(
+            f"Opportunity adapter config not found for chain id {opportunity.chain_id}"
+        )
     domain_data = {
         "name": "Permit2",
         "chainId": opportunity_adapter_config.chain_id,
@@ -559,14 +543,16 @@ def sign_bid(
         ],
     }
 
+    permitted = _get_permitted_tokens(
+        opportunity.sell_tokens,
+        bid_params.amount,
+        opportunity.target_call_value,
+        opportunity_adapter_config.weth,
+    )
+
     # the data to be signed
     message_data = {
-        "permitted": _get_permitted_tokens(
-            opportunity.sell_tokens,
-            bid_params.amount,
-            opportunity.target_call_value,
-            opportunity_adapter_config.weth,
-        ),
+        "permitted": permitted,
         "spender": compute_create2_address(
             executor,
             opportunity_adapter_config.opportunity_adapter_factory,
@@ -596,14 +582,14 @@ def sign_bid(
         private_key, domain_data, message_types, message_data
     )
 
-    opportunity_bid = OpportunityBid(
-        opportunity_id=opportunity.opportunity_id,
-        permission_key=opportunity.permission_key,
-        amount=bid_params.amount,
-        deadline=bid_params.deadline,
-        nonce=bid_params.nonce,
-        executor=executor,
-        signature=signed_typed_data,
+    calldata = make_adapter_calldata(
+        opportunity, permitted, executor, bid_params, signed_typed_data.signature
     )
 
-    return opportunity_bid
+    return Bid(
+        amount=bid_params.amount,
+        target_calldata=calldata,
+        chain_id=opportunity.chain_id,
+        target_contract=opportunity_adapter_config.opportunity_adapter_factory,
+        permission_key=opportunity.permission_key,
+    )
