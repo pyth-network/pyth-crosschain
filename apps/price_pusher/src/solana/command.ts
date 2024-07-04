@@ -66,6 +66,11 @@ export default {
       type: "number",
       default: 2,
     } as Options,
+    "updates-per-jito-bundle": {
+      description: "Number of transactions in each bundle",
+      type: "number",
+      default: 6,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -90,6 +95,7 @@ export default {
       jitoKeypairFile,
       jitoTipLamports,
       jitoBundleSize,
+      updatesPerJitoBundle,
       logLevel,
       priceServiceConnectionLogLevel,
       controllerLogLevel,
@@ -143,7 +149,8 @@ export default {
         shardId,
         jitoTipLamports,
         jitoClient,
-        jitoBundleSize
+        jitoBundleSize,
+        updatesPerJitoBundle
       );
 
       onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
