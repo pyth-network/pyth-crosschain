@@ -4,6 +4,7 @@ import { checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { isHex } from "viem";
 import { BidStatusUpdate, Opportunity } from "../types";
+import { OPPORTUNITY_ADAPTER_CONFIGS } from "../const";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -132,6 +133,11 @@ async function run() {
     argv.privateKey,
     argv.apiKey
   );
+  if (OPPORTUNITY_ADAPTER_CONFIGS[argv.chainId] === undefined) {
+    throw new Error(
+      `Opportunity adapter config not found for chain ${argv.chainId}`
+    );
+  }
   await searcher.start();
 }
 

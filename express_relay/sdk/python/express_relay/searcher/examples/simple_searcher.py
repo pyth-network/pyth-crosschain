@@ -8,6 +8,7 @@ from express_relay.client import (
     ExpressRelayClient,
     sign_bid,
 )
+from express_relay.constants import OPPORTUNITY_ADAPTER_CONFIGS
 from express_relay.express_relay_types import (
     Opportunity,
     Bid,
@@ -149,7 +150,11 @@ async def main():
 
     simple_searcher = SimpleSearcher(args.server_url, args.private_key, args.api_key)
     logger.info("Searcher address: %s", simple_searcher.public_key)
-
+    for chain_id in args.chain_ids:
+        if chain_id not in OPPORTUNITY_ADAPTER_CONFIGS:
+            raise ValueError(
+                f"Opportunity adapter config not found for chain {chain_id}"
+            )
     await simple_searcher.client.subscribe_chains(args.chain_ids)
 
     task = await simple_searcher.client.get_ws_loop()
