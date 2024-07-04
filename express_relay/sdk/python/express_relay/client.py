@@ -504,7 +504,12 @@ def sign_bid(
     Returns:
         A Bid object, representing the transaction to submit to the server. This object contains the searcher's signature.
     """
-    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chain_id]
+
+    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS.get(opportunity.chain_id)
+    if not opportunity_adapter_config:
+        raise ExpressRelayClientException(
+            f"Opportunity adapter config not found for chain id {opportunity.chain_id}"
+        )
     domain_data = {
         "name": "Permit2",
         "chainId": opportunity_adapter_config.chain_id,

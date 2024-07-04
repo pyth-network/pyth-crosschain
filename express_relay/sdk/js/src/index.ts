@@ -408,6 +408,11 @@ export class Client {
     const executor = account.address;
     const opportunityAdapterConfig =
       OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
+    if (!opportunityAdapterConfig) {
+      throw new ClientError(
+        `Opportunity adapter config not found for chain id: ${opportunity.chainId}`
+      );
+    }
     const permitted = getPermittedTokens(
       opportunity.sellTokens,
       bidParams.amount,
