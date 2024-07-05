@@ -36,7 +36,7 @@
   type: token
 - id: HBAR
   pythId: 3728e591097635310e6341af53db8b7ee42da9b3a8d918f9463ce9cca886dfbd
-  decimals: 8
+  decimals: 18
   type: token
 - id: CORE
   pythId: 9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c
