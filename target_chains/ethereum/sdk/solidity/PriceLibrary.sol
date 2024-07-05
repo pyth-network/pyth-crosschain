@@ -55,10 +55,9 @@ library PriceLibrary {
         uint64 rateDiscountFinal,
         int32 discountExponent
     ) public pure returns (PythStructs.Price memory) {
-        // If the initial discount rate is greater than the final rate, return zero price
-        if (rateDiscountInitial < rateDiscountFinal) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
+        // valuation price should not increase as amount of collateral grows, so
+        // rate_discount_initial should >= rate_discount_final
+        require(rateDiscountInitial >= rateDiscountFinal, "rateDiscountInitial should be greater than or equal to rateDiscountFinal");
 
         // Create Price structs for initial and final discount percentages
         PythStructs.Price memory initialPercentage = PythStructs.Price({
@@ -83,22 +82,16 @@ library PriceLibrary {
             int64(deposits),
             -9
         );
-        // If interpolated price is zero, return zero price
-        if (discountInterpolated.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
+
+        uint64 confOrig = self.conf;
+        int32 expoOrig = self.expo;
 
         // Apply discounted price to self price
-        PythStructs.Price memory priceDiscounted = mul(self, discountInterpolated);
-        // If resulting price is zero, return zero price
-        if (priceDiscounted.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
-
+        PythStructs.Price memory priceDiscounted = scaleToExponent(mul(self, discountInterpolated), expoOrig);
         // Return adjusted Price struct
         return PythStructs.Price({
             price: priceDiscounted.price,
-            conf: self.conf,
+            conf: confOrig,
             expo: priceDiscounted.expo,
             publishTime: self.publishTime
         });
@@ -122,10 +115,9 @@ library PriceLibrary {
         uint64 ratePremiumFinal,
         int32 premiumExponent
     ) public pure returns (PythStructs.Price memory) {
-        // If initial premium rate is greater than final rate, return zero price
-        if (ratePremiumInitial > ratePremiumFinal) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
+        // valuation price should not decrease as amount of borrow grows, so rate_premium_initial
+        // should <= rate_premium_final
+        require(ratePremiumInitial <= ratePremiumFinal, "ratePremiumInitial should not be greater than ratePremiumFinal");
 
         // Create Price structs for initial and final premium percentages
         PythStructs.Price memory initialPercentage = PythStructs.Price({
@@ -150,22 +142,17 @@ library PriceLibrary {
             int64(borrows),
             -9
         );
-        // If interpolated price is zero, return zero price
-        if (premiumInterpolated.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
+
+        uint64 confOrig = self.conf;
+        int32 expoOrig = self.expo;
 
         // Apply premium price to self price
-        PythStructs.Price memory pricePremium = mul(self, premiumInterpolated);
-        // If resulting price is zero, return zero price
-        if (pricePremium.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
-
+        PythStructs.Price memory pricePremium = scaleToExponent(mul(self, premiumInterpolated), expoOrig);
+        
         // Return adjusted Price struct
         return PythStructs.Price({
             price: pricePremium.price,
-            conf: self.conf,
+            conf: confOrig,
             expo: pricePremium.expo,
             publishTime: self.publishTime
         });
@@ -173,13 +160,42 @@ library PriceLibrary {
 
     /**
      * @notice Perform affine combination of two prices.
-     * @param x1 X-coordinate of first point.
-     * @param y1 Y-coordinate of first point.
-     * @param x2 X-coordinate of second point.
-     * @param y2 Y-coordinate of second point.
-     * @param xQuery X-coordinate of query point.
-     * @param preAddExpo Exponent to scale result to.
+     * @dev Computes the value at `xQuery` by interpolating between `y1` and `y2` based on the coordinates `x1` and `x2`.
+     *      The result is scaled to `preAddExpo` exponent.
+     *      This function effectively draws a line between the two points (`x1`, `y1`) and (`x2`, `y2`), and then interpolates
+     *      or extrapolates to find the value at `xQuery` along that line.
+     *      If the prices (`y1` and `y2`) are normalized, no loss occurs in computation; otherwise, normalization ensures
+     *      accuracy within 8 digits of precision.
+     *      The scaling to `preAddExpo` introduces a maximum error of 2 * 10^`preAddExpo`. If `preAddExpo` is sufficiently
+     *      small relative to the products, no loss due to scaling occurs.
+     *      However, if `y1` and `y2` are unnormalized, normalization may zero out price fields, hence it's recommended
+     *      to ensure input prices are normalized or have minimal discrepancies between price and confidence.
+     * @param x1 X-coordinate of the first point.
+     * @param y1 Y-coordinate of the first point, represented as a Price struct.
+     * @param x2 X-coordinate of the second point, must be greater than `x1`.
+     * @param y2 Y-coordinate of the second point, represented as a Price struct.
+     * @param xQuery X-coordinate of the query point, at which we wish to impute a Y value.
+     * @param preAddExpo Exponent to scale to before final addition; essentially the precision desired.
      * @return Affine combination result as a Price struct.
+     *
+     * Logic:
+     * - Compute A = `xQuery` - `x1`
+     * - Compute B = `x2` - `xQuery`
+     * - Compute C = `x2` - `x1`
+     * - Compute D = A / C
+     * - Compute E = B / C
+     * - Compute F = `y2` * D
+     * - Compute G = `y1` * E
+     * - Compute H = F + G
+     *
+     * Bounds due to precision loss:
+     * - `x` = 10^(PD_EXPO + 2)
+     * - Maximum loss due to normalization and division: `Err(D)`, `Err(E)` <= `x`
+     * - If `y1` and `y2` are normalized, no additional error. Otherwise, `Err(y1)`, `Err(y2)` with normalization <= `x`
+     * - `Err(F)`, `Err(G)` <= (1 + `x`)^2 - 1 (in fractional terms) ~= 2 * `x`
+     * - `Err(H)` <= 2 * 2 * `x` = 4 * `x`, when `PD_EXPO` = -9 ==> `Err(H)` <= 4 * 10^-7
+     * - Scaling back error bounded by `10^preAddExpo`. Error combines additively: `Err` <= 4 * `x` + 2 * 10^`preAddExpo`
+     * - With `preAddExpo` reasonably small (<= -9), scaling error dominates.
      */
     function affineCombination(
         int64 x1,
@@ -189,10 +205,7 @@ library PriceLibrary {
         int64 xQuery,
         int32 preAddExpo
     ) public pure returns (PythStructs.Price memory) {
-        // If x2 <= x1, return zero price
-        if (x2 <= x1) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
+        require(x2 > x1, "X-coordinate of the second point, must be greater than X-coordinate of the first point");
 
         // Calculate deltas and fractions
         int64 deltaQ1 = xQuery - x1;
@@ -200,38 +213,13 @@ library PriceLibrary {
         int64 delta21 = x2 - x1;
 
         PythStructs.Price memory fracQ1 = fraction(deltaQ1, delta21);
-        // If fraction price is zero, return zero price
-        if (fracQ1.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
         PythStructs.Price memory frac2Q = fraction(delta2Q, delta21);
-        // If fraction price is zero, return zero price
-        if (frac2Q.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
 
         // Perform multiplication and scaling to target exponent
         PythStructs.Price memory left = mul(y2, fracQ1);
-        // If resulting price is zero, return zero price
-        if (left.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
         PythStructs.Price memory right = mul(y1, frac2Q);
-        // If resulting price is zero, return zero price
-        if (right.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
-
         left = scaleToExponent(left, preAddExpo);
-        // If scaled price is zero, return zero price
-        if (left.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
         right = scaleToExponent(right, preAddExpo);
-        // If scaled price is zero, return zero price
-        if (right.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
 
         // Return addition of left and right prices
         return add(left, right);
@@ -266,23 +254,21 @@ library PriceLibrary {
 
         // Calculate confidence and handle overflow conditions
         uint64 otherConfidencePct = (normalizedOther.conf * PD_SCALE) / otherPrice;
-        uint128 conf = ((uint128(base.conf) * uint128(PD_SCALE)) /
+        uint128 conf = (uint128(base.conf) * uint128(PD_SCALE)) /
             uint128(otherPrice) +
             uint128(otherConfidencePct) *
-            uint128(midprice)) / uint128(PD_SCALE);
+            uint128(midprice) / uint128(PD_SCALE);
 
-        // If confidence is less than max uint64, return adjusted Price struct
-        if (conf < type(uint64).max) {
-            return PythStructs.Price({
-                price: int64(midprice),
-                conf: uint64(conf),
-                expo: midpriceExpo,
-                publishTime: base.publishTime
-            });
-        } else {
-            // Otherwise, return zero Price struct
-            return PythStructs.Price({price: 0, conf: 0, expo: 0, publishTime: 0});
-        }
+        // Note that this check only fails if an argument's confidence interval was >> its price,
+        // in which case None is a reasonable result, as we have essentially 0 information about the
+        // price.
+        require(conf < type(uint64).max, "Argument's confidence interval was >> its price");
+        return PythStructs.Price({
+            price: int64(midprice),
+            conf: uint64(conf),
+            expo: midpriceExpo,
+            publishTime: base.publishTime
+        });
     }
 
     /**

@@ -539,7 +539,7 @@ contract PriceLibraryTest is Test {
         );
 
         assert(result.price > 0);
-        assertEq(result.expo, -15);
+        assertEq(result.expo, -9);
     }
 
     function testGetBorrowValuationPrice() public view {
@@ -564,7 +564,7 @@ contract PriceLibraryTest is Test {
         );
 
         assert(result.price > 0);
-        assertEq(result.expo, -15);
+        assertEq(result.expo, -9);
     }
 
     function testAffineCombination() public view {
