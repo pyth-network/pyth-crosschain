@@ -101,7 +101,7 @@ contract PriceLibraryTest is Test {
             targetExpo
         );
         assertEq(result.price, 0);
-        assertEq(result.expo, 0);
+        assertEq(result.expo, -9);
     }
 
     function testScaleToExponentZeroExponent() public view {

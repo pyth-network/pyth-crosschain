@@ -239,11 +239,6 @@ library PriceLibrary {
         PythStructs.Price memory base = normalize(self);
         PythStructs.Price memory normalizedOther = normalize(other);
 
-        // If normalizedOther price is zero, return zero Price struct
-        if (normalizedOther.price == 0) {
-            return PythStructs.Price({price: 0, conf: 0, expo: 0, publishTime: 0});
-        }
-
         // Get unsigned values and signs of base and normalizedOther prices
         (uint64 basePrice, int64 baseSign) = toUnsigned(base.price);
         (uint64 otherPrice, int64 otherSign) = toUnsigned(normalizedOther.price);
@@ -385,10 +380,6 @@ library PriceLibrary {
         PythStructs.Price memory self,
         int32 targetExpo
     ) public pure returns (PythStructs.Price memory) {
-        if (self.price == 0) {
-            return PythStructs.Price({price: 0, conf: 0, expo: 0, publishTime: 0});
-        }
-
         int32 delta = targetExpo - self.expo;
         int64 price = self.price;
         uint64 conf = self.conf;
@@ -447,9 +438,6 @@ library PriceLibrary {
         PythStructs.Price memory yAsPrice = PythStructs.Price(y, 0, 0, 0);
 
         PythStructs.Price memory frac = div(xAsPrice, yAsPrice);
-        if (frac.price == 0) {
-            return PythStructs.Price(0, 0, 0, 0);
-        }
 
         // Return fraction Price struct
         return frac;
