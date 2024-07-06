@@ -122,4 +122,12 @@ module pyth::error {
     public fun invalid_keccak160_length(): u64 {
         error::invalid_argument(30)
     }
+
+    public fun price_feed_outside_time_range(): u64 {
+        error::invalid_argument(31)
+    }
+
+    public fun invalid_publish_time_range(): u64 {
+        error::invalid_argument(32)
+    }
 }
