@@ -42,7 +42,7 @@ library Price {
      * @param discount_exponent The exponent to apply to the discounts
      * @return The valuation price of the collateral
      */
-    function get_collateral_valuation_price(
+    function getCollateralValuationPrice(
         PythStructs.Price memory self,
         uint64 deposits,
         uint64 deposits_endpoint,
@@ -103,7 +103,7 @@ library Price {
      * @param premium_exponent The exponent to apply to the premiums above
      * @return The price of the borrow valuation
      */
-    function get_borrow_valuation_price(
+    function getBorrowValuationPrice(
         PythStructs.Price memory self,
         uint64 borrows,
         uint64 borrows_endpoint,
@@ -167,7 +167,7 @@ library Price {
      * @param pre_add_expo The exponent to scale to, before final addition; essentially the final precision you want
      * @return The price at the query x coordinate
      */
-    function affine_combination(
+    function affineCombination(
         int64 x1,
         PythStructs.Price memory y1,
         int64 x2,
@@ -360,7 +360,7 @@ library Price {
      * @param targetExpo The target exponent
      * @return The scaled price
      */
-    function scale_to_exponent(
+    function scaleToExponent(
         PythStructs.Price memory self,
         int32 targetExpo
     ) internal pure returns (PythStructs.Price memory) {
