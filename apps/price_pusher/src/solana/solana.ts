@@ -108,17 +108,16 @@ export class SolanaPricePusher implements IPricePusher {
       return;
     }
 
-    let priceFeedUpdateData: string[];
-    try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        priceIds
-      );
-    } catch (e: any) {
-      console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
-      return;
-    }
-
     for (const priceId of priceIds) {
+      let priceFeedUpdateData: string[];
+      try {
+        priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
+          [priceId]
+        );
+      } catch (e: any) {
+        console.error(new Date(), "getPriceFeedsUpdateData failed:", e);
+        return
+      }
       
       const ixs = await this.driftClient.getPostPythPullOracleUpdateAtomicIxs(
         priceFeedUpdateData[0],
