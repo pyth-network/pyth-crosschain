@@ -10,6 +10,7 @@ import {
   DataSource,
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
+  EvmExecute,
 } from "@pythnetwork/xc-admin-common";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import Web3 from "web3";
@@ -369,6 +370,27 @@ export class EvmChain extends Chain {
    */
   generateGovernanceUpgradePayload(address: string): Buffer {
     return new EvmUpgradeContract(this.wormholeChainName, address).encode();
+  }
+
+  /**
+   * Returns the payload for a governance action from the executor contract
+   * @param executor the address of the executor contract live on this chain
+   * @param callAddress the address of the contract to call
+   * @param calldata the calldata to pass to the contract
+   * @returns the payload for the governance action
+   */
+  generateExecutorPayload(
+    executor: string,
+    callAddress: string,
+    calldata: string
+  ): Buffer {
+    return new EvmExecute(
+      this.wormholeChainName,
+      executor.replace("0x", ""),
+      callAddress.replace("0x", ""),
+      0n,
+      Buffer.from(calldata.replace("0x", ""), "hex")
+    ).encode();
   }
 
   generateGovernanceSetWormholeAddressPayload(address: string): Buffer {

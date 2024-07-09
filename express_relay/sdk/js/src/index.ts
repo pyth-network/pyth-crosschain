@@ -2,7 +2,14 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import { Address, Hex, isAddress, isHex, getContractAddress } from "viem";
+import {
+  Address,
+  Hex,
+  isAddress,
+  isHex,
+  getContractAddress,
+  encodeFunctionData,
+} from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
 import {
@@ -11,13 +18,13 @@ import {
   BidParams,
   BidStatusUpdate,
   Opportunity,
-  OpportunityAdapterConfig,
-  OpportunityBid,
   OpportunityParams,
   TokenAmount,
   BidsResponse,
   TokenPermissions,
 } from "./types";
+import { executeOpportunityAbi } from "./abi";
+import { OPPORTUNITY_ADAPTER_CONFIGS } from "./const";
 
 export * from "./types";
 
@@ -33,7 +40,7 @@ export interface WsOptions {
 }
 
 const DEFAULT_WS_OPTIONS: WsOptions = {
-  response_timeout: 5000,
+  response_timeout: 10000,
 };
 
 export function checkHex(hex: string): Hex {
@@ -59,20 +66,6 @@ export function checkTokenQty(token: {
     amount: BigInt(token.amount),
   };
 }
-
-export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
-  string,
-  OpportunityAdapterConfig
-> = {
-  op_sepolia: {
-    chain_id: 11155420,
-    opportunity_adapter_factory: "0xfA119693864b2F185742A409c66f04865c787754",
-    opportunity_adapter_init_bytecode_hash:
-      "0x3d71516d94b96a8fdca4e3a5825a6b41c9268a8e94610367e69a8462cc543533",
-    permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    weth: "0x74A4A85C611679B73F402B36c0F84A7D2CcdFDa3",
-  },
-};
 
 /**
  * Converts sellTokens, bidAmount, and callValue to permitted tokens
@@ -339,17 +332,52 @@ export class Client {
   }
 
   /**
+   * Constructs the calldata for the opportunity adapter contract.
+   * @param opportunity Opportunity to bid on
+   * @param permitted Permitted tokens
+   * @param executor Address of the searcher's wallet
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param signature Searcher's signature for opportunity params and bidParams
+   * @returns Calldata for the opportunity adapter contract
+   */
+  private makeAdapterCalldata(
+    opportunity: Opportunity,
+    permitted: TokenPermissions[],
+    executor: Address,
+    bidParams: BidParams,
+    signature: Hex
+  ): Hex {
+    return encodeFunctionData({
+      abi: [executeOpportunityAbi],
+      args: [
+        [
+          [permitted, bidParams.nonce, bidParams.deadline],
+          [
+            opportunity.buyTokens,
+            executor,
+            opportunity.targetContract,
+            opportunity.targetCalldata,
+            opportunity.targetCallValue,
+            bidParams.amount,
+          ],
+        ],
+        signature,
+      ],
+    });
+  }
+
+  /**
    * Creates a signed bid for an opportunity
    * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount and valid until timestamp
+   * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
-   * @returns Signed opportunity bid
+   * @returns Signed bid
    */
-  async signOpportunityBid(
+  async signBid(
     opportunity: Opportunity,
     bidParams: BidParams,
     privateKey: Hex
-  ): Promise<OpportunityBid> {
+  ): Promise<Bid> {
     const types = {
       PermitBatchWitnessTransferFrom: [
         { name: "permitted", type: "TokenPermissions[]" },
@@ -377,14 +405,26 @@ export class Client {
     };
 
     const account = privateKeyToAccount(privateKey);
+    const executor = account.address;
     const opportunityAdapterConfig =
       OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
+    if (!opportunityAdapterConfig) {
+      throw new ClientError(
+        `Opportunity adapter config not found for chain id: ${opportunity.chainId}`
+      );
+    }
+    const permitted = getPermittedTokens(
+      opportunity.sellTokens,
+      bidParams.amount,
+      opportunity.targetCallValue,
+      checkAddress(opportunityAdapterConfig.weth)
+    );
     const create2Address = getContractAddress({
       bytecodeHash:
         opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
       from: opportunityAdapterConfig.opportunity_adapter_factory,
       opcode: "CREATE2",
-      salt: `0x${account.address.replace("0x", "").padStart(64, "0")}`,
+      salt: `0x${executor.replace("0x", "").padStart(64, "0")}`,
     });
 
     const signature = await signTypedData({
@@ -397,18 +437,13 @@ export class Client {
       types,
       primaryType: "PermitBatchWitnessTransferFrom",
       message: {
-        permitted: getPermittedTokens(
-          opportunity.sellTokens,
-          bidParams.amount,
-          opportunity.targetCallValue,
-          checkAddress(opportunityAdapterConfig.weth)
-        ),
+        permitted,
         spender: create2Address,
         nonce: bidParams.nonce,
         deadline: bidParams.deadline,
         witness: {
           buyTokens: opportunity.buyTokens,
-          executor: account.address,
+          executor,
           targetContract: opportunity.targetContract,
           targetCalldata: opportunity.targetCalldata,
           targetCallValue: opportunity.targetCallValue,
@@ -417,25 +452,20 @@ export class Client {
       },
     });
 
-    return {
-      permissionKey: opportunity.permissionKey,
-      bid: bidParams,
-      executor: account.address,
-      signature,
-      opportunityId: opportunity.opportunityId,
-    };
-  }
+    const calldata = this.makeAdapterCalldata(
+      opportunity,
+      permitted,
+      executor,
+      bidParams,
+      signature
+    );
 
-  private toServerOpportunityBid(
-    bid: OpportunityBid
-  ): components["schemas"]["OpportunityBid"] {
     return {
-      amount: bid.bid.amount.toString(),
-      executor: bid.executor,
-      permission_key: bid.permissionKey,
-      signature: bid.signature,
-      deadline: bid.bid.deadline.toString(),
-      nonce: bid.bid.nonce.toString(),
+      amount: bidParams.amount,
+      targetCalldata: calldata,
+      chainId: opportunity.chainId,
+      targetContract: opportunityAdapterConfig.opportunity_adapter_factory,
+      permissionKey: opportunity.permissionKey,
     };
   }
 
@@ -447,48 +477,6 @@ export class Client {
       target_contract: bid.targetContract,
       permission_key: bid.permissionKey,
     };
-  }
-
-  /**
-   * Submits a bid for an opportunity
-   * @param bid
-   * @param subscribeToUpdates If true, the client will subscribe to bid status updates via websocket and will call the bid status callback if set
-   * @returns The id of the submitted bid, you can use this id to track the status of the bid
-   */
-  async submitOpportunityBid(
-    bid: OpportunityBid,
-    subscribeToUpdates = true
-  ): Promise<BidId> {
-    const serverBid = this.toServerOpportunityBid(bid);
-    if (subscribeToUpdates) {
-      const result = await this.requestViaWebsocket({
-        method: "post_opportunity_bid",
-        params: {
-          opportunity_bid: serverBid,
-          opportunity_id: bid.opportunityId,
-        },
-      });
-      if (result === null) {
-        throw new ClientError("Empty response in websocket for bid submission");
-      }
-      return result.id;
-    } else {
-      const client = createClient<paths>(this.clientOptions);
-      const response = await client.POST(
-        "/v1/opportunities/{opportunity_id}/bids",
-        {
-          body: serverBid,
-          params: { path: { opportunity_id: bid.opportunityId } },
-        }
-      );
-      if (response.error) {
-        throw new ClientError(response.error.error);
-      } else if (response.data === undefined) {
-        throw new ClientError("No data returned");
-      } else {
-        return response.data.id;
-      }
-    }
   }
 
   /**

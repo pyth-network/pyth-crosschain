@@ -130,8 +130,6 @@ export class SolanaPricePusher implements IPricePusher {
   }
 }
 
-const UPDATES_PER_JITO_BUNDLE = 7;
-
 export class SolanaPricePusherJito implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
@@ -140,7 +138,8 @@ export class SolanaPricePusherJito implements IPricePusher {
     private shardId: number,
     private jitoTipLamports: number,
     private searcherClient: SearcherClient,
-    private jitoBundleSize: number
+    private jitoBundleSize: number,
+    private updatesPerJitoBundle: number
   ) {}
 
   async updatePriceFeed(
@@ -158,7 +157,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       return;
     }
 
-    for (let i = 0; i < priceIds.length; i += UPDATES_PER_JITO_BUNDLE) {
+    for (let i = 0; i < priceIds.length; i += this.updatesPerJitoBundle) {
       const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
         closeUpdateAccounts: true,
       });
@@ -167,7 +166,7 @@ export class SolanaPricePusherJito implements IPricePusher {
           return sliceAccumulatorUpdateData(
             Buffer.from(x, "base64"),
             i,
-            i + UPDATES_PER_JITO_BUNDLE
+            i + this.updatesPerJitoBundle
           ).toString("base64");
         }),
         this.shardId

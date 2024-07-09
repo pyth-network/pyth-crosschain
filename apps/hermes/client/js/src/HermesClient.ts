@@ -29,12 +29,17 @@ export type HermesClientConfig = {
    * it will timeout regardless of the retries at the configured `timeout` time.
    */
   httpRetries?: number;
+  /**
+   * Optional headers to be included in every request.
+   */
+  headers?: HeadersInit;
 };
 
 export class HermesClient {
   private baseURL: string;
   private timeout: DurationInMs;
   private httpRetries: number;
+  private headers: HeadersInit;
 
   /**
    * Constructs a new Connection.
@@ -46,6 +51,7 @@ export class HermesClient {
     this.baseURL = endpoint;
     this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
+    this.headers = config?.headers ?? {};
   }
 
   private async httpRequest<ResponseData>(
@@ -58,7 +64,11 @@ export class HermesClient {
   ): Promise<ResponseData> {
     const controller = externalAbortController ?? new AbortController();
     const { signal } = controller;
-    options = { ...options, signal }; // Merge any existing options with the signal
+    options = {
+      ...options,
+      signal,
+      headers: { ...this.headers, ...options?.headers },
+    }; // Merge any existing options with the signal and headers
 
     // Set a timeout to abort the request if it takes too long
     const timeout = setTimeout(() => controller.abort(), this.timeout);
@@ -129,7 +139,7 @@ export class HermesClient {
       parsed?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`v2/updates/price/latest`, this.baseURL);
+    const url = new URL("v2/updates/price/latest", this.baseURL);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -208,7 +218,7 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
-    return new EventSource(url.toString());
+    return new EventSource(url.toString(), { headers: this.headers });
   }
 
   private appendUrlSearchParams(
