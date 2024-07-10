@@ -2,6 +2,7 @@ import { readApi, solidity, ethersJS } from "./common";
 
 export const getValidTimePeriod = readApi<never>({
   name: "getValidTimePeriod",
+  summary: "Get the default valid time period of price freshness in seconds.",
   description: `
 Get the default valid time period in seconds.  This quantity is the maximum age
 of price updates returned by functions like [getPrice](getPrice) and

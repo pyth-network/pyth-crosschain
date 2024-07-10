@@ -4,7 +4,7 @@ import Eth from "cryptocurrency-icons/svg/color/eth.svg";
 import {
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
   writeApi,
@@ -15,6 +15,8 @@ export const updatePriceFeedsIfNecessary = writeApi<
   "updateData" | "priceId" | "publishTime" | "fee"
 >({
   name: "updatePriceFeedsIfNecessary",
+  summary:
+    "Update the on-chain price feeds using the provided `updateData` only if the on-chain prices are older than the valid time period.",
   description: `
 Update the on-chain price feeds using the provided \`updateData\` if the
 on-chain data is not sufficiently fresh.  The caller provides two matched
@@ -107,7 +109,7 @@ const getParams = async (
     readContract: (name: string, args: unknown[]) => Promise<unknown>;
   },
 ) => {
-  const feed = await getLatestPriceFeed(priceId);
+  const feed = await getLatestPriceUpdate(priceId);
   const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");

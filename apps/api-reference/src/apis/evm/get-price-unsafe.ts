@@ -6,6 +6,8 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getPriceUnsafe = readApi<"id">({
   name: "getPriceUnsafe",
+  summary:
+    "Get the **last updated** price object for the requested price feed ID. _Caution: This function may return a price from arbitrarily in the the past_",
   description: `
 Get the latest price and confidence interval for the requested price feed id.
 The price feed id is a 32-byte id written as a hexadecimal string; see the

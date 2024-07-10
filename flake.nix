@@ -19,27 +19,31 @@
         };
 
         cli-overlay = _: prev: {
-          cli = prev.lib.mkCli "cli" {
-            _noAll = true;
+          cli = let
+            pnpm = "${prev.pnpm}/bin/pnpm i && ${prev.pnpm}/bin/pnpm";
+          in
+            prev.lib.mkCli "cli" {
+              _noAll = true;
 
-            install = "${prev.pnpm}/bin/pnpm i";
+              install = "${pnpm} i";
+              start = "${pnpm} lerna run start:dev";
 
-            test = {
-              nix = {
-                lint = "${prev.statix}/bin/statix check --ignore node_modules .";
-                dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules .";
-                format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules --check .";
+              test = {
+                nix = {
+                  lint = "${prev.statix}/bin/statix check --ignore node_modules .";
+                  dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules .";
+                  format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules --check .";
+                };
+              };
+
+              fix = {
+                nix = {
+                  lint = "${prev.statix}/bin/statix fix --ignore node_modules .";
+                  dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules -e .";
+                  format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules .";
+                };
               };
             };
-
-            fix = {
-              nix = {
-                lint = "${prev.statix}/bin/statix fix --ignore node_modules .";
-                dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules -e .";
-                format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules .";
-              };
-            };
-          };
         };
 
         pkgs = import nixpkgs {

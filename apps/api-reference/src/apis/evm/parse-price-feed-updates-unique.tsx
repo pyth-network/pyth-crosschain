@@ -4,7 +4,7 @@ import Eth from "cryptocurrency-icons/svg/color/eth.svg";
 import {
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
   writeApi,
@@ -15,6 +15,8 @@ export const parsePriceFeedUpdatesUnique = writeApi<
   "updateData" | "priceId" | "minPublishTime" | "maxPublishTime" | "fee"
 >({
   name: "parsePriceFeedUpdatesUnique",
+  summary:
+    "Parse `updateData` to return the **first updated** prices if the prices are published within the given time range.",
   description: `
 Parse \`updateData\` and return the price feeds for the given \`priceIds\`
 within, if they are all **the first updates** published between
@@ -114,7 +116,7 @@ const getParams = async (
     readContract: (name: string, args: unknown[]) => Promise<unknown>;
   },
 ) => {
-  const feed = await getLatestPriceFeed(priceId);
+  const feed = await getLatestPriceUpdate(priceId);
   const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");
