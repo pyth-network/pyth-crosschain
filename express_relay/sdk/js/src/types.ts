@@ -97,6 +97,29 @@ export type Opportunity = {
   buyTokens: TokenAmount[];
 };
 /**
+ * Represents a bid for an opportunity
+ */
+export type OpportunityBid = {
+  /**
+   * Opportunity unique identifier in uuid format
+   */
+  opportunityId: string;
+  /**
+   * The permission key required for successful execution of the opportunity.
+   */
+  permissionKey: Hex;
+  /**
+   * Executor address
+   */
+  executor: Address;
+  /**
+   * Signature of the executor
+   */
+  signature: Hex;
+
+  bid: BidParams;
+};
+/**
  * All the parameters necessary to represent an opportunity
  */
 export type OpportunityParams = Omit<Opportunity, "opportunityId">;
