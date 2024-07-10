@@ -382,7 +382,7 @@ export class Client {
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
-   * @returns The signature
+   * @returns Signature for the bid and opportunity
    */
   async getSignature(
     opportunity: Opportunity,
@@ -459,7 +459,7 @@ export class Client {
   }
 
   /**
-   * Creates a signed bid for an opportunity
+   * Creates a signed opportunity bid for an opportunity
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with

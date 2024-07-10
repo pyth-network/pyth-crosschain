@@ -499,6 +499,7 @@ def get_opportunity_adapter_config(chain_id: str):
         raise ExpressRelayClientException(
             f"Opportunity adapter config not found for chain id {chain_id}"
         )
+    return opportunity_adapter_config
 
 
 def get_signature(
@@ -514,7 +515,7 @@ def get_signature(
         bid_params: An object representing the bid parameters, of type OpportunityBidParams.
         private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
-        The signature
+        A SignedMessage object, representing the signature of the searcher's bid.
     """
     opportunity_adapter_config = get_opportunity_adapter_config(opportunity.chain_id)
     domain_data = {
@@ -589,7 +590,7 @@ def get_signature(
         private_key, domain_data, message_types, message_data
     )
 
-    return signed_typed_data.signature
+    return signed_typed_data
 
 
 def sign_opportunity_bid(
