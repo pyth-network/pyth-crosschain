@@ -99,6 +99,7 @@ export class SolanaPricePusher implements IPricePusher {
       })
       .sort((a, b) => a.key - b.key)
       .map((x) => x.element);
+
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
