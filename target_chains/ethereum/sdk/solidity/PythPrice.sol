@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "./PythStructs.sol";
 
-library Price {
+library PythPrice {
     // Constants for working with Pyth's number representation
     int32 private constant PD_EXPO = -9;
     uint64 private constant PD_SCALE = 1_000_000_000;
