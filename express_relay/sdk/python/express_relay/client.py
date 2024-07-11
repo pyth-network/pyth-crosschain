@@ -20,12 +20,14 @@ from express_relay.express_relay_types import (
     BidStatusUpdate,
     ClientMessage,
     Bid,
+    OpportunityBid,
     OpportunityParams,
     Address,
     Bytes32,
     TokenAmount,
     OpportunityBidParams,
 )
+from eth_account.datastructures import SignedMessage
 from express_relay.constants import (
     OPPORTUNITY_ADAPTER_CONFIGS,
     EXECUTION_PARAMS_TYPESTRING,
@@ -491,25 +493,31 @@ def make_adapter_calldata(
     return calldata
 
 
-def sign_bid(
-    opportunity: Opportunity, bid_params: OpportunityBidParams, private_key: str
-) -> Bid:
+def get_opportunity_adapter_config(chain_id: str):
+    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS.get(chain_id)
+    if not opportunity_adapter_config:
+        raise ExpressRelayClientException(
+            f"Opportunity adapter config not found for chain id {chain_id}"
+        )
+    return opportunity_adapter_config
+
+
+def get_signature(
+    opportunity: Opportunity,
+    bid_params: OpportunityBidParams,
+    private_key: str,
+) -> SignedMessage:
     """
-    Constructs a signature for a searcher's bid and returns the Bid object to be submitted to the server.
+    Constructs a signature for a searcher's bid and opportunity.
 
     Args:
         opportunity: An object representing the opportunity, of type Opportunity.
         bid_params: An object representing the bid parameters, of type OpportunityBidParams.
         private_key: A 0x-prefixed hex string representing the searcher's private key.
     Returns:
-        A Bid object, representing the transaction to submit to the server. This object contains the searcher's signature.
+        A SignedMessage object, representing the signature of the searcher's bid.
     """
-
-    opportunity_adapter_config = OPPORTUNITY_ADAPTER_CONFIGS.get(opportunity.chain_id)
-    if not opportunity_adapter_config:
-        raise ExpressRelayClientException(
-            f"Opportunity adapter config not found for chain id {opportunity.chain_id}"
-        )
+    opportunity_adapter_config = get_opportunity_adapter_config(opportunity.chain_id)
     domain_data = {
         "name": "Permit2",
         "chainId": opportunity_adapter_config.chain_id,
@@ -582,8 +590,63 @@ def sign_bid(
         private_key, domain_data, message_types, message_data
     )
 
+    return signed_typed_data
+
+
+def sign_opportunity_bid(
+    opportunity: Opportunity,
+    bid_params: OpportunityBidParams,
+    private_key: str,
+) -> OpportunityBid:
+    """
+    Constructs a signature for a searcher's bid and returns the OpportunityBid object to be submitted to the server.
+
+    Args:
+        opportunity: An object representing the opportunity, of type Opportunity.
+        bid_params: An object representing the bid parameters, of type OpportunityBidParams.
+        private_key: A 0x-prefixed hex string representing the searcher's private key.
+    Returns:
+        A OpportunityBid object, representing the transaction to submit to the server. This object contains the searcher's signature.
+    """
+    executor = Account.from_key(private_key).address
+    opportunity_bid = OpportunityBid(
+        opportunity_id=opportunity.opportunity_id,
+        permission_key=opportunity.permission_key,
+        amount=bid_params.amount,
+        deadline=bid_params.deadline,
+        nonce=bid_params.nonce,
+        executor=executor,
+        signature=get_signature(opportunity, bid_params, private_key),
+    )
+
+    return opportunity_bid
+
+
+def sign_bid(
+    opportunity: Opportunity, bid_params: OpportunityBidParams, private_key: str
+) -> Bid:
+    """
+    Constructs a signature for a searcher's bid and returns the Bid object to be submitted to the server.
+
+    Args:
+        opportunity: An object representing the opportunity, of type Opportunity.
+        bid_params: An object representing the bid parameters, of type OpportunityBidParams.
+        private_key: A 0x-prefixed hex string representing the searcher's private key.
+    Returns:
+        A Bid object, representing the transaction to submit to the server. This object contains the searcher's signature.
+    """
+    opportunity_adapter_config = get_opportunity_adapter_config(opportunity.chain_id)
+    permitted = _get_permitted_tokens(
+        opportunity.sell_tokens,
+        bid_params.amount,
+        opportunity.target_call_value,
+        opportunity_adapter_config.weth,
+    )
+    executor = Account.from_key(private_key).address
+
+    signature = get_signature(opportunity, bid_params, private_key).signature
     calldata = make_adapter_calldata(
-        opportunity, permitted, executor, bid_params, signed_typed_data.signature
+        opportunity, permitted, executor, bid_params, signature
     )
 
     return Bid(

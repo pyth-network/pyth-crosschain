@@ -22,6 +22,7 @@ import {
   TokenAmount,
   BidsResponse,
   TokenPermissions,
+  OpportunityBid,
 } from "./types";
 import { executeOpportunityAbi } from "./abi";
 import { OPPORTUNITY_ADAPTER_CONFIGS } from "./const";
@@ -65,6 +66,16 @@ export function checkTokenQty(token: {
     token: checkAddress(token.token),
     amount: BigInt(token.amount),
   };
+}
+
+function getOpportunityConfig(chainId: string) {
+  const opportunityAdapterConfig = OPPORTUNITY_ADAPTER_CONFIGS[chainId];
+  if (!opportunityAdapterConfig) {
+    throw new ClientError(
+      `Opportunity adapter config not found for chain id: ${chainId}`
+    );
+  }
+  return opportunityAdapterConfig;
 }
 
 /**
@@ -367,17 +378,17 @@ export class Client {
   }
 
   /**
-   * Creates a signed bid for an opportunity
+   * Creates a signature for the bid and opportunity
    * @param opportunity Opportunity to bid on
    * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
-   * @returns Signed bid
+   * @returns Signature for the bid and opportunity
    */
-  async signBid(
+  async getSignature(
     opportunity: Opportunity,
     bidParams: BidParams,
     privateKey: Hex
-  ): Promise<Bid> {
+  ): Promise<`0x${string}`> {
     const types = {
       PermitBatchWitnessTransferFrom: [
         { name: "permitted", type: "TokenPermissions[]" },
@@ -406,13 +417,7 @@ export class Client {
 
     const account = privateKeyToAccount(privateKey);
     const executor = account.address;
-    const opportunityAdapterConfig =
-      OPPORTUNITY_ADAPTER_CONFIGS[opportunity.chainId];
-    if (!opportunityAdapterConfig) {
-      throw new ClientError(
-        `Opportunity adapter config not found for chain id: ${opportunity.chainId}`
-      );
-    }
+    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
     const permitted = getPermittedTokens(
       opportunity.sellTokens,
       bidParams.amount,
@@ -427,7 +432,7 @@ export class Client {
       salt: `0x${executor.replace("0x", "").padStart(64, "0")}`,
     });
 
-    const signature = await signTypedData({
+    return signTypedData({
       privateKey,
       domain: {
         name: "Permit2",
@@ -451,6 +456,61 @@ export class Client {
         },
       },
     });
+  }
+
+  /**
+   * Creates a signed opportunity bid for an opportunity
+   * @param opportunity Opportunity to bid on
+   * @param bidParams Bid amount and valid until timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signed opportunity bid
+   */
+  async signOpportunityBid(
+    opportunity: Opportunity,
+    bidParams: BidParams,
+    privateKey: Hex
+  ): Promise<OpportunityBid> {
+    const account = privateKeyToAccount(privateKey);
+    const signature = await this.getSignature(
+      opportunity,
+      bidParams,
+      privateKey
+    );
+
+    return {
+      permissionKey: opportunity.permissionKey,
+      bid: bidParams,
+      executor: account.address,
+      signature,
+      opportunityId: opportunity.opportunityId,
+    };
+  }
+
+  /**
+   * Creates a signed bid for an opportunity
+   * @param opportunity Opportunity to bid on
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signed bid
+   */
+  async signBid(
+    opportunity: Opportunity,
+    bidParams: BidParams,
+    privateKey: Hex
+  ): Promise<Bid> {
+    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
+    const executor = privateKeyToAccount(privateKey).address;
+    const permitted = getPermittedTokens(
+      opportunity.sellTokens,
+      bidParams.amount,
+      opportunity.targetCallValue,
+      checkAddress(opportunityAdapterConfig.weth)
+    );
+    const signature = await this.getSignature(
+      opportunity,
+      bidParams,
+      privateKey
+    );
 
     const calldata = this.makeAdapterCalldata(
       opportunity,
