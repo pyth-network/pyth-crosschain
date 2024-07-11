@@ -46,27 +46,16 @@ contract PRNG {
 
     /// @notice Generate a random uint256 value within a specified range
     /// @param min The minimum value (inclusive)
-    /// @param max The maximum value (inclusive)
+    /// @param max The maximum value (exclusive)
     /// @return A random uint256 value between min and max
+    /// @dev The result is uniformly distributed between min and max, with a slight bias toward lower numbers.
+    /// @dev This bias is insignificant as long as (max - min) << MAX_UINT256.
     function randUintRange(
         uint256 min,
         uint256 max
     ) internal returns (uint256) {
         require(max > min, "Max must be greater than min");
-        return (randUint() % (max - min + 1)) + min;
-    }
-
-    /// @notice Generate a sequence of random bytes
-    /// @param length The number of random bytes to generate (max 32)
-    /// @return A bytes array of random values
-    function randomBytes(uint256 length) internal returns (bytes memory) {
-        require(length <= 32, "Length must be 32 or less");
-        bytes32 randomness = nextBytes32();
-        bytes memory result = new bytes(length);
-        assembly {
-            mstore(add(result, 32), randomness)
-        }
-        return result;
+        return (randUint() % (max - min)) + min;
     }
 
     /// @notice Generate a random permutation of a sequence
