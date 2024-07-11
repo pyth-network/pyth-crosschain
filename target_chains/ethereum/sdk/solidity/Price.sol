@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 import "./PythStructs.sol";
 
 library Price {
@@ -18,23 +20,23 @@ library Price {
 
     /**
      * @dev Get the current price in a different quote currency.
-     * @param self The base price
+     * @param price The base price
      * @param quote The quote price
      * @param resultExpo The desired exponent for the result
      * @return The price in the quote currency
      */
     function getPriceInQuote(
-        PythStructs.Price memory self,
+        PythStructs.Price memory price,
         PythStructs.Price memory quote,
         int32 resultExpo
     ) public pure returns (PythStructs.Price memory) {
-        PythStructs.Price memory divResult = div(self, quote);
+        PythStructs.Price memory divResult = div(price, quote);
         return scale_to_exponent(divResult, resultExpo);
     }
 
     /**
      * @dev Get the valuation price of a collateral position.
-     * @param self The original price
+     * @param price The original price
      * @param deposits Quantity of token deposited in the protocol
      * @param deposits_endpoint Deposits right endpoint for the affine combination
      * @param rate_discount_initial Initial discounted rate at 0 deposits (units given by discount_exponent)
@@ -43,7 +45,7 @@ library Price {
      * @return The valuation price of the collateral
      */
     function getCollateralValuationPrice(
-        PythStructs.Price memory self,
+        PythStructs.Price memory price,
         uint64 deposits,
         uint64 deposits_endpoint,
         uint64 rate_discount_initial,
@@ -81,16 +83,16 @@ library Price {
         );
 
         PythStructs.Price memory price_discounted = scale_to_exponent(
-            mul(self, discount_interpolated),
-            self.expo
+            mul(price, discount_interpolated),
+            price.expo
         );
 
         return
             PythStructs.Price({
                 price: price_discounted.price,
-                conf: self.conf,
+                conf: price.conf,
                 expo: price_discounted.expo,
-                publishTime: self.publishTime
+                publishTime: price.publishTime
             });
     }
 
@@ -104,7 +106,7 @@ library Price {
      * @return The price of the borrow valuation
      */
     function getBorrowValuationPrice(
-        PythStructs.Price memory self,
+        PythStructs.Price memory price,
         uint64 borrows,
         uint64 borrows_endpoint,
         uint64 rate_premium_initial,
@@ -144,16 +146,16 @@ library Price {
 
         // Get price premium, convert back to the original exponents we received the price in
         PythStructs.Price memory price_premium = scale_to_exponent(
-            mul(self, premium_interpolated),
-            self.expo
+            mul(price, premium_interpolated),
+            price.expo
         );
 
         return
             PythStructs.Price({
                 price: price_premium.price,
-                conf: self.conf,
+                conf: price.conf,
                 expo: price_premium.expo,
-                publishTime: self.publishTime
+                publishTime: price.publishTime
             });
     }
 
@@ -209,28 +211,28 @@ library Price {
 
     /**
      * @dev Divide one price by another, propagating uncertainty.
-     * @param self The numerator price
-     * @param other The denominator price
+     * @param price The numerator price
+     * @param price2 The denominator price
      * @return The resulting price
      */
     function div(
-        PythStructs.Price memory self,
-        PythStructs.Price memory other
+        PythStructs.Price memory price,
+        PythStructs.Price memory price2
     ) internal pure returns (PythStructs.Price memory) {
-        PythStructs.Price memory base = normalize(self);
-        other = normalize(other);
+        PythStructs.Price memory base = normalize(price);
+        price2 = normalize(price2);
 
-        if (other.price == 0) {
+        if (price2.price == 0) {
             revert DivisionByZero();
         }
 
         (uint64 basePrice, int64 baseSign) = toUnsigned(base.price);
-        (uint64 otherPrice, int64 otherSign) = toUnsigned(other.price);
+        (uint64 otherPrice, int64 otherSign) = toUnsigned(price2.price);
 
         uint64 midprice = (basePrice * PD_SCALE) / otherPrice;
-        int32 midpriceExpo = base.expo - other.expo + PD_EXPO;
+        int32 midpriceExpo = base.expo - price2.expo + PD_EXPO;
 
-        uint64 otherConfidencePct = (other.conf * PD_SCALE) / otherPrice;
+        uint64 otherConfidencePct = (price2.conf * PD_SCALE) / otherPrice;
         uint128 conf = ((uint128(base.conf) * PD_SCALE) / otherPrice) +
             ((uint128(otherConfidencePct) * midprice) / PD_SCALE);
 
@@ -243,101 +245,101 @@ library Price {
                 price: int64(midprice) * baseSign * otherSign,
                 conf: uint64(conf),
                 expo: midpriceExpo,
-                publishTime: min(self.publishTime, other.publishTime)
+                publishTime: Math.min(price.publishTime, price2.publishTime)
             });
     }
 
     /**
      * @dev Add two prices, propagating uncertainty.
-     * @param self The first price
-     * @param other The second price
+     * @param price The first price
+     * @param price2 The second price
      * @return The sum of the two prices
      */
     function add(
-        PythStructs.Price memory self,
-        PythStructs.Price memory other
+        PythStructs.Price memory price,
+        PythStructs.Price memory price2
     ) internal pure returns (PythStructs.Price memory) {
-        if (self.expo != other.expo) {
+        if (price.expo != price2.expo) {
             revert ExponentsMustMatch();
         }
 
-        int64 price = self.price + other.price;
-        uint64 conf = self.conf + other.conf;
+        int64 price = price.price + price2.price;
+        uint64 conf = price.conf + price2.conf;
 
         return
             PythStructs.Price({
                 price: price,
                 conf: conf,
-                expo: self.expo,
-                publishTime: min(self.publishTime, other.publishTime)
+                expo: price.expo,
+                publishTime: Math.min(price.publishTime, price2.publishTime)
             });
     }
 
     /**
      * @dev Multiply a price by a constant.
-     * @param self The price
+     * @param price The price
      * @param c The constant
      * @param e The exponent of the constant
      * @return The resulting price
      */
     function cmul(
-        PythStructs.Price memory self,
+        PythStructs.Price memory price,
         int64 c,
         int32 e
     ) internal pure returns (PythStructs.Price memory) {
         return
             mul(
-                self,
+                price,
                 PythStructs.Price({
                     price: c,
                     conf: 0,
                     expo: e,
-                    publishTime: self.publishTime
+                    publishTime: price.publishTime
                 })
             );
     }
 
     /**
      * @dev Multiply two prices, propagating uncertainty.
-     * @param self The first price
-     * @param other The second price
+     * @param price The first price
+     * @param price2 The second price
      * @return The product of the two prices
      */
     function mul(
-        PythStructs.Price memory self,
-        PythStructs.Price memory other
+        PythStructs.Price memory price,
+        PythStructs.Price memory price2
     ) internal pure returns (PythStructs.Price memory) {
-        PythStructs.Price memory base = normalize(self);
-        other = normalize(other);
+        PythStructs.Price memory base = normalize(price);
+        price2 = normalize(price2);
 
         (uint64 basePrice, int64 baseSign) = toUnsigned(base.price);
-        (uint64 otherPrice, int64 otherSign) = toUnsigned(other.price);
+        (uint64 otherPrice, int64 otherSign) = toUnsigned(price2.price);
 
         uint64 midprice = basePrice * otherPrice;
-        int32 midpriceExpo = base.expo + other.expo;
+        int32 midpriceExpo = base.expo + price2.expo;
 
-        uint64 conf = base.conf * otherPrice + other.conf * basePrice;
+        uint64 conf = base.conf * otherPrice + price2.conf * basePrice;
 
         return
             PythStructs.Price({
                 price: int64(midprice) * baseSign * otherSign,
                 conf: conf,
                 expo: midpriceExpo,
-                publishTime: min(self.publishTime, other.publishTime)
+                publishTime: Math.min(price.publishTime, price2.publishTime)
             });
     }
 
     /**
      * @dev Normalize a price to be between MIN_PD_V_I64 and MAX_PD_V_I64.
-     * @param self The price to normalize
+     * @param price The price to normalize
      * @return The normalized price
      */
     function normalize(
-        PythStructs.Price memory self
+        PythStructs.Price memory price
     ) internal pure returns (PythStructs.Price memory) {
-        (uint64 p, int64 s) = toUnsigned(self.price);
-        uint64 c = self.conf;
-        int32 e = self.expo;
+        (uint64 p, int64 s) = toUnsigned(price.price);
+        uint64 c = price.conf;
+        int32 e = price.expo;
 
         while (p > MAX_PD_V_U64 || c > MAX_PD_V_U64) {
             p /= 10;
@@ -350,25 +352,25 @@ library Price {
                 price: int64(p) * s,
                 conf: c,
                 expo: e,
-                publishTime: self.publishTime
+                publishTime: price.publishTime
             });
     }
 
     /**
      * @dev Scale a price to a target exponent.
-     * @param self The price to scale
+     * @param price The price to scale
      * @param targetExpo The target exponent
      * @return The scaled price
      */
     function scaleToExponent(
-        PythStructs.Price memory self,
+        PythStructs.Price memory price,
         int32 targetExpo
     ) internal pure returns (PythStructs.Price memory) {
-        int32 delta = targetExpo - self.expo;
-        if (delta == 0) return self;
+        int32 delta = targetExpo - price.expo;
+        if (delta == 0) return price;
 
-        int64 p = self.price;
-        uint64 c = self.conf;
+        int64 p = price.price;
+        uint64 c = price.conf;
 
         if (delta > 0) {
             while (delta > 0 && (p != 0 || c != 0)) {
@@ -389,7 +391,7 @@ library Price {
                 price: p,
                 conf: c,
                 expo: targetExpo,
-                publishTime: self.publishTime
+                publishTime: price.publishTime
             });
     }
 
@@ -435,25 +437,5 @@ library Price {
 
         // Get the relevant fraction
         return div(x_as_price, y_as_price);
-    }
-
-    /**
-     * @dev Helper function to return the minimum of two uint64 values.
-     * @param a The first value
-     * @param b The second value
-     * @return The minimum of a and b
-     */
-    function min(uint64 a, uint64 b) internal pure returns (uint64) {
-        return a < b ? a : b;
-    }
-
-    /**
-     * @dev Helper function to return the minimum of two uint256 values.
-     * @param a The first value
-     * @param b The second value
-     * @return The minimum of a and b
-     */
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
     }
 }
