@@ -987,6 +987,7 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
         .unwrap();
     super::wormhole::deploy_declared_at(
         @wormhole_class,
+        0,
         array_try_into(array![0x301]),
         super::wormhole::CHAIN_ID,
         super::wormhole::GOVERNANCE_CHAIN_ID,
@@ -1093,6 +1094,41 @@ fn test_upgrade_rejects_wrong_magic() {
     pyth.execute_governance_instruction(data::pyth_upgrade_wrong_magic());
 }
 
+#[test]
+#[should_panic(expected: ('invalid guardian set index',))]
+fn update_price_feeds_with_set3_rejects_on_guardian_set4() {
+    let wormhole = super::wormhole::deploy_with_mainnet_guardian_set4();
+    let ctx = deploy_with_wormhole(wormhole);
+    let pyth = ctx.pyth;
+    ctx.approve_fee(1000);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+fn update_price_feeds_works_with_guardian_set4() {
+    let wormhole = super::wormhole::deploy_with_mainnet_guardian_set4();
+    let ctx = deploy_with_wormhole(wormhole);
+    let pyth = ctx.pyth;
+    ctx.approve_fee(1000);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::unique_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
+fn update_price_feeds_works_with_guardian_sets_3_4() {
+    let wormhole = super::wormhole::deploy_with_mainnet_guardian_sets_3_4();
+    let ctx = deploy_with_wormhole(wormhole);
+    let pyth = ctx.pyth;
+    ctx.approve_fee(2000);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update1());
+    pyth.update_price_feeds(data::unique_update1());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
 #[derive(Drop, Copy)]
 struct Context {
     user: ContractAddress,
@@ -1118,20 +1154,15 @@ impl ContextImpl of ContextTrait {
 }
 
 fn deploy_test() -> Context {
-    let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_test_guardian();
-    let fee_class = declare("ERC20");
-    let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
-    let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
-    let pyth = deploy_pyth_default(
-        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
-    );
-    Context { user, wormhole, fee_contract, fee_contract2, pyth }
+    deploy_with_wormhole(super::wormhole::deploy_with_test_guardian())
 }
 
 fn deploy_mainnet() -> Context {
+    deploy_with_wormhole(super::wormhole::deploy_with_mainnet_guardians())
+}
+
+fn deploy_with_wormhole(wormhole: IWormholeDispatcher) -> Context {
     let user = 'user'.try_into().unwrap();
-    let wormhole = super::wormhole::deploy_with_mainnet_guardians();
     let fee_class = declare("ERC20");
     let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
     let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
