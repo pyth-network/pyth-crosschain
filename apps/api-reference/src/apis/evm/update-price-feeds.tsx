@@ -4,7 +4,7 @@ import Eth from "cryptocurrency-icons/svg/color/eth.svg";
 import {
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
   writeApi,
@@ -13,6 +13,7 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   name: "updatePriceFeeds",
+  summary: "Update the on-chain price feeds using the provided `updateData`.",
   description: `
 Update the on-chain price feeds using the provided \`updateData\`, which
 contains serialized and signed price update data from Pyth Network.  You can
@@ -81,7 +82,7 @@ const getParams = async (
     readContract: (name: string, args: unknown[]) => Promise<unknown>;
   },
 ) => {
-  const feed = await getLatestPriceFeed(feedId);
+  const feed = await getLatestPriceUpdate(feedId);
   const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");

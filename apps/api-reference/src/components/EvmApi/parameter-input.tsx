@@ -2,11 +2,13 @@ import {
   type ChangeEvent,
   type Dispatch,
   type SetStateAction,
+  Fragment,
   useState,
   useCallback,
   useMemo,
   useEffect,
 } from "react";
+import Markdown from "react-markdown";
 
 import {
   type Parameter,
@@ -14,6 +16,7 @@ import {
   isValid,
   getValidationError,
 } from "./parameter";
+import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import { Input } from "../Input";
 
 type ParameterProps<ParameterName extends string> = {
@@ -39,7 +42,16 @@ export const ParameterInput = <ParameterName extends string>({
     <Input
       validationError={validationError}
       label={spec.name}
-      description={spec.description}
+      description={
+        <Markdown
+          components={{
+            ...MARKDOWN_COMPONENTS,
+            p: ({ children }) => <Fragment>{children}</Fragment>,
+          }}
+        >
+          {spec.description}
+        </Markdown>
+      }
       placeholder={PLACEHOLDERS[spec.type]}
       required={true}
       value={internalValue}

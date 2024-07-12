@@ -5,15 +5,16 @@ import {
   readApi,
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
 } from "./common";
 import { ParameterType } from "../../components/EvmApi";
-import { InlineLink } from "../../components/InlineLink";
 
 export const getUpdateFee = readApi<"updateData">({
   name: "getUpdateFee",
+  summary:
+    "Get the fee required to update the on-chain price feeds with the provided `updateData`.",
   description: `
 Get the fee required to update the on-chain price feeds with the provided
 \`updateData\`.  The returned number of wei should be sent as the transaction
@@ -24,12 +25,8 @@ can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
     {
       name: "updateData",
       type: ParameterType.HexArray,
-      description: (
-        <>
-          The price updates that you would like to submit to{" "}
-          <InlineLink href="updatePriceFeeds">updatePriceFeeds</InlineLink>
-        </>
-      ),
+      description:
+        "The price updates that you would like to submit to [updatePriceFeeds](updatePriceFeeds).",
     },
   ],
   examples: [
@@ -62,6 +59,6 @@ const [feeAmount] = await contract.getUpdateFee(updateData);
 });
 
 const getParams = async (feedId: string) => {
-  const feed = await getLatestPriceFeed(feedId);
+  const feed = await getLatestPriceUpdate(feedId);
   return { updateData: feed.binary.data };
 };

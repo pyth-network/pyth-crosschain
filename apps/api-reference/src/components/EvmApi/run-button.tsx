@@ -6,7 +6,7 @@ import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ConnectKitButton, Avatar } from "connectkit";
 import { useCallback, useMemo, useState } from "react";
 import { useAccount, useConfig } from "wagmi";
-import { readContract, writeContract } from "wagmi/actions";
+import { readContract, simulateContract, writeContract } from "wagmi/actions";
 
 import { getContractAddress } from "./networks";
 import { type Parameter, TRANSFORMS } from "./parameter";
@@ -175,7 +175,7 @@ const useRunButton = <ParameterName extends string>({
             })
             .catch((error: unknown) => {
               setModalContents({
-                error: error,
+                error,
                 parameters: paramValues,
                 networkName,
               });
@@ -193,7 +193,14 @@ const useRunButton = <ParameterName extends string>({
             });
             setStatus(Status.ShowingResults);
           } else {
-            writeContract(config, { abi, address, functionName, args, value })
+            simulateContract(config, {
+              abi,
+              address,
+              functionName,
+              args,
+              value,
+            })
+              .then(({ request }) => writeContract(config, request))
               .then((result) => {
                 setModalContents({
                   result,
@@ -203,7 +210,7 @@ const useRunButton = <ParameterName extends string>({
               })
               .catch((error: unknown) => {
                 setModalContents({
-                  error: error,
+                  error,
                   parameters: paramValues,
                   networkName,
                 });

@@ -3,16 +3,18 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useMemo } from "react";
 
 const baseClasses = "font-semibold text-sm py-2 px-3";
 
-export const NavLink = ({
-  className,
-  ...props
-}: ComponentProps<typeof Link>) => {
-  const segment = useSelectedLayoutSegment();
-  return segment && `/${segment}` === props.href ? (
+type NavLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
+  href: string;
+};
+
+export const NavLink = ({ className, ...props }: NavLinkProps) => {
+  const isCurrent = useIsCurrent(props.href);
+
+  return isCurrent ? (
     <span
       className={clsx(
         "text-pythpurple-600 dark:text-pythpurple-400",
@@ -31,5 +33,13 @@ export const NavLink = ({
       )}
       {...props}
     />
+  );
+};
+
+const useIsCurrent = (href: string) => {
+  const selectedSegment = useSelectedLayoutSegment();
+  return useMemo(
+    () => href.toString().split("/")[1] === selectedSegment,
+    [href, selectedSegment],
   );
 };

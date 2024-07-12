@@ -1,9 +1,7 @@
-import type { ReactNode } from "react";
-
 export type Parameter<Name extends string> = {
   name: Name;
   type: ParameterType;
-  description: ReactNode;
+  description: string;
 };
 
 export enum ParameterType {

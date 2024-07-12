@@ -6,6 +6,8 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getPriceNoOlderThan = readApi<"id" | "age">({
   name: "getPriceNoOlderThan",
+  summary:
+    "Get the price object with a published timestamp from before than `age` seconds in the past.",
   description: `
 Get the latest price and confidence interval for the requested price feed id, if
 it has been updated sufficiently recently.  The price feed id is a 32-byte id

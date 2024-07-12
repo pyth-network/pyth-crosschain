@@ -6,6 +6,7 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getPrice = readApi<"id">({
   name: "getPrice",
+  summary: "Get the **latest** price object for the requested price feed ID.",
   description: `
 Get the latest price and confidence interval for the requested price feed id.
 The price feed id is a 32-byte id written as a hexadecimal string; see the

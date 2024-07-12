@@ -14,23 +14,25 @@ import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
 import {
-  type ReactNode,
   type Dispatch,
   type SetStateAction,
   type ComponentProps,
+  type ElementType,
+  type SVGAttributes,
   useState,
   useCallback,
   useMemo,
-  type ComponentType,
-  type SVGAttributes,
 } from "react";
+import Markdown from "react-markdown";
 import { useSwitchChain, useChainId, useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 
 import { getContractAddress } from "./networks";
-import { type Parameter } from "./parameter";
+import type { Parameter } from "./parameter";
 import { ParameterInput } from "./parameter-input";
 import { type EvmApiType, RunButton } from "./run-button";
+import { getLogger } from "../../browser-logger";
+import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import { useIsMounted } from "../../use-is-mounted";
 import { type SupportedLanguage, Code } from "../Code";
 import { ErrorTooltip } from "../ErrorTooltip";
@@ -48,7 +50,8 @@ type Props<ParameterName extends string> =
 
 type Common<ParameterName extends string> = {
   name: (typeof PythAbi)[number]["name"];
-  children: ReactNode;
+  summary: string;
+  description: string;
   parameters: Parameter<ParameterName>[];
   examples: Example<ParameterName>[];
   code: CodeSample<ParameterName>[];
@@ -65,7 +68,7 @@ export type WriteApi<ParameterName extends string> = Common<ParameterName> & {
 
 type Example<ParameterName extends string> = {
   name: string;
-  icon?: ComponentType<SVGAttributes<SVGSVGElement>>;
+  icon?: ElementType<SVGAttributes<SVGSVGElement>>;
   parameters: ValueOrFunctionOrAsyncFunction<Record<ParameterName, string>>;
 };
 
@@ -100,7 +103,8 @@ export type NetworkInfo = {
 
 export const EvmApi = <ParameterName extends string>({
   name,
-  children,
+  summary,
+  description,
   parameters,
   code,
   examples,
@@ -125,11 +129,14 @@ export const EvmApi = <ParameterName extends string>({
   return (
     <div className="gap-x-20 lg:grid lg:grid-cols-[2fr_1fr]">
       <h1 className="col-span-2 mb-6 font-mono text-4xl font-medium">{name}</h1>
+      <div className="col-span-2 mb-6 opacity-60">
+        <Markdown components={MARKDOWN_COMPONENTS}>{summary}</Markdown>
+      </div>
       <section>
         <h2 className="mb-4 border-b border-neutral-200 text-2xl/loose font-medium dark:border-neutral-800">
           Description
         </h2>
-        {children}
+        <Markdown components={MARKDOWN_COMPONENTS}>{description}</Markdown>
       </section>
       <section className="flex flex-col">
         <h2 className="mb-4 border-b border-neutral-200 text-2xl/loose font-medium dark:border-neutral-800">
@@ -282,7 +289,8 @@ const Example = <ParameterName extends string>({
           .then((paramsResolved) => {
             setParamValues(paramsResolved);
           })
-          .catch(() => {
+          .catch((error_: unknown) => {
+            getLogger().error(error_);
             setError(
               "An error occurred while fetching data for this example, please try again",
             );

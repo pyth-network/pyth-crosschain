@@ -6,6 +6,8 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getEmaPriceNoOlderThan = readApi<"id" | "age">({
   name: "getEmaPriceNoOlderThan",
+  summary:
+    "Get the exponentially weighted moving average (EMA) price object with a published timestamp from before than `age` seconds in the past.",
   description: `
 Get the latest exponentially-weighted moving average (EMA) price and confidence
 interval for the requested price feed id.  The price feed id is a 32-byte id

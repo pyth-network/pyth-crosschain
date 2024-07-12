@@ -1,9 +1,3 @@
-import clsx from "clsx";
-import type { HTMLAttributes } from "react";
+import { Styled } from "../Styled";
 
-export const Paragraph = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLElement>) => (
-  <p className={clsx("mb-6 last:mb-0", className)} {...props} />
-);
+export const Paragraph = Styled("p", "mb-6 last:mb-0");

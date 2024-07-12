@@ -4,9 +4,17 @@ import { Field, Label } from "@headlessui/react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { type HTMLAttributes, useState, type ComponentProps } from "react";
+import {
+  type HTMLAttributes,
+  useState,
+  type ComponentProps,
+  type ElementType,
+  Fragment,
+} from "react";
+import Markdown from "react-markdown";
 
 import * as apis from "../../apis";
+import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import { Select } from "../Select";
 
 type Chain = keyof typeof apis;
@@ -22,9 +30,10 @@ const CHAIN_TO_NAME = {
 const MENU = Object.fromEntries(
   Object.entries(apis).map(([chain, methods]) => [
     chain,
-    Object.keys(methods).map((method) => ({
-      name: method,
-      href: `/price-feeds/${chain}/${method}`,
+    Object.entries(methods).map(([name, { summary }]) => ({
+      name,
+      summary,
+      href: `/price-feeds/${chain}/${name}`,
     })),
   ]),
 );
@@ -60,9 +69,11 @@ export const Sidebar = ({
           aria-label="Methods"
         >
           <ul className="contents">
-            {MENU[chain]?.map(({ name, href }) => (
+            {MENU[chain]?.map(({ name, href, summary }) => (
               <li className="contents" key={href}>
-                <MenuButton href={href}>{name}</MenuButton>
+                <MenuButton href={href} name={name}>
+                  {summary}
+                </MenuButton>
               </li>
             ))}
           </ul>
@@ -73,29 +84,75 @@ export const Sidebar = ({
   );
 };
 
-const baseMenuButtonClasses = "text-sm py-1 px-2";
+type MenuButtonProps = Omit<
+  ComponentProps<typeof Link>,
+  keyof MenuItemProps<typeof Link>
+> & {
+  name: string;
+  children: string;
+};
 
-const MenuButton = ({ className, ...props }: ComponentProps<typeof Link>) => {
+const MenuButton = ({
+  className,
+  name,
+  children,
+  ...props
+}: MenuButtonProps) => {
   const segments = useSelectedLayoutSegments();
 
   return `/price-feeds/${segments.join("/")}` === props.href ? (
-    <div
-      className={clsx(
-        "font-bold text-pythpurple-600 dark:text-pythpurple-400",
-        baseMenuButtonClasses,
-        className,
-      )}
-    >
-      {props.children}
-    </div>
+    <MenuItem
+      className={className}
+      name={name}
+      summary={children}
+      nameClassName="font-bold text-pythpurple-600 dark:text-pythpurple-400"
+    />
   ) : (
-    <Link
+    <MenuItem
+      as={Link}
       className={clsx(
-        "rounded hover:bg-neutral-200 hover:text-pythpurple-600 dark:hover:bg-neutral-800 dark:hover:text-pythpurple-400",
-        baseMenuButtonClasses,
+        "group hover:bg-neutral-200 dark:hover:bg-neutral-800",
         className,
       )}
+      nameClassName="group-hover:text-pythpurple-600 dark:group-hover:text-pythpurple-400"
+      name={name}
+      summary={children}
       {...props}
     />
+  );
+};
+
+type MenuItemProps<T extends ElementType> = {
+  as?: T;
+  name: string;
+  summary: string;
+  nameClassName?: string | undefined;
+};
+
+const MenuItem = <T extends ElementType>({
+  as,
+  className,
+  name,
+  summary,
+  nameClassName,
+  ...props
+}: Omit<ComponentProps<T>, keyof MenuItemProps<T>> & MenuItemProps<T>) => {
+  const Component = as ?? "div";
+  return (
+    <Component className={clsx("rounded px-2 py-1", className)} {...props}>
+      <div className={clsx("text-sm", nameClassName)}>{name}</div>
+      <Markdown
+        className={clsx(
+          "ml-4 overflow-hidden text-ellipsis text-nowrap text-xs font-light",
+          className,
+        )}
+        components={{
+          ...MARKDOWN_COMPONENTS,
+          p: ({ children }) => <Fragment>{children}</Fragment>,
+        }}
+      >
+        {summary}
+      </Markdown>
+    </Component>
   );
 };

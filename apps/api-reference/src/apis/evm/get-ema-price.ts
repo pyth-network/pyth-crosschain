@@ -6,6 +6,8 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getEmaPrice = readApi<"id">({
   name: "getEmaPrice",
+  summary:
+    "Get the **latest** exponentially weighted moving average (EMA) price object for the requested price feed ID.",
   description: `
 Get the latest exponentially-weighted moving average (EMA) price and confidence
 interval for the requested price feed id.  The price feed id is a 32-byte id
