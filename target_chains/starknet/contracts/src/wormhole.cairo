@@ -84,6 +84,7 @@ mod wormhole {
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        initial_guardian_set_index: u32,
         initial_guardians: Array<EthAddress>,
         chain_id: u16,
         governance_chain_id: u16,
@@ -92,8 +93,7 @@ mod wormhole {
         self.chain_id.write(chain_id);
         self.governance_chain_id.write(governance_chain_id);
         self.governance_contract.write(governance_contract);
-        let set_index = 0;
-        self.store_guardian_set(set_index, @initial_guardians);
+        self.store_guardian_set(initial_guardian_set_index, @initial_guardians);
     }
 
     #[abi(embed_v0)]
