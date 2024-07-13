@@ -1,4 +1,4 @@
-import { pythSolanaReceiverIdl, PythSolanaReceiverProgram, PythTransactionBuilder } from "@pythnetwork/pyth-solana-receiver";
+import { PythSolanaReceiverProgram } from "@pythnetwork/pyth-solana-receiver";
 import {
   ChainPriceListener,
   IPricePusher,
@@ -9,13 +9,10 @@ import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import {
   sendTransactions,
-  sendTransactionsJito,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
-import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { AddressLookupTableAccount, Connection, VersionedTransaction } from "@solana/web3.js";
-import { DRIFT_ORACLE_RECEIVER_ID, DriftClient, FastSingleTxSender, getPythPullOraclePublicKey, Wallet } from "@drift-labs/sdk";
+import { AddressLookupTableAccount } from "@solana/web3.js";
+import { DriftClient, FastSingleTxSender, getPythPullOraclePublicKey, WhileValidTxSender } from "@drift-labs/sdk";
 import { getFeedIdUint8Array } from "@drift-labs/sdk/lib/util/pythPullOracleUtils"
 import { PriceUpdateAccount } from "@pythnetwork/pyth-solana-receiver/lib/PythSolanaReceiver";
 import { Program } from "@coral-xyz/anchor";
@@ -80,7 +77,7 @@ export class SolanaPriceListener extends ChainPriceListener {
 }
 
 export class SolanaPricePusher implements IPricePusher {
-  txSender: FastSingleTxSender;
+  txSender: WhileValidTxSender;
 
   constructor(
     private driftClient: DriftClient,
@@ -89,10 +86,10 @@ export class SolanaPricePusher implements IPricePusher {
     private addressLookupTable: AddressLookupTableAccount
   ) {
 
-    this.txSender = new FastSingleTxSender({
+    this.txSender = new WhileValidTxSender({
       connection: this.driftClient.connection,
       blockhashCommitment: 'confirmed',
-      blockhashRefreshInterval: 1000,
+      retrySleep: 5000,
       wallet: this.driftClient.wallet,
       opts: {
         skipPreflight: true,
@@ -125,7 +122,7 @@ export class SolanaPricePusher implements IPricePusher {
         3
       )
       const tx = await this.txSender.getVersionedTransaction(ixs, [this.addressLookupTable],
-        undefined, undefined, this.txSender.recentBlockhash ?? await this.txSender.connection.getLatestBlockhash('confirmed')
+        undefined, undefined, await this.txSender.connection.getLatestBlockhash('confirmed')
       );
       this.txSender.sendVersionedTransaction(tx).then((txSig) => {
         console.log(new Date(), `updatePriceFeed successful: ${txSig.txSig}`);
