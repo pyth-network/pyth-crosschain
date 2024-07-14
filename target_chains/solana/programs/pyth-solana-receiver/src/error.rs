@@ -53,4 +53,8 @@ pub enum ReceiverError {
     NonexistentGovernanceAuthorityTransferRequest,
     #[msg("The minimum number of signatures should be at least 1")]
     ZeroMinimumSignatures,
+    #[msg("Cannot post multi atomic updates for more than 2 accounts at a time")]
+    TooManyPriceUpdates,
+    #[msg("Remaining account price update account has wrong owner")]
+    InvalidRemainingPriceUpdateAccountOwner,
 }
