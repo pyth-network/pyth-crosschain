@@ -48,8 +48,10 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain pythnet validator, message_buffer/remote_executor/oracle contracts, merkle tree library, xc_admin_frontend_
 - **[January 18, 2024 - Trail of Bits](https://github.com/pyth-network/audit-reports/blob/main/2024_01_23/Pyth%20Data%20Association%20-%20Entropy%20-%20Comprehensive%20Report.pdf)**
   - **Scope**: _pyth-crosschain-entropy contracts and fortuna web service_
-- **[April 25, 2024 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_pull_oracle_audit_final.pdf)**
+- **[April 25, 2024 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_solana_pull_oracle_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-solana contracts_
+- **[July 12, 2024 - Nethermind](https://github.com/pyth-network/audit-reports/blob/main/2024_07_12/pyth_starknet_pull_oracle_audit_final.pdf)**
+  - **Scope**: _pyth-crosschain-starknet contracts_
 
 ## Social Media Monitoring
 
