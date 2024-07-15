@@ -40,7 +40,7 @@ fn to_cairo_byte_array_data(data: &[u8]) -> CairoByteBufferData {
         pos += 31;
     }
     CairoByteBufferData {
-        num_last_bytes: 0,
+        num_last_bytes: if r.is_empty() { 0 } else { 31 },
         data: r,
     }
 }
