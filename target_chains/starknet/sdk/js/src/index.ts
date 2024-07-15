@@ -55,6 +55,6 @@ export class ByteBuffer {
       }
       pos += 31;
     }
-    return new ByteBuffer(0, data);
+    return new ByteBuffer(data.length == 0 ? 0 : 31, data);
   }
 }

@@ -228,6 +228,18 @@ fn update_price_feeds_works() {
 }
 
 #[test]
+fn update_price_feeds_works2() {
+    let ctx = deploy_mainnet();
+    let pyth = ctx.pyth;
+    let fee = pyth.get_update_fee(data::good_update2(), ctx.fee_contract.contract_address);
+    assert!(fee == 1000);
+    ctx.approve_fee(fee);
+    start_prank(CheatTarget::One(pyth.contract_address), ctx.user.try_into().unwrap());
+    pyth.update_price_feeds(data::good_update2());
+    stop_prank(CheatTarget::One(pyth.contract_address));
+}
+
+#[test]
 fn test_accepts_secondary_fee() {
     let ctx = deploy_mainnet();
     let pyth = ctx.pyth;
