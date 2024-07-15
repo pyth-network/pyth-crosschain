@@ -15,6 +15,10 @@ export const ETH_TOKEN_ADDRESS =
 export const PYTH_CONTRACT_ADDRESS_SEPOLIA =
   "0x07f2b07b6b5365e7ee055bda4c0ecabd867e6d3ee298d73aea32b027667186d6";
 
+/** Address of the Pyth contract on Starknet mainnet. */
+export const PYTH_CONTRACT_ADDRESS_MAINNET =
+  "0x062ab68d8e23a7aa0d5bf4d25380c2d54f2dd8f83012e047851c3706b53d64d1";
+
 /** A byte array encoded in a format compatible with starknet-js and with the Pyth contract. */
 export class ByteBuffer {
   num_last_bytes = 0;
