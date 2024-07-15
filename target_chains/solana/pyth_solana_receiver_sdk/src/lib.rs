@@ -1,8 +1,17 @@
-use borsh::{BorshDeserialize, BorshSerialize};
-use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
-    anchor_lang::{declare_id, prelude::*},
-    solana_program::{pubkey, pubkey::Pubkey},
+    anchor_lang::{
+        declare_id,
+        prelude::*,
+    },
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
+    pythnet_sdk::wire::v1::MerklePriceUpdate,
+    solana_program::{
+        pubkey,
+        pubkey::Pubkey,
+    },
 };
 
 pub mod config;
@@ -19,12 +28,12 @@ pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("pythWSnswVUd12oZpeFP8e9CVaEqJg2
 #[derive(Debug, BorshSerialize, BorshDeserialize, Clone)]
 pub struct PostUpdateParams {
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id: u8,
+    pub treasury_id:         u8,
 }
 
 #[derive(Debug, BorshSerialize, BorshDeserialize, Clone)]
 pub struct PostUpdateAtomicParams {
-    pub vaa: Vec<u8>,
+    pub vaa:                 Vec<u8>,
     pub merkle_price_update: MerklePriceUpdate,
-    pub treasury_id: u8,
+    pub treasury_id:         u8,
 }
