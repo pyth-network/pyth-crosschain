@@ -68,8 +68,6 @@ export const RECEIVER_CHAINS = {
   iota: 60049,
   flow_previewnet: 60050,
   starknet: 60051,
-  taiko_mainnet: 50077,
-  sei_evm_mainnet: 50078,
   opbnb: 60052,
   gravity: 60053,
   polynomial: 60054,
@@ -159,6 +157,8 @@ export const RECEIVER_CHAINS = {
   polygon_amoy: 50074,
   starknet_sepolia: 50075,
   movement_m2_devnet: 50076,
+  taiko_mainnet: 50077,
+  sei_evm_mainnet: 50078,
   kakarot_sepolia: 50079,
   dela_mithreum_deperp_testnet: 50080,
   berachain_testnet_v2: 50081,
@@ -167,6 +167,7 @@ export const RECEIVER_CHAINS = {
   fuel_testnet: 50084,
   sei_evm_testnet: 50085,
   klaytn_testnet: 50086,
+  morph_holesky_testnet: 50087,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
