@@ -119,15 +119,15 @@ pub struct PriceFeedMessage {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for PriceFeedMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        let mut id = [0u8; 32];
-        for item in &mut id {
+        let mut feed_id = [0u8; 32];
+        for item in &mut feed_id {
             *item = u8::arbitrary(g);
         }
 
         let publish_time = i64::arbitrary(g);
 
         PriceFeedMessage {
-            id,
+            feed_id,
             price: i64::arbitrary(g),
             conf: u64::arbitrary(g),
             exponent: i32::arbitrary(g),
@@ -156,15 +156,15 @@ pub struct TwapMessage {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for TwapMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        let mut id = [0u8; 32];
-        for item in &mut id {
+        let mut feed_id = [0u8; 32];
+        for item in &mut feed_id {
             *item = u8::arbitrary(g);
         }
 
         let publish_time = i64::arbitrary(g);
 
         TwapMessage {
-            id,
+            feed_id,
             cumulative_price: i128::arbitrary(g),
             cumulative_conf: u128::arbitrary(g),
             num_down_slots: u64::arbitrary(g),
