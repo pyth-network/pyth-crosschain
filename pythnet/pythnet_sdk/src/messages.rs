@@ -30,7 +30,7 @@ use {
 /// some of the methods for PriceFeedMessage and TwapMessage are not used by the oracle
 /// for the same reason. Rust compiler doesn't include the unused methods in the contract.
 /// Once we start using the unused structs and methods, the contract size will increase.
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "strum",
     derive(strum::EnumDiscriminants),
@@ -50,6 +50,7 @@ use {
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
+    PublisherCapsMessage(PublisherCapsMessage),
 }
 
 impl Message {
@@ -57,6 +58,7 @@ impl Message {
         match self {
             Self::PriceFeedMessage(msg) => msg.publish_time,
             Self::TwapMessage(msg) => msg.publish_time,
+            Self::PublisherCapsMessage(msg) => msg.publish_time,
         }
     }
 
@@ -64,6 +66,7 @@ impl Message {
         match self {
             Self::PriceFeedMessage(msg) => msg.feed_id,
             Self::TwapMessage(msg) => msg.feed_id,
+            Self::PublisherCapsMessage(_) => [0u8; 32],
         }
     }
 }
@@ -171,6 +174,20 @@ impl Arbitrary for TwapMessage {
             publish_slot: u64::arbitrary(g),
         }
     }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PublisherCapsMessage {
+    pub publish_time: i64,
+    pub caps:         Vec<PublisherCap>,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PublisherCap {
+    pub publisher: [u8; 32],
+    pub cap:       u64,
 }
 
 #[cfg(test)]
