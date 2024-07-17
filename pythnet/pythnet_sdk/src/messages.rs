@@ -190,6 +190,33 @@ pub struct PublisherCap {
     pub cap:       u64,
 }
 
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for PublisherCapsMessage {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        let caps = Vec::arbitrary(g);
+        PublisherCapsMessage {
+            publish_time: i64::arbitrary(g),
+            caps,
+        }
+    }
+}
+
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for PublisherCap {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        PublisherCap {
+            publisher: {
+                let mut publisher = [0u8; 32];
+                for item in &mut publisher {
+                    *item = u8::arbitrary(g);
+                }
+                publisher
+            },
+            cap:       u64::arbitrary(g),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
