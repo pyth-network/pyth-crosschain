@@ -7,3 +7,6 @@
 - chain: movement_m1_devnet
   address: "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9"
   type: AptosWormholeContract
+- chain: movement_suzuka_testnet
+  address: "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9"
+  type: AptosWormholeContract
