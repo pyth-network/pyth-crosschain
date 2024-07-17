@@ -16,6 +16,9 @@ services:
     image: public.ecr.aws/pyth-network/xc-price-pusher:v<version>
     restart: always
     command:
+      - "npm"
+      - "run"
+      - "start"
       - "--"
       - "evm"
       - "--endpoint"
