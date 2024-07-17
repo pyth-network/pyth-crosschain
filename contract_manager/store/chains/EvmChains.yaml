@@ -649,3 +649,13 @@
   rpcUrl: https://rpc.ankr.com/klaytn_testnet
   networkId: 1001
   type: EvmChain
+- id: morph_holesky_testnet
+  mainnet: false
+  rpcUrl: https://rpc-holesky.morphl2.io
+  networkId: 2810
+  type: EvmChain
+- id: tabi_testnet
+  mainnet: false
+  rpcUrl: https://rpc-internal.testnet.tabichain.com/
+  networkId: 9789
+  type: EvmChain
