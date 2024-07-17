@@ -168,6 +168,7 @@ export const RECEIVER_CHAINS = {
   sei_evm_testnet: 50085,
   klaytn_testnet: 50086,
   morph_holesky_testnet: 50087,
+  tabi_testnet: 50088,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
