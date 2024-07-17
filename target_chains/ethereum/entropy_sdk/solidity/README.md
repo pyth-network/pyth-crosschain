@@ -133,6 +133,7 @@ contract MyContract is PRNG {
     PRNG(_seed);
   }
 }
+
 ```
 
 2. Use the contract functions to generate random numbers:
