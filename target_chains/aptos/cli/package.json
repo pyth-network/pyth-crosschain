@@ -4,7 +4,6 @@
   "description": "Utilities for managing the Pyth Target Chain contract on Aptos",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "cli": "ts-node src/cli.ts",
     "build": "tsc"
   },
