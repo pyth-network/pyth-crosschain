@@ -82,7 +82,7 @@ where
         Ok(nonce)
     } // guard dropped here
 
-    pub async fn reset(&self) {
+    pub fn reset(&self) {
         self.initialized.store(false, Ordering::SeqCst);
     }
 

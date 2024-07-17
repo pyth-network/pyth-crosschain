@@ -493,28 +493,25 @@ pub async fn process_event(
             ))
         })?;
 
-    let optional_receipt = pending_tx.await.map_err(|e| {
-        backoff::Error::transient(anyhow!(
-            "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
-            transaction,
-            e
-        ))
-    })?;
-
-
-    let receipt = match optional_receipt {
-        Some(receipt) => receipt,
-        None => {
+    let receipt = pending_tx
+        .await
+        .map_err(|e| {
+            backoff::Error::transient(anyhow!(
+                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
+                transaction,
+                e
+            ))
+        })?
+        .ok_or_else(|| {
             // RPC may not return an error on tx submission if the nonce is too high.
             // But we will never get a receipt. So we reset the nonce manager to get the correct nonce.
             let nonce_manager = contract.client_ref().inner().inner();
-            nonce_manager.reset().await;
-            return Err(backoff::Error::transient(anyhow!(
+            nonce_manager.reset();
+            backoff::Error::transient(anyhow!(
                 "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
                 transaction
-            )));
-        }
-    };
+            ))
+        })?;
 
     tracing::info!(
         sequence_number = &event.sequence_number,
