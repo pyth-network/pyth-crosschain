@@ -11,7 +11,7 @@ import { metadata } from "../../metadata";
 
 type EvmProviderProps = {
   children: ReactNode;
-  walletConnectProjectId: string;
+  walletConnectProjectId?: string | undefined;
 };
 
 export const EvmProvider = ({
@@ -28,11 +28,11 @@ export const EvmProvider = ({
           [arbitrum.id]: http(),
           [sepolia.id]: http(),
         },
-        walletConnectProjectId,
         appName: metadata.applicationName,
         appDescription: metadata.description,
         appUrl: metadata.metadataBase.toString(),
         appIcon: metadata.icons.apple.url,
+        walletConnectProjectId: walletConnectProjectId ?? "",
       }),
     )}
   >
