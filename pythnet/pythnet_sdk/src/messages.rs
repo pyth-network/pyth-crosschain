@@ -11,6 +11,7 @@ use borsh::{
 #[cfg(feature = "quickcheck")]
 use quickcheck::Arbitrary;
 use {
+    crate::wire::PrefixedVec,
     borsh::BorshSchema,
     serde::{
         Deserialize,
@@ -180,7 +181,7 @@ impl Arbitrary for TwapMessage {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublisherCapsMessage {
     pub publish_time: i64,
-    pub caps:         Vec<PublisherCap>,
+    pub caps:         PrefixedVec<u16, PublisherCap>,
 }
 
 #[repr(C)]
@@ -196,7 +197,7 @@ impl Arbitrary for PublisherCapsMessage {
         let caps = Vec::arbitrary(g);
         PublisherCapsMessage {
             publish_time: i64::arbitrary(g),
-            caps,
+            caps:         caps.into(),
         }
     }
 }
