@@ -503,6 +503,10 @@ pub async fn process_event(
             ))
         })?
         .ok_or_else(|| {
+            // RPC may not return an error on tx submission if the nonce is too high.
+            // But we will never get a receipt. So we reset the nonce manager to get the correct nonce.
+            let nonce_manager = contract.client_ref().inner().inner();
+            nonce_manager.reset();
             backoff::Error::transient(anyhow!(
                 "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
                 transaction
