@@ -7,7 +7,7 @@ export default {
     type: 'website',
     images: [
       {
-        url: 'https://staking.pyth.network/default-banner.png',
+        url: 'https://proposals.pyth.network/default-banner.png',
         width: 1200,
         height: 630,
         alt: 'Pyth Network',
