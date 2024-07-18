@@ -1,4 +1,5 @@
 // This is a copy of the NonceManagerMiddleware from ethers-rs, with an additional reset method.
+// Copied from: https://github.com/gakonst/ethers-rs/blob/34ed9e372e66235aed7074bc3f5c14922b139242/ethers-middleware/src/nonce_manager.rs
 
 use {
     axum::async_trait,
@@ -82,6 +83,11 @@ where
         Ok(nonce)
     } // guard dropped here
 
+    /// Resets the initialized flag so the next usage of the manager will reinitialize the nonce
+    /// based on the chain state.
+    /// This is useful when the RPC does not return an error if the transaction is submitted with
+    /// an incorrect nonce.
+    /// This is the only new method compared to the original NonceManagerMiddleware.
     pub fn reset(&self) {
         self.initialized.store(false, Ordering::SeqCst);
     }
