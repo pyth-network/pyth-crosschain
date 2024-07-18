@@ -51,7 +51,7 @@ use {
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
-    PublisherCapsMessage(PublisherStakeCapsMessage),
+    PublisherStakeCapsMessage(PublisherStakeCapsMessage),
 }
 
 impl Message {
@@ -59,7 +59,7 @@ impl Message {
         match self {
             Self::PriceFeedMessage(msg) => msg.publish_time,
             Self::TwapMessage(msg) => msg.publish_time,
-            Self::PublisherCapsMessage(msg) => msg.publish_time,
+            Self::PublisherStakeCapsMessage(msg) => msg.publish_time,
         }
     }
 
@@ -67,7 +67,7 @@ impl Message {
         match self {
             Self::PriceFeedMessage(msg) => msg.feed_id,
             Self::TwapMessage(msg) => msg.feed_id,
-            Self::PublisherCapsMessage(_) => [0u8; 32],
+            Self::PublisherStakeCapsMessage(_) => [0u8; 32],
         }
     }
 }
