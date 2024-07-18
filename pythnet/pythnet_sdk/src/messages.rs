@@ -51,7 +51,7 @@ use {
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
-    PublisherCapsMessage(PublisherCapsMessage),
+    PublisherCapsMessage(PublisherStakeCapsMessage),
 }
 
 impl Message {
@@ -84,6 +84,7 @@ impl Arbitrary for Message {
 
 /// Id of a feed producing the message. One feed produces one or more messages.
 pub type FeedId = [u8; 32];
+pub type Pubkey = [u8; 32];
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
@@ -179,23 +180,23 @@ impl Arbitrary for TwapMessage {
 
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct PublisherCapsMessage {
+pub struct PublisherStakeCapsMessage {
     pub publish_time: i64,
-    pub caps:         PrefixedVec<u16, PublisherCap>,
+    pub caps:         PrefixedVec<u16, PublisherStakeCap>, // PrefixedVec because we might have more than 256 publishers
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
-pub struct PublisherCap {
-    pub publisher: [u8; 32],
+pub struct PublisherStakeCap {
+    pub publisher: Pubkey,
     pub cap:       u64,
 }
 
 #[cfg(feature = "quickcheck")]
-impl Arbitrary for PublisherCapsMessage {
+impl Arbitrary for PublisherStakeCapsMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         let caps = Vec::arbitrary(g);
-        PublisherCapsMessage {
+        PublisherStakeCapsMessage {
             publish_time: i64::arbitrary(g),
             caps:         caps.into(),
         }
@@ -203,9 +204,9 @@ impl Arbitrary for PublisherCapsMessage {
 }
 
 #[cfg(feature = "quickcheck")]
-impl Arbitrary for PublisherCap {
+impl Arbitrary for PublisherStakeCap {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        PublisherCap {
+        PublisherStakeCap {
             publisher: {
                 let mut publisher = [0u8; 32];
                 for item in &mut publisher {
