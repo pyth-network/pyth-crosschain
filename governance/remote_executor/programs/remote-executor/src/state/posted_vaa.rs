@@ -10,7 +10,13 @@ use {
 
 // The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
-    #[cfg(not(feature = "pythtest"))]
+    // do something like this
+    // #[cfg(feature = "eclipse-testnet")]
+    // fn owner() -> Pubkey {
+    //     Pubkey::from_str("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ").unwrap()
+    // }
+
+    // #[cfg(not(feature = "pythtest"))]
     fn owner() -> Pubkey {
         Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap()
     }

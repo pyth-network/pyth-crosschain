@@ -4,6 +4,7 @@ use {
         state::{
             claim_record::ClaimRecord,
             governance_payload::{
+                get_chain_id_by_env_var,
                 ExecutorPayload,
                 GovernanceHeader,
                 InstructionData,
@@ -172,7 +173,7 @@ impl ExecutorBench {
         };
 
         let payload = ExecutorPayload {
-            header:       GovernanceHeader::executor_governance_header(),
+            header:       GovernanceHeader::executor_governance_header(get_chain_id_by_env_var()),
             instructions: instructions.iter().map(InstructionData::from).collect(),
         };
 

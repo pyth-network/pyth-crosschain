@@ -6,14 +6,35 @@ use {
     },
     boolinator::Boolinator,
     std::{
+        collections::HashMap,
         io::ErrorKind,
         mem::size_of,
         ops::Deref,
     },
-    wormhole_sdk::Chain,
 };
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers (the solidity contract uses 0x5054474d)
+
+lazy_static::lazy_static! {
+    static ref CHAIN_MAP: HashMap<&'static str, u16> = {
+        let mut m = HashMap::new();
+        m.insert("pythnet", 26);
+        m.insert("eclipse_testnet", 40001);
+        // Add other chains here
+        m
+    };
+
+    static ref CHAIN_ID: u16 = get_chain_id_by_env_var();
+}
+
+pub fn get_chain_id(chain: &str) -> Option<u16> {
+    CHAIN_MAP.get(chain.to_lowercase().as_str()).copied()
+}
+
+pub fn get_chain_id_by_env_var() -> u16 {
+    let chain = option_env!("RECEIVER_CHAIN").expect("RECEIVER_CHAIN environment variable not set");
+    get_chain_id(chain).expect("Unknown receiver chain")
+}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq)]
 pub struct ExecutorPayload {
@@ -48,14 +69,12 @@ pub struct GovernanceHeader {
 
 impl GovernanceHeader {
     #[allow(unused)] // Only used in tests right now
-    pub fn executor_governance_header() -> Self {
+    pub fn executor_governance_header(chain: u16) -> Self {
         Self {
             magic_number: MAGIC_NUMBER,
             module:       Module::Executor,
             action:       Action::ExecutePostedVaa,
-            chain:        BigEndianU16 {
-                value: Chain::Pythnet.try_into().unwrap(),
-            },
+            chain:        BigEndianU16 { value: chain },
         }
     }
 }
@@ -163,7 +182,7 @@ impl ExecutorPayload {
             .ok_or(error!(ExecutorError::GovernanceHeaderInvalidModule))?;
         (self.header.action == ExecutorPayload::ACTION)
             .ok_or(error!(ExecutorError::GovernanceHeaderInvalidAction))?;
-        (Chain::from(self.header.chain.value) == Chain::Pythnet)
+        (self.header.chain.value == *CHAIN_ID)
             .ok_or(error!(ExecutorError::GovernanceHeaderInvalidReceiverChain))
     }
 }
@@ -173,12 +192,17 @@ pub mod tests {
     use {
         super::ExecutorPayload,
         crate::{
-            error,
             error::ExecutorError,
-            state::governance_payload::InstructionData,
+            state::governance_payload::{
+                InstructionData,
+                CHAIN_ID,
+            },
         },
         anchor_lang::{
-            prelude::Pubkey,
+            prelude::{
+                Pubkey,
+                *,
+            },
             AnchorDeserialize,
             AnchorSerialize,
         },
@@ -188,7 +212,7 @@ pub mod tests {
     fn test_check_deserialization_serialization() {
         // No instructions
         let payload = ExecutorPayload {
-            header:       super::GovernanceHeader::executor_governance_header(),
+            header:       super::GovernanceHeader::executor_governance_header(*CHAIN_ID),
             instructions: vec![],
         };
 
@@ -203,7 +227,7 @@ pub mod tests {
 
         // One instruction
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader::executor_governance_header(),
+            header: super::GovernanceHeader::executor_governance_header(*CHAIN_ID),
 
             instructions: vec![InstructionData::from(
                 &anchor_lang::solana_program::system_instruction::create_account(

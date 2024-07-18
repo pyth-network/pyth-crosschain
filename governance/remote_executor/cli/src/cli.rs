@@ -4,6 +4,7 @@ use {
         Parser,
         Subcommand,
     },
+    remote_executor::state::governance_payload::get_chain_id,
     solana_sdk::{
         commitment_config::CommitmentConfig,
         pubkey::Pubkey,
@@ -18,8 +19,14 @@ use {
 pub struct Cli {
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
+    #[clap(long, default_value = "pythnet", parse(try_from_str = parse_chain))]
+    pub chain:      u16,
     #[clap(subcommand)]
     pub action:     Action,
+}
+
+fn parse_chain(chain: &str) -> Result<u16, String> {
+    get_chain_id(chain).ok_or_else(|| format!("Unsupported chain: {}", chain))
 }
 
 #[derive(Subcommand, Debug)]
