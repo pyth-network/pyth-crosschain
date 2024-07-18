@@ -8,12 +8,12 @@ export const getPrice = readApi<"id">({
   name: "getPrice",
   summary: "Get the **latest** price object for the requested price feed ID.",
   description: `
-Get the latest price and confidence interval for the requested price feed id.
-The price feed id is a 32-byte id written as a hexadecimal string; see the
-[price feed ids](https://pyth.network/developers/price-feed-ids) page to look up
-the id for a given symbol. The returned price and confidence are decimal numbers
+  Get the **latest** price objects which includes the \`price\`, \`confidence\`, \`exponent\`, and \`timestamp\` for the requested price feed ID.
+ The returned price and confidence are decimal numbers
 written in the form \`a * 10^e\`, where \`e\` is an exponent included in the
-result. For example, a price of 1234 with an exponent of -2 represents the
+result. 
+
+For example, a price of 1234 with an exponent of -2 represents the
 number 12.34. The result also includes a \`publishTime\` which is the unix
 timestamp for the price update.
 
