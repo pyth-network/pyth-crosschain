@@ -1,6 +1,7 @@
 pub mod accumulators;
 pub mod hashers;
 pub mod payload;
+pub mod publisher_stake_caps;
 pub mod wormhole;
 
 pub(crate) type Pubkey = [u8; 32];
