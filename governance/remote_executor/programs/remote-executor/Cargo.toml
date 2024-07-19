@@ -16,7 +16,7 @@ cpi = ["no-entrypoint"]
 default = ["pythnet"]
 pythnet = []
 pythtest = []
-eclipse_testnet = []
+eclipse_devnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}

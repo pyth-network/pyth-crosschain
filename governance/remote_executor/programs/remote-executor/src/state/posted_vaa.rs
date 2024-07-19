@@ -1,10 +1,6 @@
 use {
     anchor_lang::prelude::*,
-    std::{
-        io::Write,
-        ops::Deref,
-        str::FromStr,
-    },
+    std::{io::Write, ops::Deref, str::FromStr},
     wormhole_solana::VAA,
 };
 
@@ -20,7 +16,7 @@ impl Owner for AnchorVaa {
         Pubkey::from_str("EUrRARh92Cdc54xrDn6qzaqjA77NRrCcfbr8kPwoTL4z").unwrap()
     }
 
-    #[cfg(feature = "eclipse_testnet")]
+    #[cfg(feature = "eclipse_devnet")]
     fn owner() -> Pubkey {
         Pubkey::from_str("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ").unwrap()
     }
@@ -57,5 +53,5 @@ impl Deref for AnchorVaa {
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
     pub magic: [u8; 3],
-    pub vaa:   VAA,
+    pub vaa: VAA,
 }
