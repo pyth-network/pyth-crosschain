@@ -1,11 +1,7 @@
 //! CLI options
 use {
-    clap::{
-        Parser,
-        Subcommand,
-    },
+    clap::Parser,
     solana_sdk::{
-        commitment_config::CommitmentConfig,
         pubkey::Pubkey,
         signature::{
             read_keypair_file,

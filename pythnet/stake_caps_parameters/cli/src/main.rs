@@ -10,10 +10,7 @@ use {
     solana_sdk::{
         commitment_config::CommitmentConfig,
         instruction::Instruction,
-        signer::{
-            keypair,
-            Signer,
-        },
+        signer::Signer,
         transaction::Transaction,
     },
     stake_caps_parameters::{

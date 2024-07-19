@@ -1,9 +1,7 @@
 use {
     anchor_lang::{
         error::Error,
-        prelude::thiserror::Error,
         solana_program::native_token::LAMPORTS_PER_SOL,
-        system_program,
         AccountDeserialize,
         InstructionData,
         ToAccountMetas,
