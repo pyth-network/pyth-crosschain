@@ -1,7 +1,0 @@
-[env]
-# Set ENV_VAR_NAME=value for any process run by Cargo
-BRIDGE_ADDRESS = "value"
-# Set even if already present in environment
-ENV_VAR_NAME_2 = { value = "value", force = true }
-# Value is relative to .cargo directory containing `config.toml`, make absolute
-ENV_VAR_NAME_3 = { value = "relative/path", relative = true }

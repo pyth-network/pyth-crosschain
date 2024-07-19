@@ -1,6 +1,10 @@
 use {
     anchor_lang::prelude::*,
-    std::{io::Write, ops::Deref, str::FromStr},
+    std::{
+        io::Write,
+        ops::Deref,
+        str::FromStr,
+    },
     wormhole_solana::VAA,
 };
 
@@ -54,5 +58,5 @@ impl Deref for AnchorVaa {
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
     pub magic: [u8; 3],
-    pub vaa: VAA,
+    pub vaa:   VAA,
 }

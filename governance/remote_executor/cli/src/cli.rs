@@ -1,8 +1,14 @@
 //! CLI options
 use {
-    clap::{Parser, Subcommand},
+    clap::{
+        Parser,
+        Subcommand,
+    },
     remote_executor::state::governance_payload::CHAIN_ID_ARRAY,
-    solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey},
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        pubkey::Pubkey,
+    },
 };
 
 #[derive(Parser, Debug)]
@@ -14,9 +20,9 @@ pub struct Cli {
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
     #[clap(long, default_value = "pythnet", parse(try_from_str = parse_chain))]
-    pub chain: u16,
+    pub chain:      u16,
     #[clap(subcommand)]
-    pub action: Action,
+    pub action:     Action,
 }
 
 fn parse_chain(chain: &str) -> Result<u16, String> {
@@ -32,7 +38,7 @@ pub enum Action {
     #[clap(about = "Post a VAA and execute it through the remote executor")]
     PostAndExecute {
         #[clap(short = 'v', long = "vaa")]
-        vaa: String,
+        vaa:     String,
         #[clap(
             long,
             default_value = "~/.config/solana/id.json",
@@ -54,22 +60,22 @@ pub enum Action {
     #[clap(about = "Get set upgrade authority payload for squads-cli")]
     GetSetUpgradeAuthorityPayload {
         #[clap(short, long, help = "Current authority")]
-        current: Pubkey,
+        current:    Pubkey,
         #[clap(short, long, help = "New authority")]
-        new: Pubkey,
+        new:        Pubkey,
         #[clap(short, long, help = "Program id")]
         program_id: Pubkey,
     },
     #[clap(about = "Get upgrade program payload for squads-cli")]
     GetUpgradeProgramPayload {
         #[clap(short, long, help = "Current authority")]
-        authority: Pubkey,
+        authority:  Pubkey,
         #[clap(short, long, help = "Program id")]
         program_id: Pubkey,
         #[clap(short, long, help = "New buffer")]
         new_buffer: Pubkey,
         #[clap(short, long, help = "Spill address")]
-        spill: Pubkey,
+        spill:      Pubkey,
     },
     #[clap(about = "Map solana key to pythnet key")]
     MapKey {
