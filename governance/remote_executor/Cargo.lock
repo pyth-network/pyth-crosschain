@@ -2813,7 +2813,6 @@ dependencies = [
  "anchor-lang",
  "bincode",
  "boolinator",
- "lazy_static",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program-test",
