@@ -29,7 +29,7 @@ pub struct Cli {
     pub m:         u64,
     #[clap(long, help = "Z parameter")]
     pub z:         u64,
-    #[clap(long, help = "Update authority for the parameters", required = false)]
+    #[clap(long, help = "Update authority for the parameters")]
     pub authority: Pubkey,
 }
 
