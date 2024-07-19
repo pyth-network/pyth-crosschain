@@ -34,7 +34,7 @@
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
-    "@pythnetwork/pyth-starknet-js": "^0.2.0",
+    "@pythnetwork/pyth-starknet-js": "^0.2.1",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
