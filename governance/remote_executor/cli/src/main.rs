@@ -78,8 +78,7 @@ fn main() -> Result<()> {
         Action::PostAndExecute { vaa, keypair } => {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
-            let rpc_client =
-                RpcClient::new_with_commitment("https://pythnet.rpcpool.com/", cli.commitment);
+            let rpc_client = RpcClient::new_with_commitment(&cli.rpc_url, cli.commitment);
 
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
             let wormhole = AnchorVaa::owner();

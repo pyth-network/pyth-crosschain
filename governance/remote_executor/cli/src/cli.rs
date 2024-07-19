@@ -21,6 +21,8 @@ pub struct Cli {
     pub commitment: CommitmentConfig,
     #[clap(long, default_value = "pythnet", parse(try_from_str = parse_chain))]
     pub chain:      u16,
+    #[clap(long, default_value = "https://pythnet.rpcpool.com/")]
+    pub rpc_url:    String,
     #[clap(subcommand)]
     pub action:     Action,
 }
