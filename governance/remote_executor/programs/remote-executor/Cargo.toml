@@ -13,8 +13,10 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = []
+default = ["pythnet"]
+pythnet = []
 pythtest = []
+eclipse_testnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
