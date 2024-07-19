@@ -7,7 +7,7 @@ use {
 };
 
 #[derive(Default, Clone, Copy, BorshDeserialize, BorshSerialize)]
-struct StakeCapParameters {
+pub struct StakeCapParameters {
     pub _discriminator:     u64,
     pub _current_authority: Pubkey,
     pub m:                  u64,
