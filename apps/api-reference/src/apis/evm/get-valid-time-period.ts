@@ -11,7 +11,6 @@ is older than this period.  The valid time period is configured to be a sane
 default for each blockchain.
   `,
   parameters: [],
-  examples: [],
   code: [
     solidity("uint validTimePeriod = pyth.getValidTimePeriod();"),
     ethersJS("const [validTimePeriod] = await contract.getValidTimePeriod();"),

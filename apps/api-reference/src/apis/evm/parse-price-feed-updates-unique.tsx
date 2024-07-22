@@ -47,7 +47,7 @@ within the given time range.
     },
     {
       name: "priceId",
-      type: ParameterType.HexArray,
+      type: ParameterType.PriceFeedIdArray,
       description: "The price ids whose feeds will be returned.",
     },
     {

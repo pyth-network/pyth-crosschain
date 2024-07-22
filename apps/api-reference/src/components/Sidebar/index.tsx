@@ -9,12 +9,9 @@ import {
   useState,
   type ComponentProps,
   type ElementType,
-  Fragment,
 } from "react";
-import Markdown from "react-markdown";
 
 import * as apis from "../../apis";
-import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import { Select } from "../Select";
 
 type Chain = keyof typeof apis;
@@ -30,9 +27,8 @@ const CHAIN_TO_NAME = {
 const MENU = Object.fromEntries(
   Object.entries(apis).map(([chain, methods]) => [
     chain,
-    Object.entries(methods).map(([name, { summary }]) => ({
+    Object.entries(methods).map(([name]) => ({
       name,
-      summary,
       href: `/price-feeds/${chain}/${name}`,
     })),
   ]),
@@ -59,8 +55,7 @@ export const Sidebar = ({
             value={chain}
             onChange={setChain}
             options={CHAINS}
-            anchor="bottom start"
-            buttonClassName="grow"
+            className="grow"
             renderOption={(chain) => CHAIN_TO_NAME[chain]}
           />
         </Field>
@@ -69,11 +64,9 @@ export const Sidebar = ({
           aria-label="Methods"
         >
           <ul className="contents">
-            {MENU[chain]?.map(({ name, href, summary }) => (
+            {MENU[chain]?.map(({ name, href }) => (
               <li className="contents" key={href}>
-                <MenuButton href={href} name={name}>
-                  {summary}
-                </MenuButton>
+                <MenuButton href={href}>{name}</MenuButton>
               </li>
             ))}
           </ul>
@@ -87,26 +80,18 @@ export const Sidebar = ({
 type MenuButtonProps = Omit<
   ComponentProps<typeof Link>,
   keyof MenuItemProps<typeof Link>
-> & {
-  name: string;
-  children: string;
-};
+>;
 
-const MenuButton = ({
-  className,
-  name,
-  children,
-  ...props
-}: MenuButtonProps) => {
+const MenuButton = ({ className, children, ...props }: MenuButtonProps) => {
   const segments = useSelectedLayoutSegments();
 
   return `/price-feeds/${segments.join("/")}` === props.href ? (
     <MenuItem
       className={className}
-      name={name}
-      summary={children}
       nameClassName="font-bold text-pythpurple-600 dark:text-pythpurple-400"
-    />
+    >
+      {children}
+    </MenuItem>
   ) : (
     <MenuItem
       as={Link}
@@ -115,44 +100,29 @@ const MenuButton = ({
         className,
       )}
       nameClassName="group-hover:text-pythpurple-600 dark:group-hover:text-pythpurple-400"
-      name={name}
-      summary={children}
       {...props}
-    />
+    >
+      {children}
+    </MenuItem>
   );
 };
 
 type MenuItemProps<T extends ElementType> = {
   as?: T;
-  name: string;
-  summary: string;
   nameClassName?: string | undefined;
 };
 
 const MenuItem = <T extends ElementType>({
   as,
   className,
-  name,
-  summary,
+  children,
   nameClassName,
   ...props
 }: Omit<ComponentProps<T>, keyof MenuItemProps<T>> & MenuItemProps<T>) => {
   const Component = as ?? "div";
   return (
     <Component className={clsx("rounded px-2 py-1", className)} {...props}>
-      <div className={clsx("text-sm", nameClassName)}>{name}</div>
-      <Markdown
-        className={clsx(
-          "ml-4 overflow-hidden text-ellipsis text-nowrap text-xs font-light",
-          className,
-        )}
-        components={{
-          ...MARKDOWN_COMPONENTS,
-          p: ({ children }) => <Fragment>{children}</Fragment>,
-        }}
-      >
-        {summary}
-      </Markdown>
+      <div className={clsx("text-sm", nameClassName)}>{children}</div>
     </Component>
   );
 };

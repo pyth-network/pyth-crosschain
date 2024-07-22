@@ -45,7 +45,7 @@ signed or formatted.
     },
     {
       name: "priceId",
-      type: ParameterType.HexArray,
+      type: ParameterType.PriceFeedIdArray,
       description: "The price ids to update.",
     },
     {

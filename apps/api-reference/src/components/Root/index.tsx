@@ -10,6 +10,7 @@ import {
   AMPLITUDE_API_KEY,
   WALLETCONNECT_PROJECT_ID,
 } from "../../server-config";
+import { PriceFeedListProvider } from "../../use-price-feed-list";
 import { Amplitude } from "../Amplitude";
 import { HighlighterProvider } from "../Code/use-highlighted-code";
 import { EvmProvider } from "../EvmProvider";
@@ -42,11 +43,13 @@ export const Root = ({ children }: Props) => (
     <body className="grid size-full grid-cols-1 grid-rows-[max-content_1fr_max-content] bg-white text-pythpurple-950 dark:bg-pythpurple-900 dark:text-white">
       <ThemeProvider attribute="class">
         <HighlighterProvider>
-          <EvmProvider walletConnectProjectId={WALLETCONNECT_PROJECT_ID}>
-            <Header className="z-10 border-b border-neutral-400 dark:border-neutral-600" />
-            <div className="size-full">{children}</div>
-            <Footer className="z-10 border-t border-neutral-400 dark:border-neutral-600" />
-          </EvmProvider>
+          <PriceFeedListProvider>
+            <EvmProvider walletConnectProjectId={WALLETCONNECT_PROJECT_ID}>
+              <Header className="z-10 border-b border-neutral-400 dark:border-neutral-600" />
+              <div className="size-full">{children}</div>
+              <Footer className="z-10 border-t border-neutral-400 dark:border-neutral-600" />
+            </EvmProvider>
+          </PriceFeedListProvider>
         </HighlighterProvider>
       </ThemeProvider>
     </body>

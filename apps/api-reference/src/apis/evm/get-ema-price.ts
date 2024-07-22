@@ -1,7 +1,4 @@
-import Btc from "cryptocurrency-icons/svg/color/btc.svg";
-import Eth from "cryptocurrency-icons/svg/color/eth.svg";
-
-import { readApi, BTCUSD, ETHUSD, solidity, ethersJS } from "./common";
+import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
 
 export const getEmaPrice = readApi<"id">({
@@ -38,13 +35,9 @@ attempted use of that feed on-chain. In the second case, calling
   parameters: [
     {
       name: "id",
-      type: ParameterType.Hex,
+      type: ParameterType.PriceFeedId,
       description: "The ID of the price feed you want to read",
     },
-  ],
-  examples: [
-    { name: "BTC/USD", icon: Btc, parameters: { id: BTCUSD } },
-    { name: "ETH/USD", icon: Eth, parameters: { id: ETHUSD } },
   ],
   code: [
     solidity(

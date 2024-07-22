@@ -1,7 +1,4 @@
-import Btc from "cryptocurrency-icons/svg/color/btc.svg";
-import Eth from "cryptocurrency-icons/svg/color/eth.svg";
-
-import { readApi, BTCUSD, ETHUSD, solidity, ethersJS } from "./common";
+import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
 
 export const getEmaPriceNoOlderThan = readApi<"id" | "age">({
@@ -35,7 +32,7 @@ attempted use of that feed on-chain. In the second case, calling
   parameters: [
     {
       name: "id",
-      type: ParameterType.Hex,
+      type: ParameterType.PriceFeedId,
       description: "The ID of the price feed you want to read",
     },
     {
@@ -43,10 +40,6 @@ attempted use of that feed on-chain. In the second case, calling
       type: ParameterType.Int,
       description: "Maximum age of the on-chain price in seconds.",
     },
-  ],
-  examples: [
-    { name: "BTC/USD", icon: Btc, parameters: { id: BTCUSD, age: "60" } },
-    { name: "ETH/USD", icon: Eth, parameters: { id: ETHUSD, age: "60" } },
   ],
   code: [
     solidity(
