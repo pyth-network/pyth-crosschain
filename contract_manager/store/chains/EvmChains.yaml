@@ -669,3 +669,8 @@
   rpcUrl: https://rpc.kinto-rpc.com
   networkId: 7887
   type: EvmChain
+- id: cronos_zkevm_testnet
+  mainnet: false
+  rpcUrl: https://testnet.zkevm.cronos.org
+  networkId: 282
+  type: EvmChain

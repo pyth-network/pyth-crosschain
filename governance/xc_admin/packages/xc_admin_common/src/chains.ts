@@ -172,6 +172,7 @@ export const RECEIVER_CHAINS = {
   tabi_testnet: 50088,
   movement_suzuka_testnet: 50089,
   b3_testnet: 50090,
+  cronos_zkevm_testnet: 50091,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
