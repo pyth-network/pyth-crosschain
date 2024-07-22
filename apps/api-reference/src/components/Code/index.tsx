@@ -122,23 +122,32 @@ const HighlightedCode = ({
   language,
   children,
   dimRange,
+  className,
   ...props
 }: HighlightedCodeProps) => {
   const highlightedCode = useHighlightedCode(language, children, dimRange);
 
-  return highlightedCode ? (
-    <div dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
-  ) : (
-    <div {...props}>
-      <pre className="shiki">
-        <code>
-          {children.split("\n").map((line, i) => (
-            <div key={i} className="line">
-              {line}
-            </div>
-          ))}
-        </code>
-      </pre>
-    </div>
+  return (
+    <div
+      className={clsx("overflow-hidden rounded-md", className)}
+      {...props}
+      {...(highlightedCode
+        ? {
+            dangerouslySetInnerHTML: { __html: highlightedCode },
+          }
+        : {
+            children: (
+              <pre className="shiki">
+                <code>
+                  {children.split("\n").map((line, i) => (
+                    <div key={i} className="line">
+                      {line}
+                    </div>
+                  ))}
+                </code>
+              </pre>
+            ),
+          })}
+    />
   );
 };

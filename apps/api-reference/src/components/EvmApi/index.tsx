@@ -27,11 +27,11 @@ import Markdown from "react-markdown";
 import { useSwitchChain, useChainId, useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 
-import { getContractAddress } from "./networks";
 import type { Parameter } from "./parameter";
 import { ParameterInput } from "./parameter-input";
 import { type EvmApiType, RunButton } from "./run-button";
 import { getLogger } from "../../browser-logger";
+import { getContractAddress } from "../../evm-networks";
 import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import { useIsMounted } from "../../use-is-mounted";
 import { type SupportedLanguage, Code } from "../Code";
@@ -53,7 +53,7 @@ type Common<ParameterName extends string> = {
   summary: string;
   description: string;
   parameters: Parameter<ParameterName>[];
-  examples: Example<ParameterName>[];
+  examples?: Example<ParameterName>[] | undefined;
   code: CodeSample<ParameterName>[];
 };
 
@@ -138,7 +138,7 @@ export const EvmApi = <ParameterName extends string>({
         </h2>
         <Markdown components={MARKDOWN_COMPONENTS}>{description}</Markdown>
       </section>
-      <section className="flex flex-col">
+      <section className="flex min-w-0 flex-col">
         <h2 className="mb-4 border-b border-neutral-200 text-2xl/loose font-medium dark:border-neutral-800">
           Arguments
         </h2>
@@ -161,8 +161,7 @@ export const EvmApi = <ParameterName extends string>({
             </div>
           )}
         </div>
-        <div className="grow" />
-        {examples.length > 0 && (
+        {examples && examples.length > 0 && (
           <div className="mb-8">
             <h3 className="text-sm font-semibold">Examples</h3>
             <ul className="ml-2 text-sm">
@@ -182,23 +181,41 @@ export const EvmApi = <ParameterName extends string>({
               switchChain({ chainId: id });
             }}
             renderButtonContents={({ id, name }) => (
-              <div className="flex h-8 flex-row items-center gap-2">
+              <div className="flex h-8 grow basis-0 flex-row items-center gap-2 overflow-hidden">
                 {isMounted && (
                   <>
                     <ChainIcon id={id} />
-                    <span>{name}</span>
+                    <div className="grow basis-0 truncate">{name}</div>
                   </>
                 )}
               </div>
             )}
             renderOption={({ id, name }) => (
-              <div className="flex flex-row items-center gap-2">
+              <div key={id} className="flex flex-row items-center gap-2">
                 <ChainIcon id={id} />
                 <span>{name}</span>
               </div>
             )}
-            options={chains}
-            buttonClassName="grow"
+            optionGroups={[
+              {
+                name: "Mainnet",
+                options: chains
+                  .filter((chain) => !chain.testnet)
+                  .sort((a, b) => a.name.localeCompare(b.name)),
+              },
+              {
+                name: "Testnet",
+                options: chains
+                  .filter((chain) => chain.testnet)
+                  .sort((a, b) => a.name.localeCompare(b.name)),
+              },
+            ]}
+            filter={(chains, value) =>
+              chains.filter((chain) =>
+                chain.name.toLowerCase().includes(value.toLowerCase()),
+              )
+            }
+            className="min-w-0 grow"
           />
         </Field>
         <RunButton

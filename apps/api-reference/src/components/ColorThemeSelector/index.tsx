@@ -49,7 +49,6 @@ export const ColorThemeSelector = () => {
       value={theme}
       onChange={setTheme}
       options={VALID_THEMES}
-      anchor="bottom end"
       renderOption={(theme) => (
         <>
           {createElement(THEME_ICONS[theme], {

@@ -5,7 +5,7 @@ repos:
       - id: trailing-whitespace
         exclude: target_chains/sui/vendor/|patches/
       - id: end-of-file-fixer
-        exclude: target_chains/sui/vendor/|patches/
+        exclude: target_chains/sui/vendor/|patches/|apps/api-reference/public/currency-icons/
       - id: check-added-large-files
         exclude: target_chains/sui/vendor/|patches/
   # Hook to format many type of files in the repo

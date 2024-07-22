@@ -6,7 +6,7 @@ import {
   type InputProps,
 } from "@headlessui/react";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import { type Ref, type ReactNode, forwardRef } from "react";
 
 import { ErrorTooltip } from "../ErrorTooltip";
 
@@ -17,15 +17,18 @@ type Props = InputProps & {
   validationError?: string | undefined;
 };
 
-export const Input = ({
-  label,
-  description,
-  className,
-  required,
-  invalid,
-  validationError,
-  ...props
-}: Props) => (
+const InputImpl = (
+  {
+    label,
+    description,
+    className,
+    required,
+    invalid,
+    validationError,
+    ...props
+  }: Props,
+  ref: Ref<HTMLElement>,
+) => (
   <Field className="flex flex-col gap-1">
     <Label className="ml-3 font-semibold text-neutral-600 dark:text-neutral-400">
       {label}
@@ -35,6 +38,7 @@ export const Input = ({
     </Label>
     <div className="relative h-12 w-full">
       <HeadlessUiInput
+        ref={ref}
         invalid={invalid === true || validationError !== undefined}
         className={clsx(
           "flex size-full flex-row items-center justify-between truncate rounded border border-neutral-500 bg-transparent px-3 text-left text-sm placeholder:opacity-60 data-[focus]:border-pythpurple-600 data-[invalid]:border-red-500 data-[invalid]:data-[focus]:border-pythpurple-600 data-[invalid]:pl-3 data-[invalid]:pr-12 data-[focus]:ring-pythpurple-600 dark:data-[focus]:border-pythpurple-400 dark:data-[invalid]:border-red-600 dark:data-[invalid]:data-[focus]:border-pythpurple-400 dark:data-[focus]:ring-pythpurple-400",
@@ -53,3 +57,5 @@ export const Input = ({
     </Description>
   </Field>
 );
+
+export const Input = forwardRef(InputImpl);
