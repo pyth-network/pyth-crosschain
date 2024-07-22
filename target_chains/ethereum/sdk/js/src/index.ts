@@ -101,6 +101,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   kakarot_sepolia: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
   kava_testnet: "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
   kcc_testnet: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+  kinto: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   klaytn_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   lightlink_pegasus_testnet: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
   linea_goerli: "0xdF21D137Aadc95588205586636710ca2890538d5",

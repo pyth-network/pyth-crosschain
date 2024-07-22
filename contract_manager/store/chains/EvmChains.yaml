@@ -664,3 +664,8 @@
   rpcUrl: https://sepolia.b3.fun/http/
   networkId: 1993
   type: EvmChain
+- id: kinto
+  mainnet: true
+  rpcUrl: https://rpc.kinto-rpc.com
+  networkId: 7887
+  type: EvmChain
