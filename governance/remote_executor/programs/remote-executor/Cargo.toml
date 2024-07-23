@@ -14,9 +14,15 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = ["pythnet"]
+# These features determine the network for deployment:
+# - Use `pythnet` for deploying on Pythnet
+# - Use `pythtest` for deploying on Pythtest
+# - Use `eclipse_devnet` for deploying on Eclipse Devnet
+# etc...
 pythnet = []
 pythtest = []
 eclipse_devnet = []
+eclipse_testnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}

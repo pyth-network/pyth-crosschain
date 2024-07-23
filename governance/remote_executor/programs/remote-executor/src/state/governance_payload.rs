@@ -14,14 +14,21 @@ use {
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers (the solidity contract uses 0x5054474d)
 
-pub const CHAIN_ID_ARRAY: &[(&str, u16)] =
-    &[("pythnet", 26), ("pythtest", 26), ("eclipse_devnet", 40001)];
+pub const CHAIN_ID_ARRAY: &[(&str, u16)] = &[
+    ("pythnet", 26),
+    ("pythtest", 26),
+    ("eclipse_devnet", 40001),
+    ("eclipse_testnet", 40002),
+];
 
 #[cfg(any(feature = "pythnet", feature = "pythtest"))]
 pub const CHAIN_ID: u16 = 26;
 
 #[cfg(feature = "eclipse_devnet")]
 pub const CHAIN_ID: u16 = 40001;
+
+#[cfg(feature = "eclipse_testnet")]
+pub const CHAIN_ID: u16 = 40002;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq)]
 pub struct ExecutorPayload {

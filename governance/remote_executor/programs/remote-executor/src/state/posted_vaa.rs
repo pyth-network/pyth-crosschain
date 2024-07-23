@@ -20,7 +20,7 @@ impl Owner for AnchorVaa {
         Pubkey::from_str("EUrRARh92Cdc54xrDn6qzaqjA77NRrCcfbr8kPwoTL4z").unwrap()
     }
 
-    #[cfg(feature = "eclipse_devnet")]
+    #[cfg(any(feature = "eclipse_devnet", feature = "eclipse_testnet"))]
     fn owner() -> Pubkey {
         Pubkey::from_str("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ").unwrap()
     }
