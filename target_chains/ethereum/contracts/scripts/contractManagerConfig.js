@@ -17,7 +17,7 @@ function getDefaultConfig(chainName) {
   const chain = DefaultStore.chains[chainName];
   console.log("***chain", chain);
   const { dataSources, governanceDataSource, wormholeConfig } =
-    getDefaultDeploymentConfig(chain.isMainnet() ? "stable" : "edge");
+    getDefaultDeploymentConfig("stable");
 
   const emitterChainIds = dataSources.map((dataSource) =>
     convertChainId(dataSource.emitterChain)

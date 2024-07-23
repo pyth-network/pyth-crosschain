@@ -16,25 +16,25 @@ module.exports = {
   },
   defaultNetwork: "cronosZkEvmTestnet",
   networks: {
-    // [process.env.MIGRATIONS_NETWORK!]: {
-    //   url: process.env.RPC_URL,
-    //   chainId: Number(process.env.NETWORK_ID),
-    //   accounts: {
-    //     mnemonic: process.env.MNEMONIC,
-    //   },
-    // },
-    // goerli: {
-    //   url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
-    //   zksync: false,
-    // },
-    // zkSyncTestnet: {
-    //   url: "https://zksync2-testnet.zksync.dev", // URL of the zkSync network RPC
-    //   ethNetwork: "goerli", // Can also be the RPC URL of the Ethereum network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
-    //   zksync: true,
-    //   chainId: 280,
-    //   verifyURL:
-    //     "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
-    // },
+    [process.env.MIGRATIONS_NETWORK!]: {
+      url: process.env.RPC_URL,
+      chainId: Number(process.env.NETWORK_ID),
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      zksync: false,
+    },
+    zkSyncTestnet: {
+      url: "https://zksync2-testnet.zksync.dev", // URL of the zkSync network RPC
+      ethNetwork: "goerli", // Can also be the RPC URL of the Ethereum network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
+      zksync: true,
+      chainId: 280,
+      verifyURL:
+        "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
+    },
     zkSyncMainnet: {
       url: "https://zksync2-mainnet.zksync.io",
       ethNetwork: "mainnet",
@@ -49,21 +49,21 @@ module.exports = {
       zksync: true,
       verifyURL: "https://explorer.zkevm.cronos.org/contract_verification",
 
-  }
-    // neon_devnet: {
-    //   url: "https://devnet.neonevm.org",
-    //   chainId: 245022926,
-    //   accounts: {
-    //     mnemonic: process.env.MNEMONIC,
-    //   },
-    // },
-    // shimmer_testnet: {
-    //   url: "https://json-rpc.evm.testnet.shimmer.network",
-    //   chainId: 1071,
-    //   accounts: {
-    //     mnemonic: process.env.MNEMONIC,
-    //   },
-    // },
+  },
+    neon_devnet: {
+      url: "https://devnet.neonevm.org",
+      chainId: 245022926,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
+    shimmer_testnet: {
+      url: "https://json-rpc.evm.testnet.shimmer.network",
+      chainId: 1071,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
   },
   etherscan: {
     apiKey: {

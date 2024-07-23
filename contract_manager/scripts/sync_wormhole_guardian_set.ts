@@ -68,9 +68,9 @@ async function main() {
 
         // TODO: This is a temporary workaround to skip contracts that are in beta channel
         // We should have a better way to handle this
-        if ((await wormhole.getCurrentGuardianSetIndex()) === 0) {
-          continue;
-        }
+        // if ((await wormhole.getCurrentGuardianSetIndex()) === 0) {
+        //   continue;
+        // }
 
         console.log(
           `Current Guardianset for ${contract.getId()}: ${await wormhole.getCurrentGuardianSetIndex()}`
