@@ -86,9 +86,8 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
   );
 
-  const governanceInitialSequence = Number(
-    process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0"
-  );
+  // Hardcoding the initial sequence number for governance messages.
+  const governanceInitialSequence = Number("0");
 
   const validTimePeriodSeconds = Number(envOrErr("VALID_TIME_PERIOD_SECONDS"));
   const singleUpdateFeeInWei = Number(envOrErr("SINGLE_UPDATE_FEE_IN_WEI"));
@@ -97,6 +96,8 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const pythProxyArtifact = await deployer.loadArtifact("ERC1967Proxy");
 
   const pythImplContract = await deployer.deploy(pythImplArtifact);
+
+  console.log(`Deployed Pyth implementation on ${pythImplContract.address}`);
 
   const pythInitData = pythImplContract.interface.encodeFunctionData(
     "initialize",
@@ -119,24 +120,24 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`Deployed Pyth contract on ${pythProxyContract.address}`);
 
-  const networkId = hre.network.config.chainId;
-  const registryPath = `networks/${networkId}.json`;
-  console.log(`Saving addresses in ${registryPath}`);
-  writeFileSync(
-    registryPath,
-    JSON.stringify(
-      [
-        {
-          contractName: "WormholeReceiver",
-          address: wormholeReceiverContract.address,
-        },
-        {
-          contractName: "PythUpgradable",
-          address: pythProxyContract.address,
-        },
-      ],
-      null,
-      2
-    )
-  );
+  //   const networkId = hre.network.config.chainId;
+  //   const registryPath = `networks/${networkId}.json`;
+  //   console.log(`Saving addresses in ${registryPath}`);
+  //   writeFileSync(
+  //     registryPath,
+  //     JSON.stringify(
+  //       [
+  //         {
+  //           contractName: "WormholeReceiver",
+  //           address: wormholeReceiverContract.address,
+  //         },
+  //         {
+  //           contractName: "PythUpgradable",
+  //           address: pythProxyContract.address,
+  //         },
+  //       ],
+  //       null,
+  //       2
+  //     )
+  //   );
 }
