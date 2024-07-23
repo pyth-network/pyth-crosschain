@@ -88,7 +88,7 @@ export const RunButton = <ParameterName extends string>(
       {status.type === StatusType.Results && (
         <div>
           <h3 className="mb-2 text-lg font-bold">Results</h3>
-          <Code language="javascript">{stringifyResponse(status.data)}</Code>
+          <Code language="json">{stringifyResponse(status.data)}</Code>
         </div>
       )}
       {status.type === StatusType.Error && (

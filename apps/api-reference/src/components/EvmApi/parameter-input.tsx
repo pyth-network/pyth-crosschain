@@ -12,13 +12,11 @@ import {
   type ChangeEvent,
   type Dispatch,
   type SetStateAction,
-  Fragment,
   useState,
   useCallback,
   useMemo,
   useEffect,
 } from "react";
-import Markdown from "react-markdown";
 
 import {
   type Parameter,
@@ -27,7 +25,6 @@ import {
   getValidationError,
   ParameterType,
 } from "./parameter";
-import { MARKDOWN_COMPONENTS } from "../../markdown-components";
 import {
   type PriceFeed,
   PriceFeedListContextType,
@@ -35,6 +32,7 @@ import {
 } from "../../use-price-feed-list";
 import { InlineLink } from "../InlineLink";
 import { Input } from "../Input";
+import { Markdown } from "../Markdown";
 
 type ParameterProps<ParameterName extends string> = {
   spec: Parameter<ParameterName>;
@@ -101,16 +99,7 @@ const PriceFeedIdInput = <ParameterName extends string>({
         onChange={onChangeInput}
         validationError={validationError}
         label={spec.name}
-        description={
-          <Markdown
-            components={{
-              ...MARKDOWN_COMPONENTS,
-              p: ({ children }) => <Fragment>{children}</Fragment>,
-            }}
-          >
-            {spec.description}
-          </Markdown>
-        }
+        description={<Markdown inline>{spec.description}</Markdown>}
         placeholder={PLACEHOLDERS[spec.type]}
         required={true}
       />
@@ -241,16 +230,7 @@ const DefaultParameterInput = <ParameterName extends string>({
     <Input
       validationError={validationError}
       label={spec.name}
-      description={
-        <Markdown
-          components={{
-            ...MARKDOWN_COMPONENTS,
-            p: ({ children }) => <Fragment>{children}</Fragment>,
-          }}
-        >
-          {spec.description}
-        </Markdown>
-      }
+      description={<Markdown inline>{spec.description}</Markdown>}
       placeholder={PLACEHOLDERS[spec.type]}
       required={true}
       value={internalValue}

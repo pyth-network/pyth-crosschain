@@ -12,7 +12,8 @@ import {
 } from "react";
 import type { OffsetOrPosition } from "shiki";
 
-import type { Highlighter, SupportedLanguage } from "./shiki";
+import type { Highlighter } from "./shiki";
+import type { SupportedLanguage } from "./supported-language";
 import { getLogger } from "../../browser-logger";
 
 const HighlighterContext = createContext<
@@ -45,7 +46,7 @@ const useHighlighter = () => {
 };
 
 export const useHighlightedCode = (
-  language: SupportedLanguage,
+  language: SupportedLanguage | undefined,
   code: string,
   dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined,
 ) => {
