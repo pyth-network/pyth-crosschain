@@ -5,6 +5,23 @@ export const getPrice = readApi<"id">({
   name: "getPrice",
   summary: "Get the **latest** price object for the requested price feed ID.",
   description: `
+  This method returns the latest price object for the requested price feed ID.
+
+  The \`Price\` object contains the following fields:
+  1. \`price\`: The price of the asset.
+  2. \`conf\`: The confidence level of the price.
+  3. \`expo\`: The exponent of the price.
+  4. \`publishTime\`: The timestamp of the price update.
+
+  Sample \`Price\` object:
+  \`\`\`json
+  {
+    "price": "1234",
+    "conf": "1000",
+    "expo": "-2",
+    "publishTime": 1626892800
+  }
+  \`\`\`
 Get the latest price and confidence interval for the requested price feed id.
 The price feed id is a 32-byte id written as a hexadecimal string; see the
 [price feed ids](https://pyth.network/developers/price-feed-ids) page to look up
