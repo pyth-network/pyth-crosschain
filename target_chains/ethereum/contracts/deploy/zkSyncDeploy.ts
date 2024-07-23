@@ -120,24 +120,24 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`Deployed Pyth contract on ${pythProxyContract.address}`);
 
-//   const networkId = hre.network.config.chainId;
-//   const registryPath = `networks/${networkId}.json`;
-//   console.log(`Saving addresses in ${registryPath}`);
-//   writeFileSync(
-//     registryPath,
-//     JSON.stringify(
-//       [
-//         {
-//           contractName: "WormholeReceiver",
-//           address: wormholeReceiverContract.address,
-//         },
-//         {
-//           contractName: "PythUpgradable",
-//           address: pythProxyContract.address,
-//         },
-//       ],
-//       null,
-//       2
-//     )
-//   );
+  //   const networkId = hre.network.config.chainId;
+  //   const registryPath = `networks/${networkId}.json`;
+  //   console.log(`Saving addresses in ${registryPath}`);
+  //   writeFileSync(
+  //     registryPath,
+  //     JSON.stringify(
+  //       [
+  //         {
+  //           contractName: "WormholeReceiver",
+  //           address: wormholeReceiverContract.address,
+  //         },
+  //         {
+  //           contractName: "PythUpgradable",
+  //           address: pythProxyContract.address,
+  //         },
+  //       ],
+  //       null,
+  //       2
+  //     )
+  //   );
 }

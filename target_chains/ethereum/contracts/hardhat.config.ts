@@ -48,8 +48,7 @@ module.exports = {
       ethNetwork: "sepolia", // or a Sepolia RPC endpoint from Infura/Alchemy/Chainstack etc.
       zksync: true,
       verifyURL: "https://explorer.zkevm.cronos.org/contract_verification",
-
-  },
+    },
     neon_devnet: {
       url: "https://devnet.neonevm.org",
       chainId: 245022926,
