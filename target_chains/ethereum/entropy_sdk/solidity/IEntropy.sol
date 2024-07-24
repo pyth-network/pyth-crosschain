@@ -43,10 +43,10 @@ interface IEntropy is EntropyEvents {
         bool useBlockHash
     ) external payable returns (uint64 assignedSequenceNumber);
 
-    // Request a random number. The method expects the provider address and a secret random number
+    // Request a random number. The method expects the provider address and the user random number
     // in the arguments. It returns a sequence number.
     //
-    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The address calling this function should be an EOA or a contract that implements the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
@@ -54,6 +54,22 @@ interface IEntropy is EntropyEvents {
     function requestWithCallback(
         address provider,
         bytes32 userRandomNumber
+    ) external payable returns (uint64 assignedSequenceNumber);
+
+    // Request a random number. The method expects the provider address and the user random number
+    // in the arguments. It returns a sequence number.
+    //
+    // The address calling this function should be an EOA or a contract that implements the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the generated random number.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // Note that excess value is *not* refunded to the caller. This method will also revert if the provider's original
+    // commitment does not match the one on-chain which is necessary to prevent a scenario where the provider rotates
+    // their commitment while the transaction is pending.
+    function requestWithCallback(
+        address provider,
+        bytes32 userRandomNumber,
+        bytes32 providerOriginalCommitment
     ) external payable returns (uint64 assignedSequenceNumber);
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
@@ -99,6 +115,11 @@ interface IEntropy is EntropyEvents {
     ) external view returns (EntropyStructs.Request memory req);
 
     function getFee(address provider) external view returns (uint128 feeAmount);
+
+    // Utility function to get all the necessary information for submitting a request in one call.
+    function getFeeAndOriginalCommitment(
+        address provider
+    ) external view returns (uint128 feeAmount, bytes32 commitment);
 
     function getAccruedPythFees()
         external

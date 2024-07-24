@@ -9,6 +9,10 @@ library EntropyErrors {
     // The provider being registered has already registered
     // Signature: 0xda041bdf
     error ProviderAlreadyRegistered();
+    // The original provider commitment is not the same as the one on-chain.
+    // Perhaps it was rotated while the transaction was pending.
+    // Signature: 0x03e97a06
+    error InvalidOriginalProviderCommitment();
     // The requested provider does not exist.
     // Signature: 0xdf51c431
     error NoSuchProvider();
