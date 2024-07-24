@@ -153,8 +153,8 @@ pub fn create_dummy_twap_message() -> Message {
 }
 
 pub fn create_accumulator_message(
-    all_feeds: &[Message],
-    updates: &[Message],
+    all_feeds: &[&Message],
+    updates: &[&Message],
     corrupt_wormhole_message: bool,
     corrupt_messages: bool,
 ) -> Vec<u8> {
