@@ -37,7 +37,8 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
     {
       name: "updateData",
       type: ParameterType.HexArray,
-      description: "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
+      description:
+        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
     },
     {
       name: "fee",
