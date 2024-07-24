@@ -35,6 +35,8 @@ export const updatePriceFeedsIfNecessary = writeApi<
 
   This method returns the transaction hash of the update transaction.
 
+  ### Error Response
+
   The above method can return the following error response:
   - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding corresponding price id in \`updateData\`.
   - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.

@@ -20,10 +20,10 @@ The price object contains the following fields:
 Sample \`price\` object:
 \`\`\`json
 {
-    price: 123456789,
-    conf: 180726074,
+    price: 123456789n,
+    conf: 180726074n,
     expo: -8,
-    publishTime: 1721765108
+    publishTime: 1721765108n
 }
 \`\`\`
 

@@ -35,6 +35,8 @@ export const parsePriceFeedUpdates = writeApi<
   This method requires the caller to pay a fee in wei; the required fee can be
   computed by calling [getUpdateFee](get-update-fee) with \`updateData\`.
 
+  ### Error Response
+
   The above method can return the following error response:
   - \`PriceFeedNotFoundWithinRange\`: No price feed was found within the given time range.
   - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
