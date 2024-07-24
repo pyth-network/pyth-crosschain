@@ -5,7 +5,6 @@ use crate::utils::interface::{
 };
 use crate::utils::setup::setup_environment;
 
-use fuels::types::errors::{transaction::Reason, Error};
 use pyth_sdk::{
     constants::{
         DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID,
@@ -56,9 +55,7 @@ mod success {
             (false, false)
         );
 
-        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes())
-            .await
-            .unwrap();
+        update_price_feeds(&deployer.instance, fee, test_batch_update_data_bytes()).await;
 
         // Final values
         assert_eq!(
@@ -113,8 +110,7 @@ mod success {
             fee,
             test_accumulator_update_data_bytes(),
         )
-        .await
-        .unwrap();
+        .await;
 
         // Final values
         assert_eq!(
@@ -132,6 +128,10 @@ mod success {
 }
 
 mod failure {
+    use fuels::{
+        programs::calls::CallParameters,
+        types::errors::{transaction::Reason, Error},
+    };
 
     use super::*;
 
@@ -169,18 +169,21 @@ mod failure {
             (false, false)
         );
 
-        let response = update_price_feeds(
-            &deployer.instance,
-            fee,
-            test_corrupted_proof_accumulator_update_data_bytes(),
-        )
-        .await;
+        // Manually call the function to test the panic
+        let result = deployer
+            .instance
+            .methods()
+            .update_price_feeds(test_corrupted_proof_accumulator_update_data_bytes())
+            .call_params(CallParameters::default().with_amount(fee))
+            .unwrap()
+            .call()
+            .await;
 
-        let is_error = response.is_err();
+        let is_error = result.is_err();
 
         assert!(is_error);
 
-        let error = response.unwrap_err();
+        let error = result.unwrap_err();
 
         if let Error::Transaction(Reason::Reverted {
             reason,

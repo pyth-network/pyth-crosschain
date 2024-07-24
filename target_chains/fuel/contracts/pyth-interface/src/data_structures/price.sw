@@ -333,7 +333,7 @@ impl PriceFeed {
         let (_, slice) = encoded_proof.split_at(current_offset);
         let (encoded_message, _) = slice.split_at(message_size);
         current_offset += message_size;
-        let end_offset = validate_proof(encoded_proof, current_offset, digest, encoded_message);
+        let end_offset = validate_proof(encoded_proof, current_offset, digest, encoded_message.clone());
         // Message type of 0 is a Price Feed
         require(
             encoded_message
