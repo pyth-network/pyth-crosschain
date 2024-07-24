@@ -16,17 +16,19 @@ export const getUpdateFee = readApi<"updateData">({
   summary:
     "Get the fee required to update the on-chain price feeds with the provided `updateData`.",
   description: `
-Get the fee required to update the on-chain price feeds with the provided
-\`updateData\`.  The returned number of wei should be sent as the transaction
-value when calling [updatePriceFeeds](update-price-feeds).  The \`updateData\`
-can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
+  This method returns the fee required to update the on-chain price feeds for the given \`updateData\`.
+
+  The fee returned is in **wei**.
+
+  The caller should send the returned fee amount as the transaction value when calling [updatePriceFeeds](update-price-feeds).
+  The \`updateData\` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
   `,
   parameters: [
     {
       name: "updateData",
       type: ParameterType.HexArray,
       description:
-        "The price updates that you would like to submit to [updatePriceFeeds](updatePriceFeeds).",
+        "The price updates that you would like to submit to [updatePriceFeeds](updatePriceFeeds). Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
     },
   ],
   examples: [

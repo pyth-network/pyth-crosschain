@@ -5,30 +5,39 @@ export const getPrice = readApi<"id">({
   name: "getPrice",
   summary: "Get the **latest** price object for the requested price feed ID.",
   description: `
-Get the latest price and confidence interval for the requested price feed id.
-The price feed id is a 32-byte id written as a hexadecimal string; see the
-[price feed ids](https://pyth.network/developers/price-feed-ids) page to look up
-the id for a given symbol. The returned price and confidence are decimal numbers
-written in the form \`a * 10^e\`, where \`e\` is an exponent included in the
-result. For example, a price of 1234 with an exponent of -2 represents the
-number 12.34. The result also includes a \`publishTime\` which is the unix
-timestamp for the price update.
+This method returns the latest price object for the requested price feed ID.
 
-This function reverts with a \`StalePrice\` error if the on-chain price has not
-been updated within the last [getValidTimePeriod()](getValidTimePeriod)
-seconds. The default valid time period is set to a reasonable default on each
-chain and is typically around 1 minute. Call
-[updatePriceFeeds](updatePriceFeeds) to pull a fresh price on-chain and solve
-this problem. If you would like to configure the valid time period, see
-[getPriceNoOlderThan](getPriceNoOlderThan). If you want the latest price
-regardless of when it was updated, see [getPriceUnsafe](getPriceUnsafe).
+The price object contains the following fields:
+1. \`price\`: The latest price of the price feed.
+2. \`conf\`: The confidence level of the price feed.
+3. \`expo\`: The exponent of the price feed.
+4. \`publishtime\`: The time when the price feed was last updated.
 
-This function reverts with a \`PriceFeedNotFound\` error if the requested feed
-id has never received a price update. This error could either mean that the
-provided price feed id is incorrect, or (more typically) that this is the first
-attempted use of that feed on-chain. In the second case, calling
-[updatePriceFeeds](updatePriceFeeds) will solve this problem.
-  `,
+Sample \`price\` object:
+\`\`\`json
+{
+    price: 123456789n,
+    conf: 180726074n,
+    expo: -8,
+    publishTime: 1721765108n
+}
+\`\`\`
+
+The \`price\` above is in the format of \`price * 10^expo\`. So, the \`price\` in above
+mentioned sample represents the number \`123456789 * 10(-8) = 1.23456789\` in
+this case.
+
+### Error Response
+
+The above method can return the following error response:
+- \`StalePrice\`: The on-chain price has not been updated within the last
+  [\`getValidTimePeriod()\`](getValidTimePeriod) seconds. Try calling
+  [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed with the
+  latest price.
+- \`PriceFeedNotFound\`: The requested price feed has never received a price
+  update or does not exist. Try calling
+  [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed.
+`,
   parameters: [
     {
       name: "id",

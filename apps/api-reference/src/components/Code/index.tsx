@@ -5,16 +5,16 @@ import { useMemo, useCallback, type HTMLAttributes } from "react";
 import { useEffect, useState } from "react";
 import type { OffsetOrPosition } from "shiki";
 
-import type { SupportedLanguage } from "./shiki";
 import style from "./style.module.css";
+import type { SupportedLanguage } from "./supported-language";
 import { useHighlightedCode } from "./use-highlighted-code";
 import { getLogger } from "../../browser-logger";
 import { Button } from "../Button";
 
-export type { SupportedLanguage } from "./shiki";
+export * from "./supported-language";
 
 type CodeProps = {
-  language: SupportedLanguage;
+  language?: SupportedLanguage | undefined;
   children: string;
   dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };
@@ -113,7 +113,7 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
 };
 
 type HighlightedCodeProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
-  language: SupportedLanguage;
+  language?: SupportedLanguage | undefined;
   children: string;
   dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };

@@ -15,32 +15,36 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   name: "updatePriceFeeds",
   summary: "Update the on-chain price feeds using the provided `updateData`.",
   description: `
-Update the on-chain price feeds using the provided \`updateData\`, which
-contains serialized and signed price update data from Pyth Network.  You can
-retrieve the latest price \`updateData\` for a given set of price feeds from the
-[Hermes API](https://hermes.pyth.network/docs).  This function updates the
-on-chain price if the provided update is more recent than the current on-chain
-price.  Otherwise, the provided update will be ignored.  The function call will
-succeed even if the update is ignored.
+  This method updates the on-chain price feeds using the provided \`updateData\`, which contains serialized and signed price update data from Pyth Network.
+  You can retrieve the latest price \`updateData\` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
 
-This function requires the caller to pay a fee to perform the update.  The
-required fee for a given set of updates can be computed by passing them to
-[getUpdateFee](get-update-fee).
 
-Reverts if the required fee is not paid, or the \`updateData\` is incorrectly
-signed or formatted.
+  This method updates the on-chain price if the provided update is more recent than the current on-chain price. Otherwise, the provided update will be ignored. The method call will succeed even if the update is ignored.
+
+  This function requires the caller to pay a fee to perform the update.  The
+  required fee for a given set of updates can be computed by passing them to
+  [getUpdateFee](getUpdateFee).
+
+  This method returns the transaction hash of the update transaction.
+
+  ### Error Response
+
+  The above method can return the following error response:
+  - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
+  - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
   parameters: [
     {
       name: "updateData",
       type: ParameterType.HexArray,
-      description: "The price update data for the contract to verify.",
+      description:
+        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
     },
     {
       name: "fee",
       type: ParameterType.Int,
       description:
-        "The update fee in wei. This fee is sent as the value of the transaction.",
+        "The update fee in **wei**. This fee is sent as the value of the transaction.",
     },
   ],
   valueParam: "fee",
