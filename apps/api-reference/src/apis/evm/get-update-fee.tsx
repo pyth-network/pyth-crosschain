@@ -16,10 +16,10 @@ export const getUpdateFee = readApi<"updateData">({
   summary:
     "Get the fee required to update the on-chain price feeds with the provided `updateData`.",
   description: `
-  This method returns the fee required to update the on-chain price feeds for the given \`updateData\`. 
-  
+  This method returns the fee required to update the on-chain price feeds for the given \`updateData\`.
+
   The fee returned is in **wei**.
-  
+
   The caller should send the returned fee amount as the transaction value when calling [updatePriceFeeds](update-price-feeds).
   The \`updateData\` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
   `,

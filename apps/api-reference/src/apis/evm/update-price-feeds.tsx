@@ -15,8 +15,8 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   name: "updatePriceFeeds",
   summary: "Update the on-chain price feeds using the provided `updateData`.",
   description: `
-  This method updates the on-chain price feeds using the provided \`updateData\`, which contains serialized and signed price update data from Pyth Network. 
-  You can retrieve the latest price \`updateData\` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs). 
+  This method updates the on-chain price feeds using the provided \`updateData\`, which contains serialized and signed price update data from Pyth Network.
+  You can retrieve the latest price \`updateData\` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
 
 
   This method updates the on-chain price if the provided update is more recent than the current on-chain price. Otherwise, the provided update will be ignored. The method call will succeed even if the update is ignored.

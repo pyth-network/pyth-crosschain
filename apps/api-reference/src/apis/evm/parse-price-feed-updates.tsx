@@ -20,7 +20,7 @@ export const parsePriceFeedUpdates = writeApi<
   description: `
   This method parse \`updateData\` and return the price feeds for the given \`priceIds\`
   within, if they are all published between \`minPublishTime\` and
-  \`maxPublishTime\` (\`minPublishTime <= publishTime <= maxPublishTime\`). 
+  \`maxPublishTime\` (\`minPublishTime <= publishTime <= maxPublishTime\`).
 
   Use this function if you want to use a Pyth price for a fixed time and not the most
   recent price; otherwise, consider using [updatePriceFeeds](update-price-feeds)

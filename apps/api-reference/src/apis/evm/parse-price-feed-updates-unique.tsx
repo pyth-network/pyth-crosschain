@@ -20,8 +20,8 @@ export const parsePriceFeedUpdatesUnique = writeApi<
   description: `
   This method parse \`updateData\` and return the price feeds for the given \`priceIds\`
   within, if they are all **the first updates** published between \`minPublishTime\` and
-  \`maxPublishTime\` 
-  
+  \`maxPublishTime\`
+
   That is to say, if \`prevPublishTime
   < minPublishTime <= publishTime <= maxPublishTime\` where \`prevPublishTime\` is
   the publish time of the previous update for the given price feed.
@@ -29,7 +29,7 @@ export const parsePriceFeedUpdatesUnique = writeApi<
   These updates are unique per \`priceId\` and \`minPublishTime\`.  This will guarantee no
   updates exist for the given \`priceIds\` earlier than the returned updates and
   still in the given time range.  If you do not need the uniqueness guarantee,
-  consider using [parsePriceFeedUpdates](parse-price-feed-updates) instead. 
+  consider using [parsePriceFeedUpdates](parse-price-feed-updates) instead.
 
   Use this function if you want to use a Pyth price for a fixed time and not the most
   recent price; otherwise, consider using [updatePriceFeeds](update-price-feeds)

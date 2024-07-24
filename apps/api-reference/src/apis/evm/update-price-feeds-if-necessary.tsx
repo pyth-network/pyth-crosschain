@@ -21,9 +21,9 @@ export const updatePriceFeedsIfNecessary = writeApi<
   This method updates the on-chain price feeds using the provided \`updateData\` if the on-chain data is not sufficiently fresh.
 
 
-  The caller provides two matched arrays, \`priceIds\` and \`publishTimes\`. 
-  This function applies the update if there exists an index \`i\` such that \`priceIds[i]\`'s last \`publishTime\` is before than \`publishTimes[i]\`. 
-  Callers should typically pass \`publishTimes[i]\` to be equal to the publishTime of the corresponding price id in \`updateData\`. 
+  The caller provides two matched arrays, \`priceIds\` and \`publishTimes\`.
+  This function applies the update if there exists an index \`i\` such that \`priceIds[i]\`'s last \`publishTime\` is before than \`publishTimes[i]\`.
+  Callers should typically pass \`publishTimes[i]\` to be equal to the publishTime of the corresponding price id in \`updateData\`.
 
 
   This method is a variant of [updatePriceFeeds](update-price-feeds) that reduces
