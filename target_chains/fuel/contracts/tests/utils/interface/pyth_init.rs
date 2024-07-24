@@ -1,9 +1,6 @@
-use fuels::{
-    accounts::wallet::WalletUnlocked, programs::call_response::FuelCallResponse,
-    types::Bits256,
-};
+use fuels::{accounts::wallet::WalletUnlocked, programs::responses::CallResponse, types::Bits256};
 
-use pyth_sdk::pyth_utils::{DataSource, PythOracleContract};
+use pyth_sdk::pyth_utils::{handle_error, DataSource, PythOracleContract};
 
 pub(crate) async fn constructor(
     contract: &PythOracleContract<WalletUnlocked>,
@@ -15,7 +12,7 @@ pub(crate) async fn constructor(
     wormhole_guardian_set_addresses: Vec<Bits256>,
     wormhole_guardian_set_index: u32,
     chain_id: u16,
-) -> FuelCallResponse<()> {
+) -> CallResponse<()> {
     contract
         .methods()
         .constructor(
@@ -30,5 +27,6 @@ pub(crate) async fn constructor(
         )
         .call()
         .await
+        .map_err(handle_error)
         .unwrap()
 }

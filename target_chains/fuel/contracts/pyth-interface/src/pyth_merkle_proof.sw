@@ -42,7 +42,6 @@ pub fn validate_proof(
     leaf_data: Bytes,
 ) -> u64 {
     let mut current_digest = leaf_hash(leaf_data);
-
     let proof_size = encoded_proof.get(proof_offset).unwrap().as_u64();
     proof_offset += 1;
 
