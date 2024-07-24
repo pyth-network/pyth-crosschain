@@ -137,7 +137,7 @@ export const RECEIVER_CHAINS = {
   dela_deperp_testnet: 50053,
   injective_inevm_testnet: 50054,
   idex_xchain_testnet: 50055,
-  berachain_testnet: 50056,
+  berachain_testnet: 50056, // Deprecated
   merlin_testnet: 50057,
   manta_sepolia: 50058,
   polygon_blackberry: 50059, // Gelato shared testnet
