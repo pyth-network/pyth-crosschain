@@ -21,6 +21,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidOriginalProviderCommitment",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidRevealCall",
     "type": "error"
   },

@@ -556,6 +556,30 @@
         "type": "address"
       }
     ],
+    "name": "getFeeAndOriginalCommitment",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "commitment",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      }
+    ],
     "name": "getProviderInfo",
     "outputs": [
       {
@@ -762,6 +786,35 @@
       {
         "internalType": "bytes32",
         "name": "userRandomNumber",
+        "type": "bytes32"
+      }
+    ],
+    "name": "requestWithCallback",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userRandomNumber",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerOriginalCommitment",
         "type": "bytes32"
       }
     ],
