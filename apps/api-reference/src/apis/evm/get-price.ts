@@ -7,7 +7,7 @@ export const getPrice = readApi<"id">({
   description: `
 This method returns the latest price object for the requested price feed ID.
 
-The \`price\` object contains the following fields:
+The price object contains the following fields:
 1. \`price\`: The latest price of the price feed.
 2. \`conf\`: The confidence level of the price feed.
 3. \`expo\`: The exponent of the price feed.
@@ -23,7 +23,7 @@ Sample \`price\` object:
 }
 \`\`\`
 
-The price above is in the format of \`price * 10^expo\`. So, the price in above
+The \`price\` above is in the format of \`price * 10^expo\`. So, the \`price\` in above
 mentioned sample represents the number \`123456789 * 10(-8) = 1.23456789\` in
 this case.
 

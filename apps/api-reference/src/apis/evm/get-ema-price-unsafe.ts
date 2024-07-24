@@ -12,7 +12,7 @@ export const getEmaPriceUnsafe = readApi<"id">({
   caller's responsibility to check the returned \`publishTime\` to ensure that the
   update is recent enough for their use case. If you need the latest price, update the price using [\`updatePriceFeeds()\`](updatePriceFeeds) and then call [\`getEmaPrice()\`](getEmaPrice).
 
-  The \`price\` object contains the following fields:
+  The price object contains the following fields:
   1. \`price\`: The latest price of the price feed.
   2. \`conf\`: The confidence level of the price feed.
   3. \`expo\`: The exponent of the price feed.
@@ -28,7 +28,7 @@ export const getEmaPriceUnsafe = readApi<"id">({
   }
   \`\`\`
 
-  The price above is in the format of \`price * 10^expo\`. So, the price in above
+  The \`price\` above is in the format of \`price * 10^expo\`. So, the \`price\` in above
   mentioned sample represents the number \`123456789 * 10(-8) = 1.23456789\` in
   this case.
 

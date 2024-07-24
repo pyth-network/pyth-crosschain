@@ -13,7 +13,7 @@ export const getEmaPrice = readApi<"id">({
   3. \`expo\`: The exponent of the price feed.
   4. \`publishtime\`: The time when the price feed was last updated.
 
-  Sample \`price\` object:
+  Sample price object:
   \`\`\`json
   {
       price: 123456789,
@@ -23,7 +23,7 @@ export const getEmaPrice = readApi<"id">({
   }
   \`\`\`
 
-  The price above is in the format of \`price * 10^expo\`. So, the price in above
+  The \`price\` above is in the format of \`price * 10^expo\`. So, the \`price\` in above
   mentioned sample represents the number \`123456789 * 10(-8) = 1.23456789\` in
   this case.
 
