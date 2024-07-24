@@ -402,11 +402,20 @@ export class PythContractFactory {
   }
 
   createWeb3PayerProvider() {
-    return new HDWalletProvider({
+    const provider = new HDWalletProvider({
       mnemonic: {
         phrase: this.mnemonic,
       },
       providerOrUrl: this.createWeb3Provider() as ProviderOrUrl,
     });
+
+    // HDWalletProvider runs a block tracker that we don't use and often
+    // it throws errors that we don't want to handle. This is a workaround
+    // based on this issue:
+    // https://github.com/trufflesuite/truffle/issues/4757#issuecomment-1184949361
+    (provider.engine as any)._blockTracker.on("error", function (_e: any) {});
+    (provider.engine as any).on("error", function (_e: any) {});
+
+    return provider;
   }
 }
