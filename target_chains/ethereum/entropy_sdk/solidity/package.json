@@ -12,7 +12,7 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "generate-abi": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs",
+    "generate-abi": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs PRNG",
     "check-abi": "git diff --exit-code abis"
   },
   "keywords": [
