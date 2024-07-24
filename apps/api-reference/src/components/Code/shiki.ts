@@ -4,20 +4,21 @@ import {
   getHighlighterCore as shikiGetHighlighterCore,
 } from "shiki/core";
 import javascript from "shiki/langs/javascript.mjs";
+import json from "shiki/langs/json.mjs";
 import solidity from "shiki/langs/solidity.mjs";
 import darkPlus from "shiki/themes/dark-plus.mjs";
 import lightPlus from "shiki/themes/light-plus.mjs";
 import loadWasm from "shiki/wasm";
 
+import type { SupportedLanguage } from "./supported-language";
+
 export type Highlighter = {
   highlight: (
-    lang: SupportedLanguage,
+    lang: SupportedLanguage | undefined,
     code: string,
     options?: HighlightOptions | undefined,
   ) => string;
 };
-
-export type SupportedLanguage = "javascript" | "solidity";
 
 export type HighlightOptions = {
   decorations?: DecorationItem[] | undefined;
@@ -25,14 +26,14 @@ export type HighlightOptions = {
 
 export const getHighlighter = async (): Promise<Highlighter> => {
   const highlighterCore = await shikiGetHighlighterCore({
-    langs: [javascript, solidity],
+    langs: [javascript, solidity, json],
     themes: [darkPlus, lightPlus],
     loadWasm,
   });
 
   return {
     highlight: (
-      lang: SupportedLanguage,
+      lang: SupportedLanguage | undefined,
       code: string,
       options?: HighlightOptions | undefined,
     ) => highlight(highlighterCore, lang, code, options),
@@ -41,12 +42,12 @@ export const getHighlighter = async (): Promise<Highlighter> => {
 
 const highlight = (
   highlighter: HighlighterCore,
-  lang: SupportedLanguage,
+  lang: SupportedLanguage | undefined,
   code: string,
   options?: HighlightOptions | undefined,
 ) =>
   highlighter.codeToHtml(code, {
-    lang,
+    lang: lang ?? "text",
     themes: {
       light: "light-plus",
       dark: "dark-plus",
