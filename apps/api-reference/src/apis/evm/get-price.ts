@@ -29,7 +29,7 @@ this case.
 
 ### Error Response
 
-The above method returns the following error response:
+The above method can return the following error response:
 - \`StalePrice\`: The on-chain price has not been updated within the last
   [\`getValidTimePeriod()\`](getValidTimePeriod) seconds. Try calling
   [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed with the

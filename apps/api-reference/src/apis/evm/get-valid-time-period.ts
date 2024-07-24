@@ -4,8 +4,8 @@ export const getValidTimePeriod = readApi<never>({
   name: "getValidTimePeriod",
   summary: "Get the default valid time period of price freshness in seconds.",
   description: `
-Get the default valid time period in seconds.  This quantity is the maximum age
-of price updates returned by functions like [getPrice](getPrice) and
+  This method returns the default valid time period of price freshness in **seconds**.
+ This quantity is the maximum age of price updates returned by functions like [getPrice](getPrice) and
 [getEmaPrice](getEmaPrice); these functions revert if the current on-chain price
 is older than this period.  The valid time period is configured to be a sane
 default for each blockchain.
