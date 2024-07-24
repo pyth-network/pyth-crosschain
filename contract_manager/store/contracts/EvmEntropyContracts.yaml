@@ -34,9 +34,6 @@
 - chain: base_sepolia
   address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
   type: EvmEntropyContract
-- chain: berachain_testnet
-  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
-  type: EvmEntropyContract
 - chain: optimism_sepolia
   address: "0x4821932D0CDd71225A6d914706A621e0389D7061"
   type: EvmEntropyContract
