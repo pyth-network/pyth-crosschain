@@ -63,11 +63,11 @@ impl Message {
         }
     }
 
-    pub fn feed_id(&self) -> FeedId {
+    pub fn feed_id(&self) -> Option<FeedId> {
         match self {
-            Self::PriceFeedMessage(msg) => msg.feed_id,
-            Self::TwapMessage(msg) => msg.feed_id,
-            Self::PublisherStakeCapsMessage(_) => [0u8; 32],
+            Self::PriceFeedMessage(msg) => Some(msg.feed_id),
+            Self::TwapMessage(msg) => Some(msg.feed_id),
+            Self::PublisherStakeCapsMessage(_) => None,
         }
     }
 }
