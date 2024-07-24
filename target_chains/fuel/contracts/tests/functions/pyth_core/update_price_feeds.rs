@@ -88,9 +88,6 @@ mod success {
         )
         .await;
 
-        let data = test_accumulator_update_data_bytes();
-        let bytes: &Vec<u8> = &data[0].0;
-        println!("Data from index 955 onwards: {:?}", &bytes[955..]);
         let fee = update_fee(&deployer.instance, test_accumulator_update_data_bytes())
             .await
             .value;
