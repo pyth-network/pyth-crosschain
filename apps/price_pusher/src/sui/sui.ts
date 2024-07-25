@@ -3,14 +3,14 @@ import {
   IPricePusher,
   PriceInfo,
   PriceItem,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui.js/client";
-import { Logger } from "pino";
+} from '../interface';
+import { DurationInSeconds } from '../utils';
+import { PriceServiceConnection } from '@pythnetwork/price-service-client';
+import { SuiPythClient } from '@pythnetwork/pyth-sui-js';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Transaction } from '@mysten/sui/transactions';
+import { SuiClient, SuiObjectRef, PaginatedCoins } from '@mysten/sui/client';
+import { Logger } from 'pino';
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
@@ -51,7 +51,7 @@ export class SuiPriceListener extends ChainPriceListener {
         priceId
       );
       if (priceInfoObjectId === undefined) {
-        throw new Error("Price not found on chain for price id " + priceId);
+        throw new Error('Price not found on chain for price id ' + priceId);
       }
 
       // Fetching the price info object for the above priceInfoObjectId
@@ -61,10 +61,10 @@ export class SuiPriceListener extends ChainPriceListener {
       });
 
       if (!priceInfoObject.data || !priceInfoObject.data.content)
-        throw new Error("Price not found on chain for price id " + priceId);
+        throw new Error('Price not found on chain for price id ' + priceId);
 
-      if (priceInfoObject.data.content.dataType !== "moveObject")
-        throw new Error("fetched object datatype should be moveObject");
+      if (priceInfoObject.data.content.dataType !== 'moveObject')
+        throw new Error('fetched object datatype should be moveObject');
 
       const priceInfo =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -78,7 +78,7 @@ export class SuiPriceListener extends ChainPriceListener {
       const timestamp = priceInfo.timestamp;
 
       return {
-        price: negative ? "-" + magnitude : magnitude,
+        price: negative ? '-' + magnitude : magnitude,
         conf,
         publishTime: Number(timestamp),
       };
@@ -136,20 +136,20 @@ export class SuiPricePusher implements IPricePusher {
         },
       })
       .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
+        if (result.data?.content?.dataType == 'moveObject') {
           return result.data.content.fields;
         }
 
-        throw new Error("not move object");
+        throw new Error('not move object');
       });
 
-    if ("upgrade_cap" in state) {
+    if ('upgrade_cap' in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       return state.upgrade_cap.fields.package;
     }
 
-    throw new Error("upgrade_cap not found");
+    throw new Error('upgrade_cap not found');
   }
 
   /**
@@ -209,17 +209,17 @@ export class SuiPricePusher implements IPricePusher {
     }
 
     if (priceIds.length !== pubTimesToPush.length)
-      throw new Error("Invalid arguments");
+      throw new Error('Invalid arguments');
 
     if (this.gasPool.length === 0) {
-      this.logger.warn("Skipping update: no available gas coin.");
+      this.logger.warn('Skipping update: no available gas coin.');
       return;
     }
 
     // 3 price feeds per transaction is the optimal number for gas cost.
     const priceIdChunks = chunkArray(priceIds, 3);
 
-    const txBlocks: TransactionBlock[] = [];
+    const txBlocks: Transaction[] = [];
 
     await Promise.all(
       priceIdChunks.map(async (priceIdChunk) => {
@@ -232,10 +232,10 @@ export class SuiPricePusher implements IPricePusher {
           );
         }
         const vaa = vaas[0];
-        const tx = new TransactionBlock();
+        const tx = new Transaction();
         await this.pythClient.updatePriceFeeds(
           tx,
-          [Buffer.from(vaa, "base64")],
+          [Buffer.from(vaa, 'base64')],
           priceIdChunk
         );
         txBlocks.push(tx);
@@ -246,17 +246,15 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   /** Send every transaction in txs in parallel, returning when all transactions have completed. */
-  private async sendTransactionBlocks(
-    txs: TransactionBlock[]
-  ): Promise<void[]> {
+  private async sendTransactionBlocks(txs: Transaction[]): Promise<void[]> {
     return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)));
   }
 
   /** Send a single transaction block using a gas coin from the pool. */
-  private async sendTransactionBlock(tx: TransactionBlock): Promise<void> {
+  private async sendTransactionBlock(tx: Transaction): Promise<void> {
     const gasObject = this.gasPool.shift();
     if (gasObject === undefined) {
-      this.logger.warn("No available gas coin. Skipping push.");
+      this.logger.warn('No available gas coin. Skipping push.');
       return;
     }
 
@@ -264,9 +262,9 @@ export class SuiPricePusher implements IPricePusher {
     try {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
-      const result = await this.provider.signAndExecuteTransactionBlock({
+      const result = await this.provider.signAndExecuteTransaction({
         signer: this.signer,
-        transactionBlock: tx,
+        transaction: tx,
         options: {
           showEffects: true,
         },
@@ -278,20 +276,20 @@ export class SuiPricePusher implements IPricePusher {
 
       this.logger.info(
         { hash: result.digest },
-        "Successfully updated price with transaction digest"
+        'Successfully updated price with transaction digest'
       );
     } catch (err: any) {
       if (
-        String(err).includes("Balance of gas object") ||
-        String(err).includes("GasBalanceTooLow")
+        String(err).includes('Balance of gas object') ||
+        String(err).includes('GasBalanceTooLow')
       ) {
-        this.logger.error(err, "Insufficient gas balance");
+        this.logger.error(err, 'Insufficient gas balance');
         // If the error is caused by insufficient gas, we should panic
         throw err;
       } else {
         this.logger.error(
           err,
-          "Failed to update price. Trying to refresh gas object references."
+          'Failed to update price. Trying to refresh gas object references.'
         );
         // Refresh the coin object here in case the error is caused by an object version mismatch.
         nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
@@ -322,7 +320,7 @@ export class SuiPricePusher implements IPricePusher {
     if (ignoreGasObjects.length > 0) {
       logger.info(
         { ignoreGasObjects },
-        "Ignoring some gas objects for coin merging"
+        'Ignoring some gas objects for coin merging'
       );
     }
 
@@ -341,12 +339,12 @@ export class SuiPricePusher implements IPricePusher {
     if (
       coinResult.data &&
       coinResult.data.content &&
-      coinResult.data.content.dataType == "moveObject"
+      coinResult.data.content.dataType == 'moveObject'
     ) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       balance = coinResult.data.content.fields.balance;
-    } else throw new Error("Bad coin object");
+    } else throw new Error('Bad coin object');
     const splitAmount =
       (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
 
@@ -358,7 +356,7 @@ export class SuiPricePusher implements IPricePusher {
       numGasObjects,
       consolidatedCoin
     );
-    logger.info({ gasPool }, "Gas pool is filled with coins");
+    logger.info({ gasPool }, 'Gas pool is filled with coins');
     return gasPool;
   }
 
@@ -376,7 +374,7 @@ export class SuiPricePusher implements IPricePusher {
         version: objectResponse.data!.version,
       };
     } else {
-      throw new Error("Failed to refresh object reference");
+      throw new Error('Failed to refresh object reference');
     }
   }
 
@@ -408,7 +406,7 @@ export class SuiPricePusher implements IPricePusher {
     }
 
     if (numCoins !== coins.size) {
-      throw new Error("Unexpected getCoins result: duplicate coins found");
+      throw new Error('Unexpected getCoins result: duplicate coins found');
     }
     return [...coins].map((item) => JSON.parse(item));
   }
@@ -422,20 +420,20 @@ export class SuiPricePusher implements IPricePusher {
     gasCoin: SuiObjectRef
   ): Promise<SuiObjectRef[]> {
     // TODO: implement chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const coins = tx.splitCoins(
       tx.gas,
-      Array.from({ length: numGasObjects }, () => tx.pure(splitAmount))
+      Array.from({ length: numGasObjects }, () => tx.pure.u64(splitAmount))
     );
 
     tx.transferObjects(
       Array.from({ length: numGasObjects }, (_, i) => coins[i]),
-      tx.pure(signerAddress)
+      tx.pure.address(signerAddress)
     );
     tx.setGasPayment([gasCoin]);
-    const result = await provider.signAndExecuteTransactionBlock({
+    const result = await provider.signAndExecuteTransaction({
       signer,
-      transactionBlock: tx,
+      transaction: tx,
       options: { showEffects: true },
     });
     const error = result?.effects?.status.error;
@@ -474,7 +472,7 @@ export class SuiPricePusher implements IPricePusher {
     const lockedAddresses: Set<string> = new Set();
     initialLockedAddresses.forEach((value) => lockedAddresses.add(value));
     for (let i = 0; i < gasCoinsChunks.length; i++) {
-      const mergeTx = new TransactionBlock();
+      const mergeTx = new Transaction();
       let coins = gasCoinsChunks[i];
       coins = coins.filter((coin) => !lockedAddresses.has(coin.objectId));
       if (finalCoin) {
@@ -483,17 +481,17 @@ export class SuiPricePusher implements IPricePusher {
       mergeTx.setGasPayment(coins);
       let mergeResult;
       try {
-        mergeResult = await provider.signAndExecuteTransactionBlock({
+        mergeResult = await provider.signAndExecuteTransaction({
           signer,
-          transactionBlock: mergeTx,
+          transaction: mergeTx,
           options: { showEffects: true },
         });
       } catch (err) {
-        logger.error(err, "Merge transaction failed with error");
+        logger.error(err, 'Merge transaction failed with error');
 
         if (
           String(err).includes(
-            "quorum of validators because of locked objects. Retried a conflicting transaction"
+            'quorum of validators because of locked objects. Retried a conflicting transaction'
           )
         ) {
           Object.values((err as any).data).forEach((lockedObjects: any) => {
