@@ -272,13 +272,9 @@ impl PriceServiceConnection {
 mod tests {
     use chrono::Duration;
 
-    // use crate::types::RpcPriceIdentifier;
-
     use super::*;
 
     const ENDPOINT: &str = "https://hermes.pyth.network";
-
-    // type Cb = fn(RpcPriceFeed);
 
     #[tokio::test]
     async fn test_http_endpoints() {
