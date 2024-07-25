@@ -132,16 +132,10 @@ impl PriceServiceConnection {
         for price_id in price_ids {
             params.push(("ids[]", price_id.to_string()));
         }
-        let verbose = match self.price_feed_request_config.verbose {
-            Some(verbose) => verbose,
-            None => true,
-        };
+        let verbose = self.price_feed_request_config.verbose.unwrap_or(true);
         params.push(("verbose", verbose.to_string()));
 
-        let binary = match self.price_feed_request_config.binary {
-            Some(binary) => binary,
-            None => true,
-        };
+        let binary = self.price_feed_request_config.binary.unwrap_or(true);
         params.push(("binary", binary.to_string()));
 
         let url = match self.base_url.join("/api/latest_price_feeds") {
@@ -229,16 +223,10 @@ impl PriceServiceConnection {
         params.insert("id", price_id.to_string());
         params.insert("publish_time", publish_time.second().to_string());
 
-        let verbose = match self.price_feed_request_config.verbose {
-            Some(verbose) => verbose,
-            None => true,
-        };
+        let verbose = self.price_feed_request_config.verbose.unwrap_or(true);
         params.insert("verbose", verbose.to_string());
 
-        let binary = match self.price_feed_request_config.binary {
-            Some(binary) => binary,
-            None => true,
-        };
+        let binary = self.price_feed_request_config.binary.unwrap_or(true);
         params.insert("binary", binary.to_string());
 
         let url = match self.base_url.join("/api/get_price_feed") {
