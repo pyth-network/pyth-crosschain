@@ -4,9 +4,9 @@
 /* eslint-disable */
 
 /*
-  Fuels version: 0.92.1
-  Forc version: 0.61.2
-  Fuel-Core version: 0.31.0
+  Fuels version: 0.89.2
+  Forc version: 0.60.0
+  Fuel-Core version: 0.27.0
 */
 
 import type {
@@ -19,7 +19,6 @@ import type {
   FunctionFragment,
   Interface,
   InvokeFunction,
-  StrSlice,
 } from "fuels";
 
 import type { Enum, Vec } from "./common";
@@ -384,6 +383,226 @@ interface PythContractAbiInterface extends Interface {
     execute_governance_instruction: FunctionFragment;
     governance_data_source: FunctionFragment;
   };
+
+  encodeFunctionData(functionFragment: "owner", values: []): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "ema_price",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "ema_price_no_older_than",
+    values: [BigNumberish, string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "ema_price_unsafe",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "parse_price_feed_updates",
+    values: [BigNumberish, BigNumberish, Vec<string>, Vec<Bytes>]
+  ): Uint8Array;
+  encodeFunctionData(functionFragment: "price", values: [string]): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "price_no_older_than",
+    values: [BigNumberish, string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "price_unsafe",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "update_fee",
+    values: [Vec<Bytes>]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "update_price_feeds",
+    values: [Vec<Bytes>]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "update_price_feeds_if_necessary",
+    values: [Vec<string>, Vec<BigNumberish>, Vec<Bytes>]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "valid_time_period",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "constructor",
+    values: [
+      Vec<DataSourceInput>,
+      DataSourceInput,
+      DataSourceInput,
+      BigNumberish,
+      BigNumberish,
+      Vec<string>,
+      BigNumberish,
+      BigNumberish
+    ]
+  ): Uint8Array;
+  encodeFunctionData(functionFragment: "chain_id", values: []): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "is_valid_data_source",
+    values: [DataSourceInput]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "last_executed_governance_sequence",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "latest_publish_time",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "price_feed_exists",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "price_feed_unsafe",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "single_update_fee",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "valid_data_sources",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "current_guardian_set_index",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "current_wormhole_provider",
+    values: []
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "governance_action_is_consumed",
+    values: [string]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "guardian_set",
+    values: [BigNumberish]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "submit_new_guardian_set",
+    values: [Bytes]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "execute_governance_instruction",
+    values: [Bytes]
+  ): Uint8Array;
+  encodeFunctionData(
+    functionFragment: "governance_data_source",
+    values: []
+  ): Uint8Array;
+
+  decodeFunctionData(functionFragment: "owner", data: BytesLike): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "ema_price",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "ema_price_no_older_than",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "ema_price_unsafe",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "parse_price_feed_updates",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(functionFragment: "price", data: BytesLike): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "price_no_older_than",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "price_unsafe",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "update_fee",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "update_price_feeds",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "update_price_feeds_if_necessary",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "valid_time_period",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "constructor",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "chain_id",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "is_valid_data_source",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "last_executed_governance_sequence",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "latest_publish_time",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "price_feed_exists",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "price_feed_unsafe",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "single_update_fee",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "valid_data_sources",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "current_guardian_set_index",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "current_wormhole_provider",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "governance_action_is_consumed",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "guardian_set",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "submit_new_guardian_set",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "execute_governance_instruction",
+    data: BytesLike
+  ): DecodedValue;
+  decodeFunctionData(
+    functionFragment: "governance_data_source",
+    data: BytesLike
+  ): DecodedValue;
 }
 
 export class PythContractAbi extends Contract {

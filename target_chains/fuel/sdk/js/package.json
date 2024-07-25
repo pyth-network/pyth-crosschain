@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-fuel-js",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Pyth Network Fuel Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
@@ -20,6 +20,7 @@
     "access": "public"
   },
   "scripts": {
+    "test": "jest --passWithNoTests",
     "usage-example": "ts-node src/examples/usage.ts",
     "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -41,10 +42,11 @@
     "eslint": "^8.14.0",
     "jest": "^29.4.1",
     "prettier": "^2.6.2",
+    "ts-jest": "^29.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "fuels": "^0.92.1"
+    "fuels": "^0.89.2"
   }
 }

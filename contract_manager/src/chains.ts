@@ -1,4 +1,4 @@
-import { KeyValueConfig, PrivateKey, Storable, TxResult } from "./base";
+import { KeyValueConfig, PrivateKey, Storable, TxResult } from './base';
 import {
   ChainName,
   SetFee,
@@ -11,21 +11,21 @@ import {
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
-} from "@pythnetwork/xc-admin-common";
-import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
-import Web3 from "web3";
+} from '@pythnetwork/xc-admin-common';
+import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from 'aptos';
+import Web3 from 'web3';
 import {
   CosmwasmExecutor,
   CosmwasmQuerier,
   InjectiveExecutor,
-} from "@pythnetwork/cosmwasm-deploy-tools";
-import { Network } from "@injectivelabs/networks";
-import { SuiClient } from "@mysten/sui.js/client";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { TokenId } from "./token";
-import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
-import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
-import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
+} from '@pythnetwork/cosmwasm-deploy-tools';
+import { Network } from '@injectivelabs/networks';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { TokenId } from './token';
+import { BN, Provider, Wallet, WalletUnlocked } from 'fuels';
+import { FUEL_ETH_ASSET_ID } from '@pythnetwork/pyth-fuel-js';
+import { Contract, RpcProvider, Signer, ec, shortString } from 'starknet';
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -133,23 +133,23 @@ export abstract class Chain extends Storable {
  * For example, governance instructions to upgrade Pyth data sources.
  */
 export class GlobalChain extends Chain {
-  static type = "GlobalChain";
+  static type = 'GlobalChain';
   constructor() {
-    super("global", true, "unset", undefined);
+    super('global', true, 'unset', undefined);
   }
 
   generateGovernanceUpgradePayload(): Buffer {
     throw new Error(
-      "Can not create a governance message for upgrading contracts on all chains!"
+      'Can not create a governance message for upgrading contracts on all chains!'
     );
   }
 
   async getAccountAddress(_privateKey: PrivateKey): Promise<string> {
-    throw new Error("Can not get account for GlobalChain.");
+    throw new Error('Can not get account for GlobalChain.');
   }
 
   async getAccountBalance(_privateKey: PrivateKey): Promise<number> {
-    throw new Error("Can not get account balance for GlobalChain.");
+    throw new Error('Can not get account balance for GlobalChain.');
   }
 
   getType(): string {
@@ -167,7 +167,7 @@ export class GlobalChain extends Chain {
 }
 
 export class CosmWasmChain extends Chain {
-  static type = "CosmWasmChain";
+  static type = 'CosmWasmChain';
 
   constructor(
     id: string,
@@ -183,7 +183,7 @@ export class CosmWasmChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig): CosmWasmChain {
-    if (parsed.type !== CosmWasmChain.type) throw new Error("Invalid type");
+    if (parsed.type !== CosmWasmChain.type) throw new Error('Invalid type');
     return new CosmWasmChain(
       parsed.id,
       parsed.mainnet,
@@ -225,7 +225,7 @@ export class CosmWasmChain extends Chain {
   async getExecutor(
     privateKey: PrivateKey
   ): Promise<CosmwasmExecutor | InjectiveExecutor> {
-    if (this.getId().indexOf("injective") > -1) {
+    if (this.getId().indexOf('injective') > -1) {
       return InjectiveExecutor.fromPrivateKey(
         this.isMainnet() ? Network.Mainnet : Network.Testnet,
         privateKey
@@ -254,7 +254,7 @@ export class CosmWasmChain extends Chain {
 }
 
 export class SuiChain extends Chain {
-  static type = "SuiChain";
+  static type = 'SuiChain';
 
   constructor(
     id: string,
@@ -267,7 +267,7 @@ export class SuiChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig): SuiChain {
-    if (parsed.type !== SuiChain.type) throw new Error("Invalid type");
+    if (parsed.type !== SuiChain.type) throw new Error('Invalid type');
     return new SuiChain(
       parsed.id,
       parsed.mainnet,
@@ -305,7 +305,7 @@ export class SuiChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(privateKey, "hex")
+      Buffer.from(privateKey, 'hex')
     );
     return keypair.toSuiAddress();
   }
@@ -320,7 +320,7 @@ export class SuiChain extends Chain {
 }
 
 export class EvmChain extends Chain {
-  static type = "EvmChain";
+  static type = 'EvmChain';
 
   constructor(
     id: string,
@@ -334,7 +334,7 @@ export class EvmChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
-    if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
+    if (parsed.type !== EvmChain.type) throw new Error('Invalid type');
     return new EvmChain(
       parsed.id,
       parsed.mainnet,
@@ -351,7 +351,7 @@ export class EvmChain extends Chain {
     const envMatches = this.rpcUrl.match(/\$ENV_\w+/);
     if (envMatches) {
       for (const envMatch of envMatches) {
-        const envName = envMatch.replace("$ENV_", "");
+        const envName = envMatch.replace('$ENV_', '');
         const envValue = process.env[envName];
         if (!envValue) {
           throw new Error(
@@ -386,10 +386,10 @@ export class EvmChain extends Chain {
   ): Buffer {
     return new EvmExecute(
       this.wormholeChainName,
-      executor.replace("0x", ""),
-      callAddress.replace("0x", ""),
+      executor.replace('0x', ''),
+      callAddress.replace('0x', ''),
       0n,
-      Buffer.from(calldata.replace("0x", ""), "hex")
+      Buffer.from(calldata.replace('0x', ''), 'hex')
     ).encode();
   }
 
@@ -502,7 +502,7 @@ export class EvmChain extends Chain {
 }
 
 export class AptosChain extends Chain {
-  static type = "AptosChain";
+  static type = 'AptosChain';
 
   constructor(
     id: string,
@@ -541,7 +541,7 @@ export class AptosChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig): AptosChain {
-    if (parsed.type !== AptosChain.type) throw new Error("Invalid type");
+    if (parsed.type !== AptosChain.type) throw new Error('Invalid type');
     return new AptosChain(
       parsed.id,
       parsed.mainnet,
@@ -553,7 +553,7 @@ export class AptosChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, 'hex'))
     );
     return account.address().toString();
   }
@@ -561,7 +561,7 @@ export class AptosChain extends Chain {
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const client = this.getClient();
     const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, 'hex'))
     );
     const coinClient = new CoinClient(client);
     return Number(await coinClient.checkBalance(account)) / 10 ** 8;
@@ -573,7 +573,7 @@ export class AptosChain extends Chain {
   ): Promise<TxResult> {
     const client = this.getClient();
     const sender = new AptosAccount(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, 'hex'))
     );
     const result = await client.generateSignSubmitWaitForTransaction(
       sender,
@@ -587,7 +587,7 @@ export class AptosChain extends Chain {
 }
 
 export class FuelChain extends Chain {
-  static type = "FuelChain";
+  static type = 'FuelChain';
 
   constructor(
     id: string,
@@ -632,7 +632,7 @@ export class FuelChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig): FuelChain {
-    if (parsed.type !== FuelChain.type) throw new Error("Invalid type");
+    if (parsed.type !== FuelChain.type) throw new Error('Invalid type');
     return new FuelChain(
       parsed.id,
       parsed.mainnet,
@@ -655,7 +655,7 @@ export class FuelChain extends Chain {
 }
 
 export class StarknetChain extends Chain {
-  static type = "StarknetChain";
+  static type = 'StarknetChain';
 
   constructor(
     id: string,
@@ -681,7 +681,7 @@ export class StarknetChain extends Chain {
   }
 
   static fromJson(parsed: ChainConfig): StarknetChain {
-    if (parsed.type !== StarknetChain.type) throw new Error("Invalid type");
+    if (parsed.type !== StarknetChain.type) throw new Error('Invalid type');
     return new StarknetChain(
       parsed.id,
       parsed.mainnet,
@@ -700,40 +700,40 @@ export class StarknetChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const ARGENT_CLASS_HASH =
-      "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
+      '0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b';
     const ADDR_BOUND =
       0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00n;
 
     function computeHashOnElements(elements: string[]): string {
-      let hash = "0";
+      let hash = '0';
       for (const item of elements) {
         hash = ec.starkCurve.pedersen(hash, item);
       }
       return ec.starkCurve.pedersen(hash, elements.length);
     }
 
-    const publicKey = await new Signer("0x" + privateKey).getPubKey();
+    const publicKey = await new Signer('0x' + privateKey).getPubKey();
 
     const value = computeHashOnElements([
-      shortString.encodeShortString("STARKNET_CONTRACT_ADDRESS"),
-      "0",
+      shortString.encodeShortString('STARKNET_CONTRACT_ADDRESS'),
+      '0',
       publicKey,
       ARGENT_CLASS_HASH,
-      computeHashOnElements([publicKey, "0"]),
+      computeHashOnElements([publicKey, '0']),
     ]);
-    return (BigInt(value) % ADDR_BOUND).toString(16).padStart(64, "0");
+    return (BigInt(value) % ADDR_BOUND).toString(16).padStart(64, '0');
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const ETH =
-      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+      '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
 
     const address = await this.getAccountAddress(privateKey);
     const provider = this.getProvider();
     const tokenClassData = await provider.getClassAt(ETH);
     const tokenContract = new Contract(tokenClassData.abi, ETH, provider);
     const decimals = await tokenContract.decimals();
-    const amount = await tokenContract.balanceOf("0x" + address);
+    const amount = await tokenContract.balanceOf('0x' + address);
     return Number(amount) / Number(10n ** decimals);
   }
 
