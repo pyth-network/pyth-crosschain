@@ -310,12 +310,6 @@ impl PythCore for Contract {
 fn ema_price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price {
     let price = ema_price_unsafe(price_feed_id);
     let current_time = timestamp();
-
-    require(
-        price.publish_time <= current_time,
-        PythError::FuturePriceNotAllowed,
-    );
-
     require(
         current_time - price.publish_time <= time_period,
         PythError::OutdatedPrice,
@@ -336,12 +330,6 @@ fn ema_price_unsafe(price_feed_id: PriceFeedId) -> Price {
 fn price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price {
     let price = price_unsafe(price_feed_id);
     let current_time = timestamp();
-
-    require(
-        price.publish_time <= current_time,
-        PythError::FuturePriceNotAllowed,
-    );
-
     require(
         current_time - price.publish_time <= time_period,
         PythError::OutdatedPrice,

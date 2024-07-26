@@ -1,6 +1,6 @@
 library;
 
-use std::bytes::Bytes;
+use std::{bytes::Bytes, block::timestamp};
 
 use ::errors::PythError;
 use ::utils::absolute_of_exponent;
@@ -174,6 +174,11 @@ impl PriceFeed {
         );
         //convert publish_time from UNIX to TAI64
         publish_time += TAI64_DIFFERENCE;
+
+        require(
+            publish_time <= timestamp(),
+            PythError::FuturePriceNotAllowed,
+        );
 
         PriceFeed::new(
             Price::new(ema_confidence, exponent, ema_price, publish_time),
