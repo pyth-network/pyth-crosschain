@@ -1,9 +1,9 @@
-import { SuiClient } from '@mysten/sui/client';
-import { SUI_CLOCK_OBJECT_ID } from '@mysten/sui/utils';
-import { Transaction } from '@mysten/sui/transactions';
-import { bcs } from '@mysten/sui/bcs';
-import { HexString } from '@pythnetwork/price-service-client';
-import { Buffer } from 'buffer';
+import { SuiClient } from "@mysten/sui/client";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
+import { Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
+import { HexString } from "@pythnetwork/price-service-client";
+import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 export type ObjectId = string;
@@ -32,9 +32,9 @@ export class SuiPythClient {
       if (
         !result.data ||
         !result.data.content ||
-        result.data.content.dataType !== 'moveObject'
+        result.data.content.dataType !== "moveObject"
       )
-        throw new Error('Unable to fetch pyth state object');
+        throw new Error("Unable to fetch pyth state object");
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
@@ -58,7 +58,7 @@ export class SuiPythClient {
         },
       })
       .then((result) => {
-        if (result.data?.content?.dataType == 'moveObject') {
+        if (result.data?.content?.dataType == "moveObject") {
           return result.data.content.fields;
         }
         console.log(result.data?.content);
@@ -66,13 +66,13 @@ export class SuiPythClient {
         throw new Error(`Cannot fetch package id for object ${objectId}`);
       });
 
-    if ('upgrade_cap' in state) {
+    if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       return state.upgrade_cap.fields.package;
     }
 
-    throw new Error('upgrade_cap not found');
+    throw new Error("upgrade_cap not found");
   }
 
   /**
@@ -127,7 +127,7 @@ export class SuiPythClient {
     let priceUpdatesHotPotato;
     if (updates.length > 1) {
       throw new Error(
-        'SDK does not support sending multiple accumulator messages in a single transaction'
+        "SDK does not support sending multiple accumulator messages in a single transaction"
       );
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
@@ -194,7 +194,7 @@ export class SuiPythClient {
     const packageId = await this.getPythPackageId();
     if (updates.length > 1) {
       throw new Error(
-        'SDK does not support sending multiple accumulator messages in a single transaction'
+        "SDK does not support sending multiple accumulator messages in a single transaction"
       );
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
@@ -249,7 +249,7 @@ export class SuiPythClient {
    * @param feedId
    */
   async getPriceFeedObjectId(feedId: HexString): Promise<ObjectId | undefined> {
-    const normalizedFeedId = feedId.replace('0x', '');
+    const normalizedFeedId = feedId.replace("0x", "");
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
       const result = await this.provider.getDynamicFieldObject({
@@ -257,15 +257,15 @@ export class SuiPythClient {
         name: {
           type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: {
-            bytes: Array.from(Buffer.from(normalizedFeedId, 'hex')),
+            bytes: Array.from(Buffer.from(normalizedFeedId, "hex")),
           },
         },
       });
       if (!result.data || !result.data.content) {
         return undefined;
       }
-      if (result.data.content.dataType !== 'moveObject') {
-        throw new Error('Price feed type mismatch');
+      if (result.data.content.dataType !== "moveObject") {
+        throw new Error("Price feed type mismatch");
       }
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
@@ -286,19 +286,19 @@ export class SuiPythClient {
       const result = await this.provider.getDynamicFieldObject({
         parentId: this.pythStateId,
         name: {
-          type: 'vector<u8>',
-          value: 'price_info',
+          type: "vector<u8>",
+          value: "price_info",
         },
       });
       if (!result.data || !result.data.type) {
         throw new Error(
-          'Price Table not found, contract may not be initialized'
+          "Price Table not found, contract may not be initialized"
         );
       }
-      let type = result.data.type.replace('0x2::table::Table<', '');
+      let type = result.data.type.replace("0x2::table::Table<", "");
       type = type.replace(
-        '::price_identifier::PriceIdentifier, 0x2::object::ID>',
-        ''
+        "::price_identifier::PriceIdentifier, 0x2::object::ID>",
+        ""
       );
       this.priceTableInfo = { id: result.data.objectId, fieldType: type };
     }
