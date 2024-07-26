@@ -1,17 +1,17 @@
-import { Chain, SuiChain } from '../chains';
-import { DataSource } from '@pythnetwork/xc-admin-common';
-import { WormholeContract } from './wormhole';
-import { PriceFeedContract, PrivateKey, TxResult } from '../base';
-import { SuiPythClient } from '@pythnetwork/pyth-sui-js';
-import { SUI_CLOCK_OBJECT_ID } from '@mysten/sui/utils';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { Transaction } from '@mysten/sui/transactions';
-import { uint8ArrayToBCS } from '@certusone/wormhole-sdk/lib/cjs/sui';
+import { Chain, SuiChain } from "../chains";
+import { DataSource } from "@pythnetwork/xc-admin-common";
+import { WormholeContract } from "./wormhole";
+import { PriceFeedContract, PrivateKey, TxResult } from "../base";
+import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 
 type ObjectId = string;
 
 export class SuiPriceFeedContract extends PriceFeedContract {
-  static type = 'SuiPriceFeedContract';
+  static type = "SuiPriceFeedContract";
   private client: SuiPythClient;
 
   /**
@@ -40,7 +40,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     parsed: { type: string; stateId: string; wormholeStateId: string }
   ): SuiPriceFeedContract {
     if (parsed.type !== SuiPriceFeedContract.type)
-      throw new Error('Invalid type');
+      throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
     return new SuiPriceFeedContract(
@@ -97,9 +97,9 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     };
   }) {
     let expo = priceInfo.fields.expo.fields.magnitude;
-    if (priceInfo.fields.expo.fields.negative) expo = '-' + expo;
+    if (priceInfo.fields.expo.fields.negative) expo = "-" + expo;
     let price = priceInfo.fields.price.fields.magnitude;
-    if (priceInfo.fields.price.fields.negative) price = '-' + price;
+    if (priceInfo.fields.price.fields.negative) price = "-" + price;
     return {
       conf: priceInfo.fields.conf,
       publishTime: priceInfo.fields.timestamp,
@@ -121,7 +121,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
         `Price feed ID ${priceInfoObjectId} in price table but object not found!!`
       );
     }
-    if (priceInfo.data.content.dataType !== 'moveObject') {
+    if (priceInfo.data.content.dataType !== "moveObject") {
       throw new Error(
         `Expected ${priceInfoObjectId} to be a moveObject (PriceInfoObject)`
       );
@@ -169,7 +169,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     // it may be possible to get them from the VAA but in batch transactions,
     // it is also possible to hava fewer feeds that user wants to update compared to
     // what exists in the VAA.
-    throw new Error('Use executeUpdatePriceFeedWithFeeds instead');
+    throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
   }
 
   async executeUpdatePriceFeedWithFeeds(
@@ -180,7 +180,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, 'hex')
+      Buffer.from(senderPrivateKey, "hex")
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -192,7 +192,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, 'hex')
+      Buffer.from(senderPrivateKey, "hex")
     );
 
     const result = await this.executeTransaction(tx, keypair);
@@ -204,7 +204,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     vaa: Buffer
   ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, 'hex')
+      Buffer.from(senderPrivateKey, "hex")
     );
     const tx = new Transaction();
     const packageId = await this.getPythPackageId();
@@ -324,17 +324,17 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
       name: {
-        type: 'vector<u8>',
-        value: 'data_sources',
+        type: "vector<u8>",
+        value: "data_sources",
       },
     });
     if (!result.data || !result.data.content) {
       throw new Error(
-        'Data Sources not found, contract may not be initialized'
+        "Data Sources not found, contract may not be initialized"
       );
     }
-    if (result.data.content.dataType !== 'moveObject') {
-      throw new Error('Data Sources type mismatch');
+    if (result.data.content.dataType !== "moveObject") {
+      throw new Error("Data Sources type mismatch");
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -351,7 +351,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
           emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(
             fields.emitter_address.fields.value.fields.data
-          ).toString('hex'),
+          ).toString("hex"),
         };
       }
     );
@@ -367,7 +367,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       governanceFields.emitter_address.fields.value.fields.data;
     return {
       emitterChain: Number(chainId),
-      emitterAddress: Buffer.from(emitterAddress).toString('hex'),
+      emitterAddress: Buffer.from(emitterAddress).toString("hex"),
     };
   }
 
@@ -398,15 +398,15 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     if (
       !result.data ||
       !result.data.content ||
-      result.data.content.dataType !== 'moveObject'
+      result.data.content.dataType !== "moveObject"
     )
-      throw new Error('Unable to fetch pyth state object');
+      throw new Error("Unable to fetch pyth state object");
     return result.data.content.fields;
   }
 }
 
 export class SuiWormholeContract extends WormholeContract {
-  public static type = 'SuiWormholeContract';
+  public static type = "SuiWormholeContract";
   private client: SuiPythClient;
 
   getId(): string {
@@ -434,7 +434,7 @@ export class SuiWormholeContract extends WormholeContract {
     }
   ): SuiWormholeContract {
     if (parsed.type !== SuiWormholeContract.type)
-      throw new Error('Invalid type');
+      throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
     return new SuiWormholeContract(chain, parsed.address, parsed.stateId);
@@ -452,7 +452,7 @@ export class SuiWormholeContract extends WormholeContract {
       // We're using the SuiPythClient to work with the Wormhole contract
       // so there is no Pyth contract here, passing empty string to type-
       // check.
-      '',
+      "",
       this.stateId
     );
   }
@@ -521,7 +521,7 @@ export class SuiWormholeContract extends WormholeContract {
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, 'hex')
+      Buffer.from(senderPrivateKey, "hex")
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -536,9 +536,9 @@ export class SuiWormholeContract extends WormholeContract {
     if (
       !result.data ||
       !result.data.content ||
-      result.data.content.dataType !== 'moveObject'
+      result.data.content.dataType !== "moveObject"
     )
-      throw new Error('Unable to fetch pyth state object');
+      throw new Error("Unable to fetch pyth state object");
     return result.data.content.fields;
   }
 
