@@ -1,10 +1,10 @@
-import { Transaction } from '@mysten/sui/transactions';
-import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from '@mysten/sui/utils';
-import { SuiClient } from '@mysten/sui/client';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Transaction } from "@mysten/sui/transactions";
+import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
-import { execSync } from 'child_process';
-import { SuiPriceFeedContract } from '@pythnetwork/contract-manager';
+import { execSync } from "child_process";
+import { SuiPriceFeedContract } from "@pythnetwork/contract-manager";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -14,7 +14,7 @@ export function buildForBytecodeAndDigest(packagePath: string) {
   } = JSON.parse(
     execSync(
       `sui move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
-      { encoding: 'utf-8' }
+      { encoding: "utf-8" }
     )
   );
   return {
