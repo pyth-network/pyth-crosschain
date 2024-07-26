@@ -203,13 +203,6 @@ export class SuiPythClient {
       target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
-        // tx.pure(
-        //   bcs
-        //     .ser('vector<u8>', Array.from(updates[0]), {
-        //       maxSize: MAX_ARGUMENT_SIZE,
-        //     })
-        //     .toBytes()
-        // ),
         tx.pure(
           bcs
             .vector(bcs.U8)
