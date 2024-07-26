@@ -1924,7 +1924,6 @@ const _storageSlots: StorageSlot[] = [
     value: "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
-
 export const PythContractAbi__factory = {
   abi: _abi,
 
