@@ -170,6 +170,11 @@ const _abi = {
           typeArguments: null,
         },
         {
+          name: "FuturePriceNotAllowed",
+          type: 0,
+          typeArguments: null,
+        },
+        {
           name: "GuardianSetNotFound",
           type: 0,
           typeArguments: null,
@@ -1864,7 +1869,7 @@ const _abi = {
         type: 6,
         typeArguments: [],
       },
-      offset: 117008,
+      offset: 117592,
     },
   ],
 };
@@ -1919,6 +1924,7 @@ const _storageSlots: StorageSlot[] = [
     value: "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
+
 export const PythContractAbi__factory = {
   abi: _abi,
 
