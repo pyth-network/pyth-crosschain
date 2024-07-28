@@ -669,3 +669,8 @@
   rpcUrl: https://testnet.zkevm.cronos.org
   networkId: 282
   type: EvmChain
+- id: reya_testnet
+  mainnet: false
+  rpcUrl: https://rpc.reya-cronos.gelato.digital
+  networkId: 89346162
+  type: EvmChain
