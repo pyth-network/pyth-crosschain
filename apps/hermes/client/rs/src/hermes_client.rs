@@ -33,10 +33,18 @@ pub struct ParamOption {
 
     // filter: Option<String>,
 
-
+    // Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is `hex`.
+    //
+    // Available values : hex, base64
     encoding: Option<EncodingType>,
+
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     parsed: Option<bool>,
+
+    /// If true, allows unordered price updates to be included in the stream.
     allow_unordered: Option<bool>,
+
+    /// If true, only include benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime).
     benchmark_only: Option<bool>,
 }
 
