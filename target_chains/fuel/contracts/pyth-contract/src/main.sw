@@ -14,11 +14,11 @@ use std::{
         keccak256,
         sha256,
     },
+    revert::revert,
     storage::{
         storage_map::StorageMap,
         storage_vec::*,
     },
-    revert::revert,
 };
 
 use pyth_interface::{
@@ -31,18 +31,32 @@ use pyth_interface::{
         update_type::UpdateType,
         wormhole_light::*,
     },
-    errors::{PythError, WormholeError},
-    events::{ConstructedEvent, NewGuardianSetEvent, UpdatedPriceFeedsEvent, ContractUpgradedEvent, GovernanceDataSourceSetEvent, DataSourcesSetEvent, FeeSetEvent, ValidPeriodSetEvent},
+    errors::{
+        PythError,
+        WormholeError,
+    },
+    events::{
+        ConstructedEvent,
+        ContractUpgradedEvent,
+        DataSourcesSetEvent,
+        FeeSetEvent,
+        GovernanceDataSourceSetEvent,
+        NewGuardianSetEvent,
+        UpdatedPriceFeedsEvent,
+        ValidPeriodSetEvent,
+    },
     pyth_merkle_proof::validate_proof,
-    utils::{difference, total_fee},
     PythCore,
     PythInfo,
     PythInit,
+    utils::total_fee,
     WormholeGuardians,
 };
 
 use sway_libs::ownership::*;
 use standards::src5::{SRC5, State};
+
+const GUARDIAN_SET_EXPIRATION_TIME_SECONDS: u64 = 86400; // 24 hours in seconds
 
 configurable {
     DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
@@ -140,7 +154,7 @@ impl PythCore for Contract {
 
         let mut output_price_feeds: Vec<PriceFeed> = Vec::with_capacity(target_price_feed_ids.len());
         let mut i = 0;
-        while i < update_data.len()  {
+        while i < update_data.len() {
             let data = update_data.get(i).unwrap();
 
             match UpdateType::determine_type(data) {
@@ -229,7 +243,7 @@ impl PythCore for Contract {
 
         require(
             target_price_feed_ids
-                .len()  == output_price_feeds
+                .len() == output_price_feeds
                 .len(),
             PythError::PriceFeedNotFoundWithinRange,
         );
@@ -270,13 +284,13 @@ impl PythCore for Contract {
     ) {
         require(
             price_feed_ids
-                .len()  == publish_times
+                .len() == publish_times
                 .len(),
             PythError::LengthOfPriceFeedIdsAndPublishTimesMustMatch,
         );
 
         let mut i = 0;
-        while i < price_feed_ids.len()  {
+        while i < price_feed_ids.len() {
             if latest_publish_time(price_feed_ids.get(i).unwrap()) < publish_times.get(i).unwrap()
             {
                 update_price_feeds(update_data);
@@ -297,9 +311,9 @@ impl PythCore for Contract {
 #[storage(read)]
 fn ema_price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price {
     let price = ema_price_unsafe(price_feed_id);
-
+    let current_time = timestamp();
     require(
-        difference(timestamp(), price.publish_time) <= time_period,
+        current_time - price.publish_time <= time_period,
         PythError::OutdatedPrice,
     );
 
@@ -317,8 +331,9 @@ fn ema_price_unsafe(price_feed_id: PriceFeedId) -> Price {
 #[storage(read)]
 fn price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price {
     let price = price_unsafe(price_feed_id);
+    let current_time = timestamp();
     require(
-        difference(timestamp(), price.publish_time) <= time_period,
+        current_time - price.publish_time <= time_period,
         PythError::OutdatedPrice,
     );
 
@@ -337,7 +352,7 @@ fn price_unsafe(price_feed_id: PriceFeedId) -> Price {
 fn update_fee(update_data: Vec<Bytes>) -> u64 {
     let mut total_number_of_updates = 0;
     let mut i = 0;
-    while i < update_data.len()  {
+    while i < update_data.len() {
         let data = update_data.get(i).unwrap();
 
         match UpdateType::determine_type(data) {
@@ -368,7 +383,7 @@ fn update_price_feeds(update_data: Vec<Bytes>) {
 
     // let mut updated_price_feeds: Vec<PriceFeedId> = Vec::new(); // TODO: requires append for Vec
     let mut i = 0;
-    while i < update_data.len()  {
+    while i < update_data.len() {
         let data = update_data.get(i).unwrap();
 
         match UpdateType::determine_type(data) {
@@ -473,7 +488,7 @@ impl PythInit for Contract {
         // This function ensures that the sender is the owner. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L59-L65
         only_owner();
 
-        require(data_sources.len()  > 0, PythError::InvalidDataSourcesLength);
+        require(data_sources.len() > 0, PythError::InvalidDataSourcesLength);
 
         let mut i = 0;
         while i < data_sources.len() {
@@ -483,7 +498,9 @@ impl PythInit for Contract {
 
             i += 1;
         }
-        storage.latest_price_feed.write(StorageMap::<PriceFeedId, PriceFeed> {});
+        storage
+            .latest_price_feed
+            .write(StorageMap::<PriceFeedId, PriceFeed> {});
 
         storage
             .valid_time_period_seconds
@@ -493,7 +510,11 @@ impl PythInit for Contract {
         let guardian_length: u8 = wormhole_guardian_set_addresses.len().try_as_u8().unwrap();
         let mut new_guardian_set = StorageGuardianSet::new(
             0,
-            StorageKey::<StorageVec<b256>>::new(sha256(("guardian_set_keys", wormhole_guardian_set_index)), 0, ZERO_B256),
+            StorageKey::<StorageVec<b256>>::new(
+                sha256(("guardian_set_keys", wormhole_guardian_set_index)),
+                0,
+                ZERO_B256,
+            ),
         );
         let mut i: u8 = 0;
         while i < guardian_length {
@@ -502,17 +523,27 @@ impl PythInit for Contract {
             i += 1;
         }
 
-        storage.wormhole_guardian_set_index.write(wormhole_guardian_set_index);
-        storage.wormhole_guardian_sets.insert(wormhole_guardian_set_index, new_guardian_set);
+        storage
+            .wormhole_guardian_set_index
+            .write(wormhole_guardian_set_index);
+        storage
+            .wormhole_guardian_sets
+            .insert(wormhole_guardian_set_index, new_guardian_set);
 
         storage.governance_data_source.write(governance_data_source);
-        storage.wormhole_governance_data_source.write(wormhole_governance_data_source);
+        storage
+            .wormhole_governance_data_source
+            .write(wormhole_governance_data_source);
         storage.governance_data_source_index.write(0);
-        storage.wormhole_consumed_governance_actions.write(StorageMap::<b256, bool> {});
+        storage
+            .wormhole_consumed_governance_actions
+            .write(StorageMap::<b256, bool> {});
         storage.chain_id.write(chain_id);
         storage.last_executed_governance_sequence.write(0);
 
-        storage.current_implementation.write(Identity::Address(Address::from(ZERO_B256)));
+        storage
+            .current_implementation
+            .write(Identity::Address(Address::from(ZERO_B256)));
 
         // This function revokes ownership of the current owner and disallows any new owners. https://github.com/FuelLabs/sway-libs/blob/8045a19e3297599750abdf6300c11e9927a29d40/libs/src/ownership.sw#L89-L99
         renounce_ownership();
@@ -670,7 +701,7 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
     let current_guardian_set = storage.wormhole_guardian_sets.get(current_guardian_set_index).try_read();
     if current_guardian_set.is_some() {
         let mut current_guardian_set = current_guardian_set.unwrap();
-        current_guardian_set.expiration_time = timestamp() + 86400;
+        current_guardian_set.expiration_time = timestamp() + GUARDIAN_SET_EXPIRATION_TIME_SECONDS;
         storage
             .wormhole_guardian_sets
             .insert(current_guardian_set_index, current_guardian_set);
@@ -691,27 +722,41 @@ fn submit_new_guardian_set(encoded_vm: Bytes) {
 
 /// Transfer the governance data source to a new value with sanity checks to ensure the new governance data source can manage the contract.
 #[storage(read, write)]
-fn authorize_governance_data_source_transfer(payload: AuthorizeGovernanceDataSourceTransferPayload) {
+fn authorize_governance_data_source_transfer(
+    payload: AuthorizeGovernanceDataSourceTransferPayload,
+) {
     let old_governance_data_source = governance_data_source();
 
     // Parse and verify the VAA contained in the payload to ensure it's valid and can manage the contract
     let vm: WormholeVM = WormholeVM::parse_and_verify_wormhole_vm(
         current_guardian_set_index(),
-        payload.claim_vaa,
-        storage.wormhole_guardian_sets,
+        payload
+            .claim_vaa,
+        storage
+            .wormhole_guardian_sets,
     );
 
     let gi = GovernanceInstruction::parse_governance_instruction(vm.payload);
-    require(gi.target_chain_id == chain_id() || gi.target_chain_id == 0, PythError::InvalidGovernanceTarget);
+    require(
+        gi.target_chain_id == chain_id() || gi.target_chain_id == 0,
+        PythError::InvalidGovernanceTarget,
+    );
 
-    require(match gi.action {
-        GovernanceAction::RequestGovernanceDataSourceTransfer => true,
-        _ => false,
-    }, PythError::InvalidGovernanceMessage);
+    require(
+        match gi.action {
+            GovernanceAction::RequestGovernanceDataSourceTransfer => true,
+            _ => false,
+        },
+        PythError::InvalidGovernanceMessage,
+    );
 
     let claim_payload = GovernanceInstruction::parse_request_governance_data_source_transfer_payload(gi.payload);
 
-    require(governance_data_source_index() < claim_payload.governance_data_source_index, PythError::OldGovernanceMessage);
+    require(
+        governance_data_source_index() < claim_payload
+            .governance_data_source_index,
+        PythError::OldGovernanceMessage,
+    );
 
     set_governance_data_source_index(claim_payload.governance_data_source_index);
 
@@ -737,7 +782,7 @@ fn set_data_sources(payload: SetDataSourcesPayload) {
     let old_data_sources = storage.valid_data_sources.load_vec();
 
     let mut i = 0;
-    while i < old_data_sources.len()  {
+    while i < old_data_sources.len() {
         let data_source = old_data_sources.get(i).unwrap();
         storage.is_valid_data_source.insert(data_source, false);
         i += 1;
@@ -748,7 +793,7 @@ fn set_data_sources(payload: SetDataSourcesPayload) {
 
     i = 0;
     // Add new data sources from the payload and mark them as valid
-    while i < payload.data_sources.len()  {
+    while i < payload.data_sources.len() {
         let data_source = payload.data_sources.get(i).unwrap();
         storage.valid_data_sources.push(data_source);
         storage.is_valid_data_source.insert(data_source, true);
@@ -777,7 +822,9 @@ fn set_fee(payload: SetFeePayload) {
 #[storage(read, write)]
 fn set_valid_period(payload: SetValidPeriodPayload) {
     let old_valid_period = storage.valid_time_period_seconds.read();
-    storage.valid_time_period_seconds.write(payload.new_valid_period);
+    storage
+        .valid_time_period_seconds
+        .write(payload.new_valid_period);
 
     log(ValidPeriodSetEvent {
         old_valid_period,
@@ -809,7 +856,10 @@ impl PythGovernance for Contract {
         // Log so that the GovernanceInstruction struct will show up in the ABI and can be used in the tests
         log(gi);
 
-        require(gi.target_chain_id == chain_id() || gi.target_chain_id == 0, PythError::InvalidGovernanceTarget);
+        require(
+            gi.target_chain_id == chain_id() || gi.target_chain_id == 0,
+            PythError::InvalidGovernanceTarget,
+        );
 
         match gi.action {
             GovernanceAction::UpgradeContract => {
@@ -852,7 +902,6 @@ impl PythGovernance for Contract {
         }
     }
 }
-
 
 #[storage(read, write)]
 fn verify_governance_vm(encoded_vm: Bytes) -> WormholeVM {

@@ -78,6 +78,7 @@ export enum InitializationErrorOutput {
 }
 export enum PythErrorInput {
   FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
+  FuturePriceNotAllowed = "FuturePriceNotAllowed",
   GuardianSetNotFound = "GuardianSetNotFound",
   IncorrectMessageType = "IncorrectMessageType",
   InsufficientFee = "InsufficientFee",
@@ -114,6 +115,7 @@ export enum PythErrorInput {
 }
 export enum PythErrorOutput {
   FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
+  FuturePriceNotAllowed = "FuturePriceNotAllowed",
   GuardianSetNotFound = "GuardianSetNotFound",
   IncorrectMessageType = "IncorrectMessageType",
   InsufficientFee = "InsufficientFee",

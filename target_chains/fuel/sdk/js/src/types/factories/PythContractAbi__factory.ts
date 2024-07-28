@@ -170,6 +170,11 @@ const _abi = {
           typeArguments: null,
         },
         {
+          name: "FuturePriceNotAllowed",
+          type: 0,
+          typeArguments: null,
+        },
+        {
           name: "GuardianSetNotFound",
           type: 0,
           typeArguments: null,
@@ -1864,7 +1869,7 @@ const _abi = {
         type: 6,
         typeArguments: [],
       },
-      offset: 117008,
+      offset: 117592,
     },
   ],
 };
