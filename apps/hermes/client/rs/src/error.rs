@@ -14,7 +14,7 @@ pub enum PriceServiceError {
     NotJson(String),
 
     /// Invalid JSON response.
-    Json(reqwest::Error),
+    Json(serde_json::Error),
 }
 
 impl Error for PriceServiceError {}

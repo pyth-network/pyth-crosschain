@@ -1,13 +1,13 @@
 use std::time::Duration;
 
+use chrono::{DateTime, Utc};
+use futures_util::{Stream, StreamExt};
+use hermes_types::{AssetType, EncodingType, PriceFeedMetadata, PriceUpdate};
 use reqwest::{Client, ClientBuilder};
 use serde::Serialize;
 use url::Url;
 
-use crate::{
-    error::PriceServiceError,
-    types::{AssetType, EncodingType},
-};
+use crate::error::PriceServiceError;
 
 const DEFAULT_TIMEOUT: u64 = 5000;
 
@@ -117,5 +117,73 @@ impl HermesClient {
         let price_update_json = response.json::<PriceUpdate>().await?;
 
         Ok(price_update_json)
+    }
+
+    /// Fetch the price updates for a set of price feed IDs at a given timestamp.
+    /// This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
+    /// This will throw an error if there is a network problem or the price service returns a non-ok response.
+    pub async fn get_price_updates_at_timestamp(
+        &self,
+        publish_time: DateTime<Utc>,
+        ids: &[&str],
+        options: Option<ParamOption>,
+    ) -> Result<PriceUpdate, PriceServiceError> {
+        let sub_url = format!("v2/updates/price/{}", publish_time.timestamp().to_string());
+        let url = self.base_url.clone();
+        url.join(&sub_url)?;
+
+        let mut params = Vec::new();
+        for price_id in ids {
+            params.push(("ids[]", price_id.to_string()));
+        }
+        let response = self
+            .http_client
+            .get(url)
+            .query(&params)
+            .query(&options)
+            .send()
+            .await?;
+        let price_update_json = response.json::<PriceUpdate>().await?;
+
+        Ok(price_update_json)
+    }
+
+    /// Fetch streaming price updates for a set of price feed IDs.
+    /// This endpoint can be customized by specifying the encoding type, whether the results should include parsed updates,
+    /// and if unordered updates or only benchmark updates are allowed.
+    /// This will return an EventSource that can be used to listen to streaming updates.
+    /// If an invalid hex-encoded ID is passed, it will throw an error.
+    pub async fn get_price_updates_stream(
+        &self,
+        ids: &[&str],
+        options: Option<ParamOption>,
+    ) -> impl Stream<Item = Result<PriceUpdate, PriceServiceError>> {
+        let mut url = self.base_url.clone();
+        url.set_path("v2/updates/price/stream");
+
+        let mut params = Vec::new();
+        for price_id in ids {
+            params.push(("ids[]", price_id.to_string()));
+        }
+
+        let request = self
+            .http_client
+            .get(url)
+            .header("Accept", "text/event-stream")
+            .query(&params)
+            .query(&options);
+
+        let stream = async_stream::stream! {
+        let response =request.send().await?;
+            let mut stream = response.bytes_stream();
+
+            while let Some(chunk) = stream.next().await {
+                let chunk = chunk?;
+                let price_update: PriceUpdate = serde_json::from_slice(&chunk).map_err(|e| PriceServiceError::Json(e))?;
+                yield Ok(price_update);
+            }
+        };
+
+        stream
     }
 }
