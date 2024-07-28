@@ -1869,7 +1869,7 @@ dependencies = [
  "prometheus-client",
  "prost",
  "prost-build",
- "pyth-sdk 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-sdk",
  "pyth-sdk-solana",
  "pythnet-sdk",
  "rand 0.8.5",
@@ -3005,7 +3005,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "hermes",
- "pyth-sdk 0.8.0 (git+https://github.com/pyth-network/pyth-sdk-rs)",
+ "pyth-sdk",
  "reqwest",
  "serde",
  "serde_json",
@@ -3174,19 +3174,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-sdk"
-version = "0.8.0"
-source = "git+https://github.com/pyth-network/pyth-sdk-rs#05ddf2beccac5bccdb8c31999f1940e4589b2c66"
-dependencies = [
- "borsh 0.10.3",
- "borsh-derive 0.10.3",
- "getrandom 0.2.15",
- "hex",
- "schemars",
- "serde",
-]
-
-[[package]]
 name = "pyth-sdk-solana"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3197,7 +3184,7 @@ dependencies = [
  "bytemuck",
  "num-derive 0.3.3",
  "num-traits",
- "pyth-sdk 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-sdk",
  "serde",
  "solana-program 2.0.3",
  "thiserror",

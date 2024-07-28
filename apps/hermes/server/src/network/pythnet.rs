@@ -405,7 +405,7 @@ async fn fetch_price_feeds_metadata(
     for product_keys_chunk in mapping_acct
         .products
         .iter()
-        .filter(|&prod_pkey| *prod_pkey != solana_program::pubkey::Pubkey::default())
+        .filter(|&prod_pkey| *prod_pkey != Pubkey::default())
         .collect::<Vec<_>>()
         .chunks(150)
     {

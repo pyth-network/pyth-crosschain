@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use hermes::api::types::{PriceFeedMetadata, PriceUpdate};
 use reqwest::{Client, ClientBuilder};
 use serde::Serialize;
 use url::Url;
