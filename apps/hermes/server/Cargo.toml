@@ -4,14 +4,6 @@ version     = "0.5.15"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
-[lib]
-name = "hermes"
-path = "src/lib.rs"
-
-[[bin]]
-name = "hermes"
-path = "src/main.rs"
-
 [dependencies]
 anyhow             = { version = "1.0.69" }
 async-trait        = { version = "0.1.73" }
