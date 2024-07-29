@@ -88,13 +88,6 @@ export class SuiPythClient {
         target: `${wormholePackageId}::vaa::parse_and_verify`,
         arguments: [
           tx.object(this.wormholeStateId),
-          // tx.pure(
-          //   bcs
-          //     .ser('vector<u8>', Array.from(vaa), {
-          //       maxSize: MAX_ARGUMENT_SIZE,
-          //     })
-          //     .toBytes()
-          // ),
           tx.pure(
             bcs
               .vector(bcs.U8)
@@ -136,13 +129,6 @@ export class SuiPythClient {
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
-        // tx.pure(
-        //   bcs
-        //     .ser('vector<u8>', Array.from(updates[0]), {
-        //       maxSize: MAX_ARGUMENT_SIZE,
-        //     })
-        //     .toBytes()
-        // ),
         tx.pure(
           bcs
             .vector(bcs.U8)
