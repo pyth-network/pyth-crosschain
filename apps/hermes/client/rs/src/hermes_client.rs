@@ -177,8 +177,6 @@ impl HermesClient {
     /// Fetch streaming price updates for a set of price feed IDs.
     /// This endpoint can be customized by specifying the encoding type, whether the results should include parsed updates,
     /// and if unordered updates or only benchmark updates are allowed.
-    /// This will return an EventSource that can be used to listen to streaming updates.
-    /// If an invalid hex-encoded ID is passed, it will throw an error.
     pub fn get_price_updates_stream(
         &self,
         ids: &[&str],
@@ -200,14 +198,39 @@ impl HermesClient {
             .query(&options);
 
         let stream = async_stream::stream! {
-            let response =request.send().await?;
+            let mut buffer = Vec::new();
+            let response =match request.send().await {
+                Ok(response) => response,
+                Err(e) => {
+                    yield Err(PriceServiceError::RError(e));
+                    return;
+                }
+            };
+
             let mut stream = response.bytes_stream();
 
             while let Some(chunk) = stream.next().await {
-                let chunk = chunk?;
-                println!("Chunk: {chunk:?}");
-                let price_update: PriceUpdate = serde_json::from_slice(&chunk).map_err(|e| PriceServiceError::Json(e))?;
-                yield Ok(price_update);
+                match chunk {
+                    Ok(bytes) => {
+                        buffer.extend_from_slice(&bytes);
+
+                        if let Some(pos) = buffer.windows(2).position(|window| window == b"\n\n") {
+                            let (complete_data, rest) = buffer.split_at(pos + 2);
+                            let data_str = &complete_data[5..]; // Strip the "data:" prefix
+                            match serde_json::from_slice::<PriceUpdate>(&data_str) {
+                                Ok(price_update) => {
+                                    yield Ok(price_update);
+                                }
+                                Err(e) => {
+                                   yield  Err(PriceServiceError::Json(e));
+                                   break;
+                                }
+                            }
+                            buffer = rest.to_vec();
+                        }
+                    }
+                    Err(e) => yield Err(PriceServiceError::RError(e)),
+                }
             }
         };
 

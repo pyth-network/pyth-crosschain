@@ -512,7 +512,7 @@ checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 [[package]]
 name = "hermes-types"
 version = "0.1.0"
-source = "git+https://github.com/aoikurokawa/hermes-types#e6404e71f7f4fea4b50f833efe4f20e39d5ab4d9"
+source = "git+https://github.com/aoikurokawa/hermes-types#7b8fcb6272c26e2d34183cbb3a27f20ef7aafd38"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
