@@ -23,7 +23,7 @@ use wormhole_sdk::Vaa;
 
 abigen!(Contract(
     name = "PythOracleContract",
-    abi = "pyth-contract/out/debug/pyth-contract-abi.json"
+    abi = "pyth-contract/out/release/pyth-contract-abi.json"
 ));
 
 pub struct Pyth {
