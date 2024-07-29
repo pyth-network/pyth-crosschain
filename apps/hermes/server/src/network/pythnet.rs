@@ -412,7 +412,7 @@ async fn fetch_price_feeds_metadata(
         // Prepare a list of futures for fetching product account data for each chunk
         let fetch_product_data_futures = product_keys_chunk
             .iter()
-            .map(|&prod_pkey| rpc_client.get_account_data(prod_pkey))
+            .map(|prod_pkey| rpc_client.get_account_data(prod_pkey))
             .collect::<Vec<_>>();
 
         // Await all futures concurrently within the chunk
@@ -436,7 +436,7 @@ async fn fetch_price_feeds_metadata(
                         .map(|(key, val)| (key.to_string(), val.to_string()))
                         .collect::<BTreeMap<String, String>>();
 
-                    if prod_acct.px_acc != solana_program::pubkey::Pubkey::default() {
+                    if prod_acct.px_acc != Pubkey::default() {
                         let px_pkey = prod_acct.px_acc;
                         let px_pkey_bytes = bs58::decode(&px_pkey.to_string()).into_vec()?;
                         let px_pkey_array: [u8; 32] = px_pkey_bytes

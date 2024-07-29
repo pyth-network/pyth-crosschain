@@ -1836,7 +1836,6 @@ dependencies = [
  "sha3 0.10.8",
  "solana-account-decoder",
  "solana-client",
- "solana-program",
  "solana-sdk",
  "strum",
  "tokio",
