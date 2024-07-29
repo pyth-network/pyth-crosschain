@@ -7,7 +7,7 @@ use reqwest::{Client, ClientBuilder};
 use serde::Serialize;
 use url::Url;
 
-use crate::error::PriceServiceError;
+use crate::error::HermesClientError;
 
 const DEFAULT_TIMEOUT: u64 = 5000;
 
@@ -79,7 +79,7 @@ impl HermesClient {
     pub fn new(
         endpoint: &str,
         config: Option<HermesClientConfig>,
-    ) -> Result<Self, PriceServiceError> {
+    ) -> Result<Self, HermesClientError> {
         let timeout;
 
         match config {
@@ -108,7 +108,7 @@ impl HermesClient {
     pub async fn get_price_feeds(
         &self,
         options: Option<ParamOption>,
-    ) -> Result<Vec<PriceFeedMetadata>, PriceServiceError> {
+    ) -> Result<Vec<PriceFeedMetadata>, HermesClientError> {
         let mut url = self.base_url.clone();
         url.set_path("v2/price_feeds");
 
@@ -125,7 +125,7 @@ impl HermesClient {
         &self,
         ids: &[&str],
         options: Option<ParamOption>,
-    ) -> Result<PriceUpdate, PriceServiceError> {
+    ) -> Result<PriceUpdate, HermesClientError> {
         let mut url = self.base_url.clone();
         url.set_path("v2/updates/price/latest");
 
@@ -153,7 +153,7 @@ impl HermesClient {
         publish_time: DateTime<Utc>,
         ids: &[&str],
         options: Option<ParamOption>,
-    ) -> Result<PriceUpdate, PriceServiceError> {
+    ) -> Result<PriceUpdate, HermesClientError> {
         let path = format!("v2/updates/price/{}", publish_time.timestamp().to_string());
         let mut url = self.base_url.clone();
         url.set_path(&path);
@@ -181,7 +181,7 @@ impl HermesClient {
         &self,
         ids: &[&str],
         options: Option<ParamOption>,
-    ) -> impl Stream<Item = Result<PriceUpdate, PriceServiceError>> {
+    ) -> impl Stream<Item = Result<PriceUpdate, HermesClientError>> {
         let mut url = self.base_url.clone();
         url.set_path("v2/updates/price/stream");
 
@@ -202,7 +202,7 @@ impl HermesClient {
             let response =match request.send().await {
                 Ok(response) => response,
                 Err(e) => {
-                    yield Err(PriceServiceError::RError(e));
+                    yield Err(HermesClientError::RError(e));
                     return;
                 }
             };
@@ -222,14 +222,14 @@ impl HermesClient {
                                     yield Ok(price_update);
                                 }
                                 Err(e) => {
-                                   yield  Err(PriceServiceError::Json(e));
+                                   yield  Err(HermesClientError::Json(e));
                                    break;
                                 }
                             }
                             buffer = rest.to_vec();
                         }
                     }
-                    Err(e) => yield Err(PriceServiceError::RError(e)),
+                    Err(e) => yield Err(HermesClientError::RError(e)),
                 }
             }
         };
