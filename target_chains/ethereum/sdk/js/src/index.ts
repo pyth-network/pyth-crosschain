@@ -128,6 +128,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   polygon_blackberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   polygon_zkevm_testnet: "0xFf255f800044225f54Af4510332Aa3D67CC77635",
   polynomial_testnet: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+  reya_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   saigon: "0xEbe57e8045F2F230872523bbff7374986E45C486",
   sei_evm_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   scroll_sepolia: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",

@@ -358,3 +358,6 @@
 - chain: cronos_zkevm_testnet
   address: "0x3f5bB93eEC6E3D6784274291A5816Bc34E851dc8"
   type: EvmWormholeContract
+- chain: reya_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
