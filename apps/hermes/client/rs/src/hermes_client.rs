@@ -17,6 +17,12 @@ pub struct HermesClientConfig {
     timeout: Option<Duration>,
 }
 
+impl HermesClientConfig {
+    pub fn new(timeout: Option<Duration>) -> Self {
+        Self { timeout }
+    }
+}
+
 #[derive(Debug)]
 pub struct HermesClient {
     http_client: Client,
@@ -46,6 +52,26 @@ pub struct ParamOption {
 
     /// If true, only include benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime).
     benchmark_only: Option<bool>,
+}
+
+impl ParamOption {
+    pub fn new(
+        query: Option<String>,
+        asset_type: Option<AssetType>,
+        encoding: Option<EncodingType>,
+        parsed: Option<bool>,
+        allow_unordered: Option<bool>,
+        benchmark_only: Option<bool>,
+    ) -> Self {
+        Self {
+            query,
+            asset_type,
+            encoding,
+            parsed,
+            allow_unordered,
+            benchmark_only,
+        }
+    }
 }
 
 impl HermesClient {
@@ -83,8 +109,8 @@ impl HermesClient {
         &self,
         options: Option<ParamOption>,
     ) -> Result<Vec<PriceFeedMetadata>, PriceServiceError> {
-        let url = self.base_url.clone();
-        url.join("v2/price_feeds")?;
+        let mut url = self.base_url.clone();
+        url.set_path("v2/price_feeds");
 
         let response = self.http_client.get(url).query(&options).send().await?;
         let price_feed_meta_json = response.json::<Vec<PriceFeedMetadata>>().await?;
@@ -100,8 +126,8 @@ impl HermesClient {
         ids: &[&str],
         options: Option<ParamOption>,
     ) -> Result<PriceUpdate, PriceServiceError> {
-        let url = self.base_url.clone();
-        url.join("v2/updates/price/latest")?;
+        let mut url = self.base_url.clone();
+        url.set_path("v2/updates/price/latest");
 
         let mut params = Vec::new();
         for price_id in ids {
@@ -128,9 +154,9 @@ impl HermesClient {
         ids: &[&str],
         options: Option<ParamOption>,
     ) -> Result<PriceUpdate, PriceServiceError> {
-        let sub_url = format!("v2/updates/price/{}", publish_time.timestamp().to_string());
-        let url = self.base_url.clone();
-        url.join(&sub_url)?;
+        let path = format!("v2/updates/price/{}", publish_time.timestamp().to_string());
+        let mut url = self.base_url.clone();
+        url.set_path(&path);
 
         let mut params = Vec::new();
         for price_id in ids {
@@ -153,7 +179,7 @@ impl HermesClient {
     /// and if unordered updates or only benchmark updates are allowed.
     /// This will return an EventSource that can be used to listen to streaming updates.
     /// If an invalid hex-encoded ID is passed, it will throw an error.
-    pub async fn get_price_updates_stream(
+    pub fn get_price_updates_stream(
         &self,
         ids: &[&str],
         options: Option<ParamOption>,
@@ -174,11 +200,12 @@ impl HermesClient {
             .query(&options);
 
         let stream = async_stream::stream! {
-        let response =request.send().await?;
+            let response =request.send().await?;
             let mut stream = response.bytes_stream();
 
             while let Some(chunk) = stream.next().await {
                 let chunk = chunk?;
+                println!("Chunk: {chunk:?}");
                 let price_update: PriceUpdate = serde_json::from_slice(&chunk).map_err(|e| PriceServiceError::Json(e))?;
                 yield Ok(price_update);
             }
