@@ -80,18 +80,12 @@ impl HermesClient {
         endpoint: &str,
         config: Option<HermesClientConfig>,
     ) -> Result<Self, HermesClientError> {
-        let timeout;
-
-        match config {
-            Some(config) => {
-                timeout = config
-                    .timeout
-                    .unwrap_or(Duration::from_millis(DEFAULT_TIMEOUT));
-            }
-            None => {
-                timeout = Duration::from_millis(DEFAULT_TIMEOUT);
-            }
-        }
+        let timeout = match config {
+            Some(config) => config
+                .timeout
+                .unwrap_or(Duration::from_millis(DEFAULT_TIMEOUT)),
+            None => Duration::from_millis(DEFAULT_TIMEOUT),
+        };
 
         let base_url = Url::parse(endpoint)?;
         let http_client = ClientBuilder::new().timeout(timeout).build()?;
@@ -154,7 +148,7 @@ impl HermesClient {
         ids: &[&str],
         options: Option<ParamOption>,
     ) -> Result<PriceUpdate, HermesClientError> {
-        let path = format!("v2/updates/price/{}", publish_time.timestamp().to_string());
+        let path = format!("v2/updates/price/{}", publish_time.timestamp());
         let mut url = self.base_url.clone();
         url.set_path(&path);
 
@@ -217,7 +211,7 @@ impl HermesClient {
                         if let Some(pos) = buffer.windows(2).position(|window| window == b"\n\n") {
                             let (complete_data, rest) = buffer.split_at(pos + 2);
                             let data_str = &complete_data[5..]; // Strip the "data:" prefix
-                            match serde_json::from_slice::<PriceUpdate>(&data_str) {
+                            match serde_json::from_slice::<PriceUpdate>(data_str) {
                                 Ok(price_update) => {
                                     yield Ok(price_update);
                                 }
