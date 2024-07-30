@@ -2,6 +2,7 @@
   "name": "@pythnetwork/aptos-cli",
   "version": "1.0.0",
   "description": "Utilities for managing the Pyth Target Chain contract on Aptos",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "cli": "ts-node src/cli.ts",
