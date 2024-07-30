@@ -57,7 +57,8 @@ You can use `SuiPythClient` to build such transactions.
 
 ```ts
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { TransactionBlock } from "@mysten/sui.js";
+import { Transaction } from "@mysten/sui/transactions";
+import { SuiClient } from "@mysten/sui/client";
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // see quickstart section
 
@@ -69,8 +70,9 @@ const wallet: SignerWithProvider = getWallet();
 const wormholeStateId = " 0xFILL_ME";
 const pythStateId = "0xFILL_ME";
 
+const provider = new SuiClient({ url: "https://fill-sui-endpoint" });
 const client = new SuiPythClient(wallet.provider, pythStateId, wormholeStateId);
-const tx = new TransactionBlock();
+const tx = new Transaction();
 const priceInfoObjectIds = await client.updatePriceFeeds(tx, priceFeedUpdateData, priceIds);
 
 tx.moveCall({
@@ -82,15 +84,14 @@ tx.moveCall({
     ],
 });
 
-const txBlock = {
-    transactionBlock: tx,
-    options: {
-        showEffects: true,
-        showEvents: true,
-    },
-};
-
-const result = await wallet.signAndExecuteTransactionBlock(txBlock);
+const result = await provider.signAndExecuteTransaction({
+  signer: wallet,
+  transaction: tx,
+  options: {
+    showEffects: true,
+    showEvents: true,
+  },
+});
 ```
 
 Now in your contract you can consume the price by calling `pyth::get_price` or other utility functions on the `PriceInfoObject`.
