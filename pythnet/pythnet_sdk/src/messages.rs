@@ -56,7 +56,7 @@ pub enum Message {
 
 /// PublisherStakeCapsMessage is a global message that aggregates data from all price feeds
 /// we can't associate it with a specific feed, so we use a feed id that is not used by any price feed
-pub const PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID: FeedId = [0u8; 32];
+pub const PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID: FeedId = [1u8; 32];
 
 impl Message {
     pub fn publish_time(&self) -> i64 {
@@ -67,6 +67,7 @@ impl Message {
         }
     }
 
+    /// TO DO : This API doesn't work with PublisherStakeCapsMessage since it doesn't have a feed_id, consider refactoring
     pub fn feed_id(&self) -> FeedId {
         match self {
             Self::PriceFeedMessage(msg) => msg.feed_id,
