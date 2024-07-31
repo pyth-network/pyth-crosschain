@@ -47,8 +47,8 @@ async fn test_update_price_feed() {
     let feed_2 = create_dummy_price_feed_message_with_feed_id(300, feed_id_2);
 
     let message = create_accumulator_message(
-        &[feed_1_old, feed_1_recent, feed_2],
-        &[feed_1_old, feed_1_recent, feed_2],
+        &[&feed_1_old, &feed_1_recent, &feed_2],
+        &[&feed_1_old, &feed_1_recent, &feed_2],
         false,
         false,
     );

@@ -83,7 +83,7 @@ pub mod pyth_push_oracle {
                 .map_err(|_| PushOracleError::DeserializeMessageFailed)?;
         let next_timestamp = match message {
             Message::PriceFeedMessage(price_feed_message) => price_feed_message.publish_time,
-            Message::TwapMessage(_) => {
+            Message::TwapMessage(_) | Message::PublisherStakeCapsMessage(_) => {
                 return err!(PushOracleError::UnsupportedMessageType);
             }
         };
