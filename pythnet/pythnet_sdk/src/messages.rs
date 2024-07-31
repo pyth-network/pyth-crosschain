@@ -183,12 +183,9 @@ impl Arbitrary for TwapMessage {
     }
 }
 
-pub const PUBLISHER_STAKE_CAPS_MESSAGE_VERSION: u8 = 1;
-
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublisherStakeCapsMessage {
-    pub version:      u8,
     pub publish_time: i64,
     pub caps:         PrefixedVec<u16, PublisherStakeCap>, // PrefixedVec because we might have more than 256 publishers
 }
@@ -205,7 +202,6 @@ impl Arbitrary for PublisherStakeCapsMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         let caps = Vec::arbitrary(g);
         PublisherStakeCapsMessage {
-            version:      PUBLISHER_STAKE_CAPS_MESSAGE_VERSION,
             publish_time: i64::arbitrary(g),
             caps:         caps.into(),
         }
