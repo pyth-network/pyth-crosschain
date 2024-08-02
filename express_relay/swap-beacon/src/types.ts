@@ -41,11 +41,11 @@ export type ExtendedTargetCall = TargetCall & {
 export interface Adapter {
   chainIds: string[];
   getPrice: (chainId: string, pair: Pair) => Promise<number>;
-  constructSwap: (
+  constructSwaps: (
     chainId: string,
     tokenIn: Address,
     tokenOut: Address,
     amountIn?: bigint,
     amountOut?: bigint
-  ) => ExtendedTargetCall;
+  ) => ExtendedTargetCall[];
 }

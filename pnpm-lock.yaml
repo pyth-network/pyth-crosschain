@@ -4,6 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@injectivelabs/sdk-ts@1.10.72>@injectivelabs/token-metadata': 1.10.42
+  eslint-config-next>@typescript-eslint/parser: ^7.0.0
+  '@solana/web3.js@^1.93.0': 1.92.3
+
+patchedDependencies:
+  eccrypto@1.1.6:
+    hash: rjcfmtfgn3z72mudpdif5oxmye
+    path: patches/eccrypto@1.1.6.patch
+
 importers:
 
   .:
@@ -536,6 +546,25 @@ importers:
       prettier-plugin-solidity:
         specifier: ^1.0.0-rc.1
         version: 1.1.3(prettier@2.8.8)
+
+  express_relay/swap-beacon:
+    dependencies:
+      '@graphprotocol/graph-ts':
+        specifier: ^0.35.1
+        version: 0.35.1
+      '@pythnetwork/express-relay-evm-js':
+        specifier: ^0.8.1
+        version: link:../sdk/js
+      viem:
+        specifier: ^2.18.6
+        version: 2.18.6(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.0.0
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
 
   express_relay/swaps-beacon:
     dependencies:
