@@ -33,19 +33,24 @@ export type TargetCall = {
   tokensToSend: TokenToSend[];
 };
 
-// TODO: better name
 export type ExtendedTargetCall = TargetCall & {
   tokensToReceive: TokenAmount[];
 };
 
 export interface Adapter {
   chainIds: string[];
-  getPrice: (chainId: string, pair: Pair) => Promise<number>;
+  getPrice: (
+    chainId: string,
+    tokenIn: Address,
+    tokenOut: Address,
+    amountIn?: bigint,
+    amountOut?: bigint
+  ) => Promise<number>;
   constructSwaps: (
     chainId: string,
     tokenIn: Address,
     tokenOut: Address,
     amountIn?: bigint,
     amountOut?: bigint
-  ) => ExtendedTargetCall[];
+  ) => Promise<ExtendedTargetCall[]>;
 }

@@ -3,7 +3,6 @@ import { SWAP_ADAPTER_CONFIGS } from "./const";
 import {
   Client,
   Opportunity,
-  OpportunityParams,
   ChainId,
   TokenAmount,
   OPPORTUNITY_ADAPTER_CONFIGS,
@@ -14,7 +13,7 @@ import { multicallAbi } from "./abi";
 
 export class SwapBeaconError extends Error {}
 
-function getSwapAdapterConfig(chainId: string) {
+export function getSwapAdapterConfig(chainId: string) {
   const swapAdapterConfig = SWAP_ADAPTER_CONFIGS[chainId];
   if (!swapAdapterConfig) {
     throw new SwapBeaconError(
@@ -44,12 +43,10 @@ export class SwapBeacon {
     tokenIn: Address,
     tokenOut: Address
   ) {
-    const pair = {
-      token0: tokenIn,
-      token1: tokenOut,
-    };
     const prices = await Promise.all(
-      this.adapters.map((adapter) => adapter.getPrice(chainId, pair))
+      this.adapters.map((adapter) =>
+        adapter.getPrice(chainId, tokenIn, tokenOut)
+      )
     );
 
     return this.adapters[
@@ -199,34 +196,39 @@ export class SwapBeacon {
       Promise.all(promisesOptimalAdaptersBuy),
     ]);
 
-    const swapsSell = optimalAdaptersSell
-      .map((adapter, index) =>
-        adapter.constructSwaps(
-          opportunity.chainId,
-          base,
-          opportunity.sellTokens[index].token,
-          undefined,
-          opportunity.sellTokens[index].amount
+    const swapsSell = (
+      await Promise.all(
+        optimalAdaptersSell.map(
+          async (adapter, index) =>
+            await adapter.constructSwaps(
+              opportunity.chainId,
+              base,
+              opportunity.sellTokens[index].token,
+              undefined,
+              opportunity.sellTokens[index].amount
+            )
         )
       )
-      .reduce((acc, val) => acc.concat(val), []);
-    const swapsBuy = optimalAdaptersBuy
-      .map((adapter, index) =>
-        adapter.constructSwaps(
-          opportunity.chainId,
-          opportunity.buyTokens[index].token,
-          base,
-          opportunity.buyTokens[index].amount,
-          undefined
+    ).reduce((acc, val) => acc.concat(val), []);
+    const swapsBuy = (
+      await Promise.all(
+        optimalAdaptersBuy.map(
+          async (adapter, index) =>
+            await adapter.constructSwaps(
+              opportunity.chainId,
+              opportunity.buyTokens[index].token,
+              base,
+              opportunity.buyTokens[index].amount,
+              undefined
+            )
         )
       )
-      .reduce((acc, val) => acc.concat(val), []);
+    ).reduce((acc, val) => acc.concat(val), []);
 
     return this.createSwapOpportunity(opportunity, base, swapsSell, swapsBuy);
   }
 
   async opportunityHandler(opportunity: Opportunity) {
-    // check opportunity
     const swapAdapterConfig = getSwapAdapterConfig(opportunity.chainId);
 
     await Promise.all(
