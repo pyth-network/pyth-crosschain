@@ -269,10 +269,10 @@ abstract contract Entropy is IEntropy, EntropyState {
         emit Requested(req);
     }
 
-    // Request a random number. The method expects the provider address and a secret random number
+    // Request a random number. The method expects the provider address and the user random number
     // in the arguments. It returns a sequence number.
     //
-    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The address calling this function should be an EOA or a contract that implements the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
@@ -290,6 +290,48 @@ abstract contract Entropy is IEntropy, EntropyState {
             false,
             true
         );
+
+        emit RequestedWithCallback(
+            provider,
+            req.requester,
+            req.sequenceNumber,
+            userRandomNumber,
+            req
+        );
+
+        return req.sequenceNumber;
+    }
+
+    // Request a random number. The method expects the provider address and the user random number
+    // in the arguments. It returns a sequence number.
+    //
+    // The address calling this function should be an EOA or a contract that implements the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the generated random number.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // Note that excess value is *not* refunded to the caller. This method will also revert if the provider's original
+    // commitment does not match the one on-chain which is necessary to prevent a scenario where the provider rotates
+    // their commitment while the transaction is pending.
+    function requestWithCallback(
+        address provider,
+        bytes32 userRandomNumber,
+        bytes32 providerOriginalCommitment
+    ) public payable override returns (uint64) {
+        EntropyStructs.Request storage req = requestHelper(
+            provider,
+            constructUserCommitment(userRandomNumber),
+            // If useBlockHash is set to true, it allows a scenario in which the provider and miner can collude.
+            // If we remove the blockHash from this, the provider would have no choice but to provide its committed
+            // random number. Hence, useBlockHash is set to false.
+            false,
+            true
+        );
+
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (providerInfo.originalCommitment != providerOriginalCommitment)
+            revert EntropyErrors.InvalidOriginalProviderCommitment();
 
         emit RequestedWithCallback(
             provider,
@@ -478,6 +520,18 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider
     ) public view override returns (uint128 feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+    }
+
+    function getFeeAndOriginalCommitment(
+        address provider
+    ) public view override returns (uint128 feeAmount, bytes32 commitment) {
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        return (
+            providerInfo.feeInWei + _state.pythFeeInWei,
+            providerInfo.originalCommitment
+        );
     }
 
     function getPythFee() public view returns (uint128 feeAmount) {

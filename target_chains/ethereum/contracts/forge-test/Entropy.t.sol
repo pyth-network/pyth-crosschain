@@ -891,6 +891,79 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(reqAfterReveal.sequenceNumber, 0);
     }
 
+    function testRequestWithCallbackAndRevealWithCallbackByEoaWithOriginalCommitment()
+        public
+    {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        (uint fee, bytes32 originalCommitment) = random
+            .getFeeAndOriginalCommitment(provider1);
+        vm.deal(user1, fee);
+        vm.prank(user1);
+
+        bytes32 invalidOriginalCommitment = bytes32(0);
+        vm.expectRevert(
+            EntropyErrors.InvalidOriginalProviderCommitment.selector
+        );
+        random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber,
+            invalidOriginalCommitment
+        );
+
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber,
+            originalCommitment
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
+
+    function testInvalidOriginalCommitmentIfProviderRotates() public {
+        bytes32 userRandomNumber = bytes32(uint(42));
+        (uint fee, bytes32 originalCommitment) = random
+            .getFeeAndOriginalCommitment(provider1);
+
+        uint64 newHashChainOffset = random
+            .getProviderInfo(provider1)
+            .sequenceNumber + 1;
+        bytes32[] memory newHashChain = generateHashChain(
+            provider1,
+            newHashChainOffset,
+            10
+        );
+        vm.prank(provider1);
+        random.register(
+            provider1FeeInWei,
+            newHashChain[0],
+            hex"0100",
+            10,
+            provider1Uri
+        );
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        vm.expectRevert(
+            EntropyErrors.InvalidOriginalProviderCommitment.selector
+        );
+        random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber,
+            originalCommitment
+        );
+    }
+
     function testRequestAndRevealWithCallback() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
         assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
