@@ -85,7 +85,7 @@ contract EasyLend is IExpressRelayFeeReceiver {
      */
     function _getPrice(bytes32 id) internal view returns (uint256) {
         IPyth oracle = IPyth(payable(_oracle));
-        return convertToUint(oracle.getPrice(id), 18);
+        return convertToUint(oracle.getPriceNoOlderThan(id, 60), 18);
     }
 
     function getAllowUndercollateralized() public view returns (bool) {

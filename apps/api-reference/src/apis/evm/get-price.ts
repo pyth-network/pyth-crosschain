@@ -2,7 +2,7 @@ import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
 
 export const getPrice = readApi<"id">({
-  name: "getPrice",
+  name: "getPrice (deprecated)",
   summary: "Get the **latest** price object for the requested price feed ID.",
   description: `
 This method returns the latest price object for the requested price feed ID.

@@ -138,7 +138,10 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
             uint256 aavePrice = assetPrice / BASE_CURRENCY_UNIT;
 
             bytes32 priceId = priceIds[i];
-            PythStructs.Price memory price = pyth.getPrice(priceId);
+            PythStructs.Price memory price = pyth.getPriceNoOlderThan(
+                priceId,
+                60
+            );
             int64 pythRawPrice = price.price;
             uint pythNormalizer;
             uint pythPrice;
