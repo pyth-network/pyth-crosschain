@@ -51,6 +51,7 @@ async fn test_update_price_feed() {
         &[&feed_1_old, &feed_1_recent, &feed_2],
         false,
         false,
+        None,
     );
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
