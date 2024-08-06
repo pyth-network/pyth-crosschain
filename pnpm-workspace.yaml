@@ -24,4 +24,5 @@ packages:
   - "target_chains/sui/cli"
   - "target_chains/solana/sdk/js/solana_utils"
   - "target_chains/solana/sdk/js/pyth_solana_receiver"
+  - "target_chains/ton/contracts"
   - "contract_manager"

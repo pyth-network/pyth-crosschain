@@ -1,5 +1,27 @@
 #include "imports/stdlib.fc";
+#include "Wormhole.fc";
 
+;; Opcodes
+const int OP_UPDATE_GUARDIAN_SET = 1;
+const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
+
+;; Internal message handler
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+        return ();
+    }
+    
+    ;; * A 32-bit (big-endian) unsigned integer `op`, identifying the `operation` to be performed, or the `method` of the smart contract to be invoked.
+    int op = in_msg_body~load_uint(32);
+    ;; * A 64-bit (big-endian) unsigned integer `query_id`, used in all query-response internal messages to indicate that a response is related to a query (the `query_id` of a response must be equal to the `query_id` of the corresponding query). If `op` is not a query-response method (e.g., it invokes a method that is not expected to send an answer), then `query_id` may be omitted.
+    int query_id = in_msg_body~load_uint(64);
 
+    ;; * The remainder of the message body is specific for each supported value of `op`.
+    if (op == OP_UPDATE_GUARDIAN_SET) {
+        update_guardian_set(in_msg_body);
+    } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
+        execute_governance_action(in_msg_body);
+    } else {
+        throw(0xffff); ;; Throw exception for unknown op
+    }
 }
