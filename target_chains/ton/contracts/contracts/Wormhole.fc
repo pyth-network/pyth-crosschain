@@ -1,0 +1,228 @@
+#include "imports/stdlib.fc";
+#include "imports/errors.fc";
+#include "imports/utils.fc";
+
+;; Storage variables
+global int guardian_set_index;
+;; GuardianSet struct: {expiration_time: int, keys: cell}
+global cell guardian_sets;
+global int chain_id;
+global int governance_chain_id;
+;; GovernanceContract struct: {chain_id: int, address: slice}
+global cell governance_contract;
+global cell consumed_governance_actions;
+
+;; Signature verification function
+;; ECRECOVER: Recovers the signer's address from the signature
+;; It returns 1 value (0) on failure and 4 values on success
+;; NULLSWAPIFNOT and NULLSWAPIFNOT2: Ensure consistent return of 4 values
+;; These opcodes swap nulls onto the stack if ECRECOVER fails, maintaining the 4-value return
+(int, int, int, int) check_sig (int hash, int v, int r, int s) asm 
+    "ECRECOVER"     ;; Attempt to recover the signer's address
+    "NULLSWAPIFNOT" ;; If recovery failed, swap null with top of stack
+    "NULLSWAPIFNOT2";  ;; If recovery failed, swap two more nulls with top of stack
+
+;; Constants
+const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
+const int UPGRADE_MODULE = 0x436f7265; ;; "Core" in hex
+
+
+;; Internal helper methods
+(slice, int) get_guardian_set_internal(int index) {
+    (slice guardian_set, int found?) = guardian_sets.udict_get?(256, index);
+    throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
+    return (guardian_set, found?);
+}
+
+(int, cell, int) parse_guardian_set(slice guardian_set) {
+    int expiration_time = guardian_set~load_uint(64);
+    cell keys = guardian_set~load_ref();
+    int keys_count = 0;
+    do {
+        (_, _, int key_exists) = keys.udict_get_next?(256, keys_count);
+        if (key_exists) {
+            keys_count += 1;
+        }
+    } until (~ key_exists);
+    return (expiration_time, keys, keys_count);
+}
+
+;; Get methods
+int get_guardian_set_index() method_id {
+    return guardian_set_index;
+}
+
+(slice, int) get_guardian_set(int index) method_id {
+    (slice guardian_set, _) = get_guardian_set_internal(index);
+    return (guardian_set~load_ref().begin_parse(), guardian_set~load_uint(32));
+}
+
+int get_chain_id() method_id {
+    return chain_id;
+}
+
+int get_governance_chain_id() method_id {
+    return governance_chain_id;
+}
+
+(int, slice) get_governance_contract() method_id {
+    slice cs = governance_contract.begin_parse();
+    int chain_id = cs~load_uint(16);
+    slice address = cs~load_bits(256);
+    return (chain_id, address);
+}
+
+int governance_action_is_consumed(int hash) method_id {
+    (_, int found?) = consumed_governance_actions.udict_get?(256, hash);
+    return found?;
+}
+
+() verify_signatures(int hash, cell signatures, int signers_length, int guardian_set_size) impure {
+    slice cs = signatures.begin_parse();
+    int last_index = 0;
+    int i = 0;
+    int valid_signatures = 0;
+
+    while (i < signers_length) {
+        int guardian_index = cs~load_uint(8);
+        ;; Check if the current guardian index is greater than the last one
+        throw_if(ERROR_SIGNATURE_INDICES_NOT_ASCENDING, guardian_index <= last_index);
+        last_index = guardian_index;
+
+        (_, _) = get_guardian_set_internal(guardian_index);
+
+        int r = cs~load_uint(256);
+        int s = cs~load_uint(256);
+        ;; Add 27 to 'v' to conform with Ethereum's ECDSA signature standard
+        ;; In Ethereum, v is either 27 or 28, while in Wormhole's cross-chain format, it's stored as 0 or 1
+        int v = cs~load_uint(8) + 27;
+
+        (int x, int y, int z, int valid) = check_sig(hash, v, r, s);
+        throw_unless(ERROR_INVALID_SIGNATURES, valid);
+        valid_signatures += 1;
+
+        i += 1;
+    }
+
+    ;; Check quorum (2/3 + 1)
+    ;; We're using a fixed point number transformation with 1 decimal to deal with rounding.
+    throw_unless(ERROR_NO_QUORUM, valid_signatures >= (((guardian_set_size * 10) / 3) * 2) / 10 + 1);
+}
+
+(int, int, int, int, int, slice, int, int, slice, int) parse_and_verify_wormhole_vm(slice in_msg_body) impure {
+    ;; Parse VM fields
+    int version = in_msg_body~load_uint(8);
+    throw_unless(ERROR_INVALID_VERSION, version == 1);
+    int vm_guardian_set_index = in_msg_body~load_uint(32);
+    ;; Verify guardian set
+    (slice guardian_set, _) = get_guardian_set_internal(vm_guardian_set_index);
+    ;; Check if guardian set is valid
+    (int expiration_time, cell keys, int keys_count) = parse_guardian_set(guardian_set);
+    throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys));
+    throw_unless(ERROR_INVALID_GUARDIAN_SET, 
+        (guardian_set_index == vm_guardian_set_index) & 
+        ((expiration_time == 0) | (expiration_time > now()))
+    );
+    int signers_length = in_msg_body~load_uint(8);
+    ;; Calculate hash_index in bytes (66 bytes per signature: 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v))
+    int hash_index = 6 + (signers_length * 66); ;; 6 = version + vm_guardian_set_index + signers_length
+    ;; Check if hash_index is within the bounds of the encoded VM
+    throw_if(ERROR_INVALID_SIGNATURE_LENGTH, hash_index >= in_msg_body.slice_bits() / 8);
+    slice body_slice = in_msg_body~load_bits(hash_index * 8);
+    int hash = keccak256(begin_cell().store_uint(keccak256(body_slice), 256).end_cell().begin_parse());
+    ;; Load signatures (we might need to implement a separate function to verify these)
+    cell signatures = in_msg_body~load_ref();
+    ;; Verify signatures
+    verify_signatures(hash, signatures, signers_length, keys_count);
+    int timestamp = in_msg_body~load_uint(32);
+    int nonce = in_msg_body~load_uint(32);
+    int emitter_chain_id = in_msg_body~load_uint(16);
+    slice emitter_address = in_msg_body~load_bits(256);
+    int sequence = in_msg_body~load_uint(64);
+    int consistency_level = in_msg_body~load_uint(8);
+    slice payload = in_msg_body~load_ref().begin_parse();
+    
+    return (
+        version,
+        vm_guardian_set_index,
+        timestamp,
+        nonce,
+        emitter_chain_id,
+        emitter_address,
+        sequence,
+        consistency_level,
+        payload,
+        hash
+    );
+}
+
+(int, int, int, cell, int) parse_encoded_upgrade(int current_guardian_set_index, slice payload) impure {
+    int module = payload~load_uint(256);
+    throw_unless(ERROR_INVALID_MODULE, module == UPGRADE_MODULE);
+
+    int action = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == 2);
+
+    int chain = payload~load_uint(16);
+    int new_guardian_set_index = payload~load_uint(32);
+    throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index > current_guardian_set_index);
+
+    int guardian_length = payload~load_uint(8);
+    cell new_guardian_set_keys = new_dict();
+    int keys_count = 0;
+    
+    repeat(guardian_length) {
+        slice key = payload~load_bits(160);
+        new_guardian_set_keys~udict_set(256, key.preload_uint(160), key);
+        keys_count += 1;
+    }
+    throw_unless(ERROR_GUARDIAN_SET_KEYS_LENGTH_NOT_EQUAL, keys_count == guardian_length);
+    throw_unless(ERROR_INVALID_GUARDIAN_SET_UPGRADE_LENGTH, payload.slice_empty?());
+
+    return (action, chain, module, new_guardian_set_keys, new_guardian_set_index);
+}
+
+() update_guardian_set(slice in_msg_body) impure {
+    ;; Verify governance VM
+    (int version, int vm_guardian_set_index, int timestamp, int nonce, int emitter_chain_id, slice emitter_address, int sequence, int consistency_level, slice payload, int hash) = parse_and_verify_wormhole_vm(in_msg_body);
+
+    ;; Verify the emitter chain and address
+    (int governance_chain_id, slice governance_contract_address) = get_governance_contract();
+    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == governance_chain_id);
+    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, equal_slices(emitter_address, governance_contract_address));
+    
+    ;; Check if the governance action has already been consumed
+    throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
+
+    ;; Parse the new guardian set from the payload
+    (int action, int chain, int module, cell new_guardian_set_keys, int new_guardian_set_index) = parse_encoded_upgrade(guardian_set_index, payload);
+
+    ;; Set expiry if current GuardianSet exists
+    (slice current_guardian_set, int found?) = guardian_sets.udict_get?(256, guardian_set_index);
+    if (found?) {
+        current_guardian_set~load_uint(64); ;; Skip the old expiration time
+        cell updated_guardian_set = begin_cell()
+            .store_uint(now() + GUARDIAN_SET_EXPIRY, 64) ;; expiration time
+            .store_ref(current_guardian_set~load_ref()) ;; keys
+        .end_cell();
+        guardian_sets~udict_set(256, guardian_set_index, updated_guardian_set.begin_parse());
+    }
+
+    ;; Store the new guardian set
+    cell new_guardian_set = begin_cell()
+        .store_uint(0, 64) ;; expiration_time, set to 0 initially
+        .store_ref(new_guardian_set_keys)
+    .end_cell();
+    guardian_sets~udict_set(256, new_guardian_set_index, new_guardian_set.begin_parse());
+
+    ;; Update the current guardian set index
+    guardian_set_index = new_guardian_set_index;
+
+    ;; Mark the governance action as consumed
+    consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());
+
+}
+
+() execute_governance_action(slice in_msg_body) impure {
+    ;; TODO: Implement
+}
