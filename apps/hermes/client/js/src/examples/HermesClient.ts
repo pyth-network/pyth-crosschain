@@ -81,6 +81,10 @@ async function run() {
 
   eventSource.onmessage = (event) => {
     console.log("Received price update:", event.data);
+    console.log(
+      "Price oldness:",
+      Date.now() / 1000 - JSON.parse(event.data).parsed[0].price.publish_time
+    );
   };
 
   eventSource.onerror = (error) => {
