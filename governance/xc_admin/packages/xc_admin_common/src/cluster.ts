@@ -1,6 +1,9 @@
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { Cluster } from "@solana/web3.js";
 
+export type NonPythnetSvmCluster = "eclipse_mainnet";
+export type SvmCluster = PythCluster | NonPythnetSvmCluster;
+
 /**
  * Return whether the cluster is governed remotely or not. For example Pythnet is governed remotely by a mainnet multisig.
  */
@@ -15,9 +18,10 @@ export function isRemoteCluster(cluster: PythCluster) {
 /**
  * For cluster that are governed remotely (ex : Pythnet from Mainnet) return the network where the multisig lives
  */
-export function getMultisigCluster(cluster: PythCluster): Cluster | "localnet" {
+export function getMultisigCluster(cluster: SvmCluster): Cluster | "localnet" {
   switch (cluster) {
     case "pythnet":
+    case "eclipse_mainnet":
       return "mainnet-beta";
     case "pythtest-conformance":
       return "devnet";

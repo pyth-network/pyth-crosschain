@@ -7,6 +7,7 @@ import {
   MultisigParser,
   PythGovernanceActionImpl,
   SetDataSources,
+  SvmCluster,
   WormholeMultisigInstruction,
 } from '@pythnetwork/xc-admin-common'
 
@@ -116,4 +117,25 @@ const getTransactionSummary = (instruction: MultisigInstruction) => {
         name: instruction.name,
       } as const
   }
+}
+
+export const isSolanaPullProgram = (programId: PublicKey) => {
+  const solanaPullProgramIds = [
+    new PublicKey('rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ'),
+    new PublicKey('HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ'),
+    new PublicKey('pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT'),
+  ]
+  return solanaPullProgramIds.some((id) => programId.equals(id))
+}
+
+export const isSvmChainId = (chainId: string) => {
+  const svmChainIds = ['pythnet', 'eclipse_mainnet']
+  return svmChainIds.includes(chainId)
+}
+
+export const getPythnetCluster = (cluster: SvmCluster): PythCluster => {
+  if (isSvmChainId(cluster)) {
+    return 'pythnet'
+  }
+  return cluster as PythCluster
 }

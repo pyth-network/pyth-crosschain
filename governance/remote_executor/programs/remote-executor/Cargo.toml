@@ -23,6 +23,7 @@ pythnet = []
 pythtest = []
 eclipse_devnet = []
 eclipse_testnet = []
+eclipse_mainnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}

@@ -17,6 +17,7 @@ import {
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
+  SvmCluster,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
   getMultisigCluster,
@@ -37,11 +38,16 @@ import Spinner from '../../common/Spinner'
 import Loadbar from '../../loaders/Loadbar'
 
 import { Wallet } from '@coral-xyz/anchor'
-import { PythCluster, getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
 import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
 import { StatusTag } from './StatusTag'
-import { getProposalStatus } from './utils'
+import {
+  getProposalStatus,
+  getPythnetCluster,
+  isSolanaPullProgram,
+  isSvmChainId,
+} from './utils'
 
 import VerifiedIcon from '@images/icons/verified.inline.svg'
 import VotedIcon from '@images/icons/voted.inline.svg'
@@ -140,7 +146,7 @@ export const Proposal = ({
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
   const { cluster: contextCluster } = useContext(ClusterContext)
   const multisigCluster = getMultisigCluster(contextCluster)
-  const targetClusters: (PythCluster | 'unknown')[] = []
+  const targetClusters: (SvmCluster | 'unknown')[] = []
   instructions.map((ix) => {
     if (!(ix instanceof WormholeMultisigInstruction)) {
       targetClusters.push(multisigCluster)
@@ -148,17 +154,22 @@ export const Proposal = ({
       ix instanceof WormholeMultisigInstruction &&
       ix.governanceAction instanceof ExecutePostedVaa
     ) {
-      ix.governanceAction.instructions.map((ix) => {
-        const remoteClusters: PythCluster[] = [
+      ix.governanceAction.instructions.map((innerIx) => {
+        const remoteClusters: SvmCluster[] = [
           'pythnet',
           'pythtest-conformance',
           'pythtest-crosschain',
+          'eclipse_mainnet',
         ]
         for (const remoteCluster of remoteClusters) {
           if (
             multisigCluster === getMultisigCluster(remoteCluster) &&
-            (ix.programId.equals(getPythProgramKeyForCluster(remoteCluster)) ||
-              ix.programId.equals(SystemProgram.programId))
+            ix.governanceAction?.targetChainId === remoteCluster &&
+            (innerIx.programId.equals(
+              getPythProgramKeyForCluster(getPythnetCluster(remoteCluster))
+            ) ||
+              innerIx.programId.equals(SystemProgram.programId) ||
+              isSolanaPullProgram(innerIx.programId))
           ) {
             targetClusters.push(remoteCluster)
           }
@@ -203,7 +214,10 @@ export const Proposal = ({
           ix.name === 'postMessage' &&
           ix.governanceAction instanceof ExecutePostedVaa &&
           ix.governanceAction.instructions.every((remoteIx) => {
-            const innerMultisigParser = MultisigParser.fromCluster(cluster)
+            console.log(getPythnetCluster(cluster))
+            const innerMultisigParser = MultisigParser.fromCluster(
+              getPythnetCluster(cluster)
+            )
             const parsedRemoteInstruction =
               innerMultisigParser.parseInstruction({
                 programId: remoteIx.programId,
@@ -215,7 +229,7 @@ export const Proposal = ({
               parsedRemoteInstruction instanceof AnchorMultisigInstruction
             )
           }) &&
-          ix.governanceAction.targetChainId === 'pythnet')
+          isSvmChainId(ix.governanceAction.targetChainId))
     )
 
   const voted =
@@ -300,7 +314,7 @@ export const Proposal = ({
 
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
-      } catch (e: any) {
+      } catch (e) {
         toast.error(capitalizeFirstLetter(e.message))
       } finally {
         setIsTransactionLoading(false)
@@ -488,7 +502,10 @@ export const Proposal = ({
         </h4>
         <hr className="border-gray-700" />
         <h4 className="h4 text-[20px] font-semibold">Summary</h4>
-        <InstructionsSummary instructions={instructions} cluster={cluster} />
+        <InstructionsSummary
+          instructions={instructions}
+          cluster={getPythnetCluster(cluster)}
+        />
         <hr className="border-gray-700" />
         {instructions?.map((instruction, index) => (
           <Fragment key={index}>
@@ -549,7 +566,7 @@ export const Proposal = ({
                               {typeof instruction.args[key] === 'string'
                                 ? instruction.args[key]
                                 : instruction.args[key] instanceof Uint8Array
-                                ? instruction.args[key].toString('hex')
+                                ? instruction.args[key].toString()
                                 : typeof instruction.args[key] === 'bigint'
                                 ? instruction.args[key].toString()
                                 : JSON.stringify(instruction.args[key])}
@@ -576,7 +593,7 @@ export const Proposal = ({
             )}
             {instruction instanceof WormholeMultisigInstruction && (
               <WormholeInstructionView
-                cluster={cluster}
+                cluster={getPythnetCluster(cluster)}
                 instruction={instruction}
               />
             )}
