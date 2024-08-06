@@ -5,7 +5,6 @@ import {
   Opportunity,
   ChainId,
   TokenAmount,
-  OPPORTUNITY_ADAPTER_CONFIGS,
 } from "@pythnetwork/express-relay-evm-js";
 import { Adapter, ExtendedTargetCall, TargetCall } from "./types";
 import { Address, Hex, encodeFunctionData } from "viem";
