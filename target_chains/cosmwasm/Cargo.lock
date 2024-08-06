@@ -1640,7 +1640,7 @@ dependencies = [
 
 [[package]]
 name = "pythnet-sdk"
-version = "2.1.0"
+version = "2.3.0"
 dependencies = [
  "bincode",
  "borsh 0.10.3",

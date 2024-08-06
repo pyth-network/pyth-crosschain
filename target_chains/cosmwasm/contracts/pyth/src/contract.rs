@@ -1155,7 +1155,8 @@ mod test {
         let feed1 = create_dummy_price_feed_message(100);
         let feed2 = create_dummy_price_feed_message(200);
         let feed3 = create_dummy_price_feed_message(300);
-        let data = create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1], false, false);
+        let data =
+            create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1], false, false, None);
         check_sufficient_fee(&deps.as_ref(), &[data.into()])
     }
 
@@ -1246,14 +1247,20 @@ mod test {
         let feed2 = create_dummy_price_feed_message(200);
         let feed3 = create_dummy_price_feed_message(300);
 
-        let msg =
-            create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1, &feed3], false, false);
+        let msg = create_accumulator_message(
+            &[&feed1, &feed2, &feed3],
+            &[&feed1, &feed3],
+            false,
+            false,
+            None,
+        );
         assert_eq!(
             get_update_fee_amount(&deps.as_ref(), &[msg.into()]).unwrap(),
             200
         );
 
-        let msg = create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1], false, false);
+        let msg =
+            create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1], false, false, None);
         assert_eq!(
             get_update_fee_amount(&deps.as_ref(), &[msg.into()]).unwrap(),
             100
@@ -1264,6 +1271,7 @@ mod test {
             &[&feed1, &feed2, &feed3, &feed1, &feed3],
             false,
             false,
+            None,
         );
         assert_eq!(
             get_update_fee_amount(&deps.as_ref(), &[msg.into()]).unwrap(),
@@ -1277,6 +1285,7 @@ mod test {
             &[&feed1, &feed2, &feed3],
             false,
             false,
+            None,
         );
         assert_eq!(
             get_update_fee_amount(&deps.as_ref(), &[msg.into(), batch_msg]).unwrap(),
@@ -1294,7 +1303,7 @@ mod test {
 
         let feed1 = create_dummy_price_feed_message(100);
         let feed2 = create_dummy_price_feed_message(200);
-        let msg = create_accumulator_message(&[&feed1, &feed2], &[&feed1], false, false);
+        let msg = create_accumulator_message(&[&feed1, &feed2], &[&feed1], false, false, None);
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
         assert!(result.is_ok());
@@ -1312,7 +1321,7 @@ mod test {
             all_feeds.push(create_dummy_price_feed_message(i));
         }
         let all_feeds: Vec<&Message> = all_feeds.iter().collect();
-        let msg = create_accumulator_message(&all_feeds, &all_feeds[100..110], false, false);
+        let msg = create_accumulator_message(&all_feeds, &all_feeds[100..110], false, false, None);
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
         assert!(result.is_ok());
@@ -1344,6 +1353,7 @@ mod test {
             &[&feed1, &feed2, &feed3],
             false,
             false,
+            None,
         );
         as_mut_price_feed(&mut feed1).publish_time += 1;
         as_mut_price_feed(&mut feed2).publish_time += 1;
@@ -1356,6 +1366,7 @@ mod test {
             &[&feed1, &feed2, &feed3],
             false,
             false,
+            None,
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into(), msg2.into()]);
@@ -1382,6 +1393,7 @@ mod test {
             &[&feed1, &feed2, &feed3],
             false,
             false,
+            None,
         );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1402,11 +1414,21 @@ mod test {
         let feed3 = create_dummy_price_feed_message(300);
         as_mut_price_feed(&mut feed2).publish_time -= 1;
         as_mut_price_feed(&mut feed2).price *= 2;
-        let msg =
-            create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed1, &feed3], false, false);
+        let msg = create_accumulator_message(
+            &[&feed1, &feed2, &feed3],
+            &[&feed1, &feed3],
+            false,
+            false,
+            None,
+        );
 
-        let msg2 =
-            create_accumulator_message(&[&feed1, &feed2, &feed3], &[&feed2, &feed3], false, false);
+        let msg2 = create_accumulator_message(
+            &[&feed1, &feed2, &feed3],
+            &[&feed2, &feed3],
+            false,
+            false,
+            None,
+        );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into(), msg2.into()]);
 
@@ -1423,7 +1445,7 @@ mod test {
             .unwrap();
 
         let feed1 = create_dummy_price_feed_message(100);
-        let mut msg = create_accumulator_message(&[&feed1], &[&feed1], false, false);
+        let mut msg = create_accumulator_message(&[&feed1], &[&feed1], false, false, None);
         msg[4] = 3; // major version
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
@@ -1442,7 +1464,7 @@ mod test {
             .unwrap();
 
         let feed1 = create_dummy_price_feed_message(100);
-        let msg = create_accumulator_message(&[&feed1], &[&feed1], true, false);
+        let msg = create_accumulator_message(&[&feed1], &[&feed1], true, false, None);
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
         assert!(result.is_err());
@@ -1470,7 +1492,7 @@ mod test {
             prev_publish_time: 0,
             publish_slot:      0,
         });
-        let msg = create_accumulator_message(&[&feed1], &[&feed1], false, false);
+        let msg = create_accumulator_message(&[&feed1], &[&feed1], false, false, None);
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
         assert!(result.is_err());

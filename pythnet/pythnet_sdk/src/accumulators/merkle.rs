@@ -111,6 +111,10 @@ impl<H: Hasher> MerklePath<H> {
             .flat_map(|hash| hash.as_ref().to_vec())
             .collect()
     }
+
+    pub fn to_vec(&self) -> Vec<H::Hash> {
+        self.0.clone()
+    }
 }
 
 /// Presents an Accumulator friendly interface for MerkleTree.
