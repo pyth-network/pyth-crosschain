@@ -314,7 +314,7 @@ export const Proposal = ({
 
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
-      } catch (e) {
+      } catch (e: any) {
         toast.error(capitalizeFirstLetter(e.message))
       } finally {
         setIsTransactionLoading(false)
