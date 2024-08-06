@@ -10,7 +10,7 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
     if (in_msg_body.slice_empty?()) { ;; ignore empty messages
         return ();
     }
-    
+
     ;; * A 32-bit (big-endian) unsigned integer `op`, identifying the `operation` to be performed, or the `method` of the smart contract to be invoked.
     int op = in_msg_body~load_uint(32);
     ;; * A 64-bit (big-endian) unsigned integer `query_id`, used in all query-response internal messages to indicate that a response is related to a query (the `query_id` of a response must be equal to the `query_id` of the corresponding query). If `op` is not a query-response method (e.g., it invokes a method that is not expected to send an answer), then `query_id` may be omitted.

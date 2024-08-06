@@ -17,7 +17,7 @@ global cell consumed_governance_actions;
 ;; It returns 1 value (0) on failure and 4 values on success
 ;; NULLSWAPIFNOT and NULLSWAPIFNOT2: Ensure consistent return of 4 values
 ;; These opcodes swap nulls onto the stack if ECRECOVER fails, maintaining the 4-value return
-(int, int, int, int) check_sig (int hash, int v, int r, int s) asm 
+(int, int, int, int) check_sig (int hash, int v, int r, int s) asm
     "ECRECOVER"     ;; Attempt to recover the signer's address
     "NULLSWAPIFNOT" ;; If recovery failed, swap null with top of stack
     "NULLSWAPIFNOT2";  ;; If recovery failed, swap two more nulls with top of stack
@@ -119,8 +119,8 @@ int governance_action_is_consumed(int hash) method_id {
     ;; Check if guardian set is valid
     (int expiration_time, cell keys, int keys_count) = parse_guardian_set(guardian_set);
     throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys));
-    throw_unless(ERROR_INVALID_GUARDIAN_SET, 
-        (guardian_set_index == vm_guardian_set_index) & 
+    throw_unless(ERROR_INVALID_GUARDIAN_SET,
+        (guardian_set_index == vm_guardian_set_index) &
         ((expiration_time == 0) | (expiration_time > now()))
     );
     int signers_length = in_msg_body~load_uint(8);
@@ -141,7 +141,7 @@ int governance_action_is_consumed(int hash) method_id {
     int sequence = in_msg_body~load_uint(64);
     int consistency_level = in_msg_body~load_uint(8);
     slice payload = in_msg_body~load_ref().begin_parse();
-    
+
     return (
         version,
         vm_guardian_set_index,
@@ -170,7 +170,7 @@ int governance_action_is_consumed(int hash) method_id {
     int guardian_length = payload~load_uint(8);
     cell new_guardian_set_keys = new_dict();
     int keys_count = 0;
-    
+
     repeat(guardian_length) {
         slice key = payload~load_bits(160);
         new_guardian_set_keys~udict_set(256, key.preload_uint(160), key);
@@ -190,7 +190,7 @@ int governance_action_is_consumed(int hash) method_id {
     (int governance_chain_id, slice governance_contract_address) = get_governance_contract();
     throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == governance_chain_id);
     throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, equal_slices(emitter_address, governance_contract_address));
-    
+
     ;; Check if the governance action has already been consumed
     throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
 
