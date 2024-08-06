@@ -23,6 +23,11 @@ export const RECEIVER_CHAINS = {
   arbitrum: 23,
   optimism: 24,
 
+  // SVM chains
+  eclipse_devnet: 40001,
+  eclipse_testnet: 40002,
+  eclipse_mainnet: 40003,
+
   cronos: 60001,
   kcc: 60002,
   zksync: 60003,

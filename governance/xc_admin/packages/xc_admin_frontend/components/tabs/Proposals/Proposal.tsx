@@ -377,7 +377,7 @@ export const Proposal = ({
           {uniqueTargetCluster
             ? `Target network: ${targetClusters[0]}`
             : targetClusters.length == 0
-            ? 'No target network detected'
+            ? ''
             : `Multiple target networks detected ${targetClusters.join(' ')}`}
         </h4>
       </div>
