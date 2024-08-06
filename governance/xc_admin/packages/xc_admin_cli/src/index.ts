@@ -33,7 +33,6 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
-  SvmCluster,
   getMultisigCluster,
   getProposalInstructions,
 } from "@pythnetwork/xc-admin-common";
@@ -70,7 +69,7 @@ async function loadVaultFromOptions(options: any): Promise<MultisigVault> {
     options.ledgerDerivationChange
   );
   // This is the cluster where we want to perform the action
-  const cluster: SvmCluster = options.cluster;
+  const cluster: PythCluster = options.cluster;
   // This is the cluster where the multisig lives that can perform actions on ^
   const multisigCluster = getMultisigCluster(cluster);
   const vault: PublicKey = new PublicKey(options.vault);
@@ -172,7 +171,7 @@ multisigCommand(
   "Accept governance authority transfer for the solana receiver program"
 ).action(async (options: any) => {
   const vault = await loadVaultFromOptions(options);
-  const targetCluster: SvmCluster = options.cluster;
+  const targetCluster: PythCluster = options.cluster;
 
   const programSolanaReceiver = new Program(
     pythSolanaReceiverIdl,

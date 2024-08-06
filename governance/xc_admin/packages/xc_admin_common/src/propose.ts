@@ -33,8 +33,6 @@ import {
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { SvmCluster } from "./cluster";
-import { ChainName } from "./chains";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
@@ -86,9 +84,9 @@ export class MultisigVault {
    * is the PDA of the remote executor program representing the vault's Wormhole emitter address.
    * @param cluster
    */
-  public async getVaultAuthorityPDA(cluster?: SvmCluster): Promise<PublicKey> {
+  public async getVaultAuthorityPDA(cluster?: PythCluster): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
-    const localAuthorityPDA = this.squad.getAuthorityPDA(
+    const localAuthorityPDA = await this.squad.getAuthorityPDA(
       msAccount.publicKey,
       msAccount.authorityIndex
     );
@@ -290,7 +288,7 @@ export class MultisigVault {
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
-    targetCluster: SvmCluster,
+    targetCluster: PythCluster,
     priorityFeeConfig: PriorityFeeConfig = {}
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
@@ -323,8 +321,7 @@ export class MultisigVault {
             newProposalAddress,
             batch,
             i + 1,
-            this.wormholeAddress()!,
-            targetCluster
+            this.wormholeAddress()!
           );
           ixToSend.push(
             await this.squad.buildAddInstruction(
@@ -476,13 +473,9 @@ export async function wrapAsRemoteInstruction(
   proposalAddress: PublicKey,
   instructions: TransactionInstruction[],
   instructionIndex: number,
-  wormholeAddress: PublicKey,
-  targetCluster: SvmCluster
+  wormholeAddress: PublicKey
 ): Promise<SquadInstruction> {
-  const buffer: Buffer = new ExecutePostedVaa(
-    targetCluster as ChainName,
-    instructions
-  ).encode();
+  const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
   return await getPostMessageInstruction(
     squad,
     vault,
