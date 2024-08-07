@@ -19,6 +19,7 @@ abstract contract AbstractPyth is IPyth {
         bytes32 id
     ) public view virtual returns (bool exists);
 
+    /// @notice This function is deprecated and is only kept for backward compatibility.
     function getValidTimePeriod()
         public
         view
