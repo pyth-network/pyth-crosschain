@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import {
   CustomGasChainId,
   TxSpeed,
@@ -7,8 +6,9 @@ import {
   customGasChainIds,
 } from "../utils";
 import { Logger } from "pino";
+import { parseGwei } from "viem";
 
-type chainMethods = Record<CustomGasChainId, () => Promise<string | undefined>>;
+type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
 
 export class CustomGasStation {
   private chain: CustomGasChainId;
@@ -29,11 +29,10 @@ export class CustomGasStation {
 
   private async fetchMaticMainnetGasPrice() {
     try {
-      const res = await fetch("https://gasstation-mainnet.matic.network/v2");
+      const res = await fetch("https://gasstation.polygon.technology/v2");
       const jsonRes = await res.json();
       const gasPrice = jsonRes[this.speed].maxFee;
-      const gweiGasPrice = Web3.utils.toWei(gasPrice.toFixed(2), "Gwei");
-      return gweiGasPrice.toString();
+      return parseGwei(gasPrice.toFixed(2));
     } catch (err) {
       this.logger.error(
         err,

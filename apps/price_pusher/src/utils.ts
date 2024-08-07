@@ -18,11 +18,11 @@ export function removeLeading0x(id: HexString): HexString {
   return id;
 }
 
-export function addLeading0x(id: HexString): HexString {
+export function addLeading0x(id: HexString): `0x${string}` {
   if (id.startsWith("0x")) {
-    return id;
+    return id as `0x${string}`;
   }
-  return "0x" + id;
+  return ("0x" + id) as `0x${string}`;
 }
 
 export function isWsEndpoint(endpoint: string): boolean {
