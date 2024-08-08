@@ -125,7 +125,6 @@ async function run() {
           );
 
           const parsedInstruction = multisigParser.parseInstruction(ix);
-          console.log(parsedInstruction);
           if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addProduct"
