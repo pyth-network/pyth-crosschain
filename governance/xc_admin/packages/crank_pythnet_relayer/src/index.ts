@@ -173,12 +173,24 @@ async function run() {
             const stakeAccount = await provider.connection.getAccountInfo(
               parsedInstruction.accounts.named.stakePubkey.pubkey
             );
-            if (stakeAccount?.owner.equals(SystemProgram.programId)) {
+            if (stakeAccount === null) {
               preInstructions.push(
                 ...(await getInitializeDeterministicStakeAccountInstructions(
+                  provider.connection,
                   provider.wallet.publicKey,
                   parsedInstruction.accounts.named.votePubkey.pubkey,
-                  parsedInstruction.accounts.named.authorizedPubkey.pubkey
+                  parsedInstruction.accounts.named.authorizedPubkey.pubkey,
+                  false
+                ))
+              );
+            } else if (stakeAccount.owner.equals(SystemProgram.programId)) {
+              preInstructions.push(
+                ...(await getInitializeDeterministicStakeAccountInstructions(
+                  provider.connection,
+                  provider.wallet.publicKey,
+                  parsedInstruction.accounts.named.votePubkey.pubkey,
+                  parsedInstruction.accounts.named.authorizedPubkey.pubkey,
+                  true
                 ))
               );
             }
