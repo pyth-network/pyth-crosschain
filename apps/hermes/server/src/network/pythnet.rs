@@ -440,7 +440,7 @@ async fn fetch_price_feeds_metadata(
                     // TODO: Add stricter type checking for attributes
                     let attributes = prod_acct
                         .iter()
-                        .filter(|(key, _)| !key.is_empty() && !key.contains('\0'))
+                        .filter(|(key, _)| !key.is_empty())
                         .map(|(key, val)| (key.to_string(), val.to_string()))
                         .collect::<BTreeMap<String, String>>();
 
