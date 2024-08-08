@@ -410,35 +410,6 @@ multisigCommand(
   });
 
 multisigCommand(
-  "delegate-stake",
-  "Delegate a stake account to the given vote account"
-)
-  .requiredOption("-s, --stake-account <pubkey>", "stake account to delegate")
-  .requiredOption("-d, --vote-account <pubkey>", "vote account to delegate to")
-  .action(async (options: any) => {
-    const vault = await loadVaultFromOptions(options);
-    const cluster: PythCluster = options.cluster;
-    const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
-      cluster
-    );
-
-    const stakeAccount: PublicKey = new PublicKey(options.stakeAccount);
-    const voteAccount: PublicKey = new PublicKey(options.voteAccount);
-
-    const instructions = StakeProgram.delegate({
-      stakePubkey: stakeAccount,
-      authorizedPubkey,
-      votePubkey: voteAccount,
-    }).instructions;
-
-    await vault.proposeInstructions(
-      instructions,
-      cluster,
-      DEFAULT_PRIORITY_FEE_CONFIG
-    );
-  });
-
-multisigCommand(
   "initialize-stake-accounts",
   "Initialize stake accounts and assign them to the given vote accounts"
 )
