@@ -33,6 +33,7 @@ use {
     },
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
+    pyth_sdk::PriceIdentifier,
     pyth_sdk_solana::state::{
         load_mapping_account,
         load_product_account,
@@ -384,13 +385,20 @@ pub async fn fetch_and_store_price_feeds_metadata<S>(
     rpc_client: &RpcClient,
 ) -> Result<Vec<PriceFeedMetadata>>
 where
-    S: PriceFeedMeta,
+    S: PriceFeedMeta + Aggregates,
 {
     let price_feeds_metadata = fetch_price_feeds_metadata(mapping_address, rpc_client).await?;
-    state
-        .store_price_feeds_metadata(&price_feeds_metadata)
-        .await?;
-    Ok(price_feeds_metadata)
+    let all_ids = Aggregates::get_price_feed_ids(state).await;
+
+    // Filter price_feeds_metadata to only include entries with IDs in all_ids
+    let filtered_metadata: Vec<PriceFeedMetadata> = price_feeds_metadata
+        .into_iter()
+        .filter(|metadata| all_ids.contains(&PriceIdentifier::from(metadata.id)))
+        .collect();
+
+
+    state.store_price_feeds_metadata(&filtered_metadata).await?;
+    Ok(filtered_metadata)
 }
 
 async fn fetch_price_feeds_metadata(
@@ -432,7 +440,7 @@ async fn fetch_price_feeds_metadata(
                     // TODO: Add stricter type checking for attributes
                     let attributes = prod_acct
                         .iter()
-                        .filter(|(key, _)| !key.is_empty())
+                        .filter(|(key, _)| !key.is_empty() && !key.contains('\0'))
                         .map(|(key, val)| (key.to_string(), val.to_string()))
                         .collect::<BTreeMap<String, String>>();
 
