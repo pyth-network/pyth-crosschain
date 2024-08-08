@@ -7,9 +7,9 @@ import {
 import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 export async function findDetermisticStakeAccountAddress(
-  voteAccount: PublicKey
+  votePubkey: PublicKey
 ): Promise<[PublicKey, string]> {
-  const seed: string = voteAccount.toBuffer().toString("hex").slice(0, 32);
+  const seed: string = votePubkey.toBuffer().toString("hex").slice(0, 32);
   const address: PublicKey = await PublicKey.createWithSeed(
     PRICE_FEED_OPS_KEY,
     seed,
@@ -20,11 +20,11 @@ export async function findDetermisticStakeAccountAddress(
 
 export async function getInitializeDeterministicStakeAccountInstructions(
   base: PublicKey,
-  voteAccount: PublicKey,
-  authority: PublicKey
+  votePubkey: PublicKey,
+  authorizedPubkey: PublicKey
 ): Promise<TransactionInstruction[]> {
   const [address, seed]: [PublicKey, string] =
-    await findDetermisticStakeAccountAddress(voteAccount);
+    await findDetermisticStakeAccountAddress(votePubkey);
   return [
     SystemProgram.allocate({
       accountPubkey: address,
@@ -42,8 +42,8 @@ export async function getInitializeDeterministicStakeAccountInstructions(
     StakeProgram.initialize({
       stakePubkey: address,
       authorized: {
-        staker: authority,
-        withdrawer: authority,
+        staker: authorizedPubkey,
+        withdrawer: authorizedPubkey,
       },
     }),
   ];

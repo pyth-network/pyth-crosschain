@@ -33,7 +33,7 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
-  findDetermisticStakeAccountAddress,
+  votePubkey,
   getMultisigCluster,
   getProposalInstructions,
 } from "@pythnetwork/xc-admin-common";
@@ -460,9 +460,7 @@ multisigCommand(
     const instructions: TransactionInstruction[] = [];
 
     for (const votePubkey of votePubkeys) {
-      const stakePubkey = (
-        await findDetermisticStakeAccountAddress(votePubkey)
-      )[0];
+      const stakePubkey = (await votePubkey(votePubkey))[0];
       instructions.push(
         SystemProgram.transfer({
           fromPubkey: authorizedPubkey,

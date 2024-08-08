@@ -32,6 +32,7 @@ import {
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
   SolanaStakingMultisigInstruction,
+  authorizedPubkey,
   getInitializeDeterministicStakeAccountInstructions,
 } from "@pythnetwork/xc-admin-common";
 
@@ -171,10 +172,10 @@ async function run() {
             parsedInstruction instanceof SolanaStakingMultisigInstruction &&
             parsedInstruction.name == "Delegate"
           ) {
-            let account = await provider.connection.getAccountInfo(
+            const stakeAccount = await provider.connection.getAccountInfo(
               parsedInstruction.accounts.named.stakePubkey.pubkey
             );
-            if (account?.owner.equals(SystemProgram.programId)) {
+            if (stakeAccount?.owner.equals(SystemProgram.programId)) {
               preInstructions.push(
                 ...(await getInitializeDeterministicStakeAccountInstructions(
                   provider.wallet.publicKey,
