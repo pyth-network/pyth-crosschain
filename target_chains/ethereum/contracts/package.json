@@ -34,7 +34,7 @@
     "@openzeppelin/contracts": "=4.8.1",
     "@openzeppelin/contracts-upgradeable": "=4.8.1",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
-    "@pythnetwork/pyth-sdk-solidity": "^3.0.0",
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
     "@pythnetwork/contract-manager": "workspace:*",
     "dotenv": "^10.0.0",

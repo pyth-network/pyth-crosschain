@@ -21,7 +21,7 @@ export const Home = () => (
           <li className="contents">
             <ProductLink
               icon={PriceFeeds}
-              href="/price-feeds/evm/getPrice"
+              href="/price-feeds/evm/getPriceNoOlderThan"
               name="Price Feeds"
             >
               Fetch real-time low-latency market data, on 50+ chains or off

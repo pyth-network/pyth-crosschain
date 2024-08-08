@@ -102,12 +102,12 @@ async function run() {
       receipt = await web3.eth.getTransactionReceipt(txHash);
     }
 
-    // For on-chain use, you will typically perform the getPrice call within the same transaction as updatePriceFeeds.
-    // The call to getPrice below simply demonstrates that the on-chain price was in fact updated.
+    // For on-chain use, you will typically perform the getPriceNoOlderThan call within the same transaction as updatePriceFeeds.
+    // The call to getPriceNoOlderThan below simply demonstrates that the on-chain price was in fact updated.
     // Note that the code above for waiting for tx confirmation is a little flaky -- if so, you may see an old price printed here.
     for (const priceId of priceIds) {
       const [price, conf, expo, publishTime] = await pythContract.methods
-        .getPrice(priceId)
+        .getPriceNoOlderThan(priceId, 60) // 60 seconds staleness tolerance
         .call();
       console.log(
         `Updated ${priceId} to (${price} +- ${conf}) * 10^${expo} at unix timestamp ${publishTime}`
