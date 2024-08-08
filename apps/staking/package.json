@@ -1,0 +1,63 @@
+{
+  "name": "@pythnetwork/staking",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "build": "next build",
+    "fix": "pnpm fix:lint && pnpm fix:format",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "pull:env": "VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID= vercel env pull",
+    "start:dev": "next dev",
+    "start:prod": "next start",
+    "test": "tsc && jest",
+    "test:format": "jest --selectProjects format",
+    "test:lint": "jest --selectProjects lint",
+    "test:types": "tsc",
+    "test:unit": "jest --selectProjects unit"
+  },
+  "dependencies": {
+    "@amplitude/analytics-browser": "^2.9.3",
+    "@amplitude/plugin-autocapture-browser": "^0.9.0",
+    "@bonfida/spl-name-service": "^3.0.0",
+    "@headlessui/react": "^2.1.2",
+    "@heroicons/react": "^2.1.4",
+    "@next/third-parties": "^14.2.5",
+    "@solana/wallet-adapter-base": "^0.9.20",
+    "@solana/wallet-adapter-react": "^0.15.28",
+    "@solana/wallet-adapter-react-ui": "^0.9.27",
+    "@solana/wallet-adapter-wallets": "0.19.10",
+    "@solana/web3.js": "^1.95.2",
+    "clsx": "^2.1.1",
+    "next": "^14.2.5",
+    "pino": "^9.3.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@axe-core/react": "^4.9.1",
+    "@cprussin/eslint-config": "^3.0.0",
+    "@cprussin/jest-config": "^1.4.1",
+    "@cprussin/prettier-config": "^2.1.1",
+    "@cprussin/tsconfig": "^3.0.1",
+    "@svgr/webpack": "^8.1.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9.8.0",
+    "jest": "^29.7.0",
+    "postcss": "^8.4.40",
+    "prettier": "^3.3.2",
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.5.4",
+    "vercel": "^35.2.2"
+  }
+}

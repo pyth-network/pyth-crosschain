@@ -1,0 +1,20 @@
+{
+  "name": "Pyth Network Staking & Delegation",
+  "short_name": "Pyth Network Staking & Delegation",
+  "description": "Stake PYTH tokens to participate in governance or earn yield and protect DeFi by staking to publishers.",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#242235",
+  "background_color": "#242235",
+  "display": "standalone"
+}
