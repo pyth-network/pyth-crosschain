@@ -32,7 +32,6 @@ import {
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
   SolanaStakingMultisigInstruction,
-  authorizedPubkey,
   getInitializeDeterministicStakeAccountInstructions,
 } from "@pythnetwork/xc-admin-common";
 

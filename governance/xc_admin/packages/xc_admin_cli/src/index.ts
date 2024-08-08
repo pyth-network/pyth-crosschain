@@ -33,7 +33,6 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
-  votePubkey,
   getMultisigCluster,
   getProposalInstructions,
   findDetermisticStakeAccountAddress,
