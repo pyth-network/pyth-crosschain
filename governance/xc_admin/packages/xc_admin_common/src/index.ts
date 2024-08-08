@@ -11,3 +11,4 @@ export * from "./cranks";
 export * from "./message_buffer";
 export * from "./executor";
 export * from "./chains";
+export * from "./deterministic_stake_accounts";

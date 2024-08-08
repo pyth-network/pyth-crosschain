@@ -33,6 +33,7 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
+  findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
 } from "@pythnetwork/xc-admin-common";
@@ -400,6 +401,83 @@ multisigCommand(
       authorizedPubkey,
       votePubkey: voteAccount,
     }).instructions;
+
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
+
+multisigCommand(
+  "delegate-stake",
+  "Delegate a stake account to the given vote account"
+)
+  .requiredOption("-s, --stake-account <pubkey>", "stake account to delegate")
+  .requiredOption("-d, --vote-account <pubkey>", "vote account to delegate to")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
+      cluster
+    );
+
+    const stakeAccount: PublicKey = new PublicKey(options.stakeAccount);
+    const voteAccount: PublicKey = new PublicKey(options.voteAccount);
+
+    const instructions = StakeProgram.delegate({
+      stakePubkey: stakeAccount,
+      authorizedPubkey,
+      votePubkey: voteAccount,
+    }).instructions;
+
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
+
+multisigCommand(
+  "initialize-stake-accounts",
+  "Initialize stake accounts and assign them to the given vote accounts"
+)
+  .requiredOption(
+    "-d, --vote-pubkeys <comma_separated_voter_pubkeys>",
+    "vote account to delegate to"
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
+      cluster
+    );
+
+    const votePubkeys: PublicKey[] = options.votePubkeys
+      ? options.votePubkeys.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    const instructions: TransactionInstruction[] = [];
+
+    for (const votePubkey of votePubkeys) {
+      const stakePubkey = (
+        await findDetermisticStakeAccountAddress(votePubkey)
+      )[0];
+      instructions.push(
+        SystemProgram.transfer({
+          fromPubkey: authorizedPubkey,
+          toPubkey: stakePubkey,
+          lamports: 100000 * LAMPORTS_PER_SOL,
+        })
+      );
+      instructions.push(
+        StakeProgram.delegate({
+          stakePubkey,
+          authorizedPubkey,
+          votePubkey,
+        }).instructions[0]
+      );
+    }
 
     await vault.proposeInstructions(
       instructions,
