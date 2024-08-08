@@ -15,7 +15,6 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
@@ -31,8 +30,6 @@ import {
   mapKey,
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
-  SolanaStakingMultisigInstruction,
-  getInitializeDeterministicStakeAccountInstructions,
 } from "@pythnetwork/xc-admin-common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
@@ -165,34 +162,6 @@ async function run() {
               );
             } else {
               throw Error("Product account not found");
-            }
-          } else if (
-            parsedInstruction instanceof SolanaStakingMultisigInstruction &&
-            parsedInstruction.name == "Delegate"
-          ) {
-            const stakeAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.stakePubkey.pubkey
-            );
-            if (stakeAccount === null) {
-              preInstructions.push(
-                ...(await getInitializeDeterministicStakeAccountInstructions(
-                  provider.connection,
-                  provider.wallet.publicKey,
-                  parsedInstruction.accounts.named.votePubkey.pubkey,
-                  parsedInstruction.accounts.named.authorizedPubkey.pubkey,
-                  false
-                ))
-              );
-            } else if (stakeAccount.owner.equals(SystemProgram.programId)) {
-              preInstructions.push(
-                ...(await getInitializeDeterministicStakeAccountInstructions(
-                  provider.connection,
-                  provider.wallet.publicKey,
-                  parsedInstruction.accounts.named.votePubkey.pubkey,
-                  parsedInstruction.accounts.named.authorizedPubkey.pubkey,
-                  true
-                ))
-              );
             }
           }
         }

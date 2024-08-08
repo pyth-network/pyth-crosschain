@@ -431,14 +431,28 @@ multisigCommand(
     const instructions: TransactionInstruction[] = [];
 
     for (const votePubkey of votePubkeys) {
-      const stakePubkey = (
-        await findDetermisticStakeAccountAddress(votePubkey)
-      )[0];
+      const [stakePubkey, seed] = await findDetermisticStakeAccountAddress(
+        authorizedPubkey,
+        votePubkey
+      );
       instructions.push(
-        SystemProgram.transfer({
+        SystemProgram.createAccountWithSeed({
+          basePubkey: authorizedPubkey,
+          seed: seed,
           fromPubkey: authorizedPubkey,
-          toPubkey: stakePubkey,
-          lamports: 100000 * LAMPORTS_PER_SOL,
+          newAccountPubkey: stakePubkey,
+          lamports: 3 * LAMPORTS_PER_SOL,
+          space: StakeProgram.space,
+          programId: StakeProgram.programId,
+        })
+      );
+      instructions.push(
+        StakeProgram.initialize({
+          stakePubkey,
+          authorized: {
+            staker: authorizedPubkey,
+            withdrawer: authorizedPubkey,
+          },
         })
       );
       instructions.push(
