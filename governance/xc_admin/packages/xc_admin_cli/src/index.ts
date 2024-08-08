@@ -441,7 +441,7 @@ multisigCommand(
           seed: seed,
           fromPubkey: authorizedPubkey,
           newAccountPubkey: stakePubkey,
-          lamports: 3 * LAMPORTS_PER_SOL,
+          lamports: 100000 * LAMPORTS_PER_SOL,
           space: StakeProgram.space,
           programId: StakeProgram.programId,
         })
