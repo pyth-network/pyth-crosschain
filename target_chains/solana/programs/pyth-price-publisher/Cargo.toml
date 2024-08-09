@@ -1,0 +1,20 @@
+[package]
+name = "publishing"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bytemuck = "1.16.3"
+solana-program = "=1.14.17"
+thiserror = "1.0.63"
+
+[dev-dependencies]
+solana-program-test = "=1.14.17"
+solana-sdk = "=1.14.17"
+tokio = "*"
+
+[profile.release]
+opt-level     = "z"
+strip         = true
+lto           = true
+codegen-units = 1
