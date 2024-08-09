@@ -8,27 +8,32 @@ import {
   Sender,
   SendMode,
 } from "@ton/core";
+import { createCellChain } from "../tests/utils";
 
-export type PythConfig = {};
+export type WormholeUnitTestConfig = {};
 
-export function pythConfigToCell(config: PythConfig): Cell {
+export function pythConfigToCell(config: WormholeUnitTestConfig): Cell {
   return beginCell().endCell();
 }
 
-export class Pyth implements Contract {
+export class WormholeUnitTest implements Contract {
   constructor(
     readonly address: Address,
     readonly init?: { code: Cell; data: Cell }
   ) {}
 
   static createFromAddress(address: Address) {
-    return new Pyth(address);
+    return new WormholeUnitTest(address);
   }
 
-  static createFromConfig(config: PythConfig, code: Cell, workchain = 0) {
+  static createFromConfig(
+    config: WormholeUnitTestConfig,
+    code: Cell,
+    workchain = 0
+  ) {
     const data = pythConfigToCell(config);
     const init = { code, data };
-    return new Pyth(contractAddress(workchain, init), init);
+    return new WormholeUnitTest(contractAddress(workchain, init), init);
   }
 
   async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
@@ -39,33 +44,15 @@ export class Pyth implements Contract {
     });
   }
 
-  private static createCellChain(buffer: Buffer): Cell {
-    const rootCell = beginCell();
-    let currentCell = rootCell;
-
-    for (let i = 0; i < buffer.length; i += 127) {
-      const chunk = buffer.subarray(i, i + 127);
-      currentCell.storeBuffer(chunk);
-
-      if (i + 127 < buffer.length) {
-        const nextCell = beginCell();
-        currentCell.storeRef(nextCell);
-        currentCell = nextCell;
-      }
-    }
-
-    return rootCell.endCell();
-  }
-
   // NOTE: the function name has to start with "send" or "get" so that it automatically inserts `provider` as a first argument
-  async sendParseEncodedUpgrade(
+  async getParseEncodedUpgrade(
     provider: ContractProvider,
     currentGuardianSetIndex: number,
     encodedUpgrade: Buffer
   ) {
-    const result = await provider.get("parse_encoded_upgrade", [
+    const result = await provider.get("test_parse_encoded_upgrade", [
       { type: "int", value: BigInt(currentGuardianSetIndex) },
-      { type: "cell", cell: Pyth.createCellChain(encodedUpgrade) },
+      { type: "slice", cell: createCellChain(encodedUpgrade) },
     ]);
 
     return {

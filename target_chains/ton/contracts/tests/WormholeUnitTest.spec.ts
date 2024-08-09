@@ -1,37 +1,39 @@
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { Cell, toNano } from "@ton/core";
-import { Pyth } from "../wrappers/Pyth";
+import { WormholeUnitTest } from "../wrappers/WormholeUnitTest";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import { Wormhole } from "../wrappers/Wormhole";
 import { GUARDIAN_SET_4 } from "./utils/wormhole";
 
-describe("Pyth", () => {
+describe("WormholeUnitTest", () => {
   let code: Cell;
 
   beforeAll(async () => {
-    code = await compile("Pyth");
+    code = await compile("WormholeUnitTest");
   });
 
   let blockchain: Blockchain;
   let deployer: SandboxContract<TreasuryContract>;
-  let pyth: SandboxContract<Pyth>;
+  let wormholeUnitTest: SandboxContract<WormholeUnitTest>;
 
   beforeEach(async () => {
     blockchain = await Blockchain.create();
 
-    pyth = blockchain.openContract(Pyth.createFromConfig({}, code));
+    wormholeUnitTest = blockchain.openContract(
+      WormholeUnitTest.createFromConfig({}, code)
+    );
 
     deployer = await blockchain.treasury("deployer");
 
-    const deployResult = await pyth.sendDeploy(
+    const deployResult = await wormholeUnitTest.sendDeploy(
       deployer.getSender(),
       toNano("0.05")
     );
 
     expect(deployResult.transactions).toHaveTransaction({
       from: deployer.address,
-      to: pyth.address,
+      to: wormholeUnitTest.address,
       deploy: true,
       success: true,
     });
@@ -46,15 +48,11 @@ describe("Pyth", () => {
       newGuardianSetIndex,
       GUARDIAN_SET_4
     );
-    console.log(encodedUpgrade);
 
-    const result = (
-      await pyth.sendParseEncodedUpgrade(
-        currentGuardianSetIndex,
-        encodedUpgrade
-      )
-    ).result;
-    console.log(result);
+    const result = await wormholeUnitTest.getParseEncodedUpgrade(
+      currentGuardianSetIndex,
+      encodedUpgrade
+    );
 
     expect(result.action).toBe(2);
     expect(result.chain).toBe(chainId);

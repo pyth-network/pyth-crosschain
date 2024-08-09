@@ -1,0 +1,10 @@
+#include "../imports/stdlib.fc";
+#include "../wormhole.fc";
+
+() recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    ;; nop;
+}
+
+(int, int, int, cell, int) test_parse_encoded_upgrade(int current_guardian_set_index, slice payload) method_id {
+    return parse_encoded_upgrade(current_guardian_set_index, payload);
+}
