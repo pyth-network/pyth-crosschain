@@ -35,6 +35,7 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   getMultisigCluster,
   getProposalInstructions,
+  findDetermisticStakeAccountAddress,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -400,6 +401,68 @@ multisigCommand(
       authorizedPubkey,
       votePubkey: voteAccount,
     }).instructions;
+
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
+
+multisigCommand(
+  "initialize-stake-accounts",
+  "Initialize stake accounts and assign them to the given vote accounts"
+)
+  .requiredOption(
+    "-d, --vote-pubkeys <comma_separated_voter_pubkeys>",
+    "vote account to delegate to"
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
+      cluster
+    );
+
+    const votePubkeys: PublicKey[] = options.votePubkeys
+      ? options.votePubkeys.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    const instructions: TransactionInstruction[] = [];
+
+    for (const votePubkey of votePubkeys) {
+      const [stakePubkey, seed] = await findDetermisticStakeAccountAddress(
+        authorizedPubkey,
+        votePubkey
+      );
+      instructions.push(
+        SystemProgram.createAccountWithSeed({
+          basePubkey: authorizedPubkey,
+          seed: seed,
+          fromPubkey: authorizedPubkey,
+          newAccountPubkey: stakePubkey,
+          lamports: 100000 * LAMPORTS_PER_SOL,
+          space: StakeProgram.space,
+          programId: StakeProgram.programId,
+        })
+      );
+      instructions.push(
+        StakeProgram.initialize({
+          stakePubkey,
+          authorized: {
+            staker: authorizedPubkey,
+            withdrawer: authorizedPubkey,
+          },
+        })
+      );
+      instructions.push(
+        StakeProgram.delegate({
+          stakePubkey,
+          authorizedPubkey,
+          votePubkey,
+        }).instructions[0]
+      );
+    }
 
     await vault.proposeInstructions(
       instructions,
