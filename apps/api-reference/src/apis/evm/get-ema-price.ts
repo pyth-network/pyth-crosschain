@@ -2,9 +2,12 @@ import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
 
 export const getEmaPrice = readApi<"id">({
-  name: "getEmaPrice",
-  summary:
-    "Get the **latest** exponentially weighted moving average (EMA) price object for the requested price feed ID.",
+  name: "getEmaPrice (deprecated)",
+  summary: `
+  Get the **latest** exponentially weighted moving average (EMA) price object for the requested price feed ID.
+
+  **Note**: We recommend using [\`getEmaPriceNoOlderThan()\`](getEmaPriceNoOlderThan) instead of this endpoint
+  as it gives more flexibility to specify the maximum age of the price.`,
   description: `
   This method returns the latest price object containing **exponentially-weighted moving average** price for the requested price feed ID.
   The \`price\` object contains the following fields:
