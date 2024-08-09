@@ -3,7 +3,12 @@ import { ParameterType } from "../../components/EvmApi";
 
 export const getPrice = readApi<"id">({
   name: "getPrice (deprecated)",
-  summary: "Get the **latest** price object for the requested price feed ID.",
+  summary: `
+Get the **latest** price object for the requested price feed ID.
+
+**Note**: We recommend using [\`getPriceNoOlderThan()\`](getPriceNoOlderThan) instead of this endpoint
+as it gives more flexibility to specify the maximum age of the price.
+`,
   description: `
 This method returns the latest price object for the requested price feed ID.
 
