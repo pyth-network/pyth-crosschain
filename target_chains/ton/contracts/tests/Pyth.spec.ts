@@ -3,8 +3,6 @@ import { Cell, toNano } from "@ton/core";
 import { Pyth } from "../wrappers/Pyth";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
-import { Wormhole } from "../wrappers/Wormhole";
-import { GUARDIAN_SET_4 } from "./utils/wormhole";
 
 describe("Pyth", () => {
   let code: Cell;
@@ -37,32 +35,8 @@ describe("Pyth", () => {
     });
   });
 
-  it("should correctly parse encoded upgrade", async () => {
-    const currentGuardianSetIndex = 3;
-    const newGuardianSetIndex = 4;
-    const chainId = 1; // Example chain ID
-    const encodedUpgrade = Wormhole.createGuardianSetUpgradeBytes(
-      chainId,
-      newGuardianSetIndex,
-      GUARDIAN_SET_4
-    );
-    console.log(encodedUpgrade);
-
-    const result = (
-      await pyth.sendParseEncodedUpgrade(
-        currentGuardianSetIndex,
-        encodedUpgrade
-      )
-    ).result;
-    console.log(result);
-
-    expect(result.action).toBe(2);
-    expect(result.chain).toBe(chainId);
-    expect(result.module.toString(16)).toBe("436f7265");
-    expect(result.newGuardianSetIndex).toBeGreaterThan(currentGuardianSetIndex);
-    expect(result.newGuardianSetIndex).toBe(newGuardianSetIndex);
-
-    const parsedKeys = Wormhole.parseGuardianSetKeys(result.newGuardianSetKeys);
-    expect(parsedKeys).toEqual(GUARDIAN_SET_4);
+  it("should deploy", async () => {
+    // the check is done inside beforeEach
+    // blockchain and pyth are ready to use
   });
 });

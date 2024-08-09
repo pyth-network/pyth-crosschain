@@ -3,8 +3,11 @@ import { Cell, toNano } from "@ton/core";
 import { WormholeUnitTest } from "../wrappers/WormholeUnitTest";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
-import { Wormhole } from "../wrappers/Wormhole";
-import { GUARDIAN_SET_4 } from "./utils/wormhole";
+import {
+  createGuardianSetUpgradeBytes,
+  GUARDIAN_SET_4,
+  parseGuardianSetKeys,
+} from "./utils/wormhole";
 
 describe("WormholeUnitTest", () => {
   let code: Cell;
@@ -43,7 +46,7 @@ describe("WormholeUnitTest", () => {
     const currentGuardianSetIndex = 3;
     const newGuardianSetIndex = 4;
     const chainId = 1; // Example chain ID
-    const encodedUpgrade = Wormhole.createGuardianSetUpgradeBytes(
+    const encodedUpgrade = createGuardianSetUpgradeBytes(
       chainId,
       newGuardianSetIndex,
       GUARDIAN_SET_4
@@ -60,7 +63,7 @@ describe("WormholeUnitTest", () => {
     expect(result.newGuardianSetIndex).toBeGreaterThan(currentGuardianSetIndex);
     expect(result.newGuardianSetIndex).toBe(newGuardianSetIndex);
 
-    const parsedKeys = Wormhole.parseGuardianSetKeys(result.newGuardianSetKeys);
+    const parsedKeys = parseGuardianSetKeys(result.newGuardianSetKeys);
     expect(parsedKeys).toEqual(GUARDIAN_SET_4);
   });
 });

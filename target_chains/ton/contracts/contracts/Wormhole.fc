@@ -183,7 +183,8 @@ int governance_action_is_consumed(int hash) method_id {
                 payload = payload~load_ref().begin_parse();
             }
         }
-        new_guardian_set_keys~udict_set(256, keys_count, key.end_cell().begin_parse());
+        slice key_slice = key.end_cell().begin_parse();
+        new_guardian_set_keys~udict_set(8, keys_count, key_slice);
         keys_count += 1;
     }
     throw_unless(ERROR_GUARDIAN_SET_KEYS_LENGTH_NOT_EQUAL, keys_count == guardian_length);
