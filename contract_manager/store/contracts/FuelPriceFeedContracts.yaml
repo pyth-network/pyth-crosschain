@@ -1,3 +1,3 @@
 - chain: fuel_testnet
-  address: "0xcda57a8ab59090ab2b75d10e093af41a2ad9b7951a2805ab39100995c69f9b2a"
+  address: "0x73591bf32f010ce4e83d86005c24e7833b397be38014ab670a73f6fde59ad607"
   type: FuelPriceFeedContract
