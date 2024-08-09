@@ -157,8 +157,9 @@ int governance_action_is_consumed(int hash) method_id {
 }
 
 (int, int, int, cell, int) parse_encoded_upgrade(int current_guardian_set_index, slice payload) impure {
-    int module = payload~load_uint(256);
-    throw_unless(ERROR_INVALID_MODULE, module == UPGRADE_MODULE);
+    slice module = payload~load_bits(32);
+    int module_int = module~load_uint(32);
+    throw_unless(ERROR_INVALID_MODULE, module_int == UPGRADE_MODULE);
 
     int action = payload~load_uint(8);
     throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == 2);
@@ -170,16 +171,25 @@ int governance_action_is_consumed(int hash) method_id {
     int guardian_length = payload~load_uint(8);
     cell new_guardian_set_keys = new_dict();
     int keys_count = 0;
-
-    repeat(guardian_length) {
-        slice key = payload~load_bits(160);
-        new_guardian_set_keys~udict_set(256, key.preload_uint(160), key);
+    while (keys_count < guardian_length) {
+        builder key = begin_cell();
+        int key_bits_loaded = 0;
+        while (key_bits_loaded < 160) {
+            int bits_to_load = min(payload.slice_bits(), 160 - key_bits_loaded);
+            key = key.store_slice(payload~load_bits(bits_to_load));
+            key_bits_loaded += bits_to_load;
+            if (key_bits_loaded < 160) {
+                throw_unless(ERROR_INVALID_GUARDIAN_SET_UPGRADE_LENGTH, ~ payload.slice_refs_empty?());
+                payload = payload~load_ref().begin_parse();
+            }
+        }
+        new_guardian_set_keys~udict_set(256, keys_count, key.end_cell().begin_parse());
         keys_count += 1;
     }
     throw_unless(ERROR_GUARDIAN_SET_KEYS_LENGTH_NOT_EQUAL, keys_count == guardian_length);
     throw_unless(ERROR_INVALID_GUARDIAN_SET_UPGRADE_LENGTH, payload.slice_empty?());
 
-    return (action, chain, module, new_guardian_set_keys, new_guardian_set_index);
+    return (action, chain, module_int, new_guardian_set_keys, new_guardian_set_index);
 }
 
 () update_guardian_set(slice in_msg_body) impure {
