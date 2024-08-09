@@ -234,8 +234,10 @@ abstract contract Entropy is IEntropy, EntropyState {
             assignedSequenceNumber -
                 providerInfo.currentCommitmentSequenceNumber
         );
-        if (req.numHashes > 500) {
-            //TODO: make this a constant
+        if (
+            providerInfo.maxNumHashes != 0 &&
+            req.numHashes > providerInfo.maxNumHashes
+        ) {
             revert EntropyErrors.LastRevealedTooOld();
         }
         req.commitment = keccak256(
@@ -359,7 +361,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
     function updateProviderCommitment(
         address provider,
-        uint32 updatedSequenceNumber,
+        uint64 updatedSequenceNumber,
         bytes32 providerRevelation
     ) public override {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
@@ -600,6 +602,25 @@ abstract contract Entropy is IEntropy, EntropyState {
         address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
         emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+    }
+
+    // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
+    // the provider supports for callbacks.
+    function setMaxNumHashes(uint32 maxNumHashes) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+
+        uint64 oldMaxNumHashes = provider.maxNumHashes;
+        provider.maxNumHashes = maxNumHashes;
+        emit ProviderMaxNumHashesUpdated(
+            msg.sender,
+            oldMaxNumHashes,
+            maxNumHashes
+        );
     }
 
     function constructUserCommitment(

@@ -87,6 +87,9 @@ const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Check whether we need to adjust the fee at this interval.
 const ADJUST_FEE_INTERVAL: Duration = Duration::from_secs(30);
+/// Check whether we need to manually update the commitments to reduce numHashes for future
+/// requests
+const UPDATE_COMMITMENTS_INTERVAL: Duration = Duration::from_secs(30);
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
@@ -313,6 +316,9 @@ pub async fn run_keeper_threads(
         )
         .in_current_span(),
     );
+
+    // Spawn a thread that periodically adjusts the provider fee.
+    spawn(update_commitments_wrapper(contract.clone(), chain_state.clone()).in_current_span());
 
 
     // Spawn a thread to track the provider info and the balance of the keeper
@@ -1018,6 +1024,79 @@ pub async fn adjust_fee_wrapper(
         }
         time::sleep(poll_interval).await;
     }
+}
+
+#[tracing::instrument(name = "update_commitments", skip_all)]
+pub async fn update_commitments_wrapper(
+    contract: Arc<InstrumentedSignablePythContract>,
+    chain_state: BlockchainState,
+) {
+    loop {
+        if let Err(e) = update_commitments_if_necessary(contract.clone(), &chain_state)
+            .in_current_span()
+            .await
+        {
+            tracing::error!("Update commitments. error: {:?}", e);
+        }
+        time::sleep(UPDATE_COMMITMENTS_INTERVAL).await;
+    }
+}
+
+
+pub async fn update_commitments_if_necessary(
+    contract: Arc<InstrumentedSignablePythContract>,
+    chain_state: &BlockchainState,
+) -> Result<()> {
+    let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+    let provider_address = chain_state.provider_address;
+    let provider_info = contract
+        .get_provider_info(provider_address)
+        .block(latest_safe_block)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
+    if provider_info.max_num_hashes == 0 {
+        return Ok(());
+    }
+    let threshold: u64 = (provider_info.max_num_hashes * 95 / 100).into();
+    if provider_info.sequence_number - provider_info.current_commitment_sequence_number > threshold
+    {
+        let seq_number = provider_info.sequence_number - 1;
+        let provider_revelation = chain_state
+            .state
+            .reveal(seq_number)
+            .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+        let contract_call =
+            contract.update_provider_commitment(provider_address, seq_number, provider_revelation);
+        // TODO: refactor
+        let pending_tx = contract_call.send().await.map_err(|e| {
+            anyhow!(
+                "Error submitting the update commitment transaction: {:?}",
+                e
+            )
+        })?;
+
+        let tx_result = pending_tx
+            .await
+            .map_err(|e| {
+                anyhow!(
+                    "Error waiting for update commitment transaction receipt: {:?}",
+                    e
+                )
+            })?
+            .ok_or_else(|| {
+                anyhow!(
+                    "Can't verify the update commitment transaction, probably dropped from mempool"
+                )
+            })?;
+
+        tracing::info!(
+            transaction_hash = &tx_result.transaction_hash.to_string(),
+            "Updated commitment to avoid falling back. Receipt: {:?}",
+            tx_result,
+        );
+    }
+    Ok(())
 }
 
 /// Adjust the fee charged by the provider to ensure that it is profitable at the prevailing gas price.

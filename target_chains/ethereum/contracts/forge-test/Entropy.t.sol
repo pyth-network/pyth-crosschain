@@ -23,6 +23,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     bytes32[] provider1Proofs;
     uint128 provider1FeeInWei = 8;
     uint64 provider1ChainLength = 1000;
+    uint32 provider1MaxNumHashes = 500;
     bytes provider1Uri = bytes("https://foo.com");
     bytes provider1CommitmentMetadata = hex"0100";
 
@@ -65,6 +66,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1ChainLength,
             provider1Uri
         );
+        vm.prank(provider1);
+        random.setMaxNumHashes(provider1MaxNumHashes);
 
         bytes32[] memory hashChain2 = generateHashChain(provider2, 0, 100);
         provider2Proofs = hashChain2;
@@ -967,7 +970,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Proofs[sequenceNumber],
             ALL_ZEROS
         );
-        for (uint256 i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
             request(user1, provider1, 42, false);
         }
         assertRequestReverts(
@@ -983,7 +986,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint32 requestCount,
         uint32 updateSeqNumber
     ) public {
-        vm.assume(requestCount < 500);
+        vm.assume(requestCount < provider1MaxNumHashes);
         vm.assume(requestCount < provider1ChainLength);
         vm.assume(updateSeqNumber < requestCount);
         vm.assume(0 < updateSeqNumber);
@@ -1013,7 +1016,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint32 requestCount,
         uint32 updateSeqNumber
     ) public {
-        vm.assume(requestCount < 500);
+        vm.assume(requestCount < provider1MaxNumHashes);
         vm.assume(requestCount < provider1ChainLength);
         vm.assume(updateSeqNumber < requestCount);
         vm.assume(0 < updateSeqNumber);
@@ -1079,6 +1082,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             seqNumber,
             provider1Proofs[0]
         );
+    }
+
+    function testSetMaxNumHashes(uint32 maxNumHashes) public {
+        vm.prank(provider1);
+        random.setMaxNumHashes(maxNumHashes);
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.maxNumHashes, maxNumHashes);
+    }
+
+    function testSetMaxNumHashesRevertIfNotFromProvider() public {
+        vm.expectRevert(EntropyErrors.NoSuchProvider.selector);
+        random.setMaxNumHashes(100);
     }
 
     function testFeeManager() public {

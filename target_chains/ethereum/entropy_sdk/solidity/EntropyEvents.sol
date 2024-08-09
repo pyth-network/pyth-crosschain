@@ -38,6 +38,11 @@ interface EntropyEvents {
         address oldFeeManager,
         address newFeeManager
     );
+    event ProviderMaxNumHashesUpdated(
+        address provider,
+        uint64 oldMaxNumHashes,
+        uint64 newMaxNumHashes
+    );
 
     event Withdrawal(
         address provider,

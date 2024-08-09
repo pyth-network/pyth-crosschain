@@ -193,6 +193,14 @@ async fn setup_chain_provider(
     .in_current_span()
     .await?;
 
+    sync_max_num_hashes(
+        &contract,
+        &provider_info,
+        chain_config.max_num_hashes.unwrap_or(0),
+    )
+    .in_current_span()
+    .await?;
+
     Ok(())
 }
 
@@ -244,6 +252,26 @@ async fn sync_fee_manager(
         tracing::info!("Updating provider fee manager to {:?}", fee_manager);
         if let Some(receipt) = contract.set_fee_manager(fee_manager).send().await?.await? {
             tracing::info!("Updated provider fee manager: {:?}", receipt);
+        }
+    }
+    Ok(())
+}
+
+
+async fn sync_max_num_hashes(
+    contract: &Arc<SignablePythContract>,
+    provider_info: &ProviderInfo,
+    max_num_hashes: u32,
+) -> Result<()> {
+    if provider_info.max_num_hashes != max_num_hashes {
+        tracing::info!("Updating provider max num hashes to {:?}", max_num_hashes);
+        if let Some(receipt) = contract
+            .set_max_num_hashes(max_num_hashes)
+            .send()
+            .await?
+            .await?
+        {
+            tracing::info!("Updated provider max num hashes to : {:?}", receipt);
         }
     }
     Ok(())
