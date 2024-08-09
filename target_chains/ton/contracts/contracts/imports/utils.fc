@@ -1,0 +1,7 @@
+;; Built-in assembly functions
+int keccak(slice s, int h) asm "HASHEXT_KECCAK256";  ;; Keccak-256 hash function
+
+
+int keccak256(slice s) inline {
+    return keccak(s, 1);
+}

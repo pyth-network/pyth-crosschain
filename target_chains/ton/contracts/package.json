@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "blueprint run",
-    "build": "blueprint build",
+    "build": "echo Pyth | blueprint build",
     "test": "jest --verbose"
   },
   "devDependencies": {
