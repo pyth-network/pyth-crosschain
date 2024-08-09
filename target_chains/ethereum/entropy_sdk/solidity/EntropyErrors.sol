@@ -41,4 +41,6 @@ library EntropyErrors {
     // The last random number revealed from the provider is too old. Therefore, too many hashes
     // are required for any new reveal. Please update the currentCommitment before making more requests.
     error LastRevealedTooOld();
+    // A more recent commitment is already revealed on-chain
+    error UpdateTooOld();
 }

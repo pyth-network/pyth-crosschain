@@ -958,7 +958,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testLastRevealedTooOld() public {
-        vm.roll(17);
         uint64 sequenceNumber = request(user2, provider1, 42, false);
         assertRevealSucceeds(
             user2,
@@ -977,6 +976,108 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             42,
             false,
             EntropyErrors.LastRevealedTooOld.selector
+        );
+    }
+
+    function testUpdateProviderCommitment(
+        uint32 requestCount,
+        uint32 updateSeqNumber
+    ) public {
+        vm.assume(requestCount < 500);
+        vm.assume(requestCount < provider1ChainLength);
+        vm.assume(updateSeqNumber < requestCount);
+        vm.assume(0 < updateSeqNumber);
+
+        for (uint256 i = 0; i < requestCount; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertInvariants();
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.currentCommitmentSequenceNumber, 0);
+        assertEq(info1.sequenceNumber, requestCount + 1);
+        random.updateProviderCommitment(
+            provider1,
+            updateSeqNumber,
+            provider1Proofs[updateSeqNumber]
+        );
+        info1 = random.getProviderInfo(provider1);
+        assertEq(info1.currentCommitmentSequenceNumber, updateSeqNumber);
+        assertEq(info1.currentCommitment, provider1Proofs[updateSeqNumber]);
+        assertEq(info1.sequenceNumber, requestCount + 1);
+        assertInvariants();
+    }
+
+    function testUpdateProviderCommitmentTooOld(
+        uint32 requestCount,
+        uint32 updateSeqNumber
+    ) public {
+        vm.assume(requestCount < 500);
+        vm.assume(requestCount < provider1ChainLength);
+        vm.assume(updateSeqNumber < requestCount);
+        vm.assume(0 < updateSeqNumber);
+
+        for (uint256 i = 0; i < requestCount; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            requestCount,
+            42,
+            provider1Proofs[requestCount],
+            ALL_ZEROS
+        );
+        vm.expectRevert(EntropyErrors.UpdateTooOld.selector);
+        random.updateProviderCommitment(
+            provider1,
+            updateSeqNumber,
+            provider1Proofs[updateSeqNumber]
+        );
+    }
+
+    function testUpdateProviderCommitmentIncorrectRevelation(
+        uint32 seqNumber,
+        uint32 mismatchedProofNumber
+    ) public {
+        vm.assume(seqNumber < provider1ChainLength);
+        vm.assume(mismatchedProofNumber < provider1ChainLength);
+        vm.assume(seqNumber != mismatchedProofNumber);
+        vm.assume(seqNumber > 0);
+        vm.expectRevert(EntropyErrors.IncorrectRevelation.selector);
+        random.updateProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[mismatchedProofNumber]
+        );
+    }
+
+    function testUpdateProviderCommitmentUpdatesSequenceNumber(
+        uint32 seqNumber
+    ) public {
+        vm.assume(seqNumber < provider1ChainLength);
+        vm.assume(seqNumber > 0);
+        random.updateProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[seqNumber]
+        );
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.sequenceNumber, seqNumber + 1);
+    }
+
+    function testUpdateProviderCommitmentHigherThanChainLength(
+        uint32 seqNumber
+    ) public {
+        vm.assume(seqNumber >= provider1ChainLength);
+        vm.expectRevert(EntropyErrors.AssertionFailure.selector);
+        random.updateProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[0]
         );
     }
 

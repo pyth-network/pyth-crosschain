@@ -355,6 +355,49 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    // Update the provider commitment and increase the sequence number.
+    // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
+    function updateProviderCommitment(
+        address provider,
+        uint32 updatedSequenceNumber,
+        bytes32 providerRevelation
+    ) public override {
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (
+            updatedSequenceNumber <=
+            providerInfo.currentCommitmentSequenceNumber
+        ) revert EntropyErrors.UpdateTooOld();
+        if (updatedSequenceNumber >= providerInfo.endSequenceNumber)
+            revert EntropyErrors.AssertionFailure();
+
+        uint32 numHashes = SafeCast.toUint32(
+            updatedSequenceNumber - providerInfo.currentCommitmentSequenceNumber
+        );
+        bytes32 providerCommitment = constructProviderCommitment(
+            numHashes,
+            providerRevelation
+        );
+
+        if (providerCommitment != providerInfo.currentCommitment)
+            revert EntropyErrors.IncorrectRevelation();
+
+        providerInfo.currentCommitmentSequenceNumber = updatedSequenceNumber;
+        providerInfo.currentCommitment = providerRevelation;
+        if (
+            providerInfo.currentCommitmentSequenceNumber >=
+            providerInfo.sequenceNumber
+        ) {
+            // This means the provider called the function with a sequence number that was not yet requested.
+            // Assuming this is landed on-chain it's better to bump the sequence number and never use that range
+            // for future requests. Otherwise, someone can use the leaked revelation to derive favorable random numbers.
+            providerInfo.sequenceNumber =
+                providerInfo.currentCommitmentSequenceNumber +
+                1;
+        }
+    }
+
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.

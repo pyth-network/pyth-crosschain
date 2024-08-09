@@ -120,6 +120,14 @@ interface IEntropy is EntropyEvents {
     // will override the previous value. Call this function with the all-zero address to disable the fee manager role.
     function setFeeManager(address manager) external;
 
+    // Update the provider commitment and increase the sequence number.
+    // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
+    function updateProviderCommitment(
+        address provider,
+        uint32 updatedSequenceNumber,
+        bytes32 providerRevelation
+    ) external;
+
     function constructUserCommitment(
         bytes32 userRandomness
     ) external pure returns (bytes32 userCommitment);
