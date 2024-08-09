@@ -22,7 +22,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     address public provider1 = address(1);
     bytes32[] provider1Proofs;
     uint128 provider1FeeInWei = 8;
-    uint64 provider1ChainLength = 100;
+    uint64 provider1ChainLength = 1000;
     bytes provider1Uri = bytes("https://foo.com");
     bytes provider1CommitmentMetadata = hex"0100";
 
@@ -567,7 +567,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testOutOfRandomness() public {
         // Should be able to request chainLength - 1 random numbers successfully.
         for (uint64 i = 0; i < provider1ChainLength - 1; i++) {
-            request(user1, provider1, i, false);
+            uint64 sequenceNumber = request(user2, provider1, 42, false);
+            assertRevealSucceeds(
+                user2,
+                provider1,
+                sequenceNumber,
+                42,
+                provider1Proofs[sequenceNumber],
+                ALL_ZEROS
+            );
         }
 
         assertRequestReverts(
@@ -811,7 +819,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getRequest(provider1, assignedSequenceNumber).provider,
             provider1
         );
-
         vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
         random.reveal(
             provider1,
@@ -947,6 +954,29 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             assignedSequenceNumber,
             userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
+        );
+    }
+
+    function testLastRevealedTooOld() public {
+        vm.roll(17);
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+        assertRevealSucceeds(
+            user2,
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
+        );
+        for (uint256 i = 0; i < 500; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRequestReverts(
+            random.getFee(provider1),
+            provider1,
+            42,
+            false,
+            EntropyErrors.LastRevealedTooOld.selector
         );
     }
 

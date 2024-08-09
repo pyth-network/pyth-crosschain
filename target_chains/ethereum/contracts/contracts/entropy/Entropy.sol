@@ -234,6 +234,10 @@ abstract contract Entropy is IEntropy, EntropyState {
             assignedSequenceNumber -
                 providerInfo.currentCommitmentSequenceNumber
         );
+        if (req.numHashes > 500) {
+            //TODO: make this a constant
+            revert EntropyErrors.LastRevealedTooOld();
+        }
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
