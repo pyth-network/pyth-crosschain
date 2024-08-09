@@ -115,25 +115,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint fee,
         address provider,
         uint randomNumber,
-        bool useBlockhash
+        bool useBlockhash,
+        bytes4 revertReason
     ) public {
-        // Note: for some reason vm.expectRevert() won't catch errors from the request function (?!),
-        // even though they definitely revert. Use a try/catch instead for the moment, though the try/catch
-        // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
-        bool requestSucceeds = false;
-        try
-            random.request{value: fee}(
-                provider,
-                random.constructUserCommitment(bytes32(uint256(randomNumber))),
-                useBlockhash
-            )
-        {
-            requestSucceeds = true;
-        } catch {
-            requestSucceeds = false;
-        }
-
-        assert(!requestSucceeds);
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(randomNumber))
+        );
+        vm.deal(address(this), fee);
+        vm.expectRevert(revertReason);
+        random.request{value: fee}(provider, userCommitment, useBlockhash);
     }
 
     function assertRevealSucceeds(
@@ -275,7 +265,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testNoSuchProvider() public {
-        assertRequestReverts(10000000, unregisteredProvider, 42, false);
+        assertRequestReverts(
+            10000000,
+            unregisteredProvider,
+            42,
+            false,
+            EntropyErrors.NoSuchProvider.selector
+        );
     }
 
     function testAuthorization() public {
@@ -578,7 +574,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getFee(provider1),
             provider1,
             provider1ChainLength - 1,
-            false
+            false,
+            EntropyErrors.OutOfRandomness.selector
         );
     }
 
@@ -603,34 +600,54 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testOverflow() public {
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
         // msg.value overflows the uint128 fee variable
-        assertRequestReverts(2 ** 128, provider1, 42, false);
+        uint fee = 2 ** 128;
+        vm.deal(address(this), fee);
+        vm.expectRevert("SafeCast: value doesn't fit in 128 bits");
+        random.request{value: fee}(provider1, userCommitment, false);
 
         // block number is too large
         vm.roll(2 ** 96);
-        assertRequestReverts(
-            pythFeeInWei + provider1FeeInWei,
+        vm.expectRevert("SafeCast: value doesn't fit in 64 bits");
+        random.request{value: pythFeeInWei + provider1FeeInWei}(
             provider1,
-            42,
+            userCommitment,
             true
         );
     }
 
     function testFees() public {
         // Insufficient fees causes a revert
-        assertRequestReverts(0, provider1, 42, false);
+        assertRequestReverts(
+            0,
+            provider1,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         assertRequestReverts(
             pythFeeInWei + provider1FeeInWei - 1,
             provider1,
             42,
-            false
+            false,
+            EntropyErrors.InsufficientFee.selector
         );
-        assertRequestReverts(0, provider2, 42, false);
+        assertRequestReverts(
+            0,
+            provider2,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         assertRequestReverts(
             pythFeeInWei + provider2FeeInWei - 1,
             provider2,
             42,
-            false
+            false,
+            EntropyErrors.InsufficientFee.selector
         );
 
         // Accrue some fees for both providers
@@ -669,7 +686,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Uri
         );
 
-        assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
+        assertRequestReverts(
+            pythFeeInWei + 12345 - 1,
+            provider1,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
         uint128 providerOneBalance = provider1FeeInWei * 3 + 12345;
