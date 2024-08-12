@@ -961,15 +961,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testLastRevealedTooOld() public {
-        uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertRevealSucceeds(
-            user2,
-            provider1,
-            sequenceNumber,
-            42,
-            provider1Proofs[sequenceNumber],
-            ALL_ZEROS
-        );
         for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
             request(user1, provider1, 42, false);
         }
@@ -1094,6 +1085,22 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testSetMaxNumHashesRevertIfNotFromProvider() public {
         vm.expectRevert(EntropyErrors.NoSuchProvider.selector);
         random.setMaxNumHashes(100);
+    }
+
+    function testZeroMaxNumHashesDisableChecks() public {
+        for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRequestReverts(
+            random.getFee(provider1),
+            provider1,
+            42,
+            false,
+            EntropyErrors.LastRevealedTooOld.selector
+        );
+        vm.prank(provider1);
+        random.setMaxNumHashes(0);
+        request(user1, provider1, 42, false);
     }
 
     function testFeeManager() public {
