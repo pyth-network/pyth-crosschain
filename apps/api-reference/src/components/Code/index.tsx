@@ -2,18 +2,19 @@ import { Transition } from "@headlessui/react";
 import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useMemo, useCallback, type HTMLAttributes } from "react";
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { OffsetOrPosition } from "shiki";
 
-import type { Highlighter, SupportedLanguage } from "./shiki";
 import style from "./style.module.css";
+import type { SupportedLanguage } from "./supported-language";
+import { useHighlightedCode } from "./use-highlighted-code";
 import { getLogger } from "../../browser-logger";
 import { Button } from "../Button";
 
-export type { SupportedLanguage } from "./shiki";
+export * from "./supported-language";
 
 type CodeProps = {
-  language: SupportedLanguage;
+  language?: SupportedLanguage | undefined;
   children: string;
   dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };
@@ -87,19 +88,6 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
       className={clsx("bg-neutral-100 dark:bg-neutral-800", className)}
       {...props}
     >
-      <Transition
-        show={isCopied}
-        enter="transition-opacity duration-150"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition-opacity duration-150"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <div className="absolute size-full rounded-md border border-green-500 bg-green-50 p-2 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-500">
-          <CheckIcon className="size-4 stroke-2" />
-        </div>
-      </Transition>
       <Button
         onClick={copy}
         className="rounded-md p-2 text-neutral-800 dark:text-neutral-300"
@@ -107,12 +95,25 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
         <ClipboardDocumentIcon className="size-4" />
         <div className="sr-only">Copy code to clipboaord</div>
       </Button>
+      <Transition
+        show={isCopied}
+        as="div"
+        className="absolute inset-0 rounded-md border border-green-500 bg-green-50 p-2 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-500"
+        enter="transition-opacity duration-150"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity duration-150"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <CheckIcon className="size-4 stroke-2" />
+      </Transition>
     </div>
   );
 };
 
 type HighlightedCodeProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
-  language: SupportedLanguage;
+  language?: SupportedLanguage | undefined;
   children: string;
   dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined;
 };
@@ -121,100 +122,32 @@ const HighlightedCode = ({
   language,
   children,
   dimRange,
+  className,
   ...props
 }: HighlightedCodeProps) => {
   const highlightedCode = useHighlightedCode(language, children, dimRange);
 
-  return highlightedCode ? (
-    <div dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
-  ) : (
-    <div {...props}>
-      <pre className="shiki">
-        <code>
-          {children.split("\n").map((line, i) => (
-            <div key={i} className="line">
-              {line}
-            </div>
-          ))}
-        </code>
-      </pre>
-    </div>
-  );
-};
-
-const useHighlightedCode = (
-  language: SupportedLanguage,
-  code: string,
-  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined,
-) => {
-  const [highlightedCode, setHighlightedCode] = useState<string | undefined>(
-    undefined,
-  );
-  const highlighter = useRef<Highlighter | undefined>(undefined);
-  const decorations = useMemo(
-    () =>
-      dimRange
-        ? [
-            {
-              start: dimRange[0],
-              end: dimRange[1],
-              properties: {
-                class: "opacity-40 group-hover:opacity-100 transition",
-              },
-            },
-          ]
-        : undefined,
-    [dimRange],
-  );
-
-  useEffect(() => {
-    if (highlighter.current) {
-      setHighlightedCode(
-        highlighter.current.highlight(language, code, { decorations }),
-      );
-      return;
-    } else {
-      const { cancel, load } = createShikiLoader();
-      load()
-        .then((newHighlighter) => {
-          if (newHighlighter) {
-            highlighter.current = newHighlighter;
-            setHighlightedCode(
-              newHighlighter.highlight(language, code, { decorations }),
-            );
+  return (
+    <div
+      className={clsx("overflow-hidden rounded-md", className)}
+      {...props}
+      {...(highlightedCode
+        ? {
+            dangerouslySetInnerHTML: { __html: highlightedCode },
           }
-        })
-        .catch((error: unknown) => {
-          // TODO report these errors somewhere
-          getLogger().error(error);
-        });
-      return cancel;
-    }
-  }, [code, language, decorations]);
-
-  return highlightedCode;
-};
-
-const createShikiLoader = () => {
-  let cancelled = false;
-  return {
-    load: async () => {
-      const { getHighlighter } = await import("./shiki");
-      if (cancelled) {
-        return;
-      } else {
-        const highlighter = await getHighlighter();
-        // Typescript narrows optimistically, meaning that by the time the code
-        // reaches this point, typescript things that `cancelled` can only be
-        // `false`.  However, that's not actually true and some other code could
-        // have called `cancel` during the `await` and flipped `cancelled` to
-        // false, so we should check it here too.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        return cancelled ? undefined : highlighter;
-      }
-    },
-    cancel: () => {
-      cancelled = true;
-    },
-  };
+        : {
+            children: (
+              <pre className="shiki">
+                <code>
+                  {children.split("\n").map((line, i) => (
+                    <div key={i} className="line">
+                      {line}
+                    </div>
+                  ))}
+                </code>
+              </pre>
+            ),
+          })}
+    />
+  );
 };

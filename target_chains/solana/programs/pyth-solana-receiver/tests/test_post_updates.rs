@@ -42,7 +42,8 @@ use {
 async fn test_post_update() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
 
@@ -185,7 +186,8 @@ async fn test_post_update() {
 async fn test_post_update_wrong_encoded_vaa_owner() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
@@ -226,7 +228,8 @@ async fn test_post_update_wrong_encoded_vaa_owner() {
 async fn test_post_update_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {

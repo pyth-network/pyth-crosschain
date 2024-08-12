@@ -1,11 +1,7 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import {
-  fromB64,
-  MIST_PER_SUI,
-  normalizeSuiObjectId,
-} from "@mysten/sui.js/utils";
-import { SuiClient } from "@mysten/sui.js/client";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import { execSync } from "child_process";
 import { SuiPriceFeedContract } from "@pythnetwork/contract-manager";
@@ -40,9 +36,10 @@ export async function upgradePyth(
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
 
-  const tx = new TransactionBlock();
+  const tx = new Transaction();
+
   const verificationReceipt = await contract.getVaaVerificationReceipt(
-    tx,
+    tx as any,
     pythPackage,
     signedVaa
   );
@@ -50,14 +47,14 @@ export async function upgradePyth(
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
     target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
-    arguments: [tx.object(contract.stateId), verificationReceipt],
+    arguments: [tx.object(contract.stateId), verificationReceipt as any],
   });
 
   // Build and generate modules and dependencies for upgrade.
   const [upgradeReceipt] = tx.upgrade({
     modules,
     dependencies,
-    packageId: pythPackage,
+    package: pythPackage,
     ticket: upgradeTicket,
   });
 
@@ -69,9 +66,9 @@ export async function upgradePyth(
 
   tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI
 
-  return provider.signAndExecuteTransactionBlock({
+  return provider.signAndExecuteTransaction({
     signer: keypair,
-    transactionBlock: tx,
+    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
@@ -87,7 +84,7 @@ export async function migratePyth(
   pythPackageOld: string
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
-  const tx = new TransactionBlock();
+  const tx = new Transaction();
   // The pyth package version is not updated yet, therefore we can not get the verification receipts from the new
   // package yet. We need to use the old package id to get the verification receipt in this transaction and then submit
   // it to the migrate function in the new package!
@@ -98,14 +95,14 @@ export async function migratePyth(
   );
   tx.moveCall({
     target: `${pythPackage}::migrate::migrate`,
-    arguments: [tx.object(contract.stateId), verificationReceipt],
+    arguments: [tx.object(contract.stateId), verificationReceipt as any],
   });
 
   tx.setGasBudget(MIST_PER_SUI / 10n); //0.1 SUI
 
-  return provider.signAndExecuteTransactionBlock({
+  return provider.signAndExecuteTransaction({
     signer: keypair,
-    transactionBlock: tx,
+    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,

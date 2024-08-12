@@ -11,6 +11,7 @@ use borsh::{
 #[cfg(feature = "quickcheck")]
 use quickcheck::Arbitrary;
 use {
+    crate::wire::PrefixedVec,
     borsh::BorshSchema,
     serde::{
         Deserialize,
@@ -30,7 +31,7 @@ use {
 /// some of the methods for PriceFeedMessage and TwapMessage are not used by the oracle
 /// for the same reason. Rust compiler doesn't include the unused methods in the contract.
 /// Once we start using the unused structs and methods, the contract size will increase.
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "strum",
     derive(strum::EnumDiscriminants),
@@ -50,20 +51,28 @@ use {
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
+    PublisherStakeCapsMessage(PublisherStakeCapsMessage),
 }
+
+/// PublisherStakeCapsMessage is a global message that aggregates data from all price feeds
+/// we can't associate it with a specific feed, so we use a feed id that is not used by any price feed
+pub const PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID: FeedId = [1u8; 32];
 
 impl Message {
     pub fn publish_time(&self) -> i64 {
         match self {
             Self::PriceFeedMessage(msg) => msg.publish_time,
             Self::TwapMessage(msg) => msg.publish_time,
+            Self::PublisherStakeCapsMessage(msg) => msg.publish_time,
         }
     }
 
+    /// TO DO : This API doesn't work with PublisherStakeCapsMessage since it doesn't have a feed_id, consider refactoring
     pub fn feed_id(&self) -> FeedId {
         match self {
             Self::PriceFeedMessage(msg) => msg.feed_id,
             Self::TwapMessage(msg) => msg.feed_id,
+            Self::PublisherStakeCapsMessage(_) => PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID,
         }
     }
 }
@@ -80,6 +89,7 @@ impl Arbitrary for Message {
 
 /// Id of a feed producing the message. One feed produces one or more messages.
 pub type FeedId = [u8; 32];
+pub type Pubkey = [u8; 32];
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
@@ -116,15 +126,15 @@ pub struct PriceFeedMessage {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for PriceFeedMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        let mut id = [0u8; 32];
-        for item in &mut id {
+        let mut feed_id = [0u8; 32];
+        for item in &mut feed_id {
             *item = u8::arbitrary(g);
         }
 
         let publish_time = i64::arbitrary(g);
 
         PriceFeedMessage {
-            id,
+            feed_id,
             price: i64::arbitrary(g),
             conf: u64::arbitrary(g),
             exponent: i32::arbitrary(g),
@@ -153,15 +163,15 @@ pub struct TwapMessage {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for TwapMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        let mut id = [0u8; 32];
-        for item in &mut id {
+        let mut feed_id = [0u8; 32];
+        for item in &mut feed_id {
             *item = u8::arbitrary(g);
         }
 
         let publish_time = i64::arbitrary(g);
 
         TwapMessage {
-            id,
+            feed_id,
             cumulative_price: i128::arbitrary(g),
             cumulative_conf: u128::arbitrary(g),
             num_down_slots: u64::arbitrary(g),
@@ -169,6 +179,47 @@ impl Arbitrary for TwapMessage {
             publish_time,
             prev_publish_time: publish_time.saturating_sub(i64::arbitrary(g)),
             publish_slot: u64::arbitrary(g),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PublisherStakeCapsMessage {
+    pub publish_time: i64,
+    pub caps:         PrefixedVec<u16, PublisherStakeCap>, // PrefixedVec because we might have more than 256 publishers
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PublisherStakeCap {
+    pub publisher: Pubkey,
+    pub cap:       u64,
+}
+
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for PublisherStakeCapsMessage {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        let caps = Vec::arbitrary(g);
+        PublisherStakeCapsMessage {
+            publish_time: i64::arbitrary(g),
+            caps:         caps.into(),
+        }
+    }
+}
+
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for PublisherStakeCap {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        PublisherStakeCap {
+            publisher: {
+                let mut publisher = [0u8; 32];
+                for item in &mut publisher {
+                    *item = u8::arbitrary(g);
+                }
+                publisher
+            },
+            cap:       u64::arbitrary(g),
         }
     }
 }

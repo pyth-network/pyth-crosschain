@@ -93,10 +93,17 @@ export class SolanaPricePusher implements IPricePusher {
       return;
     }
 
+    const shuffledPriceIds = priceIds
+      .map((x) => {
+        return { element: x, key: Math.random() };
+      })
+      .sort((a, b) => a.key - b.key)
+      .map((x) => x.element);
+
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        priceIds
+        shuffledPriceIds
       );
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed:");

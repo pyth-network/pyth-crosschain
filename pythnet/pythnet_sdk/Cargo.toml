@@ -1,6 +1,6 @@
 [package]
 name = "pythnet-sdk"
-version = "2.1.0"
+version = "2.3.0"
 description = "Pyth Runtime for Solana"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pythnet"
@@ -13,7 +13,7 @@ name = "pythnet_sdk"
 
 [features]
 test-utils = ["dep:wormhole-vaas-serde", "dep:serde_wormhole", "dep:libsecp256k1", "dep:rand"]
-solana-program = ["dep:solana-program", "dep:anchor-lang", "dep:proc-macro2"]
+solana-program = ["dep:solana-program", "dep:anchor-lang"]
 
 [dependencies]
 bincode = "1.3.1"
@@ -34,7 +34,6 @@ libsecp256k1 = {version ="0.7.1", optional = true}
 rand = {version = "0.8.5", optional = true}
 solana-program = {version = ">=1.13.6", optional = true}
 anchor-lang  = {version = ">=0.28.0", optional = true}
-proc-macro2 = {version = "=1.0.79", optional = true} # pinned to 1.0.79 to compilation errors with newer versions, remove this if it compiles fine without
 
 [dev-dependencies]
 base64 = "0.21.0"

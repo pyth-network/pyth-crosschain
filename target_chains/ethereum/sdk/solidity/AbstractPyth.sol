@@ -19,22 +19,24 @@ abstract contract AbstractPyth is IPyth {
         bytes32 id
     ) public view virtual returns (bool exists);
 
+    /// @notice This function is deprecated and is only kept for backward compatibility.
     function getValidTimePeriod()
         public
         view
         virtual
-        override
         returns (uint validTimePeriod);
 
+    /// @notice This function is deprecated and is only kept for backward compatibility.
     function getPrice(
         bytes32 id
-    ) external view virtual override returns (PythStructs.Price memory price) {
+    ) external view virtual returns (PythStructs.Price memory price) {
         return getPriceNoOlderThan(id, getValidTimePeriod());
     }
 
+    /// @notice This function is deprecated and is only kept for backward compatibility.
     function getEmaPrice(
         bytes32 id
-    ) external view virtual override returns (PythStructs.Price memory price) {
+    ) external view virtual returns (PythStructs.Price memory price) {
         return getEmaPriceNoOlderThan(id, getValidTimePeriod());
     }
 

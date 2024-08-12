@@ -84,7 +84,8 @@ contract SomeContract {
 
     // Doing other things that uses prices
     bytes32 priceId = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
-    PythStructs.Price price = pyth.getPrice(priceId);
+    // Get the price if it is not older than 10 seconds from the current time.
+    PythStructs.Price price = pyth.getPriceNoOlderThan(priceId, 10);
   }
 }
 

@@ -78,8 +78,7 @@ fn main() -> Result<()> {
         Action::PostAndExecute { vaa, keypair } => {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
-            let rpc_client =
-                RpcClient::new_with_commitment("https://pythnet.rpcpool.com/", cli.commitment);
+            let rpc_client = RpcClient::new_with_commitment(&cli.rpc_url, cli.commitment);
 
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
             let wormhole = AnchorVaa::owner();
@@ -169,7 +168,7 @@ fn main() -> Result<()> {
                 Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![],
             }
             .try_to_vec()?;
@@ -197,7 +196,7 @@ fn main() -> Result<()> {
         }
         Action::GetTestPayload {} => {
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![],
             }
             .try_to_vec()?;
@@ -224,7 +223,7 @@ fn main() -> Result<()> {
             instruction.accounts[2].is_signer = true; // Require signature of new authority for safety
             println!("New authority : {:}", instruction.accounts[2].pubkey);
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&instruction)],
             }
             .try_to_vec()?;
@@ -246,7 +245,7 @@ fn main() -> Result<()> {
                 instruction.accounts[3].pubkey
             );
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&instruction)],
             }
             .try_to_vec()?;

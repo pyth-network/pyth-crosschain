@@ -101,3 +101,47 @@ This method will combine the user and provider's random numbers, along with the 
 
 The [Coin Flip](/target_chains/ethereum/examples/coin_flip) example demonstrates how to build a smart contract that
 interacts with Pyth Entropy as well as a typescript client for that application.
+
+## PRNG Contract
+
+The PRNG (Pseudorandom Number Generation) Contract is designed to work seamlessly with Pyth Entropy.
+
+### Features
+
+- **Pyth Entropy Integration**: Utilizes Pyth Entropy as a secure seed source
+- **Stateful Randomness**: Maintains an internal state to ensure unique random numbers on each call
+- **Versatile Random Generation**: Includes functions for generating random uint256, uint64, integers within specified ranges, and permutations
+- **Random Bytes Generation**: Ability to generate random byte sequences of specified length
+
+### Key Functions
+
+- `randUint() -> uint256`: Generate a random uint256 value
+- `randUint64() -> uint64`: Generate a random uint64 value
+- `randUintRange(uint256 min, uint256 max) -> uint256`: Generate a random integer within a specified range
+- `randomBytes(uint256 length) -> bytes`: Generate a sequence of random bytes
+- `randomPermutation(uint256 length) -> uint256[]`: Generate a random permutation of a sequence
+
+### Usage
+
+To use the PRNG contract in your project:
+
+1. Create a contract that inherits from PRNG and uses its internal functions with a seed from Pyth Entropy:
+
+```solidity
+contract MyContract is PRNG {
+  constructor(bytes32 _seed) {
+    PRNG(_seed);
+  }
+}
+
+```
+
+2. Use the contract functions to generate random numbers:
+
+```solidity
+bytes32 pythEntropySeed = ...; // Get this from Pyth Entropy
+setSeed(pythEntropySeed)
+uint256 randomNumber = randUint();
+uint64 randomSmallNumber = randUint64();
+uint256 randomInRange = randUintRange(1, 100);
+```

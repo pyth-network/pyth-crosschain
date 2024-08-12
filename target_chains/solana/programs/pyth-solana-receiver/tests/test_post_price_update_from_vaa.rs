@@ -55,7 +55,8 @@ async fn test_invalid_wormhole_message() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
 
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], true, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], true, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
@@ -100,7 +101,8 @@ async fn test_invalid_update_message() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
 
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, true);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, true, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
 
@@ -150,15 +152,16 @@ async fn test_post_price_update_from_vaa() {
     let twap_1 = create_dummy_twap_message();
 
     let message = create_accumulator_message(
-        &[feed_1, feed_2, twap_1],
-        &[feed_1, feed_2, twap_1],
+        &[&feed_1, &feed_2, &twap_1],
+        &[&feed_1, &feed_2, &twap_1],
         false,
         false,
+        None,
     );
 
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
-    let message2 = create_accumulator_message(&[feed_2, feed_3], &[feed_3], false, false);
+    let message2 = create_accumulator_message(&[&feed_2, &feed_3], &[&feed_3], false, false, None);
     let (_, merkle_price_updates2) = deserialize_accumulator_update_data(message2).unwrap();
 
     let ProgramTestFixtures {

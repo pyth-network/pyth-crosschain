@@ -36,47 +36,6 @@
         "internalType": "bytes32",
         "name": "id",
         "type": "bytes32"
-      }
-    ],
-    "name": "getEmaPrice",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "int64",
-            "name": "price",
-            "type": "int64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "conf",
-            "type": "uint64"
-          },
-          {
-            "internalType": "int32",
-            "name": "expo",
-            "type": "int32"
-          },
-          {
-            "internalType": "uint256",
-            "name": "publishTime",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PythStructs.Price",
-        "name": "price",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "id",
-        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -126,47 +85,6 @@
       }
     ],
     "name": "getEmaPriceUnsafe",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "int64",
-            "name": "price",
-            "type": "int64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "conf",
-            "type": "uint64"
-          },
-          {
-            "internalType": "int32",
-            "name": "expo",
-            "type": "int32"
-          },
-          {
-            "internalType": "uint256",
-            "name": "publishTime",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PythStructs.Price",
-        "name": "price",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "id",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getPrice",
     "outputs": [
       {
         "components": [
@@ -299,19 +217,6 @@
       {
         "internalType": "uint256",
         "name": "feeAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getValidTimePeriod",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "validTimePeriod",
         "type": "uint256"
       }
     ],

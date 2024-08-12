@@ -10,18 +10,14 @@ import {
 import { singletonArray, safeFetch } from "../../zod-utils";
 
 export const readApi = <ParameterName extends string>(
-  spec: Omit<ReadApi<ParameterName>, "children" | "type"> & {
-    description: string;
-  },
+  spec: Omit<ReadApi<ParameterName>, "type">,
 ) => ({
   ...spec,
   type: EvmApiType.Read,
 });
 
 export const writeApi = <ParameterName extends string>(
-  spec: Omit<WriteApi<ParameterName>, "children" | "type"> & {
-    description: string;
-  },
+  spec: Omit<WriteApi<ParameterName>, "type">,
 ) => ({
   ...spec,
   type: EvmApiType.Write,
@@ -34,19 +30,15 @@ export const ETHUSD =
 
 const HERMES_URL = "https://hermes.pyth.network";
 
-export const getLatestPriceFeed = async (feedId: string) => {
+export const getLatestPriceUpdate = async (feedId: string) => {
   const url = new URL("/v2/updates/price/latest", HERMES_URL);
   url.searchParams.set("ids[]", feedId);
-  url.searchParams.set("target_chain", "evm");
-  url.searchParams.set("binary", "true");
   return safeFetch(priceFeedSchema, url);
 };
 
 const priceFeedSchema = z.object({
   binary: z.object({
-    data: singletonArray(z.string()).transform((value) =>
-      toZeroXPrefixedHex(value),
-    ),
+    data: singletonArray(z.string()).transform((value) => `0x${value}`),
   }),
   parsed: singletonArray(
     z.object({
@@ -56,9 +48,6 @@ const priceFeedSchema = z.object({
     }),
   ),
 });
-
-const toZeroXPrefixedHex = (value: string) =>
-  `0x${Buffer.from(value, "base64").toString("hex")}`;
 
 export const solidity = <ParameterName extends string>(
   code: string | ((params: Partial<Record<ParameterName, string>>) => string),

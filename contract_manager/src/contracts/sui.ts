@@ -3,9 +3,9 @@ import { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 
 type ObjectId = string;
@@ -148,7 +148,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param keypair used to sign the transaction
    */
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const packageId = await this.getPythPackageId();
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
@@ -177,7 +177,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     vaas: Buffer[],
     feedIds: string[]
   ): Promise<TxResult> {
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
@@ -189,7 +189,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     senderPrivateKey: string,
     vaas: Buffer[]
   ): Promise<TxResult> {
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
@@ -206,7 +206,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const packageId = await this.getPythPackageId();
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
@@ -229,7 +229,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     modules: number[][],
     dependencies: string[]
   ) {
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const packageId = await this.getPythPackageId();
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
@@ -245,7 +245,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const [upgradeReceipt] = tx.upgrade({
       modules,
       dependencies,
-      packageId: packageId,
+      package: packageId,
       ticket: upgradeTicket,
     });
 
@@ -266,7 +266,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @private
    */
   async getVaaVerificationReceipt(
-    tx: TransactionBlock,
+    tx: Transaction,
     packageId: string,
     vaa: Buffer
   ) {
@@ -276,7 +276,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
-        tx.pure(Array.from(vaa)),
+        tx.pure.arguments(Array.from(vaa)),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
     });
@@ -295,19 +295,16 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param keypair
    * @private
    */
-  private async executeTransaction(
-    tx: TransactionBlock,
-    keypair: Ed25519Keypair
-  ) {
+  private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.getProvider();
     tx.setSender(keypair.toSuiAddress());
     const dryRun = await provider.dryRunTransactionBlock({
       transactionBlock: await tx.build({ client: provider }),
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
-    return provider.signAndExecuteTransactionBlock({
+    return provider.signAndExecuteTransaction({
       signer: keypair,
-      transactionBlock: tx,
+      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,
@@ -489,7 +486,7 @@ export class SuiWormholeContract extends WormholeContract {
     senderPrivateKey: PrivateKey,
     vaa: Buffer
   ): Promise<TxResult> {
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const coreObjectId = this.stateId;
     const corePackageId = await this.client.getWormholePackageId();
     const [verifiedVaa] = tx.moveCall({
@@ -552,19 +549,16 @@ export class SuiWormholeContract extends WormholeContract {
    * @param keypair
    * @private
    */
-  private async executeTransaction(
-    tx: TransactionBlock,
-    keypair: Ed25519Keypair
-  ) {
+  private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.chain.getProvider();
     tx.setSender(keypair.toSuiAddress());
     const dryRun = await provider.dryRunTransactionBlock({
       transactionBlock: await tx.build({ client: provider }),
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
-    return provider.signAndExecuteTransactionBlock({
+    return provider.signAndExecuteTransaction({
       signer: keypair,
-      transactionBlock: tx,
+      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,

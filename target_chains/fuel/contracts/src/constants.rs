@@ -26,7 +26,7 @@ pub const BETA_5_URL: &str = "beta-5.fuel.network";
 pub const BETA_5_PYTH_CONTRACT_ID: &str =
     "0xe69daeb9fcf4c536c0fe402403b4b9e9822cc8b1f296e5d754be12cc384554c5";
 
-pub const PYTH_CONTRACT_BINARY_PATH: &str = "./pyth-contract/out/debug/pyth-contract.bin";
+pub const PYTH_CONTRACT_BINARY_PATH: &str = "./pyth-contract/out/release/pyth-contract.bin";
 pub const DEFAULT_SINGLE_UPDATE_FEE: u64 = 1;
 pub const DEFAULT_VALID_TIME_PERIOD: u64 = 60;
 pub const GUARDIAN_SET_UPGRADE_3_VAA: &str =

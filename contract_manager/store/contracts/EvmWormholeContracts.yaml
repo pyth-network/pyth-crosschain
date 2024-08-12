@@ -223,9 +223,6 @@
 - chain: hedera
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: berachain_testnet
-  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmWormholeContract
 - chain: blast
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
@@ -344,5 +341,23 @@
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
 - chain: klaytn
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: morph_holesky_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: tabi_testnet
+  address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
+  type: EvmWormholeContract
+- chain: b3_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: kinto
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: cronos_zkevm_testnet
+  address: "0x3f5bB93eEC6E3D6784274291A5816Bc34E851dc8"
+  type: EvmWormholeContract
+- chain: reya_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract

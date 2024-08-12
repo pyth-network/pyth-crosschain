@@ -35,7 +35,7 @@ To set up and run a Hermes node, follow the steps below:
    ```
 4. **Build the project**: Navigate to the project directory and run the following command to build the project:
    ```bash
-   cd apps/hermes
+   cd apps/hermes/server
    cargo build --release
    ```
    This will create a binary in the target/release directory.

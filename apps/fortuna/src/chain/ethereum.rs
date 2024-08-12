@@ -3,6 +3,7 @@ use {
         api::ChainId,
         chain::{
             eth_gas_oracle::EthProviderOracle,
+            nonce_manager::NonceManagerMiddleware,
             reader::{
                 self,
                 BlockNumber,
@@ -33,7 +34,6 @@ use {
         middleware::{
             gas_oracle::GasOracleMiddleware,
             MiddlewareError,
-            NonceManagerMiddleware,
             SignerMiddleware,
         },
         prelude::{

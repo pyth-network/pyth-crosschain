@@ -4,7 +4,12 @@ import { Field, Label } from "@headlessui/react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { type HTMLAttributes, useState, type ComponentProps } from "react";
+import {
+  type HTMLAttributes,
+  useState,
+  type ComponentProps,
+  type ElementType,
+} from "react";
 
 import * as apis from "../../apis";
 import { Select } from "../Select";
@@ -22,9 +27,9 @@ const CHAIN_TO_NAME = {
 const MENU = Object.fromEntries(
   Object.entries(apis).map(([chain, methods]) => [
     chain,
-    Object.keys(methods).map((method) => ({
-      name: method,
-      href: `/price-feeds/${chain}/${method}`,
+    Object.entries(methods).map(([name]) => ({
+      name,
+      href: `/price-feeds/${chain}/${name}`,
     })),
   ]),
 );
@@ -50,8 +55,7 @@ export const Sidebar = ({
             value={chain}
             onChange={setChain}
             options={CHAINS}
-            anchor="bottom start"
-            buttonClassName="grow"
+            className="grow"
             renderOption={(chain) => CHAIN_TO_NAME[chain]}
           />
         </Field>
@@ -73,29 +77,52 @@ export const Sidebar = ({
   );
 };
 
-const baseMenuButtonClasses = "text-sm py-1 px-2";
+type MenuButtonProps = Omit<
+  ComponentProps<typeof Link>,
+  keyof MenuItemProps<typeof Link>
+>;
 
-const MenuButton = ({ className, ...props }: ComponentProps<typeof Link>) => {
+const MenuButton = ({ className, children, ...props }: MenuButtonProps) => {
   const segments = useSelectedLayoutSegments();
 
   return `/price-feeds/${segments.join("/")}` === props.href ? (
-    <div
-      className={clsx(
-        "font-bold text-pythpurple-600 dark:text-pythpurple-400",
-        baseMenuButtonClasses,
-        className,
-      )}
+    <MenuItem
+      className={className}
+      nameClassName="font-bold text-pythpurple-600 dark:text-pythpurple-400"
     >
-      {props.children}
-    </div>
+      {children}
+    </MenuItem>
   ) : (
-    <Link
+    <MenuItem
+      as={Link}
       className={clsx(
-        "rounded hover:bg-neutral-200 hover:text-pythpurple-600 dark:hover:bg-neutral-800 dark:hover:text-pythpurple-400",
-        baseMenuButtonClasses,
+        "group hover:bg-neutral-200 dark:hover:bg-neutral-800",
         className,
       )}
+      nameClassName="group-hover:text-pythpurple-600 dark:group-hover:text-pythpurple-400"
       {...props}
-    />
+    >
+      {children}
+    </MenuItem>
+  );
+};
+
+type MenuItemProps<T extends ElementType> = {
+  as?: T;
+  nameClassName?: string | undefined;
+};
+
+const MenuItem = <T extends ElementType>({
+  as,
+  className,
+  children,
+  nameClassName,
+  ...props
+}: Omit<ComponentProps<T>, keyof MenuItemProps<T>> & MenuItemProps<T>) => {
+  const Component = as ?? "div";
+  return (
+    <Component className={clsx("rounded px-2 py-1", className)} {...props}>
+      <div className={clsx("text-sm", nameClassName)}>{children}</div>
+    </Component>
   );
 };

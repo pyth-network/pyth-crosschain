@@ -4,7 +4,7 @@ import Eth from "cryptocurrency-icons/svg/color/eth.svg";
 import {
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
   writeApi,
@@ -15,35 +15,43 @@ export const parsePriceFeedUpdates = writeApi<
   "updateData" | "priceId" | "minPublishTime" | "maxPublishTime" | "fee"
 >({
   name: "parsePriceFeedUpdates",
+  summary:
+    "Parse `updateData` to return prices if the prices are published within the given time range.",
   description: `
-Parse \`updateData\` and return the price feeds for the given \`priceIds\`
-within, if they are all published between \`minPublishTime\` and
-\`maxPublishTime\` (\`minPublishTime <= publishTime <= maxPublishTime\`).  Use
-this function if you want to use a Pyth price for a fixed time and not the most
-recent price; otherwise, consider using [updatePriceFeeds](update-price-feeds)
-followed by [getPrice](get-price) or one of its variants.  Unlike
-\`updatePriceFeeds\`, calling this function will not update the on-chain price.
+  This method parse \`updateData\` and return the price feeds for the given \`priceIds\`
+  within, if they are all published between \`minPublishTime\` and
+  \`maxPublishTime\` (\`minPublishTime <= publishTime <= maxPublishTime\`).
 
-If you need to make sure the price update is the earliest update after the
-\`minPublishTime\` consider using
-[parsePriceFeedUpdatesUnique](parse-price-feed-updates-unique).
+  Use this function if you want to use a Pyth price for a fixed time and not the most
+  recent price; otherwise, consider using [updatePriceFeeds](update-price-feeds)
+  followed by [getPrice](get-price) or one of its variants.
 
-This method requires the caller to pay a fee in wei; the required fee can be
-computed by calling [getUpdateFee](get-update-fee) with \`updateData\`.
+  Unlike [updatePriceFeeds](updatePriceFeeds), calling this function will **not** update the on-chain price.
 
-Reverts if the transferred fee is not sufficient, or \`updateData\` is invalid,
-or \`updateData\` does not contain an update for any of the given \`priceIds\`
-within the given time range.
+  If you need to make sure the price update is the earliest update after the
+  \`minPublishTime\` consider using
+  [parsePriceFeedUpdatesUnique](parse-price-feed-updates-unique).
+
+  This method requires the caller to pay a fee in wei; the required fee can be
+  computed by calling [getUpdateFee](get-update-fee) with \`updateData\`.
+
+  ### Error Response
+
+  The above method can return the following error response:
+  - \`PriceFeedNotFoundWithinRange\`: No price feed was found within the given time range.
+  - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
+  - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
   parameters: [
     {
       name: "updateData",
       type: ParameterType.HexArray,
-      description: "The price update data to parse.",
+      description:
+        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
     },
     {
       name: "priceId",
-      type: ParameterType.HexArray,
+      type: ParameterType.PriceFeedIdArray,
       description: "The price ids whose feeds will be returned.",
     },
     {
@@ -112,7 +120,7 @@ const getParams = async (
     readContract: (name: string, args: unknown[]) => Promise<unknown>;
   },
 ) => {
-  const feed = await getLatestPriceFeed(priceId);
+  const feed = await getLatestPriceUpdate(priceId);
   const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");

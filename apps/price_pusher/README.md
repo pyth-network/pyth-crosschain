@@ -174,7 +174,7 @@ pnpm run start solana \
 
 
 # Or, run the price pusher docker image instead of building from the source
-docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
+docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- npm run start -- <above-arguments>
 ```
 
 [hermes]: https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes

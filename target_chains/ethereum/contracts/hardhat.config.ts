@@ -6,7 +6,7 @@ import "@matterlabs/hardhat-zksync-solc";
 
 module.exports = {
   zksolc: {
-    version: "1.3.1",
+    version: "1.4.1",
     compilerSource: "binary",
     settings: {
       optimizer: {
@@ -14,7 +14,7 @@ module.exports = {
       },
     },
   },
-  defaultNetwork: "zkSyncTestnet",
+  defaultNetwork: "cronosZkEvmTestnet",
   networks: {
     [process.env.MIGRATIONS_NETWORK!]: {
       url: process.env.RPC_URL,
@@ -42,6 +42,12 @@ module.exports = {
       chainId: 324,
       verifyURL:
         "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+    },
+    cronosZkEvmTestnet: {
+      url: "https://testnet.zkevm.cronos.org",
+      ethNetwork: "sepolia", // or a Sepolia RPC endpoint from Infura/Alchemy/Chainstack etc.
+      zksync: true,
+      verifyURL: "https://explorer.zkevm.cronos.org/contract_verification",
     },
     neon_devnet: {
       url: "https://devnet.neonevm.org",

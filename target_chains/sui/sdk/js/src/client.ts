@@ -1,7 +1,7 @@
-import { SuiClient } from "@mysten/sui.js/client";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { bcs } from "@mysten/sui.js/bcs";
+import { SuiClient } from "@mysten/sui/client";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
+import { Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { HexString } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
@@ -80,7 +80,7 @@ export class SuiPythClient {
    * @param vaas array of vaas to verify
    * @param tx transaction block to add commands to
    */
-  async verifyVaas(vaas: Buffer[], tx: TransactionBlock) {
+  async verifyVaas(vaas: Buffer[], tx: Transaction) {
     const wormholePackageId = await this.getWormholePackageId();
     const verifiedVaas = [];
     for (const vaa of vaas) {
@@ -90,7 +90,8 @@ export class SuiPythClient {
           tx.object(this.wormholeStateId),
           tx.pure(
             bcs
-              .ser("vector<u8>", Array.from(vaa), {
+              .vector(bcs.U8)
+              .serialize(Array.from(vaa), {
                 maxSize: MAX_ARGUMENT_SIZE,
               })
               .toBytes()
@@ -110,7 +111,7 @@ export class SuiPythClient {
    * @param feedIds array of feed ids to update (in hex format)
    */
   async updatePriceFeeds(
-    tx: TransactionBlock,
+    tx: Transaction,
     updates: Buffer[],
     feedIds: HexString[]
   ): Promise<ObjectId[]> {
@@ -130,7 +131,8 @@ export class SuiPythClient {
         tx.object(this.pythStateId),
         tx.pure(
           bcs
-            .ser("vector<u8>", Array.from(updates[0]), {
+            .vector(bcs.U8)
+            .serialize(Array.from(updates[0]), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes()
@@ -144,7 +146,7 @@ export class SuiPythClient {
     const baseUpdateFee = await this.getBaseUpdateFee();
     const coins = tx.splitCoins(
       tx.gas,
-      feedIds.map(() => tx.pure(baseUpdateFee))
+      feedIds.map(() => tx.pure.u64(baseUpdateFee))
     );
     let coinId = 0;
     for (const feedId of feedIds) {
@@ -174,7 +176,7 @@ export class SuiPythClient {
     });
     return priceInfoObjects;
   }
-  async createPriceFeed(tx: TransactionBlock, updates: Buffer[]) {
+  async createPriceFeed(tx: Transaction, updates: Buffer[]) {
     const packageId = await this.getPythPackageId();
     if (updates.length > 1) {
       throw new Error(
@@ -189,7 +191,8 @@ export class SuiPythClient {
         tx.object(this.pythStateId),
         tx.pure(
           bcs
-            .ser("vector<u8>", Array.from(updates[0]), {
+            .vector(bcs.U8)
+            .serialize(Array.from(updates[0]), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes()

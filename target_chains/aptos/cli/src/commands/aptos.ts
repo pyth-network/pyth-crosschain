@@ -59,12 +59,11 @@ interface PackageBCS {
 export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
   yargs
     .command(
-      "deploy <package-dir> <account>",
+      "deploy <package-dir>",
       "Deploy a package",
       (yargs) => {
         return yargs
           .positional("package-dir", { type: "string" })
-          .positional("account", { type: "string" })
           .option("named-addresses", { type: "string" })
           .option("network", NETWORK_OPTION);
       },

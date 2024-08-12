@@ -14,3 +14,8 @@
   mainnet: false
   rpcUrl: https://devnet.m1.movementlabs.xyz/v1
   type: AptosChain
+- id: movement_suzuka_testnet
+  wormholeChainName: movement_suzuka_testnet
+  mainnet: false
+  rpcUrl: https://aptos.testnet.suzuka.movementlabs.xyz/v1
+  type: AptosChain

@@ -6,8 +6,6 @@ import "entropy-sdk-solidity/IEntropy.sol";
 import "entropy-sdk-solidity/IEntropyConsumer.sol";
 
 library CoinFlipErrors {
-    error IncorrectSender();
-
     error InsufficientFee();
 }
 

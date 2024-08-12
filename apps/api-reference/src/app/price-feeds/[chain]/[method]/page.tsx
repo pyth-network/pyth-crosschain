@@ -1,9 +1,10 @@
-import { evaluate } from "@mdx-js/mdx";
+"use client";
+
 import { notFound } from "next/navigation";
-import * as runtime from "react/jsx-runtime";
+import type { ComponentProps } from "react";
 
 import * as apis from "../../../../apis";
-import { useMDXComponents } from "../../../../mdx-components";
+import { EvmApi } from "../../../../components/EvmApi";
 
 type Props = {
   params: {
@@ -12,17 +13,18 @@ type Props = {
   };
 };
 
-const Page = async ({ params }: Props) => {
-  const mdxComponents = useMDXComponents({});
-  // eslint-disable-next-line import/namespace
-  const chain = isKeyOf(params.chain, apis) ? apis[params.chain] : undefined;
+const Page = ({ params }: Props) => {
+  const chain: (typeof apis)[keyof typeof apis] | undefined = isKeyOf(
+    params.chain,
+    apis,
+  )
+    ? // eslint-disable-next-line import/namespace
+      apis[params.chain]
+    : undefined;
   const api =
     chain && isKeyOf(params.method, chain) ? chain[params.method] : undefined;
   if (api) {
-    // @ts-expect-error for some reason these types aren't unifying, it's
-    // probably a dependency versioning issue
-    const { default: Description } = await evaluate(api.description, runtime);
-    return <Description components={mdxComponents} />;
+    return <EvmApi {...(api as unknown as ComponentProps<typeof EvmApi>)} />;
   } else {
     notFound();
   }
@@ -33,10 +35,3 @@ const isKeyOf = <T extends Record<string, unknown>>(
   value: unknown,
   obj: T,
 ): value is keyof T => typeof value === "string" && value in obj;
-
-export const generateStaticParams = () =>
-  Object.entries(apis).flatMap(([chain, methods]) =>
-    Object.keys(methods).map((method) => ({ chain, method })),
-  );
-
-export const dynamicParams = false;

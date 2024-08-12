@@ -1,6 +1,4 @@
-import withMDX from "@next/mdx";
-
-const config = {
+export default {
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
@@ -24,7 +22,7 @@ const config = {
     return config;
   },
 
-  transpilePackages: ["@pyth.network/*"],
+  transpilePackages: ["@pythnetwork/*"],
 
   headers: () => [
     {
@@ -55,5 +53,3 @@ const config = {
     },
   ],
 };
-
-export default withMDX()(config);

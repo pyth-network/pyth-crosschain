@@ -3,7 +3,7 @@ import type { Config } from "tailwindcss";
 
 const tailwindConfig = {
   darkMode: "class",
-  content: ["src/components/**/*.{ts,tsx}", "src/mdx-components.tsx"],
+  content: ["src/components/**/*.{ts,tsx}", "src/markdown-components.tsx"],
   plugins: [forms],
   theme: {
     extend: {

@@ -5,14 +5,15 @@ import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ConnectKitButton, Avatar } from "connectkit";
 import { useCallback, useMemo, useState } from "react";
+import { ContractFunctionExecutionError } from "viem";
 import { useAccount, useConfig } from "wagmi";
-import { readContract, writeContract } from "wagmi/actions";
+import { readContract, simulateContract, writeContract } from "wagmi/actions";
 
-import { getContractAddress } from "./networks";
 import { type Parameter, TRANSFORMS } from "./parameter";
-import { type ModalContents, ResultsModal } from "./results-modal";
+import { getContractAddress } from "../../evm-networks";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";
+import { Code } from "../Code";
 import { InlineLink } from "../InlineLink";
 
 const abi = [...PythAbi, ...PythErrorsAbi] as const;
@@ -46,14 +47,7 @@ export const RunButton = <ParameterName extends string>(
 ) => {
   const { isConnected } = useAccount();
   const isMounted = useIsMounted();
-  const {
-    status,
-    modalContents,
-    resetStatus,
-    clearModalContents,
-    run,
-    disabled,
-  } = useRunButton(props);
+  const { status, run, disabled } = useRunButton(props);
 
   return (
     <>
@@ -80,24 +74,35 @@ export const RunButton = <ParameterName extends string>(
       {(props.type === EvmApiType.Read || (isMounted && isConnected)) && (
         <Button
           disabled={disabled}
-          loading={status === Status.Loading}
-          className="flex h-10 w-full flex-row items-center justify-center gap-2"
+          loading={status.type === StatusType.Loading}
+          className="mb-8 flex h-10 w-full flex-row items-center justify-center gap-2"
           onClick={run}
         >
-          {status === Status.Loading ? (
+          {status.type === StatusType.Loading ? (
             <ArrowPathIcon className="size-4 animate-spin" />
           ) : (
             "Run"
           )}
         </Button>
       )}
-      <ResultsModal
-        modalContents={modalContents}
-        isShowingResults={status === Status.ShowingResults}
-        resetStatus={resetStatus}
-        clearModalContents={clearModalContents}
-        functionName={props.functionName}
-      />
+      {status.type === StatusType.Results && (
+        <div>
+          <h3 className="mb-2 text-lg font-bold">Results</h3>
+          <Code language="json">{stringifyResponse(status.data)}</Code>
+        </div>
+      )}
+      {status.type === StatusType.Error && (
+        <div>
+          <h3 className="mb-2 text-lg font-bold">Error</h3>
+          <div className="relative overflow-hidden rounded-md bg-neutral-100/25 dark:bg-neutral-800">
+            <div className="flex size-full overflow-auto px-6 py-4">
+              <p className="font-mono text-sm font-medium text-red-600 dark:text-red-400">
+                {showError(status.error)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
@@ -109,17 +114,7 @@ const useRunButton = <ParameterName extends string>({
   ...props
 }: RunButtonProps<ParameterName>) => {
   const config = useConfig();
-  const [status, setStatus] = useState<Status>(Status.None);
-  const [modalContents, setModalContents] = useState<
-    ModalContents<ParameterName> | undefined
-  >(undefined);
-
-  const resetStatus = useCallback(() => {
-    setStatus(Status.None);
-  }, [setStatus]);
-  const clearModalContents = useCallback(() => {
-    setModalContents(undefined);
-  }, [setModalContents]);
+  const [status, setStatus] = useState<Status>(None());
 
   const args = useMemo(() => {
     const allParams =
@@ -146,16 +141,9 @@ const useRunButton = <ParameterName extends string>({
   }, [paramValues, props]);
 
   const run = useCallback(() => {
-    setStatus(Status.Loading);
-    const networkName =
-      config.chains.find((chain) => chain.id === config.state.chainId)?.name ??
-      "";
+    setStatus(Loading());
     if (args === undefined) {
-      setModalContents({
-        error: new Error("Invalid parameters!"),
-        networkName,
-      });
-      setStatus(Status.ShowingResults);
+      setStatus(ErrorStatus(new Error("Invalid parameters!")));
     } else {
       const address = getContractAddress(config.state.chainId);
       if (!address) {
@@ -167,76 +155,113 @@ const useRunButton = <ParameterName extends string>({
         case EvmApiType.Read: {
           readContract(config, { abi, address, functionName, args })
             .then((result) => {
-              setModalContents({
-                result,
-                parameters: paramValues,
-                networkName,
-              });
+              setStatus(Results(result));
             })
             .catch((error: unknown) => {
-              setModalContents({
-                error: error,
-                parameters: paramValues,
-                networkName,
-              });
-            })
-            .finally(() => {
-              setStatus(Status.ShowingResults);
+              setStatus(ErrorStatus(error));
             });
           return;
         }
         case EvmApiType.Write: {
           if (value === undefined) {
-            setModalContents({
-              error: new Error("Missing value!"),
-              networkName,
-            });
-            setStatus(Status.ShowingResults);
+            setStatus(ErrorStatus(new Error("Missing value!")));
           } else {
-            writeContract(config, { abi, address, functionName, args, value })
+            simulateContract(config, {
+              abi,
+              address,
+              functionName,
+              args,
+              value,
+            })
+              .then(({ request }) => writeContract(config, request))
               .then((result) => {
-                setModalContents({
-                  result,
-                  parameters: paramValues,
-                  networkName,
-                });
+                setStatus(Results(result));
               })
               .catch((error: unknown) => {
-                setModalContents({
-                  error: error,
-                  parameters: paramValues,
-                  networkName,
-                });
-              })
-              .finally(() => {
-                setStatus(Status.ShowingResults);
+                setStatus(ErrorStatus(error));
               });
           }
           return;
         }
       }
     }
-  }, [config, functionName, setStatus, args, paramValues, value, props.type]);
+  }, [config, functionName, setStatus, args, value, props.type]);
 
   const { isConnected } = useAccount();
 
-  const disabled =
-    args === undefined ||
-    status !== Status.None ||
-    (props.type === EvmApiType.Write && (!isConnected || value === undefined));
+  const disabled = useMemo(
+    () =>
+      args === undefined ||
+      status.type === StatusType.Loading ||
+      (props.type === EvmApiType.Write &&
+        (!isConnected || value === undefined)),
+    [args, status, props, isConnected, value],
+  );
 
-  return {
-    status,
-    modalContents,
-    resetStatus,
-    clearModalContents,
-    run,
-    disabled,
-  };
+  return { status, run, disabled };
 };
 
-enum Status {
+enum StatusType {
   None,
   Loading,
-  ShowingResults,
+  Error,
+  Results,
 }
+
+const None = () => ({ type: StatusType.None as const });
+const Loading = () => ({ type: StatusType.Loading as const });
+const ErrorStatus = (error: unknown) => ({
+  type: StatusType.Error as const,
+  error,
+});
+const Results = (data: unknown) => ({
+  type: StatusType.Results as const,
+  data,
+});
+
+type Status =
+  | ReturnType<typeof None>
+  | ReturnType<typeof Loading>
+  | ReturnType<typeof ErrorStatus>
+  | ReturnType<typeof Results>;
+
+const showError = (error: unknown): string => {
+  if (typeof error === "string") {
+    return error;
+  } else if (error instanceof ContractFunctionExecutionError) {
+    return error.cause.metaMessages?.[0] ?? error.message;
+  } else if (error instanceof Error) {
+    return error.toString();
+  } else {
+    return "An unknown error occurred";
+  }
+};
+
+const stringifyResponse = (response: unknown): string => {
+  switch (typeof response) {
+    case "string": {
+      return `"${response}"`;
+    }
+    case "number":
+    case "boolean":
+    case "function": {
+      return response.toString();
+    }
+    case "bigint": {
+      return `${response.toString()}n`;
+    }
+    case "symbol": {
+      return `Symbol(${response.toString()})`;
+    }
+    case "undefined": {
+      return "undefined";
+    }
+    case "object": {
+      return response === null
+        ? "null"
+        : `{\n${Object.entries(response)
+            .map(([key, value]) => `    ${key}: ${stringifyResponse(value)}`)
+            .join(",\n")}\n}`;
+    }
+  }
+};

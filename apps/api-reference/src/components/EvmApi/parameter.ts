@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
-
 export type Parameter<Name extends string> = {
   name: Name;
   type: ParameterType;
-  description: ReactNode;
+  description: string;
 };
 
 export enum ParameterType {
+  PriceFeedId,
+  PriceFeedIdArray,
   HexArray,
   Hex,
   Int,
@@ -16,11 +16,16 @@ export enum ParameterType {
 export const TRANSFORMS: {
   [paramType in ParameterType]?: (value: string) => unknown;
 } = {
+  [ParameterType.PriceFeedIdArray]: (value) => [value],
   [ParameterType.HexArray]: (value) => [value],
   [ParameterType.IntArray]: (value) => [value],
 };
 
 export const PLACEHOLDERS: Record<ParameterType, string> = {
+  [ParameterType.PriceFeedId]:
+    "0x1111111111111111111111111111111111111111111111111111111111111111",
+  [ParameterType.PriceFeedIdArray]:
+    "0x1111111111111111111111111111111111111111111111111111111111111111",
   [ParameterType.Hex]:
     "0x1111111111111111111111111111111111111111111111111111111111111111",
   [ParameterType.HexArray]:
@@ -61,6 +66,8 @@ const VALIDATIONS: Record<
   ParameterType,
   ((value: string) => string | undefined)[]
 > = {
+  [ParameterType.PriceFeedId]: [validateHex],
+  [ParameterType.PriceFeedIdArray]: [validateHex],
   [ParameterType.Hex]: [validateHex],
   [ParameterType.HexArray]: [validateHex],
   [ParameterType.Int]: [validateInt],

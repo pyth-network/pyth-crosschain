@@ -69,7 +69,7 @@ impl MessageState {
     pub fn key(&self) -> MessageStateKey {
         MessageStateKey {
             feed_id: self.message.feed_id(),
-            type_:   self.message.into(),
+            type_:   self.message.clone().into(),
         }
     }
 
