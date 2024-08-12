@@ -8,6 +8,7 @@ use {
         chain::{
             eth_gas_oracle::eip1559_default_estimator,
             ethereum::{
+                EntropyContractCall,
                 InstrumentedPythContract,
                 InstrumentedSignablePythContract,
             },
@@ -88,7 +89,7 @@ const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Check whether we need to adjust the fee at this interval.
 const ADJUST_FEE_INTERVAL: Duration = Duration::from_secs(30);
 /// Check whether we need to manually update the commitments to reduce numHashes for future
-/// requests
+/// requests and reduce the gas cost of the reveal.
 const UPDATE_COMMITMENTS_INTERVAL: Duration = Duration::from_secs(30);
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
@@ -317,8 +318,7 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // Spawn a thread that periodically adjusts the provider fee.
-    spawn(update_commitments_wrapper(contract.clone(), chain_state.clone()).in_current_span());
+    spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
 
     // Spawn a thread to track the provider info and the balance of the keeper
@@ -966,25 +966,43 @@ pub async fn withdraw_fees_if_necessary(
     if keeper_balance < min_balance && U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
         let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
-        let pending_tx = contract_call
-            .send()
-            .await
-            .map_err(|e| anyhow!("Error submitting the withdrawal transaction: {:?}", e))?;
-
-        let tx_result = pending_tx
-            .await
-            .map_err(|e| anyhow!("Error waiting for withdrawal transaction receipt: {:?}", e))?
-            .ok_or_else(|| anyhow!("Can't verify the withdrawal, probably dropped from mempool"))?;
-
-        tracing::info!(
-            transaction_hash = &tx_result.transaction_hash.to_string(),
-            "Withdrew fees to keeper address. Receipt: {:?}",
-            tx_result,
-        );
+        send_and_confirm(contract_call).await?;
     } else if keeper_balance < min_balance {
         tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance)
     }
 
+    Ok(())
+}
+
+pub async fn send_and_confirm(contract_call: EntropyContractCall) -> Result<()> {
+    let call_name = contract_call.function.name.as_str();
+    let pending_tx = contract_call
+        .send()
+        .await
+        .map_err(|e| anyhow!("Error submitting transaction({}) {:?}", call_name, e))?;
+
+    let tx_result = pending_tx
+        .await
+        .map_err(|e| {
+            anyhow!(
+                "Error waiting for transaction({}) receipt: {:?}",
+                call_name,
+                e
+            )
+        })?
+        .ok_or_else(|| {
+            anyhow!(
+                "Can't verify the transaction({}), probably dropped from mempool",
+                call_name
+            )
+        })?;
+
+    tracing::info!(
+        transaction_hash = &tx_result.transaction_hash.to_string(),
+        "Confirmed transaction({}). Receipt: {:?}",
+        call_name,
+        tx_result,
+    );
     Ok(())
 }
 
@@ -1027,7 +1045,7 @@ pub async fn adjust_fee_wrapper(
 }
 
 #[tracing::instrument(name = "update_commitments", skip_all)]
-pub async fn update_commitments_wrapper(
+pub async fn update_commitments_loop(
     contract: Arc<InstrumentedSignablePythContract>,
     chain_state: BlockchainState,
 ) {
@@ -1047,11 +1065,12 @@ pub async fn update_commitments_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     chain_state: &BlockchainState,
 ) -> Result<()> {
+    //TODO: we can reuse the result from the last call from the watch_blocks thread to reduce RPCs
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     let provider_address = chain_state.provider_address;
     let provider_info = contract
         .get_provider_info(provider_address)
-        .block(latest_safe_block)
+        .block(latest_safe_block) // To ensure we are not revealing sooner than we should
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
@@ -1068,33 +1087,7 @@ pub async fn update_commitments_if_necessary(
             .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
         let contract_call =
             contract.update_provider_commitment(provider_address, seq_number, provider_revelation);
-        // TODO: refactor
-        let pending_tx = contract_call.send().await.map_err(|e| {
-            anyhow!(
-                "Error submitting the update commitment transaction: {:?}",
-                e
-            )
-        })?;
-
-        let tx_result = pending_tx
-            .await
-            .map_err(|e| {
-                anyhow!(
-                    "Error waiting for update commitment transaction receipt: {:?}",
-                    e
-                )
-            })?
-            .ok_or_else(|| {
-                anyhow!(
-                    "Can't verify the update commitment transaction, probably dropped from mempool"
-                )
-            })?;
-
-        tracing::info!(
-            transaction_hash = &tx_result.transaction_hash.to_string(),
-            "Updated commitment to avoid falling back. Receipt: {:?}",
-            tx_result,
-        );
+        send_and_confirm(contract_call).await?;
     }
     Ok(())
 }
@@ -1184,23 +1177,7 @@ pub async fn adjust_fee_if_necessary(
             target_fee
         );
         let contract_call = contract.set_provider_fee_as_fee_manager(provider_address, target_fee);
-        let pending_tx = contract_call
-            .send()
-            .await
-            .map_err(|e| anyhow!("Error submitting the set fee transaction: {:?}", e))?;
-
-        let tx_result = pending_tx
-            .await
-            .map_err(|e| anyhow!("Error waiting for set fee transaction receipt: {:?}", e))?
-            .ok_or_else(|| {
-                anyhow!("Can't verify the set fee transaction, probably dropped from mempool")
-            })?;
-
-        tracing::info!(
-            transaction_hash = &tx_result.transaction_hash.to_string(),
-            "Set provider fee. Receipt: {:?}",
-            tx_result,
-        );
+        send_and_confirm(contract_call).await?;
 
         *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
     } else {
