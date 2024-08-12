@@ -83,7 +83,7 @@ pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
 
-pub type EntropyContractCall = ContractCall<MiddlewaresWrapper<TracedClient>, ()>;
+pub type PythContractCall = ContractCall<MiddlewaresWrapper<TracedClient>, ()>;
 
 pub type PythContract = PythRandom<Provider<Http>>;
 pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;

@@ -8,9 +8,9 @@ use {
         chain::{
             eth_gas_oracle::eip1559_default_estimator,
             ethereum::{
-                EntropyContractCall,
                 InstrumentedPythContract,
                 InstrumentedSignablePythContract,
+                PythContractCall,
             },
             reader::{
                 BlockNumber,
@@ -91,6 +91,7 @@ const ADJUST_FEE_INTERVAL: Duration = Duration::from_secs(30);
 /// Check whether we need to manually update the commitments to reduce numHashes for future
 /// requests and reduce the gas cost of the reveal.
 const UPDATE_COMMITMENTS_INTERVAL: Duration = Duration::from_secs(30);
+const UPDATE_COMMITMENTS_THRESHOLD_FACTOR: f64 = 0.95;
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
@@ -974,7 +975,7 @@ pub async fn withdraw_fees_if_necessary(
     Ok(())
 }
 
-pub async fn send_and_confirm(contract_call: EntropyContractCall) -> Result<()> {
+pub async fn send_and_confirm(contract_call: PythContractCall) -> Result<()> {
     let call_name = contract_call.function.name.as_str();
     let pending_tx = contract_call
         .send()
@@ -1077,7 +1078,8 @@ pub async fn update_commitments_if_necessary(
     if provider_info.max_num_hashes == 0 {
         return Ok(());
     }
-    let threshold: u64 = (provider_info.max_num_hashes * 95 / 100).into();
+    let threshold =
+        ((provider_info.max_num_hashes as f64) * UPDATE_COMMITMENTS_THRESHOLD_FACTOR) as u64;
     if provider_info.sequence_number - provider_info.current_commitment_sequence_number > threshold
     {
         let seq_number = provider_info.sequence_number - 1;

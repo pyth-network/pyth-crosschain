@@ -987,7 +987,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint32 updateSeqNumber
     ) public {
         vm.assume(requestCount < provider1MaxNumHashes);
-        vm.assume(requestCount < provider1ChainLength);
         vm.assume(updateSeqNumber < requestCount);
         vm.assume(0 < updateSeqNumber);
 
@@ -1017,7 +1016,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint32 updateSeqNumber
     ) public {
         vm.assume(requestCount < provider1MaxNumHashes);
-        vm.assume(requestCount < provider1ChainLength);
         vm.assume(updateSeqNumber < requestCount);
         vm.assume(0 < updateSeqNumber);
 
