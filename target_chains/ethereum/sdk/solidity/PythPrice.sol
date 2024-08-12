@@ -31,7 +31,7 @@ library PythPrice {
         int32 resultExpo
     ) public pure returns (PythStructs.Price memory) {
         PythStructs.Price memory divResult = div(price, quote);
-        return scale_to_exponent(divResult, resultExpo);
+        return scaleToExponent(divResult, resultExpo);
     }
 
     /**
@@ -73,7 +73,7 @@ library PythPrice {
         });
 
         // get the interpolated discount as a price
-        PythStructs.Price memory discount_interpolated = affine_combination(
+        PythStructs.Price memory discount_interpolated = affineCombination(
             0,
             initial_percentage,
             int64(deposits_endpoint),
@@ -82,7 +82,7 @@ library PythPrice {
             -9
         );
 
-        PythStructs.Price memory price_discounted = scale_to_exponent(
+        PythStructs.Price memory price_discounted = scaleToExponent(
             mul(price, discount_interpolated),
             price.expo
         );
@@ -135,7 +135,7 @@ library PythPrice {
         });
 
         // Get the interpolated premium as a price
-        PythStructs.Price memory premium_interpolated = affine_combination(
+        PythStructs.Price memory premium_interpolated = affineCombination(
             0,
             initial_percentage,
             int64(borrows_endpoint),
@@ -145,7 +145,7 @@ library PythPrice {
         );
 
         // Get price premium, convert back to the original exponents we received the price in
-        PythStructs.Price memory price_premium = scale_to_exponent(
+        PythStructs.Price memory price_premium = scaleToExponent(
             mul(price, premium_interpolated),
             price.expo
         );
@@ -202,8 +202,8 @@ library PythPrice {
         PythStructs.Price memory right = mul(y1, frac_2q);
 
         // Scaling
-        left = scale_to_exponent(left, pre_add_expo);
-        right = scale_to_exponent(right, pre_add_expo);
+        left = scaleToExponent(left, pre_add_expo);
+        right = scaleToExponent(right, pre_add_expo);
 
         // 8. compute H = F + G
         return add(left, right);
@@ -263,13 +263,10 @@ library PythPrice {
             revert ExponentsMustMatch();
         }
 
-        int64 price = price.price + price2.price;
-        uint64 conf = price.conf + price2.conf;
-
         return
             PythStructs.Price({
-                price: price,
-                conf: conf,
+                price: price.price + price2.price,
+                conf: price.conf + price2.conf,
                 expo: price.expo,
                 publishTime: Math.min(price.publishTime, price2.publishTime)
             });
