@@ -1088,7 +1088,7 @@ pub async fn update_commitments_if_necessary(
             .reveal(seq_number)
             .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
         let contract_call =
-            contract.update_provider_commitment(provider_address, seq_number, provider_revelation);
+            contract.advance_provider_commitment(provider_address, seq_number, provider_revelation);
         send_and_confirm(contract_call).await?;
     }
     Ok(())

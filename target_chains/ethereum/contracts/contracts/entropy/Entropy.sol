@@ -357,25 +357,26 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
     }
 
-    // Update the provider commitment and increase the sequence number.
+    // Advance the provider commitment and increase the sequence number.
     // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
-    function updateProviderCommitment(
+    function advanceProviderCommitment(
         address provider,
-        uint64 updatedSequenceNumber,
+        uint64 advancedSequenceNumber,
         bytes32 providerRevelation
     ) public override {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
         if (
-            updatedSequenceNumber <=
+            advancedSequenceNumber <=
             providerInfo.currentCommitmentSequenceNumber
         ) revert EntropyErrors.UpdateTooOld();
-        if (updatedSequenceNumber >= providerInfo.endSequenceNumber)
+        if (advancedSequenceNumber >= providerInfo.endSequenceNumber)
             revert EntropyErrors.AssertionFailure();
 
         uint32 numHashes = SafeCast.toUint32(
-            updatedSequenceNumber - providerInfo.currentCommitmentSequenceNumber
+            advancedSequenceNumber -
+                providerInfo.currentCommitmentSequenceNumber
         );
         bytes32 providerCommitment = constructProviderCommitment(
             numHashes,
@@ -385,7 +386,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (providerCommitment != providerInfo.currentCommitment)
             revert EntropyErrors.IncorrectRevelation();
 
-        providerInfo.currentCommitmentSequenceNumber = updatedSequenceNumber;
+        providerInfo.currentCommitmentSequenceNumber = advancedSequenceNumber;
         providerInfo.currentCommitment = providerRevelation;
         if (
             providerInfo.currentCommitmentSequenceNumber >=

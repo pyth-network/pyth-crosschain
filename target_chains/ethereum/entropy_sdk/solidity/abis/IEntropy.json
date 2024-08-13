@@ -488,6 +488,29 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "advancedSequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      }
+    ],
+    "name": "advanceProviderCommitment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "userRandomness",
         "type": "bytes32"
@@ -939,29 +962,6 @@
       }
     ],
     "name": "setProviderUri",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "updatedSequenceNumber",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "providerRevelation",
-        "type": "bytes32"
-      }
-    ],
-    "name": "updateProviderCommitment",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

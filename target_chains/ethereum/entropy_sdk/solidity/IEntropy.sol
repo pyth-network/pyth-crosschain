@@ -124,11 +124,11 @@ interface IEntropy is EntropyEvents {
     // the provider supports for callbacks.
     function setMaxNumHashes(uint32 maxNumHashes) external;
 
-    // Update the provider commitment and increase the sequence number.
+    // Advance the provider commitment and increase the sequence number.
     // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
-    function updateProviderCommitment(
+    function advanceProviderCommitment(
         address provider,
-        uint64 updatedSequenceNumber,
+        uint64 advancedSequenceNumber,
         bytes32 providerRevelation
     ) external;
 

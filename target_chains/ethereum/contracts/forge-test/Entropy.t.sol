@@ -973,7 +973,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
     }
 
-    function testUpdateProviderCommitment(
+    function testAdvanceProviderCommitment(
         uint32 requestCount,
         uint32 updateSeqNumber
     ) public {
@@ -990,7 +990,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assertEq(info1.currentCommitmentSequenceNumber, 0);
         assertEq(info1.sequenceNumber, requestCount + 1);
-        random.updateProviderCommitment(
+        random.advanceProviderCommitment(
             provider1,
             updateSeqNumber,
             provider1Proofs[updateSeqNumber]
@@ -1002,7 +1002,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertInvariants();
     }
 
-    function testUpdateProviderCommitmentTooOld(
+    function testAdvanceProviderCommitmentTooOld(
         uint32 requestCount,
         uint32 updateSeqNumber
     ) public {
@@ -1022,14 +1022,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             ALL_ZEROS
         );
         vm.expectRevert(EntropyErrors.UpdateTooOld.selector);
-        random.updateProviderCommitment(
+        random.advanceProviderCommitment(
             provider1,
             updateSeqNumber,
             provider1Proofs[updateSeqNumber]
         );
     }
 
-    function testUpdateProviderCommitmentIncorrectRevelation(
+    function testAdvanceProviderCommitmentIncorrectRevelation(
         uint32 seqNumber,
         uint32 mismatchedProofNumber
     ) public {
@@ -1038,19 +1038,19 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.assume(seqNumber != mismatchedProofNumber);
         vm.assume(seqNumber > 0);
         vm.expectRevert(EntropyErrors.IncorrectRevelation.selector);
-        random.updateProviderCommitment(
+        random.advanceProviderCommitment(
             provider1,
             seqNumber,
             provider1Proofs[mismatchedProofNumber]
         );
     }
 
-    function testUpdateProviderCommitmentUpdatesSequenceNumber(
+    function testAdvanceProviderCommitmentUpdatesSequenceNumber(
         uint32 seqNumber
     ) public {
         vm.assume(seqNumber < provider1ChainLength);
         vm.assume(seqNumber > 0);
-        random.updateProviderCommitment(
+        random.advanceProviderCommitment(
             provider1,
             seqNumber,
             provider1Proofs[seqNumber]
@@ -1061,12 +1061,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(info1.sequenceNumber, seqNumber + 1);
     }
 
-    function testUpdateProviderCommitmentHigherThanChainLength(
+    function testAdvanceProviderCommitmentHigherThanChainLength(
         uint32 seqNumber
     ) public {
         vm.assume(seqNumber >= provider1ChainLength);
         vm.expectRevert(EntropyErrors.AssertionFailure.selector);
-        random.updateProviderCommitment(
+        random.advanceProviderCommitment(
             provider1,
             seqNumber,
             provider1Proofs[0]
