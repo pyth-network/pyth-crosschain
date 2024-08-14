@@ -60,18 +60,18 @@
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "uint32",
         "name": "oldMaxNumHashes",
-        "type": "uint64"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "uint32",
         "name": "newMaxNumHashes",
-        "type": "uint64"
+        "type": "uint32"
       }
     ],
-    "name": "ProviderMaxNumHashesUpdated",
+    "name": "ProviderMaxNumHashesAdvanced",
     "type": "event"
   },
   {

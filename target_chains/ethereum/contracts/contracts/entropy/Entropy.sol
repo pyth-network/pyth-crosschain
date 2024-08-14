@@ -617,7 +617,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         uint64 oldMaxNumHashes = provider.maxNumHashes;
         provider.maxNumHashes = maxNumHashes;
-        emit ProviderMaxNumHashesUpdated(
+        emit ProviderMaxNumHashesAdvanced(
             msg.sender,
             oldMaxNumHashes,
             maxNumHashes
