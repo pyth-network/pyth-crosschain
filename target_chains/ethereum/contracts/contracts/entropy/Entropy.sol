@@ -393,6 +393,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerInfo.sequenceNumber
         ) {
             // This means the provider called the function with a sequence number that was not yet requested.
+            // Providers should never do this and we consider such an implementation flawed.
             // Assuming this is landed on-chain it's better to bump the sequence number and never use that range
             // for future requests. Otherwise, someone can use the leaked revelation to derive favorable random numbers.
             providerInfo.sequenceNumber =
