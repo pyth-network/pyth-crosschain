@@ -79,6 +79,7 @@ export const RECEIVER_CHAINS = {
   etherlink: 60055,
   klaytn: 60056,
   kinto: 60057,
+  b3_mainnet: 60058,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

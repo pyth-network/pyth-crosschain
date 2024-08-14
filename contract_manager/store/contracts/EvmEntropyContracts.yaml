@@ -97,3 +97,6 @@
 - chain: b3_testnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
   type: EvmEntropyContract
+- chain: b3_mainnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
