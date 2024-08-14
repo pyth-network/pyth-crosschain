@@ -674,3 +674,8 @@
   rpcUrl: https://rpc.reya-cronos.gelato.digital
   networkId: 89346162
   type: EvmChain
+- id: b3_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet-rpc.b3.fun/http
+  networkId: 8333
+  type: EvmChain
