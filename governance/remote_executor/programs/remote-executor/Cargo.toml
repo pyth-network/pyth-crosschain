@@ -13,7 +13,7 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = ["pythnet"]
+default = ["mantis_testnet"]
 # These features determine the network for deployment:
 # - Use `pythnet` for deploying on Pythnet
 # - Use `pythtest` for deploying on Pythtest
@@ -24,6 +24,7 @@ pythtest = []
 eclipse_devnet = []
 eclipse_testnet = []
 eclipse_mainnet = []
+mantis_testnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
