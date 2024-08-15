@@ -680,6 +680,6 @@
   networkId: 8333
 - id: cronos_zkevm_mainnet
   mainnet: true
-  rpcUrl: https://gs.zkevm.cronos.org
+  rpcUrl: https://mainnet.zkevm.cronos.org
   networkId: 388
   type: EvmChain

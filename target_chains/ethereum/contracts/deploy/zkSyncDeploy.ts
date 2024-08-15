@@ -8,7 +8,6 @@ import { writeFileSync } from "fs";
 // import {Wallet as ZkWallet} from "zksync-ethers";
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
-
 const { getDefaultConfig } = require("../scripts/contractManagerConfig");
 
 function envOrErr(name: string): string {
@@ -20,157 +19,141 @@ function envOrErr(name: string): string {
 }
 
 export default async function (hre: HardhatRuntimeEnvironment) {
-
-
-  // Initialize the zkWallet wallet.
+  // Initialize the wallet.
   const wallet = Wallet.fromMnemonic(envOrErr("MNEMONIC"));
 
-  // Create zkWallet deployer object and load the artifact of the contract we want to deploy.
+  // Create deployer object and load the artifact of the contract we want to deploy.
   const deployer = new Deployer(hre, wallet);
 
+  // Deposit some funds to L2 in order to be able to perform L2 transactions. Uncomment
+  // this if the deployment account is unfunded.
+  //
+  // const depositAmount = ethers.utils.parseEther("0.005");
+  // const depositHandle = await deployer.zkWallet.deposit({
+  //   to: deployer.zkWallet.address,
+  //   token: utils.ETH_ADDRESS,
+  //   amount: depositAmount,
+  // });
+  // // Wait until the deposit is processed on zkSync
+  // await depositHandle.wait();
 
+  // Deploy WormholeReceiver contract.
 
+  const {
+    wormholeGovernanceChainId,
+    wormholeGovernanceContract,
+    wormholeInitialSigners,
+    governanceEmitter,
+    governanceChainId,
+    emitterAddresses,
+    emitterChainIds,
+  } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
+  const chainName = envOrErr("MIGRATIONS_NETWORK");
+  const wormholeReceiverChainId = CHAINS[chainName];
+  assert(wormholeReceiverChainId !== undefined);
 
+  const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
 
-  // // Initialize the wallet.
-  // const wallet = Wallet.fromMnemonic(envOrErr("MNEMONIC"));
+  console.log("receiverSetupArtifact: ", receiverSetupArtifact);
+  const receiverImplArtifact = await deployer.loadArtifact(
+    "ReceiverImplementation"
+  );
+  const wormholeReceiverArtifact = await deployer.loadArtifact(
+    "WormholeReceiver"
+  );
 
-  // // Create deployer object and load the artifact of the contract we want to deploy.
-  // const deployer = new Deployer(hre, wallet);
+  // deploy
 
-  // // Deposit some funds to L2 in order to be able to perform L2 transactions. Uncomment
-  // // this if the deployment account is unfunded.
-  // //
-  // // const depositAmount = ethers.utils.parseEther("0.005");
-  // // const depositHandle = await deployer.zkWallet.deposit({
-  // //   to: deployer.zkWallet.address,
-  // //   token: utils.ETH_ADDRESS,
-  // //   amount: depositAmount,
-  // // });
-  // // // Wait until the deposit is processed on zkSync
-  // // await depositHandle.wait();
+  console.log("Deploying WormholeReceiver contract...");
 
-  // // Deploy WormholeReceiver contract.
+  const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
 
-  // const {
-  //   wormholeGovernanceChainId,
-  //   wormholeGovernanceContract,
-  //   wormholeInitialSigners,
-  //   governanceEmitter,
-  //   governanceChainId,
-  //   emitterAddresses,
-  //   emitterChainIds,
-  // } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
-  // const chainName = envOrErr("MIGRATIONS_NETWORK");
-  // const wormholeReceiverChainId = CHAINS[chainName];
-  // assert(wormholeReceiverChainId !== undefined);
+  console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
 
-  // const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
+  console.log("Deploying ReceiverImplementation contract...");
 
-  // console.log("receiverSetupArtifact: ", receiverSetupArtifact);
-  // const receiverImplArtifact = await deployer.loadArtifact(
-  //   "ReceiverImplementation"
-  // );
-  // const wormholeReceiverArtifact = await deployer.loadArtifact(
-  //   "WormholeReceiver"
-  // );
+  // deploy implementation
+  const receiverImplContract = await deployer.deploy(receiverImplArtifact);
 
+  console.log(
+    "Deployed ReceiverImplementation on",
+    receiverImplContract.address
+  );
 
-  // // deploy
+  // encode initialisation data
+  const whInitData = receiverSetupContract.interface.encodeFunctionData(
+    "setup",
+    [
+      receiverImplContract.address,
+      wormholeInitialSigners,
+      wormholeReceiverChainId,
+      wormholeGovernanceChainId,
+      wormholeGovernanceContract,
+    ]
+  );
 
-  // console.log("Deploying WormholeReceiver contract...");
+  // deploy proxy
+  const wormholeReceiverContract = await deployer.deploy(
+    wormholeReceiverArtifact,
+    [receiverSetupContract.address, whInitData]
+  );
 
-  // const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
+  console.log(
+    `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
+  );
 
-  // console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
+  // Hardcoding the initial sequence number for governance messages.
+  const governanceInitialSequence = Number("0");
 
-  // console.log("Deploying ReceiverImplementation contract...");
+  const validTimePeriodSeconds = Number(envOrErr("VALID_TIME_PERIOD_SECONDS"));
+  const singleUpdateFeeInWei = Number(envOrErr("SINGLE_UPDATE_FEE_IN_WEI"));
 
-  // // deploy implementation
-  // const receiverImplContract = await deployer.deploy(receiverImplArtifact);
+  const pythImplArtifact = await deployer.loadArtifact("PythUpgradable");
+  const pythProxyArtifact = await deployer.loadArtifact("ERC1967Proxy");
 
-  // console.log(
-  //   "Deployed ReceiverImplementation on",
-  //   receiverImplContract.address
-  // );
+  const pythImplContract = await deployer.deploy(pythImplArtifact);
 
-  // // encode initialisation data
-  // const whInitData = receiverSetupContract.interface.encodeFunctionData(
-  //   "setup",
-  //   [
-  //     receiverImplContract.address,
-  //     wormholeInitialSigners,
-  //     wormholeReceiverChainId,
-  //     wormholeGovernanceChainId,
-  //     wormholeGovernanceContract,
-  //   ]
-  // );
+  console.log(`Deployed Pyth implementation on ${pythImplContract.address}`);
 
-  // // deploy proxy
-  // const wormholeReceiverContract = await deployer.deploy(
-  //   wormholeReceiverArtifact,
-  //   [receiverSetupContract.address, whInitData]
-  // );
+  const pythInitData = pythImplContract.interface.encodeFunctionData(
+    "initialize",
+    [
+      wormholeReceiverContract.address,
+      emitterChainIds,
+      emitterAddresses,
+      governanceChainId,
+      governanceEmitter,
+      governanceInitialSequence,
+      validTimePeriodSeconds,
+      singleUpdateFeeInWei,
+    ]
+  );
 
-  // console.log(
-  //   `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
-  // );
+  const pythProxyContract = await deployer.deploy(pythProxyArtifact, [
+    pythImplContract.address,
+    pythInitData,
+  ]);
 
-  // // Hardcoding the initial sequence number for governance messages.
-  // const governanceInitialSequence = Number("0");
+  console.log(`Deployed Pyth contract on ${pythProxyContract.address}`);
 
-  // const validTimePeriodSeconds = Number(envOrErr("VALID_TIME_PERIOD_SECONDS"));
-  // const singleUpdateFeeInWei = Number(envOrErr("SINGLE_UPDATE_FEE_IN_WEI"));
-
-  // const pythImplArtifact = await deployer.loadArtifact("PythUpgradable");
-  // const pythProxyArtifact = await deployer.loadArtifact("ERC1967Proxy");
-
-  // const pythImplContract = await deployer.deploy(pythImplArtifact);
-
-  // console.log(`Deployed Pyth implementation on ${pythImplContract.address}`);
-
-  // const pythInitData = pythImplContract.interface.encodeFunctionData(
-  //   "initialize",
-  //   [
-  //     wormholeReceiverContract.address,
-  //     emitterChainIds,
-  //     emitterAddresses,
-  //     governanceChainId,
-  //     governanceEmitter,
-  //     governanceInitialSequence,
-  //     validTimePeriodSeconds,
-  //     singleUpdateFeeInWei,
-  //   ]
-  // );
-
-  // const pythProxyContract = await deployer.deploy(pythProxyArtifact, [
-  //   pythImplContract.address,
-  //   pythInitData,
-  // ]);
-
-  // console.log(`Deployed Pyth contract on ${pythProxyContract.address}`);
-
-
-  
-  // //   const networkId = hre.network.config.chainId;
-  // //   const registryPath = `networks/${networkId}.json`;
-  // //   console.log(`Saving addresses in ${registryPath}`);
-  // //   writeFileSync(
-  // //     registryPath,
-  // //     JSON.stringify(
-  // //       [
-  // //         {
-  // //           contractName: "WormholeReceiver",
-  // //           address: wormholeReceiverContract.address,
-  // //         },
-  // //         {
-  // //           contractName: "PythUpgradable",
-  // //           address: pythProxyContract.address,
-  // //         },
-  // //       ],
-  // //       null,
-  // //       2
-  // //     )
-  // //   );
+  //   const networkId = hre.network.config.chainId;
+  //   const registryPath = `networks/${networkId}.json`;
+  //   console.log(`Saving addresses in ${registryPath}`);
+  //   writeFileSync(
+  //     registryPath,
+  //     JSON.stringify(
+  //       [
+  //         {
+  //           contractName: "WormholeReceiver",
+  //           address: wormholeReceiverContract.address,
+  //         },
+  //         {
+  //           contractName: "PythUpgradable",
+  //           address: pythProxyContract.address,
+  //         },
+  //       ],
+  //       null,
+  //       2
+  //     )
+  //   );
 }
-

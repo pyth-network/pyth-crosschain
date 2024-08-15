@@ -1,3 +1,4 @@
+import { http } from "wagmi";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
 import "@matterlabs/hardhat-zksync-deploy";
@@ -49,7 +50,8 @@ module.exports = {
       url: "https://mainnet.zkevm.cronos.org",
       ethNetwork: "sepolia", // or a Sepolia RPC endpoint from Infura/Alchemy/Chainstack etc.
       zksync: true,
-      verifyURL: "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=",
+      verifyURL:
+        "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=",
     },
   },
   etherscan: {
