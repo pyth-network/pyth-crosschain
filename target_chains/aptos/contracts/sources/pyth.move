@@ -403,7 +403,6 @@ module pyth::pyth {
         max_publish_time: u64
     ): vector<price_feed::PriceFeed> {
         let parsed_price_feeds = vector::empty<price_feed::PriceFeed>();
-        let parsed_price_ids = vector::empty<vector<u8>>();
 
         // validate publish times and populate parsed price feed vector 
         let i = 0;
@@ -415,9 +414,6 @@ module pyth::pyth {
 
             assert!(timestamp >= min_publish_time && timestamp <= max_publish_time, error::price_feed_outside_time_range());
 
-            let price_id: &price_identifier::PriceIdentifier = price_feed::get_price_identifier(price_feed);
-            let price_id_bytes = price_identifier::get_bytes(price_id);
-            vector::push_back(&mut parsed_price_ids, price_id_bytes);
             vector::push_back(&mut parsed_price_feeds, *price_feed);
             i = i + 1;
         };
@@ -1593,8 +1589,7 @@ module pyth::pyth_test {
         let min_publish_time: u64 = 1663074345;
         let max_publish_time: u64 = 1663680750;
 
-        let test_price_feeds: vector<pyth::price_feed::PriceFeed> = pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);        
-        assert!(vector::length(&test_price_feeds) == 0, 1);
+        pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins); 
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -1608,8 +1603,7 @@ module pyth::pyth_test {
         let min_publish_time: u64 = 1663074345;
         let max_publish_time: u64 = 1663680750;
 
-        let test_price_feeds: vector<pyth::price_feed::PriceFeed> = pyth::parse_price_feed_updates(vector[corrupt_vaa], min_publish_time, max_publish_time, coins);    
-        assert!(vector::length(&test_price_feeds) == 0, 1); 
+        pyth::parse_price_feed_updates(vector[corrupt_vaa], min_publish_time, max_publish_time, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -1629,8 +1623,7 @@ module pyth::pyth_test {
         ];
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 100);
 
-        let test_price_feeds: vector<pyth::price_feed::PriceFeed> = pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
-        assert!(vector::length(&test_price_feeds) == 0, 1);
+        pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -1651,8 +1644,7 @@ module pyth::pyth_test {
         let min_publish_time: u64 = 1663680750;
         let max_publish_time: u64 = 1663074345;
 
-        let test_price_feeds: vector<pyth::price_feed::PriceFeed> = pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
-        assert!(vector::length(&test_price_feeds) == 0, 1);
+        pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
         
         cleanup_test(burn_capability, mint_capability);
     }
@@ -1674,8 +1666,7 @@ module pyth::pyth_test {
         let min_publish_time: u64 = 2000000000; // Future timestamp
         let max_publish_time: u64 = 2000000500; // Future timestamp
 
-        let test_price_feeds: vector<pyth::price_feed::PriceFeed> = pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
-        assert!(vector::length(&test_price_feeds) == 0, 1);
+        pyth::parse_price_feed_updates(update_data, min_publish_time, max_publish_time, coins);
         
         cleanup_test(burn_capability, mint_capability);
     }
