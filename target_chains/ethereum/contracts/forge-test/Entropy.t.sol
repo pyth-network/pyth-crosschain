@@ -22,7 +22,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     address public provider1 = address(1);
     bytes32[] provider1Proofs;
     uint128 provider1FeeInWei = 8;
-    uint64 provider1ChainLength = 100;
+    uint64 provider1ChainLength = 1000;
+    uint32 provider1MaxNumHashes = 500;
     bytes provider1Uri = bytes("https://foo.com");
     bytes provider1CommitmentMetadata = hex"0100";
 
@@ -65,6 +66,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1ChainLength,
             provider1Uri
         );
+        vm.prank(provider1);
+        random.setMaxNumHashes(provider1MaxNumHashes);
 
         bytes32[] memory hashChain2 = generateHashChain(provider2, 0, 100);
         provider2Proofs = hashChain2;
@@ -115,25 +118,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint fee,
         address provider,
         uint randomNumber,
-        bool useBlockhash
+        bool useBlockhash,
+        bytes4 revertReason
     ) public {
-        // Note: for some reason vm.expectRevert() won't catch errors from the request function (?!),
-        // even though they definitely revert. Use a try/catch instead for the moment, though the try/catch
-        // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
-        bool requestSucceeds = false;
-        try
-            random.request{value: fee}(
-                provider,
-                random.constructUserCommitment(bytes32(uint256(randomNumber))),
-                useBlockhash
-            )
-        {
-            requestSucceeds = true;
-        } catch {
-            requestSucceeds = false;
-        }
-
-        assert(!requestSucceeds);
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(randomNumber))
+        );
+        vm.deal(address(this), fee);
+        vm.expectRevert(revertReason);
+        random.request{value: fee}(provider, userCommitment, useBlockhash);
     }
 
     function assertRevealSucceeds(
@@ -275,7 +268,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testNoSuchProvider() public {
-        assertRequestReverts(10000000, unregisteredProvider, 42, false);
+        assertRequestReverts(
+            10000000,
+            unregisteredProvider,
+            42,
+            false,
+            EntropyErrors.NoSuchProvider.selector
+        );
     }
 
     function testAuthorization() public {
@@ -571,14 +570,23 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testOutOfRandomness() public {
         // Should be able to request chainLength - 1 random numbers successfully.
         for (uint64 i = 0; i < provider1ChainLength - 1; i++) {
-            request(user1, provider1, i, false);
+            uint64 sequenceNumber = request(user2, provider1, 42, false);
+            assertRevealSucceeds(
+                user2,
+                provider1,
+                sequenceNumber,
+                42,
+                provider1Proofs[sequenceNumber],
+                ALL_ZEROS
+            );
         }
 
         assertRequestReverts(
             random.getFee(provider1),
             provider1,
             provider1ChainLength - 1,
-            false
+            false,
+            EntropyErrors.OutOfRandomness.selector
         );
     }
 
@@ -603,34 +611,54 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testOverflow() public {
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
         // msg.value overflows the uint128 fee variable
-        assertRequestReverts(2 ** 128, provider1, 42, false);
+        uint fee = 2 ** 128;
+        vm.deal(address(this), fee);
+        vm.expectRevert("SafeCast: value doesn't fit in 128 bits");
+        random.request{value: fee}(provider1, userCommitment, false);
 
         // block number is too large
         vm.roll(2 ** 96);
-        assertRequestReverts(
-            pythFeeInWei + provider1FeeInWei,
+        vm.expectRevert("SafeCast: value doesn't fit in 64 bits");
+        random.request{value: pythFeeInWei + provider1FeeInWei}(
             provider1,
-            42,
+            userCommitment,
             true
         );
     }
 
     function testFees() public {
         // Insufficient fees causes a revert
-        assertRequestReverts(0, provider1, 42, false);
+        assertRequestReverts(
+            0,
+            provider1,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         assertRequestReverts(
             pythFeeInWei + provider1FeeInWei - 1,
             provider1,
             42,
-            false
+            false,
+            EntropyErrors.InsufficientFee.selector
         );
-        assertRequestReverts(0, provider2, 42, false);
+        assertRequestReverts(
+            0,
+            provider2,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         assertRequestReverts(
             pythFeeInWei + provider2FeeInWei - 1,
             provider2,
             42,
-            false
+            false,
+            EntropyErrors.InsufficientFee.selector
         );
 
         // Accrue some fees for both providers
@@ -669,7 +697,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Uri
         );
 
-        assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
+        assertRequestReverts(
+            pythFeeInWei + 12345 - 1,
+            provider1,
+            42,
+            false,
+            EntropyErrors.InsufficientFee.selector
+        );
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
         uint128 providerOneBalance = provider1FeeInWei * 3 + 12345;
@@ -788,7 +822,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getRequest(provider1, assignedSequenceNumber).provider,
             provider1
         );
-
         vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
         random.reveal(
             provider1,
@@ -925,6 +958,149 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
         );
+    }
+
+    function testLastRevealedTooOld() public {
+        for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRequestReverts(
+            random.getFee(provider1),
+            provider1,
+            42,
+            false,
+            EntropyErrors.LastRevealedTooOld.selector
+        );
+    }
+
+    function testAdvanceProviderCommitment(
+        uint32 requestCount,
+        uint32 updateSeqNumber
+    ) public {
+        vm.assume(requestCount < provider1MaxNumHashes);
+        vm.assume(updateSeqNumber < requestCount);
+        vm.assume(0 < updateSeqNumber);
+
+        for (uint256 i = 0; i < requestCount; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertInvariants();
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.currentCommitmentSequenceNumber, 0);
+        assertEq(info1.sequenceNumber, requestCount + 1);
+        random.advanceProviderCommitment(
+            provider1,
+            updateSeqNumber,
+            provider1Proofs[updateSeqNumber]
+        );
+        info1 = random.getProviderInfo(provider1);
+        assertEq(info1.currentCommitmentSequenceNumber, updateSeqNumber);
+        assertEq(info1.currentCommitment, provider1Proofs[updateSeqNumber]);
+        assertEq(info1.sequenceNumber, requestCount + 1);
+        assertInvariants();
+    }
+
+    function testAdvanceProviderCommitmentTooOld(
+        uint32 requestCount,
+        uint32 updateSeqNumber
+    ) public {
+        vm.assume(requestCount < provider1MaxNumHashes);
+        vm.assume(updateSeqNumber < requestCount);
+        vm.assume(0 < updateSeqNumber);
+
+        for (uint256 i = 0; i < requestCount; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRevealSucceeds(
+            user1,
+            provider1,
+            requestCount,
+            42,
+            provider1Proofs[requestCount],
+            ALL_ZEROS
+        );
+        vm.expectRevert(EntropyErrors.UpdateTooOld.selector);
+        random.advanceProviderCommitment(
+            provider1,
+            updateSeqNumber,
+            provider1Proofs[updateSeqNumber]
+        );
+    }
+
+    function testAdvanceProviderCommitmentIncorrectRevelation(
+        uint32 seqNumber,
+        uint32 mismatchedProofNumber
+    ) public {
+        vm.assume(seqNumber < provider1ChainLength);
+        vm.assume(mismatchedProofNumber < provider1ChainLength);
+        vm.assume(seqNumber != mismatchedProofNumber);
+        vm.assume(seqNumber > 0);
+        vm.expectRevert(EntropyErrors.IncorrectRevelation.selector);
+        random.advanceProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[mismatchedProofNumber]
+        );
+    }
+
+    function testAdvanceProviderCommitmentUpdatesSequenceNumber(
+        uint32 seqNumber
+    ) public {
+        vm.assume(seqNumber < provider1ChainLength);
+        vm.assume(seqNumber > 0);
+        random.advanceProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[seqNumber]
+        );
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.sequenceNumber, seqNumber + 1);
+    }
+
+    function testAdvanceProviderCommitmentHigherThanChainLength(
+        uint32 seqNumber
+    ) public {
+        vm.assume(seqNumber >= provider1ChainLength);
+        vm.expectRevert(EntropyErrors.AssertionFailure.selector);
+        random.advanceProviderCommitment(
+            provider1,
+            seqNumber,
+            provider1Proofs[0]
+        );
+    }
+
+    function testSetMaxNumHashes(uint32 maxNumHashes) public {
+        vm.prank(provider1);
+        random.setMaxNumHashes(maxNumHashes);
+        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info1.maxNumHashes, maxNumHashes);
+    }
+
+    function testSetMaxNumHashesRevertIfNotFromProvider() public {
+        vm.expectRevert(EntropyErrors.NoSuchProvider.selector);
+        random.setMaxNumHashes(100);
+    }
+
+    function testZeroMaxNumHashesDisableChecks() public {
+        for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
+            request(user1, provider1, 42, false);
+        }
+        assertRequestReverts(
+            random.getFee(provider1),
+            provider1,
+            42,
+            false,
+            EntropyErrors.LastRevealedTooOld.selector
+        );
+        vm.prank(provider1);
+        random.setMaxNumHashes(0);
+        request(user1, provider1, 42, false);
     }
 
     function testFeeManager() public {

@@ -1,15 +1,11 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 
-import {
-  MIST_PER_SUI,
-  normalizeSuiObjectId,
-  fromB64,
-} from "@mysten/sui.js/utils";
+import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
 
-import { Ed25519Keypair } from "@mysten/sui.js/dist/cjs/keypairs/ed25519";
+import { Ed25519Keypair } from "@mysten/sui/dist/cjs/keypairs/ed25519";
 import { execSync } from "child_process";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { SuiClient } from "@mysten/sui.js/client";
+import { SuiClient } from "@mysten/sui/client";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
@@ -32,11 +28,12 @@ export async function publishPackage(
   console.log("buildOutput: ", buildOutput);
 
   // Publish contracts
-  const transactionBlock = new TransactionBlock();
+  // const transactionBlock = new TransactionBlock();
+  const txb = new Transaction();
 
-  transactionBlock.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
+  txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
 
-  const [upgradeCap] = transactionBlock.publish({
+  const [upgradeCap] = txb.publish({
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d)
@@ -44,15 +41,12 @@ export async function publishPackage(
   });
 
   // Transfer upgrade capability to deployer
-  transactionBlock.transferObjects(
-    [upgradeCap],
-    transactionBlock.pure(keypair.toSuiAddress())
-  );
+  txb.transferObjects([upgradeCap], txb.pure.address(keypair.toSuiAddress()));
 
   // Execute transactions
-  const result = await provider.signAndExecuteTransactionBlock({
+  const result = await provider.signAndExecuteTransaction({
     signer: keypair,
-    transactionBlock,
+    transaction: txb,
     options: {
       showInput: true,
       showObjectChanges: true,
@@ -112,24 +106,24 @@ export async function initPyth(
     governanceDataSource: DataSource;
   }
 ) {
-  const tx = new TransactionBlock();
+  const tx = new Transaction();
 
-  const baseUpdateFee = tx.pure(1);
-  const dataSourceEmitterAddresses = tx.pure(
+  const baseUpdateFee = tx.pure.u64(1);
+  const dataSourceEmitterAddresses = tx.pure.arguments(
     config.dataSources.map((dataSource) => [
       ...Buffer.from(dataSource.emitterAddress, "hex"),
     ])
   );
-  const dataSourceEmitterChainIds = tx.pure(
+  const dataSourceEmitterChainIds = tx.pure.arguments(
     config.dataSources.map((dataSource) => dataSource.emitterChain)
   );
-  const governanceEmitterAddress = tx.pure([
+  const governanceEmitterAddress = tx.pure.arguments([
     ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
   ]);
-  const governanceEmitterChainId = tx.pure(
+  const governanceEmitterChainId = tx.pure.arguments(
     config.governanceDataSource.emitterChain
   );
-  const stalePriceThreshold = tx.pure(60);
+  const stalePriceThreshold = tx.pure.u64(60);
   tx.moveCall({
     target: `${pythPackageId}::pyth::init_pyth`,
     arguments: [
@@ -146,9 +140,9 @@ export async function initPyth(
 
   tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
 
-  let result = await provider.signAndExecuteTransactionBlock({
+  let result = await provider.signAndExecuteTransaction({
     signer: keypair,
-    transactionBlock: tx,
+    transaction: tx,
     options: {
       showInput: true,
       showEffects: true,

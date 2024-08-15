@@ -1502,7 +1502,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "6.4.1"
+version = "6.5.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -1517,6 +1517,7 @@ dependencies = [
  "ethabi",
  "ethers",
  "futures",
+ "futures-locks",
  "hex",
  "lazy_static",
  "once_cell",
@@ -1612,6 +1613,7 @@ checksum = "45ec6fe3675af967e67c5536c0b9d44e34e6c52f86bedc4ea49c5317b8e94d06"
 dependencies = [
  "futures-channel",
  "futures-task",
+ "tokio",
 ]
 
 [[package]]

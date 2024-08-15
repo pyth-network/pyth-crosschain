@@ -144,6 +144,11 @@
           "typeArguments": null
         },
         {
+          "name": "FuturePriceNotAllowed",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
           "name": "GuardianSetNotFound",
           "type": 0,
           "typeArguments": null
@@ -1838,7 +1843,7 @@
         "type": 6,
         "typeArguments": []
       },
-      "offset": 129616
+      "offset": 117592
     }
   ]
 }

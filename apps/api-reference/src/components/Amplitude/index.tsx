@@ -1,16 +1,26 @@
 "use client";
 
-import { init } from "@amplitude/analytics-browser";
-import { useEffect } from "react";
+import * as amplitude from "@amplitude/analytics-browser";
+import { autocapturePlugin } from "@amplitude/plugin-autocapture-browser";
+import { useEffect, useRef } from "react";
 
 type Props = {
-  key: string;
+  apiKey: string | undefined;
 };
 
-export const Amplitude = ({ key }: Props) => {
+export const Amplitude = ({ apiKey }: Props) => {
+  const amplitudeInitialized = useRef(false);
+
   useEffect(() => {
-    init(key);
-  }, [key]);
+    if (!amplitudeInitialized.current && apiKey) {
+      amplitude.add(autocapturePlugin());
+      amplitude.init(apiKey, {
+        defaultTracking: true,
+      });
+      amplitudeInitialized.current = true;
+    }
+  }, [apiKey]);
+
   // eslint-disable-next-line unicorn/no-null
   return null;
 };

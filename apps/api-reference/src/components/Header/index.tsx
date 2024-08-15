@@ -31,7 +31,7 @@ export const Header = ({
           >
             <ul className="contents">
               <li className="contents">
-                <NavLink href="/price-feeds">Price Feeds</NavLink>
+                <NavLink href="/price-feeds/evm/getPrice">Price Feeds</NavLink>
               </li>
               <li className="contents">
                 <NavLink href="/benchmarks">Benchmarks</NavLink>

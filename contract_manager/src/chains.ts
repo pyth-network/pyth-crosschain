@@ -20,8 +20,8 @@ import {
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Network } from "@injectivelabs/networks";
-import { SuiClient } from "@mysten/sui.js/client";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";

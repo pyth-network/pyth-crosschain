@@ -2,7 +2,7 @@ import PYTH_CONTRACT_ABI from "./abi/pyth-contract-abi.json";
 
 /** Address of the Pyth contract on Fuel Sepolia (testnet). */
 export const PYTH_CONTRACT_ADDRESS_SEPOLIA =
-  "0xdf202803b7a452a1ed2e09291731dbac5ceb13d036de3a9a31f74e6057c909af";
+  "0x73591bf32f010ce4e83d86005c24e7833b397be38014ab670a73f6fde59ad607";
 
 /** Asset ID of ETH on Fuel. */
 export const FUEL_ETH_ASSET_ID =

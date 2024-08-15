@@ -1,6 +1,6 @@
 library;
 
-use std::bytes::Bytes;
+use std::{bytes::Bytes, block::timestamp};
 
 use ::errors::PythError;
 use ::utils::absolute_of_exponent;
@@ -175,6 +175,11 @@ impl PriceFeed {
         //convert publish_time from UNIX to TAI64
         publish_time += TAI64_DIFFERENCE;
 
+        require(
+            publish_time <= timestamp(),
+            PythError::FuturePriceNotAllowed,
+        );
+
         PriceFeed::new(
             Price::new(ema_confidence, exponent, ema_price, publish_time),
             price_feed_id,
@@ -333,7 +338,7 @@ impl PriceFeed {
         let (_, slice) = encoded_proof.split_at(current_offset);
         let (encoded_message, _) = slice.split_at(message_size);
         current_offset += message_size;
-        let end_offset = validate_proof(encoded_proof, current_offset, digest, encoded_message);
+        let end_offset = validate_proof(encoded_proof, current_offset, digest, encoded_message.clone());
         // Message type of 0 is a Price Feed
         require(
             encoded_message

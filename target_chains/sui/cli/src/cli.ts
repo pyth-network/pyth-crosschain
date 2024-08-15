@@ -9,7 +9,7 @@ import {
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,

@@ -437,7 +437,7 @@ fn post_price_update_from_vaa<'info>(
             price_update_account.price_message = price_feed_message;
             price_update_account.posted_slot = Clock::get()?.slot;
         }
-        Message::TwapMessage(_) => {
+        Message::TwapMessage(_) | Message::PublisherStakeCapsMessage(_) => {
             return err!(ReceiverError::UnsupportedMessageType);
         }
     }

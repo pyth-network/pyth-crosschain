@@ -60,6 +60,31 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "oldMaxNumHashes",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "newMaxNumHashes",
+        "type": "uint32"
+      }
+    ],
+    "name": "ProviderMaxNumHashesAdvanced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "bytes",
         "name": "oldUri",
         "type": "bytes"
@@ -133,6 +158,11 @@
             "internalType": "address",
             "name": "feeManager",
             "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "maxNumHashes",
+            "type": "uint32"
           }
         ],
         "indexed": false,
@@ -458,6 +488,29 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "advancedSequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      }
+    ],
+    "name": "advanceProviderCommitment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "userRandomness",
         "type": "bytes32"
@@ -614,6 +667,11 @@
             "internalType": "address",
             "name": "feeManager",
             "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "maxNumHashes",
+            "type": "uint32"
           }
         ],
         "internalType": "struct EntropyStructs.ProviderInfo",
@@ -847,6 +905,19 @@
       }
     ],
     "name": "setFeeManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "maxNumHashes",
+        "type": "uint32"
+      }
+    ],
+    "name": "setMaxNumHashes",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

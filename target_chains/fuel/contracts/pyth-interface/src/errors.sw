@@ -2,6 +2,7 @@ library;
 
 pub enum PythError {
     FeesCanOnlyBePaidInTheBaseAsset: (),
+    FuturePriceNotAllowed: (),
     GuardianSetNotFound: (),
     IncorrectMessageType: (),
     InsufficientFee: (),

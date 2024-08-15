@@ -4,7 +4,7 @@ import Eth from "cryptocurrency-icons/svg/color/eth.svg";
 import {
   BTCUSD,
   ETHUSD,
-  getLatestPriceFeed,
+  getLatestPriceUpdate,
   solidity,
   ethersJS,
   writeApi,
@@ -15,35 +15,43 @@ export const updatePriceFeedsIfNecessary = writeApi<
   "updateData" | "priceId" | "publishTime" | "fee"
 >({
   name: "updatePriceFeedsIfNecessary",
+  summary:
+    "Update the on-chain price feeds using the provided `updateData` only if the on-chain prices are older than the valid time period.",
   description: `
-Update the on-chain price feeds using the provided \`updateData\` if the
-on-chain data is not sufficiently fresh.  The caller provides two matched
-arrays, \`priceIds\` and \`publishTimes\`.  This function applies the update if
-there exists an index \`i\` such that \`priceIds[i]\`'s last \`publishTime\` is
-before than \`publishTimes[i]\`.  Callers should typically pass
-\`publishTimes[i]\` to be equal to the publishTime of the corresponding price id
-in \`updateData\`.  If this condition is not satisfied, the call will revert
-with a \`NoFreshUpdate\` error.
+  This method updates the on-chain price feeds using the provided \`updateData\` if the on-chain data is not sufficiently fresh.
 
-This method is a variant of [updatePriceFeeds](update-price-feeds) that reduces
-gas usage when multiple callers are sending the same price updates.
 
-This function requires the caller to pay a fee to perform the update.  The
-required fee for a given set of updates can be computed by passing them to
-[getUpdateFee](get-update-fee).
+  The caller provides two matched arrays, \`priceIds\` and \`publishTimes\`.
+  This function applies the update if there exists an index \`i\` such that \`priceIds[i]\`'s last \`publishTime\` is before than \`publishTimes[i]\`.
+  Callers should typically pass \`publishTimes[i]\` to be equal to the publishTime of the corresponding price id in \`updateData\`.
 
-Reverts if the required fee is not paid, or the \`updateData\` is incorrectly
-signed or formatted.
+
+  This method is a variant of [updatePriceFeeds](update-price-feeds) that reduces
+  gas usage when multiple callers are sending the same price updates.
+
+  This function requires the caller to pay a fee to perform the update.  The
+  required fee for a given set of updates can be computed by passing them to
+  [getUpdateFee](get-update-fee).
+
+  This method returns the transaction hash of the update transaction.
+
+  ### Error Response
+
+  The above method can return the following error response:
+  - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding corresponding price id in \`updateData\`.
+  - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
+  - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
   parameters: [
     {
       name: "updateData",
       type: ParameterType.HexArray,
-      description: "The price update data for the contract to verify.",
+      description:
+        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
     },
     {
       name: "priceId",
-      type: ParameterType.HexArray,
+      type: ParameterType.PriceFeedIdArray,
       description: "The price ids to update.",
     },
     {
@@ -107,7 +115,7 @@ const getParams = async (
     readContract: (name: string, args: unknown[]) => Promise<unknown>;
   },
 ) => {
-  const feed = await getLatestPriceFeed(priceId);
+  const feed = await getLatestPriceUpdate(priceId);
   const fee = await ctx.readContract("getUpdateFee", [[feed.binary.data]]);
   if (typeof fee !== "bigint") {
     throw new TypeError("Invalid fee");

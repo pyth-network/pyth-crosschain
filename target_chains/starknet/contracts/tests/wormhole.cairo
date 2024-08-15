@@ -99,7 +99,7 @@ fn test_submit_guardian_set_rejects_invalid_emitter() {
 #[test]
 #[should_panic(expected: ('invalid guardian set index',))]
 fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade3());
@@ -107,7 +107,7 @@ fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
 
 #[test]
 fn test_submit_guardian_set_emits_events() {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     let mut spy = spy_events(SpyOn::One(dispatcher.contract_address));
 
@@ -152,7 +152,7 @@ fn test_submit_guardian_set_emits_events() {
 
 #[test]
 fn test_get_guardian_set_works() {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     let set0 = dispatcher.get_guardian_set(0);
     assert!(set0.keys == guardian_set0());
@@ -194,7 +194,7 @@ fn test_get_guardian_set_works() {
 #[test]
 #[should_panic(expected: ('invalid index',))]
 fn test_get_guardian_set_rejects_invalid_index() {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     dispatcher.get_guardian_set(2);
 }
@@ -210,7 +210,7 @@ fn test_submit_guardian_set_rejects_wrong_index_in_payload() {
 #[test]
 #[should_panic(expected: ('no guardians specified',))]
 fn test_deploy_rejects_empty() {
-    deploy(array![], CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    deploy(0, array![], CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
 }
 
 #[test]
@@ -225,7 +225,7 @@ fn test_submit_guardian_set_rejects_empty() {
 #[fuzzer(runs: 100, seed: 0)]
 #[should_panic]
 fn test_submit_guardian_set_rejects_corrupted(pos: usize, random1: usize, random2: usize) {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     let vm = corrupted_vm(data::mainnet_guardian_set_upgrade1(), pos, random1, random2);
     dispatcher.submit_new_guardian_set(vm);
@@ -234,7 +234,7 @@ fn test_submit_guardian_set_rejects_corrupted(pos: usize, random1: usize, random
 #[test]
 #[should_panic(expected: ('wrong governance chain',))]
 fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, random2: usize) {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
@@ -247,6 +247,7 @@ fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, r
 // If address is not specified, the default address derivation is used.
 pub fn deploy_declared_at(
     class: @ContractClass,
+    guardian_set_index: u32,
     guardians: Array<EthAddress>,
     chain_id: u16,
     governance_chain_id: u16,
@@ -254,6 +255,7 @@ pub fn deploy_declared_at(
     address: Option<ContractAddress>,
 ) -> IWormholeDispatcher {
     let mut args = array![];
+    guardian_set_index.serialize(ref args);
     (guardians, chain_id, governance_chain_id, governance_contract).serialize(ref args);
     let result = match address {
         Option::Some(address) => class.deploy_at(@args, address),
@@ -268,6 +270,7 @@ pub fn deploy_declared_at(
 
 // Declares and deploys the contract.
 fn deploy(
+    guardian_set_index: u32,
     guardians: Array<EthAddress>,
     chain_id: u16,
     governance_chain_id: u16,
@@ -275,13 +278,19 @@ fn deploy(
 ) -> IWormholeDispatcher {
     let class = declare("wormhole");
     deploy_declared_at(
-        @class, guardians, chain_id, governance_chain_id, governance_contract, Option::None
+        @class,
+        guardian_set_index,
+        guardians,
+        chain_id,
+        governance_chain_id,
+        governance_contract,
+        Option::None
     )
 }
 
 // Declares and deploys the contract and initializes it with mainnet guardian set upgrades.
 pub fn deploy_with_mainnet_guardians() -> IWormholeDispatcher {
-    let dispatcher = deploy(guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    let dispatcher = deploy_with_mainnet_guardian_set0();
 
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
@@ -291,9 +300,24 @@ pub fn deploy_with_mainnet_guardians() -> IWormholeDispatcher {
     dispatcher
 }
 
+pub fn deploy_with_mainnet_guardian_sets_3_4() -> IWormholeDispatcher {
+    let dispatcher = deploy(3, guardian_set3(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT);
+    dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade4());
+    dispatcher
+}
+
+pub fn deploy_with_mainnet_guardian_set4() -> IWormholeDispatcher {
+    deploy(4, guardian_set4(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT)
+}
+
+pub fn deploy_with_mainnet_guardian_set0() -> IWormholeDispatcher {
+    deploy(0, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT)
+}
+
 // Declares and deploys the contract with the test guardian address that's used to sign VAAs generated in `test_vaas`.
 pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
     deploy(
+        0,
         array_try_into(array![data::TEST_GUARDIAN_ADDRESS1]),
         CHAIN_ID,
         GOVERNANCE_CHAIN_ID,
@@ -308,6 +332,7 @@ pub fn deploy_declared_with_test_guardian_at(
 ) -> IWormholeDispatcher {
     deploy_declared_at(
         class,
+        0,
         array_try_into(array![data::TEST_GUARDIAN_ADDRESS1]),
         CHAIN_ID,
         GOVERNANCE_CHAIN_ID,

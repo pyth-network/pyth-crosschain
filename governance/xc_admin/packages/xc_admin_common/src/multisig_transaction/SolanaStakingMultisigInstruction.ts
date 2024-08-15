@@ -77,9 +77,29 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             }
           );
+        case "Initialize":
+          const decodedInitialize =
+            StakeInstruction.decodeInitialize(instruction);
+          return new SolanaStakingMultisigInstruction(
+            "Initialize",
+            {
+              authorized: decodedInitialize.authorized,
+              lockup: decodedInitialize.lockup,
+            },
+            {
+              named: {
+                stakePubkey: {
+                  pubkey: decodedInitialize.stakePubkey,
+                  isSigner: false,
+                  isWritable: true,
+                },
+              },
+              remaining: [],
+            }
+          );
         case "Authorize":
         case "AuthorizeWithSeed":
-        case "Initialize":
+
         case "Merge":
         case "Split":
         case "Withdraw":

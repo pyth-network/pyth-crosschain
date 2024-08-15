@@ -7,6 +7,7 @@ use {
                 ExecutorPayload,
                 GovernanceHeader,
                 InstructionData,
+                CHAIN_ID,
             },
             posted_vaa::AnchorVaa,
         },
@@ -88,7 +89,6 @@ impl ExecutorBench {
                 .unwrap()
                 .join(Path::new("../../target/deploy/remote_executor.so")),
         );
-
 
         let mut program_test = ProgramTest::default();
         let program_key = crate::id();
@@ -172,7 +172,7 @@ impl ExecutorBench {
         };
 
         let payload = ExecutorPayload {
-            header:       GovernanceHeader::executor_governance_header(),
+            header:       GovernanceHeader::executor_governance_header(CHAIN_ID),
             instructions: instructions.iter().map(InstructionData::from).collect(),
         };
 

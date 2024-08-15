@@ -22,5 +22,5 @@ html:global(.dark) .code :global(.shiki) span {
 /* Add some overflow, padding, rounding, smaller text, and a background color on
    light mode */
 .code :global(.shiki) {
-  @apply overflow-x-auto rounded-xl !bg-neutral-100/25 p-5 text-sm;
+  @apply overflow-x-auto !bg-neutral-100/25 p-5 text-sm;
 }

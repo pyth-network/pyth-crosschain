@@ -153,10 +153,11 @@ pub fn create_dummy_twap_message() -> Message {
 }
 
 pub fn create_accumulator_message(
-    all_feeds: &[Message],
-    updates: &[Message],
+    all_feeds: &[&Message],
+    updates: &[&Message],
     corrupt_wormhole_message: bool,
     corrupt_messages: bool,
+    data_source_override: Option<DataSource>,
 ) -> Vec<u8> {
     let mut all_feeds_bytes: Vec<_> = all_feeds
         .iter()
@@ -196,12 +197,13 @@ pub fn create_accumulator_message(
             proof,
         });
     }
+    let data_source = data_source_override.unwrap_or(DEFAULT_DATA_SOURCE);
     create_accumulator_message_from_updates(
         price_updates,
         tree,
         corrupt_wormhole_message,
-        DEFAULT_DATA_SOURCE.address,
-        DEFAULT_DATA_SOURCE.chain,
+        data_source.address,
+        data_source.chain,
     )
 }
 

@@ -1,8 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiClient } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { SuiClient } from "@mysten/sui/client";
+import { Transaction } from "@mysten/sui/transactions";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import { Buffer } from "buffer";
 import { SuiPythClient } from "../client";
@@ -69,7 +69,7 @@ async function run() {
     newFeeds,
     existingFeeds,
   });
-  const tx = new TransactionBlock();
+  const tx = new Transaction();
   if (existingFeeds.length > 0) {
     const updateData = await connection.getPriceFeedsUpdateData(existingFeeds);
     await client.updatePriceFeeds(tx, updateData, existingFeeds);
@@ -83,9 +83,9 @@ async function run() {
     Buffer.from(process.env.SUI_KEY, "hex")
   );
 
-  const result = await provider.signAndExecuteTransactionBlock({
+  const result = await provider.signAndExecuteTransaction({
     signer: wallet,
-    transactionBlock: tx,
+    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,

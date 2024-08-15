@@ -44,7 +44,8 @@ use {
 async fn test_post_update_atomic() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
@@ -209,7 +210,8 @@ async fn test_post_update_atomic() {
 async fn test_post_update_atomic_wrong_vaa() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     let ProgramTestFixtures {
@@ -458,7 +460,8 @@ async fn test_post_update_atomic_wrong_vaa() {
 async fn test_post_update_atomic_wrong_setup() {
     let feed_1 = create_dummy_price_feed_message(100);
     let feed_2 = create_dummy_price_feed_message(200);
-    let message = create_accumulator_message(&[feed_1, feed_2], &[feed_1, feed_2], false, false);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
     let price_update_keypair = Keypair::new();
 

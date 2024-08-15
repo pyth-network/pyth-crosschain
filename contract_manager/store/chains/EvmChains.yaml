@@ -514,11 +514,6 @@
   rpcUrl: https://inevm.calderachain.xyz/http
   networkId: 2525
   type: EvmChain
-- id: berachain_testnet
-  mainnet: false
-  rpcUrl: https://rpc.ankr.com/berachain_testnet
-  networkId: 80085
-  type: EvmChain
 - id: blast
   mainnet: true
   rpcUrl: https://rpc.blast.io
@@ -648,4 +643,39 @@
   mainnet: false
   rpcUrl: https://rpc.ankr.com/klaytn_testnet
   networkId: 1001
+  type: EvmChain
+- id: morph_holesky_testnet
+  mainnet: false
+  rpcUrl: https://rpc-holesky.morphl2.io
+  networkId: 2810
+  type: EvmChain
+- id: tabi_testnet
+  mainnet: false
+  rpcUrl: https://rpc-internal.testnet.tabichain.com/
+  networkId: 9789
+  type: EvmChain
+- id: b3_testnet
+  mainnet: false
+  rpcUrl: https://sepolia.b3.fun/http/
+  networkId: 1993
+  type: EvmChain
+- id: kinto
+  mainnet: true
+  rpcUrl: https://rpc.kinto-rpc.com
+  networkId: 7887
+  type: EvmChain
+- id: cronos_zkevm_testnet
+  mainnet: false
+  rpcUrl: https://testnet.zkevm.cronos.org
+  networkId: 282
+  type: EvmChain
+- id: reya_testnet
+  mainnet: false
+  rpcUrl: https://rpc.reya-cronos.gelato.digital
+  networkId: 89346162
+  type: EvmChain
+- id: b3_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet-rpc.b3.fun/http
+  networkId: 8333
   type: EvmChain

@@ -7,9 +7,9 @@ import {
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui.js/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
 import { Logger } from "pino";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
@@ -219,7 +219,7 @@ export class SuiPricePusher implements IPricePusher {
     // 3 price feeds per transaction is the optimal number for gas cost.
     const priceIdChunks = chunkArray(priceIds, 3);
 
-    const txBlocks: TransactionBlock[] = [];
+    const txBlocks: Transaction[] = [];
 
     await Promise.all(
       priceIdChunks.map(async (priceIdChunk) => {
@@ -232,7 +232,7 @@ export class SuiPricePusher implements IPricePusher {
           );
         }
         const vaa = vaas[0];
-        const tx = new TransactionBlock();
+        const tx = new Transaction();
         await this.pythClient.updatePriceFeeds(
           tx,
           [Buffer.from(vaa, "base64")],
@@ -246,14 +246,12 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   /** Send every transaction in txs in parallel, returning when all transactions have completed. */
-  private async sendTransactionBlocks(
-    txs: TransactionBlock[]
-  ): Promise<void[]> {
+  private async sendTransactionBlocks(txs: Transaction[]): Promise<void[]> {
     return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)));
   }
 
   /** Send a single transaction block using a gas coin from the pool. */
-  private async sendTransactionBlock(tx: TransactionBlock): Promise<void> {
+  private async sendTransactionBlock(tx: Transaction): Promise<void> {
     const gasObject = this.gasPool.shift();
     if (gasObject === undefined) {
       this.logger.warn("No available gas coin. Skipping push.");
@@ -264,9 +262,9 @@ export class SuiPricePusher implements IPricePusher {
     try {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
-      const result = await this.provider.signAndExecuteTransactionBlock({
+      const result = await this.provider.signAndExecuteTransaction({
         signer: this.signer,
-        transactionBlock: tx,
+        transaction: tx,
         options: {
           showEffects: true,
         },
@@ -422,20 +420,20 @@ export class SuiPricePusher implements IPricePusher {
     gasCoin: SuiObjectRef
   ): Promise<SuiObjectRef[]> {
     // TODO: implement chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     const coins = tx.splitCoins(
       tx.gas,
-      Array.from({ length: numGasObjects }, () => tx.pure(splitAmount))
+      Array.from({ length: numGasObjects }, () => tx.pure.u64(splitAmount))
     );
 
     tx.transferObjects(
       Array.from({ length: numGasObjects }, (_, i) => coins[i]),
-      tx.pure(signerAddress)
+      tx.pure.address(signerAddress)
     );
     tx.setGasPayment([gasCoin]);
-    const result = await provider.signAndExecuteTransactionBlock({
+    const result = await provider.signAndExecuteTransaction({
       signer,
-      transactionBlock: tx,
+      transaction: tx,
       options: { showEffects: true },
     });
     const error = result?.effects?.status.error;
@@ -474,7 +472,7 @@ export class SuiPricePusher implements IPricePusher {
     const lockedAddresses: Set<string> = new Set();
     initialLockedAddresses.forEach((value) => lockedAddresses.add(value));
     for (let i = 0; i < gasCoinsChunks.length; i++) {
-      const mergeTx = new TransactionBlock();
+      const mergeTx = new Transaction();
       let coins = gasCoinsChunks[i];
       coins = coins.filter((coin) => !lockedAddresses.has(coin.objectId));
       if (finalCoin) {
@@ -483,9 +481,9 @@ export class SuiPricePusher implements IPricePusher {
       mergeTx.setGasPayment(coins);
       let mergeResult;
       try {
-        mergeResult = await provider.signAndExecuteTransactionBlock({
+        mergeResult = await provider.signAndExecuteTransaction({
           signer,
-          transactionBlock: mergeTx,
+          transaction: mergeTx,
           options: { showEffects: true },
         });
       } catch (err) {

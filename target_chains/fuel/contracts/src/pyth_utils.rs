@@ -7,8 +7,12 @@ use crate::constants::{
 use base64::{engine::general_purpose, prelude::Engine};
 use fuels::{
     prelude::{abigen, CallParameters, Contract, LoadConfiguration, TxPolicies, WalletUnlocked},
-    programs::call_response::FuelCallResponse,
-    types::{errors::Error, Address, Bits256, Bytes, Identity},
+    programs::responses::CallResponse,
+    tx::Receipt,
+    types::{
+        errors::{transaction::Reason, Error},
+        Address, Bits256, Bytes, Identity,
+    },
 };
 use rand::Rng;
 use reqwest;
@@ -19,7 +23,7 @@ use wormhole_sdk::Vaa;
 
 abigen!(Contract(
     name = "PythOracleContract",
-    abi = "pyth-contract/out/debug/pyth-contract-abi.json"
+    abi = "pyth-contract/out/release/pyth-contract-abi.json"
 ));
 
 pub struct Pyth {
@@ -163,7 +167,7 @@ pub fn create_governance_instruction_payload(
 }
 
 impl Pyth {
-    pub async fn price(&self, price_feed_id: Bits256) -> Result<FuelCallResponse<Price>, Error> {
+    pub async fn price(&self, price_feed_id: Bits256) -> Result<CallResponse<Price>, Error> {
         self.instance
             .methods()
             .price(price_feed_id)
@@ -175,7 +179,7 @@ impl Pyth {
         &self,
         fee: u64,
         update_data: &[Bytes],
-    ) -> Result<FuelCallResponse<()>, Error> {
+    ) -> Result<CallResponse<()>, Error> {
         self.instance
             .methods()
             .update_price_feeds(update_data.to_vec())
@@ -184,7 +188,7 @@ impl Pyth {
             .await
     }
 
-    pub async fn update_fee(&self, update_data: &[Bytes]) -> Result<FuelCallResponse<u64>, Error> {
+    pub async fn update_fee(&self, update_data: &[Bytes]) -> Result<CallResponse<u64>, Error> {
         self.instance
             .methods()
             .update_fee(update_data.to_vec())
@@ -200,7 +204,7 @@ impl Pyth {
         wormhole_guardian_set_addresses: Vec<Bits256>,
         wormhole_guardian_set_index: u32,
         chain_id: u16,
-    ) -> Result<FuelCallResponse<()>, Error> {
+    ) -> Result<CallResponse<()>, Error> {
         self.instance
             .methods()
             .constructor(
@@ -240,7 +244,7 @@ impl Pyth {
         })
     }
 
-    pub async fn current_guardian_set_index(&self) -> Result<FuelCallResponse<u32>, Error> {
+    pub async fn current_guardian_set_index(&self) -> Result<CallResponse<u32>, Error> {
         self.instance
             .methods()
             .current_guardian_set_index()
@@ -375,4 +379,26 @@ pub fn default_data_sources() -> Vec<DataSource> {
             .unwrap(),
         },
     ]
+}
+
+pub fn handle_error(e: Error) -> Error {
+    if let Error::Transaction(Reason::Reverted {
+        reason: _,
+        revert_id: _,
+        receipts,
+    }) = &e
+    {
+        for r in receipts {
+            match r {
+                Receipt::Log { ra, .. } => {
+                    println!("{:?}", ra);
+                }
+                Receipt::LogData { data, .. } => {
+                    println!("{:?}", hex::encode(data.clone().unwrap()));
+                }
+                _ => {}
+            }
+        }
+    }
+    e
 }

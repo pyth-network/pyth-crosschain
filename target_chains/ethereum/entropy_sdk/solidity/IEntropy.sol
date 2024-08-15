@@ -120,6 +120,18 @@ interface IEntropy is EntropyEvents {
     // will override the previous value. Call this function with the all-zero address to disable the fee manager role.
     function setFeeManager(address manager) external;
 
+    // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
+    // the provider supports for callbacks.
+    function setMaxNumHashes(uint32 maxNumHashes) external;
+
+    // Advance the provider commitment and increase the sequence number.
+    // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
+    function advanceProviderCommitment(
+        address provider,
+        uint64 advancedSequenceNumber,
+        bytes32 providerRevelation
+    ) external;
+
     function constructUserCommitment(
         bytes32 userRandomness
     ) external pure returns (bytes32 userCommitment);

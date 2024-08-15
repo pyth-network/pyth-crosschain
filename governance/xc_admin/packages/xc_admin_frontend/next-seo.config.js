@@ -7,7 +7,7 @@ export default {
     type: 'website',
     images: [
       {
-        url: 'https://pyth-og-images.s3.eu-west-2.amazonaws.com/default-banner.png',
+        url: 'https://proposals.pyth.network/default-banner.png',
         width: 1200,
         height: 630,
         alt: 'Pyth Network',

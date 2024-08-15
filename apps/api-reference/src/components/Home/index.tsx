@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ComponentType, SVGProps } from "react";
+import type { ElementType, SVGProps } from "react";
 
 import Benchmarks from "./benchmarks.svg";
 import Entropy from "./entropy.svg";
@@ -21,7 +21,7 @@ export const Home = () => (
           <li className="contents">
             <ProductLink
               icon={PriceFeeds}
-              href="/price-feeds"
+              href="/price-feeds/evm/getPriceNoOlderThan"
               name="Price Feeds"
             >
               Fetch real-time low-latency market data, on 50+ chains or off
@@ -50,7 +50,7 @@ type ProductLinkProps = {
   name: string;
   href: string;
   children: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: ElementType<SVGProps<SVGSVGElement>>;
 };
 
 const ProductLink = ({
@@ -63,14 +63,14 @@ const ProductLink = ({
     as={Link}
     href={href}
     gradient
-    className="flex flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
+    className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
   >
     <Icon className="h-24 p-3 text-pythpurple-600 dark:text-pythpurple-400" />
     <div className="flex flex-col gap-2">
       <h2 className="text-2xl font-medium text-pythpurple-600 dark:text-pythpurple-400">
         {name}
       </h2>
-      <p className="text-sm font-normal text-neutral-600 dark:text-neutral-400">
+      <p className="text-lg font-normal text-neutral-600 dark:text-neutral-400">
         {children}
       </p>
     </div>
