@@ -60,6 +60,31 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "oldMaxNumHashes",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "newMaxNumHashes",
+        "type": "uint32"
+      }
+    ],
+    "name": "ProviderMaxNumHashesAdvanced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "bytes",
         "name": "oldUri",
         "type": "bytes"
@@ -133,6 +158,11 @@
             "internalType": "address",
             "name": "feeManager",
             "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "maxNumHashes",
+            "type": "uint32"
           }
         ],
         "indexed": false,

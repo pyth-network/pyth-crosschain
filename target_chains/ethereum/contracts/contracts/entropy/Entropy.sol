@@ -234,6 +234,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             assignedSequenceNumber -
                 providerInfo.currentCommitmentSequenceNumber
         );
+        if (
+            providerInfo.maxNumHashes != 0 &&
+            req.numHashes > providerInfo.maxNumHashes
+        ) {
+            revert EntropyErrors.LastRevealedTooOld();
+        }
         req.commitment = keccak256(
             bytes.concat(userCommitment, providerInfo.currentCommitment)
         );
@@ -348,6 +354,51 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (providerInfo.currentCommitmentSequenceNumber < req.sequenceNumber) {
             providerInfo.currentCommitmentSequenceNumber = req.sequenceNumber;
             providerInfo.currentCommitment = providerRevelation;
+        }
+    }
+
+    // Advance the provider commitment and increase the sequence number.
+    // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
+    function advanceProviderCommitment(
+        address provider,
+        uint64 advancedSequenceNumber,
+        bytes32 providerRevelation
+    ) public override {
+        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (
+            advancedSequenceNumber <=
+            providerInfo.currentCommitmentSequenceNumber
+        ) revert EntropyErrors.UpdateTooOld();
+        if (advancedSequenceNumber >= providerInfo.endSequenceNumber)
+            revert EntropyErrors.AssertionFailure();
+
+        uint32 numHashes = SafeCast.toUint32(
+            advancedSequenceNumber -
+                providerInfo.currentCommitmentSequenceNumber
+        );
+        bytes32 providerCommitment = constructProviderCommitment(
+            numHashes,
+            providerRevelation
+        );
+
+        if (providerCommitment != providerInfo.currentCommitment)
+            revert EntropyErrors.IncorrectRevelation();
+
+        providerInfo.currentCommitmentSequenceNumber = advancedSequenceNumber;
+        providerInfo.currentCommitment = providerRevelation;
+        if (
+            providerInfo.currentCommitmentSequenceNumber >=
+            providerInfo.sequenceNumber
+        ) {
+            // This means the provider called the function with a sequence number that was not yet requested.
+            // Providers should never do this and we consider such an implementation flawed.
+            // Assuming this is landed on-chain it's better to bump the sequence number and never use that range
+            // for future requests. Otherwise, someone can use the leaked revelation to derive favorable random numbers.
+            providerInfo.sequenceNumber =
+                providerInfo.currentCommitmentSequenceNumber +
+                1;
         }
     }
 
@@ -553,6 +604,25 @@ abstract contract Entropy is IEntropy, EntropyState {
         address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
         emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+    }
+
+    // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
+    // the provider supports for callbacks.
+    function setMaxNumHashes(uint32 maxNumHashes) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+
+        uint32 oldMaxNumHashes = provider.maxNumHashes;
+        provider.maxNumHashes = maxNumHashes;
+        emit ProviderMaxNumHashesAdvanced(
+            msg.sender,
+            oldMaxNumHashes,
+            maxNumHashes
+        );
     }
 
     function constructUserCommitment(

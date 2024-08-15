@@ -28,6 +28,7 @@ use {
         abi::RawLog,
         contract::{
             abigen,
+            ContractCall,
             EthLogDecode,
         },
         core::types::Address,
@@ -72,16 +73,17 @@ abigen!(
     "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
 
-pub type SignablePythContractInner<T> = PythRandom<
-    LegacyTxMiddleware<
-        GasOracleMiddleware<
-            NonceManagerMiddleware<SignerMiddleware<Provider<T>, LocalWallet>>,
-            EthProviderOracle<Provider<T>>,
-        >,
+pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
+    GasOracleMiddleware<
+        NonceManagerMiddleware<SignerMiddleware<Provider<T>, LocalWallet>>,
+        EthProviderOracle<Provider<T>>,
     >,
 >;
+pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
+
+pub type PythContractCall = ContractCall<MiddlewaresWrapper<TracedClient>, ()>;
 
 pub type PythContract = PythRandom<Provider<Http>>;
 pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;

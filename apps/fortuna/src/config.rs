@@ -183,6 +183,10 @@ pub struct EthereumConfig {
 
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
+
+    /// Maximum number of hashes to record in a request.
+    /// This should be set according to the maximum gas limit the provider supports for callbacks.
+    pub max_num_hashes: Option<u32>,
 }
 
 

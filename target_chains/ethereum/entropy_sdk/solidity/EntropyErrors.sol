@@ -38,4 +38,9 @@ library EntropyErrors {
     // else if a request was made using `request`, request should be fulfilled using `reveal`
     // Signature: 0x50f0dc92
     error InvalidRevealCall();
+    // The last random number revealed from the provider is too old. Therefore, too many hashes
+    // are required for any new reveal. Please update the currentCommitment before making more requests.
+    error LastRevealedTooOld();
+    // A more recent commitment is already revealed on-chain
+    error UpdateTooOld();
 }

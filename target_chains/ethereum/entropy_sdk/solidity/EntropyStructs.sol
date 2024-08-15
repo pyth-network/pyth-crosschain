@@ -34,6 +34,9 @@ contract EntropyStructs {
         uint64 currentCommitmentSequenceNumber;
         // An address that is authorized to set / withdraw fees on behalf of this provider.
         address feeManager;
+        // Maximum number of hashes to record in a request. This should be set according to the maximum gas limit
+        // the provider supports for callbacks.
+        uint32 maxNumHashes;
     }
 
     struct Request {
