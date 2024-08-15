@@ -376,3 +376,6 @@
 - chain: reya_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
+- chain: cronos_zkevm_mainnet
+  address: "0x056f829183Ec806A78c26C98961678c24faB71af"
+  type: EvmPriceFeedContract

@@ -364,3 +364,6 @@
 - chain: b3_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: cronos_zkevm_mainnet
+  address: "0xc10F5BE78E464BB0E1f534D66E5A6ecaB150aEFa"
+  type: EvmWormholeContract

@@ -5,6 +5,8 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
+// import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
+// import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
 const { getDefaultConfig } = require("../scripts/contractManagerConfig");
 
@@ -46,7 +48,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     emitterAddresses,
     emitterChainIds,
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
-
   const chainName = envOrErr("MIGRATIONS_NETWORK");
   const wormholeReceiverChainId = CHAINS[chainName];
   assert(wormholeReceiverChainId !== undefined);
@@ -59,10 +60,17 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     "WormholeReceiver"
   );
 
+  console.log("Deploying WormholeReceiver contract...");
   const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
+  console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
 
+  console.log("Deploying ReceiverImplementation contract...");
   // deploy implementation
   const receiverImplContract = await deployer.deploy(receiverImplArtifact);
+  console.log(
+    "Deployed ReceiverImplementation on",
+    receiverImplContract.address
+  );
 
   // encode initialisation data
   const whInitData = receiverSetupContract.interface.encodeFunctionData(
