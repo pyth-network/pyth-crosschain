@@ -19,7 +19,6 @@ function getDefaultConfig(chainName) {
   const { dataSources, governanceDataSource, wormholeConfig } =
     getDefaultDeploymentConfig("stable");
 
-  console.log("***dataSources", dataSources);
   const emitterChainIds = dataSources.map((dataSource) =>
     convertChainId(dataSource.emitterChain)
   );

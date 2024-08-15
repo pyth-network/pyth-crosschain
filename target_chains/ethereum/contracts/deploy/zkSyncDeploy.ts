@@ -1,6 +1,6 @@
 require("dotenv").config({ path: ".env" });
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { utils, Wallet } from "zksync-web3";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
@@ -54,7 +54,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
 
-  console.log("receiverSetupArtifact: ", receiverSetupArtifact);
   const receiverImplArtifact = await deployer.loadArtifact(
     "ReceiverImplementation"
   );
@@ -65,16 +64,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // deploy
 
   console.log("Deploying WormholeReceiver contract...");
-
   const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
-
   console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
 
   console.log("Deploying ReceiverImplementation contract...");
-
   // deploy implementation
   const receiverImplContract = await deployer.deploy(receiverImplArtifact);
-
   console.log(
     "Deployed ReceiverImplementation on",
     receiverImplContract.address
