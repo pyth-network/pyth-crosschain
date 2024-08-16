@@ -86,7 +86,11 @@ export class Store {
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
       for (const parsed of parsedArray) {
-        if (allChainClasses[parsed.type] === undefined) return;
+        if (allChainClasses[parsed.type] === undefined) {
+          throw new Error(
+            `No chain class found for chain type: ${parsed.type}`
+          );
+        }
         const chain = allChainClasses[parsed.type].fromJson(parsed);
         if (this.chains[chain.getId()])
           throw new Error(`Multiple chains with id ${chain.getId()} found`);

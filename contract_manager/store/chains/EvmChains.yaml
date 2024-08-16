@@ -678,6 +678,7 @@
   mainnet: true
   rpcUrl: https://mainnet-rpc.b3.fun/http
   networkId: 8333
+  type: EvmChain
 - id: cronos_zkevm_mainnet
   mainnet: true
   rpcUrl: https://mainnet.zkevm.cronos.org
