@@ -116,6 +116,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   morph_holesky_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   morph_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   movement_evm_devnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  movement_evm_devnet_imola: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   mumbai: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
   neon_devnet: "0x0708325268dF9F66270F1401206434524814508b",
   olive_testnet: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",

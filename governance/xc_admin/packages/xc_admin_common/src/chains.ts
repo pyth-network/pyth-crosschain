@@ -181,6 +181,7 @@ export const RECEIVER_CHAINS = {
   b3_testnet: 50090,
   cronos_zkevm_testnet: 50091,
   reya_testnet: 50092,
+  movement_evm_devnet_imola: 50093,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

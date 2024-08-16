@@ -678,8 +678,14 @@
   mainnet: true
   rpcUrl: https://mainnet-rpc.b3.fun/http
   networkId: 8333
+  type: EvmChain
 - id: cronos_zkevm_mainnet
   mainnet: true
   rpcUrl: https://mainnet.zkevm.cronos.org
   networkId: 388
+  type: EvmChain
+- id: movement_evm_devnet_imola
+  mainnet: false
+  rpcUrl: https://mevm.devnet.imola.movementlabs.xyz
+  networkId: 30732
   type: EvmChain
