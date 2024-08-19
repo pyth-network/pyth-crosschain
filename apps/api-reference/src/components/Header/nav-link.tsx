@@ -9,6 +9,7 @@ const baseClasses = "font-semibold text-sm py-2 px-3";
 
 type NavLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
   href: string;
+  target?: "_blank" | "_self";
 };
 
 export const NavLink = ({ className, ...props }: NavLinkProps) => {

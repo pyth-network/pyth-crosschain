@@ -31,10 +31,17 @@ export const Header = ({
           >
             <ul className="contents">
               <li className="contents">
-                <NavLink href="/price-feeds/evm/getPrice">Price Feeds</NavLink>
+                <NavLink href="/price-feeds/evm/getPriceNoOlderThan">
+                  Price Feeds
+                </NavLink>
               </li>
               <li className="contents">
-                <NavLink href="/benchmarks">Benchmarks</NavLink>
+                <NavLink
+                  href="https://benchmarks.pyth.network/docs#/"
+                  target="_blank"
+                >
+                  Benchmarks
+                </NavLink>
               </li>
               <li className="contents">
                 <NavLink href="/entropy">Entropy</NavLink>
