@@ -29,7 +29,12 @@ export const Home = () => (
             </ProductLink>
           </li>
           <li className="contents">
-            <ProductLink icon={Benchmarks} href="https://benchmarks.pyth.network/docs#/" target="_blank" name="Benchmarks">
+            <ProductLink
+              icon={Benchmarks}
+              href="https://benchmarks.pyth.network/docs#/"
+              target="_blank"
+              name="Benchmarks"
+            >
               Get historical market data from any Pyth feed for use in both on-
               and off-chain applications
             </ProductLink>
