@@ -29,7 +29,12 @@ export const Home = () => (
             </ProductLink>
           </li>
           <li className="contents">
-            <ProductLink icon={Benchmarks} href="/benchmarks" name="Benchmarks">
+            <ProductLink
+              icon={Benchmarks}
+              href="https://benchmarks.pyth.network/docs#/"
+              target="_blank"
+              name="Benchmarks"
+            >
               Get historical market data from any Pyth feed for use in both on-
               and off-chain applications
             </ProductLink>
@@ -49,6 +54,7 @@ export const Home = () => (
 type ProductLinkProps = {
   name: string;
   href: string;
+  target?: "_blank" | "_self";
   children: string;
   icon: ElementType<SVGProps<SVGSVGElement>>;
 };
@@ -57,11 +63,13 @@ const ProductLink = ({
   name,
   children,
   href,
+  target,
   icon: Icon,
 }: ProductLinkProps) => (
   <Button
     as={Link}
     href={href}
+    target={target}
     gradient
     className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
   >

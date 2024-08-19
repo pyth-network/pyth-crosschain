@@ -9,6 +9,13 @@ export default {
     },
   },
 
+  redirects: async () => [
+    {
+      source: "/price-feeds/evm",
+      destination: "/price-feeds/evm/parsePriceFeedUpdates",
+      permanent: false,
+    },
+  ],
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/i,
