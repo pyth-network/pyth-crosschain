@@ -403,7 +403,7 @@ export class EvmPricePusher implements IPricePusher {
         "The transaction failed with an unhandled error. crashing the process. " +
           "Please review this error and file an issue if it is a bug."
       );
-      throw new Error("Unhandled error");
+      throw err;
     }
 
     // Update lastAttempt
