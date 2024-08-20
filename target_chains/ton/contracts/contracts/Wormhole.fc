@@ -1,16 +1,7 @@
 #include "imports/stdlib.fc";
 #include "imports/errors.fc";
 #include "imports/utils.fc";
-
-;; Storage variables
-global int guardian_set_index;
-;; GuardianSet struct: {expiration_time: int, keys: cell}
-global cell guardian_sets;
-global int chain_id;
-global int governance_chain_id;
-;; GovernanceContract struct: {chain_id: int, address: slice}
-global cell governance_contract;
-global cell consumed_governance_actions;
+#include "imports/storage.fc";
 
 ;; Signature verification function
 ;; ECRECOVER: Recovers the signer's address from the signature
@@ -26,35 +17,65 @@ global cell consumed_governance_actions;
 const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
 const int UPGRADE_MODULE = 0x436f7265; ;; "Core" in hex
 
+;; For troubleshooting purposes
+() dump_guardian_sets(cell keys) impure {
+    int key = -1;
+    do {
+        (key, slice value, int found) = keys.udict_get_next?(32, key);
+        if (found) {
+            ~dump(key);
+            ~dump(value);
+        }
+    } until (~ found);
+}
+
 
 ;; Internal helper methods
-(slice, int) get_guardian_set_internal(int index) {
-    (slice guardian_set, int found?) = guardian_sets.udict_get?(256, index);
-    throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
-    return (guardian_set, found?);
-}
-
 (int, cell, int) parse_guardian_set(slice guardian_set) {
-    int expiration_time = guardian_set~load_uint(64);
-    cell keys = guardian_set~load_ref();
+    slice cs = guardian_set~load_ref().begin_parse();
+    int expiration_time = cs~load_uint(64);
+    ;; slice keys = cs~load_ref().begin_parse();
+    cell keys_dict = cs~load_dict();
     int keys_count = 0;
+    int key = -1;
     do {
-        (_, _, int key_exists) = keys.udict_get_next?(256, keys_count);
-        if (key_exists) {
+        (key, slice address, int found) = keys_dict.udict_get_next?(8, key);
+        if (found) {
             keys_count += 1;
         }
-    } until (~ key_exists);
+    } until (~ found);
+
+    return (expiration_time, keys_dict, keys_count);
+}
+
+(int, cell, int) get_guardian_set_internal(int index) {
+    (slice guardian_set, int found?) = guardian_sets.udict_get?(32, index);
+    throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
+    (int expiration_time, cell keys, int keys_count) = parse_guardian_set(guardian_set);
     return (expiration_time, keys, keys_count);
 }
+
+;; load_data populates storage variables using stored data
+() load_data() impure {
+    var ds = get_data().begin_parse();
+    guardian_set_index = ds~load_uint(32);
+    guardian_sets = ds~load_dict(); 
+    (int expiration_time, cell keys, int keys_count) = get_guardian_set_internal(guardian_set_index);
+    chain_id = ds~load_uint(16);
+    governance_chain_id = ds~load_uint(16);
+    governance_contract = ds~load_ref();
+    consumed_governance_actions = ds~load_dict();
+    ds.end_parse();
+}
+
 
 ;; Get methods
 int get_guardian_set_index() method_id {
     return guardian_set_index;
 }
 
-(slice, int) get_guardian_set(int index) method_id {
-    (slice guardian_set, _) = get_guardian_set_internal(index);
-    return (guardian_set~load_ref().begin_parse(), guardian_set~load_uint(32));
+(int, cell, int) get_guardian_set(int index) method_id {
+    return get_guardian_set_internal(index);
 }
 
 int get_chain_id() method_id {
@@ -77,30 +98,24 @@ int governance_action_is_consumed(int hash) method_id {
     return found?;
 }
 
-() verify_signatures(int hash, cell signatures, int signers_length, int guardian_set_size) impure {
-    slice cs = signatures.begin_parse();
+
+() verify_signatures(int hash, slice signatures, int signers_length, int guardian_set_size) impure {
+    slice cs = signatures;
     int last_index = 0;
     int i = 0;
     int valid_signatures = 0;
 
     while (i < signers_length) {
         int guardian_index = cs~load_uint(8);
-        ;; Check if the current guardian index is greater than the last one
-        throw_if(ERROR_SIGNATURE_INDICES_NOT_ASCENDING, guardian_index <= last_index);
         last_index = guardian_index;
-
-        (_, _) = get_guardian_set_internal(guardian_index);
-
+        (_, _, _) = get_guardian_set_internal(guardian_index);
         int r = cs~load_uint(256);
         int s = cs~load_uint(256);
-        ;; Add 27 to 'v' to conform with Ethereum's ECDSA signature standard
-        ;; In Ethereum, v is either 27 or 28, while in Wormhole's cross-chain format, it's stored as 0 or 1
-        int v = cs~load_uint(8) + 27;
-
-        (int x, int y, int z, int valid) = check_sig(hash, v, r, s);
+        int v = cs~load_uint(8);
+        (_, int x1, int x2, int valid) = check_sig(hash, v >= 27 ? v - 27 : v, r, s);
         throw_unless(ERROR_INVALID_SIGNATURES, valid);
+        int address = parse_pubkey(x1, x2);
         valid_signatures += 1;
-
         i += 1;
     }
 
@@ -114,10 +129,8 @@ int governance_action_is_consumed(int hash) method_id {
     int version = in_msg_body~load_uint(8);
     throw_unless(ERROR_INVALID_VERSION, version == 1);
     int vm_guardian_set_index = in_msg_body~load_uint(32);
-    ;; Verify guardian set
-    (slice guardian_set, _) = get_guardian_set_internal(vm_guardian_set_index);
-    ;; Check if guardian set is valid
-    (int expiration_time, cell keys, int keys_count) = parse_guardian_set(guardian_set);
+    ;; Verify and check if guardian set is valid
+    (int expiration_time, cell keys, int keys_count) = get_guardian_set_internal(vm_guardian_set_index);
     throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys));
     throw_unless(ERROR_INVALID_GUARDIAN_SET,
         (guardian_set_index == vm_guardian_set_index) &
@@ -125,22 +138,39 @@ int governance_action_is_consumed(int hash) method_id {
     );
     int signers_length = in_msg_body~load_uint(8);
     ;; Calculate hash_index in bytes (66 bytes per signature: 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v))
-    int hash_index = 6 + (signers_length * 66); ;; 6 = version + vm_guardian_set_index + signers_length
-    ;; Check if hash_index is within the bounds of the encoded VM
-    throw_if(ERROR_INVALID_SIGNATURE_LENGTH, hash_index >= in_msg_body.slice_bits() / 8);
-    slice body_slice = in_msg_body~load_bits(hash_index * 8);
-    int hash = keccak256(begin_cell().store_uint(keccak256(body_slice), 256).end_cell().begin_parse());
-    ;; Load signatures (we might need to implement a separate function to verify these)
-    cell signatures = in_msg_body~load_ref();
+    int hash_index = signers_length * 66;
+
+    ;; Load signatures
+    (cell signatures, slice remaining_body) = read_and_store_large_data(in_msg_body, hash_index * 8);
+    in_msg_body = remaining_body;
+
+    ;; Calculate total body length across all references
+    int body_length = 0;
+    int continue? = -1; ;; -1 is true
+    do {
+        body_length += remaining_body.slice_bits();
+        if (remaining_body.slice_refs_empty?()) {
+            continue? = 0;
+        } else {
+            remaining_body = remaining_body~load_ref().begin_parse();
+        }
+    } until (~ continue?);
+    
+    ;; Load body
+    (cell body_cell, _) = read_and_store_large_data(in_msg_body, body_length);
+
+    int hash = hash_vm_body(body_cell.begin_parse());
     ;; Verify signatures
-    verify_signatures(hash, signatures, signers_length, keys_count);
-    int timestamp = in_msg_body~load_uint(32);
-    int nonce = in_msg_body~load_uint(32);
-    int emitter_chain_id = in_msg_body~load_uint(16);
-    slice emitter_address = in_msg_body~load_bits(256);
-    int sequence = in_msg_body~load_uint(64);
-    int consistency_level = in_msg_body~load_uint(8);
-    slice payload = in_msg_body~load_ref().begin_parse();
+    verify_signatures(hash, signatures.begin_parse(), signers_length, keys_count);
+
+    slice body_slice = body_cell.begin_parse();
+    int timestamp = body_slice~load_uint(32);
+    int nonce = body_slice~load_uint(32);
+    int emitter_chain_id = body_slice~load_uint(16);
+    slice emitter_address = body_slice~load_bits(256);
+    int sequence = body_slice~load_uint(64);
+    int consistency_level = body_slice~load_uint(8);
+    slice payload = body_slice;
 
     return (
         version,
