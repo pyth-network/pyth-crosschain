@@ -7,8 +7,8 @@ export function createCellChain(buffer: Buffer): Cell {
   for (let i = chunks.length - 1; i >= 0; i--) {
     const chunk = chunks[i];
     const cellBuilder = beginCell();
-
-    cellBuilder.storeBuffer(chunk);
+    const buffer = Buffer.from(chunk);
+    cellBuilder.storeBuffer(buffer);
 
     if (lastCell) {
       cellBuilder.storeRef(lastCell);
@@ -22,11 +22,22 @@ export function createCellChain(buffer: Buffer): Cell {
   return rootCell;
 }
 
-function bufferToChunks(buff: Buffer, chunkSize: number) {
-  let chunks: Buffer[] = [];
-  while (buff.byteLength > 0) {
-    chunks.push(buff.subarray(0, chunkSize));
-    buff = buff.subarray(chunkSize);
+function bufferToChunks(
+  buff: Buffer,
+  chunkSizeBytes: number = 127
+): Uint8Array[] {
+  const chunks: Uint8Array[] = [];
+  const uint8Array = new Uint8Array(
+    buff.buffer,
+    buff.byteOffset,
+    buff.byteLength
+  );
+
+  for (let offset = 0; offset < uint8Array.length; offset += chunkSizeBytes) {
+    const remainingBytes = Math.min(chunkSizeBytes, uint8Array.length - offset);
+    const chunk = uint8Array.subarray(offset, offset + remainingBytes);
+    chunks.push(chunk);
   }
+
   return chunks;
 }

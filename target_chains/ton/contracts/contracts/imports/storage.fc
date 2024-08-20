@@ -1,0 +1,8 @@
+global int guardian_set_index;
+;; GuardianSet struct: {expiration_time: int, keys: cell}
+global cell guardian_sets;
+global int chain_id;
+global int governance_chain_id;
+;; GovernanceContract struct: {chain_id: int, address: slice}
+global cell governance_contract;
+global cell consumed_governance_actions;
