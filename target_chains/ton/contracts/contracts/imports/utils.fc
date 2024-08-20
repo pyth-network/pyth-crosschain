@@ -28,7 +28,7 @@ int hash_vm_body(slice s) inline {
         int bits_to_load = min(min(data.slice_bits(), 1016 - current_chunk.builder_bits()), size - total_bits_loaded);
         current_chunk = current_chunk.store_slice(data~load_bits(bits_to_load));
         total_bits_loaded += bits_to_load;
-        if ((current_chunk.builder_bits() == 1016) | (size - total_bits_loaded == 0)) { 
+        if ((current_chunk.builder_bits() == 1016) | (size - total_bits_loaded == 0)) {
             slice current_chunk_slice = current_chunk.end_cell().begin_parse();
             if (cell_null?(chunks)) {
                 chunks = begin_cell().store_slice(current_chunk_slice).end_cell();
