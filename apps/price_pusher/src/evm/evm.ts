@@ -36,6 +36,11 @@ import {
   InternalRpcError,
   InsufficientFundsError,
   Chain,
+  publicActions,
+  Client,
+  RpcSchema,
+  WalletActions,
+  PublicActions,
 } from "viem";
 
 import { mnemonicToAccount } from "viem/accounts";
@@ -44,6 +49,18 @@ import * as chains from "viem/chains";
 type PythContract = GetContractReturnType<
   typeof PythAbi,
   PublicClient | WalletClient
+>;
+
+export type SuperWalletClient<
+  transport extends Transport = Transport,
+  chain extends Chain | undefined = Chain | undefined,
+  account extends Account | undefined = Account | undefined
+> = Client<
+  transport,
+  chain,
+  account,
+  RpcSchema,
+  PublicActions<transport, chain, account> & WalletActions<chain, account>
 >;
 
 const UNKNOWN_CHAIN_CONFIG = {
@@ -159,8 +176,7 @@ export class EvmPriceListener extends ChainPriceListener {
 
 export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;
-  private publicClient: PublicClient;
-  private walletClient: WalletClient;
+  private client: SuperWalletClient;
   private pythContract: PythContract;
   private pusherAddress: `0x${string}` | undefined;
   private lastPushAttempt: PushAttempt | undefined;
@@ -176,9 +192,8 @@ export class EvmPricePusher implements IPricePusher {
     customGasStation?: CustomGasStation
   ) {
     this.customGasStation = customGasStation;
-    this.pythContract = pythContractFactory.createPythContractWithWallet();
-    this.publicClient = pythContractFactory.createPublicClient();
-    this.walletClient = pythContractFactory.createWalletClient();
+    this.pythContract = pythContractFactory.createPythContract();
+    this.client = pythContractFactory.createClient();
   }
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -222,7 +237,7 @@ export class EvmPricePusher implements IPricePusher {
       throw e;
     }
 
-    const fees = await this.publicClient.estimateFeesPerGas();
+    const fees = await this.client.estimateFeesPerGas();
 
     this.logger.debug({ fees }, "Estimated fees");
 
@@ -233,11 +248,11 @@ export class EvmPricePusher implements IPricePusher {
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     if (this.pusherAddress === undefined) {
-      this.pusherAddress = this.walletClient.account!.address;
+      this.pusherAddress = this.client.account!.address;
     }
 
     const lastExecutedNonce =
-      (await this.publicClient.getTransactionCount({
+      (await this.client.getTransactionCount({
         address: this.pusherAddress,
       })) - 1;
 
@@ -297,8 +312,8 @@ export class EvmPricePusher implements IPricePusher {
             this.gasLimit !== undefined
               ? BigInt(Math.round(this.gasLimit))
               : undefined,
-          chain: this.walletClient.chain,
-          account: this.walletClient.account!,
+          chain: this.client.chain,
+          account: this.client.account!,
         }
       );
 
@@ -431,7 +446,7 @@ export class EvmPricePusher implements IPricePusher {
 
   private async waitForTransactionReceipt(hash: `0x${string}`): Promise<void> {
     try {
-      const receipt = await this.publicClient.waitForTransactionReceipt({
+      const receipt = await this.client.waitForTransactionReceipt({
         hash: hash,
       });
 
@@ -496,26 +511,7 @@ export class PythContractFactory {
   }
 
   /**
-   * This method creates a web3 Pyth contract with payer (based on HDWalletProvider). As this
-   * provider is an HDWalletProvider it does not support subscriptions even if the
-   * endpoint is a websocket endpoint.
-   *
-   * @returns Pyth contract
-   */
-  createPythContractWithWallet(): PythContract {
-    return getContract({
-      address: this.pythContractAddress,
-      abi: PythAbi,
-      client: {
-        public: this.createPublicClient(),
-        wallet: this.createWalletClient(),
-      },
-    });
-  }
-
-  /**
-   * This method creates a web3 Pyth contract with the given endpoint as its provider. If
-   * the endpoint is a websocket endpoint the contract will support subscriptions.
+   * This method creates a web3 Pyth contract with payer (based on mnemonic).
    *
    * @returns Pyth contract
    */
@@ -523,7 +519,7 @@ export class PythContractFactory {
     return getContract({
       address: this.pythContractAddress,
       abi: PythAbi,
-      client: this.createPublicClient(),
+      client: this.createClient(),
     });
   }
 
@@ -531,23 +527,16 @@ export class PythContractFactory {
     return isWsEndpoint(this.endpoint);
   }
 
-  createPublicClient(): PublicClient {
-    return createPublicClient({
-      transport: PythContractFactory.getTransport(this.endpoint),
-      chain: PythContractFactory.getChain(this.chainId),
-    });
-  }
-
   getAccount(): Account {
     return mnemonicToAccount(this.mnemonic);
   }
 
-  createWalletClient(): WalletClient {
+  createClient(): SuperWalletClient {
     return createWalletClient({
       transport: PythContractFactory.getTransport(this.endpoint),
       account: mnemonicToAccount(this.mnemonic),
       chain: PythContractFactory.getChain(this.chainId),
-    });
+    }).extend(publicActions);
   }
 
   // Get the chain corresponding to the chainId. If the chain is not found, it will return
