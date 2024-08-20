@@ -95,6 +95,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   fantom_sonic_testnet: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
   fantom_testnet: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   filecoin_calibration: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  flow_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   fuji: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
   hedera_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   idex_xchain_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
