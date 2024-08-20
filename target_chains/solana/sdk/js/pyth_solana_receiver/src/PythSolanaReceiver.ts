@@ -465,15 +465,16 @@ export class PythSolanaReceiver {
     encodedVaaAddress: PublicKey;
     closeInstructions: InstructionWithEphemeralSigners[];
   }> {
+    const trimmedVaa = trimSignatures(vaa, 13);
     const postInstructions: InstructionWithEphemeralSigners[] = [];
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
     const encodedVaaKeypair = new Keypair();
-    const guardianSetIndex = getGuardianSetIndex(vaa);
+    const guardianSetIndex = getGuardianSetIndex(trimmedVaa);
 
     postInstructions.push(
       await buildEncodedVaaCreateInstruction(
         this.wormhole,
-        vaa,
+        trimmedVaa,
         encodedVaaKeypair
       )
     );
@@ -491,7 +492,7 @@ export class PythSolanaReceiver {
     postInstructions.push(
       ...(await buildWriteEncodedVaaWithSplitInstructions(
         this.wormhole,
-        vaa,
+        trimmedVaa,
         encodedVaaKeypair.publicKey
       ))
     );
