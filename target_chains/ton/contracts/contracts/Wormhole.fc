@@ -226,42 +226,7 @@ int governance_action_is_consumed(int hash) method_id {
 () update_guardian_set(slice in_msg_body) impure {
     ;; Verify governance VM
     (int version, int vm_guardian_set_index, int timestamp, int nonce, int emitter_chain_id, slice emitter_address, int sequence, int consistency_level, slice payload, int hash) = parse_and_verify_wormhole_vm(in_msg_body);
-
-    ;; Verify the emitter chain and address
-    (int governance_chain_id, slice governance_contract_address) = get_governance_contract();
-    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == governance_chain_id);
-    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, equal_slices(emitter_address, governance_contract_address));
-
-    ;; Check if the governance action has already been consumed
-    throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
-
-    ;; Parse the new guardian set from the payload
-    (int action, int chain, int module, cell new_guardian_set_keys, int new_guardian_set_index) = parse_encoded_upgrade(guardian_set_index, payload);
-
-    ;; Set expiry if current GuardianSet exists
-    (slice current_guardian_set, int found?) = guardian_sets.udict_get?(256, guardian_set_index);
-    if (found?) {
-        current_guardian_set~load_uint(64); ;; Skip the old expiration time
-        cell updated_guardian_set = begin_cell()
-            .store_uint(now() + GUARDIAN_SET_EXPIRY, 64) ;; expiration time
-            .store_ref(current_guardian_set~load_ref()) ;; keys
-        .end_cell();
-        guardian_sets~udict_set(256, guardian_set_index, updated_guardian_set.begin_parse());
-    }
-
-    ;; Store the new guardian set
-    cell new_guardian_set = begin_cell()
-        .store_uint(0, 64) ;; expiration_time, set to 0 initially
-        .store_ref(new_guardian_set_keys)
-    .end_cell();
-    guardian_sets~udict_set(256, new_guardian_set_index, new_guardian_set.begin_parse());
-
-    ;; Update the current guardian set index
-    guardian_set_index = new_guardian_set_index;
-
-    ;; Mark the governance action as consumed
-    consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());
-
+    ;; TODO: Implement
 }
 
 () execute_governance_action(slice in_msg_body) impure {
