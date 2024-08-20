@@ -435,18 +435,16 @@ export class EvmPricePusher implements IPricePusher {
         hash: hash,
       });
 
-      if (receipt.status === "success") {
-        this.logger.info({ hash }, "Price update successful");
-      } else if (receipt.status === "reverted") {
-        this.logger.info(
-          { hash, receipt },
-          "Price update reverted or its transaction did not land. " +
-            "This is an expected behaviour in high frequency or multi-instance setup."
-        );
-      } else {
-        throw new Error(
-          "This codepath should be unreachable. Please file a bug report."
-        );
+      switch (receipt.status) {
+        case "success":
+          this.logger.info({ hash }, "Price update successful");
+          break;
+        default:
+          this.logger.info(
+            { hash, receipt },
+            "Price update did not succeed or its transaction did not land. " +
+              "This is an expected behaviour in high frequency or multi-instance setup."
+          );
       }
     } catch (err: any) {
       this.logger.warn({ err }, "Failed to get transaction receipt");
