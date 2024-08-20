@@ -4,7 +4,12 @@ import {
   ChainPriceListener,
   PriceItem,
 } from "../interface";
-import { addLeading0x, DurationInSeconds, removeLeading0x } from "../utils";
+import {
+  addLeading0x,
+  assertDefined,
+  DurationInSeconds,
+  removeLeading0x,
+} from "../utils";
 import { PythAbi } from "./pyth-abi";
 import { Logger } from "pino";
 import { isWsEndpoint } from "../utils";
@@ -53,8 +58,8 @@ type PythContract = GetContractReturnType<
 
 export type SuperWalletClient<
   transport extends Transport = Transport,
-  chain extends Chain | undefined = Chain | undefined,
-  account extends Account | undefined = Account | undefined
+  chain extends Chain | undefined = Chain,
+  account extends Account | undefined = Account
 > = Client<
   transport,
   chain,
@@ -120,7 +125,7 @@ export class EvmPriceListener extends ChainPriceListener {
   private async startWatching() {
     this.pythContract.watchEvent.PriceFeedUpdate(
       { id: this.priceItems.map((item) => addLeading0x(item.id)) },
-      { onLogs: this.onPriceFeedUpdate.bind(this) }
+      { strict: true, onLogs: this.onPriceFeedUpdate.bind(this) }
     );
   }
 
@@ -128,12 +133,12 @@ export class EvmPriceListener extends ChainPriceListener {
     logs: WatchContractEventOnLogsParameter<typeof PythAbi, "PriceFeedUpdate">
   ) {
     for (const log of logs) {
-      const priceId = removeLeading0x(log.args.id!);
+      const priceId = removeLeading0x(assertDefined(log.args.id));
 
       const priceInfo: PriceInfo = {
-        conf: log.args.conf!.toString(),
-        price: log.args.price!.toString(),
-        publishTime: Number(log.args.publishTime!),
+        conf: assertDefined(log.args.conf).toString(),
+        price: assertDefined(log.args.price).toString(),
+        publishTime: Number(assertDefined(log.args.publishTime)),
       };
 
       this.logger.debug(
@@ -248,7 +253,7 @@ export class EvmPricePusher implements IPricePusher {
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     if (this.pusherAddress === undefined) {
-      this.pusherAddress = this.client.account!.address;
+      this.pusherAddress = this.client.account.address;
     }
 
     const lastExecutedNonce =

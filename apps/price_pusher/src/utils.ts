@@ -46,3 +46,11 @@ export function verifyValidOption<
     option + " is not a valid option. Please choose between " + validOptions;
   throw new Error(errorString);
 }
+
+export const assertDefined = <T>(value: T | undefined): T => {
+  if (value === undefined) {
+    throw new Error("Assertion failed: value was undefined");
+  } else {
+    return value;
+  }
+};
