@@ -59,7 +59,7 @@ const int UPGRADE_MODULE = 0x436f7265; ;; "Core" in hex
 () load_data() impure {
     var ds = get_data().begin_parse();
     guardian_set_index = ds~load_uint(32);
-    guardian_sets = ds~load_dict(); 
+    guardian_sets = ds~load_dict();
     (int expiration_time, cell keys, int keys_count) = get_guardian_set_internal(guardian_set_index);
     chain_id = ds~load_uint(16);
     governance_chain_id = ds~load_uint(16);
@@ -155,7 +155,7 @@ int governance_action_is_consumed(int hash) method_id {
             remaining_body = remaining_body~load_ref().begin_parse();
         }
     } until (~ continue?);
-    
+
     ;; Load body
     (cell body_cell, _) = read_and_store_large_data(in_msg_body, body_length);
 
