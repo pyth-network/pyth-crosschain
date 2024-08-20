@@ -22,6 +22,7 @@ import {
   createPublicClient,
   createWalletClient,
   getContract,
+  defineChain,
   http,
   webSocket,
   Address,
@@ -34,15 +35,30 @@ import {
   FeeCapTooLowError,
   InternalRpcError,
   InsufficientFundsError,
+  Chain,
 } from "viem";
 
 import { mnemonicToAccount } from "viem/accounts";
-import { getChain } from "./chains";
+import * as chains from "viem/chains";
 
 type PythContract = GetContractReturnType<
   typeof PythAbi,
   PublicClient | WalletClient
 >;
+
+const UNKNOWN_CHAIN_CONFIG = {
+  name: "Unknown",
+  nativeCurrency: {
+    name: "Unknown",
+    symbol: "Unknown",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: [],
+    },
+  },
+};
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -520,7 +536,7 @@ export class PythContractFactory {
   createPublicClient(): PublicClient {
     return createPublicClient({
       transport: PythContractFactory.getTransport(this.endpoint),
-      chain: getChain(this.chainId),
+      chain: PythContractFactory.getChain(this.chainId),
     });
   }
 
@@ -532,8 +548,19 @@ export class PythContractFactory {
     return createWalletClient({
       transport: PythContractFactory.getTransport(this.endpoint),
       account: mnemonicToAccount(this.mnemonic),
-      chain: getChain(this.chainId),
+      chain: PythContractFactory.getChain(this.chainId),
     });
+  }
+
+  // Get the chain corresponding to the chainId. If the chain is not found, it will return
+  // an unknown chain which should work fine in most of the cases. We might need to update
+  // the viem package to support new chains if they don't work as expected with the unknown
+  // chain.
+  private static getChain(chainId: number): Chain {
+    return (
+      Object.values(chains).find((chain) => chain.id === chainId) ||
+      defineChain({ id: chainId, ...UNKNOWN_CHAIN_CONFIG })
+    );
   }
 
   private static getTransport(endpoint: string): Transport {
