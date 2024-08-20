@@ -689,3 +689,8 @@
   rpcUrl: https://mevm.devnet.imola.movementlabs.xyz
   networkId: 30732
   type: EvmChain
+- id: flow_testnet
+  mainnet: false
+  rpcUrl: https://testnet.evm.nodes.onflow.org
+  networkId: 545
+  type: EvmChain
