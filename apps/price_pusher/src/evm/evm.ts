@@ -12,7 +12,6 @@ import {
 } from "../utils";
 import { PythAbi } from "./pyth-abi";
 import { Logger } from "pino";
-import { isWsEndpoint } from "../utils";
 import {
   PriceServiceConnection,
   HexString,
@@ -21,94 +20,38 @@ import {
 import { CustomGasStation } from "./custom-gas-station";
 import { PushAttempt } from "../common";
 import {
-  PublicClient,
-  Transport,
-  WalletClient,
-  createPublicClient,
-  createWalletClient,
-  getContract,
-  defineChain,
-  http,
-  webSocket,
-  Address,
-  GetContractReturnType,
   WatchContractEventOnLogsParameter,
   TransactionExecutionError,
-  Account,
   BaseError,
   ContractFunctionRevertedError,
   FeeCapTooLowError,
   InternalRpcError,
   InsufficientFundsError,
-  Chain,
-  publicActions,
-  Client,
-  RpcSchema,
-  WalletActions,
-  PublicActions,
 } from "viem";
 
-import { mnemonicToAccount } from "viem/accounts";
-import * as chains from "viem/chains";
-
-type PythContract = GetContractReturnType<
-  typeof PythAbi,
-  PublicClient | WalletClient
->;
-
-export type SuperWalletClient<
-  transport extends Transport = Transport,
-  chain extends Chain | undefined = Chain,
-  account extends Account | undefined = Account
-> = Client<
-  transport,
-  chain,
-  account,
-  RpcSchema,
-  PublicActions<transport, chain, account> & WalletActions<chain, account>
->;
-
-const UNKNOWN_CHAIN_CONFIG = {
-  name: "Unknown",
-  nativeCurrency: {
-    name: "Unknown",
-    symbol: "Unknown",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: [],
-    },
-  },
-};
+import { PythContract } from "./pyth-contract";
+import { SuperWalletClient } from "./super-wallet";
 
 export class EvmPriceListener extends ChainPriceListener {
-  private pythContractFactory: PythContractFactory;
-  private pythContract: PythContract;
-  private logger: Logger;
-
   constructor(
-    pythContractFactory: PythContractFactory,
+    private pythContract: PythContract,
     priceItems: PriceItem[],
-    logger: Logger,
+    private watchEvents: boolean,
+    private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
     super(config.pollingFrequency, priceItems);
 
-    this.pythContractFactory = pythContractFactory;
-    this.pythContract = this.pythContractFactory.createPythContract();
+    this.pythContract = pythContract;
     this.logger = logger;
   }
 
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
-    // It is possible to watch the events in the non-ws endpoints, either by getFilter
-    // or by getLogs, but it is very expensive and our polling mechanism does it
-    // in a more efficient way.
-    if (this.pythContractFactory.hasWebsocketProvider()) {
+    if (this.watchEvents) {
       this.logger.info("Watching target network pyth contract events...");
       this.startWatching();
     } else {
@@ -180,26 +123,20 @@ export class EvmPriceListener extends ChainPriceListener {
 }
 
 export class EvmPricePusher implements IPricePusher {
-  private customGasStation?: CustomGasStation;
-  private client: SuperWalletClient;
-  private pythContract: PythContract;
   private pusherAddress: `0x${string}` | undefined;
   private lastPushAttempt: PushAttempt | undefined;
 
   constructor(
     private connection: PriceServiceConnection,
-    pythContractFactory: PythContractFactory,
+    private client: SuperWalletClient,
+    private pythContract: PythContract,
     private logger: Logger,
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
     private gasLimit?: number,
-    customGasStation?: CustomGasStation
-  ) {
-    this.customGasStation = customGasStation;
-    this.pythContract = pythContractFactory.createPythContract();
-    this.client = pythContractFactory.createClient();
-  }
+    private customGasStation?: CustomGasStation
+  ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
   // This is an optimization to avoid getting a newer value (as an update comes)
@@ -466,88 +403,5 @@ export class EvmPricePusher implements IPricePusher {
     return latestVaas.map(
       (vaa) => "0x" + Buffer.from(vaa, "base64").toString("hex")
     );
-  }
-}
-
-export class PythContractFactory {
-  private endpoint: string;
-  private mnemonic: string;
-  private pythContractAddress: Address;
-  private chainId: number;
-
-  private constructor(
-    endpoint: string,
-    mnemonic: string,
-    pythContractAddress: Address,
-    chainId: number
-  ) {
-    this.endpoint = endpoint;
-    this.mnemonic = mnemonic;
-    this.pythContractAddress = pythContractAddress;
-    this.chainId = chainId;
-  }
-
-  static async create(
-    endpoint: string,
-    mnemonic: string,
-    pythContractAddress: Address
-  ): Promise<PythContractFactory> {
-    const chainId = await createPublicClient({
-      transport: PythContractFactory.getTransport(endpoint),
-    }).getChainId();
-    return new PythContractFactory(
-      endpoint,
-      mnemonic,
-      pythContractAddress,
-      chainId
-    );
-  }
-
-  /**
-   * This method creates a web3 Pyth contract with payer (based on mnemonic).
-   *
-   * @returns Pyth contract
-   */
-  createPythContract(): PythContract {
-    return getContract({
-      address: this.pythContractAddress,
-      abi: PythAbi,
-      client: this.createClient(),
-    });
-  }
-
-  hasWebsocketProvider(): boolean {
-    return isWsEndpoint(this.endpoint);
-  }
-
-  getAccount(): Account {
-    return mnemonicToAccount(this.mnemonic);
-  }
-
-  createClient(): SuperWalletClient {
-    return createWalletClient({
-      transport: PythContractFactory.getTransport(this.endpoint),
-      account: mnemonicToAccount(this.mnemonic),
-      chain: PythContractFactory.getChain(this.chainId),
-    }).extend(publicActions);
-  }
-
-  // Get the chain corresponding to the chainId. If the chain is not found, it will return
-  // an unknown chain which should work fine in most of the cases. We might need to update
-  // the viem package to support new chains if they don't work as expected with the unknown
-  // chain.
-  private static getChain(chainId: number): Chain {
-    return (
-      Object.values(chains).find((chain) => chain.id === chainId) ||
-      defineChain({ id: chainId, ...UNKNOWN_CHAIN_CONFIG })
-    );
-  }
-
-  private static getTransport(endpoint: string): Transport {
-    if (isWsEndpoint(endpoint)) {
-      return webSocket(endpoint);
-    } else {
-      return http(endpoint);
-    }
   }
 }

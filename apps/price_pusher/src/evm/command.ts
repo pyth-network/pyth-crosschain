@@ -5,9 +5,12 @@ import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
+import { EvmPriceListener, EvmPricePusher } from "./evm";
 import { getCustomGasStation } from "./custom-gas-station";
 import pino from "pino";
+import { createClient } from "./super-wallet";
+import { createPythContract } from "./pyth-contract";
+import { isWsEndpoint } from "../utils";
 
 export default {
   command: "evm",
@@ -121,21 +124,22 @@ export default {
       logger.child({ module: "PythPriceListener" })
     );
 
-    const pythContractFactory = await PythContractFactory.create(
-      endpoint,
-      mnemonic,
-      pythContractAddress
-    );
+    const client = await createClient(endpoint, mnemonic);
+    const pythContract = createPythContract(client, pythContractAddress);
 
     logger.info(
-      `Pushing updates from wallet address: ${
-        pythContractFactory.getAccount().address
-      }`
+      `Pushing updates from wallet address: ${client.account.address}`
     );
 
+    // It is possible to watch the events in the non-ws endpoints, either by getFilter
+    // or by getLogs, but it is very expensive and our polling mechanism does it
+    // in a more efficient way. So we only do it with ws endpoints.
+    const watchEvents = isWsEndpoint(endpoint);
+
     const evmListener = new EvmPriceListener(
-      pythContractFactory,
+      pythContract,
       priceItems,
+      watchEvents,
       logger.child({ module: "EvmPriceListener" }),
       {
         pollingFrequency,
@@ -149,7 +153,8 @@ export default {
     );
     const evmPusher = new EvmPricePusher(
       priceServiceConnection,
-      pythContractFactory,
+      client,
+      pythContract,
       logger.child({ module: "EvmPricePusher" }),
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
