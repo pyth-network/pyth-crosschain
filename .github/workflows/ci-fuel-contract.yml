@@ -29,6 +29,8 @@ jobs:
         run: forc build --verbose
       - name: Run tests with Forc
         run: forc test --verbose
+      - name: Rust add wasm32-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
       - name: Build
         run: cargo build --verbose
       - name: Run tests
