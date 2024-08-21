@@ -9,7 +9,7 @@ license = "Apache-2.0"
 [dependencies]
 rand = "0.8.5"
 base64 = "0.22"
-fuels = { version = "0.65.1", features = ["fuel-core-lib"] }
+fuels = { version = "0.66.2", features = ["fuel-core-lib"] }
 tokio = { version = "1.12", features = ["rt", "macros"] }
 hex = "0.4.3"
 reqwest = "0.11.27"

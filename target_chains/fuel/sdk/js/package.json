@@ -44,6 +44,6 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "fuels": "^0.92.1"
+    "fuels": "^0.94.0"
   }
 }
