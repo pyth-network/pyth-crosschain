@@ -694,3 +694,8 @@
   rpcUrl: https://testnet.evm.nodes.onflow.org
   networkId: 545
   type: EvmChain
+- id: idex_xchain_mainnet
+  mainnet: true
+  rpcUrl: https://xchain-rpc.idex.io/
+  networkId: 94524
+  type: EvmChain

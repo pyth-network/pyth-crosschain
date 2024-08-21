@@ -81,6 +81,7 @@ export const RECEIVER_CHAINS = {
   kinto: 60057,
   b3_mainnet: 60058,
   cronos_zkevm_mainnet: 60059,
+  idex_xchain_mainnet: 60060,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
