@@ -251,9 +251,6 @@ importers:
       '@solana/web3.js':
         specifier: 1.92.3
         version: 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@truffle/hdwallet-provider':
-        specifier: ^2.1.3
-        version: 2.1.5(@babel/core@7.24.7)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@types/pino':
         specifier: ^7.0.5
         version: 7.0.5
@@ -272,15 +269,9 @@ importers:
       pino:
         specifier: ^9.2.0
         version: 9.2.0
-      web3:
-        specifier: ^1.8.1
-        version: 1.8.2(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-core:
-        specifier: ^1.8.1
-        version: 1.10.0(encoding@0.1.13)
-      web3-eth-contract:
-        specifier: ^1.8.1
-        version: 1.8.2(encoding@0.1.13)
+      viem:
+        specifier: ^2.19.4
+        version: 2.19.4(bufferutil@4.0.8)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8)
       yaml:
         specifier: ^2.1.1
         version: 2.4.3
@@ -8341,6 +8332,17 @@ packages:
 
   abitype@1.0.4:
     resolution: {integrity: sha512-UivtYZOGJGE8rsrM/N5vdRkUpqEZVmuTumfTuolm7m/6O09wprd958rx8kUBwVAAAhQDveGAgD0GJdBuR8s6tw==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3 >=3.22.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
+
+  abitype@1.0.5:
+    resolution: {integrity: sha512-YzDhti7cjlfaBhHutMaboYB21Ha3rXR9QTkNJFzYC4kC8YclaiwPBBBJY8ejFdu2wnJeZCVZSMlQJ7fi8S6hsw==}
     peerDependencies:
       typescript: '>=5.0.4'
       zod: ^3 >=3.22.0
@@ -18105,6 +18107,14 @@ packages:
       typescript:
         optional: true
 
+  viem@2.19.4:
+    resolution: {integrity: sha512-JdhK3ui3uPD2tnpqGNkJaDQV4zTfOeKXcF+VrU8RG88Dn2e0lFjv6l7m0YNmYLsHm+n5vFFfCLcUrTk6xcYv5w==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   viem@2.8.13:
     resolution: {integrity: sha512-jEbRUjsiBwmoDr3fnKL1Bh1GhK5ERhmZcPLeARtEaQoBTPB6bcO2siKhNPVOF8qrYRnGHGQrZHncBWMQhTjGYg==}
     peerDependencies:
@@ -18610,6 +18620,9 @@ packages:
   web3@4.8.0:
     resolution: {integrity: sha512-kQSF2NlHk8yjS3SRiJW3S+U5ibkEmVRhB4/GYsVwGvdAkFC2b+EIE1Ob7J56OmqW9VBZgkx1+SuWqo5JTIJSYQ==}
     engines: {node: '>=14.0.0', npm: '>=6.12.0'}
+
+  webauthn-p256@0.0.5:
+    resolution: {integrity: sha512-drMGNWKdaixZNobeORVIqq7k5DsRC9FnG201K2QjeOoQLmtSDaSsVZdkg6n5jUALJKcAG++zBPJXmv6hy0nWFg==}
 
   webextension-polyfill@0.10.0:
     resolution: {integrity: sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==}
@@ -23699,7 +23712,7 @@ snapshots:
       '@fuel-ts/utils': 0.89.2
       '@fuel-ts/versions': 0.89.2
       '@fuels/vm-asm': 0.50.0
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       events: 3.3.0
       graphql: 16.8.2
       graphql-request: 5.0.0(encoding@0.1.13)(graphql@16.8.2)
@@ -26547,10 +26560,10 @@ snapshots:
   '@mysten/sui.js@0.32.2(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
       '@mysten/bcs': 0.7.1
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
       '@scure/bip32': 1.4.0
-      '@scure/bip39': 1.2.2
+      '@scure/bip39': 1.3.0
       '@suchipi/femver': 1.0.0
       jayson: 4.1.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
       rpc-websockets: 7.5.1
@@ -26563,10 +26576,10 @@ snapshots:
   '@mysten/sui.js@0.32.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/bcs': 0.7.1
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
       '@scure/bip32': 1.4.0
-      '@scure/bip39': 1.2.2
+      '@scure/bip39': 1.3.0
       '@suchipi/femver': 1.0.0
       jayson: 4.1.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       rpc-websockets: 7.5.1
@@ -26579,10 +26592,10 @@ snapshots:
   '@mysten/sui.js@0.32.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
     dependencies:
       '@mysten/bcs': 0.7.1
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
       '@scure/bip32': 1.4.0
-      '@scure/bip39': 1.2.2
+      '@scure/bip39': 1.3.0
       '@suchipi/femver': 1.0.0
       jayson: 4.1.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       rpc-websockets: 7.5.1
@@ -28267,9 +28280,9 @@ snapshots:
 
   '@scure/bip32@1.4.0':
     dependencies:
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
-      '@scure/base': 1.1.6
+      '@scure/base': 1.1.7
 
   '@scure/bip39@1.1.0':
     dependencies:
@@ -28289,7 +28302,7 @@ snapshots:
   '@scure/bip39@1.2.2':
     dependencies:
       '@noble/hashes': 1.3.3
-      '@scure/base': 1.1.6
+      '@scure/base': 1.1.7
 
   '@scure/bip39@1.3.0':
     dependencies:
@@ -32062,6 +32075,11 @@ snapshots:
   abitype@1.0.4(typescript@5.5.2)(zod@3.23.8):
     optionalDependencies:
       typescript: 5.5.2
+      zod: 3.23.8
+
+  abitype@1.0.5(typescript@5.4.5)(zod@3.23.8):
+    optionalDependencies:
+      typescript: 5.4.5
       zod: 3.23.8
 
   abort-controller@3.0.0:
@@ -46225,6 +46243,24 @@ snapshots:
       - utf-8-validate
       - zod
 
+  viem@2.19.4(bufferutil@4.0.8)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.23.8):
+    dependencies:
+      '@adraffy/ens-normalize': 1.10.0
+      '@noble/curves': 1.4.0
+      '@noble/hashes': 1.4.0
+      '@scure/bip32': 1.4.0
+      '@scure/bip39': 1.3.0
+      abitype: 1.0.5(typescript@5.4.5)(zod@3.23.8)
+      isows: 1.0.4(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      webauthn-p256: 0.0.5
+      ws: 8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+    optionalDependencies:
+      typescript: 5.4.5
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - zod
+
   viem@2.8.13(bufferutil@4.0.8)(typescript@5.4.5)(utf-8-validate@6.0.4)(zod@3.23.8):
     dependencies:
       '@adraffy/ens-normalize': 1.10.0
@@ -47487,6 +47523,11 @@ snapshots:
       - typescript
       - utf-8-validate
       - zod
+
+  webauthn-p256@0.0.5:
+    dependencies:
+      '@noble/curves': 1.4.2
+      '@noble/hashes': 1.4.0
 
   webextension-polyfill@0.10.0: {}
 

@@ -18,12 +18,11 @@ export function removeLeading0x(id: HexString): HexString {
   return id;
 }
 
-export function addLeading0x(id: HexString): HexString {
-  if (id.startsWith("0x")) {
-    return id;
-  }
-  return "0x" + id;
-}
+export const addLeading0x = (id: HexString): `0x${string}` =>
+  hasLeading0x(id) ? id : `0x${id}`;
+
+const hasLeading0x = (input: string): input is `0x${string}` =>
+  input.startsWith("0x");
 
 export function isWsEndpoint(endpoint: string): boolean {
   const url = new URL(endpoint);
@@ -47,3 +46,11 @@ export function verifyValidOption<
     option + " is not a valid option. Please choose between " + validOptions;
   throw new Error(errorString);
 }
+
+export const assertDefined = <T>(value: T | undefined): T => {
+  if (value === undefined) {
+    throw new Error("Assertion failed: value was undefined");
+  } else {
+    return value;
+  }
+};
