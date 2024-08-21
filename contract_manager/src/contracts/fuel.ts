@@ -128,8 +128,9 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   }
 
   getId(): string {
-    return `${this.chain.getId()}_${this.address}_${FuelPriceFeedContract.type
-      }`;
+    return `${this.chain.getId()}_${this.address}_${
+      FuelPriceFeedContract.type
+    }`;
   }
 
   getType(): string {
@@ -239,8 +240,9 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const pythContract = await this.getContract();
-    const result: DryRunResult<DataSourceOutput> =
-      await pythContract.functions.governance_data_source().get();
+    const result: DryRunResult<DataSourceOutput> = await pythContract.functions
+      .governance_data_source()
+      .get();
     return {
       emitterChain: result.value.chain_id,
       emitterAddress: result.value.emitter_address.replace("0x", ""),
