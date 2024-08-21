@@ -296,31 +296,18 @@ export class EvmPricePusher implements IPricePusher {
           [priceFeedUpdateData, priceIdsWith0x, pubTimesToPushParam],
           {
             value: updateFee,
-            gasPrice: BigInt(Math.round(gasPrice)),
+            gasPrice: BigInt(Math.ceil(gasPrice)),
             nonce: txNonce,
             gas:
               this.gasLimit !== undefined
-                ? BigInt(Math.round(this.gasLimit))
+                ? BigInt(Math.ceil(this.gasLimit))
                 : undefined,
           }
         );
 
       this.logger.debug({ request }, "Simulated request successfully");
 
-      const hash = await this.pythContract.write.updatePriceFeedsIfNecessary(
-        [priceFeedUpdateData, priceIdsWith0x, pubTimesToPushParam],
-        {
-          value: updateFee,
-          gasPrice: BigInt(Math.round(gasPrice)),
-          nonce: txNonce,
-          gas:
-            this.gasLimit !== undefined
-              ? BigInt(Math.round(this.gasLimit))
-              : undefined,
-          chain: this.client.chain,
-          account: this.client.account!,
-        }
-      );
+      const hash = await this.client.writeContract(request);
 
       this.logger.info({ hash }, "Price update sent");
 
@@ -345,10 +332,10 @@ export class EvmPricePusher implements IPricePusher {
         if (err.walk((e) => e instanceof InsufficientFundsError)) {
           this.logger.error(
             { err },
-            "Wallet doesn't have enough balance. In a rare case, there might be issues with gas price " +
+            "Wallet doesn't have enough balance. In rare cases, there might be issues with gas price " +
               "calculation in the RPC."
           );
-          throw new Error("Please top up the wallet");
+          throw err;
         }
 
         if (
@@ -457,6 +444,7 @@ export class EvmPricePusher implements IPricePusher {
 
       switch (receipt.status) {
         case "success":
+          this.logger.debug({ hash, receipt }, "Price update successful");
           this.logger.info({ hash }, "Price update successful");
           break;
         default:

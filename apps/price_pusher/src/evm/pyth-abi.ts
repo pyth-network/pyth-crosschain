@@ -1,4 +1,4 @@
-const IPyth = [
+export const IPythAbi = [
   {
     anonymous: false,
     inputs: [
@@ -546,7 +546,7 @@ const IPyth = [
   },
 ] as const;
 
-const IPythEvents = [
+export const IPythEventsAbi = [
   {
     anonymous: false,
     inputs: [
@@ -580,7 +580,7 @@ const IPythEvents = [
   },
 ] as const;
 
-const PythErrors = [
+export const PythErrorsAbi = [
   {
     inputs: [],
     name: "InsufficientFee",
@@ -653,4 +653,8 @@ const PythErrors = [
   },
 ] as const;
 
-export const PythAbi = [...IPyth, ...IPythEvents, ...PythErrors] as const;
+export const PythAbi = [
+  ...IPythAbi,
+  ...IPythEventsAbi,
+  ...PythErrorsAbi,
+] as const;
