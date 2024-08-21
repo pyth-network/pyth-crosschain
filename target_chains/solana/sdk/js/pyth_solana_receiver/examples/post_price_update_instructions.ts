@@ -1,9 +1,6 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import {
-  InstructionWithEphemeralSigners,
-  PythSolanaReceiver,
-} from "@pythnetwork/pyth-solana-receiver";
+import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
