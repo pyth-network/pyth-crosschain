@@ -99,7 +99,7 @@ int governance_action_is_consumed(int hash) method_id {
 }
 
 
-() verify_signatures(int hash, slice signatures, int signers_length, int guardian_set_size) impure {
+() verify_signatures(int hash, slice signatures, int signers_length, cell guardian_set_keys, int guardian_set_size) impure {
     slice cs = signatures;
     int last_index = 0;
     int i = 0;
@@ -114,7 +114,10 @@ int governance_action_is_consumed(int hash) method_id {
         int v = cs~load_uint(8);
         (_, int x1, int x2, int valid) = check_sig(hash, v >= 27 ? v - 27 : v, r, s);
         throw_unless(ERROR_INVALID_SIGNATURES, valid);
-        int address = parse_pubkey(x1, x2);
+        int parsed_address = parse_pubkey(x1, x2);
+        (slice guardian_key, int found?) = guardian_set_keys.udict_get?(8, guardian_index);
+        int guardian_address = guardian_key~load_uint(160);
+        throw_unless(ERROR_INVALID_GUARDIAN_ADDRESS, parsed_address == guardian_address);
         valid_signatures += 1;
         i += 1;
     }
@@ -161,7 +164,7 @@ int governance_action_is_consumed(int hash) method_id {
 
     int hash = hash_vm_body(body_cell.begin_parse());
     ;; Verify signatures
-    verify_signatures(hash, signatures.begin_parse(), signers_length, keys_count);
+    verify_signatures(hash, signatures.begin_parse(), signers_length, keys, keys_count);
 
     slice body_slice = body_cell.begin_parse();
     int timestamp = body_slice~load_uint(32);
