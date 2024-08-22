@@ -46,7 +46,23 @@ int hash_vm_body(slice s) inline {
     return (chunks, data);
 }
 
+{-
+This function reads a specified number of bits from the input slice and stores them in a cell structure,
+handling data that may exceed the maximum cell capacity in FunC (1023 bits).
 
+Parameters:
+   - in_msg_body: The input slice containing the data to be read
+   - size: The number of bits to read from the input
+Returns:
+   - A tuple containing:
+     1. A cell containing the read data, potentially spanning multiple cells if the size exceeds 1016 bits
+         2. A slice containing the remaining unread data from the input
+
+Note:
+   - The function uses a maximum of 1016 bits per cell (instead of 1023) to ensure byte alignment
+   - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
+   - The resulting cell structure is built in reverse order, with each cell referencing the previous one
+-}
 (cell, slice) read_and_store_large_data(slice in_msg_body, int size) impure {
     (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
     cell last_cell = null();
