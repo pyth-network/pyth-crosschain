@@ -10,6 +10,7 @@ import {
   SendMode,
 } from "@ton/core";
 import { createCellChain } from "../tests/utils";
+import { parseGuardianSetKeys } from "../tests/utils/wormhole";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;
@@ -78,11 +79,7 @@ export class WormholeTest implements Contract {
       .storeDict(guardianSets)
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
-      .storeRef(
-        beginCell()
-          .storeBuffer(Buffer.from(governanceContract, "hex"))
-          .endCell()
-      )
+      .storeBuffer(Buffer.from(governanceContract, "hex"))
       .storeDict(Dictionary.empty()) // consumed_governance_actions, empty for initial state
       .endCell();
   }
@@ -110,7 +107,7 @@ export class WormholeTest implements Contract {
       action: result.stack.readNumber(),
       chain: result.stack.readNumber(),
       module: result.stack.readBigNumber(),
-      newGuardianSetKeys: result.stack.readCell(),
+      newGuardianSetKeys: parseGuardianSetKeys(result.stack.readCell()),
       newGuardianSetIndex: result.stack.readNumber(),
     };
   }
@@ -127,10 +124,9 @@ export class WormholeTest implements Contract {
     const nonce = result.stack.readNumber();
     const emitter_chain_id = result.stack.readNumber();
     const emitter_address = result.stack
-      .readCell()
-      .beginParse()
-      .loadBits(256)
-      .toString();
+      .readBigNumber()
+      .toString(16)
+      .padStart(64, "0");
     const sequence = result.stack.readNumber();
     const consistency_level = result.stack.readNumber();
     const payloadCell = result.stack.readCell();
@@ -166,5 +162,29 @@ export class WormholeTest implements Contract {
     const result = await provider.get("test_get_guardian_set_index", []);
 
     return result.stack.readNumber();
+  }
+
+  async getUpdateGuardianSet(provider: ContractProvider, vm: Buffer) {
+    const result = await provider.get("test_update_guardian_set", [
+      { type: "slice", cell: createCellChain(vm) },
+    ]);
+
+    return result.stack.readNumber();
+  }
+
+  async getGetGuardianSet(provider: ContractProvider, index: number) {
+    const result = await provider.get("test_get_guardian_set", [
+      { type: "int", value: BigInt(index) },
+    ]);
+
+    const expirationTime = result.stack.readNumber();
+    const keys = parseGuardianSetKeys(result.stack.readCell());
+    const keyCount = result.stack.readNumber();
+
+    return {
+      expirationTime,
+      keys,
+      keyCount,
+    };
   }
 }
