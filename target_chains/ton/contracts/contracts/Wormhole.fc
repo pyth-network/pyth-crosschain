@@ -149,11 +149,11 @@ int governance_action_is_consumed(int hash) method_id {
         ((expiration_time == 0) | (expiration_time > now()))
     );
     int signers_length = in_msg_body~load_uint(8);
-    ;; Calculate hash_index in bytes (66 bytes per signature: 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v))
-    int hash_index = signers_length * 66;
+    ;; Calculate signatures_size in bits (66 bytes per signature: 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v))
+    int signatures_size = signers_length * 66 * 8;
 
     ;; Load signatures
-    (cell signatures, slice remaining_body) = read_and_store_large_data(in_msg_body, hash_index * 8);
+    (cell signatures, slice remaining_body) = read_and_store_large_data(in_msg_body, signatures_size);
     in_msg_body = remaining_body;
 
     ;; Calculate total body length across all references
