@@ -18,8 +18,10 @@ export function createCellChain(buffer: Buffer): Cell {
   }
 
   // lastCell will be the root cell of our chain
-  const rootCell = lastCell!;
-  return rootCell;
+  if (!lastCell) {
+    throw new Error("Failed to create cell chain");
+  }
+  return lastCell;
 }
 
 function bufferToChunks(

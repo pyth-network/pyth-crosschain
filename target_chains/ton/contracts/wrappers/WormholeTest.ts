@@ -20,16 +20,6 @@ export type WormholeTestConfig = {
   governanceContract: string;
 };
 
-export function pythConfigToCell(config: WormholeTestConfig): Cell {
-  return WormholeTest.getWormholeInitData(
-    config.guardianSetIndex,
-    config.guardianSet,
-    config.chainId,
-    config.governanceChainId,
-    config.governanceContract
-  );
-}
-
 export class WormholeTest implements Contract {
   constructor(
     readonly address: Address,
@@ -45,7 +35,13 @@ export class WormholeTest implements Contract {
     code: Cell,
     workchain = 0
   ) {
-    const data = pythConfigToCell(config);
+    const data = WormholeTest.getWormholeInitData(
+      config.guardianSetIndex,
+      config.guardianSet,
+      config.chainId,
+      config.governanceChainId,
+      config.governanceContract
+    );
     const init = { code, data };
     return new WormholeTest(contractAddress(workchain, init), init);
   }
