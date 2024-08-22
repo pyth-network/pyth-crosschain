@@ -65,7 +65,7 @@ int hash_vm_body(slice s) inline {
     return (last_cell, remaining);
 }
 
-(int) parse_pubkey(int x1, int x2) {
+(int) pubkey_to_eth_address(int x1, int x2) {
     slice pubkey = begin_cell()
             .store_uint(x1, 256)
             .store_uint(x2, 256)
