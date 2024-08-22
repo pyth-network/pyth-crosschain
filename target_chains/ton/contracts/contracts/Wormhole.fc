@@ -58,7 +58,7 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 ;; store_data stores data in the contract
 () store_data() impure inline_ref {
     begin_cell()
-        .store_uint(guardian_set_index, 32)
+        .store_uint(current_guardian_set_index, 32)
         .store_dict(guardian_sets)
         .store_uint(chain_id, 16)
         .store_uint(governance_chain_id, 16)
@@ -71,9 +71,9 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 ;; load_data populates storage variables using stored data
 () load_data() impure inline_ref {
     var ds = get_data().begin_parse();
-    guardian_set_index = ds~load_uint(32);
+    current_guardian_set_index = ds~load_uint(32);
     guardian_sets = ds~load_dict();
-    (int expiration_time, cell keys, int key_count) = get_guardian_set_internal(guardian_set_index);
+    (int expiration_time, cell keys, int key_count) = get_guardian_set_internal(current_guardian_set_index);
     chain_id = ds~load_uint(16);
     governance_chain_id = ds~load_uint(16);
     governance_contract = ds~load_uint(256);
@@ -83,8 +83,8 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 
 
 ;; Get methods
-int get_guardian_set_index() method_id {
-    return guardian_set_index;
+int get_current_guardian_set_index() method_id {
+    return current_guardian_set_index;
 }
 
 (int, cell, int) get_guardian_set(int index) method_id {
@@ -145,7 +145,7 @@ int governance_action_is_consumed(int hash) method_id {
     (int expiration_time, cell keys, int key_count) = get_guardian_set_internal(vm_guardian_set_index);
     throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys));
     throw_unless(ERROR_INVALID_GUARDIAN_SET,
-        (guardian_set_index == vm_guardian_set_index) &
+        (current_guardian_set_index == vm_guardian_set_index) &
         ((expiration_time == 0) | (expiration_time > now()))
     );
     int signers_length = in_msg_body~load_uint(8);
@@ -248,17 +248,17 @@ int governance_action_is_consumed(int hash) method_id {
     throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
 
     ;; Parse the new guardian set from the payload
-    (int action, int chain, int module, cell new_guardian_set_keys, int new_guardian_set_index) = parse_encoded_upgrade(guardian_set_index, payload);
+    (int action, int chain, int module, cell new_guardian_set_keys, int new_guardian_set_index) = parse_encoded_upgrade(current_guardian_set_index, payload);
 
     ;; Set expiry if current GuardianSet exists
-    (slice current_guardian_set, int found?) = guardian_sets.udict_get?(32, guardian_set_index);
+    (slice current_guardian_set, int found?) = guardian_sets.udict_get?(32, current_guardian_set_index);
     if (found?) {
         (int expiration_time, cell keys, int key_count) = parse_guardian_set(current_guardian_set);
         cell updated_guardian_set = begin_cell()
             .store_uint(now() + GUARDIAN_SET_EXPIRY, 64) ;; expiration time
             .store_dict(keys) ;; keys
         .end_cell();
-        guardian_sets~udict_set(32, guardian_set_index, updated_guardian_set.begin_parse());
+        guardian_sets~udict_set(32, current_guardian_set_index, updated_guardian_set.begin_parse());
     }
 
     ;; Store the new guardian set
@@ -269,7 +269,7 @@ int governance_action_is_consumed(int hash) method_id {
     guardian_sets~udict_set(32, new_guardian_set_index, new_guardian_set.begin_parse());
 
     ;; Update the current guardian set index
-    guardian_set_index = new_guardian_set_index;
+    current_guardian_set_index = new_guardian_set_index;
 
     ;; Mark the governance action as consumed
     consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());

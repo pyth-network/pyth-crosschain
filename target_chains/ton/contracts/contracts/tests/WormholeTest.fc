@@ -16,15 +16,15 @@
 
 (int) test_update_guardian_set(slice in_msg_body) method_id {
     load_data();
-    int old_guardian_set_index = get_guardian_set_index();
+    int old_guardian_set_index = get_current_guardian_set_index();
     update_guardian_set(in_msg_body);
-    int new_guardian_set_index = get_guardian_set_index();
+    int new_guardian_set_index = get_current_guardian_set_index();
     return new_guardian_set_index > old_guardian_set_index;
 }
 
-(int) test_get_guardian_set_index() method_id {
+(int) test_get_current_guardian_set_index() method_id {
     load_data();
-    return guardian_set_index;
+    return current_guardian_set_index;
 }
 
 (int, cell, int) test_get_guardian_set(int index) method_id {

@@ -158,8 +158,11 @@ export class WormholeTest implements Contract {
     };
   }
 
-  async getGuardianSetIndex(provider: ContractProvider) {
-    const result = await provider.get("test_get_guardian_set_index", []);
+  async getCurrentGuardianSetIndex(provider: ContractProvider) {
+    const result = await provider.get(
+      "test_get_current_guardian_set_index",
+      []
+    );
 
     return result.stack.readNumber();
   }

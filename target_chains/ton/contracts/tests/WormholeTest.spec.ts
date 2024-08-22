@@ -58,7 +58,7 @@ describe("WormholeTest", () => {
       success: true,
     });
 
-    const guardianSetIndexRes = await wormholeTest.getGuardianSetIndex();
+    const guardianSetIndexRes = await wormholeTest.getCurrentGuardianSetIndex();
     expect(guardianSetIndexRes).toBe(guardianSetIndex);
   }
 
