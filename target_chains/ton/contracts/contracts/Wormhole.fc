@@ -207,7 +207,7 @@ int governance_action_is_consumed(int hash) method_id {
 
     int chain = payload~load_uint(16);
     int new_guardian_set_index = payload~load_uint(32);
-    throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index > current_guardian_set_index);
+    throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index == (current_guardian_set_index + 1));
 
     int guardian_length = payload~load_uint(8);
     cell new_guardian_set_keys = new_dict();
