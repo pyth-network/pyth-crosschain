@@ -30,9 +30,9 @@ describe("WormholeTest", () => {
   async function deployContract(
     guardianSetIndex: number = 0,
     guardianSet: string[] = GUARDIAN_SET_0,
-    chainId: number = 10,
-    governanceChainId: number = 10,
-    governanceContract: string = "000000000000000000000000000000000000000000000 0000000000000000000"
+    chainId: number = 1,
+    governanceChainId: number = 1,
+    governanceContract: string = "0000000000000000000000000000000000000000000000000000000000000004"
   ) {
     const config: WormholeTestConfig = {
       guardianSetIndex,
@@ -84,9 +84,7 @@ describe("WormholeTest", () => {
     expect(result.module.toString(16)).toBe("436f7265");
     expect(result.newGuardianSetIndex).toBeGreaterThan(currentGuardianSetIndex);
     expect(result.newGuardianSetIndex).toBe(newGuardianSetIndex);
-
-    const parsedKeys = parseGuardianSetKeys(result.newGuardianSetKeys);
-    expect(parsedKeys).toEqual(GUARDIAN_SET_4);
+    expect(result.newGuardianSetKeys).toEqual(GUARDIAN_SET_4);
   });
 
   it("should correctly parse and verify wormhole vm", async () => {
@@ -111,5 +109,16 @@ describe("WormholeTest", () => {
     expect(result.hash).toBe(
       "ed3a5600d44b9dcc889daf0178dd69ab1e9356308194ba3628a7b720ae48a8d5"
     );
+  });
+
+  it("should correctly update guardian set", async () => {
+    await deployContract();
+
+    const mainnet_upgrade_vaa_1 = MAINNET_UPGRADE_VAAS[0];
+
+    const getUpdateGuardianSetResult = await wormholeTest.getUpdateGuardianSet(
+      Buffer.from(mainnet_upgrade_vaa_1, "hex")
+    );
+    expect(getUpdateGuardianSetResult).toBe(-1);
   });
 });

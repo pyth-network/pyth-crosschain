@@ -98,9 +98,19 @@ export function createGuardianSetUpgradeBytes(
   const payload = Buffer.alloc(1024);
   let offset = 0;
 
-  // Module (Core)
-  payload.write("436f7265", 0, 4, "hex");
-  offset += 4;
+  // Write the "Core" module (32 bytes / 256 bits) in big-endian format
+  // We split it into 4 64-bit chunks to ensure proper alignment and endianness
+  // This is necessary because the FunC code expects a 256-bit integer
+  // The last chunk contains the actual "Core" string (0x436f7265) at the end,
+  // preceded by leading zeros to fill the 64 bits
+  payload.writeBigUInt64BE(BigInt("0x0000000000000000"), offset);
+  offset += 8;
+  payload.writeBigUInt64BE(BigInt("0x0000000000000000"), offset);
+  offset += 8;
+  payload.writeBigUInt64BE(BigInt("0x0000000000000000"), offset);
+  offset += 8;
+  payload.writeBigUInt64BE(BigInt("0x00000000436f7265"), offset);
+  offset += 8;
 
   // Action (2 for GuardianSetUpgrade)
   payload.writeUInt8(2, offset);
@@ -130,9 +140,8 @@ export function createGuardianSetUpgradeBytes(
 export function parseGuardianSetKeys(cell: Cell): string[] {
   const keys: string[] = [];
 
-  function parseCell(c: Cell, depth = 0) {
+  function parseCell(c: Cell) {
     let slice = c.beginParse();
-
     while (slice.remainingRefs > 0 || slice.remainingBits >= 160) {
       if (slice.remainingBits >= 160) {
         const bitsToSkip = slice.remainingBits - 160;
@@ -141,7 +150,7 @@ export function parseGuardianSetKeys(cell: Cell): string[] {
         keys.push("0x" + key.toString());
       }
       if (slice.remainingRefs > 0) {
-        parseCell(slice.loadRef(), depth + 1);
+        parseCell(slice.loadRef());
       }
     }
   }

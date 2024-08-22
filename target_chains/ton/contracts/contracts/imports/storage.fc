@@ -4,5 +4,5 @@ global cell guardian_sets;
 global int chain_id;
 global int governance_chain_id;
 ;; GovernanceContract struct: {chain_id: int, address: slice}
-global cell governance_contract;
+global int governance_contract;
 global cell consumed_governance_actions;
