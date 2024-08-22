@@ -10,8 +10,8 @@
 ;; These opcodes swap nulls onto the stack if ECRECOVER fails, maintaining the 4-value return
 (int, int, int, int) check_sig (int hash, int v, int r, int s) asm
     "ECRECOVER"     ;; Attempt to recover the signer's address
-    "NULLSWAPIFNOT" ;; If recovery failed, swap null with top of stack
-    "NULLSWAPIFNOT2";  ;; If recovery failed, swap two more nulls with top of stack
+    "NULLSWAPIFNOT" ;; If recovery failed, insert null under the top of the stack
+    "NULLSWAPIFNOT2";  ;; If recovery failed, insert two more nulls under the top of the stack
 
 ;; Constants
 const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
@@ -116,7 +116,8 @@ int governance_action_is_consumed(int hash) method_id {
 
     while (i < signers_length) {
         int guardian_index = cs~load_uint(8);
-        (_, _, _) = get_guardian_set_internal(guardian_index);
+        (_, int found?) = guardian_sets.udict_get?(32, guardian_index);
+        throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
         int r = cs~load_uint(256);
         int s = cs~load_uint(256);
         int v = cs~load_uint(8);
