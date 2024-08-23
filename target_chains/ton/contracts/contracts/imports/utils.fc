@@ -1,0 +1,92 @@
+;; Built-in assembly functions
+int keccak256(slice s) asm "1 PUSHINT HASHEXT_KECCAK256"; ;; Keccak-256 hash function
+;; TODO: Implement a Fift-based solution for arbitrary-sized input.
+int keccack256_4(slice s1, slice s2, slice s3, slice s4) asm "4 PUSHINT HASHEXT_KECCAK256";
+
+const MAX_BITS = 1016;
+
+int hash_vm_body(slice s) inline {
+    ;; Assumes the input slice 's' contains a VM body stored across 4 cells,
+    ;; each containing up to 1016 bits of data.
+    ;; The total size of the VM body should not exceed 4064 bits (4 * 1016).
+    slice s1 = s~load_bits(s.slice_bits());
+    s = s~load_ref().begin_parse();
+    slice s2 = s~load_bits(s.slice_bits());
+    s = s~load_ref().begin_parse();
+    slice s3 = s~load_bits(s.slice_bits());
+    s = s~load_ref().begin_parse();
+    slice s4 = s~load_bits(s.slice_bits());
+    int hash = keccack256_4(s1, s2, s3, s4);
+    slice hash_slice = begin_cell().store_uint(hash, 256).end_cell().begin_parse();
+    return keccak256(hash_slice);
+}
+
+;; Splits a slice into chunks of MAX_BITS bits or less, in reverse order
+(cell, slice) split_into_reverse_chunks(slice data, int size) {
+    cell chunks = null();
+    int total_bits_loaded = 0;
+    builder current_chunk = begin_cell();
+    while ((~ data.slice_empty?()) & (total_bits_loaded < size)) {
+        int bits_to_load = min(min(data.slice_bits(), MAX_BITS - current_chunk.builder_bits()), size - total_bits_loaded);
+        current_chunk = current_chunk.store_slice(data~load_bits(bits_to_load));
+        total_bits_loaded += bits_to_load;
+        if ((current_chunk.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
+            slice current_chunk_slice = current_chunk.end_cell().begin_parse();
+            if (cell_null?(chunks)) {
+                chunks = begin_cell().store_slice(current_chunk_slice).end_cell();
+            } else {
+                chunks = begin_cell().store_slice(current_chunk_slice).store_ref(chunks).end_cell();
+            }
+            current_chunk = begin_cell();
+        }
+        if ((data.slice_bits() == 0) & (~ data.slice_refs_empty?())) {
+            data = data~load_ref().begin_parse();
+        }
+    }
+    return (chunks, data);
+}
+
+{-
+This function reads a specified number of bits from the input slice and stores them in a cell structure,
+handling data that may exceed the maximum cell capacity in FunC (1023 bits).
+
+Parameters:
+   - in_msg_body: The input slice containing the data to be read
+   - size: The number of bits to read from the input
+Returns:
+   - A tuple containing:
+     1. A cell containing the read data, potentially spanning multiple cells if the size exceeds 1016 bits
+         2. A slice containing the remaining unread data from the input
+
+Note:
+   - The function uses a maximum of 1016 bits per cell (instead of 1023) to ensure byte alignment
+   - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
+-}
+(cell, slice) read_and_store_large_data(slice in_msg_body, int size) impure {
+    (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
+    cell last_cell = null();
+    while (~ cell_null?(chunks)) {
+        slice chunk = chunks.begin_parse();
+        builder cb = begin_cell().store_slice(chunk~load_bits(chunk.slice_bits()));
+        if (~ cell_null?(last_cell)) {
+            cb = cb.store_ref(last_cell);
+        }
+        last_cell = cb.end_cell();
+        if (chunk.slice_refs_empty?()) {
+            chunks = null();
+        } else {
+            chunks = chunk~load_ref();
+        }
+    }
+
+    return (last_cell, remaining);
+}
+
+(int) pubkey_to_eth_address(int x1, int x2) {
+    slice pubkey = begin_cell()
+            .store_uint(x1, 256)
+            .store_uint(x2, 256)
+            .end_cell()
+            .begin_parse();
+    return keccak256(pubkey) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+}
