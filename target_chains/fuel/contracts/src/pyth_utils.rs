@@ -7,7 +7,7 @@ use crate::constants::{
 use base64::{engine::general_purpose, prelude::Engine};
 use fuels::{
     prelude::{abigen, CallParameters, Contract, LoadConfiguration, TxPolicies, WalletUnlocked},
-    programs::responses::CallResponse,
+    programs::{calls::Execution, responses::CallResponse},
     tx::Receipt,
     types::{
         errors::{transaction::Reason, Error},
@@ -171,7 +171,7 @@ impl Pyth {
         self.instance
             .methods()
             .price(price_feed_id)
-            .simulate()
+            .simulate(Execution::StateReadOnly)
             .await
     }
 
@@ -192,7 +192,7 @@ impl Pyth {
         self.instance
             .methods()
             .update_fee(update_data.to_vec())
-            .simulate()
+            .simulate(Execution::StateReadOnly)
             .await
     }
 
@@ -248,7 +248,7 @@ impl Pyth {
         self.instance
             .methods()
             .current_guardian_set_index()
-            .simulate()
+            .simulate(Execution::StateReadOnly)
             .await
     }
 }

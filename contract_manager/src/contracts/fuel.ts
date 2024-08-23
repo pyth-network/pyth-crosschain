@@ -13,7 +13,7 @@ import {
   Wallet,
   arrayify,
   hexlify,
-  InvocationCallResult,
+  DryRunResult,
 } from "fuels";
 import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
 
@@ -99,9 +99,12 @@ export class FuelWormholeContract extends WormholeContract {
     const tx = await contract.functions
       .submit_new_guardian_set(arrayify(vaa))
       .call(); // you might get `Error updating Guardianset for fuel_testnet_{address} TypeError: response.body.getReader is not a function` but the tx could still be successful, this is due to fuels using native fetch but some other packages in the monorepo is using node-fetch which overrides the fetch here
+
+    const txResult = await tx.waitForResult();
+
     return {
       id: tx.transactionId,
-      info: JSON.stringify(tx.transactionResponse),
+      info: JSON.stringify(txResult.transactionResponse),
     };
   }
 }
@@ -217,7 +220,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getDataSources(): Promise<DataSource[]> {
     const pythContract = await this.getContract();
-    const result: InvocationCallResult<DataSourceOutput[]> =
+    const result: DryRunResult<DataSourceOutput[]> =
       await pythContract.functions.valid_data_sources().get();
     return result.value.map(
       ({
@@ -237,8 +240,9 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const pythContract = await this.getContract();
-    const result: InvocationCallResult<DataSourceOutput> =
-      await pythContract.functions.governance_data_source().get();
+    const result: DryRunResult<DataSourceOutput> = await pythContract.functions
+      .governance_data_source()
+      .get();
     return {
       emitterChain: result.value.chain_id,
       emitterAddress: result.value.emitter_address.replace("0x", ""),
@@ -259,7 +263,9 @@ export class FuelPriceFeedContract extends PriceFeedContract {
       })
       .call();
 
-    return { id: tx.transactionId, info: tx.transactionResponse };
+    const txResult = await tx.waitForResult();
+
+    return { id: tx.transactionId, info: txResult.transactionResponse };
   }
 
   async executeGovernanceInstruction(
@@ -271,7 +277,10 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const tx = await contract.functions
       .execute_governance_instruction(arrayify(vaa))
       .call();
-    return { id: tx.transactionId, info: tx.transactionResponse };
+
+    const txResult = await tx.waitForResult();
+
+    return { id: tx.transactionId, info: txResult.transactionResponse };
   }
 
   getChain(): FuelChain {
