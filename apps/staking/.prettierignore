@@ -1,0 +1,7 @@
+.next/
+coverage/
+node_modules/
+*.tsbuildinfo
+.env*.local
+.env
+.DS_Store
