@@ -87,6 +87,30 @@ describe("WormholeTest", () => {
     expect(result.newGuardianSetKeys).toEqual(GUARDIAN_SET_4);
   });
 
+  it("should fail with invalid encoded upgrade", async () => {
+    await deployContract();
+
+    const currentGuardianSetIndex = 3;
+    const newGuardianSetIndex = 4;
+    const chainId = 1; // Example chain ID
+    const encodedUpgrade = createGuardianSetUpgradeBytes(
+      chainId,
+      newGuardianSetIndex,
+      GUARDIAN_SET_4
+    );
+
+    // Replace the first 32 bytes with zeros
+    const zeroBytes = Buffer.alloc(32, 0);
+    zeroBytes.copy(encodedUpgrade, 0, 0, 32);
+
+    await expect(
+      wormholeTest.getParseEncodedUpgrade(
+        currentGuardianSetIndex,
+        encodedUpgrade
+      )
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1011"); // ERROR_INVALID_MODULE = 1011
+  });
+
   it("should correctly parse and verify wormhole vm", async () => {
     await deployContract();
 
@@ -120,5 +144,15 @@ describe("WormholeTest", () => {
       Buffer.from(mainnet_upgrade_vaa_1, "hex")
     );
     expect(getUpdateGuardianSetResult).toBe(-1);
+  });
+
+  it("should fail with wrong vaa", async () => {
+    await deployContract();
+    const invalid_mainnet_upgrade_vaa = "00" + MAINNET_UPGRADE_VAAS[0].slice(2);
+    await expect(
+      wormholeTest.getUpdateGuardianSet(
+        Buffer.from(invalid_mainnet_upgrade_vaa, "hex")
+      )
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1001"); // ERROR_INVALID_VERSION = 1001
   });
 });
