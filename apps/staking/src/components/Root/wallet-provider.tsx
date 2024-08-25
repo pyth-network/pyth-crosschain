@@ -9,7 +9,6 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   GlowWalletAdapter,
   LedgerWalletAdapter,
-  PhantomWalletAdapter,
   SolflareWalletAdapter,
   SolletExtensionWalletAdapter,
   SolletWalletAdapter,
@@ -41,7 +40,6 @@ export const WalletProvider = ({
     () => [
       new GlowWalletAdapter(),
       new LedgerWalletAdapter(),
-      new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
       new SolletExtensionWalletAdapter(),
       new SolletWalletAdapter(),

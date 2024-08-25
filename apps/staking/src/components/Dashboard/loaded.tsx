@@ -1,8 +1,7 @@
-import type { WalletContextState } from "@solana/wallet-adapter-react";
-import type { Connection } from "@solana/web3.js";
 import clsx from "clsx";
 import { type ReactNode, useMemo, useCallback } from "react";
 
+import { SparkChart } from "./spark-chart";
 import {
   deposit,
   withdraw,
@@ -13,38 +12,53 @@ import {
   cancelWarmupIntegrityStaking,
   unstakeIntegrityStaking,
   claim,
+  calculateApy,
 } from "../../api";
+import type { Context } from "../../use-api-context";
 import { StateType, useTransfer } from "../../use-transfer";
 import { Button } from "../Button";
+import { ModalButton } from "../ModalButton";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
 
 type Props = {
-  replaceData: (newData: Omit<Props, "replaceData">) => void;
   total: bigint;
+  lastSlash:
+    | {
+        amount: bigint;
+        date: Date;
+      }
+    | undefined;
   walletAmount: bigint;
   availableRewards: bigint;
+  expiringRewards: {
+    amount: bigint;
+    expiry: Date;
+  };
   locked: bigint;
+  unlockSchedule: {
+    amount: bigint;
+    date: Date;
+  }[];
   governance: {
     warmup: bigint;
     staked: bigint;
     cooldown: bigint;
     cooldown2: bigint;
   };
-  integrityStakingPublishers: Omit<
-    PublisherProps,
-    "availableToStake" | "replaceData"
-  >[];
+  integrityStakingPublishers: PublisherProps["publisher"][];
 };
 
 export const DashboardLoaded = ({
   total,
+  lastSlash,
   walletAmount,
   availableRewards,
+  expiringRewards,
   governance,
   integrityStakingPublishers,
   locked,
-  replaceData,
+  unlockSchedule,
 }: Props) => {
   const availableToStakeGovernance = useMemo(
     () =>
@@ -102,6 +116,16 @@ export const DashboardLoaded = ({
     [availableToStakeGovernance, availableToStakeIntegrity],
   );
 
+  const self = useMemo(
+    () => integrityStakingPublishers.find((publisher) => publisher.isSelf),
+    [integrityStakingPublishers],
+  );
+
+  const otherPublishers = useMemo(
+    () => integrityStakingPublishers.filter((publisher) => !publisher.isSelf),
+    [integrityStakingPublishers],
+  );
+
   return (
     <>
       <div className="flex w-full flex-col gap-8 bg-pythpurple-100 p-8">
@@ -113,12 +137,19 @@ export const DashboardLoaded = ({
                 actionDescription="Add funds to your balance"
                 actionName="Deposit"
                 max={walletAmount}
-                replaceData={replaceData}
                 transfer={deposit}
               >
                 <strong>In wallet:</strong> <Tokens>{walletAmount}</Tokens>
               </TransferButton>
             }
+            {...(lastSlash && {
+              disclaimer: (
+                <>
+                  <Tokens>{lastSlash.amount}</Tokens> were slashed on{" "}
+                  {lastSlash.date.toLocaleString()}
+                </>
+              ),
+            })}
           >
             {total}
           </BalanceCategory>
@@ -126,31 +157,82 @@ export const DashboardLoaded = ({
             name="Available to withdraw"
             description="The lesser of the amount you have available to stake in governance & integrity staking"
             {...(availableToWithdraw > 0 && {
-              actions: (
-                <TransferButton
-                  actionDescription="Move funds from your account back to your wallet"
-                  actionName="Withdraw"
-                  max={availableToWithdraw}
-                  replaceData={replaceData}
-                  transfer={withdraw}
-                >
-                  <strong>Available to withdraw:</strong>{" "}
-                  <Tokens>{availableToWithdraw}</Tokens>
-                </TransferButton>
-              ),
+              actions:
+                availableRewards > 0 ? (
+                  <ClaimRequiredButton
+                    buttonText="Withdraw"
+                    description="Before you can withdraw tokens, you must claim your unclaimed rewards"
+                    availableRewards={availableRewards}
+                  />
+                ) : (
+                  <TransferButton
+                    actionDescription="Move funds from your account back to your wallet"
+                    actionName="Withdraw"
+                    max={availableToWithdraw}
+                    transfer={withdraw}
+                  >
+                    <strong>Available to withdraw:</strong>{" "}
+                    <Tokens>{availableToWithdraw}</Tokens>
+                  </TransferButton>
+                ),
             })}
           >
             {availableToWithdraw}
           </BalanceCategory>
           <BalanceCategory
-            name="Claimable rewards"
-            description="Rewards you have earned but not yet claimed from the Integrity Staking program"
+            name="Available rewards"
+            description="Rewards you have earned but not yet claimed from the Integrity Staking program."
+            {...(expiringRewards.amount > 0n && {
+              disclaimer: (
+                <>
+                  <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
+                  {expiringRewards.expiry.toLocaleString()} if you have not
+                  claimed before then
+                </>
+              ),
+            })}
             {...(availableRewards > 0 && {
-              actions: <ClaimButton replaceData={replaceData} />,
+              actions: <ClaimButton />,
             })}
           >
             {availableRewards}
           </BalanceCategory>
+          {locked && (
+            <BalanceCategory
+              name="Locked tokens"
+              description="Locked tokens cannot be withdrawn to your wallet and cannot participate in Integrity Staking."
+              actions={
+                <ModalButton
+                  title="Unlock Schedule"
+                  buttonContent="Show Unlock Schedule"
+                  description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
+                >
+                  <table>
+                    <thead className="font-medium">
+                      <tr>
+                        <td>Date</td>
+                        <td>Amount</td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unlockSchedule.map((unlock, i) => (
+                        <tr key={i}>
+                          <td className="pr-4">
+                            {unlock.date.toLocaleString()}
+                          </td>
+                          <td>
+                            <Tokens>{unlock.amount}</Tokens>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </ModalButton>
+              }
+            >
+              {locked}
+            </BalanceCategory>
+          )}
         </div>
         <div className="flex flex-col items-stretch justify-between gap-8">
           <section className="bg-black/10 p-4">
@@ -165,7 +247,6 @@ export const DashboardLoaded = ({
                     actionDescription="Stake funds to participate in governance votes"
                     actionName="Stake"
                     max={availableToStakeGovernance}
-                    replaceData={replaceData}
                     transfer={stakeGovernance}
                   >
                     <strong>Available to stake:</strong>{" "}
@@ -185,7 +266,6 @@ export const DashboardLoaded = ({
                     submitButtonText="Cancel Warmup"
                     title="Cancel Governance Staking"
                     max={governance.warmup}
-                    replaceData={replaceData}
                     transfer={cancelWarmupGovernance}
                   >
                     <strong>Max:</strong> <Tokens>{governance.warmup}</Tokens>
@@ -206,7 +286,6 @@ export const DashboardLoaded = ({
                     actionName="Unstake"
                     title="Unstake From Governance"
                     max={governance.staked}
-                    replaceData={replaceData}
                     transfer={unstakeGovernance}
                   >
                     <strong>Max:</strong> <Tokens>{governance.staked}</Tokens>
@@ -271,24 +350,53 @@ export const DashboardLoaded = ({
                 {integrityStakingCooldown2}
               </Position>
             </div>
+            {self && (
+              <div className="mt-8 bg-black/5 p-4">
+                <table className="w-full text-left">
+                  <caption className="mb-4 text-left text-xl">
+                    You ({self.name})
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th className="text-center">Pool</th>
+                      <th className="text-center">Historical APY</th>
+                      <th>Number of feeds</th>
+                      <th>Quality ranking</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <Publisher
+                      availableToStake={availableToStakeIntegrity}
+                      availableRewards={availableRewards}
+                      publisher={self}
+                      omitName
+                      omitSelfStake
+                    />
+                  </tbody>
+                </table>
+              </div>
+            )}
             <table className="mt-8 w-full text-left">
-              <caption className="mb-4 text-left text-xl">Publishers</caption>
+              <caption className="mb-4 text-left text-xl">
+                {self ? "Other Publishers" : "Publishers"}
+              </caption>
               <thead>
                 <tr>
                   <th>Publisher</th>
                   <th>Self stake</th>
                   <th className="text-center">Pool</th>
+                  <th className="text-center">Historical APY</th>
                   <th>Number of feeds</th>
                   <th>Quality ranking</th>
                 </tr>
               </thead>
               <tbody>
-                {integrityStakingPublishers.map((publisher) => (
+                {otherPublishers.map((publisher) => (
                   <Publisher
                     key={publisher.publicKey}
                     availableToStake={availableToStakeIntegrity}
-                    replaceData={replaceData}
-                    {...publisher}
+                    availableRewards={availableRewards}
+                    publisher={publisher}
                   />
                 ))}
               </tbody>
@@ -315,8 +423,9 @@ const useIntegrityStakingSum = (
 
 type BalanceCategoryProps = {
   children: bigint;
-  name: string;
-  description?: string | undefined;
+  name: ReactNode | ReactNode[];
+  description?: ReactNode | ReactNode[] | undefined;
+  disclaimer?: ReactNode | ReactNode[] | undefined;
   actions?: ReactNode | ReactNode[];
 };
 
@@ -324,6 +433,7 @@ const BalanceCategory = ({
   children,
   name,
   description,
+  disclaimer,
   actions,
 }: BalanceCategoryProps) => (
   <div className="flex w-1/3 flex-col items-start justify-between gap-2">
@@ -331,9 +441,14 @@ const BalanceCategory = ({
       <div className="text-4xl font-semibold">
         <Tokens>{children}</Tokens>
       </div>
-      <div className="text-lg">{name}</div>
+      <div className="flex items-center text-lg">{name}</div>
       {description && (
         <p className="max-w-xs text-xs font-light">{description}</p>
+      )}
+      {disclaimer && (
+        <p className="mt-2 max-w-xs text-sm font-medium text-red-600">
+          {disclaimer}
+        </p>
       )}
     </div>
     {actions && <div>{actions}</div>}
@@ -375,63 +490,60 @@ const Position = ({
   );
 
 type PublisherProps = {
+  availableRewards: bigint;
   availableToStake: bigint;
-  replaceData: Props["replaceData"];
-  name: string;
-  publicKey: string;
-  selfStake: bigint;
-  poolCapacity: bigint;
-  poolUtilization: bigint;
-  apy: number;
-  numFeeds: number;
-  qualityRanking: number;
-  positions?:
-    | {
-        warmup?: bigint | undefined;
-        staked?: bigint | undefined;
-        cooldown?: bigint | undefined;
-        cooldown2?: bigint | undefined;
-      }
-    | undefined;
+  omitName?: boolean;
+  omitSelfStake?: boolean;
+  publisher: {
+    name: string;
+    publicKey: string;
+    isSelf: boolean;
+    selfStake: bigint;
+    poolCapacity: bigint;
+    poolUtilization: bigint;
+    numFeeds: number;
+    qualityRanking: number;
+    apyHistory: { date: Date; apy: number }[];
+    positions?:
+      | {
+          warmup?: bigint | undefined;
+          staked?: bigint | undefined;
+          cooldown?: bigint | undefined;
+          cooldown2?: bigint | undefined;
+        }
+      | undefined;
+  };
 };
 
 const Publisher = ({
-  name,
-  publicKey,
-  selfStake,
-  poolUtilization,
-  poolCapacity,
-  apy,
-  numFeeds,
-  qualityRanking,
-  positions,
+  availableRewards,
+  publisher,
   availableToStake,
-  replaceData,
+  omitName,
+  omitSelfStake,
 }: PublisherProps) => {
-  const delegate = useTransferActionForPublisher(
-    delegateIntegrityStaking,
-    publicKey,
-  );
   const cancelWarmup = useTransferActionForPublisher(
     cancelWarmupIntegrityStaking,
-    publicKey,
+    publisher.publicKey,
   );
   const unstake = useTransferActionForPublisher(
     unstakeIntegrityStaking,
-    publicKey,
+    publisher.publicKey,
   );
   const utilizationPercent = useMemo(
-    () => Number((100n * poolUtilization) / poolCapacity),
-    [poolUtilization, poolCapacity],
+    () => Number((100n * publisher.poolUtilization) / publisher.poolCapacity),
+    [publisher.poolUtilization, publisher.poolCapacity],
   );
 
   return (
     <>
       <tr>
-        <td className="py-4">{name}</td>
-        <td>
-          <Tokens>{selfStake}</Tokens>
-        </td>
+        {!omitName && <td className="py-4">{publisher.name}</td>}
+        {!omitSelfStake && (
+          <td>
+            <Tokens>{publisher.selfStake}</Tokens>
+          </td>
+        )}
         <td className="flex flex-row items-center justify-center gap-2 py-4">
           <div className="relative grid h-8 w-60 place-content-center border border-black bg-pythpurple-600/10">
             <div
@@ -440,7 +552,7 @@ const Publisher = ({
               }}
               className={clsx(
                 "absolute inset-0 max-w-full",
-                poolUtilization > poolCapacity
+                publisher.poolUtilization > publisher.poolCapacity
                   ? "bg-red-500"
                   : "bg-pythpurple-400",
               )}
@@ -448,45 +560,63 @@ const Publisher = ({
             <div
               className={clsx(
                 "isolate flex flex-row items-center justify-center gap-1 text-sm",
-                { "text-white": poolUtilization > poolCapacity },
+                {
+                  "text-white":
+                    publisher.poolUtilization > publisher.poolCapacity,
+                },
               )}
             >
               <span>
-                <Tokens>{poolUtilization}</Tokens>
+                <Tokens>{publisher.poolUtilization}</Tokens>
               </span>
               <span>/</span>
               <span>
-                <Tokens>{poolCapacity}</Tokens>
+                <Tokens>{publisher.poolCapacity}</Tokens>
               </span>
               <span>({utilizationPercent.toFixed(2)}%)</span>
             </div>
           </div>
           <div className="flex flex-row items-center gap-1">
             <div className="font-medium">APY:</div>
-            <div>{apy}%</div>
+            <div>
+              {calculateApy(
+                publisher.poolCapacity,
+                publisher.poolUtilization,
+                publisher.isSelf,
+              )}
+              %
+            </div>
           </div>
         </td>
-        <td>{numFeeds}</td>
-        <td>{qualityRanking}</td>
+        <td className="px-4">
+          <div className="mx-auto h-14 w-28 border border-black bg-white/40">
+            <SparkChart
+              data={publisher.apyHistory.map(({ date, apy }) => ({
+                date,
+                value: apy,
+              }))}
+            />
+          </div>
+        </td>
+        <td>{publisher.numFeeds}</td>
+        <td>{publisher.qualityRanking}</td>
         {availableToStake > 0 && (
           <td>
-            <TransferButton
-              actionDescription={`Stake to ${name}`}
-              actionName="Stake"
-              max={availableToStake}
-              replaceData={replaceData}
-              transfer={delegate}
-            >
-              <strong>Available to stake:</strong>{" "}
-              <Tokens>{availableToStake}</Tokens>
-            </TransferButton>
+            <StakeToPublisherButton
+              availableToStake={availableToStake}
+              poolCapacity={publisher.poolCapacity}
+              poolUtilization={publisher.poolUtilization}
+              publisherKey={publisher.publicKey}
+              publisherName={publisher.name}
+              isSelf={publisher.isSelf}
+            />
           </td>
         )}
       </tr>
-      {positions && (
-        <tr>
+      {publisher.positions && (
+        <tr className="group">
           <td colSpan={6} className="border-separate border-spacing-8">
-            <div className="mx-auto mb-8 w-fit bg-black/5 p-4">
+            <div className="mx-auto mb-8 w-fit bg-black/5 p-4 group-last:mb-0">
               <table className="w-full">
                 <caption className="mb-2 text-left text-xl">
                   Your Positions
@@ -502,44 +632,50 @@ const Publisher = ({
                     name="Warmup"
                     actions={
                       <TransferButton
-                        actionDescription={`Cancel tokens that are in warmup for staking to ${name}`}
+                        actionDescription={`Cancel tokens that are in warmup for staking to ${publisher.name}`}
                         actionName="Cancel"
                         submitButtonText="Cancel Warmup"
                         title="Cancel Staking"
-                        max={positions.warmup ?? 0n}
-                        replaceData={replaceData}
+                        max={publisher.positions.warmup ?? 0n}
                         transfer={cancelWarmup}
                       >
                         <strong>Max:</strong>{" "}
-                        <Tokens>{positions.warmup ?? 0n}</Tokens>
+                        <Tokens>{publisher.positions.warmup ?? 0n}</Tokens>
                       </TransferButton>
                     }
                   >
-                    {positions.warmup}
+                    {publisher.positions.warmup}
                   </PublisherPosition>
                   <PublisherPosition
                     name="Staked"
                     actions={
-                      <TransferButton
-                        actionDescription={`Unstake tokens from ${name}`}
-                        actionName="Unstake"
-                        title="Unstake"
-                        max={positions.staked ?? 0n}
-                        replaceData={replaceData}
-                        transfer={unstake}
-                      >
-                        <strong>Max:</strong>{" "}
-                        <Tokens>{positions.staked ?? 0n}</Tokens>
-                      </TransferButton>
+                      availableRewards > 0 ? (
+                        <ClaimRequiredButton
+                          buttonText="Unstake"
+                          description={`Before you can unstake tokens from ${publisher.name}, you must claim your unclaimed rewards`}
+                          availableRewards={availableRewards}
+                        />
+                      ) : (
+                        <TransferButton
+                          actionDescription={`Unstake tokens from ${publisher.name}`}
+                          actionName="Unstake"
+                          title="Unstake"
+                          max={publisher.positions.staked ?? 0n}
+                          transfer={unstake}
+                        >
+                          <strong>Max:</strong>{" "}
+                          <Tokens>{publisher.positions.staked ?? 0n}</Tokens>
+                        </TransferButton>
+                      )
                     }
                   >
-                    {positions.staked}
+                    {publisher.positions.staked}
                   </PublisherPosition>
                   <PublisherPosition name="Cooldown (this epoch)">
-                    {positions.cooldown}
+                    {publisher.positions.cooldown}
                   </PublisherPosition>
                   <PublisherPosition name="Cooldown (next epoch)">
-                    {positions.cooldown2}
+                    {publisher.positions.cooldown2}
                   </PublisherPosition>
                 </tbody>
               </table>
@@ -550,21 +686,6 @@ const Publisher = ({
     </>
   );
 };
-
-const useTransferActionForPublisher = (
-  action: (
-    connection: Connection,
-    wallet: WalletContextState,
-    publicKey: string,
-    amount: bigint,
-  ) => Promise<void>,
-  publicKey: string,
-) =>
-  useCallback(
-    (connection: Connection, wallet: WalletContextState, amount: bigint) =>
-      action(connection, wallet, publicKey, amount),
-    [action, publicKey],
-  );
 
 type PublisherPositionProps = {
   name: string;
@@ -591,23 +712,112 @@ const PublisherPosition = ({
 // eslint-disable-next-line unicorn/no-array-reduce
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
-type ClaimButtonProps = {
-  replaceData: Props["replaceData"];
-};
-
-const ClaimButton = ({ replaceData }: ClaimButtonProps) => {
-  const { state, execute } = useTransfer(claim, replaceData);
+const ClaimButton = () => {
+  const { state, execute } = useTransfer(claim);
 
   return (
     <Button
       onClick={execute}
       disabled={state.type !== StateType.Base}
-      loading={
-        state.type === StateType.LoadingData ||
-        state.type === StateType.Submitting
-      }
+      loading={state.type === StateType.Submitting}
     >
       Claim
     </Button>
   );
 };
+
+type ClaimRequiredButtonProps = {
+  buttonText: string;
+  description: string;
+  availableRewards: bigint;
+};
+
+const ClaimRequiredButton = ({
+  buttonText,
+  description,
+  availableRewards,
+}: ClaimRequiredButtonProps) => {
+  const { state, execute } = useTransfer(claim);
+
+  const isSubmitting = state.type === StateType.Submitting;
+
+  return (
+    <ModalButton
+      buttonContent={buttonText}
+      title="Claim Required"
+      closeDisabled={isSubmitting}
+      additionalButtons={(close) => (
+        <Button
+          onClick={() => execute().then(close)}
+          disabled={state.type !== StateType.Base}
+          loading={isSubmitting}
+        >
+          Claim
+        </Button>
+      )}
+      description={description}
+    >
+      <div>
+        <strong>Available Rewards:</strong> <Tokens>{availableRewards}</Tokens>
+      </div>
+    </ModalButton>
+  );
+};
+
+type StakeToPublisherButtonProps = {
+  publisherName: string;
+  publisherKey: string;
+  availableToStake: bigint;
+  poolCapacity: bigint;
+  poolUtilization: bigint;
+  isSelf: boolean;
+};
+
+const StakeToPublisherButton = ({
+  publisherName,
+  publisherKey,
+  poolCapacity,
+  poolUtilization,
+  availableToStake,
+  isSelf,
+}: StakeToPublisherButtonProps) => {
+  const delegate = useTransferActionForPublisher(
+    delegateIntegrityStaking,
+    publisherKey,
+  );
+
+  return (
+    <TransferButton
+      actionDescription={`Stake to ${publisherName}`}
+      actionName="Stake"
+      max={availableToStake}
+      transfer={delegate}
+    >
+      {(amount) => (
+        <>
+          <strong>Available to stake:</strong>{" "}
+          <Tokens>{availableToStake}</Tokens>
+          {amount !== undefined && (
+            <div>
+              Staking these tokens will change the APY to:{" "}
+              {calculateApy(poolCapacity, poolUtilization + amount, isSelf)}%
+            </div>
+          )}
+        </>
+      )}
+    </TransferButton>
+  );
+};
+
+const useTransferActionForPublisher = (
+  action: (
+    context: Context,
+    publicKey: string,
+    amount: bigint,
+  ) => Promise<void>,
+  publicKey: string,
+) =>
+  useCallback(
+    (context: Context, amount: bigint) => action(context, publicKey, amount),
+    [action, publicKey],
+  );

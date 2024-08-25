@@ -24,7 +24,7 @@ export const WalletButton = (
           /* no-op, no worries if we can't show a SNS domain */
         });
     }
-  }, [wallet, connection]);
+  }, [wallet.publicKey, connection]);
 
   return <WalletMultiButton {...props}>{primaryDomain}</WalletMultiButton>;
 };

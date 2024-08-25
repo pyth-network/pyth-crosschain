@@ -1,5 +1,3 @@
-import { type WalletContextState } from "@solana/wallet-adapter-react";
-import type { Connection } from "@solana/web3.js";
 import {
   type ChangeEvent,
   type ComponentProps,
@@ -9,11 +7,12 @@ import {
   useState,
 } from "react";
 
+import { useLogger } from "../../logger";
 import { stringToTokens } from "../../tokens";
+import { type Context } from "../../use-api-context";
 import { StateType, useTransfer } from "../../use-transfer";
 import { Button } from "../Button";
-import type { DashboardLoaded } from "../Dashboard/loaded";
-import { Modal } from "../Modal";
+import { ModalButton } from "../ModalButton";
 
 type Props = {
   actionName: string;
@@ -21,13 +20,12 @@ type Props = {
   title?: string | undefined;
   submitButtonText?: string | undefined;
   max: bigint;
-  replaceData: ComponentProps<typeof DashboardLoaded>["replaceData"];
-  children?: ReactNode | ReactNode[] | undefined;
-  transfer: (
-    connection: Connection,
-    wallet: WalletContextState,
-    amount: bigint,
-  ) => Promise<void>;
+  children?:
+    | ((amount: bigint | undefined) => ReactNode | ReactNode[])
+    | ReactNode
+    | ReactNode[]
+    | undefined;
+  transfer: (context: Context, amount: bigint) => Promise<void>;
 };
 
 export const TransferButton = ({
@@ -36,88 +34,99 @@ export const TransferButton = ({
   actionDescription,
   title,
   max,
-  replaceData,
   transfer,
   children,
 }: Props) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [amountInput, setAmountInput] = useState<string>("");
-
-  const updateAmount = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setAmountInput(event.target.value);
-    },
-    [setAmountInput],
-  );
-
-  const amount = useMemo(() => {
-    const amount = stringToTokens(amountInput);
-    return amount !== undefined && amount <= max && amount > 0n
-      ? amount
-      : undefined;
-  }, [amountInput, max]);
-
+  const { amountInput, updateAmount, resetAmount, amount } =
+    useAmountInput(max);
   const doTransfer = useCallback(
-    (connection: Connection, wallet: WalletContextState) =>
+    (context: Context) =>
       amount === undefined
         ? Promise.reject(new InvalidAmountError())
-        : transfer(connection, wallet, amount),
+        : transfer(context, amount),
     [amount, transfer],
   );
 
-  const close = useCallback(() => {
-    setAmountInput("");
-    setIsOpen(false);
-  }, [setAmountInput, setIsOpen]);
-
-  const { state, execute } = useTransfer(doTransfer, replaceData, (reset) => {
-    close();
-    reset();
-  });
-
-  const isLoading = useMemo(
-    () =>
-      state.type === StateType.Submitting ||
-      state.type === StateType.LoadingData,
-    [state],
-  );
-
-  const open = useCallback(() => {
-    setIsOpen(true);
-  }, [setIsOpen]);
-
-  const closeUnlessLoading = useCallback(() => {
-    if (!isLoading) {
-      close();
-    }
-  }, [isLoading, close]);
+  const { state, execute } = useTransfer(doTransfer);
+  const isSubmitting = state.type === StateType.Submitting;
 
   return (
-    <>
-      <Button onClick={open}>{actionName}</Button>
-      <Modal
-        open={isOpen}
-        onClose={closeUnlessLoading}
-        closeDisabled={isLoading}
-        title={title ?? actionName}
-        description={actionDescription}
-        additionalButtons={
-          <Button
-            disabled={amount === undefined}
-            onClick={execute}
-            loading={isLoading}
-          >
-            {submitButtonText ?? actionName}
-          </Button>
-        }
-      >
-        <input name="amount" value={amountInput} onChange={updateAmount} />
-        {children && <div>{children}</div>}
-      </Modal>
-    </>
+    <ModalButton
+      title={title ?? actionName}
+      buttonContent={actionName}
+      closeDisabled={isSubmitting}
+      description={actionDescription}
+      afterLeave={resetAmount}
+      additionalButtons={(close) => (
+        <ExecuteButton
+          disabled={amount === undefined}
+          execute={execute}
+          loading={isSubmitting}
+          close={close}
+        >
+          {submitButtonText ?? actionName}
+        </ExecuteButton>
+      )}
+    >
+      <input name="amount" value={amountInput} onChange={updateAmount} />
+      {children && (
+        <div>
+          {typeof children === "function" ? children(amount) : children}
+        </div>
+      )}
+      {state.type === StateType.Error && <p>Uh oh, an error occurred!</p>}
+    </ModalButton>
   );
 };
 
+const useAmountInput = (max: bigint) => {
+  const [amountInput, setAmountInput] = useState<string>("");
+
+  return {
+    amountInput,
+
+    updateAmount: useCallback(
+      (event: ChangeEvent<HTMLInputElement>) => {
+        setAmountInput(event.target.value);
+      },
+      [setAmountInput],
+    ),
+    resetAmount: useCallback(() => {
+      setAmountInput("");
+    }, [setAmountInput]),
+
+    amount: useMemo(() => {
+      const amountAsTokens = stringToTokens(amountInput);
+      return amountAsTokens !== undefined &&
+        amountAsTokens <= max &&
+        amountAsTokens > 0n
+        ? amountAsTokens
+        : undefined;
+    }, [amountInput, max]),
+  };
+};
+
 class InvalidAmountError extends Error {
-  override message = "Invalid amount";
+  constructor() {
+    super("Invalid amount");
+  }
 }
+
+type ExecuteButtonProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
+  execute: () => Promise<void>;
+  close: () => void;
+};
+
+const ExecuteButton = ({ execute, close, ...props }: ExecuteButtonProps) => {
+  const logger = useLogger();
+  const handleClick = useCallback(async () => {
+    try {
+      await execute();
+      close();
+    } catch (error: unknown) {
+      logger.error(error);
+    }
+  }, [execute, close, logger]);
+
+  return <Button onClick={handleClick} {...props} />;
+};

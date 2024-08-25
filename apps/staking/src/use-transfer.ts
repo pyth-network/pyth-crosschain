@@ -1,53 +1,33 @@
-import {
-  type WalletContextState,
-  useConnection,
-  useWallet,
-} from "@solana/wallet-adapter-react";
-import type { Connection } from "@solana/web3.js";
-import { type ComponentProps, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useSWRConfig } from "swr";
 
-import { loadData } from "./api";
-import type { DashboardLoaded } from "./components/Dashboard/loaded";
+import { type Context, useApiContext } from "./use-api-context";
 
-export const useTransfer = (
-  transfer: (
-    connection: Connection,
-    wallet: WalletContextState,
-  ) => Promise<void>,
-  replaceData: ComponentProps<typeof DashboardLoaded>["replaceData"],
-  onFinish?: (reset: () => void) => void,
-) => {
-  const wallet = useWallet();
-  const { connection } = useConnection();
+export const useTransfer = (transfer: (context: Context) => Promise<void>) => {
+  const context = useApiContext();
   const [state, setState] = useState<State>(State.Base());
+  const { mutate } = useSWRConfig();
 
-  const reset = useCallback(() => {
-    setState(State.Base());
-  }, [setState]);
+  const execute = useCallback(async () => {
+    if (state.type === StateType.Submitting) {
+      throw new DuplicateSubmitError();
+    }
 
-  const execute = useCallback(() => {
     setState(State.Submitting());
-    transfer(connection, wallet)
-      .then(() => {
-        setState(State.LoadingData());
-        loadData(connection, wallet)
-          .then((data) => {
-            replaceData(data);
-            if (onFinish) {
-              setState(State.Finished());
-              onFinish(reset);
-            } else {
-              setState(State.Base());
-            }
-          })
-          .catch((error: unknown) => {
-            setState(State.ErrorLoadingData(error));
-          });
-      })
-      .catch((error: unknown) => {
-        setState(State.ErrorSubmitting(error));
-      });
-  }, [connection, wallet, transfer, replaceData, onFinish, setState, reset]);
+    try {
+      await transfer(context);
+      // TODO enable mutate without awaiting?
+      // Prob by changing `api.ts` to encode the change & history item along with each update?
+      await Promise.all([
+        mutate(context.stakeAccount.publicKey),
+        mutate(`${context.stakeAccount.publicKey}/history`),
+      ]);
+      setState(State.Complete());
+    } catch (error: unknown) {
+      setState(State.ErrorState(error));
+      throw error;
+    }
+  }, [state, context, transfer, setState, mutate]);
 
   return { state, execute };
 };
@@ -55,25 +35,24 @@ export const useTransfer = (
 export enum StateType {
   Base,
   Submitting,
-  LoadingData,
-  ErrorSubmitting,
-  ErrorLoadingData,
-  Finished,
+  Error,
+  Complete,
 }
 
 const State = {
   Base: () => ({ type: StateType.Base as const }),
   Submitting: () => ({ type: StateType.Submitting as const }),
-  LoadingData: () => ({ type: StateType.LoadingData as const }),
-  ErrorSubmitting: (error: unknown) => ({
-    type: StateType.ErrorSubmitting as const,
+  Complete: () => ({ type: StateType.Complete as const }),
+  ErrorState: (error: unknown) => ({
+    type: StateType.Error as const,
     error,
   }),
-  ErrorLoadingData: (error: unknown) => ({
-    type: StateType.ErrorLoadingData as const,
-    error,
-  }),
-  Finished: () => ({ type: StateType.Finished as const }),
 };
 
 type State = ReturnType<(typeof State)[keyof typeof State]>;
+
+class DuplicateSubmitError extends Error {
+  constructor() {
+    super("Attempted to submit a transaction when one is already in process");
+  }
+}
