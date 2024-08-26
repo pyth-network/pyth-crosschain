@@ -1,7 +1,7 @@
 #include "imports/stdlib.fc";
-#include "imports/errors.fc";
-#include "imports/utils.fc";
-#include "imports/storage.fc";
+#include "common/errors.fc";
+#include "common/utils.fc";
+#include "common/storage.fc";
 
 ;; Signature verification function
 ;; ECRECOVER: Recovers the signer's address from the signature
