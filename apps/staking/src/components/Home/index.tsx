@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback } from "react";
 
-import { WalletButton } from "./wallet-button";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";
 import { Dashboard } from "../Dashboard";
+import { LoadingSpinner } from "../LoadingSpinner";
 
 export const Home = () => (
   <main className="px-8 py-16">
@@ -26,12 +25,10 @@ const HomeContents = () => {
   const showModal = useCallback(() => {
     modal.setVisible(true);
   }, [modal]);
+
   if (isMounted) {
     return wallet.connected ? (
-      <>
-        <WalletButton />
-        <Dashboard />
-      </>
+      <Dashboard />
     ) : (
       <>
         <p className="mx-auto mb-8 max-w-prose text-center">
@@ -47,6 +44,6 @@ const HomeContents = () => {
       </>
     );
   } else {
-    return <ArrowPathIcon className="size-6 animate-spin" />;
+    return <LoadingSpinner />;
   }
 };

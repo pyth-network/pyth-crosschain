@@ -11,7 +11,7 @@
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
-    "pull:env": "VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID= vercel env pull",
+    "pull:env": "VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_4aG4ZJ4S8b59nQID6LZDDb7c9cVY vercel env pull",
     "start:dev": "next dev",
     "start:prod": "next start",
     "test": "tsc && jest",
@@ -37,6 +37,8 @@
     "pino": "^9.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "recharts": "^2.12.7",
+    "swr": "^2.2.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
