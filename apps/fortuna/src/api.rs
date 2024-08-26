@@ -145,7 +145,7 @@ impl IntoResponse for RestError {
             }
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
-                "The request with the given sequence number has not been made or the random value has already been revealed on chain.",
+                "The request with the given sequence number has not been made yet, or the random value has already been revealed on chain.",
             ).into_response(),
             RestError::PendingConfirmation => (
                 StatusCode::FORBIDDEN,
