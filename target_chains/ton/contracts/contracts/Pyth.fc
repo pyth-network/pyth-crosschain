@@ -1,29 +1,25 @@
 #include "imports/stdlib.fc";
 #include "common/errors.fc";
 #include "common/storage.fc";
-#include "Wormhole.fc";
 
 ;; Opcodes
 const int OP_UPDATE_GUARDIAN_SET = 1;
 const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
 
-(int, int, int, int) price_unsafe(int price_feed_id) method_id {
-    (slice price_feed, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
-    throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
-
-    ;; Load the Price struct
+(int, int, int, int) parse_price(slice price_feed) {
     int price = price_feed~load_int(256);
     int conf = price_feed~load_uint(64);
     int expo = price_feed~load_int(32);
     int publish_time = price_feed~load_uint(64);
-
-    ;; Skip the EMA Price struct
-    price_feed~load_int(256); ;; price
-    price_feed~load_uint(64); ;; conf
-    price_feed~load_int(32); ;; expo
-    price_feed~load_uint(64); ;; publish_time
-
     return (price, conf, expo, publish_time);
+}
+
+(int, int, int, int) price_unsafe(int price_feed_id) method_id {
+    (slice result, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
+    throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
+    slice price_feed = result~load_ref().begin_parse();
+    slice price = price_feed~load_ref().begin_parse();
+    return parse_price(price);
 }
 
 (int, int, int, int) price_no_older_than(int time_period, int price_feed_id) method_id {
@@ -36,22 +32,12 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
 }
 
 (int, int, int, int) ema_price_unsafe(int price_feed_id) method_id {
-    (slice price_feed, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
+    (slice result, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
     throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
-
-    ;; Skip the Price struct
-    price_feed~load_int(256); ;; price
-    price_feed~load_uint(64); ;; conf
-    price_feed~load_int(32);  ;; expo
-    price_feed~load_uint(64); ;; publish_time
-
-    ;; Load the EMA Price struct
-    int price = price_feed~load_int(256);
-    int conf = price_feed~load_uint(64);
-    int expo = price_feed~load_int(32);
-    int publish_time = price_feed~load_uint(64);
-
-    return (price, conf, expo, publish_time);
+    slice price_feed = result~load_ref().begin_parse();
+    slice price = price_feed~load_ref().begin_parse();
+    slice ema_price = price_feed~load_ref().begin_parse();
+    return parse_price(ema_price);
 }
 
 (int, int, int, int) ema_price_no_older_than(int time_period, int price_feed_id) method_id {
@@ -61,25 +47,4 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
 
     return (price, conf, expo, publish_time);
-}
-
-;; Internal message handler
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
-        return ();
-    }
-
-    ;; * A 32-bit (big-endian) unsigned integer `op`, identifying the `operation` to be performed, or the `method` of the smart contract to be invoked.
-    int op = in_msg_body~load_uint(32);
-    ;; * A 64-bit (big-endian) unsigned integer `query_id`, used in all query-response internal messages to indicate that a response is related to a query (the `query_id` of a response must be equal to the `query_id` of the corresponding query). If `op` is not a query-response method (e.g., it invokes a method that is not expected to send an answer), then `query_id` may be omitted.
-    int query_id = in_msg_body~load_uint(64);
-
-    ;; * The remainder of the message body is specific for each supported value of `op`.
-    if (op == OP_UPDATE_GUARDIAN_SET) {
-        update_guardian_set(in_msg_body);
-    } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
-        execute_governance_action(in_msg_body);
-    } else {
-        throw(0xffff); ;; Throw exception for unknown op
-    }
 }
