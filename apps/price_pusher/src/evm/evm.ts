@@ -27,6 +27,7 @@ import {
   FeeCapTooLowError,
   InternalRpcError,
   InsufficientFundsError,
+  ContractFunctionExecutionError,
 } from "viem";
 
 import { PythContract } from "./pyth-contract";
@@ -302,6 +303,16 @@ export class EvmPricePusher implements IPricePusher {
         ) {
           this.logger.info(
             "The nonce is incorrect. This is an expected behaviour in high frequency or multi-instance setup. Skipping this push."
+          );
+          return;
+        }
+
+        // Sometimes the contract function execution fails in simulation and this error is thrown.
+        if (err.walk((e) => e instanceof ContractFunctionExecutionError)) {
+          this.logger.warn(
+            { err },
+            "The contract function execution failed in simulation. This is an expected behaviour in high frequency or multi-instance setup. " +
+              "Please review this error and file an issue if it is a bug. Skipping this push."
           );
           return;
         }
