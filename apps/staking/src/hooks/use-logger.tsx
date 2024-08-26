@@ -3,7 +3,7 @@
 import pino, { type Logger } from "pino";
 import { type ComponentProps, createContext, useContext, useMemo } from "react";
 
-import { IS_PRODUCTION_BUILD } from "./isomorphic-config";
+import { IS_PRODUCTION_BUILD } from "../config/isomorphic";
 
 const LoggerContext = createContext<undefined | Logger<string>>(undefined);
 

@@ -4,7 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback } from "react";
 
-import { useIsMounted } from "../../use-is-mounted";
+import { useIsMounted } from "../../hooks/use-is-mounted";
 import { Button } from "../Button";
 import { Dashboard } from "../Dashboard";
 import { LoadingSpinner } from "../LoadingSpinner";

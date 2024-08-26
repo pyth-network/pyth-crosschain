@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { type ReactNode, useMemo, useCallback } from "react";
 
-import { SparkChart } from "./spark-chart";
 import {
+  type Context,
   deposit,
   withdraw,
   stakeGovernance,
@@ -14,10 +14,10 @@ import {
   claim,
   calculateApy,
 } from "../../api";
-import type { Context } from "../../use-api-context";
-import { StateType, useTransfer } from "../../use-transfer";
+import { StateType, useTransfer } from "../../hooks/use-transfer";
 import { Button } from "../Button";
 import { ModalButton } from "../ModalButton";
+import { SparkChart } from "../SparkChart";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
 

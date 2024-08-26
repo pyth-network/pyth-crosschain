@@ -1,9 +1,11 @@
 import { useState, useCallback } from "react";
 import { useSWRConfig } from "swr";
 
-import { type Context, useApiContext } from "./use-api-context";
+import { useApiContext } from "./use-api-context";
 
-export const useTransfer = (transfer: (context: Context) => Promise<void>) => {
+export const useTransfer = (
+  transfer: (context: ReturnType<typeof useApiContext>) => Promise<void>,
+) => {
   const context = useApiContext();
   const [state, setState] = useState<State>(State.Base());
   const { mutate } = useSWRConfig();

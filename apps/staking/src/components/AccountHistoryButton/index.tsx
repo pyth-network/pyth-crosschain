@@ -7,7 +7,7 @@ import {
   StakeType,
   loadAccountHistory,
 } from "../../api";
-import { useApiContext } from "../../use-api-context";
+import { useApiContext } from "../../hooks/use-api-context";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { ModalButton } from "../ModalButton";
 import { Tokens } from "../Tokens";

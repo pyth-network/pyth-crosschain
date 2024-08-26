@@ -3,17 +3,17 @@ import clsx from "clsx";
 import { Red_Hat_Text, Red_Hat_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 
-import { Amplitude } from "./amplitude";
-import { ReportAccessibility } from "./report-accessibility";
-import { WalletProvider } from "./wallet-provider";
-import { LoggerProvider } from "../../logger";
 import {
   IS_PRODUCTION_SERVER,
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
   WALLETCONNECT_PROJECT_ID,
   MAINNET_RPC,
-} from "../../server-config";
+} from "../../config/server";
+import { LoggerProvider } from "../../hooks/use-logger";
+import { Amplitude } from "../Amplitude";
+import { ReportAccessibility } from "../ReportAccessibility";
+import { WalletProvider } from "../WalletProvider";
 
 const redHatText = Red_Hat_Text({
   subsets: ["latin"],

@@ -12,16 +12,16 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import useSWR from "swr";
 
 import { DashboardLoaded } from "./loaded";
-import { WalletButton } from "./wallet-button";
 import { type StakeAccount, loadData } from "../../api";
-import { useApiContext } from "../../use-api-context";
+import { useApiContext } from "../../hooks/use-api-context";
 import {
   StateType,
   StakeAccountProvider,
   useStakeAccount,
-} from "../../use-stake-account";
+} from "../../hooks/use-stake-account";
 import { AccountHistoryButton } from "../AccountHistoryButton";
 import { LoadingSpinner } from "../LoadingSpinner";
+import { WalletButton } from "../WalletButton";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;

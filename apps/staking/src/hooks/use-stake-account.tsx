@@ -10,7 +10,7 @@ import {
   type ComponentProps,
 } from "react";
 
-import { type StakeAccount, getStakeAccounts } from "./api";
+import { type StakeAccount, getStakeAccounts } from "../api";
 
 export enum StateType {
   Initialized,

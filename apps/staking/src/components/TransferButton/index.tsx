@@ -7,10 +7,10 @@ import {
   useState,
 } from "react";
 
-import { useLogger } from "../../logger";
+import type { Context } from "../../api";
+import { useLogger } from "../../hooks/use-logger";
+import { StateType, useTransfer } from "../../hooks/use-transfer";
 import { stringToTokens } from "../../tokens";
-import { type Context } from "../../use-api-context";
-import { StateType, useTransfer } from "../../use-transfer";
 import { Button } from "../Button";
 import { ModalButton } from "../ModalButton";
 

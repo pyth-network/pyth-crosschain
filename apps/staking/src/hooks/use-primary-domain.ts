@@ -1,13 +1,8 @@
-"use client";
-
 import { getPrimaryDomain } from "@bonfida/spl-name-service";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { type ComponentProps, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-export const WalletButton = (
-  props: ComponentProps<typeof WalletMultiButton>,
-) => {
+export const usePrimaryDomain = () => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const [primaryDomain, setPrimaryDomain] = useState<string | undefined>(
@@ -26,5 +21,5 @@ export const WalletButton = (
     }
   }, [wallet.publicKey, connection]);
 
-  return <WalletMultiButton {...props}>{primaryDomain}</WalletMultiButton>;
+  return primaryDomain;
 };
