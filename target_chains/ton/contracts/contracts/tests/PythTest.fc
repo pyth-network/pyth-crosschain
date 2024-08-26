@@ -12,6 +12,7 @@
 }
 
 (int, int, int, int) test_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
     return price_no_older_than(time_period, price_feed_id);
 }
 
@@ -21,5 +22,6 @@
 }
 
 (int, int, int, int) test_ema_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
     return ema_price_no_older_than(time_period, price_feed_id);
 }

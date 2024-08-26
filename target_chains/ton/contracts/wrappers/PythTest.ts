@@ -117,8 +117,54 @@ export class PythTest implements Contract {
     };
   }
 
+  async getPriceNoOlderThan(
+    provider: ContractProvider,
+    timePeriod: number,
+    priceFeedId: HexString
+  ) {
+    const result = await provider.get("test_price_no_older_than", [
+      { type: "int", value: BigInt(timePeriod) },
+      { type: "int", value: BigInt(priceFeedId) },
+    ]);
+
+    const price = result.stack.readNumber();
+    const conf = result.stack.readNumber();
+    const expo = result.stack.readNumber();
+    const publishTime = result.stack.readNumber();
+
+    return {
+      price,
+      conf,
+      expo,
+      publishTime,
+    };
+  }
+
   async getEmaPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
     const result = await provider.get("test_ema_price_unsafe", [
+      { type: "int", value: BigInt(priceFeedId) },
+    ]);
+
+    const price = result.stack.readNumber();
+    const conf = result.stack.readNumber();
+    const expo = result.stack.readNumber();
+    const publishTime = result.stack.readNumber();
+
+    return {
+      price,
+      conf,
+      expo,
+      publishTime,
+    };
+  }
+
+  async getEmaPriceNoOlderThan(
+    provider: ContractProvider,
+    timePeriod: number,
+    priceFeedId: HexString
+  ) {
+    const result = await provider.get("test_ema_price_no_older_than", [
+      { type: "int", value: BigInt(timePeriod) },
       { type: "int", value: BigInt(priceFeedId) },
     ]);
 

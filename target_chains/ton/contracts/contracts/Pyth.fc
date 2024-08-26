@@ -24,10 +24,8 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
 
 (int, int, int, int) price_no_older_than(int time_period, int price_feed_id) method_id {
     (int price, int conf, int expo, int publish_time) = price_unsafe(price_feed_id);
-
     int current_time = now();
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
-
     return (price, conf, expo, publish_time);
 }
 
@@ -42,9 +40,7 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
 
 (int, int, int, int) ema_price_no_older_than(int time_period, int price_feed_id) method_id {
     (int price, int conf, int expo, int publish_time) = ema_price_unsafe(price_feed_id);
-
     int current_time = now();
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
-
     return (price, conf, expo, publish_time);
 }
