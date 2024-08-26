@@ -2360,7 +2360,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "publishing"
+name = "pyth-price-publisher"
 version = "0.1.0"
 dependencies = [
  "bytemuck",

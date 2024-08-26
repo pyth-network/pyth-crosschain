@@ -2,17 +2,8 @@ use {
     crate::ensure,
     solana_program::{
         account_info::AccountInfo,
-        entrypoint::{
-            self,
-            ProgramResult,
-        },
-        msg,
-        program::invoke_signed,
         program_error::ProgramError,
         pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
-        sysvar::Sysvar,
     },
 };
 
@@ -29,12 +20,12 @@ pub use {
 /// Seed used to derive the vault account holding funds for initializing
 /// publisher accounts. They cannot afford to pay for allocating accounts
 /// on PythNet without this account helping fund it.
-const VAULT_SEED: &'static str = "VAULT";
+const VAULT_SEED: &str = "VAULT";
 
 /// Seed used to derive the associated buffer account that publishers can
 /// write their updates into. That account will be cleared at the end of
 /// each slot.
-const BUFFER_SEED: &'static str = "BUFFER";
+const BUFFER_SEED: &str = "BUFFER";
 
 /// Amount of space to allocate to buffer publisher prices during a slot.
 ///
@@ -56,7 +47,7 @@ pub enum Instruction {
 
 impl Instruction {
     pub fn parse(input: &[u8]) -> Result<Instruction, ProgramError> {
-        match input.get(0) {
+        match input.first() {
             Some(0) => Ok(Instruction::Initialize),
             Some(1) => Ok(Instruction::SubmitPrices),
             Some(2) => Ok(Instruction::InitializePublisher),

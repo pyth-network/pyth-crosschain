@@ -1,14 +1,9 @@
-#![allow(warnings)]
-
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
 
-mod accounts;
+pub mod accounts;
 mod error;
 mod instruction;
 use instruction::*;
@@ -25,16 +20,4 @@ pub fn process_instruction(
         Ok(Instruction::InitializePublisher) => initialize_publisher(program_id, accounts),
         _ => Err(ProgramError::InvalidInstructionData),
     }
-}
-
-// Handler for the Init instruction
-fn process_init(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
-    msg!("Processing Init instruction");
-    Ok(())
-}
-
-// Handler for the Disable instruction
-fn process_disable(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
-    msg!("Processing Disable instruction");
-    Ok(())
 }

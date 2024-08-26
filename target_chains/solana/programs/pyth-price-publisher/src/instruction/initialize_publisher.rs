@@ -1,41 +1,21 @@
 use {
     super::{
-        validate_buffer,
-        validate_payer,
-        validate_publisher,
-        validate_system,
-        validate_vault,
-        Instruction,
-        BUFFER_SEED,
-        BUFFER_SIZE,
-        VAULT_SEED,
+        validate_buffer, validate_publisher, validate_system, validate_vault, BUFFER_SEED,
+        BUFFER_SIZE, VAULT_SEED,
     },
-    crate::{
-        accounts::publisher_prices::PublisherPricesHeader,
-        ensure,
-    },
+    crate::accounts::publisher_prices::PublisherPricesHeader,
     bytemuck::bytes_of,
     solana_program::{
-        account_info::AccountInfo,
-        entrypoint::{
-            self,
-            ProgramResult,
-        },
-        msg,
-        program::invoke_signed,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
-        sysvar::Sysvar,
+        account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
+        pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
     },
 };
 
 pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let mut accounts = accounts.into_iter();
+    let mut accounts = accounts.iter();
     let publisher = validate_publisher(accounts.next())?;
     let vault = validate_vault(accounts.next(), program_id)?;
-    let buffer = validate_buffer(accounts.next(), &publisher.key, program_id)?;
+    let buffer = validate_buffer(accounts.next(), publisher.key, program_id)?;
     let system = validate_system(accounts.next())?;
 
     // Deposit enough tokens to allocate the account.
@@ -52,15 +32,16 @@ pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
         &[vault.0.clone(), buffer.0.clone(), system.clone()],
         &[
             &[VAULT_SEED.as_bytes(), &[vault.1]],
-            &[BUFFER_SEED.as_bytes(), &publisher.key.to_bytes(), &[buffer.1]],
+            &[
+                BUFFER_SEED.as_bytes(),
+                &publisher.key.to_bytes(),
+                &[buffer.1],
+            ],
         ],
     )?;
 
     // Write an initial Header into the account to prepare it to receive prices.
-    let mut data = buffer
-        .0
-        .data
-        .borrow_mut();
+    let mut data = buffer.0.data.borrow_mut();
 
     let header = PublisherPricesHeader::new(publisher.key.to_bytes());
     let header = bytes_of(&header);
@@ -72,29 +53,18 @@ pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
 #[cfg(test)]
 mod tests {
     use {
-        bytemuck::bytes_of,
-        crate::instruction::initialize_publisher::PublisherPricesHeader,
         crate::instruction,
-        crate::{
-            instruction::VAULT_SEED,
-            instruction::BUFFER_SEED,
-            AccountInfo,
-        },
+        crate::instruction::initialize_publisher::PublisherPricesHeader,
+        crate::{instruction::BUFFER_SEED, instruction::VAULT_SEED},
+        bytemuck::bytes_of,
         solana_program::{
-            instruction::{
-                AccountMeta,
-                Instruction,
-            },
+            instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
-            stake_history::Epoch,
             system_program,
         },
         solana_program_test::*,
         solana_sdk::{
-            signature::{
-                Keypair,
-                Signer,
-            },
+            signature::{Keypair, Signer},
             transaction::Transaction,
         },
     };
@@ -110,14 +80,17 @@ mod tests {
         // Setup Accounts
         let vault = Pubkey::find_program_address(&[VAULT_SEED.as_bytes()], &id);
         let publisher = Keypair::new();
-        let buffer = Pubkey::find_program_address(&[BUFFER_SEED.as_bytes(), &publisher.pubkey().to_bytes()], &id);
+        let buffer = Pubkey::find_program_address(
+            &[BUFFER_SEED.as_bytes(), &publisher.pubkey().to_bytes()],
+            &id,
+        );
 
         // First we need to initialize the vault PDA for use in the next instruction.
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
                 program_id: id,
-                data:       vec![instruction::Instruction::Initialize as u8],
-                accounts:   vec![
+                data: vec![instruction::Instruction::Initialize as u8],
+                accounts: vec![
                     AccountMeta::new_readonly(payer.pubkey(), true),
                     AccountMeta::new(vault.0, false),
                     AccountMeta::new_readonly(system_program::id(), false),
@@ -144,8 +117,8 @@ mod tests {
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
                 program_id: id,
-                data:       vec![instruction::Instruction::InitializePublisher as u8],
-                accounts:   vec![
+                data: vec![instruction::Instruction::InitializePublisher as u8],
+                accounts: vec![
                     AccountMeta::new_readonly(publisher.pubkey(), true),
                     AccountMeta::new(vault.0, false),
                     AccountMeta::new(buffer.0, false),

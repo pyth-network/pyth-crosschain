@@ -6,32 +6,15 @@
 //! sending tokens from any account to the vault.
 //!
 use {
-    super::{
-        validate_payer,
-        validate_system,
-        validate_vault,
-        Instruction,
-        VAULT_SEED,
-    },
-    crate::ensure,
+    super::{validate_payer, validate_system, validate_vault, VAULT_SEED},
     solana_program::{
-        account_info::AccountInfo,
-        entrypoint::{
-            self,
-            ProgramResult,
-        },
-        msg,
-        program::invoke_signed,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
-        sysvar::Sysvar,
+        account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
+        pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
     },
 };
 
 pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let mut accounts = accounts.into_iter();
+    let mut accounts = accounts.iter();
     let payer = validate_payer(accounts.next())?;
     let vault = validate_vault(accounts.next(), program_id)?;
     let system = validate_system(accounts.next())?;
@@ -42,7 +25,7 @@ fn initialize_vault<'a>(
     (vault, vault_bump): (AccountInfo<'a>, u8),
     payer: AccountInfo<'a>,
     system: AccountInfo<'a>,
-    program_id: &Pubkey,
+    _program_id: &Pubkey,
 ) -> ProgramResult {
     // Calculate minimum lamports to transfer to initialize the account.
     let lamports = (Rent::get()?).minimum_balance(0);
@@ -68,28 +51,14 @@ fn initialize_vault<'a>(
 #[cfg(test)]
 mod tests {
     use {
-        super::initialize,
-        crate::{
-            instruction::VAULT_SEED,
-            AccountInfo,
-        },
+        crate::instruction::VAULT_SEED,
         solana_program::{
-            instruction::{
-                AccountMeta,
-                Instruction,
-            },
+            instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
-            stake_history::Epoch,
             system_program,
         },
         solana_program_test::*,
-        solana_sdk::{
-            signature::{
-                Keypair,
-                Signer,
-            },
-            transaction::Transaction,
-        },
+        solana_sdk::{signature::Signer, transaction::Transaction},
     };
 
     #[tokio::test]
@@ -108,8 +77,8 @@ mod tests {
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
                 program_id: id,
-                data:       vec![crate::instruction::Instruction::Initialize as u8],
-                accounts:   vec![
+                data: vec![crate::instruction::Instruction::Initialize as u8],
+                accounts: vec![
                     AccountMeta::new_readonly(payer.pubkey(), true),
                     AccountMeta::new(vault.0, false),
                     AccountMeta::new(system_program::id(), false),
