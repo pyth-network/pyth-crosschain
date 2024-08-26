@@ -1,0 +1,17 @@
+{
+  "name": "@pythnetwork/pyth-staking-sdk",
+  "version": "0.0.0",
+  "description": "Pyth staking SDK",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.8.0",
+    "typescript": "^5.5.4"
+  }
+}
