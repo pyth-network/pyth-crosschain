@@ -1,9 +1,50 @@
 #include "imports/stdlib.fc";
+#include "common/errors.fc";
+#include "common/storage.fc";
 #include "Wormhole.fc";
 
 ;; Opcodes
 const int OP_UPDATE_GUARDIAN_SET = 1;
 const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
+
+
+(int, int, int, int) price_unsafe(int price_feed_id) method_id {
+    (slice price_feed, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
+    throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
+
+    ;; Load the Price struct
+    int price = price_feed~load_int(256);
+    int conf = price_feed~load_uint(64);
+    int expo = price_feed~load_int(32);
+    int publish_time = price_feed~load_uint(64);
+
+    ;; Skip the EMA Price struct
+    price_feed~load_int(256); ;; price
+    price_feed~load_uint(64); ;; conf
+    price_feed~load_int(32); ;; expo
+    price_feed~load_uint(64); ;; publish_time
+
+    return (price, conf, expo, publish_time);
+}
+
+(int, int, int, int) ema_price_unsafe(int price_feed_id) method_id {
+    (slice price_feed, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
+    throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
+
+    ;; Skip the Price struct
+    price_feed~load_int(256); ;; price
+    price_feed~load_uint(64); ;; conf
+    price_feed~load_int(32);  ;; expo
+    price_feed~load_uint(64); ;; publish_time
+
+    ;; Load the EMA Price struct
+    int price = price_feed~load_int(256);
+    int conf = price_feed~load_uint(64);
+    int expo = price_feed~load_int(32);
+    int publish_time = price_feed~load_uint(64);
+
+    return (price, conf, expo, publish_time);
+}
 
 ;; Internal message handler
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {

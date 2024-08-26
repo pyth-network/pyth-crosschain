@@ -8,7 +8,6 @@ import {
   GUARDIAN_SET_0,
   GUARDIAN_SET_4,
   MAINNET_UPGRADE_VAAS,
-  parseGuardianSetKeys,
 } from "./utils/wormhole";
 
 describe("WormholeTest", () => {

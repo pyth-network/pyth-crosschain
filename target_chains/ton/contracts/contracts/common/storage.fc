@@ -1,3 +1,9 @@
+;; Pyth
+;; Price struct: {price: int, conf: int, expo: int, publish_time: int}
+;; PriceFeed struct: {price: Price, ema_price: Price}
+global cell latest_price_feeds; ;; Dictionary of PriceFeed structs, keyed by price_feed_id (256-bit)
+
+;; Wormhole
 global int current_guardian_set_index;
 ;; GuardianSet struct: {expiration_time: int, keys: cell}
 ;; The 'keys' cell is a dictionary with the following structure:
