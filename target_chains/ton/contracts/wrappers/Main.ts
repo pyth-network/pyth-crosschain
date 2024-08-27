@@ -9,26 +9,26 @@ import {
   SendMode,
 } from "@ton/core";
 
-export type PythConfig = {};
+export type MainConfig = {};
 
-export function pythConfigToCell(config: PythConfig): Cell {
+export function mainConfigToCell(config: MainConfig): Cell {
   return beginCell().endCell();
 }
 
-export class Pyth implements Contract {
+export class Main implements Contract {
   constructor(
     readonly address: Address,
     readonly init?: { code: Cell; data: Cell }
   ) {}
 
   static createFromAddress(address: Address) {
-    return new Pyth(address);
+    return new Main(address);
   }
 
-  static createFromConfig(config: PythConfig, code: Cell, workchain = 0) {
-    const data = pythConfigToCell(config);
+  static createFromConfig(config: MainConfig, code: Cell, workchain = 0) {
+    const data = mainConfigToCell(config);
     const init = { code, data };
-    return new Pyth(contractAddress(workchain, init), init);
+    return new Main(contractAddress(workchain, init), init);
   }
 
   async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {

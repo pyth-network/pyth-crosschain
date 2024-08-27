@@ -1,0 +1,26 @@
+#include "../imports/stdlib.fc";
+#include "../Pyth.fc";
+
+() recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    ;; nop;
+}
+
+(int, int, int, int) test_price_unsafe(int price_feed_id) method_id {
+    load_data();
+    return price_unsafe(price_feed_id);
+}
+
+(int, int, int, int) test_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
+    return price_no_older_than(time_period, price_feed_id);
+}
+
+(int, int, int, int) test_ema_price_unsafe(int price_feed_id) method_id {
+    load_data();
+    return ema_price_unsafe(price_feed_id);
+}
+
+(int, int, int, int) test_ema_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
+    return ema_price_no_older_than(time_period, price_feed_id);
+}
