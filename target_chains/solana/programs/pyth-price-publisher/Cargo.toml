@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bytemuck = "1.16.3"
+bytemuck = "1.13.0"
 solana-program = "=1.14.17"
-thiserror = "1.0.63"
+thiserror = "1.0.40"
 
 [dev-dependencies]
 solana-program-test = "=1.14.17"

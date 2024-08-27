@@ -3,13 +3,7 @@
 //! to allow the validator to stay in sync.
 
 use {
-    bytemuck::{
-        cast_slice,
-        from_bytes,
-        from_bytes_mut,
-        Pod,
-        Zeroable,
-    },
+    bytemuck::{cast_slice, from_bytes, from_bytes_mut, Pod, Zeroable},
     solana_program::clock::Slot,
     std::mem::size_of,
     thiserror::Error,
@@ -21,9 +15,9 @@ const FORMAT: u32 = 2848712303;
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct PublisherPricesHeader {
-    pub format:     u32,
-    pub publisher:  [u8; 32],
-    pub slot:       Slot,
+    pub format: u32,
+    pub publisher: [u8; 32],
+    pub slot: Slot,
     pub num_prices: u32,
 }
 
@@ -44,8 +38,8 @@ pub struct PublisherPrice {
     // 4 high bits: trading status
     // 28 low bits: feed index
     pub trading_status_and_feed_index: u32,
-    pub price:                         i64,
-    pub confidence:                    u64,
+    pub price: i64,
+    pub confidence: u64,
 }
 
 #[derive(Debug, Error)]
@@ -94,6 +88,14 @@ pub enum ExtendError {
     NotEnoughSpace,
     #[error("invalid length")]
     InvalidLength,
+}
+
+pub fn format_matches(data: &[u8]) -> bool {
+    if data.len() < size_of::<u32>() {
+        return false;
+    }
+    let format: &u32 = from_bytes(&data[..size_of::<u32>()]);
+    *format == FORMAT
 }
 
 pub fn read(data: &[u8]) -> Result<(&PublisherPricesHeader, &[PublisherPrice]), ReadAccountError> {

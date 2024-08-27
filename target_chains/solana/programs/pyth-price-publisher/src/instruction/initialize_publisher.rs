@@ -1,32 +1,34 @@
 use {
     super::{
         validate_buffer, validate_publisher, validate_system, validate_vault, BUFFER_SEED,
-        BUFFER_SIZE, VAULT_SEED,
+        MAX_NUM_PRICES, VAULT_SEED,
     },
-    crate::accounts::publisher_prices::PublisherPricesHeader,
-    bytemuck::bytes_of,
+    crate::accounts::publisher_prices::{self},
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
-        pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
+        program_error::ProgramError, pubkey::Pubkey, rent::Rent, system_instruction,
+        sysvar::Sysvar,
     },
 };
 
+// TODO: restrict access?
 pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut accounts = accounts.iter();
-    let publisher = validate_publisher(accounts.next())?;
+    let publisher = validate_publisher(accounts.next(), false)?;
     let vault = validate_vault(accounts.next(), program_id)?;
     let buffer = validate_buffer(accounts.next(), publisher.key, program_id)?;
     let system = validate_system(accounts.next())?;
 
+    let size = publisher_prices::size(MAX_NUM_PRICES);
     // Deposit enough tokens to allocate the account.
-    let lamports = (Rent::get()?).minimum_balance(BUFFER_SIZE as usize) * 2;
+    let lamports = (Rent::get()?).minimum_balance(size) * 2;
 
     invoke_signed(
         &system_instruction::create_account(
             vault.0.key,
             buffer.0.key,
             lamports,
-            BUFFER_SIZE,
+            size.try_into().expect("unexpected overflow"),
             program_id,
         ),
         &[vault.0.clone(), buffer.0.clone(), system.clone()],
@@ -42,10 +44,8 @@ pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
 
     // Write an initial Header into the account to prepare it to receive prices.
     let mut data = buffer.0.data.borrow_mut();
-
-    let header = PublisherPricesHeader::new(publisher.key.to_bytes());
-    let header = bytes_of(&header);
-    data[..header.len()].copy_from_slice(header);
+    publisher_prices::create(&mut *data, publisher.key.to_bytes())
+        .map_err(|_| ProgramError::AccountDataTooSmall)?;
 
     Ok(())
 }
@@ -53,9 +53,10 @@ pub fn initialize_publisher(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
 #[cfg(test)]
 mod tests {
     use {
-        crate::instruction,
-        crate::instruction::initialize_publisher::PublisherPricesHeader,
-        crate::{instruction::BUFFER_SEED, instruction::VAULT_SEED},
+        crate::{
+            accounts::publisher_prices::PublisherPricesHeader,
+            instruction::{self, BUFFER_SEED, VAULT_SEED},
+        },
         bytemuck::bytes_of,
         solana_program::{
             instruction::{AccountMeta, Instruction},
