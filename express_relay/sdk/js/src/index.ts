@@ -25,13 +25,21 @@ import {
   OpportunityBid,
 } from "./types";
 import { executeOpportunityAbi } from "./abi";
-import { OPPORTUNITY_ADAPTER_CONFIGS } from "./const";
+import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
+import { Keypair, PublicKey, Transaction, Connection } from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
+import expressRelayIdl from "./idl_express_relay.json";
 
 export * from "./types";
 
 export class ClientError extends Error {}
 
-type ClientOptions = FetchClientOptions & { baseUrl: string; apiKey?: string };
+type ClientOptions = FetchClientOptions & {
+  baseUrl: string;
+  apiKey?: string;
+  svmEndpoint?: string;
+};
 
 export interface WsOptions {
   /**
@@ -125,6 +133,8 @@ export class Client {
     statusUpdate: BidStatusUpdate
   ) => Promise<void>;
 
+  private connectionSvm?: Connection;
+
   private getAuthorization() {
     return this.clientOptions.apiKey
       ? {
@@ -147,6 +157,12 @@ export class Client {
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
     this.websocketOpportunityCallback = opportunityCallback;
     this.websocketBidStatusCallback = bidStatusCallback;
+    if (this.clientOptions.svmEndpoint !== undefined) {
+      this.connectionSvm = new Connection(
+        new URL(this.clientOptions.svmEndpoint).toString(),
+        "confirmed"
+      );
+    }
   }
 
   private connectWebsocket() {
@@ -526,15 +542,25 @@ export class Client {
       chainId: opportunity.chainId,
       targetContract: opportunityAdapterConfig.opportunity_adapter_factory,
       permissionKey: opportunity.permissionKey,
+      env: "evm",
     };
   }
 
   private toServerBid(bid: Bid): components["schemas"]["Bid"] {
+    if (bid.env == "evm") {
+      return {
+        amount: bid.amount.toString(),
+        target_calldata: bid.targetCalldata,
+        chain_id: bid.chainId,
+        target_contract: bid.targetContract,
+        permission_key: bid.permissionKey,
+      };
+    }
+
     return {
-      amount: bid.amount.toString(),
-      target_calldata: bid.targetCalldata,
+      amount: bid.amount,
       chain_id: bid.chainId,
-      target_contract: bid.targetContract,
+      transaction: bid.transaction,
       permission_key: bid.permissionKey,
     };
   }
@@ -590,5 +616,122 @@ export class Client {
     } else {
       return response.data;
     }
+  }
+
+  /**
+   * Adds a SubmitBid instruction to a transaction, thereby permissioning it
+   * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param protocol The identifying address of the protocol that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param secretKey The secret key of the searcher that will serve as fee payer for the transaction
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @returns The new transaction with the SubmitBid instruction
+   */
+  async constructBidFromSvmTx(
+    txRaw: Transaction,
+    protocol: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    secretKey: Uint8Array,
+    chainId: string
+  ): Promise<Transaction> {
+    const searcher = Keypair.fromSecretKey(secretKey);
+
+    if (this.connectionSvm === undefined) {
+      throw new Error("SVM endpoint not provided");
+    }
+    const provider = new AnchorProvider(
+      this.connectionSvm,
+      new anchor.Wallet(searcher),
+      {}
+    );
+    const expressRelay = new Program(expressRelayIdl as Idl, provider);
+
+    const svmConstants = SVM_CONSTANTS[chainId];
+
+    const protocolConfig = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("config_protocol"), protocol.toBuffer()],
+      svmConstants.expressRelayProgram
+    )[0];
+
+    let feeReceiverProtocol: PublicKey;
+    const protocolAccountInfo = await this.connectionSvm.getAccountInfo(
+      protocol
+    );
+    let protocolExecutable = false;
+    if (protocolAccountInfo) {
+      protocolExecutable = protocolAccountInfo.executable;
+    }
+    if (protocolExecutable) {
+      feeReceiverProtocol = PublicKey.findProgramAddressSync(
+        [anchor.utils.bytes.utf8.encode("express_relay_fees")],
+        protocol
+      )[0];
+    } else {
+      feeReceiverProtocol = protocol;
+    }
+
+    const expressRelayMetadata = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("metadata")],
+      svmConstants.expressRelayProgram
+    )[0];
+
+    let ixSubmitBid = await expressRelay.methods
+      .submitBid({
+        deadline,
+        bidAmount,
+      })
+      .accountsPartial({
+        searcher: searcher.publicKey,
+        relayerSigner: svmConstants.relayerSigner,
+        permission: permissionKey,
+        protocol,
+        protocolConfig: protocolConfig,
+        feeReceiverRelayer: svmConstants.feeReceiverRelayer,
+        feeReceiverProtocol,
+        expressRelayMetadata,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+      })
+      .instruction();
+
+    let ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
+    let tx = new Transaction().add(...ixsPermissioned);
+
+    return tx;
+  }
+
+  async signAndSubmitSvmBid(
+    tx: Transaction,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    secretKeys: Uint8Array[]
+  ): Promise<BidId> {
+    const keypairs = secretKeys.map((secretKey) =>
+      Keypair.fromSecretKey(secretKey)
+    );
+    if (this.connectionSvm === undefined) {
+      throw new Error("SVM endpoint not provided");
+    }
+    const { blockhash } = await this.connectionSvm.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+
+    tx.sign(...keypairs);
+
+    // TODO: fit signatures into this
+    const txSerialized = tx.serializeMessage().toString("base64");
+
+    let bidId = await this.submitBid({
+      amount: bidAmount.toNumber(),
+      permissionKey: permissionKey.toBase58(),
+      transaction: txSerialized,
+      chainId: "solana",
+      env: "svm",
+    });
+
+    return bidId;
   }
 }

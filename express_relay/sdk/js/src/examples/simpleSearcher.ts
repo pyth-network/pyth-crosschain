@@ -2,14 +2,21 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
-import { isHex } from "viem";
 import { BidStatusUpdate, Opportunity } from "../types";
-import { OPPORTUNITY_ADAPTER_CONFIGS } from "../const";
+import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "../const";
+
+import * as anchor from "@coral-xyz/anchor";
+import { Program, Idl, AnchorProvider } from "@coral-xyz/anchor";
+import { Keypair, PublicKey, Connection } from "@solana/web3.js";
+import dummyIdl from "./idl_dummy.json";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
+const SVM_CHAIN_IDS = ["solana"];
 
 class SimpleSearcher {
   private client: Client;
+  private privateKeyEvm?: string;
+  private privateKeySvm?: string;
   constructor(
     public endpoint: string,
     public chainId: string,
@@ -20,11 +27,18 @@ class SimpleSearcher {
       {
         baseUrl: endpoint,
         apiKey,
+        svmEndpoint: argv.svmEndpoint,
       },
       undefined,
       this.opportunityHandler.bind(this),
       this.bidStatusHandler.bind(this)
     );
+
+    if (SVM_CHAIN_IDS.includes(chainId)) {
+      this.privateKeySvm = privateKey;
+    } else {
+      this.privateKeyEvm = privateKey;
+    }
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -58,10 +72,13 @@ class SimpleSearcher {
       nonce: nonce,
       deadline: BigInt(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
     };
+    if (this.privateKeyEvm === undefined) {
+      throw new Error("EVM private key not provided");
+    }
     const bid = await this.client.signBid(
       opportunity,
       bidParams,
-      checkHex(argv.privateKey)
+      checkHex(this.privateKeyEvm)
     );
     try {
       const bidId = await this.client.submitBid(bid);
@@ -75,15 +92,81 @@ class SimpleSearcher {
     }
   }
 
-  async start() {
+  async svmDummyTx() {
+    if (this.privateKeySvm === undefined) {
+      throw new Error("SVM private key not provided");
+    }
+    const secretKey = anchor.utils.bytes.bs58.decode(this.privateKeySvm);
+    const searcher = Keypair.fromSecretKey(secretKey);
+
+    if (argv.svmEndpoint === undefined) {
+      throw new Error("SVM endpoint not provided");
+    }
+    const connection = new Connection(argv.svmEndpoint, "confirmed");
+    const provider = new AnchorProvider(
+      connection,
+      new anchor.Wallet(searcher),
+      {}
+    );
+    const dummy = new Program(dummyIdl as Idl, provider);
+
+    const permission = PublicKey.default;
+    const bidAmount = new anchor.BN(argv.bid);
+
+    const svmConstants = SVM_CONSTANTS[argv.chainId];
+
+    let ixDummy = await dummy.methods
+      .doNothing()
+      .accountsPartial({
+        payer: searcher.publicKey,
+        expressRelay: svmConstants.expressRelayProgram,
+        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        permission,
+        protocol: dummy.programId,
+      })
+      .instruction();
+
+    let txRaw = new anchor.web3.Transaction().add(ixDummy);
+
+    let txPermissioned = await this.client.constructBidFromSvmTx(
+      txRaw,
+      dummy.programId,
+      permission,
+      bidAmount,
+      new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
+      secretKey,
+      argv.chainId
+    );
+
     try {
-      await this.client.subscribeChains([argv.chainId]);
-      console.log(
-        `Subscribed to chain ${argv.chainId}. Waiting for opportunities...`
+      const bidId = await this.client.signAndSubmitSvmBid(
+        txPermissioned,
+        permission,
+        bidAmount,
+        [secretKey]
       );
+      console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {
-      console.error(error);
-      this.client.websocket?.close();
+      console.error(`Failed to bid: ${error}`);
+    }
+  }
+
+  async start() {
+    if (SVM_CHAIN_IDS.includes(argv.chainId)) {
+      while (true) {
+        await this.svmDummyTx();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    } else {
+      try {
+        await this.client.subscribeChains([argv.chainId]);
+        console.log(
+          `Subscribed to chain ${argv.chainId}. Waiting for opportunities...`
+        );
+      } catch (error) {
+        console.error(error);
+        this.client.websocket?.close();
+      }
     }
   }
 }
@@ -101,13 +184,13 @@ const argv = yargs(hideBin(process.argv))
     demandOption: true,
   })
   .option("bid", {
-    description: "Bid amount in wei",
+    description: "Bid amount in wei/lamports",
     type: "string",
     default: "10000000000000000",
   })
   .option("private-key", {
     description:
-      "Private key to sign the bid with in hex format with 0x prefix. e.g: 0xdeadbeef...",
+      "Private key to sign the bid with. In hex format with 0x prefix (e.g: 0xdeadbeef...) for EVM, 64-byte base58 format for SVM",
     type: "string",
     demandOption: true,
   })
@@ -117,28 +200,44 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: false,
   })
+  .option("svm-endpoint", {
+    description: "SVM RPC endpoint",
+    type: "string",
+    demandOption: false,
+  })
   .help()
   .alias("help", "h")
   .parseSync();
 async function run() {
-  if (isHex(argv.privateKey)) {
-    const account = privateKeyToAccount(argv.privateKey);
-    console.log(`Using account: ${account.address}`);
+  if (SVM_CHAIN_IDS.includes(argv.chainId)) {
+    const searcherSvm = Keypair.fromSecretKey(
+      anchor.utils.bytes.bs58.decode(argv.privateKey)
+    );
+    console.log(`Using searcher pubkey: ${searcherSvm.publicKey.toBase58()}`);
   } else {
-    throw new Error(`Invalid private key: ${argv.privateKey}`);
+    const account = privateKeyToAccount(checkHex(argv.privateKey));
+    console.log(`Using account: ${account.address}`);
   }
-  const searcher = new SimpleSearcher(
+
+  const simpleSearcher = new SimpleSearcher(
     argv.endpoint,
     argv.chainId,
     argv.privateKey,
     argv.apiKey
   );
-  if (OPPORTUNITY_ADAPTER_CONFIGS[argv.chainId] === undefined) {
+  if (SVM_CHAIN_IDS.includes(argv.chainId)) {
+    if (argv.svmEndpoint === undefined) {
+      throw new Error("SVM endpoint not provided");
+    }
+    if (SVM_CONSTANTS[argv.chainId] === undefined) {
+      throw new Error(`SVM constants not found for chain ${argv.chainId}`);
+    }
+  } else if (OPPORTUNITY_ADAPTER_CONFIGS[argv.chainId] === undefined) {
     throw new Error(
       `Opportunity adapter config not found for chain ${argv.chainId}`
     );
   }
-  await searcher.start();
+  await simpleSearcher.start();
 }
 
 run();

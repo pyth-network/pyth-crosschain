@@ -34,6 +34,8 @@
     "directory": "express_relay/sdk/js"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/web3.js": "^1.95.3",
     "isomorphic-ws": "^5.0.0",
     "openapi-client-axios": "^7.5.5",
     "openapi-fetch": "^0.8.2",
