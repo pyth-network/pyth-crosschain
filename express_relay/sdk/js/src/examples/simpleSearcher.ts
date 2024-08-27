@@ -138,7 +138,7 @@ class SimpleSearcher {
 
     let txRaw = new anchor.web3.Transaction().add(ixDummy);
 
-    let txPermissioned = await this.client.constructBidFromSvmTx(
+    let txPermissioned = await this.client.constructPermissionedTxFromSvmTx(
       txRaw,
       dummy.programId,
       permission,
@@ -221,11 +221,22 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 async function run() {
   if (SVM_CHAIN_IDS.includes(argv.chainId)) {
+    if (argv.svmEndpoint === undefined) {
+      throw new Error("SVM endpoint not provided");
+    }
+    if (SVM_CONSTANTS[argv.chainId] === undefined) {
+      throw new Error(`SVM constants not found for chain ${argv.chainId}`);
+    }
     const searcherSvm = Keypair.fromSecretKey(
       anchor.utils.bytes.bs58.decode(argv.privateKey)
     );
     console.log(`Using searcher pubkey: ${searcherSvm.publicKey.toBase58()}`);
   } else {
+    if (OPPORTUNITY_ADAPTER_CONFIGS[argv.chainId] === undefined) {
+      throw new Error(
+        `Opportunity adapter config not found for chain ${argv.chainId}`
+      );
+    }
     const account = privateKeyToAccount(checkHex(argv.privateKey));
     console.log(`Using account: ${account.address}`);
   }
@@ -236,18 +247,6 @@ async function run() {
     argv.privateKey,
     argv.apiKey
   );
-  if (SVM_CHAIN_IDS.includes(argv.chainId)) {
-    if (argv.svmEndpoint === undefined) {
-      throw new Error("SVM endpoint not provided");
-    }
-    if (SVM_CONSTANTS[argv.chainId] === undefined) {
-      throw new Error(`SVM constants not found for chain ${argv.chainId}`);
-    }
-  } else if (OPPORTUNITY_ADAPTER_CONFIGS[argv.chainId] === undefined) {
-    throw new Error(
-      `Opportunity adapter config not found for chain ${argv.chainId}`
-    );
-  }
   await simpleSearcher.start();
 }
 

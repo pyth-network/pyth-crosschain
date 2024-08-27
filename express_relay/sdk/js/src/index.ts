@@ -621,7 +621,7 @@ export class Client {
    * @param chainId The chain ID as a string, e.g. "solana"
    * @returns The new transaction with the SubmitBid instruction
    */
-  async constructBidFromSvmTx(
+  async constructPermissionedTxFromSvmTx(
     txRaw: Transaction,
     protocol: PublicKey,
     permissionKey: PublicKey,
@@ -699,8 +699,17 @@ export class Client {
     return tx;
   }
 
+  /**
+   * Signs and submits an SVM bid using a recent blockhash from the relevant cluster
+   * @param txPermissioned The permissioned transaction (i.e. includes a SubmitBid instruction) to submit a bid on
+   * @param permissionKey The permission key to bid on
+   * @param bidAmount The amount of the bid in lamports
+   * @param secretKeys The secret keys that need to sign this transaction, excluding the relayer signer key
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @returns The id of the submitted bid, you can use this id to track the status of the bid
+   */
   async signAndSubmitSvmBid(
-    tx: Transaction,
+    txPermissioned: Transaction,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
     secretKeys: Uint8Array[],
@@ -717,12 +726,12 @@ export class Client {
       "confirmed"
     );
     const { blockhash } = await connectionSvm.getLatestBlockhash();
-    tx.recentBlockhash = blockhash;
+    txPermissioned.recentBlockhash = blockhash;
 
-    tx.sign(...keypairs);
+    txPermissioned.sign(...keypairs);
 
-    // TODO: fit signatures into this
-    const txSerialized = tx.serializeMessage().toString("base64");
+    // TODO: fit signature(s) and signature template into this
+    const txSerialized = txPermissioned.serializeMessage().toString("base64");
 
     let bidId = await this.submitBid({
       amount: bidAmount.toNumber(),
