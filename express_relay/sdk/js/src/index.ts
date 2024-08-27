@@ -730,8 +730,9 @@ export class Client {
 
     txPermissioned.sign(...keypairs);
 
-    // TODO: fit signature(s) and signature template into this
-    const txSerialized = txPermissioned.serializeMessage().toString("base64");
+    const txSerialized = txPermissioned
+      .serialize({ requireAllSignatures: false })
+      .toString("base64");
 
     const bidId = await this.submitBid({
       amount: bidAmount.toNumber(),
