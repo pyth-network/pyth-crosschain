@@ -100,7 +100,7 @@ class SimpleSearcher {
     }
   }
 
-  async svmDummyTx() {
+  async svmDummyBid() {
     if (this.privateKeySvm === undefined) {
       throw new Error("SVM private key not provided");
     }
@@ -164,8 +164,8 @@ class SimpleSearcher {
 
   async start() {
     if (SVM_CHAIN_IDS.includes(argv.chainId)) {
-      while (true) {
-        await this.svmDummyTx();
+      for (;;) {
+        await this.svmDummyBid();
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     } else {
