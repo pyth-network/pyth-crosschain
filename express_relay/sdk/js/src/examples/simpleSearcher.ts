@@ -124,7 +124,7 @@ class SimpleSearcher {
     const svmConstants = SVM_CONSTANTS[argv.chainId];
     const dummyPid = DUMMY_PIDS[argv.chainId];
 
-    let ixDummy = await dummy.methods
+    const ixDummy = await dummy.methods
       .doNothing()
       .accountsPartial({
         payer: searcher.publicKey,
@@ -136,9 +136,9 @@ class SimpleSearcher {
       .instruction();
     ixDummy.programId = dummyPid;
 
-    let txRaw = new anchor.web3.Transaction().add(ixDummy);
+    const txRaw = new anchor.web3.Transaction().add(ixDummy);
 
-    let txPermissioned = await this.client.constructPermissionedTxFromSvmTx(
+    const txPermissioned = await this.client.constructPermissionedTxFromSvmTx(
       txRaw,
       dummy.programId,
       permission,

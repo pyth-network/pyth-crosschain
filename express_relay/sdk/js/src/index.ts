@@ -673,7 +673,7 @@ export class Client {
       svmConstants.expressRelayProgram
     )[0];
 
-    let ixSubmitBid = await expressRelay.methods
+    const ixSubmitBid = await expressRelay.methods
       .submitBid({
         deadline,
         bidAmount,
@@ -693,8 +693,8 @@ export class Client {
       .instruction();
     ixSubmitBid.programId = svmConstants.expressRelayProgram;
 
-    let ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
-    let tx = new Transaction().add(...ixsPermissioned);
+    const ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
+    const tx = new Transaction().add(...ixsPermissioned);
 
     return tx;
   }
@@ -733,7 +733,7 @@ export class Client {
     // TODO: fit signature(s) and signature template into this
     const txSerialized = txPermissioned.serializeMessage().toString("base64");
 
-    let bidId = await this.submitBid({
+    const bidId = await this.submitBid({
       amount: bidAmount.toNumber(),
       permissionKey: permissionKey.toBase58(),
       transaction: txSerialized,
