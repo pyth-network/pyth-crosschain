@@ -1502,7 +1502,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "6.5.2"
+version = "6.5.3"
 dependencies = [
  "anyhow",
  "axum",
@@ -2841,7 +2841,7 @@ dependencies = [
 
 [[package]]
 name = "pythnet-sdk"
-version = "2.1.0"
+version = "2.3.0"
 dependencies = [
  "bincode",
  "borsh",
