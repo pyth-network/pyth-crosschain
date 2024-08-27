@@ -3,7 +3,11 @@ import { hideBin } from "yargs/helpers";
 import { checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { BidStatusUpdate, Opportunity } from "../types";
-import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "../const";
+import {
+  OPPORTUNITY_ADAPTER_CONFIGS,
+  SVM_CONSTANTS,
+  SVM_CHAIN_IDS,
+} from "../const";
 
 import * as anchor from "@coral-xyz/anchor";
 import { Program, Idl, AnchorProvider } from "@coral-xyz/anchor";
@@ -11,7 +15,9 @@ import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import dummyIdl from "./idl_dummy.json";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
-const SVM_CHAIN_IDS = ["solana"];
+const DUMMY_PIDS: Record<string, PublicKey> = {
+  solana: new PublicKey("HYCgALnu6CM2gkQVopa1HGaNf8Vzbs9bomWRiKP267P3"),
+};
 
 class SimpleSearcher {
   private client: Client;
@@ -27,7 +33,9 @@ class SimpleSearcher {
       {
         baseUrl: endpoint,
         apiKey,
-        svmEndpoint: argv.svmEndpoint,
+        svmEndpoints: {
+          [chainId]: argv.svmEndpoint!,
+        },
       },
       undefined,
       this.opportunityHandler.bind(this),
@@ -114,6 +122,7 @@ class SimpleSearcher {
     const bidAmount = new anchor.BN(argv.bid);
 
     const svmConstants = SVM_CONSTANTS[argv.chainId];
+    const dummyPid = DUMMY_PIDS[argv.chainId];
 
     let ixDummy = await dummy.methods
       .doNothing()
@@ -122,9 +131,10 @@ class SimpleSearcher {
         expressRelay: svmConstants.expressRelayProgram,
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         permission,
-        protocol: dummy.programId,
+        protocol: dummyPid,
       })
       .instruction();
+    ixDummy.programId = dummyPid;
 
     let txRaw = new anchor.web3.Transaction().add(ixDummy);
 
@@ -143,7 +153,8 @@ class SimpleSearcher {
         txPermissioned,
         permission,
         bidAmount,
-        [secretKey]
+        [secretKey],
+        argv.chainId
       );
       console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {

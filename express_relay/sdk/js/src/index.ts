@@ -38,7 +38,7 @@ export class ClientError extends Error {}
 type ClientOptions = FetchClientOptions & {
   baseUrl: string;
   apiKey?: string;
-  svmEndpoint?: string;
+  svmEndpoints?: Record<string, string>;
 };
 
 export interface WsOptions {
@@ -133,8 +133,6 @@ export class Client {
     statusUpdate: BidStatusUpdate
   ) => Promise<void>;
 
-  private connectionSvm?: Connection;
-
   private getAuthorization() {
     return this.clientOptions.apiKey
       ? {
@@ -157,12 +155,6 @@ export class Client {
     this.wsOptions = { ...DEFAULT_WS_OPTIONS, ...wsOptions };
     this.websocketOpportunityCallback = opportunityCallback;
     this.websocketBidStatusCallback = bidStatusCallback;
-    if (this.clientOptions.svmEndpoint !== undefined) {
-      this.connectionSvm = new Connection(
-        new URL(this.clientOptions.svmEndpoint).toString(),
-        "confirmed"
-      );
-    }
   }
 
   private connectWebsocket() {
@@ -640,11 +632,15 @@ export class Client {
   ): Promise<Transaction> {
     const searcher = Keypair.fromSecretKey(secretKey);
 
-    if (this.connectionSvm === undefined) {
-      throw new Error("SVM endpoint not provided");
+    if (this.clientOptions.svmEndpoints === undefined) {
+      throw new Error("SVM endpoints not provided");
     }
+    const connectionSvm = new Connection(
+      new URL(this.clientOptions.svmEndpoints[chainId]).toString(),
+      "confirmed"
+    );
     const provider = new AnchorProvider(
-      this.connectionSvm,
+      connectionSvm,
       new anchor.Wallet(searcher),
       {}
     );
@@ -658,9 +654,7 @@ export class Client {
     )[0];
 
     let feeReceiverProtocol: PublicKey;
-    const protocolAccountInfo = await this.connectionSvm.getAccountInfo(
-      protocol
-    );
+    const protocolAccountInfo = await connectionSvm.getAccountInfo(protocol);
     let protocolExecutable = false;
     if (protocolAccountInfo) {
       protocolExecutable = protocolAccountInfo.executable;
@@ -697,6 +691,7 @@ export class Client {
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
+    ixSubmitBid.programId = svmConstants.expressRelayProgram;
 
     let ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
     let tx = new Transaction().add(...ixsPermissioned);
@@ -708,15 +703,20 @@ export class Client {
     tx: Transaction,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
-    secretKeys: Uint8Array[]
+    secretKeys: Uint8Array[],
+    chainId: string
   ): Promise<BidId> {
     const keypairs = secretKeys.map((secretKey) =>
       Keypair.fromSecretKey(secretKey)
     );
-    if (this.connectionSvm === undefined) {
-      throw new Error("SVM endpoint not provided");
+    if (this.clientOptions.svmEndpoints === undefined) {
+      throw new Error("SVM endpoints not provided");
     }
-    const { blockhash } = await this.connectionSvm.getLatestBlockhash();
+    const connectionSvm = new Connection(
+      new URL(this.clientOptions.svmEndpoints[chainId]).toString(),
+      "confirmed"
+    );
+    const { blockhash } = await connectionSvm.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
 
     tx.sign(...keypairs);

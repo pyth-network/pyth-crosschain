@@ -36,3 +36,5 @@ export const SVM_CONSTANTS: Record<string, SvmConstantsConfig> = {
     ),
   },
 };
+
+export const SVM_CHAIN_IDS = ["solana"];
