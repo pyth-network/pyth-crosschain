@@ -2178,7 +2178,6 @@ const storageSlots: StorageSlot[] = [
     value: "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
-
 export class PythContractInterface extends Interface {
   constructor() {
     super(abi);
