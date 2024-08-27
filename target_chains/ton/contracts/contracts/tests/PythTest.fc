@@ -1,5 +1,4 @@
 #include "../imports/stdlib.fc";
-#include "../common/data.fc";
 #include "../Pyth.fc";
 
 () recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {

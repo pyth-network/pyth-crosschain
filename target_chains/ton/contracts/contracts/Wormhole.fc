@@ -2,7 +2,6 @@
 #include "common/errors.fc";
 #include "common/utils.fc";
 #include "common/storage.fc";
-#include "common/data.fc";
 
 ;; Signature verification function
 ;; ECRECOVER: Recovers the signer's address from the signature

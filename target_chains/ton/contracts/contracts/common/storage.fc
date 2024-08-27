@@ -1,3 +1,5 @@
+#include "../imports/stdlib.fc";
+
 ;; Pyth
 ;; Price struct: {price: int, conf: int, expo: int, publish_time: int}
 ;; PriceFeed struct: {price: Price, ema_price: Price}
@@ -15,3 +17,30 @@ global int governance_chain_id;
 ;; GovernanceContract struct: {chain_id: int, address: slice}
 global int governance_contract;
 global cell consumed_governance_actions;
+
+
+() store_data() impure inline_ref {
+    begin_cell()
+        .store_dict(latest_price_feeds)
+        .store_uint(current_guardian_set_index, 32)
+        .store_dict(guardian_sets)
+        .store_uint(chain_id, 16)
+        .store_uint(governance_chain_id, 16)
+        .store_uint(governance_contract, 256)
+        .store_dict(consumed_governance_actions)
+        .end_cell()
+        .set_data();
+}
+
+;; load_data populates storage variables using stored data
+() load_data() impure inline_ref {
+    var ds = get_data().begin_parse();
+    latest_price_feeds = ds~load_dict();
+    current_guardian_set_index = ds~load_uint(32);
+    guardian_sets = ds~load_dict();
+    chain_id = ds~load_uint(16);
+    governance_chain_id = ds~load_uint(16);
+    governance_contract = ds~load_uint(256);
+    consumed_governance_actions = ds~load_dict();
+    ds.end_parse();
+}
