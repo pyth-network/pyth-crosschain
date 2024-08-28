@@ -190,7 +190,7 @@ const useRunButton = <ParameterName extends string>({
                 if (config.chains[0].blockExplorers?.default !== undefined) {
                   const blockExplorerTxLink = `${config.chains[0].blockExplorers.default.url}/tx/${result}`;
                   output.link = blockExplorerTxLink;
-                } 
+                }
                 setStatus(Results(output));
               })
               .catch((error: unknown) => {
