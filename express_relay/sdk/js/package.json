@@ -16,6 +16,7 @@
     "build": "tsc",
     "test": "jest src/ --passWithNoTests",
     "simple-searcher": "pnpm run build && node lib/examples/simpleSearcher.js",
+    "simple-searcher-svm": "pnpm run build && node lib/examples/simpleSearcherSvm.js",
     "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/serverTypes.d.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src",

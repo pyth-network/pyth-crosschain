@@ -26,7 +26,13 @@ import {
 } from "./types";
 import { executeOpportunityAbi } from "./abi";
 import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
-import { Keypair, PublicKey, Transaction, Connection } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  Transaction,
+  Connection,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import expressRelayIdl from "./idl_express_relay.json";
@@ -39,7 +45,6 @@ export class ClientError extends Error {}
 type ClientOptions = FetchClientOptions & {
   baseUrl: string;
   apiKey?: string;
-  svmEndpoints?: Record<string, string>;
 };
 
 export interface WsOptions {
@@ -612,42 +617,28 @@ export class Client {
   }
 
   /**
-   * Adds a SubmitBid instruction to a transaction, thereby permissioning it
-   * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
+   * @param searcher The address of the searcher that is submitting the bid
    * @param protocol The identifying address of the protocol that the permission key is for
+   * @param protocolExecutable Whether the protocol address represents an executable program or not
    * @param permissionKey The 32-byte permission key as an SVM PublicKey
    * @param bidAmount The amount of the bid in lamports
    * @param deadline The deadline for the bid in seconds since Unix epoch
-   * @param secretKey The secret key of the searcher that will serve as fee payer for the transaction
    * @param chainId The chain ID as a string, e.g. "solana"
-   * @returns The new transaction with the SubmitBid instruction
+   * @returns The SubmitBid instruction
    */
-  async constructPermissionedTxFromSvmTx(
-    txRaw: Transaction,
+  async constructSubmitBidInstruction(
+    searcher: PublicKey,
     protocol: PublicKey,
+    protocolExecutable: boolean,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
     deadline: anchor.BN,
-    secretKey: Uint8Array,
     chainId: string
-  ): Promise<Transaction> {
-    const searcher = Keypair.fromSecretKey(secretKey);
-
-    if (this.clientOptions.svmEndpoints === undefined) {
-      throw new Error("SVM endpoints not provided");
-    }
-    const connectionSvm = new Connection(
-      new URL(this.clientOptions.svmEndpoints[chainId]).toString(),
-      "confirmed"
-    );
-    const provider = new AnchorProvider(
-      connectionSvm,
-      new anchor.Wallet(searcher),
-      {}
-    );
+  ): Promise<TransactionInstruction> {
     const expressRelay = new Program<ExpressRelay>(
       expressRelayIdl as ExpressRelay,
-      provider
+      new AnchorProvider({} as Connection, {} as anchor.Wallet, {})
     );
 
     const svmConstants = SVM_CONSTANTS[chainId];
@@ -658,11 +649,6 @@ export class Client {
     )[0];
 
     let feeReceiverProtocol: PublicKey;
-    const protocolAccountInfo = await connectionSvm.getAccountInfo(protocol);
-    let protocolExecutable = false;
-    if (protocolAccountInfo) {
-      protocolExecutable = protocolAccountInfo.executable;
-    }
     if (protocolExecutable) {
       feeReceiverProtocol = PublicKey.findProgramAddressSync(
         [anchor.utils.bytes.utf8.encode("express_relay_fees")],
@@ -683,11 +669,11 @@ export class Client {
         bidAmount,
       })
       .accountsPartial({
-        searcher: searcher.publicKey,
+        searcher,
         relayerSigner: svmConstants.relayerSigner,
         permission: permissionKey,
         protocol,
-        protocolConfig,
+        protocolConfig: protocolConfig,
         feeReceiverRelayer: svmConstants.feeReceiverRelayer,
         feeReceiverProtocol,
         expressRelayMetadata,
@@ -697,6 +683,41 @@ export class Client {
       .instruction();
     ixSubmitBid.programId = svmConstants.expressRelayProgram;
 
+    return ixSubmitBid;
+  }
+
+  /**
+   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
+   * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param protocol The identifying address of the protocol that the permission key is for
+   * @param protocolExecutable Whether the protocol address represents an executable program or not
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @returns The new transaction with the SubmitBid instruction
+   */
+  async constructSvmBid(
+    txRaw: Transaction,
+    searcher: PublicKey,
+    protocol: PublicKey,
+    protocolExecutable: boolean,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string
+  ): Promise<Transaction> {
+    const ixSubmitBid = await this.constructSubmitBidInstruction(
+      searcher,
+      protocol,
+      protocolExecutable,
+      permissionKey,
+      bidAmount,
+      deadline,
+      chainId
+    );
+
     const ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
     const tx = new Transaction().add(...ixsPermissioned);
 
@@ -704,34 +725,22 @@ export class Client {
   }
 
   /**
-   * Signs and submits an SVM bid using a recent blockhash from the relevant cluster
-   * @param txPermissioned The permissioned transaction (i.e. includes a SubmitBid instruction) to submit a bid on
+   * Signs and submits an SVM bid to the express relay auction server
+   * @param txPermissioned The permissioned transaction (i.e. includes a SubmitBid instruction) to submit a bid on. This should already have a recent blockhash set.
    * @param permissionKey The permission key to bid on
    * @param bidAmount The amount of the bid in lamports
-   * @param secretKeys The secret keys that need to sign this transaction, excluding the relayer signer key
-   * @param chainId The chain ID as a string, e.g. "solana"
+   * @param secretKeys The secret keys that need to sign this transaction, apart from the relayer signer key.
    * @returns The id of the submitted bid, you can use this id to track the status of the bid
    */
   async signAndSubmitSvmBid(
     txPermissioned: Transaction,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
-    secretKeys: Uint8Array[],
-    chainId: string
+    secretKeys: Uint8Array[]
   ): Promise<BidId> {
     const keypairs = secretKeys.map((secretKey) =>
       Keypair.fromSecretKey(secretKey)
     );
-    if (this.clientOptions.svmEndpoints === undefined) {
-      throw new Error("SVM endpoints not provided");
-    }
-    const connectionSvm = new Connection(
-      new URL(this.clientOptions.svmEndpoints[chainId]).toString(),
-      "confirmed"
-    );
-    const { blockhash } = await connectionSvm.getLatestBlockhash();
-    txPermissioned.recentBlockhash = blockhash;
-
     txPermissioned.sign(...keypairs);
 
     const txSerialized = txPermissioned

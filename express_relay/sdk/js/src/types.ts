@@ -178,7 +178,7 @@ export type BidSvm = {
    */
   amount: number;
   /**
-   * @description Transaction object, as a base58-encoded string.
+   * @description Transaction object, as a base64-encoded string.
    * @example SGVsbG8sIFdvcmxkIQ
    */
   transaction: string;

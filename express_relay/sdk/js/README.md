@@ -79,4 +79,16 @@ npm run simple-searcher -- \
   --private-key <YOUR-PRIVATE-KEY>
 ```
 
+#### SimpleSearcherSvm
+
+The SimpleSearcherSvm example submits a dummy SVM transaction to the auction server after appending the appropriate `SubmitBid` instruction that permissions the transaction. You can run it with `npm run simple-searcher-svm`, and the full command looks like:
+
+```bash
+npm run simple-searcher-svm -- \
+  --endpoint-express-relay http://per-staging.dourolabs.app/ \
+  --chain-id solana \
+  --private-key <YOUR-PRIVATE-KEY> \
+  --endpoint-svm "https://api.mainnet-beta.solana.com"
+```
+
 Note that if you are using a localhost server at `http://127.0.0.1`, you should specify `--endpoint http://127.0.0.1:{PORT}` rather than `http://localhost:{PORT}`, as Typescript maps `localhost` to `::1` in line with IPv6 rather than to `127.0.0.1` as with IPv4.
