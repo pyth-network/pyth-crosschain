@@ -10,9 +10,10 @@ import {
 } from "../const";
 
 import * as anchor from "@coral-xyz/anchor";
-import { Program, Idl, AnchorProvider } from "@coral-xyz/anchor";
+import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import dummyIdl from "./idl_dummy.json";
+import { Dummy } from "./idlTypesDummy";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const DUMMY_PIDS: Record<string, PublicKey> = {
@@ -116,7 +117,7 @@ class SimpleSearcher {
       new anchor.Wallet(searcher),
       {}
     );
-    const dummy = new Program(dummyIdl as Idl, provider);
+    const dummy = new Program<Dummy>(dummyIdl as Dummy, provider);
 
     const permission = PublicKey.default;
     const bidAmount = new anchor.BN(argv.bid);

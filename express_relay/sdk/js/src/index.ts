@@ -28,8 +28,9 @@ import { executeOpportunityAbi } from "./abi";
 import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
 import { Keypair, PublicKey, Transaction, Connection } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import expressRelayIdl from "./idl_express_relay.json";
+import { ExpressRelay } from "./idlTypesExpressRelay";
 
 export * from "./types";
 
@@ -644,7 +645,10 @@ export class Client {
       new anchor.Wallet(searcher),
       {}
     );
-    const expressRelay = new Program(expressRelayIdl as Idl, provider);
+    const expressRelay = new Program<ExpressRelay>(
+      expressRelayIdl as ExpressRelay,
+      provider
+    );
 
     const svmConstants = SVM_CONSTANTS[chainId];
 
@@ -683,7 +687,7 @@ export class Client {
         relayerSigner: svmConstants.relayerSigner,
         permission: permissionKey,
         protocol,
-        protocolConfig: protocolConfig,
+        protocolConfig,
         feeReceiverRelayer: svmConstants.feeReceiverRelayer,
         feeReceiverProtocol,
         expressRelayMetadata,
