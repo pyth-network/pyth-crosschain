@@ -85,10 +85,21 @@ export const RunButton = <ParameterName extends string>(
           )}
         </Button>
       )}
-      {status.type === StatusType.Results && (
+      {status.type === StatusType.Results && props.type === EvmApiType.Write && (
         <div>
           <h3 className="mb-2 text-lg font-bold">Results</h3>
-          <Code language="json">{stringifyResponse(status.data)}</Code>
+          {status.data && typeof status.data === 'object' && 'hash' in status.data && typeof status.data.hash === 'string' ? (
+            <>
+              <Code language="json">{`Tx Hash: ${status.data.hash}`}</Code>
+              {'link' in status.data && typeof status.data.link === 'string' && (
+                <a href={status.data.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">
+                  Open in explorer↗
+                </a>
+              )}
+            </>
+          ) : (
+            <p>{stringifyResponse(status.data)}</p>
+          )}
         </div>
       )}
       {status.type === StatusType.Error && (
@@ -175,10 +186,15 @@ const useRunButton = <ParameterName extends string>({
             })
               .then(({ request }) => writeContract(config, request))
               .then((result) => {
-                setStatus(Results(result));
+                const output: {hash: string, link?: string} = {hash: result};
+                if (config.chains[0].blockExplorers?.default !== undefined) {
+                  const blockExplorerTxLink = `${config.chains[0].blockExplorers.default.url}/tx/${result}`;
+                  output.link = blockExplorerTxLink;
+                } 
+                setStatus(Results(output));
               })
               .catch((error: unknown) => {
-                setStatus(ErrorStatus(error));
+                setStatus(ErrorStatus(error))
               });
           }
           return;
