@@ -48,14 +48,12 @@ export async function startValidatorRaw() {
 
   const user = loadKeypair("keypairs/localnet_authority.json");
 
-  const command = `solana-test-validator
-    --ledger ${ledgerDir}
-    --reset
-    --mint ${user.publicKey}
-    --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} program/staking.so
+  const command = `solana-test-validator \
+    --ledger ${ledgerDir} \
+    --reset \
+    --mint ${user.publicKey} \
+    --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} programs/staking.so \
     `;
-
-  console.log("command", command);
 
   exec(command, { signal }, (error, stdout, stderr) => {
     if (error?.name.includes("AbortError")) {
@@ -78,7 +76,6 @@ export async function startValidatorRaw() {
       await connection.getSlot();
       break;
     } catch (e) {
-      console.log("Caught exception", e);
       // Bound the number of retries so the tests don't hang if there's some problem blocking
       // the connection to the validator.
       if (numRetries == 30) {

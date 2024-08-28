@@ -14,11 +14,8 @@ describe("Test", () => {
   let pythStakingClient: PythStakingClient;
 
   beforeAll(async () => {
-    console.log("startValidatorRaw");
     ({ connection, controller, wallet } = await startValidatorRaw());
-    console.log("PythStakingClient");
     pythStakingClient = new PythStakingClient({ connection, wallet });
-    console.log("done");
   });
 
   afterAll(() => {
@@ -26,27 +23,26 @@ describe("Test", () => {
   });
 
   test("config", async () => {
-    console.log("config");
     const tmpConfig: GlobalConfig = {
-      agreementHash: new Array(32),
       bump: getConfigAddress()[1],
+      governanceAuthority: PublicKey.unique(),
+      pythTokenMint: PublicKey.unique(),
+      pythGovernanceRealm: PublicKey.unique(),
+      unlockingDuration: 100,
       epochDuration: new BN(100),
       freeze: false,
-      governanceAuthority: PublicKey.unique(),
-      governanceProgram: PublicKey.unique(),
-      mockClockTime: new BN(0),
       pdaAuthority: PublicKey.unique(),
+      governanceProgram: PublicKey.unique(),
+      pythTokenListTime: null,
+      agreementHash: new Array(32).fill(0),
+      mockClockTime: new BN(0),
       poolAuthority: PublicKey.unique(),
-      pythGovernanceRealm: PublicKey.unique(),
-      pythTokenListTime: new BN(0),
-      pythTokenMint: PublicKey.unique(),
-      unlockingDuration: 100,
     };
 
-    // await pythStakingClient.setGlobalConfig(tmpConfig);
+    await pythStakingClient.setGlobalConfig(tmpConfig);
 
-    // const config = await pythStakingClient.getGlobalConfig();
+    const config = await pythStakingClient.getGlobalConfig();
 
-    // expect(config).toEqual(tmpConfig);
+    expect(JSON.stringify(config)).toEqual(JSON.stringify(tmpConfig));
   });
 });
