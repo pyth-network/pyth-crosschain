@@ -85,10 +85,10 @@ export const RunButton = <ParameterName extends string>(
           )}
         </Button>
       )}
-      {status.type === StatusType.Results && props.type === EvmApiType.Write && (
+      {status.type === StatusType.Results && (
         <div>
           <h3 className="mb-2 text-lg font-bold">Results</h3>
-          {status.data && typeof status.data === 'object' && 'hash' in status.data && typeof status.data.hash === 'string' ? (
+          {props.type === EvmApiType.Write && status.data && typeof status.data === 'object' && 'hash' in status.data && typeof status.data.hash === 'string' ? (
             <>
               <Code language="json">{`Tx Hash: ${status.data.hash}`}</Code>
               {'link' in status.data && typeof status.data.link === 'string' && (
@@ -98,7 +98,7 @@ export const RunButton = <ParameterName extends string>(
               )}
             </>
           ) : (
-            <p>{stringifyResponse(status.data)}</p>
+            <Code language="json">{stringifyResponse(status.data)}</Code>
           )}
         </div>
       )}
