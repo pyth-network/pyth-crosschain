@@ -72,6 +72,7 @@ export class WormholeTest implements Contract {
 
     return beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
+      .storeUint(0, 256) // single_update_fee, set to 0 for testing
       .storeUint(guardianSetIndex, 32)
       .storeDict(guardianSets)
       .storeUint(chainId, 16)

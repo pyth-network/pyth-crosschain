@@ -10,12 +10,14 @@ import {
   SendMode,
 } from "@ton/core";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
+import { createCellChain } from "../tests/utils";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
   timePeriod: number;
   price: Price;
   emaPrice: Price;
+  singleUpdateFee: number;
 };
 
 export class PythTest implements Contract {
@@ -33,7 +35,8 @@ export class PythTest implements Contract {
       config.priceFeedId,
       config.timePeriod,
       config.price,
-      config.emaPrice
+      config.emaPrice,
+      config.singleUpdateFee
     );
     const init = { code, data };
     return new PythTest(contractAddress(workchain, init), init);
@@ -43,7 +46,8 @@ export class PythTest implements Contract {
     priceFeedId: HexString,
     timePeriod: number,
     price: Price,
-    emaPrice: Price
+    emaPrice: Price,
+    singleUpdateFee: number
   ): Cell {
     const priceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
@@ -77,6 +81,7 @@ export class PythTest implements Contract {
 
     return beginCell()
       .storeDict(priceDict) // latest_price_feeds
+      .storeUint(singleUpdateFee, 256) // single_update_fee
       .storeUint(0, 32)
       .storeDict(Dictionary.empty())
       .storeUint(0, 16)
@@ -99,8 +104,8 @@ export class PythTest implements Contract {
     });
   }
 
-  async getPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
-    const result = await provider.get("test_price_unsafe", [
+  async getGetPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+    const result = await provider.get("test_get_price_unsafe", [
       { type: "int", value: BigInt(priceFeedId) },
     ]);
 
@@ -117,12 +122,12 @@ export class PythTest implements Contract {
     };
   }
 
-  async getPriceNoOlderThan(
+  async getGetPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString
   ) {
-    const result = await provider.get("test_price_no_older_than", [
+    const result = await provider.get("test_get_price_no_older_than", [
       { type: "int", value: BigInt(timePeriod) },
       { type: "int", value: BigInt(priceFeedId) },
     ]);
@@ -140,8 +145,11 @@ export class PythTest implements Contract {
     };
   }
 
-  async getEmaPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
-    const result = await provider.get("test_ema_price_unsafe", [
+  async getGetEmaPriceUnsafe(
+    provider: ContractProvider,
+    priceFeedId: HexString
+  ) {
+    const result = await provider.get("test_get_ema_price_unsafe", [
       { type: "int", value: BigInt(priceFeedId) },
     ]);
 
@@ -158,12 +166,12 @@ export class PythTest implements Contract {
     };
   }
 
-  async getEmaPriceNoOlderThan(
+  async getGetEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString
   ) {
-    const result = await provider.get("test_ema_price_no_older_than", [
+    const result = await provider.get("test_get_ema_price_no_older_than", [
       { type: "int", value: BigInt(timePeriod) },
       { type: "int", value: BigInt(priceFeedId) },
     ]);
@@ -179,5 +187,13 @@ export class PythTest implements Contract {
       expo,
       publishTime,
     };
+  }
+
+  async getGetUpdateFee(provider: ContractProvider, vm: Buffer) {
+    const result = await provider.get("test_get_update_fee", [
+      { type: "slice", cell: createCellChain(vm) },
+    ]);
+
+    return result.stack.readNumber();
   }
 }
