@@ -8,7 +8,7 @@ const int ACCUMULATOR_MAGIC = 0x504e4155; ;; "PNAU" (Pyth Network Accumulator Up
 const int MAJOR_VERSION = 1;
 const int MINIMUM_ALLOWED_MINOR_VERSION = 0;
 
-slice verify(slice data) {
+slice verify_header(slice data) {
     int magic = data~load_uint(32);
     throw_unless(ERROR_INVALID_MAGIC, magic == ACCUMULATOR_MAGIC);
     int major_version = data~load_uint(8);
@@ -24,7 +24,7 @@ slice verify(slice data) {
 
 (int) get_update_fee(slice data) method_id {
     load_data();
-    slice cs = verify(data);
+    slice cs = verify_header(data);
     int wormhole_proof_size_bytes = cs~load_uint(16);
     (cell wormhole_proof, slice cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
     int num_updates = cs~load_uint(8);
