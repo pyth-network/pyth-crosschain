@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Client } from "../index";
-import { BidStatusUpdate, Opportunity } from "../types";
+import { BidStatusUpdate } from "../types";
 import { SVM_CONSTANTS } from "../const";
 
 import * as anchor from "@coral-xyz/anchor";
