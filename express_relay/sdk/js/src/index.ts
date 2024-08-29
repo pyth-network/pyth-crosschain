@@ -17,6 +17,7 @@ import {
   BidId,
   BidParams,
   BidStatusUpdate,
+  BidSvm,
   Opportunity,
   OpportunityParams,
   TokenAmount,
@@ -557,7 +558,9 @@ export class Client {
 
     return {
       chain_id: bid.chainId,
-      transaction: bid.transaction,
+      transaction: bid.transaction
+        .serialize({ requireAllSignatures: false })
+        .toString("base64"),
     };
   }
 
@@ -694,7 +697,7 @@ export class Client {
    * @param bidAmount The amount of the bid in lamports
    * @param deadline The deadline for the bid in seconds since Unix epoch
    * @param chainId The chain ID as a string, e.g. "solana"
-   * @returns The new transaction with the SubmitBid instruction
+   * @returns The constructed SVM bid
    */
   async constructSvmBid(
     txRaw: Transaction,
@@ -705,7 +708,7 @@ export class Client {
     bidAmount: anchor.BN,
     deadline: anchor.BN,
     chainId: string
-  ): Promise<Transaction> {
+  ): Promise<BidSvm> {
     const ixSubmitBid = await this.constructSubmitBidInstruction(
       searcher,
       protocol,
@@ -719,37 +722,29 @@ export class Client {
     const ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
     const tx = new Transaction().add(...ixsPermissioned);
 
-    return tx;
+    return {
+      transaction: tx,
+      chainId: chainId,
+      env: "svm",
+    };
   }
 
   /**
    * Signs and submits an SVM bid to the express relay auction server
-   * @param txPermissioned The permissioned transaction (i.e. includes a SubmitBid instruction) to submit a bid on. This should already have a recent blockhash set.
-   * @param permissionKey The permission key to bid on
-   * @param bidAmount The amount of the bid in lamports
+   * @param bid The SVM bid to sign and submit
    * @param secretKeys The secret keys that need to sign this transaction, apart from the relayer signer key.
    * @returns The id of the submitted bid, you can use this id to track the status of the bid
    */
   async signAndSubmitSvmBid(
-    txPermissioned: Transaction,
-    permissionKey: PublicKey,
-    bidAmount: anchor.BN,
+    bid: BidSvm,
     secretKeys: Uint8Array[]
   ): Promise<BidId> {
     const keypairs = secretKeys.map((secretKey) =>
       Keypair.fromSecretKey(secretKey)
     );
-    txPermissioned.sign(...keypairs);
+    bid.transaction.sign(...keypairs);
 
-    const txSerialized = txPermissioned
-      .serialize({ requireAllSignatures: false })
-      .toString("base64");
-
-    const bidId = await this.submitBid({
-      chainId: "solana",
-      transaction: txSerialized,
-      env: "svm",
-    });
+    const bidId = await this.submitBid(bid);
 
     return bidId;
   }

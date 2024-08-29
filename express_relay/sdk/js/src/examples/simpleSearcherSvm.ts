@@ -95,7 +95,7 @@ class SimpleSearcherSvm {
 
     const txRaw = new anchor.web3.Transaction().add(ixDummy);
 
-    const txPermissioned = await this.client.constructSvmBid(
+    const bid = await this.client.constructSvmBid(
       txRaw,
       searcher.publicKey,
       dummy.programId,
@@ -108,13 +108,8 @@ class SimpleSearcherSvm {
 
     try {
       const { blockhash } = await this.connectionSvm.getLatestBlockhash();
-      txPermissioned.recentBlockhash = blockhash;
-      const bidId = await this.client.signAndSubmitSvmBid(
-        txPermissioned,
-        permission,
-        bidAmount,
-        [secretKey]
-      );
+      bid.transaction.recentBlockhash = blockhash;
+      const bidId = await this.client.signAndSubmitSvmBid(bid, [secretKey]);
       console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {
       console.error(`Failed to bid: ${error}`);

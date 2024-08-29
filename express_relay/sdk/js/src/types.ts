@@ -1,6 +1,6 @@
 import { Address, Hex } from "viem";
 import type { components } from "./serverTypes";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 
 /**
  * ERC20 token with contract address and amount
@@ -169,7 +169,7 @@ export type BidSvm = {
    * @description Transaction object, as a base64-encoded string.
    * @example SGVsbG8sIFdvcmxkIQ
    */
-  transaction: string;
+  transaction: Transaction;
   /**
    * @description The chain id to bid on.
    * @example solana
