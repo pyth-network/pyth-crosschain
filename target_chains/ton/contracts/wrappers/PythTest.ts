@@ -104,7 +104,7 @@ export class PythTest implements Contract {
     });
   }
 
-  async getGetPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+  async getPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
     const result = await provider.get("test_get_price_unsafe", [
       { type: "int", value: BigInt(priceFeedId) },
     ]);
@@ -122,7 +122,7 @@ export class PythTest implements Contract {
     };
   }
 
-  async getGetPriceNoOlderThan(
+  async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString
@@ -145,7 +145,7 @@ export class PythTest implements Contract {
     };
   }
 
-  async getGetEmaPriceUnsafe(
+  async getEmaPriceUnsafe(
     provider: ContractProvider,
     priceFeedId: HexString
   ) {
@@ -166,7 +166,7 @@ export class PythTest implements Contract {
     };
   }
 
-  async getGetEmaPriceNoOlderThan(
+  async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString
@@ -189,7 +189,7 @@ export class PythTest implements Contract {
     };
   }
 
-  async getGetUpdateFee(provider: ContractProvider, vm: Buffer) {
+  async getUpdateFee(provider: ContractProvider, vm: Buffer) {
     const result = await provider.get("test_get_update_fee", [
       { type: "slice", cell: createCellChain(vm) },
     ]);

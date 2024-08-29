@@ -76,7 +76,7 @@ describe("PythTest", () => {
   it("should correctly get price unsafe", async () => {
     await deployContract();
 
-    const result = await pythTest.getGetPriceUnsafe(PRICE_FEED_ID);
+    const result = await pythTest.getPriceUnsafe(PRICE_FEED_ID);
     expect(result.price).toBe(1);
     expect(result.conf).toBe(2);
     expect(result.expo).toBe(3);
@@ -93,7 +93,7 @@ describe("PythTest", () => {
     });
     await deployContract(PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
 
-    const result = await pythTest.getGetPriceNoOlderThan(
+    const result = await pythTest.getPriceNoOlderThan(
       TIME_PERIOD,
       PRICE_FEED_ID
     );
@@ -108,7 +108,7 @@ describe("PythTest", () => {
     await deployContract();
 
     await expect(
-      pythTest.getGetPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
   });
 
@@ -122,7 +122,7 @@ describe("PythTest", () => {
     });
     await deployContract(PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
 
-    const result = await pythTest.getGetEmaPriceNoOlderThan(
+    const result = await pythTest.getEmaPriceNoOlderThan(
       TIME_PERIOD,
       PRICE_FEED_ID
     );
@@ -137,14 +137,14 @@ describe("PythTest", () => {
     await deployContract();
 
     await expect(
-      pythTest.getGetEmaPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
+      pythTest.getEmaPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
   });
 
   it("should correctly get ema price unsafe", async () => {
     await deployContract();
 
-    const result = await pythTest.getGetEmaPriceUnsafe(PRICE_FEED_ID);
+    const result = await pythTest.getEmaPriceUnsafe(PRICE_FEED_ID);
 
     expect(result.price).toBe(5);
     expect(result.conf).toBe(6);
@@ -155,7 +155,7 @@ describe("PythTest", () => {
   it("should correctly get update fee", async () => {
     await deployContract();
 
-    const result = await pythTest.getGetUpdateFee(
+    const result = await pythTest.getUpdateFee(
       Buffer.from(HERMES_BTC_ETH_UPDATE, "hex")
     );
 

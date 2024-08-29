@@ -158,7 +158,7 @@ describe("WormholeTest", () => {
   it("should correctly get guardian set", async () => {
     await deployContract();
 
-    const getGuardianSetResult = await wormholeTest.getGetGuardianSet(0);
+    const getGuardianSetResult = await wormholeTest.getGuardianSet(0);
     expect(getGuardianSetResult.keys).toEqual(GUARDIAN_SET_0);
   });
 });
