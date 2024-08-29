@@ -1,6 +1,7 @@
 {
   "name": "@pythnetwork/pyth-ton",
   "version": "0.0.1",
+  "private": true,
   "scripts": {
     "start": "blueprint run",
     "build": "echo Pyth | blueprint build",
