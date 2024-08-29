@@ -699,3 +699,13 @@
   rpcUrl: https://xchain-rpc.idex.io/
   networkId: 94524
   type: EvmChain
+- id: apechain_testnet
+  mainnet: false
+  rpcUrl: https://curtis.rpc.caldera.xyz/http
+  networkId: 33111
+  type: EvmChain
+- id: soneium_minato_testnet
+  mainnet: false
+  rpcUrl: https://rpc.minato.soneium.org/
+  networkId: 1946
+  type: EvmChain
