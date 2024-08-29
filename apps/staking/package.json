@@ -32,6 +32,7 @@
     "@solana/wallet-adapter-react-ui": "^0.9.27",
     "@solana/wallet-adapter-wallets": "0.19.10",
     "@solana/web3.js": "^1.95.2",
+    "@pythnetwork/pyth-staking-sdk": "workspace:*",
     "clsx": "^2.1.1",
     "next": "^14.2.5",
     "pino": "^9.3.2",

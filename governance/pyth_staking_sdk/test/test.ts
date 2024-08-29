@@ -3,9 +3,10 @@ import {
   type CustomAbortController,
   startValidatorRaw,
 } from "./start-validator";
-import { GlobalConfig, PythStakingClient } from "../src/pyth-staking-client";
+import { PythStakingClient } from "../src/pyth-staking-client";
 import { BN, Wallet } from "@coral-xyz/anchor";
 import { getConfigAddress } from "../src/pdas";
+import { GlobalConfig } from "../src/staking/types";
 
 describe("Test", () => {
   let connection: Connection;

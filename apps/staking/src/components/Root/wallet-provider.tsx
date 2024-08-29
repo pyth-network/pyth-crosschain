@@ -32,7 +32,7 @@ export const WalletProvider = ({
   rpc,
 }: Props) => {
   const endpoint = useMemo(
-    () => rpc ?? clusterApiUrl(WalletAdapterNetwork.Mainnet),
+    () => rpc ?? clusterApiUrl(WalletAdapterNetwork.Devnet),
     [rpc],
   );
 

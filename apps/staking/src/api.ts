@@ -1,11 +1,14 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
+import { PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import type { Connection } from "@solana/web3.js";
 
 export type StakeAccount = {
-  publicKey: `0x${string}`;
+  // Why was this prefixed with 0x?
+  // publicKey: `0x${string}`;
+  publicKey: string;
 };
 
 export type Context = {
@@ -140,11 +143,17 @@ type AccountHistory = {
 }[];
 
 export const getStakeAccounts = async (
-  _connection: Connection,
-  _wallet: WalletContextState,
+  connection: Connection,
+  wallet: WalletContextState,
 ): Promise<StakeAccount[]> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  return MOCK_STAKE_ACCOUNTS;
+
+  // TODO: how to deal with wallet types? Probably need an adapter
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const pythStakingClient = new PythStakingClient({ connection, wallet });
+  const stakeAccountPositions = (await pythStakingClient.getStakeAccountPositions(wallet.publicKey!));
+  return stakeAccountPositions.map(x => ({ publicKey: x.address.toBase58() }));
+
 };
 
 export const loadData = async (context: Context): Promise<Data> => {
@@ -152,7 +161,7 @@ export const loadData = async (context: Context): Promise<Data> => {
   // While using mocks we need to clone the MOCK_DATA object every time
   // `loadData` is called so that swr treats the response as changed and
   // triggers a rerender.
-  return { ...MOCK_DATA[context.stakeAccount.publicKey]! };
+  return { ...MOCK_DATA['0x000000']! };
 };
 
 export const loadAccountHistory = async (

@@ -1,15 +1,10 @@
-import {
-  AnchorProvider,
-  Program,
-  Wallet,
-  IdlAccounts,
-} from "@coral-xyz/anchor";
-import { Connection } from "@solana/web3.js";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import { getConfigAddress } from "./pdas";
-
-export type GlobalConfig = IdlAccounts<Staking>["globalConfig"];
+import { GlobalConfig } from "./staking/types";
+import { StakeAccountPositions } from "./staking/accounts";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -32,21 +27,44 @@ export class PythStakingClient {
   }
 
   async setGlobalConfig(config: GlobalConfig) {
-    console.log("config", config);
-    let x;
-    try {
-      console.log("submitting");
-      x = await this.stakingProgram.methods.initConfig(config).rpc();
-      console.log("submitted", x);
-    } catch (e) {
-      console.error(e);
-    }
-    // return this.stakingProgram.methods.initConfig(config).rpc();
+    return this.stakingProgram.methods.initConfig(config).rpc();
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
     return this.stakingProgram.account.globalConfig.fetch(
       getConfigAddress()[0]
+    );
+  }
+
+  /** Gets a users stake accounts */
+  public async getStakeAccountPositions(
+    user: PublicKey
+  ): Promise<StakeAccountPositions[]> {
+    const res =
+      await this.stakingProgram.provider.connection.getProgramAccounts(
+        this.stakingProgram.programId,
+        {
+          encoding: "base64",
+          filters: [
+            {
+              memcmp: this.stakingProgram.coder.accounts.memcmp("positionData"),
+            },
+            {
+              memcmp: {
+                offset: 8,
+                bytes: user.toBase58(),
+              },
+            },
+          ],
+        }
+      );
+    return res.map(
+      (account) =>
+        new StakeAccountPositions(
+          account.pubkey,
+          account.account.data,
+          this.stakingProgram.idl
+        )
     );
   }
 }
