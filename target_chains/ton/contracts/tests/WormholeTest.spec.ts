@@ -154,4 +154,11 @@ describe("WormholeTest", () => {
       )
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1001"); // ERROR_INVALID_VERSION = 1001
   });
+
+  it("should correctly get guardian set", async () => {
+    await deployContract();
+
+    const getGuardianSetResult = await wormholeTest.getGuardianSet(0);
+    expect(getGuardianSetResult.keys).toEqual(GUARDIAN_SET_0);
+  });
 });

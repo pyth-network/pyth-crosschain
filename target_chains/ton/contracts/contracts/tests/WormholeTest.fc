@@ -10,12 +10,10 @@
 }
 
 (int, int, int, int, int, int, int, int, slice, int) test_parse_and_verify_wormhole_vm(slice in_msg_body) method_id {
-    load_data();
     return parse_and_verify_wormhole_vm(in_msg_body);
 }
 
 (int) test_update_guardian_set(slice in_msg_body) method_id {
-    load_data();
     int old_guardian_set_index = get_current_guardian_set_index();
     update_guardian_set(in_msg_body);
     int new_guardian_set_index = get_current_guardian_set_index();
@@ -23,8 +21,7 @@
 }
 
 (int) test_get_current_guardian_set_index() method_id {
-    load_data();
-    return current_guardian_set_index;
+    return get_current_guardian_set_index();
 }
 
 (int, cell, int) test_get_guardian_set(int index) method_id {

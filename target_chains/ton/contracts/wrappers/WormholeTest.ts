@@ -72,6 +72,7 @@ export class WormholeTest implements Contract {
 
     return beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
+      .storeUint(0, 256) // single_update_fee, set to 0 for testing
       .storeUint(guardianSetIndex, 32)
       .storeDict(guardianSets)
       .storeUint(chainId, 16)
@@ -172,7 +173,7 @@ export class WormholeTest implements Contract {
     return result.stack.readNumber();
   }
 
-  async getGetGuardianSet(provider: ContractProvider, index: number) {
+  async getGuardianSet(provider: ContractProvider, index: number) {
     const result = await provider.get("test_get_guardian_set", [
       { type: "int", value: BigInt(index) },
     ]);

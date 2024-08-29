@@ -2,8 +2,13 @@ import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { Cell, toNano } from "@ton/core";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
-import { HexString, Price } from "@pythnetwork/price-service-sdk";
+import {
+  HexString,
+  parseAccumulatorUpdateData,
+  Price,
+} from "@pythnetwork/price-service-sdk";
 import { PythTest, PythTestConfig } from "../wrappers/PythTest";
+import { HERMES_BTC_ETH_UPDATE } from "./utils/pyth";
 
 const PRICE_FEED_ID =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -20,6 +25,7 @@ const EMA_PRICE = new Price({
   expo: 7,
   publishTime: 8,
 });
+const SINGLE_UPDATE_FEE = 1;
 
 describe("PythTest", () => {
   let code: Cell;
@@ -41,13 +47,15 @@ describe("PythTest", () => {
     priceFeedId: HexString = PRICE_FEED_ID,
     timePeriod: number = TIME_PERIOD,
     price: Price = PRICE,
-    emaPrice: Price = EMA_PRICE
+    emaPrice: Price = EMA_PRICE,
+    singleUpdateFee: number = SINGLE_UPDATE_FEE
   ) {
     const config: PythTestConfig = {
       priceFeedId,
       timePeriod,
       price,
       emaPrice,
+      singleUpdateFee,
     };
 
     pythTest = blockchain.openContract(PythTest.createFromConfig(config, code));
@@ -69,7 +77,6 @@ describe("PythTest", () => {
     await deployContract();
 
     const result = await pythTest.getPriceUnsafe(PRICE_FEED_ID);
-
     expect(result.price).toBe(1);
     expect(result.conf).toBe(2);
     expect(result.expo).toBe(3);
@@ -143,5 +150,15 @@ describe("PythTest", () => {
     expect(result.conf).toBe(6);
     expect(result.expo).toBe(7);
     expect(result.publishTime).toBe(8);
+  });
+
+  it("should correctly get update fee", async () => {
+    await deployContract();
+
+    const result = await pythTest.getUpdateFee(
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex")
+    );
+
+    expect(result).toBe(2);
   });
 });

@@ -58,10 +58,12 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 
 ;; Get methods
 int get_current_guardian_set_index() method_id {
+    load_data();
     return current_guardian_set_index;
 }
 
 (int, cell, int) get_guardian_set(int index) method_id {
+    load_data();
     return get_guardian_set_internal(index);
 }
 
@@ -111,6 +113,7 @@ int governance_action_is_consumed(int hash) method_id {
 }
 
 (int, int, int, int, int, int, int, int, slice, int) parse_and_verify_wormhole_vm(slice in_msg_body) impure {
+    load_data();
     ;; Parse VM fields
     int version = in_msg_body~load_uint(8);
     throw_unless(ERROR_INVALID_VERSION, version == 1);
@@ -247,6 +250,7 @@ int governance_action_is_consumed(int hash) method_id {
 
     ;; Mark the governance action as consumed
     consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());
+    store_data();
 }
 
 () execute_governance_action(slice in_msg_body) impure {

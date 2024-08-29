@@ -4,6 +4,7 @@
 ;; Price struct: {price: int, conf: int, expo: int, publish_time: int}
 ;; PriceFeed struct: {price: Price, ema_price: Price}
 global cell latest_price_feeds; ;; Dictionary of PriceFeed structs, keyed by price_feed_id (256-bit)
+global int single_update_fee;
 
 ;; Wormhole
 global int current_guardian_set_index;
@@ -14,7 +15,6 @@ global int current_guardian_set_index;
 global cell guardian_sets;
 global int chain_id;
 global int governance_chain_id;
-;; GovernanceContract struct: {chain_id: int, address: slice}
 global int governance_contract;
 global cell consumed_governance_actions;
 
@@ -22,6 +22,7 @@ global cell consumed_governance_actions;
 () store_data() impure inline_ref {
     begin_cell()
         .store_dict(latest_price_feeds)
+        .store_uint(single_update_fee, 256)
         .store_uint(current_guardian_set_index, 32)
         .store_dict(guardian_sets)
         .store_uint(chain_id, 16)
@@ -36,6 +37,7 @@ global cell consumed_governance_actions;
 () load_data() impure inline_ref {
     var ds = get_data().begin_parse();
     latest_price_feeds = ds~load_dict();
+    single_update_fee = ds~load_uint(256);
     current_guardian_set_index = ds~load_uint(32);
     guardian_sets = ds~load_dict();
     chain_id = ds~load_uint(16);

@@ -1,10 +1,36 @@
 #include "imports/stdlib.fc";
 #include "common/errors.fc";
 #include "common/storage.fc";
+#include "common/utils.fc";
+#include "./Wormhole.fc";
 
-;; Opcodes
-const int OP_UPDATE_GUARDIAN_SET = 1;
-const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
+const int ACCUMULATOR_MAGIC = 0x504e4155; ;; "PNAU" (Pyth Network Accumulator Update)
+const int MAJOR_VERSION = 1;
+const int MINIMUM_ALLOWED_MINOR_VERSION = 0;
+
+slice verify_header(slice data) {
+    int magic = data~load_uint(32);
+    throw_unless(ERROR_INVALID_MAGIC, magic == ACCUMULATOR_MAGIC);
+    int major_version = data~load_uint(8);
+    throw_unless(ERROR_INVALID_MAJOR_VERSION, major_version == MAJOR_VERSION);
+    int minor_version = data~load_uint(8);
+    throw_if(ERROR_INVALID_MINOR_VERSION, minor_version < MINIMUM_ALLOWED_MINOR_VERSION);
+    int trailing_header_size = data~load_uint(8);
+    ;; skip trailing headers and update type (uint8)
+    data~skip_bits(trailing_header_size);
+    data~skip_bits(8);
+    return data;
+}
+
+(int) get_update_fee(slice data) method_id {
+    load_data();
+    slice cs = verify_header(data);
+    int wormhole_proof_size_bytes = cs~load_uint(16);
+    (cell wormhole_proof, slice cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
+    int num_updates = cs~load_uint(8);
+    return single_update_fee * num_updates;
+}
+
 
 (int, int, int, int) parse_price(slice price_feed) {
     int price = price_feed~load_int(256);
@@ -14,7 +40,8 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
     return (price, conf, expo, publish_time);
 }
 
-(int, int, int, int) price_unsafe(int price_feed_id) method_id {
+(int, int, int, int) get_price_unsafe(int price_feed_id) method_id {
+    load_data();
     (slice result, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
     throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
     slice price_feed = result~load_ref().begin_parse();
@@ -22,14 +49,16 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
     return parse_price(price);
 }
 
-(int, int, int, int) price_no_older_than(int time_period, int price_feed_id) method_id {
-    (int price, int conf, int expo, int publish_time) = price_unsafe(price_feed_id);
+(int, int, int, int) get_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
+    (int price, int conf, int expo, int publish_time) = get_price_unsafe(price_feed_id);
     int current_time = now();
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
     return (price, conf, expo, publish_time);
 }
 
-(int, int, int, int) ema_price_unsafe(int price_feed_id) method_id {
+(int, int, int, int) get_ema_price_unsafe(int price_feed_id) method_id {
+    load_data();
     (slice result, int success) = latest_price_feeds.udict_get?(256, price_feed_id);
     throw_unless(ERROR_PRICE_FEED_NOT_FOUND, success);
     slice price_feed = result~load_ref().begin_parse();
@@ -38,8 +67,9 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
     return parse_price(ema_price);
 }
 
-(int, int, int, int) ema_price_no_older_than(int time_period, int price_feed_id) method_id {
-    (int price, int conf, int expo, int publish_time) = ema_price_unsafe(price_feed_id);
+(int, int, int, int) get_ema_price_no_older_than(int time_period, int price_feed_id) method_id {
+    load_data();
+    (int price, int conf, int expo, int publish_time) = get_ema_price_unsafe(price_feed_id);
     int current_time = now();
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
     return (price, conf, expo, publish_time);
