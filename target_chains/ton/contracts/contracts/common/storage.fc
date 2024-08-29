@@ -5,6 +5,13 @@
 ;; PriceFeed struct: {price: Price, ema_price: Price}
 global cell latest_price_feeds; ;; Dictionary of PriceFeed structs, keyed by price_feed_id (256-bit)
 global int single_update_fee;
+;; DataSource struct: (emitter_chain_id: int, emitter_address: int)
+;; emitter_chain_id is a 16-bit unsigned integer
+;; emitter_address is a 256-bit unsigned integer
+global cell data_sources; ;; Dictionary of DataSource tuples, keyed by u8
+global int num_data_sources;
+global cell is_valid_data_source; ;; Dictionary of bool, keyed by DataSource tuple
+
 
 ;; Wormhole
 global int current_guardian_set_index;
@@ -17,18 +24,27 @@ global int chain_id;
 global int governance_chain_id;
 global int governance_contract;
 global cell consumed_governance_actions;
+global cell governance_data_source; ;; Single DataSource tuple
+global int last_executed_governance_sequence; ;; u64
+global int governance_data_source_index; ;; u32
 
 
 () store_data() impure inline_ref {
     begin_cell()
         .store_dict(latest_price_feeds)
         .store_uint(single_update_fee, 256)
+        .store_dict(data_sources)
+        .store_uint(num_data_sources, 32)
+        .store_dict(is_valid_data_source)
         .store_uint(current_guardian_set_index, 32)
         .store_dict(guardian_sets)
         .store_uint(chain_id, 16)
         .store_uint(governance_chain_id, 16)
         .store_uint(governance_contract, 256)
         .store_dict(consumed_governance_actions)
+        .store_ref(governance_data_source)
+        .store_uint(last_executed_governance_sequence, 64)
+        .store_uint(governance_data_source_index, 32)
         .end_cell()
         .set_data();
 }
@@ -38,11 +54,17 @@ global cell consumed_governance_actions;
     var ds = get_data().begin_parse();
     latest_price_feeds = ds~load_dict();
     single_update_fee = ds~load_uint(256);
+    data_sources = ds~load_dict();
+    num_data_sources = ds~load_uint(32);
+    is_valid_data_source = ds~load_dict();
     current_guardian_set_index = ds~load_uint(32);
     guardian_sets = ds~load_dict();
     chain_id = ds~load_uint(16);
     governance_chain_id = ds~load_uint(16);
     governance_contract = ds~load_uint(256);
     consumed_governance_actions = ds~load_dict();
+    governance_data_source = ds~load_ref();
+    last_executed_governance_sequence = ds~load_uint(64);
+    governance_data_source_index = ds~load_uint(32);
     ds.end_parse();
 }
