@@ -184,6 +184,8 @@ export const RECEIVER_CHAINS = {
   reya_testnet: 50092,
   movement_evm_devnet_imola: 50093,
   flow_testnet: 50094,
+  apechain_testnet: 50095,
+  soneium_minato_testnet: 50096,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
