@@ -556,10 +556,8 @@ export class Client {
     }
 
     return {
-      amount: bid.amount,
       chain_id: bid.chainId,
       transaction: bid.transaction,
-      permission_key: bid.permissionKey,
     };
   }
 
@@ -748,10 +746,8 @@ export class Client {
       .toString("base64");
 
     const bidId = await this.submitBid({
-      amount: bidAmount.toNumber(),
-      permissionKey: permissionKey.toBase58(),
-      transaction: txSerialized,
       chainId: "solana",
+      transaction: txSerialized,
       env: "svm",
     });
 

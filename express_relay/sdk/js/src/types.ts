@@ -166,18 +166,6 @@ export type BidEvm = {
  */
 export type BidSvm = {
   /**
-   * The permission key to bid on, as a base58-encoded string.
-   * @example pY7StmNLgHT4Uih59r4joWS5cKj1zztd3YbSacsauWY
-   *
-   */
-  permissionKey: string;
-  /**
-   * @description Amount of bid in wei.
-   * @example 10
-   * // TODO: this is not covering the case where 2**53-1 < bid < 2**64
-   */
-  amount: number;
-  /**
    * @description Transaction object, as a base64-encoded string.
    * @example SGVsbG8sIFdvcmxkIQ
    */

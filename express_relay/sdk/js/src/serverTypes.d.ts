@@ -133,21 +133,10 @@ export interface components {
     };
     BidSvm: {
       /**
-       * Format: int64
-       * @description Bid amount in lamports.
-       * @example 10
-       */
-      amount: number;
-      /**
        * @description The chain id to bid on.
        * @example solana
        */
       chain_id: string;
-      /**
-       * @description The permission key to bid on.
-       * @example SGVsbG8sIFdvcmxkIQ==
-       */
-      permission_key: string;
       /**
        * @description The transaction for bid.
        * @example SGVsbG8sIFdvcmxkIQ==
