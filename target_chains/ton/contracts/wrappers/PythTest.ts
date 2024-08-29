@@ -145,10 +145,7 @@ export class PythTest implements Contract {
     };
   }
 
-  async getEmaPriceUnsafe(
-    provider: ContractProvider,
-    priceFeedId: HexString
-  ) {
+  async getEmaPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
     const result = await provider.get("test_get_ema_price_unsafe", [
       { type: "int", value: BigInt(priceFeedId) },
     ]);
