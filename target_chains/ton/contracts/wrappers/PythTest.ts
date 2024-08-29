@@ -82,6 +82,9 @@ export class PythTest implements Contract {
     return beginCell()
       .storeDict(priceDict) // latest_price_feeds
       .storeUint(singleUpdateFee, 256) // single_update_fee
+      .storeDict(Dictionary.empty()) // data_sources, empty for initial state
+      .storeUint(0, 32) // num_data_sources, set to 0 for initial state
+      .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
       .storeUint(0, 32)
       .storeDict(Dictionary.empty())
       .storeUint(0, 16)
@@ -93,6 +96,9 @@ export class PythTest implements Contract {
         )
       )
       .storeDict(Dictionary.empty()) // consumed_governance_actions,
+      .storeRef(beginCell()) // governance_data_source, empty for initial state
+      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
+      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
       .endCell();
   }
 

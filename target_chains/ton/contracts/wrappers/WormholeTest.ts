@@ -73,12 +73,18 @@ export class WormholeTest implements Contract {
     return beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
       .storeUint(0, 256) // single_update_fee, set to 0 for testing
+      .storeDict(Dictionary.empty()) // data_sources, empty for initial state
+      .storeUint(0, 32) // num_data_sources, set to 0 for initial state
+      .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
       .storeUint(guardianSetIndex, 32)
       .storeDict(guardianSets)
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))
       .storeDict(Dictionary.empty()) // consumed_governance_actions, empty for initial state
+      .storeRef(beginCell()) // governance_data_source, empty for initial state
+      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
+      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
       .endCell();
   }
 
