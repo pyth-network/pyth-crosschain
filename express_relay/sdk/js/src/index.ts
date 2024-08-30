@@ -28,16 +28,14 @@ import {
 import { executeOpportunityAbi } from "./abi";
 import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
 import {
-  Keypair,
   PublicKey,
   Transaction,
-  Connection,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import expressRelayIdl from "./idl_express_relay.json";
-import { ExpressRelay } from "./idlTypesExpressRelay";
+import expressRelayIdl from "./idlExpressRelay.json";
+import { ExpressRelay } from "./expressRelayTypes";
 
 export * from "./types";
 
@@ -620,8 +618,7 @@ export class Client {
   /**
    * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
    * @param searcher The address of the searcher that is submitting the bid
-   * @param protocol The identifying address of the protocol that the permission key is for
-   * @param protocolExecutable Whether the protocol address represents an executable program or not
+   * @param router The identifying address of the router that the permission key is for
    * @param permissionKey The 32-byte permission key as an SVM PublicKey
    * @param bidAmount The amount of the bid in lamports
    * @param deadline The deadline for the bid in seconds since Unix epoch
@@ -630,8 +627,7 @@ export class Client {
    */
   async constructSubmitBidInstruction(
     searcher: PublicKey,
-    protocol: PublicKey,
-    protocolExecutable: boolean,
+    router: PublicKey,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
     deadline: anchor.BN,
@@ -639,25 +635,15 @@ export class Client {
   ): Promise<TransactionInstruction> {
     const expressRelay = new Program<ExpressRelay>(
       expressRelayIdl as ExpressRelay,
-      new AnchorProvider({} as Connection, {} as anchor.Wallet, {})
+      {} as AnchorProvider
     );
 
     const svmConstants = SVM_CONSTANTS[chainId];
 
-    const protocolConfig = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("config_protocol"), protocol.toBuffer()],
+    const routerConfig = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("config_router"), router.toBuffer()],
       svmConstants.expressRelayProgram
     )[0];
-
-    let feeReceiverProtocol: PublicKey;
-    if (protocolExecutable) {
-      feeReceiverProtocol = PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode("express_relay_fees")],
-        protocol
-      )[0];
-    } else {
-      feeReceiverProtocol = protocol;
-    }
 
     const expressRelayMetadata = PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("metadata")],
@@ -669,14 +655,13 @@ export class Client {
         deadline,
         bidAmount,
       })
-      .accountsPartial({
+      .accountsStrict({
         searcher,
         relayerSigner: svmConstants.relayerSigner,
         permission: permissionKey,
-        protocol,
-        protocolConfig: protocolConfig,
+        router,
+        routerConfig,
         feeReceiverRelayer: svmConstants.feeReceiverRelayer,
-        feeReceiverProtocol,
         expressRelayMetadata,
         systemProgram: anchor.web3.SystemProgram.programId,
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -691,8 +676,7 @@ export class Client {
    * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
    * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
    * @param searcher The address of the searcher that is submitting the bid
-   * @param protocol The identifying address of the protocol that the permission key is for
-   * @param protocolExecutable Whether the protocol address represents an executable program or not
+   * @param router The identifying address of the router that the permission key is for
    * @param permissionKey The 32-byte permission key as an SVM PublicKey
    * @param bidAmount The amount of the bid in lamports
    * @param deadline The deadline for the bid in seconds since Unix epoch
@@ -700,10 +684,9 @@ export class Client {
    * @returns The constructed SVM bid
    */
   async constructSvmBid(
-    txRaw: Transaction,
+    tx: Transaction,
     searcher: PublicKey,
-    protocol: PublicKey,
-    protocolExecutable: boolean,
+    router: PublicKey,
     permissionKey: PublicKey,
     bidAmount: anchor.BN,
     deadline: anchor.BN,
@@ -711,41 +694,19 @@ export class Client {
   ): Promise<BidSvm> {
     const ixSubmitBid = await this.constructSubmitBidInstruction(
       searcher,
-      protocol,
-      protocolExecutable,
+      router,
       permissionKey,
       bidAmount,
       deadline,
       chainId
     );
 
-    const ixsPermissioned = [ixSubmitBid, ...txRaw.instructions];
-    const tx = new Transaction().add(...ixsPermissioned);
+    tx.instructions.unshift(ixSubmitBid);
 
     return {
       transaction: tx,
       chainId: chainId,
       env: "svm",
     };
-  }
-
-  /**
-   * Signs and submits an SVM bid to the express relay auction server
-   * @param bid The SVM bid to sign and submit
-   * @param secretKeys The secret keys that need to sign this transaction, apart from the relayer signer key.
-   * @returns The id of the submitted bid, you can use this id to track the status of the bid
-   */
-  async signAndSubmitSvmBid(
-    bid: BidSvm,
-    secretKeys: Uint8Array[]
-  ): Promise<BidId> {
-    const keypairs = secretKeys.map((secretKey) =>
-      Keypair.fromSecretKey(secretKey)
-    );
-    bid.transaction.sign(...keypairs);
-
-    const bidId = await this.submitBid(bid);
-
-    return bidId;
   }
 }

@@ -24,6 +24,12 @@ To generate the latest type declarations from the server openapi schema, run:
 npm run generate-api-types
 ```
 
+You can generate the Solana Typescript declaration files from the IDLs via:
+
+```bash
+npm run generate-anchor-types
+```
+
 ## Quickstart
 
 ```typescript

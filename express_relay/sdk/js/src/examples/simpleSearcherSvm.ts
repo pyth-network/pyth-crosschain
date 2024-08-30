@@ -7,8 +7,8 @@ import { SVM_CONSTANTS } from "../const";
 import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
-import dummyIdl from "./idl_dummy.json";
-import { Dummy } from "./idlTypesDummy";
+import dummyIdl from "./idlDummy.json";
+import { Dummy } from "./dummyTypes";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const DUMMY_PIDS: Record<string, PublicKey> = {
@@ -68,6 +68,7 @@ class SimpleSearcherSvm {
     const dummy = new Program<Dummy>(dummyIdl as Dummy, provider);
 
     const permission = PublicKey.default;
+    const router = Keypair.generate().publicKey;
     const bidAmount = new anchor.BN(argv.bid);
 
     const svmConstants = SVM_CONSTANTS[this.chainId];
@@ -83,12 +84,12 @@ class SimpleSearcherSvm {
 
     const ixDummy = await dummy.methods
       .doNothing()
-      .accountsPartial({
+      .accountsStrict({
         payer: searcher.publicKey,
         expressRelay: svmConstants.expressRelayProgram,
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         permission,
-        protocol: dummyPid,
+        router,
       })
       .instruction();
     ixDummy.programId = dummyPid;
@@ -98,8 +99,7 @@ class SimpleSearcherSvm {
     const bid = await this.client.constructSvmBid(
       txRaw,
       searcher.publicKey,
-      dummy.programId,
-      dummyExecutable,
+      router,
       permission,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
@@ -109,7 +109,8 @@ class SimpleSearcherSvm {
     try {
       const { blockhash } = await this.connectionSvm.getLatestBlockhash();
       bid.transaction.recentBlockhash = blockhash;
-      const bidId = await this.client.signAndSubmitSvmBid(bid, [secretKey]);
+      bid.transaction.sign(Keypair.fromSecretKey(secretKey));
+      const bidId = await this.client.submitBid(bid);
       console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {
       console.error(`Failed to bid: ${error}`);

@@ -25,7 +25,7 @@ export type ExpressRelay = {
           name: "permission";
         },
         {
-          name: "protocol";
+          name: "router";
         }
       ];
       args: [];
@@ -105,78 +105,6 @@ export type ExpressRelay = {
       args: [];
     },
     {
-      name: "setProtocolSplit";
-      discriminator: [73, 64, 68, 216, 180, 55, 255, 62];
-      accounts: [
-        {
-          name: "admin";
-          writable: true;
-          signer: true;
-          relations: ["expressRelayMetadata"];
-        },
-        {
-          name: "protocolConfig";
-          writable: true;
-          pda: {
-            seeds: [
-              {
-                kind: "const";
-                value: [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  112,
-                  114,
-                  111,
-                  116,
-                  111,
-                  99,
-                  111,
-                  108
-                ];
-              },
-              {
-                kind: "account";
-                path: "protocol";
-              }
-            ];
-          };
-        },
-        {
-          name: "expressRelayMetadata";
-          pda: {
-            seeds: [
-              {
-                kind: "const";
-                value: [109, 101, 116, 97, 100, 97, 116, 97];
-              }
-            ];
-          };
-        },
-        {
-          name: "protocol";
-        },
-        {
-          name: "systemProgram";
-          address: "11111111111111111111111111111111";
-        }
-      ];
-      args: [
-        {
-          name: "data";
-          type: {
-            defined: {
-              name: "setProtocolSplitArgs";
-            };
-          };
-        }
-      ];
-    },
-    {
       name: "setRelayer";
       discriminator: [23, 243, 33, 88, 110, 84, 196, 37];
       accounts: [
@@ -206,6 +134,76 @@ export type ExpressRelay = {
         }
       ];
       args: [];
+    },
+    {
+      name: "setRouterSplit";
+      discriminator: [16, 150, 106, 13, 27, 191, 104, 8];
+      accounts: [
+        {
+          name: "admin";
+          writable: true;
+          signer: true;
+          relations: ["expressRelayMetadata"];
+        },
+        {
+          name: "routerConfig";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  114
+                ];
+              },
+              {
+                kind: "account";
+                path: "router";
+              }
+            ];
+          };
+        },
+        {
+          name: "expressRelayMetadata";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [109, 101, 116, 97, 100, 97, 116, 97];
+              }
+            ];
+          };
+        },
+        {
+          name: "router";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [
+        {
+          name: "data";
+          type: {
+            defined: {
+              name: "setRouterSplitArgs";
+            };
+          };
+        }
+      ];
     },
     {
       name: "setSplits";
@@ -259,10 +257,11 @@ export type ExpressRelay = {
           name: "permission";
         },
         {
-          name: "protocol";
+          name: "router";
+          writable: true;
         },
         {
-          name: "protocolConfig";
+          name: "routerConfig";
           pda: {
             seeds: [
               {
@@ -275,19 +274,17 @@ export type ExpressRelay = {
                   105,
                   103,
                   95,
-                  112,
                   114,
                   111,
+                  117,
                   116,
-                  111,
-                  99,
-                  111,
-                  108
+                  101,
+                  114
                 ];
               },
               {
                 kind: "account";
-                path: "protocol";
+                path: "router";
               }
             ];
           };
@@ -296,10 +293,6 @@ export type ExpressRelay = {
           name: "feeReceiverRelayer";
           writable: true;
           relations: ["expressRelayMetadata"];
-        },
-        {
-          name: "feeReceiverProtocol";
-          writable: true;
         },
         {
           name: "expressRelayMetadata";
@@ -365,8 +358,8 @@ export type ExpressRelay = {
   ];
   accounts: [
     {
-      name: "configProtocol";
-      discriminator: [171, 115, 146, 215, 235, 130, 24, 202];
+      name: "configRouter";
+      discriminator: [135, 66, 240, 166, 94, 198, 187, 36];
     },
     {
       name: "expressRelayMetadata";
@@ -401,33 +394,33 @@ export type ExpressRelay = {
     },
     {
       code: 6005;
+      name: "multiplePermissions";
+      msg: "Multiple permissions";
+    },
+    {
+      code: 6006;
       name: "insufficientSearcherFunds";
       msg: "Insufficient Searcher Funds";
     },
     {
-      code: 6006;
-      name: "insufficientProtocolFeeReceiverRent";
-      msg: "Insufficient protocol fee receiver funds for rent";
-    },
-    {
       code: 6007;
-      name: "insufficientRelayerFeeReceiverRent";
-      msg: "Insufficient relayer fee receiver funds for rent";
+      name: "insufficientRouterRent";
+      msg: "Insufficient router funds for rent";
     },
     {
       code: 6008;
-      name: "invalidPdaProvided";
-      msg: "Invalid PDA provided";
+      name: "insufficientRelayerFeeReceiverRent";
+      msg: "Insufficient relayer fee receiver funds for rent";
     }
   ];
   types: [
     {
-      name: "configProtocol";
+      name: "configRouter";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "protocol";
+            name: "router";
             type: "pubkey";
           },
           {
@@ -455,7 +448,7 @@ export type ExpressRelay = {
             type: "pubkey";
           },
           {
-            name: "splitProtocolDefault";
+            name: "splitRouterDefault";
             type: "u64";
           },
           {
@@ -471,7 +464,7 @@ export type ExpressRelay = {
         kind: "struct";
         fields: [
           {
-            name: "splitProtocolDefault";
+            name: "splitRouterDefault";
             type: "u64";
           },
           {
@@ -482,12 +475,12 @@ export type ExpressRelay = {
       };
     },
     {
-      name: "setProtocolSplitArgs";
+      name: "setRouterSplitArgs";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "splitProtocol";
+            name: "splitRouter";
             type: "u64";
           }
         ];
@@ -499,7 +492,7 @@ export type ExpressRelay = {
         kind: "struct";
         fields: [
           {
-            name: "splitProtocolDefault";
+            name: "splitRouterDefault";
             type: "u64";
           },
           {

@@ -19,7 +19,7 @@
           "name": "permission"
         },
         {
-          "name": "protocol"
+          "name": "router"
         }
       ],
       "args": []
@@ -99,65 +99,6 @@
       "args": []
     },
     {
-      "name": "set_protocol_split",
-      "discriminator": [73, 64, 68, 216, 180, 55, 255, 62],
-      "accounts": [
-        {
-          "name": "admin",
-          "writable": true,
-          "signer": true,
-          "relations": ["express_relay_metadata"]
-        },
-        {
-          "name": "protocol_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99, 111, 110, 102, 105, 103, 95, 112, 114, 111, 116, 111, 99,
-                  111, 108
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "protocol"
-              }
-            ]
-          }
-        },
-        {
-          "name": "express_relay_metadata",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [109, 101, 116, 97, 100, 97, 116, 97]
-              }
-            ]
-          }
-        },
-        {
-          "name": "protocol"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "data",
-          "type": {
-            "defined": {
-              "name": "SetProtocolSplitArgs"
-            }
-          }
-        }
-      ]
-    },
-    {
       "name": "set_relayer",
       "discriminator": [23, 243, 33, 88, 110, 84, 196, 37],
       "accounts": [
@@ -187,6 +128,64 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "set_router_split",
+      "discriminator": [16, 150, 106, 13, 27, 191, 104, 8],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "router_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "router"
+              }
+            ]
+          }
+        },
+        {
+          "name": "express_relay_metadata",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "router"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "SetRouterSplitArgs"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "set_splits",
@@ -240,22 +239,22 @@
           "name": "permission"
         },
         {
-          "name": "protocol"
+          "name": "router",
+          "writable": true
         },
         {
-          "name": "protocol_config",
+          "name": "router_config",
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  99, 111, 110, 102, 105, 103, 95, 112, 114, 111, 116, 111, 99,
-                  111, 108
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
                 ]
               },
               {
                 "kind": "account",
-                "path": "protocol"
+                "path": "router"
               }
             ]
           }
@@ -264,10 +263,6 @@
           "name": "fee_receiver_relayer",
           "writable": true,
           "relations": ["express_relay_metadata"]
-        },
-        {
-          "name": "fee_receiver_protocol",
-          "writable": true
         },
         {
           "name": "express_relay_metadata",
@@ -333,8 +328,8 @@
   ],
   "accounts": [
     {
-      "name": "ConfigProtocol",
-      "discriminator": [171, 115, 146, 215, 235, 130, 24, 202]
+      "name": "ConfigRouter",
+      "discriminator": [135, 66, 240, 166, 94, 198, 187, 36]
     },
     {
       "name": "ExpressRelayMetadata",
@@ -369,33 +364,33 @@
     },
     {
       "code": 6005,
+      "name": "MultiplePermissions",
+      "msg": "Multiple permissions"
+    },
+    {
+      "code": 6006,
       "name": "InsufficientSearcherFunds",
       "msg": "Insufficient Searcher Funds"
     },
     {
-      "code": 6006,
-      "name": "InsufficientProtocolFeeReceiverRent",
-      "msg": "Insufficient protocol fee receiver funds for rent"
-    },
-    {
       "code": 6007,
-      "name": "InsufficientRelayerFeeReceiverRent",
-      "msg": "Insufficient relayer fee receiver funds for rent"
+      "name": "InsufficientRouterRent",
+      "msg": "Insufficient router funds for rent"
     },
     {
       "code": 6008,
-      "name": "InvalidPDAProvided",
-      "msg": "Invalid PDA provided"
+      "name": "InsufficientRelayerFeeReceiverRent",
+      "msg": "Insufficient relayer fee receiver funds for rent"
     }
   ],
   "types": [
     {
-      "name": "ConfigProtocol",
+      "name": "ConfigRouter",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "protocol",
+            "name": "router",
             "type": "pubkey"
           },
           {
@@ -423,7 +418,7 @@
             "type": "pubkey"
           },
           {
-            "name": "split_protocol_default",
+            "name": "split_router_default",
             "type": "u64"
           },
           {
@@ -439,7 +434,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "split_protocol_default",
+            "name": "split_router_default",
             "type": "u64"
           },
           {
@@ -450,12 +445,12 @@
       }
     },
     {
-      "name": "SetProtocolSplitArgs",
+      "name": "SetRouterSplitArgs",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "split_protocol",
+            "name": "split_router",
             "type": "u64"
           }
         ]
@@ -467,7 +462,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "split_protocol_default",
+            "name": "split_router_default",
             "type": "u64"
           },
           {
