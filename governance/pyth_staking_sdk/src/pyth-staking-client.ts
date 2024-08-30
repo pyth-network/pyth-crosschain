@@ -1,24 +1,17 @@
 import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
-import {
-  Connection,
-  PublicKey,
-  sendAndConfirmTransaction,
-  Transaction,
-} from "@solana/web3.js";
-import { Staking } from "../types/staking";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { type Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
 import { getConfigAddress, getStakeAccountCustodyAddress } from "./pdas";
-import { GlobalConfig } from "./staking/types";
+import type { GlobalConfig } from "./staking/types";
 import { StakeAccountPositions } from "./staking/accounts";
-import { IntegrityPool } from "../types/integrity_pool";
+import type { IntegrityPool } from "../types/integrity_pool";
 import {
-  Account,
+  type Account,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
-  getOrCreateAssociatedTokenAccount,
-  transfer,
 } from "@solana/spl-token";
 import {
   sendTransactions,

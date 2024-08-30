@@ -1,7 +1,7 @@
-import { BorshCoder, IdlTypes, Program } from "@coral-xyz/anchor";
+import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Position } from "./types";
-import { Staking } from "../../types/staking";
+import type { Position } from "./types";
+import type { Staking } from "../../types/staking";
 import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_SIZE } from "../constants";
 
 export class StakeAccountPositions {

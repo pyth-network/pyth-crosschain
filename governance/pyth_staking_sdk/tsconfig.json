@@ -1,10 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@cprussin/tsconfig/nextjs.json",
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
-    "strict": true
+    "strict": true,
+    "verbatimModuleSyntax": false
   }
 }
