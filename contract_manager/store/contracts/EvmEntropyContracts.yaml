@@ -100,3 +100,9 @@
 - chain: b3_mainnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
   type: EvmEntropyContract
+- chain: apechain_testnet
+  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmEntropyContract
+- chain: soneium_minato_testnet
+  address: "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+  type: EvmEntropyContract
