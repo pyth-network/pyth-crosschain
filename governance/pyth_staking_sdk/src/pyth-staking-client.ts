@@ -1,5 +1,10 @@
 import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import { Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
@@ -7,7 +12,18 @@ import { getConfigAddress, getStakeAccountCustodyAddress } from "./pdas";
 import { GlobalConfig } from "./staking/types";
 import { StakeAccountPositions } from "./staking/accounts";
 import { IntegrityPool } from "../types/integrity_pool";
-import { Account, getAccount } from "@solana/spl-token";
+import {
+  Account,
+  createTransferInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+  getOrCreateAssociatedTokenAccount,
+  transfer,
+} from "@solana/spl-token";
+import {
+  sendTransactions,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -85,17 +101,53 @@ export class PythStakingClient {
     );
   }
 
-  public async stakeToGovernance(stakeAccountPositions: PublicKey, amount: BN) {
+  public async stakeToGovernance(
+    stakeAccountPositions: PublicKey,
+    amount: bigint
+  ) {
     this.stakingProgram.methods
       .createPosition(
         {
           voting: {},
         },
-        amount
+        new BN(amount.toString())
       )
       .accounts({
         stakeAccountPositions,
       })
       .rpc();
+  }
+
+  public async depositTokensToStakeAccountCustody(
+    stakeAccountPositions: PublicKey,
+    amount: bigint
+  ) {
+    const globalConfig = await this.getGlobalConfig();
+    const mint = globalConfig.pythTokenMint;
+
+    const senderTokenAccount = await getAssociatedTokenAddress(
+      mint,
+      this.wallet.publicKey
+    );
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction: createTransferInstruction(
+              senderTokenAccount,
+              getStakeAccountCustodyAddress(stakeAccountPositions),
+              this.wallet.publicKey,
+              amount
+            ),
+            signers: [],
+          },
+        ],
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 }

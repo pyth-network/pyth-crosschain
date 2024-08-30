@@ -1,7 +1,4 @@
 /* eslint-disable unicorn/no-array-reduce */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
@@ -224,9 +221,12 @@ export const deposit = async (
   context: Context,
   amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.total += amount;
-  MOCK_DATA[context.stakeAccount.publicKey]!.walletAmount -= amount;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  const p = new PublicKey(context.stakeAccount.publicKey);
+
+  await pythStakingClient.depositTokensToStakeAccountCustody(p, amount);
 };
 
 export const withdraw = async (
@@ -255,7 +255,7 @@ export const stakeGovernance = async (
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
   const p = new PublicKey(context.stakeAccount.publicKey);
 
-  await pythStakingClient.stakeToGovernance(p, new BN(amount.toString()));
+  await pythStakingClient.stakeToGovernance(p, amount);
 };
 
 export const cancelWarmupGovernance = async (
