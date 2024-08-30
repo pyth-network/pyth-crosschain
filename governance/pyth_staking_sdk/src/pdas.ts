@@ -7,3 +7,12 @@ export const getConfigAddress = () => {
     STAKING_PROGRAM_ADDRESS
   );
 };
+
+export const getStakeAccountCustodyAddress = (
+  stakeAccountPositionsAddress: PublicKey
+) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("custody"), stakeAccountPositionsAddress.toBuffer()],
+    STAKING_PROGRAM_ADDRESS
+  )[0];
+};

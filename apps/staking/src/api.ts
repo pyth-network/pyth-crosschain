@@ -1,9 +1,14 @@
+/* eslint-disable unicorn/no-array-reduce */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import { PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
+import { BN } from "@coral-xyz/anchor";
+import { getCurrentEpoch, getPositionState, PositionState, PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
-import type { Connection } from "@solana/web3.js";
+import { PublicKey, type Connection } from "@solana/web3.js";
 
 export type StakeAccount = {
   // Why was this prefixed with 0x?
@@ -161,7 +166,51 @@ export const loadData = async (context: Context): Promise<Data> => {
   // While using mocks we need to clone the MOCK_DATA object every time
   // `loadData` is called so that swr treats the response as changed and
   // triggers a rerender.
-  return { ...MOCK_DATA['0x000000']! };
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  const p = new PublicKey(context.stakeAccount.publicKey);
+  const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(p);
+
+  const stakeAccountPositions = 
+  await pythStakingClient.getStakeAccountPositions(context.wallet.publicKey!);
+  
+  const currentEpoch = await getCurrentEpoch(context.connection);
+
+
+  const stakeAccountPosition = stakeAccountPositions.find(
+    x => x.address.toBase58() === context.stakeAccount.publicKey
+  );
+
+
+  const governancePositions = stakeAccountPosition?.data.positions.filter(p => p?.targetWithParameters.voting)
+
+  const governanceWarmup =
+   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.LOCKING).map(p => p?.amount)
+   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+
+   const governanceStaked =
+   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.LOCKED).map(p => p?.amount)
+   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+
+   const governanceCooldown =
+   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.PREUNLOCKING).map(p => p?.amount)
+   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+
+   const governanceCooldown2 =
+   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.UNLOCKED).map(p => p?.amount)
+   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+
+  return { ...MOCK_DATA['0x000000']!,
+    total: stakeAccountCustody.amount,
+    governance: {
+      warmup: BigInt(governanceWarmup!.toString()),
+      staked: BigInt(governanceStaked!.toString()),
+      cooldown: BigInt(governanceCooldown!.toString()),
+      cooldown2: BigInt(governanceCooldown2!.toString())
+    }
+   };
 };
 
 export const loadAccountHistory = async (
@@ -201,8 +250,12 @@ export const stakeGovernance = async (
   context: Context,
   amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.governance.warmup += amount;
+   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  const p = new PublicKey(context.stakeAccount.publicKey);
+
+  await pythStakingClient.stakeToGovernance(p, new BN(amount.toString()));
 };
 
 export const cancelWarmupGovernance = async (

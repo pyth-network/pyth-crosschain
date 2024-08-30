@@ -13,7 +13,6 @@ export class StakeAccountPositions {
     this.data = new PositionAccountData(data, idl);
   }
 }
-
 export class PositionAccountData {
   public owner: PublicKey;
   public positions: (Position | null)[];

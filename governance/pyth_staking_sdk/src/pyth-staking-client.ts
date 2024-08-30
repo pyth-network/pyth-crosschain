@@ -1,10 +1,13 @@
-import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
-import { getConfigAddress } from "./pdas";
+import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
+import { getConfigAddress, getStakeAccountCustodyAddress } from "./pdas";
 import { GlobalConfig } from "./staking/types";
 import { StakeAccountPositions } from "./staking/accounts";
+import { IntegrityPool } from "../types/integrity_pool";
+import { Account, getAccount } from "@solana/spl-token";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -16,6 +19,7 @@ export class PythStakingClient {
   wallet: Wallet;
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
+  integrityPoolProgram: Program<IntegrityPool>;
 
   constructor(config: PythStakingClientConfig) {
     this.connection = config.connection;
@@ -24,6 +28,10 @@ export class PythStakingClient {
       skipPreflight: true,
     });
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
+    this.integrityPoolProgram = new Program(
+      IntegrityPoolIdl as IntegrityPool,
+      this.provider
+    );
   }
 
   async setGlobalConfig(config: GlobalConfig) {
@@ -66,5 +74,28 @@ export class PythStakingClient {
           this.stakingProgram.idl
         )
     );
+  }
+
+  public async getStakeAccountCustody(
+    stakeAccountPositions: PublicKey
+  ): Promise<Account> {
+    return getAccount(
+      this.connection,
+      getStakeAccountCustodyAddress(stakeAccountPositions)
+    );
+  }
+
+  public async stakeToGovernance(stakeAccountPositions: PublicKey, amount: BN) {
+    this.stakingProgram.methods
+      .createPosition(
+        {
+          voting: {},
+        },
+        amount
+      )
+      .accounts({
+        stakeAccountPositions,
+      })
+      .rpc();
   }
 }
