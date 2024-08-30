@@ -73,10 +73,13 @@ mod tests {
     #[tokio::test]
     async fn test_initialize_publisher() {
         let id = Pubkey::new_unique();
-        let (mut banks_client, payer, recent_blockhash) =
-            ProgramTest::new("publishers", id, processor!(crate::process_instruction))
-                .start()
-                .await;
+        let (mut banks_client, payer, recent_blockhash) = ProgramTest::new(
+            "publishers",
+            id,
+            processor!(crate::entrypoint::process_instruction),
+        )
+        .start()
+        .await;
 
         // Setup Accounts
         let vault = Pubkey::find_program_address(&[VAULT_SEED.as_bytes()], &id);

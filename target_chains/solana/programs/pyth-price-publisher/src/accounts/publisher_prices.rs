@@ -4,7 +4,6 @@
 
 use {
     bytemuck::{cast_slice, from_bytes, from_bytes_mut, Pod, Zeroable},
-    solana_program::clock::Slot,
     std::mem::size_of,
     thiserror::Error,
 };
@@ -17,7 +16,7 @@ const FORMAT: u32 = 2848712303;
 pub struct PublisherPricesHeader {
     pub format: u32,
     pub publisher: [u8; 32],
-    pub slot: Slot,
+    pub slot: u64,
     pub num_prices: u32,
 }
 
