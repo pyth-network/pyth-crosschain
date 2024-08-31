@@ -2,7 +2,6 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import { BN } from "@coral-xyz/anchor";
 import { getCurrentEpoch, getPositionState, PositionState, PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey, type Connection } from "@solana/web3.js";
@@ -164,8 +163,6 @@ export const loadData = async (context: Context): Promise<Data> => {
   // `loadData` is called so that swr treats the response as changed and
   // triggers a rerender.
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
   const p = new PublicKey(context.stakeAccount.publicKey);
   const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(p);
@@ -222,8 +219,6 @@ export const deposit = async (
   context: Context,
   amount: bigint,
 ): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
   const p = new PublicKey(context.stakeAccount.publicKey);
 
@@ -251,8 +246,6 @@ export const stakeGovernance = async (
   context: Context,
   amount: bigint,
 ): Promise<void> => {
-   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
   const p = new PublicKey(context.stakeAccount.publicKey);
 

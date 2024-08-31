@@ -1,4 +1,4 @@
-import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { type Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
@@ -25,15 +25,16 @@ import {
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils";
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet: Wallet;
+  wallet: AnchorWallet;
 };
 
 export class PythStakingClient {
   connection: Connection;
-  wallet: Wallet;
+  wallet: AnchorWallet;
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
   integrityPoolProgram: Program<IntegrityPool>;
