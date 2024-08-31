@@ -3,8 +3,12 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { type Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
-import { getConfigAddress, getStakeAccountCustodyAddress } from "./pdas";
-import type { GlobalConfig } from "./types";
+import {
+  getConfigAddress,
+  getPoolConfigAddress,
+  getStakeAccountCustodyAddress,
+} from "./pdas";
+import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
 import {
   StakeAccountPositions,
   StakeAccountPositionsAnchor,
@@ -99,6 +103,52 @@ export class PythStakingClient {
       this.connection,
       getStakeAccountCustodyAddress(stakeAccountPositions)
     );
+  }
+
+  public async initializePool({
+    rewardProgramAuthority,
+    poolData,
+    y,
+  }: {
+    rewardProgramAuthority: PublicKey;
+    poolData: PublicKey;
+    y: bigint;
+  }): Promise<void> {
+    const yAnchor = convertBigIntToBN(y);
+    const config = await this.getGlobalConfig();
+    await this.integrityPoolProgram.methods
+      .initializePool(rewardProgramAuthority, config.pythTokenMint, yAnchor)
+      .accounts({
+        poolData,
+      })
+      .rpc();
+  }
+
+  public async getOwnerPythATAAccount(): Promise<Account> {
+    const globalConfig = await this.getGlobalConfig();
+    return getAccount(
+      this.connection,
+      await getAssociatedTokenAddress(
+        globalConfig.pythTokenMint,
+        this.wallet.publicKey
+      )
+    );
+  }
+
+  public async getPoolConfigAccount(): Promise<PoolConfig> {
+    const poolConfigAnchor =
+      await this.integrityPoolProgram.account.poolConfig.fetch(
+        getPoolConfigAddress()
+      );
+    return convertBNToBigInt(poolConfigAnchor);
+  }
+
+  public async getPoolDataAccount(): Promise<PoolDataAccount> {
+    const poolConfig = await this.getPoolConfigAccount();
+    const poolDataAddress = poolConfig.poolData;
+    const poolDataAccountAnchor =
+      await this.integrityPoolProgram.account.poolData.fetch(poolDataAddress);
+    return convertBNToBigInt(poolDataAccountAnchor);
   }
 
   public async stakeToGovernance(

@@ -1,5 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import { STAKING_PROGRAM_ADDRESS } from "./constants";
+import {
+  INTEGRITY_POOL_PROGRAM_ADDRESS,
+  STAKING_PROGRAM_ADDRESS,
+} from "./constants";
 
 export const getConfigAddress = () => {
   return PublicKey.findProgramAddressSync(
@@ -14,5 +17,12 @@ export const getStakeAccountCustodyAddress = (
   return PublicKey.findProgramAddressSync(
     [Buffer.from("custody"), stakeAccountPositionsAddress.toBuffer()],
     STAKING_PROGRAM_ADDRESS
+  )[0];
+};
+
+export const getPoolConfigAddress = () => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool_config")],
+    INTEGRITY_POOL_PROGRAM_ADDRESS
   )[0];
 };

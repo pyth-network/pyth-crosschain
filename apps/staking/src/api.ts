@@ -170,11 +170,12 @@ export const loadData = async (context: Context): Promise<Data> => {
   const p = new PublicKey(context.stakeAccount.publicKey);
   const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(p);
 
+  const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
+
   const stakeAccountPositions = 
   await pythStakingClient.getStakeAccountPositions(context.wallet.publicKey!);
   
   const currentEpoch = await getCurrentEpoch(context.connection);
-
 
   const stakeAccountPosition = stakeAccountPositions.find(
     x => x.address.toBase58() === context.stakeAccount.publicKey
@@ -206,7 +207,7 @@ export const loadData = async (context: Context): Promise<Data> => {
       cooldown: governanceCooldown,
       cooldown2: governanceCooldown2,
     },
-    walletAmount: 0n,
+    walletAmount: ownerATAAccount.amount,
    };
 };
 

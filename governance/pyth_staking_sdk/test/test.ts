@@ -1,4 +1,11 @@
-import { PublicKey, type Connection } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  SystemProgram,
+  Transaction,
+  type Connection,
+} from "@solana/web3.js";
 import {
   type CustomAbortController,
   startValidatorRaw,
@@ -13,10 +20,15 @@ describe("Test", () => {
   let controller: CustomAbortController;
   let wallet: Wallet;
   let pythStakingClient: PythStakingClient;
+  let rewardProgramAuthority: Keypair;
+  let poolData: Keypair;
+  let config: GlobalConfig;
 
   beforeAll(async () => {
     ({ connection, controller, wallet } = await startValidatorRaw());
     pythStakingClient = new PythStakingClient({ connection, wallet });
+    rewardProgramAuthority = Keypair.generate();
+    poolData = Keypair.generate();
   });
 
   afterAll(() => {
@@ -42,8 +54,45 @@ describe("Test", () => {
 
     await pythStakingClient.setGlobalConfig(tmpConfig);
 
-    const config = await pythStakingClient.getGlobalConfig();
+    config = await pythStakingClient.getGlobalConfig();
 
     expect(config).toEqual(tmpConfig);
+  });
+
+  test("initialize pool", async () => {
+    const poolDataSpace = 2 * 1024 * 1024;
+    const balance = await connection.getMinimumBalanceForRentExemption(
+      poolDataSpace
+    );
+
+    const transaction = new Transaction().add(
+      SystemProgram.createAccount({
+        fromPubkey: wallet.publicKey,
+        newAccountPubkey: poolData.publicKey,
+        lamports: balance,
+        space: poolDataSpace,
+        programId: pythStakingClient.integrityPoolProgram.programId,
+      })
+    );
+
+    await sendAndConfirmTransaction(connection, transaction, [
+      wallet.payer,
+      poolData,
+    ]);
+
+    await pythStakingClient.initializePool({
+      rewardProgramAuthority: rewardProgramAuthority.publicKey,
+      y: 100n,
+      poolData: poolData.publicKey,
+    });
+
+    const poolConfig = await pythStakingClient.getPoolConfigAccount();
+
+    expect(poolConfig).toEqual({
+      poolData: poolData.publicKey,
+      rewardProgramAuthority: rewardProgramAuthority.publicKey,
+      pythTokenMint: config.pythTokenMint,
+      y: 100n,
+    });
   });
 });

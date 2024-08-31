@@ -4,7 +4,10 @@ import { mkdtemp } from "fs/promises";
 import path from "path";
 import os from "os";
 import { exec } from "child_process";
-import { STAKING_PROGRAM_ADDRESS } from "../src/constants";
+import {
+  INTEGRITY_POOL_PROGRAM_ADDRESS,
+  STAKING_PROGRAM_ADDRESS,
+} from "../src/constants";
 import { loadKeypair } from "./keys";
 
 export function getConnection(): Connection {
@@ -53,6 +56,7 @@ export async function startValidatorRaw() {
     --reset \
     --mint ${user.publicKey} \
     --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} programs/staking.so \
+    --bpf-program ${INTEGRITY_POOL_PROGRAM_ADDRESS.toBase58()} programs/integrity_pool.so \
     `;
 
   exec(command, { signal }, (error, stdout, stderr) => {
