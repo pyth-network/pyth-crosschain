@@ -4,9 +4,9 @@ import {
   startValidatorRaw,
 } from "./start-validator";
 import { PythStakingClient } from "../src/pyth-staking-client";
-import { BN, Wallet } from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor";
 import { getConfigAddress } from "../src/pdas";
-import type { GlobalConfig } from "../src/staking/types";
+import type { GlobalConfig } from "../src/types";
 
 describe("Test", () => {
   let connection: Connection;
@@ -30,13 +30,13 @@ describe("Test", () => {
       pythTokenMint: PublicKey.unique(),
       pythGovernanceRealm: PublicKey.unique(),
       unlockingDuration: 100,
-      epochDuration: new BN(100),
+      epochDuration: 100n,
       freeze: false,
       pdaAuthority: PublicKey.unique(),
       governanceProgram: PublicKey.unique(),
       pythTokenListTime: null,
       agreementHash: new Array(32).fill(0),
-      mockClockTime: new BN(0),
+      mockClockTime: 0n,
       poolAuthority: PublicKey.unique(),
     };
 
@@ -44,6 +44,6 @@ describe("Test", () => {
 
     const config = await pythStakingClient.getGlobalConfig();
 
-    expect(JSON.stringify(config)).toEqual(JSON.stringify(tmpConfig));
+    expect(config).toEqual(tmpConfig);
   });
 });

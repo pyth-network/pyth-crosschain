@@ -4,8 +4,11 @@ import { type Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
 import { getConfigAddress, getStakeAccountCustodyAddress } from "./pdas";
-import type { GlobalConfig } from "./staking/types";
-import { StakeAccountPositions } from "./staking/accounts";
+import type { GlobalConfig } from "./types";
+import {
+  StakeAccountPositions,
+  StakeAccountPositionsAnchor,
+} from "./staking/accounts";
 import type { IntegrityPool } from "../types/integrity_pool";
 import {
   type Account,
@@ -17,6 +20,7 @@ import {
   sendTransactions,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
+import { convertBigIntToBN, convertBNToBigInt } from "./utils";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -44,13 +48,16 @@ export class PythStakingClient {
   }
 
   async setGlobalConfig(config: GlobalConfig) {
-    return this.stakingProgram.methods.initConfig(config).rpc();
+    const globalConfigAnchor = convertBigIntToBN(config);
+    return this.stakingProgram.methods.initConfig(globalConfigAnchor).rpc();
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
-    return this.stakingProgram.account.globalConfig.fetch(
-      getConfigAddress()[0]
-    );
+    const globalConfigAnchor =
+      await this.stakingProgram.account.globalConfig.fetch(
+        getConfigAddress()[0]
+      );
+    return convertBNToBigInt(globalConfigAnchor);
   }
 
   /** Gets a users stake accounts */
@@ -75,14 +82,14 @@ export class PythStakingClient {
           ],
         }
       );
-    return res.map(
-      (account) =>
-        new StakeAccountPositions(
-          account.pubkey,
-          account.account.data,
-          this.stakingProgram.idl
-        )
-    );
+    return res.map((account) => {
+      const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
+        account.pubkey,
+        account.account.data,
+        this.stakingProgram.idl
+      );
+      return stakeAccountPositionsAnchor.toStakeAccountPositions();
+    });
   }
 
   public async getStakeAccountCustody(

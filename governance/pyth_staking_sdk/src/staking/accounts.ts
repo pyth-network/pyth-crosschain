@@ -1,21 +1,40 @@
 import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import type { Position } from "./types";
+import type { Position, PositionAnchor } from "../types";
 import type { Staking } from "../../types/staking";
 import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_SIZE } from "../constants";
+import { convertBNToBigInt } from "../utils";
 
-export class StakeAccountPositions {
+export type StakeAccountPositions = {
+  address: PublicKey;
+  data: {
+    owner: PublicKey;
+    positions: (Position | null)[];
+  };
+};
+
+export class StakeAccountPositionsAnchor {
   public address: PublicKey;
-  public data: PositionAccountData;
+  public data: PositionAccountDataAnchor;
 
   constructor(address: PublicKey, data: Buffer, idl: Staking) {
     this.address = address;
-    this.data = new PositionAccountData(data, idl);
+    this.data = new PositionAccountDataAnchor(data, idl);
+  }
+
+  public toStakeAccountPositions(): StakeAccountPositions {
+    return {
+      address: this.address,
+      data: {
+        owner: this.data.owner,
+        positions: this.data.positions.map(convertBNToBigInt),
+      },
+    };
   }
 }
-export class PositionAccountData {
+export class PositionAccountDataAnchor {
   public owner: PublicKey;
-  public positions: (Position | null)[];
+  public positions: (PositionAnchor | null)[];
 
   constructor(buffer: Buffer, idl: Staking) {
     const coder = new BorshCoder(idl);

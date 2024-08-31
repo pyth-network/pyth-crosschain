@@ -178,35 +178,35 @@ export const loadData = async (context: Context): Promise<Data> => {
 
   const stakeAccountPosition = stakeAccountPositions.find(
     x => x.address.toBase58() === context.stakeAccount.publicKey
-  );
+  )!;
 
-
-  const governancePositions = stakeAccountPosition?.data.positions.filter(p => p?.targetWithParameters.voting)
+  const governancePositions = stakeAccountPosition.data.positions.filter(p => p?.targetWithParameters.voting)
 
   const governanceWarmup =
-   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.LOCKING).map(p => p?.amount)
-   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.LOCKING).map(p => p!.amount)
+   .reduce((sum, amount) => sum + amount, 0n);
 
    const governanceStaked =
-   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.LOCKED).map(p => p?.amount)
-   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.LOCKED).map(p => p!.amount)
+   .reduce((sum, amount) => sum + amount, 0n);
 
    const governanceCooldown =
-   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.PREUNLOCKING).map(p => p?.amount)
-   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.PREUNLOCKING).map(p => p!.amount)
+   .reduce((sum, amount) => sum + amount, 0n);
 
    const governanceCooldown2 =
-   governancePositions?.filter(p => getPositionState(p!, currentEpoch) === PositionState.UNLOCKED).map(p => p?.amount)
-   .reduce((sum, amount) => sum!.add(amount!), new BN(0));
+   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.UNLOCKED).map(p => p!.amount)
+   .reduce((sum, amount) => sum + amount, 0n);
 
   return { ...MOCK_DATA['0x000000']!,
     total: stakeAccountCustody.amount,
     governance: {
-      warmup: BigInt(governanceWarmup!.toString()),
-      staked: BigInt(governanceStaked!.toString()),
-      cooldown: BigInt(governanceCooldown!.toString()),
-      cooldown2: BigInt(governanceCooldown2!.toString())
-    }
+      warmup: governanceWarmup,
+      staked: governanceStaked,
+      cooldown: governanceCooldown,
+      cooldown2: governanceCooldown2,
+    },
+    walletAmount: 0n,
    };
 };
 
