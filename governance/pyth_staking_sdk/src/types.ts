@@ -5,16 +5,16 @@ import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
 // This type converts all From types to To types in a given object.
 export type Convert<T, From, To> = T extends From
   ? To
+  : T extends Array<infer U>
+  ? Array<Convert<U, From, To>>
   : T extends Record<string, unknown>
   ? {
       [K in keyof T]: T[K] extends From
         ? To
         : T[K] extends From | null
         ? To | null
-        : T[K] extends Record<string, unknown>
+        : T[K] extends Record<string, unknown> | Array<unknown>
         ? Convert<T[K], From, To>
-        : T[K] extends Array<infer U>
-        ? Array<Convert<U, From, To>>
         : T[K];
     }
   : T;
