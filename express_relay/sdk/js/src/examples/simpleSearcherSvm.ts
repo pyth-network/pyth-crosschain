@@ -76,11 +76,6 @@ class SimpleSearcherSvm {
       throw new Error(`Dummy program id not found for chain ${this.chainId}`);
     }
     const dummyPid = DUMMY_PIDS[this.chainId];
-    const dummyAccountInfo = await this.connectionSvm.getAccountInfo(dummyPid);
-    let dummyExecutable = false;
-    if (dummyAccountInfo) {
-      dummyExecutable = dummyAccountInfo.executable;
-    }
 
     const ixDummy = await dummy.methods
       .doNothing()
