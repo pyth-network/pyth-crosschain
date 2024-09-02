@@ -166,7 +166,7 @@ export type BidEvm = {
  */
 export type BidSvm = {
   /**
-   * @description Transaction object, as a base64-encoded string.
+   * @description Transaction object.
    * @example SGVsbG8sIFdvcmxkIQ
    */
   transaction: Transaction;
