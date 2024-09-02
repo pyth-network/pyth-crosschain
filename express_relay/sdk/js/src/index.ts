@@ -34,7 +34,7 @@ import {
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import expressRelayIdl from "./idlExpressRelay.json";
+import expressRelayIdl from "./idl/idlExpressRelay.json";
 import { ExpressRelay } from "./expressRelayTypes";
 
 export * from "./types";

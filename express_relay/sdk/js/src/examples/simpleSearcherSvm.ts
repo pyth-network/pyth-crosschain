@@ -7,7 +7,7 @@ import { SVM_CONSTANTS } from "../const";
 import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
-import dummyIdl from "./idlDummy.json";
+import dummyIdl from "./idl/idlDummy.json";
 import { Dummy } from "./dummyTypes";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;

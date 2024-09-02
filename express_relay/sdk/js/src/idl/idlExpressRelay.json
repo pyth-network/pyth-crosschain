@@ -374,13 +374,8 @@
     },
     {
       "code": 6007,
-      "name": "InsufficientRouterRent",
-      "msg": "Insufficient router funds for rent"
-    },
-    {
-      "code": 6008,
-      "name": "InsufficientRelayerFeeReceiverRent",
-      "msg": "Insufficient relayer fee receiver funds for rent"
+      "name": "InsufficientRent",
+      "msg": "Insufficient funds for rent"
     }
   ],
   "types": [
