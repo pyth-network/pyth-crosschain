@@ -3,6 +3,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { type Staking } from "../types/staking";
 import * as StakingIdl from "../idl/staking.json";
 import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
+import * as PublisherCapsIdl from "../idl/publisher_caps.json";
 import {
   getConfigAddress,
   getPoolConfigAddress,
@@ -26,6 +27,7 @@ import {
 } from "@pythnetwork/solana-utils";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import { PublisherCaps } from "../types/publisher_caps";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -38,6 +40,7 @@ export class PythStakingClient {
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
   integrityPoolProgram: Program<IntegrityPool>;
+  publisherCapsProgram: Program<PublisherCaps>;
 
   constructor(config: PythStakingClientConfig) {
     this.connection = config.connection;
@@ -48,6 +51,10 @@ export class PythStakingClient {
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
     this.integrityPoolProgram = new Program(
       IntegrityPoolIdl as IntegrityPool,
+      this.provider
+    );
+    this.publisherCapsProgram = new Program(
+      PublisherCapsIdl as PublisherCaps,
       this.provider
     );
   }

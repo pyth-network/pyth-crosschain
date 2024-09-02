@@ -6,6 +6,7 @@ import os from "os";
 import { exec } from "child_process";
 import {
   INTEGRITY_POOL_PROGRAM_ADDRESS,
+  PUBLISHER_CAPS_PROGRAM_ADDRESS,
   STAKING_PROGRAM_ADDRESS,
 } from "../src/constants";
 import { loadKeypair } from "./keys";
@@ -57,6 +58,7 @@ export async function startValidatorRaw() {
     --mint ${user.publicKey} \
     --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} programs/staking.so \
     --bpf-program ${INTEGRITY_POOL_PROGRAM_ADDRESS.toBase58()} programs/integrity_pool.so \
+    --bpf-program ${PUBLISHER_CAPS_PROGRAM_ADDRESS} programs/publisher_caps.so \
     `;
 
   exec(command, { signal }, (error, stdout, stderr) => {
