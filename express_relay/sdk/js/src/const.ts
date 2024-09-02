@@ -1,4 +1,5 @@
-import { OpportunityAdapterConfig } from "./types";
+import { PublicKey } from "@solana/web3.js";
+import { OpportunityAdapterConfig, SvmConstantsConfig } from "./types";
 
 export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
   string,
@@ -19,5 +20,19 @@ export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
       "0xd53b8e32ab2ecba07c3e3a17c3c5e492c62e2f7051b89e5154f52e6bfeb0e38f",
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     weth: "0x4200000000000000000000000000000000000006",
+  },
+};
+
+export const SVM_CONSTANTS: Record<string, SvmConstantsConfig> = {
+  solana: {
+    relayerSigner: new PublicKey(
+      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
+    ),
+    feeReceiverRelayer: new PublicKey(
+      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
+    ),
+    expressRelayProgram: new PublicKey(
+      "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM"
+    ),
   },
 };

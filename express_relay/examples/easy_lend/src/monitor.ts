@@ -4,8 +4,7 @@ import {
   checkAddress,
   Client,
   OpportunityParams,
-} from "@pythnetwork/express-relay-evm-js";
-import { privateKeyToAccount } from "viem/accounts";
+} from "@pythnetwork/express-relay-js";
 import type { ContractFunctionReturnType } from "viem";
 import {
   Address,
@@ -15,7 +14,6 @@ import {
   getContract,
   Hex,
   http,
-  isHex,
 } from "viem";
 import { optimismSepolia } from "viem/chains";
 import { abi } from "./abi";

@@ -17,6 +17,7 @@ import {
   BidId,
   BidParams,
   BidStatusUpdate,
+  BidSvm,
   Opportunity,
   OpportunityParams,
   TokenAmount,
@@ -25,13 +26,25 @@ import {
   OpportunityBid,
 } from "./types";
 import { executeOpportunityAbi } from "./abi";
-import { OPPORTUNITY_ADAPTER_CONFIGS } from "./const";
+import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import expressRelayIdl from "./idl/idlExpressRelay.json";
+import { ExpressRelay } from "./expressRelayTypes";
 
 export * from "./types";
 
 export class ClientError extends Error {}
 
-type ClientOptions = FetchClientOptions & { baseUrl: string; apiKey?: string };
+type ClientOptions = FetchClientOptions & {
+  baseUrl: string;
+  apiKey?: string;
+};
 
 export interface WsOptions {
   /**
@@ -526,16 +539,26 @@ export class Client {
       chainId: opportunity.chainId,
       targetContract: opportunityAdapterConfig.opportunity_adapter_factory,
       permissionKey: opportunity.permissionKey,
+      env: "evm",
     };
   }
 
   private toServerBid(bid: Bid): components["schemas"]["Bid"] {
+    if (bid.env == "evm") {
+      return {
+        amount: bid.amount.toString(),
+        target_calldata: bid.targetCalldata,
+        chain_id: bid.chainId,
+        target_contract: bid.targetContract,
+        permission_key: bid.permissionKey,
+      };
+    }
+
     return {
-      amount: bid.amount.toString(),
-      target_calldata: bid.targetCalldata,
       chain_id: bid.chainId,
-      target_contract: bid.targetContract,
-      permission_key: bid.permissionKey,
+      transaction: bid.transaction
+        .serialize({ requireAllSignatures: false })
+        .toString("base64"),
     };
   }
 
@@ -590,5 +613,100 @@ export class Client {
     } else {
       return response.data;
     }
+  }
+
+  /**
+   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @returns The SubmitBid instruction
+   */
+  async constructSubmitBidInstruction(
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string
+  ): Promise<TransactionInstruction> {
+    const expressRelay = new Program<ExpressRelay>(
+      expressRelayIdl as ExpressRelay,
+      {} as AnchorProvider
+    );
+
+    const svmConstants = SVM_CONSTANTS[chainId];
+
+    const routerConfig = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("config_router"), router.toBuffer()],
+      svmConstants.expressRelayProgram
+    )[0];
+
+    const expressRelayMetadata = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("metadata")],
+      svmConstants.expressRelayProgram
+    )[0];
+
+    const ixSubmitBid = await expressRelay.methods
+      .submitBid({
+        deadline,
+        bidAmount,
+      })
+      .accountsStrict({
+        searcher,
+        relayerSigner: svmConstants.relayerSigner,
+        permission: permissionKey,
+        router,
+        routerConfig,
+        feeReceiverRelayer: svmConstants.feeReceiverRelayer,
+        expressRelayMetadata,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+      })
+      .instruction();
+    ixSubmitBid.programId = svmConstants.expressRelayProgram;
+
+    return ixSubmitBid;
+  }
+
+  /**
+   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
+   * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @returns The constructed SVM bid
+   */
+  async constructSvmBid(
+    tx: Transaction,
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string
+  ): Promise<BidSvm> {
+    const ixSubmitBid = await this.constructSubmitBidInstruction(
+      searcher,
+      router,
+      permissionKey,
+      bidAmount,
+      deadline,
+      chainId
+    );
+
+    tx.instructions.unshift(ixSubmitBid);
+
+    return {
+      transaction: tx,
+      chainId: chainId,
+      env: "svm",
+    };
   }
 }

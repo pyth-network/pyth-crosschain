@@ -12,8 +12,8 @@ export interface paths {
     get: operations["get_bids_by_time"];
     /**
      * Bid on a specific permission key for a specific chain.
-     * @description Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-     * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+     * @description Your bid will be verified by the server. Depending on the outcome of the auction, a transaction
+     * containing your bid will be sent to the blockchain expecting the bid amount to be paid in the transaction.
      */
     post: operations["bid"];
   };
@@ -53,7 +53,8 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     APIResponse: components["schemas"]["BidResult"];
-    Bid: {
+    Bid: components["schemas"]["BidEvm"] | components["schemas"]["BidSvm"];
+    BidEvm: {
       /**
        * @description Amount of bid in wei.
        * @example 10
@@ -129,6 +130,18 @@ export interface components {
     BidStatusWithId: {
       bid_status: components["schemas"]["BidStatus"];
       id: string;
+    };
+    BidSvm: {
+      /**
+       * @description The chain id to bid on.
+       * @example solana
+       */
+      chain_id: string;
+      /**
+       * @description The transaction for bid.
+       * @example SGVsbG8sIFdvcmxkIQ==
+       */
+      transaction: string;
     };
     ClientMessage:
       | {
@@ -431,8 +444,8 @@ export interface operations {
   };
   /**
    * Bid on a specific permission key for a specific chain.
-   * @description Your bid will be simulated and verified by the server. Depending on the outcome of the auction, a transaction
-   * containing the contract call will be sent to the blockchain expecting the bid amount to be paid after the call.
+   * @description Your bid will be verified by the server. Depending on the outcome of the auction, a transaction
+   * containing your bid will be sent to the blockchain expecting the bid amount to be paid in the transaction.
    */
   bid: {
     requestBody: {
