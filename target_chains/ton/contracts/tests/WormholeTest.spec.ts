@@ -8,7 +8,6 @@ import {
   GUARDIAN_SET_0,
   GUARDIAN_SET_4,
   MAINNET_UPGRADE_VAAS,
-  parseGuardianSetKeys,
 } from "./utils/wormhole";
 
 describe("WormholeTest", () => {
@@ -154,5 +153,12 @@ describe("WormholeTest", () => {
         Buffer.from(invalid_mainnet_upgrade_vaa, "hex")
       )
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1001"); // ERROR_INVALID_VERSION = 1001
+  });
+
+  it("should correctly get guardian set", async () => {
+    await deployContract();
+
+    const getGuardianSetResult = await wormholeTest.getGuardianSet(0);
+    expect(getGuardianSetResult.keys).toEqual(GUARDIAN_SET_0);
   });
 });

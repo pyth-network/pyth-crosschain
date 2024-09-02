@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.94.0
+  Fuels version: 0.94.2
 */
 
 export { PythContract } from "./PythContract";

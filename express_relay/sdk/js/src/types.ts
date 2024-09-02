@@ -1,5 +1,6 @@
 import { Address, Hex } from "viem";
 import type { components } from "./serverTypes";
+import { PublicKey, Transaction } from "@solana/web3.js";
 
 /**
  * ERC20 token with contract address and amount
@@ -123,10 +124,12 @@ export type OpportunityBid = {
  * All the parameters necessary to represent an opportunity
  */
 export type OpportunityParams = Omit<Opportunity, "opportunityId">;
+
+export type Bid = BidEvm | BidSvm;
 /**
- * Represents a raw bid on acquiring a permission key
+ * Represents a raw EVM bid on acquiring a permission key
  */
-export type Bid = {
+export type BidEvm = {
   /**
    * The permission key to bid on
    * @example 0xc0ffeebabe
@@ -153,6 +156,29 @@ export type Bid = {
    * @example 0xcA11bde05977b3631167028862bE2a173976CA11
    */
   targetContract: Address;
+  /**
+   * @description The execution environment for the bid.
+   */
+  env: "evm";
+};
+/**
+ * Represents a raw SVM bid on acquiring a permission key
+ */
+export type BidSvm = {
+  /**
+   * @description Transaction object.
+   * @example SGVsbG8sIFdvcmxkIQ
+   */
+  transaction: Transaction;
+  /**
+   * @description The chain id to bid on.
+   * @example solana
+   */
+  chainId: ChainId;
+  /**
+   * @description The execution environment for the bid.
+   */
+  env: "svm";
 };
 export type BidStatusUpdate = {
   id: BidId;
@@ -161,4 +187,10 @@ export type BidStatusUpdate = {
 export type BidResponse = components["schemas"]["SimulatedBid"];
 export type BidsResponse = {
   items: BidResponse[];
+};
+
+export type SvmConstantsConfig = {
+  relayerSigner: PublicKey;
+  feeReceiverRelayer: PublicKey;
+  expressRelayProgram: PublicKey;
 };

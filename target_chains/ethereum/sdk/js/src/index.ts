@@ -68,6 +68,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   zkfair: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   zksync_era: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
   // Testnets (Stable sources)
+  apechain_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   arbitrum_blueberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   arbitrum_sepolia: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
   astar_zkevm_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",
@@ -138,6 +139,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   scroll_sepolia: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
   sepolia: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
   shimmer_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",
+  soneium_minato_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   taiko_hekla: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   taiko_mainnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   viction_testnet: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",

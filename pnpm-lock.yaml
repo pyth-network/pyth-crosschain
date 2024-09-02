@@ -600,6 +600,12 @@ importers:
 
   express_relay/sdk/js:
     dependencies:
+      '@coral-xyz/anchor':
+        specifier: ^0.30.1
+        version: 0.30.1(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@solana/web3.js':
+        specifier: 1.92.3
+        version: 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -1671,8 +1677,8 @@ importers:
   target_chains/fuel/sdk/js:
     dependencies:
       fuels:
-        specifier: ^0.94.0
-        version: 0.94.0(encoding@0.1.13)
+        specifier: ^0.94.2
+        version: 0.94.2(encoding@0.1.13)
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.7.0
@@ -1924,6 +1930,9 @@ importers:
 
   target_chains/ton/contracts:
     devDependencies:
+      '@pythnetwork/price-service-sdk':
+        specifier: workspace:*
+        version: link:../../../price_service/sdk/js
       '@ton/blueprint':
         specifier: ^0.22.0
         version: 0.22.0(@ton/core@0.57.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@13.11.2(@ton/core@0.57.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@types/node@20.14.15)(encoding@0.1.13)(typescript@5.5.4)
@@ -4129,8 +4138,17 @@ packages:
     resolution: {integrity: sha512-WFjt3pjgb9p1SSGDuqIblPs7aIaZccDFVK66fMPyCBr9jFkpyc16xv7k8gf+yOAxxAdxktne747420XZ9ZJarA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/abi-coder@0.94.2':
+    resolution: {integrity: sha512-AHb2r+bAPsvcsuiDrr4tDLmsceWdOZJPXSivm3+hKtsPnvh/uhY/+TXauwZav8YrBGGfZj4SL+E/S4OD14zkjw==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/abi-typegen@0.94.0':
     resolution: {integrity: sha512-obW/p+sj2IaEc/U+Bgkvp9ALg1IwfGMeM4JNfOunbMIHF4Oi1zOHAvEPIv9s8SYkYTlIgPLjUOF2O+zRMFneLg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    hasBin: true
+
+  '@fuel-ts/abi-typegen@0.94.2':
+    resolution: {integrity: sha512-MHVJspjniyhLzY7eYB7Ot6JEmWObX/qvuEGLImJSWuft+aJkUP/MM87f6mU2RFwvM2RjixyCmVyVjO6pu/BHtg==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
@@ -4138,56 +4156,113 @@ packages:
     resolution: {integrity: sha512-/vENitnkvMbHn5wGW+K+acTRPWYligCkxD31jFTuSbe/mCR9ccHxdHaerh5333L5i4CffJNjB+wVVrUyu+g+dA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/account@0.94.2':
+    resolution: {integrity: sha512-ufs/DQeQo1HHSKZJHIsUz7gbviw8P/4YGVszeHXBAN4HXBba5LkZTnk1wariyokeIRpSlyPtGDIopuUDqs8T4A==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/address@0.94.0':
     resolution: {integrity: sha512-MHcpEyXViosuq6/vG6D07crsICIwpX6CVeF1wu0FWPv/B2lc/h0Vo1S8au4G/b4WFlinxvlAFhe1eSs2t49xMQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/address@0.94.2':
+    resolution: {integrity: sha512-IONof8FX+3bBArhHP5iDP9rJD+Kb1508j3/F1PcrllkzUDPWt3AroQaLFlya7H3p2IqPRzNNVAWs2z8WQ0/MQw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/contract@0.94.0':
     resolution: {integrity: sha512-04lDY+J6hAJuWoH1NLRuQXAphhp0uCjn4vG6C4lEEU1UA/JGFPU3OVRMyEAACwL/u9tuTOGaPvEhPStnIdjPlQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/contract@0.94.2':
+    resolution: {integrity: sha512-CGxCIEDPmOf3IC3hVxnz9Ms7I0pSm+onVP5FQnDuDgbPOkTAiL7U7VUOC5C5hNWU7xBmNQs1eIh36sn/tfGAtA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/crypto@0.94.0':
     resolution: {integrity: sha512-A6vk0c8d1FpRox9w9sSpTX1OOrD8WmIoFScz8HusgkUhlj8B8vK+3d9uLE/Q/35FsSpiJBHP9K+0Uc5QXiKVkg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/crypto@0.94.2':
+    resolution: {integrity: sha512-ampjWQ2QPmQvs0tjvvRgOEnIMYlHvGD9NSZoReFuTFszQeR6CS5J+IodJyURLJUQQb/mzF9UaZpVxVK3ObaHKQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/errors@0.94.0':
     resolution: {integrity: sha512-8QJNRKG+2GdAsl+BDsOit7QoI4g6nGwclSS+G1OyQBgoRowkMsIJkQpthYnzs5Wicv4vsQ2AniV9L7blea3IvA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/errors@0.94.2':
+    resolution: {integrity: sha512-411p4ll6wy+NSOhyKTI6AUS8dw741yQl9NhOCyAMvaVoyDqzcQQXnYpEfB+IekhnVJpvpnfXUYNySi4i3cjeBQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/hasher@0.94.0':
     resolution: {integrity: sha512-JTguSLfYKjab3GzkCb73Bp9Yxrzqh9+upfZr6KBOfh9E4aYhZMd1/CT6bw9JcsWo9nr3faEtnmhSz4U0sgc3kQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/hasher@0.94.2':
+    resolution: {integrity: sha512-k1lyCpUxYj0uWYIr2uRVbHpBf0HBrV2WQKZ8kks2tzsnVno9WK/q4wE5STuHeqqLyxula4Tws0DIm421XpT0/A==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/interfaces@0.94.0':
     resolution: {integrity: sha512-9P7jnFL2TGOp67PRJ42W0vVR3CHbfck5Bynt6CCVsHE1tC47l2yZ/TUzKbem67Gxy88H2X9eLgt6Y8vvIP81tw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/interfaces@0.94.2':
+    resolution: {integrity: sha512-69g94oaPrugBR40ex5OLreiQ8xZtHP9ZK+8iWnV4CJZDEfKxVTh1EtSNR7ClL4sBCWiEFp6qb9e5Gil152Zbhw==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/math@0.94.0':
     resolution: {integrity: sha512-Q08lUdgm6MXIyYjyYgJnVKkE+aXc++QtAo9rVdNLz68lWgLa/JUrmB+oR+P5EoyoCfKAeSaHVH/+PUsBGplGGA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/math@0.94.2':
+    resolution: {integrity: sha512-091s0fSAa1Jmm5kgIGaRNc5BtoYwSMsdjd/ZEo4zra4/JOngVw9BesSyQ0Wg4exWtO6G7ZwhBDiVGHSq13FGiQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/merkle@0.94.0':
     resolution: {integrity: sha512-rmCx15cutbFJi4L9ecvFQSI/eRb81GbeGtbeZNrwucmVjkKvJ2/3czNuaVE9whG0Ay0cni19EbqujldhpiLpEQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/merkle@0.94.2':
+    resolution: {integrity: sha512-3bh3ecc63oP3x73c5Z/jkmv8HUxyp1mBQsGZeYXswqmJ2AIeEHlcvql6WMbWXMt9V4SAo8IkFv92DCL+YOxTQw==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/program@0.94.0':
     resolution: {integrity: sha512-3yEQPe1uAhbjlTC3WgnJiPZTFSIeml80dmaMJy5xcWcKYzaLafmcDVJpLcMLoXqUI8ZXODlfwLjFZPyhicTO4A==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/program@0.94.2':
+    resolution: {integrity: sha512-LPjxkQWBLevAsHqLHWndmL3B2989+vtNGJPfhQhYJos+wl1Jvk6sYGzMca+Jb1yfNs/MhPDfIOT/VMGZ78EWDA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/script@0.94.0':
     resolution: {integrity: sha512-AprAvYzadtpr0N0olqDJ7Mp9IRb9fY3k3oQ6OXyW3e0TSJ+gac8mOSb1Kr/jiGEhrW9dEiHG9mgEVuNZZbLsaw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/script@0.94.2':
+    resolution: {integrity: sha512-1xjcAi+sP9PjAhekhodakbbblVYXJpDkoaIeIQ74Mx2813YNH4U6/WRSlWaBEdXyjRRy4mJ2cBB5PGtzUGoTpg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/transactions@0.94.0':
     resolution: {integrity: sha512-DMrA/35/a2wUQVkyu2a/X4CE72Y8nh1f4BzbA7toWEc12c5txkrr5x/8AbDc51THyN2fXQRwx6sLhekKUB9M4w==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/transactions@0.94.2':
+    resolution: {integrity: sha512-vGrY+sJPiblWz1DF78D0D2b+NlkpKdPjEBYzRab8orApm6obYVQM1BeU9wmcWllFm2O4S55RjlZltjQSR59sng==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/utils@0.94.0':
     resolution: {integrity: sha512-xFB1K/ju3nzMVlxguzeY7KL0XDhUqltVFuAMZLzx6pO6YKKSffyjA+2SpJr0nisStFEaKXlECzHjixo1j4IZIA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/utils@0.94.2':
+    resolution: {integrity: sha512-8aaOUX/HArkcMKD/qhbnjG1/BtjWySST1c3KyGqCbkuGdUkBDnppZfTw/TkQtPwY4Ua9hO3w5maeYn5rlFXRGg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/versions@0.94.0':
     resolution: {integrity: sha512-RQJDTWVxK8cDrSBri+I0Xvh7NpU8u23Re8uDHoO3DV8ASKJxWqUm9fFizBj4ZaR11ecTKNmjy9nw7DoFX4hvzA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    hasBin: true
+
+  '@fuel-ts/versions@0.94.2':
+    resolution: {integrity: sha512-Sve2ba5yu1Y9YqQDgSRKynYPMwmOyLw2XkBL7Ki2eEhcNzjO+Hy10rmxsrz8/OUbUXUBLexR8OZvKvUg63QYHg==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
@@ -12344,6 +12419,11 @@ packages:
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
+  fuels@0.94.2:
+    resolution: {integrity: sha512-VftWnqLA55FGSOwymhZwm9fm/PvNJ15+k8UhIWzPAwKOj5muJjBJQ8PLf0KSECzIbLu6LXm82inSy5g6TR4wNQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    hasBin: true
+
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
 
@@ -18421,6 +18501,11 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
+  uglify-js@3.19.2:
+    resolution: {integrity: sha512-S8KA6DDI47nQXJSi2ctQ629YzwOVs+bQML6DAtvy0wgNdpi+0ySpQK0g2pxBq2xfF2z3YCscu7NNA8nXT9PlIQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+
   uid-promise@1.0.0:
     resolution: {integrity: sha512-R8375j0qwXyIu/7R0tjdF06/sElHqbmdmWC9M2qQHpEVbvE4I5+38KJI7LUUmQMp7NVq4tKHiBMkT0NFM453Ig==}
 
@@ -23771,45 +23856,6 @@ snapshots:
       - ts-node
       - typescript
 
-  '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)':
-    dependencies:
-      '@babel/core': 7.24.7
-      '@babel/eslint-parser': 7.24.7(@babel/core@7.24.7)(eslint@9.5.0)
-      '@babel/plugin-syntax-import-assertions': 7.24.7(@babel/core@7.24.7)
-      '@eslint/compat': 1.1.0
-      '@eslint/eslintrc': 3.1.0
-      '@eslint/js': 9.5.0
-      '@next/eslint-plugin-next': 14.2.3
-      eslint: 9.5.0
-      eslint-config-prettier: 9.1.0(eslint@9.5.0)
-      eslint-config-turbo: 1.13.4(eslint@9.5.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)
-      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4)
-      eslint-plugin-jest-dom: 5.4.0(eslint@9.5.0)
-      eslint-plugin-jsonc: 2.16.0(eslint@9.5.0)
-      eslint-plugin-jsx-a11y: 6.8.0(eslint@9.5.0)
-      eslint-plugin-n: 17.9.0(eslint@9.5.0)
-      eslint-plugin-react: 7.34.2(eslint@9.5.0)
-      eslint-plugin-react-hooks: 4.6.2(eslint@9.5.0)
-      eslint-plugin-storybook: 0.8.0(eslint@9.5.0)(typescript@5.5.4)
-      eslint-plugin-tailwindcss: 3.17.3(tailwindcss@3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))
-      eslint-plugin-testing-library: 6.2.2(eslint@9.5.0)(typescript@5.5.4)
-      eslint-plugin-tsdoc: 0.3.0
-      eslint-plugin-unicorn: 53.0.0(eslint@9.5.0)
-      globals: 15.6.0
-      tailwindcss: 3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
-      typescript-eslint: 7.13.1(eslint@9.5.0)(typescript@5.5.4)
-    transitivePeerDependencies:
-      - '@testing-library/dom'
-      - '@typescript-eslint/eslint-plugin'
-      - '@typescript-eslint/parser'
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - jest
-      - supports-color
-      - ts-node
-      - typescript
-
   '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)':
     dependencies:
       '@babel/core': 7.24.7
@@ -23823,7 +23869,7 @@ snapshots:
       eslint-config-prettier: 9.1.0(eslint@9.5.0)
       eslint-config-turbo: 1.13.4(eslint@9.5.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)
-      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4)
+      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4)
       eslint-plugin-jest-dom: 5.4.0(eslint@9.5.0)
       eslint-plugin-jsonc: 2.16.0(eslint@9.5.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@9.5.0)
@@ -24646,12 +24692,35 @@ snapshots:
       '@fuel-ts/utils': 0.94.0
       type-fest: 4.25.0
 
+  '@fuel-ts/abi-coder@0.94.2':
+    dependencies:
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      type-fest: 4.25.0
+
   '@fuel-ts/abi-typegen@0.94.0':
     dependencies:
       '@fuel-ts/errors': 0.94.0
       '@fuel-ts/interfaces': 0.94.0
       '@fuel-ts/utils': 0.94.0
       '@fuel-ts/versions': 0.94.0
+      commander: 12.1.0
+      glob: 10.4.5
+      handlebars: 4.7.8
+      mkdirp: 1.0.4
+      ramda: 0.30.1
+      rimraf: 5.0.9
+
+  '@fuel-ts/abi-typegen@0.94.2':
+    dependencies:
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/versions': 0.94.2
       commander: 12.1.0
       glob: 10.4.5
       handlebars: 4.7.8
@@ -24684,12 +24753,46 @@ snapshots:
       - encoding
       - supports-color
 
+  '@fuel-ts/account@0.94.2(encoding@0.1.13)':
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/address': 0.94.2
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/merkle': 0.94.2
+      '@fuel-ts/transactions': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/versions': 0.94.2
+      '@fuels/vm-asm': 0.56.0
+      '@noble/curves': 1.4.2
+      events: 3.3.0
+      graphql: 16.9.0
+      graphql-request: 5.0.0(encoding@0.1.13)(graphql@16.9.0)
+      graphql-tag: 2.12.6(graphql@16.9.0)
+      portfinder: 1.0.32
+      ramda: 0.30.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   '@fuel-ts/address@0.94.0':
     dependencies:
       '@fuel-ts/crypto': 0.94.0
       '@fuel-ts/errors': 0.94.0
       '@fuel-ts/interfaces': 0.94.0
       '@fuel-ts/utils': 0.94.0
+      '@noble/hashes': 1.4.0
+      bech32: 2.0.0
+
+  '@fuel-ts/address@0.94.2':
+    dependencies:
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/utils': 0.94.2
       '@noble/hashes': 1.4.0
       bech32: 2.0.0
 
@@ -24713,6 +24816,26 @@ snapshots:
       - encoding
       - supports-color
 
+  '@fuel-ts/contract@0.94.2(encoding@0.1.13)':
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/merkle': 0.94.2
+      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/versions': 0.94.2
+      '@fuels/vm-asm': 0.56.0
+      ramda: 0.30.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   '@fuel-ts/crypto@0.94.0':
     dependencies:
       '@fuel-ts/errors': 0.94.0
@@ -24721,9 +24844,21 @@ snapshots:
       '@fuel-ts/utils': 0.94.0
       '@noble/hashes': 1.4.0
 
+  '@fuel-ts/crypto@0.94.2':
+    dependencies:
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@noble/hashes': 1.4.0
+
   '@fuel-ts/errors@0.94.0':
     dependencies:
       '@fuel-ts/versions': 0.94.0
+
+  '@fuel-ts/errors@0.94.2':
+    dependencies:
+      '@fuel-ts/versions': 0.94.2
 
   '@fuel-ts/hasher@0.94.0':
     dependencies:
@@ -24732,7 +24867,16 @@ snapshots:
       '@fuel-ts/utils': 0.94.0
       '@noble/hashes': 1.4.0
 
+  '@fuel-ts/hasher@0.94.2':
+    dependencies:
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@noble/hashes': 1.4.0
+
   '@fuel-ts/interfaces@0.94.0': {}
+
+  '@fuel-ts/interfaces@0.94.2': {}
 
   '@fuel-ts/math@0.94.0':
     dependencies:
@@ -24740,10 +24884,21 @@ snapshots:
       '@types/bn.js': 5.1.5
       bn.js: 5.2.1
 
+  '@fuel-ts/math@0.94.2':
+    dependencies:
+      '@fuel-ts/errors': 0.94.2
+      '@types/bn.js': 5.1.5
+      bn.js: 5.2.1
+
   '@fuel-ts/merkle@0.94.0':
     dependencies:
       '@fuel-ts/hasher': 0.94.0
       '@fuel-ts/math': 0.94.0
+
+  '@fuel-ts/merkle@0.94.2':
+    dependencies:
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/math': 0.94.2
 
   '@fuel-ts/program@0.94.0(encoding@0.1.13)':
     dependencies:
@@ -24755,6 +24910,22 @@ snapshots:
       '@fuel-ts/math': 0.94.0
       '@fuel-ts/transactions': 0.94.0
       '@fuel-ts/utils': 0.94.0
+      '@fuels/vm-asm': 0.56.0
+      ramda: 0.30.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  '@fuel-ts/program@0.94.2(encoding@0.1.13)':
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/transactions': 0.94.2
+      '@fuel-ts/utils': 0.94.2
       '@fuels/vm-asm': 0.56.0
       ramda: 0.30.1
     transitivePeerDependencies:
@@ -24776,6 +24947,21 @@ snapshots:
       - encoding
       - supports-color
 
+  '@fuel-ts/script@0.94.2(encoding@0.1.13)':
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   '@fuel-ts/transactions@0.94.0':
     dependencies:
       '@fuel-ts/abi-coder': 0.94.0
@@ -24786,6 +24972,16 @@ snapshots:
       '@fuel-ts/math': 0.94.0
       '@fuel-ts/utils': 0.94.0
 
+  '@fuel-ts/transactions@0.94.2':
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/address': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+
   '@fuel-ts/utils@0.94.0':
     dependencies:
       '@fuel-ts/errors': 0.94.0
@@ -24794,7 +24990,20 @@ snapshots:
       '@fuel-ts/versions': 0.94.0
       fflate: 0.8.2
 
+  '@fuel-ts/utils@0.94.2':
+    dependencies:
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/versions': 0.94.2
+      fflate: 0.8.2
+
   '@fuel-ts/versions@0.94.0':
+    dependencies:
+      chalk: 4.1.2
+      cli-table: 0.3.11
+
+  '@fuel-ts/versions@0.94.2':
     dependencies:
       chalk: 4.1.2
       cli-table: 0.3.11
@@ -32289,10 +32498,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)':
+  '@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)':
     dependencies:
       '@eslint-community/regexpp': 4.10.0
-      '@typescript-eslint/parser': 8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
       '@typescript-eslint/scope-manager': 7.13.1
       '@typescript-eslint/type-utils': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
       '@typescript-eslint/utils': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
@@ -32470,7 +32678,7 @@ snapshots:
       '@typescript-eslint/typescript-estree': 8.3.0(typescript@5.5.4)
       '@typescript-eslint/visitor-keys': 8.3.0
       debug: 4.3.6(supports-color@8.1.1)
-      eslint: 9.9.0(jiti@1.21.0)
+      eslint: 9.5.0
     optionalDependencies:
       typescript: 5.5.4
     transitivePeerDependencies:
@@ -34867,7 +35075,7 @@ snapshots:
 
   axios-retry@3.9.1:
     dependencies:
-      '@babel/runtime': 7.24.8
+      '@babel/runtime': 7.25.0
       is-retry-allowed: 2.2.0
 
   axios-retry@4.4.0(axios@1.6.8):
@@ -37802,22 +38010,39 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0):
-    dependencies:
-      debug: 3.2.7
-    optionalDependencies:
-      '@typescript-eslint/parser': 8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-      eslint: 9.5.0
-      eslint-import-resolver-node: 0.3.9
-    transitivePeerDependencies:
-      - supports-color
-
   eslint-plugin-es-x@7.7.0(eslint@9.5.0):
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@9.5.0)
       '@eslint-community/regexpp': 4.10.0
       eslint: 9.5.0
       eslint-compat-utils: 0.5.1(eslint@9.5.0)
+
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.13.1(eslint@8.56.0)(typescript@5.4.5))(eslint@8.56.0):
+    dependencies:
+      array-includes: 3.1.8
+      array.prototype.findlastindex: 1.2.5
+      array.prototype.flat: 1.3.2
+      array.prototype.flatmap: 1.3.2
+      debug: 3.2.7
+      doctrine: 2.1.0
+      eslint: 8.56.0
+      eslint-import-resolver-node: 0.3.9
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.13.0(eslint@8.56.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.13.0(eslint@8.56.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.56.0))(eslint@8.56.0)
+      hasown: 2.0.2
+      is-core-module: 2.13.1
+      is-glob: 4.0.3
+      minimatch: 3.1.2
+      object.fromentries: 2.0.8
+      object.groupby: 1.0.3
+      object.values: 1.2.0
+      semver: 6.3.1
+      tsconfig-paths: 3.15.0
+    optionalDependencies:
+      '@typescript-eslint/parser': 7.13.1(eslint@8.56.0)(typescript@5.4.5)
+    transitivePeerDependencies:
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - supports-color
 
   eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0):
     dependencies:
@@ -37846,60 +38071,6 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@8.3.0(eslint@8.56.0)(typescript@5.4.5))(eslint@8.56.0):
-    dependencies:
-      array-includes: 3.1.8
-      array.prototype.findlastindex: 1.2.5
-      array.prototype.flat: 1.3.2
-      array.prototype.flatmap: 1.3.2
-      debug: 3.2.7
-      doctrine: 2.1.0
-      eslint: 8.56.0
-      eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.13.1(eslint@8.56.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.13.1(eslint@8.56.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.56.0))(eslint@8.56.0)
-      hasown: 2.0.2
-      is-core-module: 2.13.1
-      is-glob: 4.0.3
-      minimatch: 3.1.2
-      object.fromentries: 2.0.8
-      object.groupby: 1.0.3
-      object.values: 1.2.0
-      semver: 6.3.1
-      tsconfig-paths: 3.15.0
-    optionalDependencies:
-      '@typescript-eslint/parser': 8.3.0(eslint@8.56.0)(typescript@5.4.5)
-    transitivePeerDependencies:
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - supports-color
-
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0):
-    dependencies:
-      array-includes: 3.1.8
-      array.prototype.findlastindex: 1.2.5
-      array.prototype.flat: 1.3.2
-      array.prototype.flatmap: 1.3.2
-      debug: 3.2.7
-      doctrine: 2.1.0
-      eslint: 9.5.0
-      eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0)
-      hasown: 2.0.2
-      is-core-module: 2.13.1
-      is-glob: 4.0.3
-      minimatch: 3.1.2
-      object.fromentries: 2.0.8
-      object.groupby: 1.0.3
-      object.values: 1.2.0
-      semver: 6.3.1
-      tsconfig-paths: 3.15.0
-    optionalDependencies:
-      '@typescript-eslint/parser': 8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-    transitivePeerDependencies:
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - supports-color
-
   eslint-plugin-jest-dom@5.4.0(eslint@9.5.0):
     dependencies:
       '@babel/runtime': 7.24.7
@@ -37917,12 +38088,12 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-jest@28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4):
+  eslint-plugin-jest@28.6.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4):
     dependencies:
       '@typescript-eslint/utils': 7.7.1(eslint@9.5.0)(typescript@5.5.4)
       eslint: 9.5.0
     optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
+      '@typescript-eslint/eslint-plugin': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
       jest: 29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
     transitivePeerDependencies:
       - supports-color
@@ -39482,6 +39653,41 @@ snapshots:
       - encoding
       - supports-color
 
+  fuels@0.94.2(encoding@0.1.13):
+    dependencies:
+      '@fuel-ts/abi-coder': 0.94.2
+      '@fuel-ts/abi-typegen': 0.94.2
+      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.2
+      '@fuel-ts/contract': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/crypto': 0.94.2
+      '@fuel-ts/errors': 0.94.2
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/merkle': 0.94.2
+      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/script': 0.94.2(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.2
+      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/versions': 0.94.2
+      bundle-require: 5.0.0(esbuild@0.22.0)
+      chalk: 4.1.2
+      chokidar: 3.6.0
+      commander: 12.1.0
+      esbuild: 0.22.0
+      glob: 10.4.5
+      handlebars: 4.7.8
+      joycon: 3.1.1
+      lodash.camelcase: 4.3.0
+      portfinder: 1.0.32
+      toml: 3.0.0
+      uglify-js: 3.19.2
+      yup: 1.4.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   function-bind@1.1.2: {}
 
   function.prototype.name@1.1.6:
@@ -39940,7 +40146,7 @@ snapshots:
       source-map: 0.6.1
       wordwrap: 1.0.0
     optionalDependencies:
-      uglify-js: 3.18.0
+      uglify-js: 3.19.2
 
   har-schema@2.0.0: {}
 
@@ -40824,7 +41030,7 @@ snapshots:
 
   jayson@4.1.0(bufferutil@4.0.7)(utf-8-validate@5.0.10):
     dependencies:
-      '@types/connect': 3.4.35
+      '@types/connect': 3.4.38
       '@types/node': 12.20.55
       '@types/ws': 7.4.7
       JSONStream: 1.3.5
@@ -40842,7 +41048,7 @@ snapshots:
 
   jayson@4.1.0(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
-      '@types/connect': 3.4.35
+      '@types/connect': 3.4.38
       '@types/node': 12.20.55
       '@types/ws': 7.4.7
       JSONStream: 1.3.5
@@ -40860,7 +41066,7 @@ snapshots:
 
   jayson@4.1.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
     dependencies:
-      '@types/connect': 3.4.35
+      '@types/connect': 3.4.38
       '@types/node': 12.20.55
       '@types/ws': 7.4.7
       JSONStream: 1.3.5
@@ -40878,7 +41084,7 @@ snapshots:
 
   jayson@4.1.0(bufferutil@4.0.8)(utf-8-validate@6.0.4):
     dependencies:
-      '@types/connect': 3.4.35
+      '@types/connect': 3.4.38
       '@types/node': 12.20.55
       '@types/ws': 7.4.7
       JSONStream: 1.3.5
@@ -49076,6 +49282,8 @@ snapshots:
   ufo@1.5.3: {}
 
   uglify-js@3.18.0: {}
+
+  uglify-js@3.19.2: {}
 
   uid-promise@1.0.0: {}
 

@@ -1,7 +1,7 @@
 #include "imports/stdlib.fc";
-#include "imports/errors.fc";
-#include "imports/utils.fc";
-#include "imports/storage.fc";
+#include "common/errors.fc";
+#include "common/utils.fc";
+#include "common/storage.fc";
 
 ;; Signature verification function
 ;; ECRECOVER: Recovers the signer's address from the signature
@@ -55,39 +55,15 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
     return (expiration_time, keys, key_count);
 }
 
-;; store_data stores data in the contract
-() store_data() impure inline_ref {
-    begin_cell()
-        .store_uint(current_guardian_set_index, 32)
-        .store_dict(guardian_sets)
-        .store_uint(chain_id, 16)
-        .store_uint(governance_chain_id, 16)
-        .store_uint(governance_contract, 256)
-        .store_dict(consumed_governance_actions)
-        .end_cell()
-        .set_data();
-}
-
-;; load_data populates storage variables using stored data
-() load_data() impure inline_ref {
-    var ds = get_data().begin_parse();
-    current_guardian_set_index = ds~load_uint(32);
-    guardian_sets = ds~load_dict();
-    (int expiration_time, cell keys, int key_count) = get_guardian_set_internal(current_guardian_set_index);
-    chain_id = ds~load_uint(16);
-    governance_chain_id = ds~load_uint(16);
-    governance_contract = ds~load_uint(256);
-    consumed_governance_actions = ds~load_dict();
-    ds.end_parse();
-}
-
 
 ;; Get methods
 int get_current_guardian_set_index() method_id {
+    load_data();
     return current_guardian_set_index;
 }
 
 (int, cell, int) get_guardian_set(int index) method_id {
+    load_data();
     return get_guardian_set_internal(index);
 }
 
@@ -137,6 +113,7 @@ int governance_action_is_consumed(int hash) method_id {
 }
 
 (int, int, int, int, int, int, int, int, slice, int) parse_and_verify_wormhole_vm(slice in_msg_body) impure {
+    load_data();
     ;; Parse VM fields
     int version = in_msg_body~load_uint(8);
     throw_unless(ERROR_INVALID_VERSION, version == 1);
@@ -273,6 +250,7 @@ int governance_action_is_consumed(int hash) method_id {
 
     ;; Mark the governance action as consumed
     consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());
+    store_data();
 }
 
 () execute_governance_action(slice in_msg_body) impure {
