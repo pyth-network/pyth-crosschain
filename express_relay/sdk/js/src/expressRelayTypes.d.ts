@@ -404,13 +404,8 @@ export type ExpressRelay = {
     },
     {
       code: 6007;
-      name: "insufficientRouterRent";
-      msg: "Insufficient router funds for rent";
-    },
-    {
-      code: 6008;
-      name: "insufficientRelayerFeeReceiverRent";
-      msg: "Insufficient relayer fee receiver funds for rent";
+      name: "insufficientRent";
+      msg: "Insufficient funds for rent";
     }
   ];
   types: [
