@@ -7,13 +7,13 @@ Utility library for interacting with the Pyth Express Relay API.
 ### npm
 
 ```
-$ npm install --save @pythnetwork/express-relay-evm-js
+$ npm install --save @pythnetwork/express-relay-js
 ```
 
 ### Yarn
 
 ```
-$ yarn add @pythnetwork/express-relay-evm-js
+$ yarn add @pythnetwork/express-relay-js
 ```
 
 ## Development
@@ -37,7 +37,7 @@ import {
   Client,
   OpportunityParams,
   BidParams,
-} from "@pythnetwork/express-relay-evm-js";
+} from "@pythnetwork/express-relay-js";
 
 function calculateOpportunityBid(opportunity: Opportunity): BidParams | null {
   // searcher implementation here
