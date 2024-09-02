@@ -2,7 +2,13 @@ import { Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
-import { pythOracleProgram } from "@pythnetwork/client";
+import {
+  pythOracleProgram,
+  PythHttpClient,
+  parseBaseData,
+  AccountType,
+  parsePriceData,
+} from "@pythnetwork/client";
 import {
   PythCluster,
   getPythClusterApiUrl,
@@ -33,9 +39,9 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
+  findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
-  findDetermisticStakeAccountAddress,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -499,6 +505,59 @@ multisigCommand(
       DEFAULT_PRIORITY_FEE_CONFIG
     );
   });
+
+multisigCommand(
+  "init-price-feed-index",
+  "Init price feed indexes to migrate old price feed accounts to the new index"
+).action(async (options: any) => {
+  const vault = await loadVaultFromOptions(options);
+
+  const cluster: PythCluster = options.cluster;
+  const oracleProgramId = getPythProgramKeyForCluster(cluster);
+  const connection = new Connection(getPythClusterApiUrl(cluster));
+
+  const allPythAccounts = await connection.getProgramAccounts(oracleProgramId);
+
+  const pricePubkeysToInitialize = [];
+
+  for (const account of allPythAccounts) {
+    const data = account.account.data;
+    const pubkey = account.pubkey;
+
+    const base = parseBaseData(data);
+    if (base?.type === AccountType.Price) {
+      const parsed = parsePriceData(data);
+      if (parsed.feedIndex === 0) {
+        pricePubkeysToInitialize.push(pubkey);
+      }
+    }
+  }
+
+  // Create instructions to initialize the price feed indexes
+  const oracleProgram = pythOracleProgram(
+    oracleProgramId,
+    vault.getAnchorProvider()
+  );
+
+  const instructions: TransactionInstruction[] = [];
+  for (const pubkey of pricePubkeysToInitialize) {
+    instructions.push(
+      await oracleProgram.methods
+        .initPriceFeedIndex()
+        .accounts({
+          fundingAccount: await vault.getVaultAuthorityPDA(cluster),
+          priceAccount: pubkey,
+        })
+        .instruction()
+    );
+  }
+
+  await vault.proposeInstructions(
+    instructions,
+    cluster,
+    DEFAULT_PRIORITY_FEE_CONFIG
+  );
+});
 
 program
   .command("parse-transaction")
