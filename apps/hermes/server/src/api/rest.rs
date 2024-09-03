@@ -14,6 +14,7 @@ use {
 mod get_price_feed;
 mod get_vaa;
 mod get_vaa_ccip;
+mod get_publisher_stake_caps_message;
 mod index;
 mod latest_price_feeds;
 mod latest_vaas;
@@ -27,6 +28,7 @@ pub use {
     get_price_feed::*,
     get_vaa::*,
     get_vaa_ccip::*,
+    get_publisher_stake_caps_message::*,
     index::*,
     latest_price_feeds::*,
     latest_vaas::*,
