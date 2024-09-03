@@ -551,7 +551,7 @@ importers:
       '@openzeppelin/contracts':
         specifier: ^4.5.0
         version: 4.8.1
-      '@pythnetwork/express-relay-evm-js':
+      '@pythnetwork/express-relay-js':
         specifier: workspace:*
         version: link:../../sdk/js
       '@pythnetwork/express-relay-sdk-solidity':
