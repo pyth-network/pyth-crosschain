@@ -180,14 +180,13 @@ export class EvmPricePusher implements IPricePusher {
       throw e;
     }
 
-    const fees = await this.client.estimateFeesPerGas();
-
-    this.logger.debug({ fees }, "Estimated fees");
-
+    // Gas price in networks with transaction type eip1559 represents the
+    // addition of baseFee and priorityFee required to land the transaction. We
+    // are using this to remain compatible with the networks that doesn't
+    // support this transaction type.
     let gasPrice =
       Number(await this.customGasStation?.getCustomGasPrice()) ||
-      Number(fees.gasPrice) ||
-      Number(fees.maxFeePerGas);
+      Number(await this.client.getGasPrice());
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     if (this.pusherAddress === undefined) {
