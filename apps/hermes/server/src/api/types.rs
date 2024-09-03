@@ -233,7 +233,7 @@ impl EncodingType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct BinaryPriceUpdate {
+pub struct BinaryUpdate {
     pub encoding: EncodingType,
     pub data:     Vec<String>,
 }
@@ -274,15 +274,15 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct PublisherStakeCapsUpdateResponse {
-    pub binary: BinaryPriceUpdate,
+pub struct GetPublisherStakeCapsUpdateDataResponse {
+    pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<Vec<PublisherStakeCapsUpdate>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceUpdate {
-    pub binary: BinaryPriceUpdate,
+    pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<Vec<ParsedPriceUpdate>>,
 }

@@ -127,7 +127,7 @@ where
                 types::RpcPriceIdentifier,
                 types::EncodingType,
                 types::PriceUpdate,
-                types::BinaryPriceUpdate,
+                types::BinaryUpdate,
                 types::ParsedPriceUpdate,
                 types::RpcPriceFeedMetadataV2,
                 types::PriceFeedMetadata,

@@ -3,9 +3,9 @@ use {
         api::{
             rest::RestError,
             types::{
-                BinaryPriceUpdate,
+                BinaryUpdate,
                 EncodingType,
-                PublisherStakeCapsUpdateResponse,
+                GetPublisherStakeCapsUpdateDataResponse,
             },
             ApiState,
         },
@@ -31,12 +31,12 @@ use {
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
-pub struct GetPublisherStakeCapsMessageQueryParams {
+pub struct GetPublisherStakeCapsUpdateData {
     /// Optional encoding type. If true, return the message in the encoding specified by the encoding parameter. Default is `hex`.
     #[serde(default)]
     encoding: EncodingType,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
+    /// If true, include the parsed update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
 }
@@ -46,38 +46,37 @@ fn default_true() -> bool {
 }
 
 
-/// Get the publisher stake caps message
-///
+/// Get the publisher stake caps update data
 #[utoipa::path(
     get,
     path = "/api/get_publisher_stake_caps_update_data",
     responses(
-        (status = 200, description = "Publisher stake caps message retrieved succesfully", body = Vec<PriceFeedMetadata>)
+        (status = 200, description = "Publisher stake caps update data retrieved succesfully", body = Vec<PriceFeedMetadata>)
     ),
     params(
-        GetPublisherStakeCapsMessageQueryParams
+        GetPublisherStakeCapsUpdateData
     )
 )]
 pub async fn get_publisher_stake_caps_update_data<S>(
     State(state): State<ApiState<S>>,
-    QsQuery(params): QsQuery<GetPublisherStakeCapsMessageQueryParams>,
-) -> Result<Json<PublisherStakeCapsUpdateResponse>, RestError>
+    QsQuery(params): QsQuery<GetPublisherStakeCapsUpdateData>,
+) -> Result<Json<GetPublisherStakeCapsUpdateDataResponse>, RestError>
 where
     S: Aggregates,
 {
-    let state = &state.state;
-    let publisher_update_caps_data =
-        state
-            .get_publisher_stake_caps_update_data()
+    let state = &*state.state;
+    let publisher_stake_caps_with_update_data =
+        Aggregates::get_publisher_stake_caps_with_update_data(state)
             .await
             .map_err(|e| {
-                tracing::warn!("RPC connection error: {}", e);
-                RestError::RpcConnectionError {
-                    message: format!("RPC connection error: {}", e),
-                }
+                tracing::warn!(
+                    "Error getting publisher stake caps with update data: {:?}",
+                    e
+                );
+                RestError::UpdateDataNotFound
             })?;
 
-    let encoded_data: Vec<String> = publisher_update_caps_data
+    let encoded_data: Vec<String> = publisher_stake_caps_with_update_data
         .update_data
         .into_iter()
         .map(|data| match params.encoding {
@@ -86,16 +85,19 @@ where
         })
         .collect();
 
-    let binary = BinaryPriceUpdate {
+    let binary = BinaryUpdate {
         encoding: params.encoding,
         data:     encoded_data,
     };
 
     let parsed: Option<Vec<PublisherStakeCapsUpdate>> = if params.parsed {
-        Some(publisher_update_caps_data.publisher_stake_caps)
+        Some(publisher_stake_caps_with_update_data.publisher_stake_caps)
     } else {
         None
     };
 
-    Ok(Json(PublisherStakeCapsUpdateResponse { binary, parsed }))
+    Ok(Json(GetPublisherStakeCapsUpdateDataResponse {
+        binary,
+        parsed,
+    }))
 }

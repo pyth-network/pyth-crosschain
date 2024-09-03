@@ -6,7 +6,7 @@ use {
                 RestError,
             },
             types::{
-                BinaryPriceUpdate,
+                BinaryUpdate,
                 EncodingType,
                 ParsedPriceUpdate,
                 PriceIdInput,
@@ -108,7 +108,7 @@ where
             EncodingType::Hex => hex::encode(data),
         })
         .collect();
-    let binary_price_update = BinaryPriceUpdate {
+    let binary_price_update = BinaryUpdate {
         encoding: params.encoding,
         data:     encoded_data,
     };
