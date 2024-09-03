@@ -55,7 +55,6 @@ wormhole-sdk       = { git     = "https://github.com/wormhole-foundation/wormhol
 solana-client          = { version = "=1.16.19" }
 solana-sdk             = { version = "=1.16.19" }
 solana-account-decoder = { version = "=1.16.19" }
-serde_with = "3.9.0"
 
 
 [build-dependencies]
