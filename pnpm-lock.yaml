@@ -49,8 +49,8 @@ importers:
         specifier: ^14.2.4
         version: 14.2.4(next@14.2.4(@babel/core@7.24.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:^
         version: link:../../target_chains/ethereum/sdk/solidity
@@ -68,7 +68,7 @@ importers:
         version: 2.1.1
       connectkit:
         specifier: ^1.8.2
-        version: 1.8.2(m5fu6jwi7nvuqo5lp7m3jyfehy)
+        version: 1.8.2(@babel/core@7.24.7)(@tanstack/react-query@5.45.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(wagmi@2.10.4(@react-native-async-storage/async-storage@1.23.1(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.45.0)(@tanstack/react-query@5.45.1(react@18.3.1))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))
       cryptocurrency-icons:
         specifier: ^0.18.1
         version: 0.18.1
@@ -455,8 +455,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(svelte@4.2.18)(typescript@5.4.5)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/contract-manager':
         specifier: workspace:*
         version: 'link:'
@@ -677,8 +677,8 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -708,8 +708,8 @@ importers:
         specifier: ^1.10.72
         version: 1.14.7(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -736,8 +736,8 @@ importers:
         specifier: ^1.10.72
         version: 1.14.7(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -779,8 +779,8 @@ importers:
         specifier: ^6.27.10
         version: 6.27.10
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-solana-receiver':
         specifier: workspace:*
         version: link:../../../../target_chains/solana/sdk/js/pyth_solana_receiver
@@ -821,8 +821,8 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-solana-receiver':
         specifier: workspace:*
         version: link:../../../../target_chains/solana/sdk/js/pyth_solana_receiver
@@ -888,8 +888,8 @@ importers:
         specifier: ^1.7.7
         version: 1.7.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@pythnetwork/client':
-        specifier: ^2.21.1
-        version: 2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: ^2.22.0
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/solana-utils':
         specifier: workspace:^
         version: link:../../../../target_chains/solana/sdk/js/solana_utils
@@ -1380,7 +1380,7 @@ importers:
         version: 0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@6.0.3)
       '@matterlabs/hardhat-zksync':
         specifier: ^1.1.0
-        version: 1.1.0(rddwq4exibnjen7dpexnm3ayw4)
+        version: 1.1.0(@matterlabs/hardhat-zksync-deploy@0.6.6(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(zksync-web3@0.13.4(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))))(@matterlabs/hardhat-zksync-ethers@1.1.0(bufferutil@4.0.7)(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)(zksync-ethers@6.11.2(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))))(@matterlabs/hardhat-zksync-node@1.1.1(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(@matterlabs/hardhat-zksync-solc@0.3.17(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(@matterlabs/hardhat-zksync-upgradable@1.5.2(bufferutil@4.0.7)(encoding@0.1.13)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(@matterlabs/hardhat-zksync-verify@1.6.0(@nomicfoundation/hardhat-verify@2.0.9(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)
       '@matterlabs/hardhat-zksync-deploy':
         specifier: ^0.6.6
         version: 0.6.6(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(zksync-web3@0.13.4(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3)))
@@ -6082,8 +6082,8 @@ packages:
     peerDependencies:
       '@solana/web3.js': 1.92.3
 
-  '@pythnetwork/client@2.21.1':
-    resolution: {integrity: sha512-nSpI1qjmbyrFTetfJSDqjzT+AAJYG3xUmDYFnExAFrnhiO5C8FPvMw1zkSYXWRvEwHFISKJLsn1sTIqU9ifaCA==}
+  '@pythnetwork/client@2.22.0':
+    resolution: {integrity: sha512-Cyv23YqewKUL1pcm99jfmdetUa2aaUXjyRF9jvSeFcY895FddRu7uSWftYiaevsnx7vn4WbJgQR6ExxH+aONow==}
     peerDependencies:
       '@solana/web3.js': 1.92.3
 
@@ -27417,8 +27417,8 @@ snapshots:
       - encoding
       - supports-color
 
-  '@matterlabs/hardhat-zksync@1.1.0(rddwq4exibnjen7dpexnm3ayw4)':
-    dependencies:
+  ? '@matterlabs/hardhat-zksync@1.1.0(@matterlabs/hardhat-zksync-deploy@0.6.6(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(zksync-web3@0.13.4(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))))(@matterlabs/hardhat-zksync-ethers@1.1.0(bufferutil@4.0.7)(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)(zksync-ethers@6.11.2(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))))(@matterlabs/hardhat-zksync-node@1.1.1(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(@matterlabs/hardhat-zksync-solc@0.3.17(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(@matterlabs/hardhat-zksync-upgradable@1.5.2(bufferutil@4.0.7)(encoding@0.1.13)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(@matterlabs/hardhat-zksync-verify@1.6.0(@nomicfoundation/hardhat-verify@2.0.9(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)))(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)'
+  : dependencies:
       '@matterlabs/hardhat-zksync-deploy': 0.6.6(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))(zksync-web3@0.13.4(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3)))
       '@matterlabs/hardhat-zksync-ethers': 1.1.0(bufferutil@4.0.7)(encoding@0.1.13)(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3))(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3)(zksync-ethers@6.11.2(ethers@5.7.2(bufferutil@4.0.7)(utf-8-validate@6.0.3)))
       '@matterlabs/hardhat-zksync-node': 1.1.1(encoding@0.1.13)(hardhat@2.22.8(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.2.0)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@6.0.3))
@@ -28772,7 +28772,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@pythnetwork/client@2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+  '@pythnetwork/client@2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))
@@ -28783,7 +28783,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@pythnetwork/client@2.21.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+  '@pythnetwork/client@2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
@@ -33345,8 +33345,8 @@ snapshots:
 
   '@vue/shared@3.4.34': {}
 
-  '@wagmi/connectors@5.0.16(mehtb7r3xxh3anmscqllj3vxmi)':
-    dependencies:
+  ? '@wagmi/connectors@5.0.16(@react-native-async-storage/async-storage@1.23.1(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10)))(@types/react@18.3.3)(@wagmi/core@2.11.4(@tanstack/query-core@5.45.0)(@types/react@18.3.3)(bufferutil@4.0.8)(immer@9.0.21)(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))(bufferutil@4.0.8)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)'
+  : dependencies:
       '@coinbase/wallet-sdk': 4.0.3
       '@metamask/sdk': 0.26.0(bufferutil@4.0.8)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(utf-8-validate@5.0.10)
       '@safe-global/safe-apps-provider': 0.18.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8)
@@ -36215,8 +36215,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  connectkit@1.8.2(m5fu6jwi7nvuqo5lp7m3jyfehy):
-    dependencies:
+  ? connectkit@1.8.2(@babel/core@7.24.7)(@tanstack/react-query@5.45.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(wagmi@2.10.4(@react-native-async-storage/async-storage@1.23.1(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.45.0)(@tanstack/react-query@5.45.1(react@18.3.1))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))
+  : dependencies:
       '@tanstack/react-query': 5.45.1(react@18.3.1)
       buffer: 6.0.3
       detect-browser: 5.3.0
@@ -49599,7 +49599,7 @@ snapshots:
   wagmi@2.10.4(@react-native-async-storage/async-storage@1.23.1(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.45.0)(@tanstack/react-query@5.45.1(react@18.3.1))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8):
     dependencies:
       '@tanstack/react-query': 5.45.1(react@18.3.1)
-      '@wagmi/connectors': 5.0.16(mehtb7r3xxh3anmscqllj3vxmi)
+      '@wagmi/connectors': 5.0.16(@react-native-async-storage/async-storage@1.23.1(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10)))(@types/react@18.3.3)(@wagmi/core@2.11.4(@tanstack/query-core@5.45.0)(@types/react@18.3.3)(bufferutil@4.0.8)(immer@9.0.21)(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))(bufferutil@4.0.8)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1))(react-native@0.74.2(@babel/core@7.24.7)(@babel/preset-env@7.24.7(@babel/core@7.24.7))(@types/react@18.3.3)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
       '@wagmi/core': 2.11.4(@tanstack/query-core@5.45.0)(@types/react@18.3.3)(bufferutil@4.0.8)(immer@9.0.21)(react@18.3.1)(typescript@5.5.2)(utf-8-validate@5.0.10)(viem@2.15.1(bufferutil@4.0.8)(typescript@5.5.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
       react: 18.3.1
       use-sync-external-store: 1.2.0(react@18.3.1)
