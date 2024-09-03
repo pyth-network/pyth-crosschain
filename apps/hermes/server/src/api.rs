@@ -150,7 +150,10 @@ where
         .route("/api/get_price_feed", get(rest::get_price_feed))
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
-        .route("/api/get_publisher_stake_caps_message", get(rest::get_publisher_stake_caps_message))
+        .route(
+            "/api/get_publisher_stake_caps_message",
+            get(rest::get_publisher_stake_caps_message),
+        )
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))

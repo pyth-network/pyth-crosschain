@@ -3,7 +3,6 @@ use mock_instant::{
     SystemTime,
     UNIX_EPOCH,
 };
-use pythnet_sdk::messages::PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID;
 #[cfg(not(test))]
 use std::time::{
     SystemTime,
@@ -46,6 +45,7 @@ use {
         messages::{
             Message,
             MessageType,
+            PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID,
         },
         wire::{
             from_slice,
@@ -243,10 +243,7 @@ where
         price_ids: &[PriceIdentifier],
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData>;
-    async fn get_publisher_stake_caps_update_data(
-        &self
-    ) -> Result<Vec<Vec<u8>>>;
-
+    async fn get_publisher_stake_caps_update_data(&self) -> Result<Vec<Vec<u8>>>;
 }
 
 /// Allow downcasting State into CacheState for functions that depend on the `Cache` service.
@@ -408,19 +405,17 @@ where
         }
     }
 
-    async fn get_publisher_stake_caps_update_data(
-        &self
-    ) -> Result<Vec<Vec<u8>>> {
+    async fn get_publisher_stake_caps_update_data(&self) -> Result<Vec<Vec<u8>>> {
         let messages = self
-        .fetch_message_states(
-            vec![PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID],
-            RequestTime::Latest,
-            MessageStateFilter::Only(MessageType::PublisherStakeCapsMessage),
-        )
-        .await?;
+            .fetch_message_states(
+                vec![PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID],
+                RequestTime::Latest,
+                MessageStateFilter::Only(MessageType::PublisherStakeCapsMessage),
+            )
+            .await?;
 
-    let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
-    Ok(update_data)
+        let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
+        Ok(update_data)
     }
 
     async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
