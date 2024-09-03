@@ -17,6 +17,10 @@ use {
         WormholeMerkleState,
     },
     crate::{
+        api::types::{
+            ParsedPublisherStakeCap,
+            ParsedPublisherStakeCapsUpdate,
+        },
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
@@ -56,10 +60,6 @@ use {
         },
     },
     serde::Serialize,
-    serde_with::{
-        serde_as,
-        DisplayFromStr,
-    },
     solana_sdk::pubkey::Pubkey,
     std::{
         collections::HashSet,
@@ -214,19 +214,6 @@ pub struct PriceFeedUpdate {
     pub prev_publish_time: Option<UnixTimestamp>,
 }
 
-#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
-pub struct PublisherStakeCapsUpdate {
-    pub publisher_stake_caps: Vec<SerdePublisherStakeCap>,
-}
-
-#[serde_as]
-#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
-pub struct SerdePublisherStakeCap {
-    #[serde_as(as = "DisplayFromStr")]
-    pub publisher: Pubkey,
-    pub cap:       u64,
-}
-
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedsWithUpdateData {
     pub price_feeds: Vec<PriceFeedUpdate>,
@@ -235,7 +222,7 @@ pub struct PriceFeedsWithUpdateData {
 
 #[derive(Debug, PartialEq)]
 pub struct PublisherStakeCapsWithUpdateData {
-    pub publisher_stake_caps: Vec<PublisherStakeCapsUpdate>,
+    pub publisher_stake_caps: Vec<ParsedPublisherStakeCapsUpdate>,
     pub update_data:          Vec<Vec<u8>>,
 }
 
@@ -444,11 +431,11 @@ where
         let publisher_stake_caps = messages
             .iter()
             .map(|message_state| match message_state.message.clone() {
-                Message::PublisherStakeCapsMessage(message) => Ok(PublisherStakeCapsUpdate {
+                Message::PublisherStakeCapsMessage(message) => Ok(ParsedPublisherStakeCapsUpdate {
                     publisher_stake_caps: message
                         .caps
                         .iter()
-                        .map(|cap| SerdePublisherStakeCap {
+                        .map(|cap| ParsedPublisherStakeCap {
                             publisher: Pubkey::from(cap.publisher),
                             cap:       cap.cap,
                         })

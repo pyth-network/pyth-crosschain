@@ -6,13 +6,11 @@ use {
                 BinaryUpdate,
                 EncodingType,
                 GetPublisherStakeCapsUpdateDataResponse,
+                ParsedPublisherStakeCapsUpdate,
             },
             ApiState,
         },
-        state::{
-            aggregate::PublisherStakeCapsUpdate,
-            Aggregates,
-        },
+        state::Aggregates,
     },
     anyhow::Result,
     axum::{
@@ -90,7 +88,7 @@ where
         data:     encoded_data,
     };
 
-    let parsed: Option<Vec<PublisherStakeCapsUpdate>> = if params.parsed {
+    let parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>> = if params.parsed {
         Some(publisher_stake_caps_with_update_data.publisher_stake_caps)
     } else {
         None

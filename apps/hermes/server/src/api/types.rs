@@ -3,7 +3,6 @@ use {
     crate::state::aggregate::{
         PriceFeedUpdate,
         PriceFeedsWithUpdateData,
-        PublisherStakeCapsUpdate,
         Slot,
         UnixTimestamp,
     },
@@ -29,6 +28,7 @@ use {
         Deserialize,
         Serialize,
     },
+    solana_sdk::pubkey::Pubkey,
     std::{
         collections::BTreeMap,
         fmt::{
@@ -273,11 +273,23 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 
+#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ParsedPublisherStakeCapsUpdate {
+    pub publisher_stake_caps: Vec<ParsedPublisherStakeCap>,
+}
+
+#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ParsedPublisherStakeCap {
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    pub publisher: Pubkey,
+    pub cap:       u64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct GetPublisherStakeCapsUpdateDataResponse {
     pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<PublisherStakeCapsUpdate>>,
+    pub parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
