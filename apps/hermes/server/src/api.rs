@@ -151,8 +151,8 @@ where
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
         .route(
-            "/api/get_publisher_stake_caps_message",
-            get(rest::get_publisher_stake_caps_message),
+            "/api/get_publisher_stake_caps_update_data",
+            get(rest::get_publisher_stake_caps_update_data),
         )
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
