@@ -3,6 +3,7 @@ use {
     crate::state::aggregate::{
         PriceFeedUpdate,
         PriceFeedsWithUpdateData,
+        PublisherStakeCapsUpdate,
         Slot,
         UnixTimestamp,
     },
@@ -39,6 +40,7 @@ use {
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
+
 
 /// A price id is a 32-byte hex string, optionally prefixed with "0x".
 /// Price ids are case insensitive.
@@ -269,6 +271,13 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
             },
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct PublisherStakeCapsUpdateResponse {
+    pub binary: BinaryPriceUpdate,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parsed: Option<Vec<PublisherStakeCapsUpdate>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

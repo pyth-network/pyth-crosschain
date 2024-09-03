@@ -56,6 +56,11 @@ use {
         },
     },
     serde::Serialize,
+    serde_with::{
+        serde_as,
+        DisplayFromStr,
+    },
+    solana_sdk::pubkey::Pubkey,
     std::{
         collections::HashSet,
         time::Duration,
@@ -69,7 +74,6 @@ use {
     },
     wormhole_sdk::Vaa,
 };
-
 pub mod metrics;
 pub mod wormhole_merkle;
 
@@ -210,10 +214,29 @@ pub struct PriceFeedUpdate {
     pub prev_publish_time: Option<UnixTimestamp>,
 }
 
+#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
+pub struct PublisherStakeCapsUpdate {
+    pub publisher_stake_caps: Vec<SerdePublisherStakeCap>,
+}
+
+#[serde_as]
+#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone)]
+pub struct SerdePublisherStakeCap {
+    #[serde_as(as = "DisplayFromStr")]
+    pub publisher: Pubkey,
+    pub cap:       u64,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedsWithUpdateData {
     pub price_feeds: Vec<PriceFeedUpdate>,
     pub update_data: Vec<Vec<u8>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PublisherStakeCapsWithUpdateData {
+    pub publisher_stake_caps: Vec<PublisherStakeCapsUpdate>,
+    pub update_data:          Vec<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -243,7 +266,9 @@ where
         price_ids: &[PriceIdentifier],
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData>;
-    async fn get_publisher_stake_caps_update_data(&self) -> Result<Vec<Vec<u8>>>;
+    async fn get_publisher_stake_caps_update_data(
+        &self,
+    ) -> Result<PublisherStakeCapsWithUpdateData>;
 }
 
 /// Allow downcasting State into CacheState for functions that depend on the `Cache` service.
@@ -405,7 +430,9 @@ where
         }
     }
 
-    async fn get_publisher_stake_caps_update_data(&self) -> Result<Vec<Vec<u8>>> {
+    async fn get_publisher_stake_caps_update_data(
+        &self,
+    ) -> Result<PublisherStakeCapsWithUpdateData> {
         let messages = self
             .fetch_message_states(
                 vec![PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID],
@@ -414,8 +441,28 @@ where
             )
             .await?;
 
+        let publisher_stake_caps = messages
+            .iter()
+            .map(|message_state| match message_state.message.clone() {
+                Message::PublisherStakeCapsMessage(message) => Ok(PublisherStakeCapsUpdate {
+                    publisher_stake_caps: message
+                        .caps
+                        .iter()
+                        .map(|cap| SerdePublisherStakeCap {
+                            publisher: Pubkey::from(cap.publisher),
+                            cap:       cap.cap,
+                        })
+                        .collect(),
+                }),
+                _ => Err(anyhow!("Invalid message state type")),
+            })
+            .collect::<Result<Vec<_>>>()?;
+
         let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
-        Ok(update_data)
+        Ok(PublisherStakeCapsWithUpdateData {
+            publisher_stake_caps,
+            update_data,
+        })
     }
 
     async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {

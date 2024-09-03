@@ -5,10 +5,14 @@ use {
             types::{
                 BinaryPriceUpdate,
                 EncodingType,
+                PublisherStakeCapsUpdateResponse,
             },
             ApiState,
         },
-        state::Aggregates,
+        state::{
+            aggregate::PublisherStakeCapsUpdate,
+            Aggregates,
+        },
     },
     anyhow::Result,
     axum::{
@@ -24,13 +28,23 @@ use {
     utoipa::IntoParams,
 };
 
+
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct GetPublisherStakeCapsMessageQueryParams {
     /// Optional encoding type. If true, return the message in the encoding specified by the encoding parameter. Default is `hex`.
     #[serde(default)]
     encoding: EncodingType,
+
+    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
+    #[serde(default = "default_true")]
+    parsed: bool,
 }
+
+fn default_true() -> bool {
+    true
+}
+
 
 /// Get the publisher stake caps message
 ///
@@ -47,7 +61,7 @@ pub struct GetPublisherStakeCapsMessageQueryParams {
 pub async fn get_publisher_stake_caps_message<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<GetPublisherStakeCapsMessageQueryParams>,
-) -> Result<Json<BinaryPriceUpdate>, RestError>
+) -> Result<Json<PublisherStakeCapsUpdateResponse>, RestError>
 where
     S: Aggregates,
 {
@@ -64,6 +78,7 @@ where
             })?;
 
     let encoded_data: Vec<String> = publisher_update_caps_data
+        .update_data
         .into_iter()
         .map(|data| match params.encoding {
             EncodingType::Base64 => base64_standard_engine.encode(data),
@@ -71,10 +86,16 @@ where
         })
         .collect();
 
-    let binary_price_update = BinaryPriceUpdate {
+    let binary = BinaryPriceUpdate {
         encoding: params.encoding,
         data:     encoded_data,
     };
 
-    Ok(Json(binary_price_update))
+    let parsed: Option<Vec<PublisherStakeCapsUpdate>> = if params.parsed {
+        Some(publisher_update_caps_data.publisher_stake_caps)
+    } else {
+        None
+    };
+
+    Ok(Json(PublisherStakeCapsUpdateResponse { binary, parsed }))
 }
