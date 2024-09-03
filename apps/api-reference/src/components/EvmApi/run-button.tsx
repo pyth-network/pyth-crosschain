@@ -88,14 +88,23 @@ export const RunButton = <ParameterName extends string>(
       {status.type === StatusType.Results && (
         <div>
           <h3 className="mb-2 text-lg font-bold">Results</h3>
-          {props.type === EvmApiType.Write && status.data && typeof status.data === 'object' && 'hash' in status.data && typeof status.data.hash === 'string' ? (
+          {props.type === EvmApiType.Write &&
+          status.data &&
+          typeof status.data === "object" &&
+          "hash" in status.data &&
+          typeof status.data.hash === "string" ? (
             <>
-              <Code language="json">{`Tx Hash: ${status.data.hash}`}</Code>
-              {'link' in status.data && typeof status.data.link === 'string' && (
-                <a href={status.data.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">
-                  Open in explorer↗
-                </a>
-              )}
+              <p>{`Tx Hash: ${status.data.hash}`}</p>
+              {"link" in status.data &&
+                typeof status.data.link === "string" && (
+                  <InlineLink
+                    href={status.data.link}
+                    target="_blank"
+                    className="text-sm text-blue-500 hover:underline"
+                  >
+                    Open in explorer↗
+                  </InlineLink>
+                )}
             </>
           ) : (
             <Code language="json">{stringifyResponse(status.data)}</Code>
@@ -186,15 +195,20 @@ const useRunButton = <ParameterName extends string>({
             })
               .then(({ request }) => writeContract(config, request))
               .then((result) => {
-                const output: {hash: string, link?: string} = {hash: result};
-                if (config.chains[0].blockExplorers?.default !== undefined) {
-                  const blockExplorerTxLink = `${config.chains[0].blockExplorers.default.url}/tx/${result}`;
-                  output.link = blockExplorerTxLink;
-                }
-                setStatus(Results(output));
+                const explorer = config.chains.find(
+                  (chain) => chain.id === config.state.chainId,
+                )?.blockExplorers?.default;
+                setStatus(
+                  Results({
+                    hash: result,
+                    link: explorer
+                      ? new URL(`/tx/${result}`, explorer.url).toString()
+                      : undefined,
+                  }),
+                );
               })
               .catch((error: unknown) => {
-                setStatus(ErrorStatus(error))
+                setStatus(ErrorStatus(error));
               });
           }
           return;
