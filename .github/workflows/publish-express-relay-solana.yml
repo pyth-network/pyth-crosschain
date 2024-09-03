@@ -1,0 +1,17 @@
+name: Publish Express Relay SDK (Solana) for Rust to crates.io
+
+on:
+  push:
+    tags:
+      - express-relay-sdk-solana-rust-v*
+jobs:
+  publish-express-relay-sdk-solana-rust:
+    name: Publish Express Relay SDK (Solana) for Rust
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        working-directory: "express_relay/sdk/solana_rust"
