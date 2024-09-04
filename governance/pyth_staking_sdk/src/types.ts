@@ -36,6 +36,14 @@ export type PoolDataAccount = ConvertBNToBigInt<PoolDataAccountAnchor>;
 
 export type TargetWithParameters = IdlTypes<Staking>["targetWithParameters"];
 
+export type VestingScheduleAnchor = IdlTypes<Staking>["vestingSchedule"];
+export type VestingSchedule = ConvertBNToBigInt<VestingScheduleAnchor>;
+
+export type UnlockSchedule = {
+  date: Date;
+  amount: bigint;
+}[];
+
 export enum PositionState {
   UNLOCKED = 0,
   LOCKING = 1,

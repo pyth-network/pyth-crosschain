@@ -160,6 +160,10 @@ export const loadData = async (context: Context): Promise<Data> => {
   const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
   const currentEpoch = await getCurrentEpoch(context.connection);
 
+  const unlockSchedule = await pythStakingClient.getUnlockSchedule({
+    stakeAccountPositions: stakeAccountPositions.address
+  });
+
   return { ...MOCK_DATA['0x000000']!,
     total: stakeAccountCustody.amount,
     governance: {
@@ -168,6 +172,8 @@ export const loadData = async (context: Context): Promise<Data> => {
       cooldown: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.PREUNLOCKING, epoch: currentEpoch}),
       cooldown2: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.UNLOCKED, epoch: currentEpoch}),
     },
+    unlockSchedule,
+    locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
     walletAmount: ownerATAAccount.amount,
     integrityStakingPublishers: publishers.map(publisher => ({
       apyHistory: [],

@@ -8,6 +8,7 @@ import {
   getConfigAddress,
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
+  getStakeAccountMetadataAddress,
 } from "./pdas";
 import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
 import {
@@ -28,6 +29,7 @@ import {
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type { PublisherCaps } from "../types/publisher_caps";
+import { getUnlockSchedule } from "./utils/vesting";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -266,5 +268,26 @@ export class PythStakingClient {
         stakeAccountPositions,
       })
       .rpc();
+  }
+
+  public async getUnlockSchedule(options: {
+    stakeAccountPositions: PublicKey;
+  }) {
+    const { stakeAccountPositions } = options;
+    const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
+      stakeAccountPositions
+    );
+    const stakeAccountMetadata =
+      await this.stakingProgram.account.stakeAccountMetadataV2.fetch(
+        stakeAccountMetadataAddress
+      );
+    const vestingSchedule = convertBNToBigInt(stakeAccountMetadata.lock);
+
+    const config = await this.getGlobalConfig();
+
+    return getUnlockSchedule({
+      vestingSchedule,
+      pythTokenListTime: config.pythTokenListTime!,
+    });
   }
 }

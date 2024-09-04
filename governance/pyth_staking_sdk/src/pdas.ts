@@ -20,6 +20,15 @@ export const getStakeAccountCustodyAddress = (
   )[0];
 };
 
+export const getStakeAccountMetadataAddress = (
+  stakeAccountPositionsAddress: PublicKey
+) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("stake_metadata"), stakeAccountPositionsAddress.toBuffer()],
+    STAKING_PROGRAM_ADDRESS
+  )[0];
+};
+
 export const getPoolConfigAddress = () => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_config")],
