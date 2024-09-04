@@ -2,8 +2,8 @@ use {
     super::{validate_buffer, validate_publisher},
     crate::accounts::publisher_prices,
     solana_program::{
-        account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-        program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
+        account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, pubkey::Pubkey,
+        sysvar::Sysvar,
     },
 };
 
@@ -13,20 +13,18 @@ use {
 /// will be removed first.
 pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let mut accounts = accounts.iter();
-    let publisher = validate_publisher(accounts.next(), true)?;
+    let publisher = validate_publisher(accounts.next())?;
     let buffer = validate_buffer(accounts.next(), publisher.key, program_id)?;
 
     // Access and update PublisherPrices account with new data.
     let mut publisher_prices = buffer.0.data.borrow_mut();
-    let (header, prices) = publisher_prices::read_mut(*publisher_prices)
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+    let (header, prices) = publisher_prices::read_mut(*publisher_prices)?;
     let current_slot = Clock::get()?.slot;
     if header.slot != current_slot {
         header.slot = current_slot;
         header.num_prices = 0;
     }
-    publisher_prices::extend(header, prices, data)
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+    publisher_prices::extend(header, prices, data)?;
 
     Ok(())
 }

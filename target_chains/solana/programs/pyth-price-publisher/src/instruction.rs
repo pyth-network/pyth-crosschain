@@ -1,5 +1,8 @@
 use {
-    crate::ensure,
+    crate::{
+        accounts::{self, config::ReadAccountError},
+        ensure,
+    },
     solana_program::{
         account_info::AccountInfo, program_error::ProgramError, program_memory::sol_memcmp,
         pubkey::Pubkey, system_program,
@@ -15,29 +18,27 @@ pub use {
     submit_prices::submit_prices,
 };
 
-/// Seed used to derive the vault account holding funds for initializing
-/// publisher accounts. They cannot afford to pay for allocating accounts
-/// on PythNet without this account helping fund it.
-const VAULT_SEED: &str = "VAULT";
+/// Seed used to derive the config account.
+const CONFIG_SEED: &str = "CONFIG";
 
 /// Seed used to derive the associated buffer account that publishers can
 /// write their updates into.
 const BUFFER_SEED: &str = "BUFFER";
 
 /// Max number of prices allowed to be stored in a single publisher account.
-const MAX_NUM_PRICES: usize = 128;
+const MAX_NUM_PRICES: usize = 509;
 
 #[repr(u8)]
 pub enum Instruction {
     // key[0] payer     [signer writable]
-    // key[1] vault     [writable]
+    // key[1] config    [writable]
     // key[2] system    []
     Initialize,
     // key[0] publisher [signer writable]
     // key[1] buffer    [writable]
     SubmitPrices,
-    // key[0] publisher []
-    // key[1] vault     [writable]
+    // key[0] autority  [signer writable]
+    // key[1] config    []
     // key[2] buffer    [writable]
     // key[3] system    []
     InitializePublisher,
@@ -56,41 +57,26 @@ impl Instruction {
 
 fn validate_publisher<'a>(
     account: Option<&AccountInfo<'a>>,
-    require_signer_writable: bool,
 ) -> Result<AccountInfo<'a>, ProgramError> {
-    let publisher = account
-        .cloned()
-        .ok_or(ProgramError::InvalidInstructionData)?;
-    if require_signer_writable {
-        ensure!(
-            ProgramError::InvalidInstructionData,
-            publisher.is_signer,
-            publisher.is_writable
-        );
-    }
+    let publisher = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    ensure!(ProgramError::MissingRequiredSignature, publisher.is_signer);
+    ensure!(ProgramError::InvalidArgument, publisher.is_writable);
     Ok(publisher)
 }
 
 fn validate_system<'a>(account: Option<&AccountInfo<'a>>) -> Result<AccountInfo<'a>, ProgramError> {
-    let system = account
-        .cloned()
-        .ok_or(ProgramError::InvalidInstructionData)?;
+    let system = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
     ensure!(
-        ProgramError::InvalidInstructionData,
+        ProgramError::InvalidArgument,
         system_program::check_id(system.key)
     );
     Ok(system)
 }
 
 fn validate_payer<'a>(account: Option<&AccountInfo<'a>>) -> Result<AccountInfo<'a>, ProgramError> {
-    let payer = account
-        .cloned()
-        .ok_or(ProgramError::InvalidInstructionData)?;
-    ensure!(
-        ProgramError::InvalidInstructionData,
-        payer.is_signer,
-        payer.is_writable
-    );
+    let payer = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    ensure!(ProgramError::MissingRequiredSignature, payer.is_signer);
+    ensure!(ProgramError::InvalidArgument, payer.is_writable);
     Ok(payer)
 }
 
@@ -98,20 +84,41 @@ fn pubkey_eq(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), 32) == 0
 }
 
-fn validate_vault<'a>(
+fn validate_config<'a>(
     account: Option<&AccountInfo<'a>>,
     program_id: &Pubkey,
+    require_writable: bool,
 ) -> Result<(AccountInfo<'a>, u8), ProgramError> {
-    let vault = account
-        .cloned()
-        .ok_or(ProgramError::InvalidInstructionData)?;
-    let vault_pda = Pubkey::find_program_address(&[VAULT_SEED.as_bytes()], program_id);
+    let config = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    let config_pda = Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], program_id);
     ensure!(
-        ProgramError::InvalidInstructionData,
-        pubkey_eq(&vault.key, &vault_pda.0),
-        vault.is_writable
+        ProgramError::InvalidArgument,
+        pubkey_eq(config.key, &config_pda.0)
     );
-    Ok((vault, vault_pda.1))
+    if require_writable {
+        ensure!(ProgramError::InvalidArgument, config.is_writable);
+    }
+    Ok((config, config_pda.1))
+}
+
+fn validate_authority<'a>(
+    account: Option<&AccountInfo<'a>>,
+    config: &AccountInfo<'a>,
+) -> Result<AccountInfo<'a>, ProgramError> {
+    let authority = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    ensure!(ProgramError::MissingRequiredSignature, authority.is_signer);
+    ensure!(ProgramError::InvalidArgument, authority.is_writable);
+    let config_data = config.data.borrow();
+    let config = accounts::config::read(*config_data).map_err(|err| match err {
+        ReadAccountError::DataTooShort => ProgramError::AccountDataTooSmall,
+        ReadAccountError::FormatMismatch => ProgramError::InvalidAccountData,
+        ReadAccountError::AlreadyInitialized => ProgramError::AccountAlreadyInitialized,
+    })?;
+    ensure!(
+        ProgramError::MissingRequiredSignature,
+        authority.key.to_bytes() == config.authority
+    );
+    Ok(authority)
 }
 
 fn validate_buffer<'a>(
@@ -119,15 +126,13 @@ fn validate_buffer<'a>(
     publisher: &Pubkey,
     program_id: &Pubkey,
 ) -> Result<(AccountInfo<'a>, u8), ProgramError> {
-    let buffer = account
-        .cloned()
-        .ok_or(ProgramError::InvalidInstructionData)?;
+    let buffer = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
     let buffer_pda =
         Pubkey::find_program_address(&[BUFFER_SEED.as_bytes(), &publisher.to_bytes()], program_id);
+    ensure!(ProgramError::InvalidArgument, buffer.is_writable);
     ensure!(
-        ProgramError::InvalidInstructionData,
-        buffer.is_writable,
-        pubkey_eq(&buffer.key, &buffer_pda.0)
+        ProgramError::MissingRequiredSignature,
+        pubkey_eq(buffer.key, &buffer_pda.0)
     );
     Ok((buffer, buffer_pda.1))
 }

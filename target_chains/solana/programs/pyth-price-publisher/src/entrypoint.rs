@@ -11,9 +11,11 @@ pub fn process_instruction(
     data: &[u8],
 ) -> ProgramResult {
     match Instruction::parse(data) {
-        Ok(Instruction::Initialize) => initialize(program_id, accounts),
+        Ok(Instruction::Initialize) => initialize(program_id, accounts, &data[1..]),
         Ok(Instruction::SubmitPrices) => submit_prices(program_id, accounts, &data[1..]),
-        Ok(Instruction::InitializePublisher) => initialize_publisher(program_id, accounts),
+        Ok(Instruction::InitializePublisher) => {
+            initialize_publisher(program_id, accounts, &data[1..])
+        }
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }

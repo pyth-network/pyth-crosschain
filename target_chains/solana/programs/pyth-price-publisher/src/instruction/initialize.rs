@@ -1,49 +1,45 @@
-//! Initialize Instruction
-//!
-//! The Initialize instruction sets up the Publisher price bridge with a rent
-//! vault that can pay for the creation of Publisher accounts. The payer will
-//! do the initial funding of the vault, future topups can be done simply by
-//! sending tokens from any account to the vault.
-//!
 use {
-    super::{validate_payer, validate_system, validate_vault, VAULT_SEED},
+    super::{validate_config, validate_payer, validate_system, CONFIG_SEED},
+    crate::accounts,
+    bytemuck::{try_from_bytes, Pod, Zeroable},
+    solana_program::program_error::ProgramError,
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
         pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
     },
 };
 
-pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let mut accounts = accounts.iter();
-    let payer = validate_payer(accounts.next())?;
-    let vault = validate_vault(accounts.next(), program_id)?;
-    let system = validate_system(accounts.next())?;
-    initialize_vault(vault, payer, system, program_id)
+#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[repr(C, packed)]
+pub struct Args {
+    pub authority: Pubkey,
 }
 
-fn initialize_vault<'a>(
-    (vault, vault_bump): (AccountInfo<'a>, u8),
-    payer: AccountInfo<'a>,
-    system: AccountInfo<'a>,
-    _program_id: &Pubkey,
-) -> ProgramResult {
-    // Calculate minimum lamports to transfer to initialize the account.
-    let lamports = (Rent::get()?).minimum_balance(0);
+pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+    let args: &Args = try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
 
-    // By Initializing the account with `create_account` it will be owned by
-    // the system account, system accounts are allowed to act as payers. This
-    // is the trick we use to use the PDA as a payer later.
+    let mut accounts = accounts.iter();
+    let payer = validate_payer(accounts.next())?;
+    let config = validate_config(accounts.next(), program_id, true)?;
+    let system = validate_system(accounts.next())?;
+
+    let lamports = (Rent::get()?).minimum_balance(accounts::config::SIZE);
+
     invoke_signed(
         &system_instruction::create_account(
             payer.key,
-            vault.key,
+            config.0.key,
             lamports,
-            0,
-            &solana_program::system_program::id(),
+            accounts::config::SIZE
+                .try_into()
+                .expect("unexpected overflow"),
+            program_id,
         ),
-        &[payer.clone(), vault.clone(), system.clone()],
-        &[&[VAULT_SEED.as_bytes(), &[vault_bump]]],
+        &[payer.clone(), config.0.clone(), system.clone()],
+        &[&[CONFIG_SEED.as_bytes(), &[config.1]]],
     )?;
+
+    accounts::config::create(*config.0.data.borrow_mut(), args.authority.to_bytes())?;
 
     Ok(())
 }
@@ -51,7 +47,7 @@ fn initialize_vault<'a>(
 #[cfg(test)]
 mod tests {
     use {
-        crate::instruction::VAULT_SEED,
+        crate::{accounts, instruction::CONFIG_SEED},
         solana_program::{
             instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
@@ -74,17 +70,22 @@ mod tests {
         .await;
 
         // Setup Accounts
-        let vault = Pubkey::find_program_address(&[VAULT_SEED.as_bytes()], &id);
+        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], &id);
+        let mut authority = [0u8; 32];
+        authority[..3].copy_from_slice(&[1, 2, 3]);
+
+        let mut data = vec![crate::instruction::Instruction::Initialize as u8];
+        data.extend_from_slice(&authority);
 
         // Execute Transaction
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
                 program_id: id,
-                data: vec![crate::instruction::Instruction::Initialize as u8],
+                data,
                 accounts: vec![
                     AccountMeta::new_readonly(payer.pubkey(), true),
-                    AccountMeta::new(vault.0, false),
-                    AccountMeta::new(system_program::id(), false),
+                    AccountMeta::new(config.0, false),
+                    AccountMeta::new_readonly(system_program::id(), false),
                 ],
             }],
             Some(&payer.pubkey()),
@@ -93,8 +94,10 @@ mod tests {
         banks_client.process_transaction(transaction).await.unwrap();
 
         // Validate Outcome
-        let vault = banks_client.get_account(vault.0).await.unwrap().unwrap();
-        assert_eq!(vault.lamports, 890880);
-        assert_eq!(vault.owner, system_program::id());
+        let config = banks_client.get_account(config.0).await.unwrap().unwrap();
+        assert_eq!(config.lamports, 1141440);
+        assert_eq!(config.owner, id);
+        let config = accounts::config::read(&config.data).unwrap();
+        assert_eq!(config.authority, authority);
     }
 }

@@ -11,7 +11,7 @@ use {
 /// Account Magic to avoid Account Confusiong
 const FORMAT: u32 = 2848712303;
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct PublisherPricesHeader {
     pub format: u32,
@@ -31,7 +31,7 @@ impl PublisherPricesHeader {
     }
 }
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct PublisherPrice {
     // 4 high bits: trading status
@@ -79,6 +79,8 @@ pub enum ReadAccountError {
     FormatMismatch,
     #[error("invalid num prices")]
     InvalidNumPrices,
+    #[error("already initialized")]
+    AlreadyInitialized,
 }
 
 #[derive(Debug, Error)]
@@ -142,6 +144,9 @@ pub fn create(
     }
     let (header, prices) = data.split_at_mut(size_of::<PublisherPricesHeader>());
     let header: &mut PublisherPricesHeader = from_bytes_mut(header);
+    if header.format != 0 {
+        return Err(ReadAccountError::AlreadyInitialized);
+    }
     *header = PublisherPricesHeader::new(publisher);
     Ok((header, prices))
 }
@@ -169,4 +174,36 @@ pub fn extend(
         .ok_or(ExtendError::NotEnoughSpace)?
         .copy_from_slice(new_prices);
     Ok(())
+}
+
+#[cfg(feature = "solana-program")]
+mod convert {
+    use super::*;
+    use solana_program::program_error::ProgramError;
+
+    impl From<PublisherPriceError> for ProgramError {
+        fn from(_value: PublisherPriceError) -> Self {
+            ProgramError::AccountDataTooSmall
+        }
+    }
+
+    impl From<ReadAccountError> for ProgramError {
+        fn from(value: ReadAccountError) -> Self {
+            match value {
+                ReadAccountError::DataTooShort => ProgramError::AccountDataTooSmall,
+                ReadAccountError::FormatMismatch => ProgramError::InvalidAccountData,
+                ReadAccountError::InvalidNumPrices => ProgramError::InvalidAccountData,
+                ReadAccountError::AlreadyInitialized => ProgramError::AccountAlreadyInitialized,
+            }
+        }
+    }
+
+    impl From<ExtendError> for ProgramError {
+        fn from(value: ExtendError) -> Self {
+            match value {
+                ExtendError::NotEnoughSpace => ProgramError::AccountDataTooSmall,
+                ExtendError::InvalidLength => ProgramError::InvalidInstructionData,
+            }
+        }
+    }
 }
