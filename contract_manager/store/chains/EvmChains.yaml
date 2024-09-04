@@ -709,3 +709,8 @@
   rpcUrl: https://rpc.minato.soneium.org/
   networkId: 1946
   type: EvmChain
+- id: apechain_mainnet
+  mainnet: true
+  rpcUrl: https://apechain.calderachain.xyz/http
+  networkId: 33139
+  type: EvmChain
