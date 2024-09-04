@@ -14,12 +14,12 @@ int keccak256_int(int hash) inline {
 int keccak256_slice(slice s) inline {
     tuple slices = empty_tuple();
     int continue = true;
-    
+
     while (continue) {
         if (~ s.slice_empty?()) {
             slice current_slice = s~load_bits(s.slice_bits());
             slices~tpush(current_slice);
-            
+
             if (s.slice_refs_empty?()) {
                 continue = false;
             } else {
@@ -29,7 +29,7 @@ int keccak256_slice(slice s) inline {
             continue = false;
         }
     }
-    
+
     return keccak256_tuple(slices);
 }
 
