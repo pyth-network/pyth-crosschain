@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/integrity_pool.json`.
  */
 export type IntegrityPool = {
-  "address": "BiJszJY5BfRKkvt818SAbY9z9cJLp2jYDPgG2BzsufiE",
+  "address": "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
   "metadata": {
     "name": "integrityPool",
     "version": "1.0.0",
@@ -62,6 +62,97 @@ export type IntegrityPool = {
               }
             ]
           }
+        },
+        {
+          "name": "poolRewardCustody",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "poolConfig"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool_config.pyth_token_mint",
+                "account": "poolConfig"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         }
       ],
       "args": []
@@ -89,6 +180,7 @@ export type IntegrityPool = {
         },
         {
           "name": "poolData",
+          "writable": true,
           "relations": [
             "poolConfig"
           ]
@@ -679,7 +771,11 @@ export type IntegrityPool = {
       "accounts": [
         {
           "name": "owner",
-          "signer": true
+          "docs": [
+            "CHECK : This instruction is permissionless, this account will be checked against",
+            "stake_account_metadata in the CPI"
+          ],
+          "writable": true
         },
         {
           "name": "poolData",
@@ -1308,43 +1404,6 @@ export type IntegrityPool = {
           ]
         },
         {
-          "name": "delegationRecord",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  108,
-                  101,
-                  103,
-                  97,
-                  116,
-                  105,
-                  111,
-                  110,
-                  95,
-                  114,
-                  101,
-                  99,
-                  111,
-                  114,
-                  100
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "account",
-                "path": "stakeAccountPositions"
-              }
-            ]
-          }
-        },
-        {
           "name": "configAccount",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
@@ -1521,6 +1580,62 @@ export type IntegrityPool = {
         {
           "name": "delegationFee",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updatePythTokenMint",
+      "discriminator": [
+        39,
+        50,
+        46,
+        180,
+        14,
+        10,
+        121,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "rewardProgramAuthority",
+          "signer": true,
+          "relations": [
+            "poolConfig"
+          ]
+        },
+        {
+          "name": "poolConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "pythTokenMint",
+          "type": "pubkey"
         }
       ]
     },
@@ -1771,6 +1886,11 @@ export type IntegrityPool = {
     {
       "code": 6022,
       "name": "invalidPublisher"
+    },
+    {
+      "code": 6023,
+      "name": "invalidY",
+      "msg": "Y should not be greater than 1%"
     }
   ],
   "types": [
@@ -1885,6 +2005,10 @@ export type IntegrityPool = {
         "fields": [
           {
             "name": "lastUpdatedEpoch",
+            "type": "u64"
+          },
+          {
+            "name": "claimableRewards",
             "type": "u64"
           },
           {

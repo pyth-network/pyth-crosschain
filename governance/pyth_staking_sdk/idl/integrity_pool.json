@@ -1,5 +1,5 @@
 {
-  "address": "BiJszJY5BfRKkvt818SAbY9z9cJLp2jYDPgG2BzsufiE",
+  "address": "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
   "metadata": {
     "name": "integrity_pool",
     "version": "1.0.0",
@@ -56,6 +56,97 @@
               }
             ]
           }
+        },
+        {
+          "name": "pool_reward_custody",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool_config.pyth_token_mint",
+                "account": "PoolConfig"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         }
       ],
       "args": []
@@ -83,6 +174,7 @@
         },
         {
           "name": "pool_data",
+          "writable": true,
           "relations": [
             "pool_config"
           ]
@@ -390,7 +482,7 @@
                 ]
               },
               {
-                "kind": "arg",
+                "kind": "account",
                 "path": "publisher"
               },
               {
@@ -399,6 +491,12 @@
               }
             ]
           }
+        },
+        {
+          "name": "publisher",
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ]
         },
         {
           "name": "system_program",
@@ -413,10 +511,6 @@
         {
           "name": "slash_ratio",
           "type": "u64"
-        },
-        {
-          "name": "publisher",
-          "type": "pubkey"
         }
       ]
     },
@@ -434,7 +528,7 @@
       ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "owner",
           "writable": true,
           "signer": true
         },
@@ -671,7 +765,11 @@
       "accounts": [
         {
           "name": "owner",
-          "signer": true
+          "docs": [
+            "CHECK : This instruction is permissionless, this account will be checked against",
+            "stake_account_metadata in the CPI"
+          ],
+          "writable": true
         },
         {
           "name": "pool_data",
@@ -1259,7 +1357,7 @@
       ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "owner",
           "writable": true,
           "signer": true
         },
@@ -1296,45 +1394,8 @@
         {
           "name": "publisher",
           "docs": [
-            "CHECK : The publisher will be checked againts data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data"
           ]
-        },
-        {
-          "name": "delegation_record",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  108,
-                  101,
-                  103,
-                  97,
-                  116,
-                  105,
-                  111,
-                  110,
-                  95,
-                  114,
-                  101,
-                  99,
-                  111,
-                  114,
-                  100
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
         },
         {
           "name": "config_account",
@@ -1513,6 +1574,62 @@
         {
           "name": "delegation_fee",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_pyth_token_mint",
+      "discriminator": [
+        39,
+        50,
+        46,
+        180,
+        14,
+        10,
+        121,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "reward_program_authority",
+          "signer": true,
+          "relations": [
+            "pool_config"
+          ]
+        },
+        {
+          "name": "pool_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "pyth_token_mint",
+          "type": "pubkey"
         }
       ]
     },
@@ -1759,6 +1876,15 @@
       "code": 6021,
       "name": "InvalidDelegationFee",
       "msg": "Delegation fee must not be greater than 100%"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidPublisher"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidY",
+      "msg": "Y should not be greater than 1%"
     }
   ],
   "types": [
@@ -1873,6 +1999,10 @@
         "fields": [
           {
             "name": "last_updated_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "claimable_rewards",
             "type": "u64"
           },
           {
@@ -2052,10 +2182,6 @@
           },
           {
             "name": "slash_custody",
-            "type": "pubkey"
-          },
-          {
-            "name": "publisher",
             "type": "pubkey"
           }
         ]

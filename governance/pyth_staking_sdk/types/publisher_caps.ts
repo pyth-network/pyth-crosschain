@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/publisher_caps.json`.
  */
 export type PublisherCaps = {
-  "address": "BZ1jqX41oh3NaF7FmkrCWUrd4eQZQqid1edPLGxzJMc2",
+  "address": "pytcD8uUjPxSLMsNqoVnm9dXQw9tKJJf3CQnGwa8oL7",
   "metadata": {
     "name": "publisherCaps",
     "version": "1.0.0",

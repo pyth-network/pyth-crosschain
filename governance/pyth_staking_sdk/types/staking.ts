@@ -1209,8 +1209,10 @@ export type Staking = {
       "accounts": [
         {
           "name": "owner",
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's checked against stake_account_metadata"
+          ],
           "writable": true,
-          "signer": true,
           "relations": [
             "stakeAccountMetadata"
           ]
@@ -2600,6 +2602,11 @@ export type Staking = {
     },
     {
       "code": 6039,
+      "name": "unexpectedTargetAccount",
+      "msg": "The target account is only expected when dealing with the governance target"
+    },
+    {
+      "code": 6040,
       "name": "other",
       "msg": "other"
     }
@@ -2627,7 +2634,7 @@ export type Staking = {
             "type": "pubkey"
           },
           {
-            "name": "unlockingDuration",
+            "name": "removedUnlockingDuration",
             "type": "u8"
           },
           {
