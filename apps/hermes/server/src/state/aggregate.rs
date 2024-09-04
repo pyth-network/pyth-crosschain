@@ -456,6 +456,7 @@ where
         Cache::message_state_keys(self)
             .await
             .iter()
+            .filter(|key| key.feed_id != PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID)
             .map(|key| PriceIdentifier::new(key.feed_id))
             .collect()
     }
