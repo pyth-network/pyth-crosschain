@@ -10,7 +10,7 @@ global int single_update_fee;
 ;; emitter_address is a 256-bit unsigned integer
 global cell data_sources; ;; Dictionary of DataSource tuples, keyed by u8
 global int num_data_sources;
-global cell is_valid_data_source; ;; Dictionary of bool, keyed by DataSource tuple
+global cell is_valid_data_source; ;; Dictionary of int (0 as false, -1 as true), keyed by DataSource cell_hash
 
 
 ;; Wormhole
@@ -51,7 +51,7 @@ global int governance_data_source_index; ;; u32
 
 ;; load_data populates storage variables using stored data
 () load_data() impure inline_ref {
-    var ds = get_data().begin_parse();
+    slice ds = get_data().begin_parse();
     latest_price_feeds = ds~load_dict();
     single_update_fee = ds~load_uint(256);
     data_sources = ds~load_dict();
