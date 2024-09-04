@@ -17,6 +17,10 @@ use {
         WormholeMerkleState,
     },
     crate::{
+        api::types::{
+            ParsedPublisherStakeCap,
+            ParsedPublisherStakeCapsUpdate,
+        },
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
@@ -45,6 +49,7 @@ use {
         messages::{
             Message,
             MessageType,
+            PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID,
         },
         wire::{
             from_slice,
@@ -55,6 +60,7 @@ use {
         },
     },
     serde::Serialize,
+    solana_sdk::pubkey::Pubkey,
     std::{
         collections::HashSet,
         time::Duration,
@@ -68,7 +74,6 @@ use {
     },
     wormhole_sdk::Vaa,
 };
-
 pub mod metrics;
 pub mod wormhole_merkle;
 
@@ -215,6 +220,12 @@ pub struct PriceFeedsWithUpdateData {
     pub update_data: Vec<Vec<u8>>,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct PublisherStakeCapsWithUpdateData {
+    pub publisher_stake_caps: Vec<ParsedPublisherStakeCapsUpdate>,
+    pub update_data:          Vec<Vec<u8>>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ReadinessMetadata {
     pub has_completed_recently:          bool,
@@ -242,6 +253,9 @@ where
         price_ids: &[PriceIdentifier],
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData>;
+    async fn get_latest_publisher_stake_caps_with_update_data(
+        &self,
+    ) -> Result<PublisherStakeCapsWithUpdateData>;
 }
 
 /// Allow downcasting State into CacheState for functions that depend on the `Cache` service.
@@ -403,10 +417,46 @@ where
         }
     }
 
+    async fn get_latest_publisher_stake_caps_with_update_data(
+        &self,
+    ) -> Result<PublisherStakeCapsWithUpdateData> {
+        let messages = self
+            .fetch_message_states(
+                vec![PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID],
+                RequestTime::Latest,
+                MessageStateFilter::Only(MessageType::PublisherStakeCapsMessage),
+            )
+            .await?;
+
+        let publisher_stake_caps = messages
+            .iter()
+            .map(|message_state| match message_state.message.clone() {
+                Message::PublisherStakeCapsMessage(message) => Ok(ParsedPublisherStakeCapsUpdate {
+                    publisher_stake_caps: message
+                        .caps
+                        .iter()
+                        .map(|cap| ParsedPublisherStakeCap {
+                            publisher: Pubkey::from(cap.publisher),
+                            cap:       cap.cap,
+                        })
+                        .collect(),
+                }),
+                _ => Err(anyhow!("Invalid message state type")),
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
+        Ok(PublisherStakeCapsWithUpdateData {
+            publisher_stake_caps,
+            update_data,
+        })
+    }
+
     async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
         Cache::message_state_keys(self)
             .await
             .iter()
+            .filter(|key| key.feed_id != PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID)
             .map(|key| PriceIdentifier::new(key.feed_id))
             .collect()
     }

@@ -35,6 +35,7 @@ pub use {
     ready::*,
     v2::{
         latest_price_updates::*,
+        latest_publisher_stake_caps::*,
         price_feeds_metadata::*,
         sse::*,
         timestamp_price_updates::*,

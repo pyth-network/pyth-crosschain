@@ -111,6 +111,7 @@ where
             rest::latest_vaas,
             rest::price_feed_ids,
             rest::latest_price_updates,
+            rest::latest_publisher_stake_caps,
             rest::timestamp_price_updates,
             rest::price_feeds_metadata,
             rest::price_stream_sse_handler,
@@ -127,7 +128,7 @@ where
                 types::RpcPriceIdentifier,
                 types::EncodingType,
                 types::PriceUpdate,
-                types::BinaryPriceUpdate,
+                types::BinaryUpdate,
                 types::ParsedPriceUpdate,
                 types::RpcPriceFeedMetadataV2,
                 types::PriceFeedMetadata,
@@ -158,6 +159,10 @@ where
             get(rest::price_stream_sse_handler),
         )
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
+        .route(
+            "/v2/updates/publisher_stake_caps/latest",
+            get(rest::latest_publisher_stake_caps),
+        )
         .route(
             "/v2/updates/price/:publish_time",
             get(rest::timestamp_price_updates),

@@ -6,7 +6,7 @@ use {
                 RestError,
             },
             types::{
-                BinaryPriceUpdate,
+                BinaryUpdate,
                 EncodingType,
                 ParsedPriceUpdate,
                 PriceIdInput,
@@ -211,7 +211,7 @@ where
         .into_iter()
         .map(|data| encoding.encode_str(&data))
         .collect();
-    let binary_price_update = BinaryPriceUpdate {
+    let binary_price_update = BinaryUpdate {
         encoding,
         data: encoded_data,
     };

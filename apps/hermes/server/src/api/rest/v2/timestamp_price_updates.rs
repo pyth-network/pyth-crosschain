@@ -7,7 +7,7 @@ use {
                 RestError,
             },
             types::{
-                BinaryPriceUpdate,
+                BinaryUpdate,
                 EncodingType,
                 ParsedPriceUpdate,
                 PriceIdInput,
@@ -123,7 +123,7 @@ where
         .into_iter()
         .map(|data| query_params.encoding.encode_str(&data))
         .collect();
-    let binary_price_update = BinaryPriceUpdate {
+    let binary_price_update = BinaryUpdate {
         encoding: query_params.encoding,
         data:     encoded_data,
     };
