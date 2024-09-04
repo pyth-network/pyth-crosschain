@@ -13,6 +13,7 @@ import {
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { createCellChain } from "../tests/utils";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
@@ -20,6 +21,7 @@ export type PythTestConfig = {
   price: Price;
   emaPrice: Price;
   singleUpdateFee: number;
+  dataSources: DataSource[];
   guardianSetIndex: number;
   guardianSet: string[];
   chainId: number;
@@ -44,6 +46,7 @@ export class PythTest implements Contract {
       config.price,
       config.emaPrice,
       config.singleUpdateFee,
+      config.dataSources,
       config.guardianSetIndex,
       config.guardianSet,
       config.chainId,
@@ -60,6 +63,7 @@ export class PythTest implements Contract {
     price: Price,
     emaPrice: Price,
     singleUpdateFee: number,
+    dataSources: DataSource[],
     guardianSetIndex: number,
     guardianSet: string[],
     chainId: number,
@@ -93,21 +97,63 @@ export class PythTest implements Contract {
 
     priceDict.set(BigInt(priceFeedId), priceFeedCell);
 
-    return beginCell()
-      .storeDict(priceDict) // latest_price_feeds
-      .storeUint(singleUpdateFee, 256) // single_update_fee
-      .storeDict(Dictionary.empty()) // data_sources, empty for initial state
-      .storeUint(0, 32) // num_data_sources, set to 0 for initial state
-      .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
+    // Create a dictionary for data sources
+    const dataSourcesDict = Dictionary.empty(
+      Dictionary.Keys.Uint(32),
+      Dictionary.Values.Cell()
+    );
+    // Create a dictionary for valid data sources
+    const isValidDataSourceDict = Dictionary.empty(
+      Dictionary.Keys.BigUint(256),
+      Dictionary.Values.Bool()
+    );
+
+    dataSources.forEach((source, index) => {
+      const sourceCell = beginCell()
+        .storeUint(source.emitterChain, 16)
+        .storeBuffer(Buffer.from(source.emitterAddress, "hex"))
+        .endCell();
+      dataSourcesDict.set(index, sourceCell);
+      const cellHash = BigInt("0x" + sourceCell.hash().toString("hex"));
+      isValidDataSourceDict.set(cellHash, true);
+    });
+
+    // Group price feeds and update fee
+    const priceFeedsCell = beginCell()
+      .storeDict(priceDict)
+      .storeUint(singleUpdateFee, 256)
+      .endCell();
+
+    // Group data sources information
+    const dataSourcesCell = beginCell()
+      .storeDict(dataSourcesDict)
+      .storeUint(dataSources.length, 32)
+      .storeDict(isValidDataSourceDict)
+      .endCell();
+
+    // Group guardian set information
+    const guardianSetCell = beginCell()
       .storeUint(guardianSetIndex, 32)
       .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
+      .endCell();
+
+    // Group chain and governance information
+    const governanceCell = beginCell()
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))
-      .storeDict(Dictionary.empty()) // consumed_governance_actions,
+      .storeDict(Dictionary.empty()) // consumed_governance_actions
       .storeRef(beginCell()) // governance_data_source, empty for initial state
-      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
-      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
+      .storeUint(0, 64) // last_executed_governance_sequence
+      .storeUint(0, 32) // governance_data_source_index
+      .endCell();
+
+    // Create the main cell with references to grouped data
+    return beginCell()
+      .storeRef(priceFeedsCell)
+      .storeRef(dataSourcesCell)
+      .storeRef(guardianSetCell)
+      .storeRef(governanceCell)
       .endCell();
   }
 

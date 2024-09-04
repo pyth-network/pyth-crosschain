@@ -1899,6 +1899,9 @@ importers:
       '@pythnetwork/price-service-sdk':
         specifier: workspace:*
         version: link:../../../price_service/sdk/js
+      '@pythnetwork/xc-admin-common':
+        specifier: workspace:*
+        version: link:../../../governance/xc_admin/packages/xc_admin_common
       '@ton/blueprint':
         specifier: ^0.22.0
         version: 0.22.0(@ton/core@0.57.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@13.11.2(@ton/core@0.57.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@types/node@20.14.15)(encoding@0.1.13)(typescript@5.5.4)
@@ -34182,7 +34185,7 @@ snapshots:
       '@typescript-eslint/typescript-estree': 8.3.0(typescript@5.5.4)
       '@typescript-eslint/visitor-keys': 8.3.0
       debug: 4.3.6(supports-color@8.1.1)
-      eslint: 9.9.0(jiti@1.21.0)
+      eslint: 9.5.0
     optionalDependencies:
       typescript: 5.5.4
     transitivePeerDependencies:
