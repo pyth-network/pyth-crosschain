@@ -75,7 +75,18 @@ const useStakeAccountState = () => {
     if (wallet.connected && !wallet.disconnecting && !loading.current) {
       loading.current = true;
       setState(State.Loading());
-      getStakeAccounts(connection, wallet)
+      if (
+        !wallet.publicKey ||
+        !wallet.signAllTransactions ||
+        !wallet.signTransaction
+      ) {
+        throw new WalletConnectedButInvalidError();
+      }
+      getStakeAccounts(connection, {
+        publicKey: wallet.publicKey,
+        signAllTransactions: wallet.signAllTransactions,
+        signTransaction: wallet.signTransaction,
+      })
         .then((accounts) => {
           const [firstAccount, ...otherAccounts] = accounts;
           if (firstAccount) {
@@ -96,12 +107,10 @@ const useStakeAccountState = () => {
         .finally(() => {
           loading.current = false;
         });
-    } else if (!wallet.connected) {
-      setState(State.NoWallet());
     }
   }, [connection, setAccount, wallet]);
 
-  return state;
+  return wallet.connected && !wallet.disconnecting ? state : State.NoWallet();
 };
 
 export const useStakeAccount = () => {
@@ -117,6 +126,14 @@ class NotInitializedError extends Error {
   constructor() {
     super(
       "This component must be a child of <StakeAccountProvider> to use the `useStakeAccount` hook",
+    );
+  }
+}
+
+class WalletConnectedButInvalidError extends Error {
+  constructor() {
+    super(
+      "The wallet is connected but is missing a public key or methods to sign transactions!",
     );
   }
 }
