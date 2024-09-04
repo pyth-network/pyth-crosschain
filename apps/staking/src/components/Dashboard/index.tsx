@@ -19,7 +19,7 @@ type Props = {
   expiringRewards: {
     amount: bigint;
     expiry: Date;
-  };
+  } | undefined;
   locked: bigint;
   unlockSchedule: {
     amount: bigint;

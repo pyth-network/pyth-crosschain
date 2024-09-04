@@ -25,7 +25,7 @@ type Data = {
   expiringRewards: {
     amount: bigint;
     expiry: Date;
-  };
+  } | undefined;
   locked: bigint;
   unlockSchedule: {
     date: Date;
@@ -164,7 +164,10 @@ export const loadData = async (context: Context): Promise<Data> => {
     stakeAccountPositions: stakeAccountPositions.address
   });
 
-  return { ...MOCK_DATA['0x000000']!,
+  return { 
+    lastSlash: undefined,
+    availableRewards: 0n,
+    expiringRewards: undefined,
     total: stakeAccountCustody.amount,
     governance: {
       warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),

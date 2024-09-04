@@ -27,7 +27,7 @@ type Props = {
   expiringRewards: {
     amount: bigint;
     expiry: Date;
-  };
+  } | undefined;
   availableToWithdraw: bigint;
 };
 
@@ -137,7 +137,7 @@ export const AccountSummary = ({
           amount={availableRewards}
           description="Rewards you have earned but not yet claimed from the Integrity Staking program"
           action={<ClaimButton disabled={availableRewards === 0n} />}
-          {...(expiringRewards.amount > 0n && {
+          {...(!!expiringRewards && expiringRewards.amount > 0n && {
             warning: (
               <>
                 <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
