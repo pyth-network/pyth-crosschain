@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import type { Position, PositionAnchor } from "../types";
 import type { Staking } from "../../types/staking";
 import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_SIZE } from "../constants";
-import { convertBNToBigInt } from "../utils";
+import { convertBNToBigInt } from "../utils/bn";
 
 export type StakeAccountPositions = {
   address: PublicKey;

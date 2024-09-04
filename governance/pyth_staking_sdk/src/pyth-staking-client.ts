@@ -25,7 +25,7 @@ import {
   sendTransactions,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
-import { convertBigIntToBN, convertBNToBigInt } from "./utils";
+import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type { PublisherCaps } from "../types/publisher_caps";
 
