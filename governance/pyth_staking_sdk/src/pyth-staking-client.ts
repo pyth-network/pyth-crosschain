@@ -177,7 +177,7 @@ export class PythStakingClient {
   public async getPublishers(): Promise<PublicKey[]> {
     const poolData = await this.getPoolDataAccount();
     return poolData.publishers.filter(
-      (publisher) => publisher && publisher !== PublicKey.default
+      (publisher) => publisher && !publisher.equals(PublicKey.default)
     );
   }
 

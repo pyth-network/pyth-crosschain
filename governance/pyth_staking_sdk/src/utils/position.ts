@@ -44,8 +44,10 @@ export const getAmountByTargetAndState = (options: {
         return !!p?.targetWithParameters.voting;
       }
       return (
-        targetWithParameters?.integrityPool?.publisher ===
-        p?.targetWithParameters?.integrityPool?.publisher
+        p?.targetWithParameters?.integrityPool?.publisher &&
+        targetWithParameters?.integrityPool?.publisher?.equals(
+          p?.targetWithParameters?.integrityPool?.publisher
+        )
       );
     })
     .map((p) => p!.amount)
