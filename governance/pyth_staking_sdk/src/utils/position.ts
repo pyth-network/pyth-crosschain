@@ -1,4 +1,5 @@
-import { Position, PositionState } from "../types";
+import { StakeAccountPositions } from "../staking/accounts";
+import { Position, PositionState, TargetWithParameters } from "../types";
 
 export const getPositionState = (
   position: Position,
@@ -21,4 +22,28 @@ export const getPositionState = (
   } else {
     return PositionState.UNLOCKED;
   }
+};
+
+export const getAmountByTargetAndState = (options: {
+  stakeAccountPositions: StakeAccountPositions;
+  targetWithParameters: TargetWithParameters;
+  positionState: PositionState;
+  epoch: bigint;
+}): bigint => {
+  const { stakeAccountPositions, targetWithParameters, positionState, epoch } =
+    options;
+
+  return stakeAccountPositions.data.positions
+    .filter((p) => p && getPositionState(p, epoch) === positionState)
+    .filter((p) => {
+      if (targetWithParameters.voting) {
+        return !!p?.targetWithParameters.voting;
+      }
+      return (
+        targetWithParameters?.integrityPool?.publisher ===
+        p?.targetWithParameters?.integrityPool?.publisher
+      );
+    })
+    .map((p) => p!.amount)
+    .reduce((sum, amount) => sum + amount, 0n);
 };

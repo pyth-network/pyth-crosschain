@@ -73,7 +73,7 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getStakeAccountPositions(
+  public async getAllStakeAccountPositions(
     user: PublicKey
   ): Promise<StakeAccountPositions[]> {
     const res =
@@ -102,6 +102,21 @@ export class PythStakingClient {
       );
       return stakeAccountPositionsAnchor.toStakeAccountPositions();
     });
+  }
+
+  public async getStakeAccountPositions(
+    stakeAccountPositions: PublicKey
+  ): Promise<StakeAccountPositions> {
+    const account =
+      await this.stakingProgram.provider.connection.getAccountInfo(
+        stakeAccountPositions
+      );
+    const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
+      stakeAccountPositions,
+      account!.data,
+      this.stakingProgram.idl
+    );
+    return stakeAccountPositionsAnchor.toStakeAccountPositions();
   }
 
   public async getStakeAccountCustody(
@@ -157,6 +172,13 @@ export class PythStakingClient {
     const poolDataAccountAnchor =
       await this.integrityPoolProgram.account.poolData.fetch(poolDataAddress);
     return convertBNToBigInt(poolDataAccountAnchor);
+  }
+
+  public async getPublishers(): Promise<PublicKey[]> {
+    const poolData = await this.getPoolDataAccount();
+    return poolData.publishers.filter(
+      (publisher) => publisher && publisher !== PublicKey.default
+    );
   }
 
   public async stakeToGovernance(

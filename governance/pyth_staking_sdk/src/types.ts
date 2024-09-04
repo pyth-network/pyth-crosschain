@@ -34,6 +34,8 @@ export type PoolConfig = ConvertBNToBigInt<PoolConfigAnchor>;
 export type PoolDataAccountAnchor = IdlAccounts<IntegrityPool>["poolData"];
 export type PoolDataAccount = ConvertBNToBigInt<PoolDataAccountAnchor>;
 
+export type TargetWithParameters = IdlTypes<Staking>["targetWithParameters"];
+
 export enum PositionState {
   UNLOCKED = 0,
   LOCKING = 1,

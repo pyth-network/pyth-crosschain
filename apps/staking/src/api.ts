@@ -1,20 +1,16 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import { getCurrentEpoch, getPositionState, PositionState, PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
+import { getAmountByTargetAndState, getCurrentEpoch, PositionState, PythStakingClient } from "@pythnetwork/staking-sdk";
+import type { StakeAccountPositions } from "@pythnetwork/staking-sdk/src/staking/accounts";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, type Connection } from "@solana/web3.js";
 
-export type StakeAccount = {
-  // Why was this prefixed with 0x?
-  // publicKey: `0x${string}`;
-  publicKey: string;
-};
 
 export type Context = {
   connection: Connection;
   wallet: AnchorWallet;
-  stakeAccount: StakeAccount;
+  stakeAccount: StakeAccountPositions;
 };
 
 type Data = {
@@ -145,15 +141,9 @@ type AccountHistory = {
 export const getStakeAccounts = async (
   connection: Connection,
   wallet: AnchorWallet,
-): Promise<StakeAccount[]> => {
-
-  // TODO: how to deal with wallet types? Probably need an adapter
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+): Promise<StakeAccountPositions[]> => {
   const pythStakingClient = new PythStakingClient({ connection, wallet });
-  const stakeAccountPositions = (await pythStakingClient.getStakeAccountPositions(wallet.publicKey));
-  return stakeAccountPositions.map(x => ({ publicKey: x.address.toBase58() }));
-
+  return await pythStakingClient.getAllStakeAccountPositions(wallet.publicKey);
 };
 
 export const loadData = async (context: Context): Promise<Data> => {
@@ -163,66 +153,37 @@ export const loadData = async (context: Context): Promise<Data> => {
   // triggers a rerender.
 
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.publicKey);
-  const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(p);
+  const stakeAccountPositions = context.stakeAccount;
 
-  const poolDataAccount = await pythStakingClient.getPoolDataAccount();
-
+  const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(stakeAccountPositions.address);
+  const publishers = await pythStakingClient.getPublishers();
   const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
-
-  const stakeAccountPositions = 
-  await pythStakingClient.getStakeAccountPositions(context.wallet.publicKey);
-  
   const currentEpoch = await getCurrentEpoch(context.connection);
-
-  const stakeAccountPosition = stakeAccountPositions.find(
-    x => x.address.toBase58() === context.stakeAccount.publicKey
-  )!;
-
-  const governancePositions = stakeAccountPosition.data.positions.filter(p => p?.targetWithParameters.voting)
-
-  const governanceWarmup =
-   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.LOCKING).map(p => p!.amount)
-   .reduce((sum, amount) => sum + amount, 0n);
-
-   const governanceStaked =
-   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.LOCKED).map(p => p!.amount)
-   .reduce((sum, amount) => sum + amount, 0n);
-
-   const governanceCooldown =
-   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.PREUNLOCKING).map(p => p!.amount)
-   .reduce((sum, amount) => sum + amount, 0n);
-
-   const governanceCooldown2 =
-   governancePositions.filter(p => p && getPositionState(p, currentEpoch) === PositionState.UNLOCKED).map(p => p!.amount)
-   .reduce((sum, amount) => sum + amount, 0n);
 
   return { ...MOCK_DATA['0x000000']!,
     total: stakeAccountCustody.amount,
     governance: {
-      warmup: governanceWarmup,
-      staked: governanceStaked,
-      cooldown: governanceCooldown,
-      cooldown2: governanceCooldown2,
+      warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
+      staked: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKED, epoch: currentEpoch}),
+      cooldown: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.PREUNLOCKING, epoch: currentEpoch}),
+      cooldown2: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.UNLOCKED, epoch: currentEpoch}),
     },
     walletAmount: ownerATAAccount.amount,
-    integrityStakingPublishers: poolDataAccount.publishers.map(p => ({
+    integrityStakingPublishers: publishers.map(publisher => ({
       apyHistory: [],
       isSelf: false,
-      name: p.toBase58(),
+      name: publisher.toString(),
       numFeeds: 0,
       poolCapacity: 100n,
       poolUtilization: 0n,
-      publicKey: p.toBase58(),
+      publicKey: publisher.toString(),
       qualityRanking: 0,
       selfStake: 0n,
       positions: {
-        cooldown: 0n,
-        cooldown2: 0n,
-        staked: 0n,
-        warmup: stakeAccountPosition.data.positions
-        .filter(x => x?.targetWithParameters.integrityPool?.publisher.toBase58() === p.toBase58())
-        .map(x => x!.amount).reduce((sum, amount) => sum + amount, 0n),
+        warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
+        staked: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKED, epoch: currentEpoch}),
+        cooldown: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.PREUNLOCKING, epoch: currentEpoch}),
+        cooldown2: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.UNLOCKED, epoch: currentEpoch}),
       }
     }))
    };
@@ -232,7 +193,7 @@ export const loadAccountHistory = async (
   context: Context,
 ): Promise<AccountHistory> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  return [...MOCK_HISTORY[context.stakeAccount.publicKey]!];
+  return MOCK_HISTORY['0x000000']!;
 };
 
 export const deposit = async (
@@ -240,7 +201,7 @@ export const deposit = async (
   amount: bigint,
 ): Promise<void> => {
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.publicKey);
+  const p = new PublicKey(context.stakeAccount.address);
 
   await pythStakingClient.depositTokensToStakeAccountCustody(p, amount);
 };
@@ -250,16 +211,12 @@ export const withdraw = async (
   amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.total -= amount;
-  MOCK_DATA[context.stakeAccount.publicKey]!.walletAmount += amount;
+
 };
 
 export const claim = async (context: Context): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.total +=
-    MOCK_DATA[context.stakeAccount.publicKey]!.availableRewards;
-  MOCK_DATA[context.stakeAccount.publicKey]!.availableRewards = 0n;
-  MOCK_DATA[context.stakeAccount.publicKey]!.expiringRewards.amount = 0n;
+
 };
 
 export const stakeGovernance = async (
@@ -267,7 +224,7 @@ export const stakeGovernance = async (
   amount: bigint,
 ): Promise<void> => {
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.publicKey);
+  const p = new PublicKey(context.stakeAccount.address);
 
   await pythStakingClient.stakeToGovernance(p, amount);
 };
@@ -277,7 +234,6 @@ export const cancelWarmupGovernance = async (
   amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.governance.warmup -= amount;
 };
 
 export const unstakeGovernance = async (
@@ -285,8 +241,8 @@ export const unstakeGovernance = async (
   amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  MOCK_DATA[context.stakeAccount.publicKey]!.governance.staked -= amount;
-  MOCK_DATA[context.stakeAccount.publicKey]!.governance.cooldown += amount;
+
+
 };
 
 export const delegateIntegrityStaking = async (
@@ -296,7 +252,7 @@ export const delegateIntegrityStaking = async (
 ): Promise<void> => {
 
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.publicKey);
+  const p = new PublicKey(context.stakeAccount.address);
 
   await pythStakingClient.stakeToPublisher({
     stakeAccountPositions: p,
@@ -312,7 +268,7 @@ export const cancelWarmupIntegrityStaking = async (
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   const publisher = MOCK_DATA[
-    context.stakeAccount.publicKey
+    context.stakeAccount.address.toString()
   ]!.integrityStakingPublishers.find(
     (publisher) => publisher.publicKey === publisherKey,
   );
@@ -332,7 +288,7 @@ export const unstakeIntegrityStaking = async (
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   const publisher = MOCK_DATA[
-    context.stakeAccount.publicKey
+    context.stakeAccount.address.toString()
   ]!.integrityStakingPublishers.find(
     (publisher) => publisher.publicKey === publisherKey,
   );
@@ -380,11 +336,6 @@ export const getNextFullEpoch = (): Date => {
 };
 
 const MOCK_DELAY = 500;
-
-const MOCK_STAKE_ACCOUNTS: StakeAccount[] = [
-  { publicKey: "0x000000" },
-  { publicKey: "0x111111" },
-];
 
 const mkMockData = (isDouro: boolean): Data => ({
   total: 15_000_000n,
@@ -491,7 +442,7 @@ const mkMockData = (isDouro: boolean): Data => ({
 });
 
 const MOCK_DATA: Record<
-  (typeof MOCK_STAKE_ACCOUNTS)[number]["publicKey"],
+  string,
   Data
 > = {
   "0x000000": mkMockData(true),
@@ -538,7 +489,7 @@ const mkMockHistory = (): AccountHistory => [
 ];
 
 const MOCK_HISTORY: Record<
-  (typeof MOCK_STAKE_ACCOUNTS)[number]["publicKey"],
+  string,
   AccountHistory
 > = {
   "0x000000": mkMockHistory(),
