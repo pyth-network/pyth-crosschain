@@ -88,18 +88,18 @@ int governance_action_is_consumed(int hash) method_id {
     while (i < signers_length) {
         int bits_to_load = 528;
         builder sig_builder = begin_cell();
-        
+
         while (bits_to_load > 0) {
             int available_bits = cs.slice_bits();
             int bits = min(bits_to_load, available_bits);
             sig_builder = sig_builder.store_slice(cs~load_bits(bits));
             bits_to_load -= bits;
-            
+
             if (bits_to_load > 0) {
                 cs = cs~load_ref().begin_parse();
             }
         }
-        
+
         slice sig_slice = sig_builder.end_cell().begin_parse();
         int guardian_index = sig_slice~load_uint(8);
         int r = sig_slice~load_uint(256);
