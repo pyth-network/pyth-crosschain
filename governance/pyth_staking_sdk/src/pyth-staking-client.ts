@@ -307,6 +307,7 @@ export class PythStakingClient {
   public async advanceDelegationRecord(options: {
     stakeAccountPositions: PublicKey;
   }) {
+    // TODO: optimize to only send transactions for publishers that have positive rewards
     const { stakeAccountPositions } = options;
     const publishers = await this.getPublishers();
 
@@ -336,7 +337,7 @@ export class PythStakingClient {
       await TransactionBuilder.batchIntoVersionedTransactions(
         this.wallet.publicKey,
         this.provider.connection,
-        instructions.slice(0, 1).map((instruction) => ({
+        instructions.map((instruction) => ({
           instruction,
           signers: [],
         })),
