@@ -23,7 +23,7 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@ledgerhq/hw-transport": "^6.27.10",
     "@ledgerhq/hw-transport-node-hid": "^6.27.10",
-    "@pythnetwork/client": "^2.21.1",
+    "@pythnetwork/client": "^2.22.0",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",

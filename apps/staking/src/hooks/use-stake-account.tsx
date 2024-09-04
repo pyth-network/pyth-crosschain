@@ -2,18 +2,22 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
+  type ComponentProps,
   createContext,
   useContext,
   useCallback,
   useState,
   useEffect,
-  type ComponentProps,
+  useRef,
 } from "react";
 
-import { type StakeAccount, getStakeAccounts } from "./api";
+import { type StakeAccount, getStakeAccounts } from "../api";
+
+export type { StakeAccount } from "../api";
 
 export enum StateType {
   Initialized,
+  NoWallet,
   Loading,
   NoAccounts,
   Loaded,
@@ -22,6 +26,7 @@ export enum StateType {
 
 const State = {
   Initialized: () => ({ type: StateType.Initialized as const }),
+  NoWallet: () => ({ type: StateType.NoWallet as const }),
   Loading: () => ({ type: StateType.Loading as const }),
   NoAccounts: () => ({ type: StateType.NoAccounts as const }),
   Loaded: (
@@ -50,6 +55,7 @@ export const StakeAccountProvider = (
 };
 
 const useStakeAccountState = () => {
+  const loading = useRef(false);
   const wallet = useWallet();
   const { connection } = useConnection();
   const [state, setState] = useState<State>(State.Initialized());
@@ -66,28 +72,45 @@ const useStakeAccountState = () => {
   );
 
   useEffect(() => {
-    setState(State.Loading());
-    getStakeAccounts(connection, wallet)
-      .then((accounts) => {
-        const [firstAccount, ...otherAccounts] = accounts;
-        if (firstAccount) {
-          setState(
-            State.Loaded(
-              firstAccount,
-              [firstAccount, ...otherAccounts],
-              setAccount,
-            ),
-          );
-        } else {
-          setState(State.NoAccounts());
-        }
+    if (wallet.connected && !wallet.disconnecting && !loading.current) {
+      loading.current = true;
+      setState(State.Loading());
+      if (
+        !wallet.publicKey ||
+        !wallet.signAllTransactions ||
+        !wallet.signTransaction
+      ) {
+        throw new WalletConnectedButInvalidError();
+      }
+      getStakeAccounts(connection, {
+        publicKey: wallet.publicKey,
+        signAllTransactions: wallet.signAllTransactions,
+        signTransaction: wallet.signTransaction,
       })
-      .catch((error: unknown) => {
-        setState(State.ErrorState(error));
-      });
+        .then((accounts) => {
+          const [firstAccount, ...otherAccounts] = accounts;
+          if (firstAccount) {
+            setState(
+              State.Loaded(
+                firstAccount,
+                [firstAccount, ...otherAccounts],
+                setAccount,
+              ),
+            );
+          } else {
+            setState(State.NoAccounts());
+          }
+        })
+        .catch((error: unknown) => {
+          setState(State.ErrorState(error));
+        })
+        .finally(() => {
+          loading.current = false;
+        });
+    }
   }, [connection, setAccount, wallet]);
 
-  return state;
+  return wallet.connected && !wallet.disconnecting ? state : State.NoWallet();
 };
 
 export const useStakeAccount = () => {
@@ -103,6 +126,14 @@ class NotInitializedError extends Error {
   constructor() {
     super(
       "This component must be a child of <StakeAccountProvider> to use the `useStakeAccount` hook",
+    );
+  }
+}
+
+class WalletConnectedButInvalidError extends Error {
+  constructor() {
+    super(
+      "The wallet is connected but is missing a public key or methods to sign transactions!",
     );
   }
 }

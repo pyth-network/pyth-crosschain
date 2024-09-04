@@ -4,19 +4,30 @@ import { Styled } from "../Styled";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean | undefined;
+  secondary?: boolean | undefined;
+  small?: boolean | undefined;
+  nopad?: boolean | undefined;
 };
 
-const ButtonBase = ({ loading, disabled, children, ...props }: Props) => (
+const ButtonBase = ({
+  loading,
+  secondary,
+  small,
+  nopad,
+  disabled,
+  ...props
+}: Props) => (
   <button
     disabled={loading === true || disabled === true}
-    {...(loading && { "data-loading": true })}
+    {...(loading && { "data-loading": "" })}
+    {...(secondary && { "data-secondary": "" })}
+    {...(small && { "data-small": "" })}
+    {...(nopad && { "data-nopad": "" })}
     {...props}
-  >
-    {children}
-  </button>
+  />
 );
 
 export const Button = Styled(
   ButtonBase,
-  "border border-pythpurple-600 px-2 py-0.5 bg-black/10 disabled:cursor-not-allowed disabled:bg-black/20 disabled:border-black/40 disabled:text-neutral-700 disabled:data-[loading]:cursor-wait",
+  "border border-pythpurple-600 bg-pythpurple-600/50 data-[small]:text-sm data-[small]:px-6 data-[small]:py-1 data-[secondary]:bg-pythpurple-600/20 px-8 py-2 data-[nopad]:px-0 data-[nopad]:py-0 disabled:cursor-not-allowed disabled:bg-neutral-50/10 disabled:border-neutral-50/10 disabled:text-white/60 disabled:data-[loading]:cursor-wait hover:bg-pythpurple-600/60 data-[secondary]:hover:bg-pythpurple-600/60 data-[secondary]:disabled:bg-neutral-50/10 focus-visible:ring-1 focus-visible:ring-pythpurple-400 focus:outline-none justify-center",
 );

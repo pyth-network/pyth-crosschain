@@ -13,10 +13,13 @@ export const Tokens = ({ children, className, ...props }: Props) => {
 
   return (
     <span
-      className={clsx("inline-flex items-center gap-0.5 align-top", className)}
+      className={clsx(
+        "inline-flex items-center gap-[0.25em] align-top",
+        className,
+      )}
       {...props}
     >
-      <Pyth className="aspect-square h-[1em]" />
+      <Pyth className="aspect-square size-[1em]" />
       <span>{value}</span>
     </span>
   );

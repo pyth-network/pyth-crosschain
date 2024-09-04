@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
 import { getCurrentEpoch, getPositionState, PositionState, PythStakingClient } from "@pythnetwork/pyth-staking-sdk";
-import type { WalletContextState } from "@solana/wallet-adapter-react";
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, type Connection } from "@solana/web3.js";
 
 export type StakeAccount = {
@@ -13,7 +13,7 @@ export type StakeAccount = {
 
 export type Context = {
   connection: Connection;
-  wallet: WalletContextState;
+  wallet: AnchorWallet;
   stakeAccount: StakeAccount;
 };
 
@@ -144,14 +144,14 @@ type AccountHistory = {
 
 export const getStakeAccounts = async (
   connection: Connection,
-  wallet: WalletContextState,
+  wallet: AnchorWallet,
 ): Promise<StakeAccount[]> => {
 
   // TODO: how to deal with wallet types? Probably need an adapter
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const pythStakingClient = new PythStakingClient({ connection, wallet });
-  const stakeAccountPositions = (await pythStakingClient.getStakeAccountPositions(wallet.publicKey!));
+  const stakeAccountPositions = (await pythStakingClient.getStakeAccountPositions(wallet.publicKey));
   return stakeAccountPositions.map(x => ({ publicKey: x.address.toBase58() }));
 
 };
@@ -171,7 +171,7 @@ export const loadData = async (context: Context): Promise<Data> => {
   const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
 
   const stakeAccountPositions = 
-  await pythStakingClient.getStakeAccountPositions(context.wallet.publicKey!);
+  await pythStakingClient.getStakeAccountPositions(context.wallet.publicKey);
   
   const currentEpoch = await getCurrentEpoch(context.connection);
 
@@ -361,6 +361,22 @@ export const calculateApy = (
     ),
     maxApy,
   );
+};
+
+export const getUpcomingEpoch = (): Date => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + ((5 + 7 - d.getUTCDay()) % 7 || 7));
+  d.setUTCHours(0);
+  d.setUTCMinutes(0);
+  d.setUTCSeconds(0);
+  d.setUTCMilliseconds(0);
+  return d;
+};
+
+export const getNextFullEpoch = (): Date => {
+  const d = getUpcomingEpoch();
+  d.setUTCDate(d.getUTCDate() + 7);
+  return d;
 };
 
 const MOCK_DELAY = 500;

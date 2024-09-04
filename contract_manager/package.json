@@ -27,7 +27,7 @@
     "@cosmjs/stargate": "^0.32.3",
     "@injectivelabs/networks": "^1.14.6",
     "@mysten/sui": "^1.3.0",
-    "@pythnetwork/client": "^2.21.1",
+    "@pythnetwork/client": "^2.22.0",
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/cosmwasm-deploy-tools": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
