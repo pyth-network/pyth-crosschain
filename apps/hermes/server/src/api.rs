@@ -111,6 +111,7 @@ where
             rest::latest_vaas,
             rest::price_feed_ids,
             rest::latest_price_updates,
+            rest::latest_publisher_stake_caps,
             rest::timestamp_price_updates,
             rest::price_feeds_metadata,
             rest::price_stream_sse_handler,
@@ -150,10 +151,6 @@ where
         .route("/api/get_price_feed", get(rest::get_price_feed))
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
-        .route(
-            "/api/get_publisher_stake_caps_update_data",
-            get(rest::get_publisher_stake_caps_update_data),
-        )
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
@@ -162,6 +159,10 @@ where
             get(rest::price_stream_sse_handler),
         )
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
+        .route(
+            "/v2/updates/publisher_stake_caps/latest",
+            get(rest::latest_publisher_stake_caps),
+        )
         .route(
             "/v2/updates/price/:publish_time",
             get(rest::timestamp_price_updates),
