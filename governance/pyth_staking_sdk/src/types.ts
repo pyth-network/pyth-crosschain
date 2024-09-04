@@ -1,4 +1,4 @@
-import { IntegrityPool } from "../types/integrity_pool";
+import type { IntegrityPool } from "../types/integrity_pool";
 import type { Staking } from "../types/staking";
 import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
 

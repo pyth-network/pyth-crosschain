@@ -114,11 +114,11 @@ const ConnectedButton = (props: Props) => {
                     {stakeAccountState.allAccounts.map((account) => (
                       <WalletMenuItem
                         as={ListboxOption}
-                        key={account.publicKey}
+                        key={account.address.toBase58()}
                         value={account}
                         className="cursor-pointer hover:bg-black/5"
                       >
-                        <pre>{account.publicKey}</pre>
+                        <pre>{account.address.toBase58()}</pre>
                       </WalletMenuItem>
                     ))}
                   </ListboxOptions>

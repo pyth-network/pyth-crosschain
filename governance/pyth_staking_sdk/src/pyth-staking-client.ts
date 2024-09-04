@@ -11,7 +11,7 @@ import {
 } from "./pdas";
 import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
 import {
-  StakeAccountPositions,
+  type StakeAccountPositions,
   StakeAccountPositionsAnchor,
 } from "./staking/accounts";
 import type { IntegrityPool } from "../types/integrity_pool";
@@ -27,7 +27,7 @@ import {
 } from "@pythnetwork/solana-utils";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { PublisherCaps } from "../types/publisher_caps";
+import type { PublisherCaps } from "../types/publisher_caps";
 
 export type PythStakingClientConfig = {
   connection: Connection;

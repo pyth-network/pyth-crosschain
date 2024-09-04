@@ -1,5 +1,6 @@
 "use client";
 
+import type { StakeAccountPositions } from "@pythnetwork/staking-sdk/src/staking/accounts";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   type ComponentProps,
@@ -11,9 +12,7 @@ import {
   useRef,
 } from "react";
 
-import { type StakeAccount, getStakeAccounts } from "../api";
-
-export type { StakeAccount } from "../api";
+import { getStakeAccounts } from "../api";
 
 export enum StateType {
   Initialized,
@@ -30,9 +29,9 @@ const State = {
   Loading: () => ({ type: StateType.Loading as const }),
   NoAccounts: () => ({ type: StateType.NoAccounts as const }),
   Loaded: (
-    account: StakeAccount,
-    allAccounts: [StakeAccount, ...StakeAccount[]],
-    selectAccount: (account: StakeAccount) => void,
+    account: StakeAccountPositions,
+    allAccounts: [StakeAccountPositions, ...StakeAccountPositions[]],
+    selectAccount: (account: StakeAccountPositions) => void,
   ) => ({
     type: StateType.Loaded as const,
     account,
@@ -61,7 +60,7 @@ const useStakeAccountState = () => {
   const [state, setState] = useState<State>(State.Initialized());
 
   const setAccount = useCallback(
-    (account: StakeAccount) => {
+    (account: StakeAccountPositions) => {
       setState((cur) =>
         cur.type === StateType.Loaded
           ? State.Loaded(account, cur.allAccounts, setAccount)

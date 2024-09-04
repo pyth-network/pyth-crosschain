@@ -98,7 +98,7 @@ const useDashboardData = () => {
   const apiContext = useApiContext();
 
   const { data, isLoading, ...rest } = useSWR(
-    apiContext.stakeAccount.publicKey,
+    apiContext.stakeAccount.address.toBase58(),
     () => loadData(apiContext),
     {
       refreshInterval: REFRESH_INTERVAL,

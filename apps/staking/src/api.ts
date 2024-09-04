@@ -190,7 +190,7 @@ export const loadData = async (context: Context): Promise<Data> => {
 };
 
 export const loadAccountHistory = async (
-  context: Context,
+  _context: Context,
 ): Promise<AccountHistory> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   return MOCK_HISTORY['0x000000']!;
@@ -207,14 +207,14 @@ export const deposit = async (
 };
 
 export const withdraw = async (
-  context: Context,
-  amount: bigint,
+  _context: Context,
+  _amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
 
 };
 
-export const claim = async (context: Context): Promise<void> => {
+export const claim = async (_context: Context): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
 
 };
@@ -230,15 +230,15 @@ export const stakeGovernance = async (
 };
 
 export const cancelWarmupGovernance = async (
-  context: Context,
-  amount: bigint,
+  _context: Context,
+  _amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
 };
 
 export const unstakeGovernance = async (
-  context: Context,
-  amount: bigint,
+  _context: Context,
+  _amount: bigint,
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
 

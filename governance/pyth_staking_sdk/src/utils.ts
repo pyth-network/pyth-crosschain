@@ -1,5 +1,5 @@
 import { BN } from "@coral-xyz/anchor";
-import { ConvertBigIntToBN, ConvertBNToBigInt } from "./types";
+import type { ConvertBigIntToBN, ConvertBNToBigInt } from "./types";
 
 export const convertBNToBigInt = <T>(obj: T): ConvertBNToBigInt<T> => {
   if (obj instanceof BN) {

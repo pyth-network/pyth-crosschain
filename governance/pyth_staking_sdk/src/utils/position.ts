@@ -1,5 +1,9 @@
-import { StakeAccountPositions } from "../staking/accounts";
-import { Position, PositionState, TargetWithParameters } from "../types";
+import type { StakeAccountPositions } from "../staking/accounts";
+import {
+  type Position,
+  PositionState,
+  type TargetWithParameters,
+} from "../types";
 
 export const getPositionState = (
   position: Position,

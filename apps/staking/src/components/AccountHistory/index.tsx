@@ -135,7 +135,7 @@ const useAccountHistoryData = () => {
   const apiContext = useApiContext();
 
   const { data, isLoading, ...rest } = useSWR(
-    `${apiContext.stakeAccount.publicKey}/history`,
+    `${apiContext.stakeAccount.address.toBase58()}/history`,
     () => loadAccountHistory(apiContext),
     {
       refreshInterval: REFRESH_INTERVAL,
