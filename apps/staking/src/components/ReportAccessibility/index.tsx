@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { useLogger } from "../../logger";
+import { useLogger } from "../../hooks/use-logger";
 
 export const ReportAccessibility = () => {
   const logger = useLogger();

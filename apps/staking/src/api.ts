@@ -290,6 +290,22 @@ export const calculateApy = (
   );
 };
 
+export const getUpcomingEpoch = (): Date => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + ((5 + 7 - d.getUTCDay()) % 7 || 7));
+  d.setUTCHours(0);
+  d.setUTCMinutes(0);
+  d.setUTCSeconds(0);
+  d.setUTCMilliseconds(0);
+  return d;
+};
+
+export const getNextFullEpoch = (): Date => {
+  const d = getUpcomingEpoch();
+  d.setUTCDate(d.getUTCDate() + 7);
+  return d;
+};
+
 const MOCK_DELAY = 500;
 
 const MOCK_STAKE_ACCOUNTS: StakeAccount[] = [

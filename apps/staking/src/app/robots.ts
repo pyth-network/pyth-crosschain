@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { IS_PRODUCTION_SERVER } from "../server-config";
+import { IS_PRODUCTION_SERVER } from "../config/server";
 
 const robots = (): MetadataRoute.Robots => ({
   rules: {
