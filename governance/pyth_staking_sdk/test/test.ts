@@ -42,7 +42,7 @@ describe("Test", () => {
       governanceAuthority: PublicKey.unique(),
       pythTokenMint: PublicKey.unique(),
       pythGovernanceRealm: PublicKey.unique(),
-      unlockingDuration: 100,
+      removedUnlockingDuration: 0,
       epochDuration: 100n,
       freeze: false,
       pdaAuthority: PublicKey.unique(),
@@ -99,7 +99,8 @@ describe("Test", () => {
     const poolDataAccount = await pythStakingClient.getPoolDataAccount();
 
     expect(poolDataAccount).toEqual({
-      lastUpdatedEpoch: await getCurrentEpoch(connection),
+      lastUpdatedEpoch: (await getCurrentEpoch(connection)) - 1n,
+      claimableRewards: 0n,
       publishers: Array(1024).fill(PublicKey.default),
       delState: Array(1024).fill({
         totalDelegation: 0n,

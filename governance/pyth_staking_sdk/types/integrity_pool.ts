@@ -709,6 +709,61 @@ export type IntegrityPool = {
           "signer": true
         },
         {
+          "name": "configAccount",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                74,
+                158,
+                192,
+                43,
+                86,
+                104,
+                29,
+                164,
+                155,
+                4,
+                186,
+                155,
+                36,
+                207,
+                137,
+                253,
+                128,
+                249,
+                44,
+                241,
+                145,
+                227,
+                125,
+                189,
+                51,
+                111,
+                70,
+                231,
+                183,
+                19,
+                217
+              ]
+            }
+          }
+        },
+        {
           "name": "poolData",
           "writable": true
         },
@@ -744,10 +799,6 @@ export type IntegrityPool = {
       "args": [
         {
           "name": "rewardProgramAuthority",
-          "type": "pubkey"
-        },
-        {
-          "name": "pythTokenMint",
           "type": "pubkey"
         },
         {
@@ -1584,16 +1635,16 @@ export type IntegrityPool = {
       ]
     },
     {
-      "name": "updatePythTokenMint",
+      "name": "updateRewardProgramAuthority",
       "discriminator": [
-        39,
-        50,
-        46,
-        180,
-        14,
-        10,
-        121,
-        154
+        105,
+        58,
+        166,
+        4,
+        99,
+        253,
+        115,
+        225
       ],
       "accounts": [
         {
@@ -1634,7 +1685,7 @@ export type IntegrityPool = {
       ],
       "args": [
         {
-          "name": "pythTokenMint",
+          "name": "rewardProgramAuthority",
           "type": "pubkey"
         }
       ]
@@ -1708,6 +1759,19 @@ export type IntegrityPool = {
         251,
         132,
         155
+      ]
+    },
+    {
+      "name": "globalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
       ]
     },
     {
@@ -1966,6 +2030,78 @@ export type IntegrityPool = {
                 1024
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "globalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "governanceAuthority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pythTokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pythGovernanceRealm",
+            "type": "pubkey"
+          },
+          {
+            "name": "removedUnlockingDuration",
+            "type": "u8"
+          },
+          {
+            "name": "epochDuration",
+            "type": "u64"
+          },
+          {
+            "name": "freeze",
+            "type": "bool"
+          },
+          {
+            "name": "pdaAuthority",
+            "type": "pubkey"
+          },
+          {
+            "name": "governanceProgram",
+            "type": "pubkey"
+          },
+          {
+            "name": "pythTokenListTime",
+            "docs": [
+              "Once the pyth token is listed, governance can update the config to set this value.",
+              "Once this value is set, vesting schedules that depend on the token list date can start",
+              "vesting."
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "agreementHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "mockClockTime",
+            "type": "i64"
+          },
+          {
+            "name": "poolAuthority",
+            "type": "pubkey"
           }
         ]
       }

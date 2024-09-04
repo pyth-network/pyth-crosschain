@@ -157,9 +157,8 @@ export class PythStakingClient {
     y: bigint;
   }): Promise<void> {
     const yAnchor = convertBigIntToBN(y);
-    const config = await this.getGlobalConfig();
     const instruction = await this.integrityPoolProgram.methods
-      .initializePool(rewardProgramAuthority, config.pythTokenMint, yAnchor)
+      .initializePool(rewardProgramAuthority, yAnchor)
       .accounts({
         poolData,
       })
