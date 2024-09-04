@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@pythnetwork/price-service-sdk": "workspace:*",
+    "@pythnetwork/xc-admin-common": "workspace:*",
     "@ton/blueprint": "^0.22.0",
     "@ton/core": "~0",
     "@ton/crypto": "^3.2.0",

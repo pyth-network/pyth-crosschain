@@ -6,6 +6,7 @@ import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { PythTest, PythTestConfig } from "../wrappers/PythTest";
 import { BTC_PRICE_FEED_ID, HERMES_BTC_ETH_UPDATE } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -21,6 +22,13 @@ const EMA_PRICE = new Price({
   publishTime: 8,
 });
 const SINGLE_UPDATE_FEE = 1;
+const DATA_SOURCES: DataSource[] = [
+  {
+    emitterChain: 26,
+    emitterAddress:
+      "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+  },
+];
 
 describe("PythTest", () => {
   let code: Cell;
@@ -44,6 +52,7 @@ describe("PythTest", () => {
     price: Price = PRICE,
     emaPrice: Price = EMA_PRICE,
     singleUpdateFee: number = SINGLE_UPDATE_FEE,
+    dataSources: DataSource[] = DATA_SOURCES,
     guardianSetIndex: number = 0,
     guardianSet: string[] = GUARDIAN_SET_0,
     chainId: number = 1,
@@ -56,6 +65,7 @@ describe("PythTest", () => {
       price,
       emaPrice,
       singleUpdateFee,
+      dataSources,
       guardianSetIndex,
       guardianSet,
       chainId,

@@ -128,10 +128,10 @@ slice read_and_verify_header(slice data) {
     ;; Dictionary doesn't support cell as key, so we use cell_hash to create a 256-bit integer key
     int data_source_key = cell_hash(data_source);
 
-    ;; ;; TODO: Add data source validation
-    ;; (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
-    ;; throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
-    ;; throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, (value~load_int(1) == -1));
+    (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
+    throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
+    int valid = value~load_int(1);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, (valid == -1));
 
 
     int root_digest = parse_wormhole_payload(payload);
