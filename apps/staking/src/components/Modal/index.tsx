@@ -8,31 +8,95 @@ import {
   Transition,
 } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { type ReactNode, useCallback } from "react";
+import {
+  type ReactNode,
+  type ComponentProps,
+  type ElementType,
+  type Dispatch,
+  type SetStateAction,
+  useState,
+  useCallback,
+  useContext,
+  createContext,
+} from "react";
 
 import { Button } from "../Button";
 
-type Props = {
-  open: boolean;
+const ModalContext = createContext<
+  [boolean, Dispatch<SetStateAction<boolean>>] | undefined
+>(undefined);
+
+export const Modal = (
+  props: Omit<ComponentProps<typeof ModalContext.Provider>, "value">,
+) => {
+  const state = useState(false);
+  return <ModalContext.Provider value={state} {...props} />;
+};
+
+const useModalContext = () => {
+  const ctx = useContext(ModalContext);
+  if (ctx === undefined) {
+    throw new ContextNotInitializedError();
+  }
+  return ctx;
+};
+
+class ContextNotInitializedError extends Error {
+  constructor() {
+    super("You cannot use this component outside of a <Modal> parent!");
+  }
+}
+
+type ModalButtonProps<T extends ElementType> = Omit<ComponentProps<T>, "as"> & {
+  as?: T;
+};
+
+export const ModalButton = <T extends ElementType>({
+  as,
+  ...props
+}: ModalButtonProps<T>) => {
+  const Component = as ?? Button;
+  const [, setState] = useModalContext();
+  const toggle = useCallback(() => {
+    setState((cur) => !cur);
+  }, [setState]);
+  return <Component onClick={toggle} {...props} />;
+};
+
+export const ModalPanel = (
+  props: Omit<RawModalProps, "isOpen" | "onClose">,
+) => {
+  const [state, setState] = useModalContext();
+  const onClose = useCallback(() => {
+    setState(false);
+  }, [setState]);
+
+  return <RawModal isOpen={state} onClose={onClose} {...props} />;
+};
+
+type RawModalProps = {
+  isOpen: boolean;
   onClose: () => void;
   closeDisabled?: boolean | undefined;
   afterLeave?: (() => void) | undefined;
-  children?: ReactNode | ReactNode[] | undefined;
   title: ReactNode | ReactNode[];
   description?: string;
-  additionalButtons?: ReactNode | ReactNode[] | undefined;
+  children?:
+    | ((onClose: () => void) => ReactNode | ReactNode[])
+    | ReactNode
+    | ReactNode[]
+    | undefined;
 };
 
-export const Modal = ({
-  open,
+export const RawModal = ({
+  isOpen,
   onClose,
   closeDisabled,
   afterLeave,
   children,
   title,
   description,
-  additionalButtons,
-}: Props) => {
+}: RawModalProps) => {
   const handleClose = useCallback(() => {
     if (!closeDisabled) {
       onClose();
@@ -40,48 +104,42 @@ export const Modal = ({
   }, [closeDisabled, onClose]);
 
   return (
-    <Dialog open={open} onClose={handleClose} className="relative z-50">
-      <DialogBackdrop
-        transition
-        className="fixed inset-0 bg-black/30 duration-300 ease-out data-[closed]:opacity-0"
-      />
-      <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-        <Transition
-          as={DialogPanel}
-          show={open}
-          static
-          className="relative rounded-md bg-white p-8 duration-300 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
-          {...(afterLeave && { afterLeave })}
-        >
-          <DialogTitle
-            as="h1"
-            className="text-lg font-medium leading-6 text-neutral-800 dark:text-neutral-200 md:text-xl lg:text-2xl"
+    <Transition show={isOpen} {...(afterLeave && { afterLeave })}>
+      <Dialog
+        static
+        open={isOpen}
+        onClose={handleClose}
+        className="relative z-50"
+      >
+        <DialogBackdrop
+          transition
+          className="fixed inset-0 bg-black/30 backdrop-blur duration-300 ease-out data-[closed]:opacity-0"
+        />
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <DialogPanel
+            transition
+            className="relative border border-neutral-600/50 bg-[#100E21] px-10 py-12 duration-300 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
           >
-            {title}
-          </DialogTitle>
-          {closeDisabled !== true && (
-            <CloseButton className="absolute right-3 top-3 rounded-md p-2 text-neutral-500 transition hover:bg-black/10 dark:hover:bg-white/5">
-              <XMarkIcon className="size-5" />
-            </CloseButton>
-          )}
-          {description && (
-            <Description className="mb-10 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-              {description}
-            </Description>
-          )}
-          {children}
-          <div className="mt-8 flex flex-row justify-end gap-4 text-right">
+            <DialogTitle as="h2" className="text-3xl font-light leading-6">
+              {title}
+            </DialogTitle>
             <CloseButton
               as={Button}
-              className="px-4 py-2"
+              className="absolute right-3 top-3 grid size-10 place-content-center"
+              nopad
               disabled={closeDisabled ?? false}
             >
-              Close
+              <XMarkIcon className="size-6" />
             </CloseButton>
-            {additionalButtons}
-          </div>
-        </Transition>
-      </div>
-    </Dialog>
+            {description && (
+              <Description className="mb-10 mt-2 max-w-96 opacity-60">
+                {description}
+              </Description>
+            )}
+            {typeof children === "function" ? children(handleClose) : children}
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </Transition>
   );
 };

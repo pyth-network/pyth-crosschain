@@ -10,8 +10,6 @@ import {
   GlowWalletAdapter,
   LedgerWalletAdapter,
   SolflareWalletAdapter,
-  SolletExtensionWalletAdapter,
-  SolletWalletAdapter,
   TorusWalletAdapter,
   WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
@@ -41,8 +39,6 @@ export const WalletProvider = ({
       new GlowWalletAdapter(),
       new LedgerWalletAdapter(),
       new SolflareWalletAdapter(),
-      new SolletExtensionWalletAdapter(),
-      new SolletWalletAdapter(),
       new TorusWalletAdapter(),
       ...(walletConnectProjectId
         ? [

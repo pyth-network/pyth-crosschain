@@ -9,23 +9,13 @@ import {
 } from "../../api";
 import { useApiContext } from "../../hooks/use-api-context";
 import { LoadingSpinner } from "../LoadingSpinner";
-import { ModalButton } from "../ModalButton";
 import { Tokens } from "../Tokens";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const AccountHistoryButton = () => (
-  <ModalButton
-    title="Account history"
-    description="A history of events that have affected your account balances"
-  >
-    <ModalBody />
-  </ModalButton>
-);
-
-const ModalBody = () => {
+export const AccountHistory = () => {
   const history = useAccountHistoryData();
 
   switch (history.type) {

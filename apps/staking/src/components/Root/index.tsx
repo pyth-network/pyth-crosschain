@@ -11,7 +11,11 @@ import {
   MAINNET_RPC,
 } from "../../config/server";
 import { LoggerProvider } from "../../hooks/use-logger";
+import { StakeAccountProvider } from "../../hooks/use-stake-account";
 import { Amplitude } from "../Amplitude";
+import { Footer } from "../Footer";
+import { Header } from "../Header";
+import { MaxWidth } from "../MaxWidth";
 import { ReportAccessibility } from "../ReportAccessibility";
 import { WalletProvider } from "../WalletProvider";
 
@@ -35,18 +39,24 @@ export const Root = ({ children }: Props) => (
       walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
       rpc={MAINNET_RPC}
     >
-      <html
-        lang="en"
-        dir="ltr"
-        className={clsx("h-dvh", redHatText.variable, redHatMono.variable)}
-      >
-        <body className="grid size-full grid-cols-1 grid-rows-[max-content_1fr_max-content] bg-white text-pythpurple-950 dark:bg-pythpurple-900 dark:text-white">
-          {children}
-        </body>
-        {GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />}
-        {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
-        {!IS_PRODUCTION_SERVER && <ReportAccessibility />}
-      </html>
+      <StakeAccountProvider>
+        <html
+          lang="en"
+          dir="ltr"
+          className={clsx(redHatText.variable, redHatMono.variable)}
+        >
+          <body className="grid min-h-dvh grid-rows-[auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(113.49%_134.57%_at_5.57%_97.67%,_rgba(17,_15,_35,_0.00)_0%,_rgba(119,_49,_234,_0.20)_100%),_#0A0814] selection:bg-pythpurple-600/60">
+            <Header className="z-10" />
+            <MaxWidth className="my-4">{children}</MaxWidth>
+            <Footer className="z-10" />
+          </body>
+          {GOOGLE_ANALYTICS_ID && (
+            <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />
+          )}
+          {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
+          {!IS_PRODUCTION_SERVER && <ReportAccessibility />}
+        </html>
+      </StakeAccountProvider>
     </WalletProvider>
   </LoggerProvider>
 );
