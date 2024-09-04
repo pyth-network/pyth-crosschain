@@ -63,7 +63,24 @@ export class PythStakingClient {
 
   async setGlobalConfig(config: GlobalConfig) {
     const globalConfigAnchor = convertBigIntToBN(config);
-    return this.stakingProgram.methods.initConfig(globalConfigAnchor).rpc();
+    const instruction = await this.stakingProgram.methods
+      .initConfig(globalConfigAnchor)
+      .instruction();
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction,
+            signers: [],
+          },
+        ],
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
@@ -141,12 +158,27 @@ export class PythStakingClient {
   }): Promise<void> {
     const yAnchor = convertBigIntToBN(y);
     const config = await this.getGlobalConfig();
-    await this.integrityPoolProgram.methods
+    const instruction = await this.integrityPoolProgram.methods
       .initializePool(rewardProgramAuthority, config.pythTokenMint, yAnchor)
       .accounts({
         poolData,
       })
-      .rpc();
+      .instruction();
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction,
+            signers: [],
+          },
+        ],
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 
   public async getOwnerPythAtaAccount(): Promise<Account> {
@@ -200,7 +232,7 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     amount: bigint
   ) {
-    this.stakingProgram.methods
+    const instruction = await this.stakingProgram.methods
       .createPosition(
         {
           voting: {},
@@ -210,7 +242,22 @@ export class PythStakingClient {
       .accounts({
         stakeAccountPositions,
       })
-      .rpc();
+      .instruction();
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction,
+            signers: [],
+          },
+        ],
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 
   public async depositTokensToStakeAccountCustody(
@@ -258,13 +305,28 @@ export class PythStakingClient {
       this.wallet.publicKey
     );
 
-    this.stakingProgram.methods
+    const instruction = await this.stakingProgram.methods
       .withdrawStake(new BN(amount.toString()))
       .accounts({
         destination: receiverTokenAccount,
         stakeAccountPositions,
       })
-      .rpc();
+      .instruction();
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction,
+            signers: [],
+          },
+        ],
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 
   public async stakeToPublisher(options: {
