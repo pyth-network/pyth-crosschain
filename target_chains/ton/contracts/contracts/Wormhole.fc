@@ -2,6 +2,7 @@
 #include "common/errors.fc";
 #include "common/utils.fc";
 #include "common/storage.fc";
+#include "common/constants.fc";
 
 ;; Signature verification function
 ;; ECRECOVER: Recovers the signer's address from the signature
@@ -13,15 +14,11 @@
     "NULLSWAPIFNOT" ;; If recovery failed, insert null under the top of the stack
     "NULLSWAPIFNOT2";  ;; If recovery failed, insert two more nulls under the top of the stack
 
-;; Constants
-const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
-const int UPGRADE_MODULE = 0x0000000000000000000000000000000000000000000000000000000000436f7265; ;; "Core" (left-padded to 256 bits) in hex
-
 ;; For troubleshooting purposes
-() dump_guardian_sets(cell keys) impure {
+() dump_guardian_sets(cell keys_dict) impure {
     int key = -1;
     do {
-        (key, slice value, int found) = keys.udict_get_next?(32, key);
+        (key, slice value, int found) = keys_dict.udict_get_next?(32, key);
         if (found) {
             ~dump(key);
             ~dump(value);
@@ -34,7 +31,6 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 (int, cell, int) parse_guardian_set(slice guardian_set) {
     slice cs = guardian_set~load_ref().begin_parse();
     int expiration_time = cs~load_uint(64);
-    ;; slice keys = cs~load_ref().begin_parse();
     cell keys_dict = cs~load_dict();
     int key_count = 0;
     int key = -1;
@@ -44,15 +40,14 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
             key_count += 1;
         }
     } until (~ found);
-
     return (expiration_time, keys_dict, key_count);
 }
 
 (int, cell, int) get_guardian_set_internal(int index) {
     (slice guardian_set, int found?) = guardian_sets.udict_get?(32, index);
     throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
-    (int expiration_time, cell keys, int key_count) = parse_guardian_set(guardian_set);
-    return (expiration_time, keys, key_count);
+    (int expiration_time, cell keys_dict, int key_count) = parse_guardian_set(guardian_set);
+    return (expiration_time, keys_dict, key_count);
 }
 
 
@@ -85,18 +80,31 @@ int governance_action_is_consumed(int hash) method_id {
 }
 
 
-() verify_signatures(int hash, slice signatures, int signers_length, cell guardian_set_keys, int guardian_set_size) impure {
-    slice cs = signatures;
+() verify_signatures(int hash, cell signatures, int signers_length, cell guardian_set_keys, int guardian_set_size) impure {
+    slice cs = signatures.begin_parse();
     int i = 0;
     int valid_signatures = 0;
 
     while (i < signers_length) {
-        int guardian_index = cs~load_uint(8);
-        (_, int found?) = guardian_sets.udict_get?(32, guardian_index);
-        throw_unless(ERROR_GUARDIAN_SET_NOT_FOUND, found?);
-        int r = cs~load_uint(256);
-        int s = cs~load_uint(256);
-        int v = cs~load_uint(8);
+        int bits_to_load = 528;
+        builder sig_builder = begin_cell();
+        
+        while (bits_to_load > 0) {
+            int available_bits = cs.slice_bits();
+            int bits = min(bits_to_load, available_bits);
+            sig_builder = sig_builder.store_slice(cs~load_bits(bits));
+            bits_to_load -= bits;
+            
+            if (bits_to_load > 0) {
+                cs = cs~load_ref().begin_parse();
+            }
+        }
+        
+        slice sig_slice = sig_builder.end_cell().begin_parse();
+        int guardian_index = sig_slice~load_uint(8);
+        int r = sig_slice~load_uint(256);
+        int s = sig_slice~load_uint(256);
+        int v = sig_slice~load_uint(8);
         (_, int x1, int x2, int valid) = check_sig(hash, v >= 27 ? v - 27 : v, r, s);
         throw_unless(ERROR_INVALID_SIGNATURES, valid);
         int parsed_address = pubkey_to_eth_address(x1, x2);
@@ -119,8 +127,8 @@ int governance_action_is_consumed(int hash) method_id {
     throw_unless(ERROR_INVALID_VERSION, version == 1);
     int vm_guardian_set_index = in_msg_body~load_uint(32);
     ;; Verify and check if guardian set is valid
-    (int expiration_time, cell keys, int key_count) = get_guardian_set_internal(vm_guardian_set_index);
-    throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys));
+    (int expiration_time, cell keys_dict, int key_count) = get_guardian_set_internal(vm_guardian_set_index);
+    throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys_dict));
     throw_unless(ERROR_INVALID_GUARDIAN_SET,
         (current_guardian_set_index == vm_guardian_set_index) &
         ((expiration_time == 0) | (expiration_time > now()))
@@ -148,9 +156,9 @@ int governance_action_is_consumed(int hash) method_id {
     ;; Load body
     (cell body_cell, _) = read_and_store_large_data(in_msg_body, body_length);
 
-    int hash = hash_vm_body(body_cell.begin_parse());
+    int hash = keccak256_int(keccak256_slice(body_cell.begin_parse()));
     ;; Verify signatures
-    verify_signatures(hash, signatures.begin_parse(), signers_length, keys, key_count);
+    verify_signatures(hash, signatures, signers_length, keys_dict, key_count);
 
     slice body_slice = body_cell.begin_parse();
     int timestamp = body_slice~load_uint(32);
@@ -173,6 +181,19 @@ int governance_action_is_consumed(int hash) method_id {
         payload,
         hash
     );
+}
+
+int parse_wormhole_payload(slice payload) impure {
+    int accumulator_wormhole_magic = payload~load_uint(32);
+    throw_unless(ERROR_INVALID_MAGIC, accumulator_wormhole_magic == ACCUMULATOR_WORMHOLE_MAGIC);
+
+    int update_type = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == 0);  ;; 0 corresponds to WormholeMerkle
+
+    payload~load_uint(64);  ;; Skip slot
+    payload~load_uint(32);  ;; Skip ring_size
+
+    return payload~load_uint(160);  ;; Return root_digest
 }
 
 (int, int, int, cell, int) parse_encoded_upgrade(int current_guardian_set_index, slice payload) impure {
@@ -230,20 +251,20 @@ int governance_action_is_consumed(int hash) method_id {
     ;; Set expiry if current GuardianSet exists
     (slice current_guardian_set, int found?) = guardian_sets.udict_get?(32, current_guardian_set_index);
     if (found?) {
-        (int expiration_time, cell keys, int key_count) = parse_guardian_set(current_guardian_set);
+        (int expiration_time, cell keys_dict, int key_count) = parse_guardian_set(current_guardian_set);
         cell updated_guardian_set = begin_cell()
             .store_uint(now() + GUARDIAN_SET_EXPIRY, 64) ;; expiration time
-            .store_dict(keys) ;; keys
+            .store_dict(keys_dict) ;; keys
         .end_cell();
-        guardian_sets~udict_set(32, current_guardian_set_index, updated_guardian_set.begin_parse());
+        guardian_sets~udict_set(32, current_guardian_set_index, begin_cell().store_ref(updated_guardian_set).end_cell().begin_parse()); ;; store reference to updated_guardian_set because storeDict stores a dict into a ref
     }
 
     ;; Store the new guardian set
     cell new_guardian_set = begin_cell()
         .store_uint(0, 64) ;; expiration_time, set to 0 initially
-        .store_ref(new_guardian_set_keys)
+        .store_dict(new_guardian_set_keys)
     .end_cell();
-    guardian_sets~udict_set(32, new_guardian_set_index, new_guardian_set.begin_parse());
+    guardian_sets~udict_set(32, new_guardian_set_index, begin_cell().store_ref(new_guardian_set).end_cell().begin_parse());
 
     ;; Update the current guardian set index
     current_guardian_set_index = new_guardian_set_index;

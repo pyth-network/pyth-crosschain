@@ -10,7 +10,10 @@ import {
   SendMode,
 } from "@ton/core";
 import { createCellChain } from "../tests/utils";
-import { parseGuardianSetKeys } from "../tests/utils/wormhole";
+import {
+  createGuardianSetsDict,
+  parseGuardianSetKeys,
+} from "../tests/utils/wormhole";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;
@@ -53,23 +56,6 @@ export class WormholeTest implements Contract {
     governanceChainId: number,
     governanceContract: string
   ): Cell {
-    const guardianSetDict = Dictionary.empty(
-      Dictionary.Keys.Uint(8),
-      Dictionary.Values.Buffer(20)
-    );
-    guardianSet.forEach((key, index) => {
-      guardianSetDict.set(index, Buffer.from(key.slice(2), "hex"));
-    });
-    const guardianSets = Dictionary.empty(
-      Dictionary.Keys.Uint(32),
-      Dictionary.Values.Cell()
-    );
-    const guardianSetCell = beginCell()
-      .storeUint(0, 64) // expiration_time, set to 0 for testing
-      .storeDict(guardianSetDict)
-      .endCell();
-    guardianSets.set(guardianSetIndex, guardianSetCell);
-
     return beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
       .storeUint(0, 256) // single_update_fee, set to 0 for testing
@@ -77,7 +63,7 @@ export class WormholeTest implements Contract {
       .storeUint(0, 32) // num_data_sources, set to 0 for initial state
       .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
       .storeUint(guardianSetIndex, 32)
-      .storeDict(guardianSets)
+      .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))

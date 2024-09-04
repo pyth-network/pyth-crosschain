@@ -8,9 +8,11 @@ import {
   Dictionary,
   Sender,
   SendMode,
+  toNano,
 } from "@ton/core";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { createCellChain } from "../tests/utils";
+import { createGuardianSetsDict } from "../tests/utils/wormhole";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
@@ -18,6 +20,11 @@ export type PythTestConfig = {
   price: Price;
   emaPrice: Price;
   singleUpdateFee: number;
+  guardianSetIndex: number;
+  guardianSet: string[];
+  chainId: number;
+  governanceChainId: number;
+  governanceContract: string;
 };
 
 export class PythTest implements Contract {
@@ -36,7 +43,12 @@ export class PythTest implements Contract {
       config.timePeriod,
       config.price,
       config.emaPrice,
-      config.singleUpdateFee
+      config.singleUpdateFee,
+      config.guardianSetIndex,
+      config.guardianSet,
+      config.chainId,
+      config.governanceChainId,
+      config.governanceContract
     );
     const init = { code, data };
     return new PythTest(contractAddress(workchain, init), init);
@@ -47,7 +59,12 @@ export class PythTest implements Contract {
     timePeriod: number,
     price: Price,
     emaPrice: Price,
-    singleUpdateFee: number
+    singleUpdateFee: number,
+    guardianSetIndex: number,
+    guardianSet: string[],
+    chainId: number,
+    governanceChainId: number,
+    governanceContract: string
   ): Cell {
     const priceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
@@ -55,17 +72,14 @@ export class PythTest implements Contract {
     );
 
     const priceCell = beginCell()
-      .storeInt(price.getPriceAsNumberUnchecked() * 10 ** -price.expo, 256)
+      .storeInt(price.getPriceAsNumberUnchecked() * 10 ** -price.expo, 64)
       .storeUint(price.getConfAsNumberUnchecked() * 10 ** -price.expo, 64)
       .storeInt(price.expo, 32)
       .storeUint(price.publishTime, 64)
       .endCell();
 
     const emaPriceCell = beginCell()
-      .storeInt(
-        emaPrice.getPriceAsNumberUnchecked() * 10 ** -emaPrice.expo,
-        256
-      )
+      .storeInt(emaPrice.getPriceAsNumberUnchecked() * 10 ** -emaPrice.expo, 64)
       .storeUint(emaPrice.getConfAsNumberUnchecked() * 10 ** -emaPrice.expo, 64)
       .storeInt(emaPrice.expo, 32)
       .storeUint(emaPrice.publishTime, 64)
@@ -85,16 +99,11 @@ export class PythTest implements Contract {
       .storeDict(Dictionary.empty()) // data_sources, empty for initial state
       .storeUint(0, 32) // num_data_sources, set to 0 for initial state
       .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
-      .storeUint(0, 32)
-      .storeDict(Dictionary.empty())
-      .storeUint(0, 16)
-      .storeUint(0, 16)
-      .storeBuffer(
-        Buffer.from(
-          "0000000000000000000000000000000000000000000000000000000000000000",
-          "hex"
-        )
-      )
+      .storeUint(guardianSetIndex, 32)
+      .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
+      .storeUint(chainId, 16)
+      .storeUint(governanceChainId, 16)
+      .storeBuffer(Buffer.from(governanceContract, "hex"))
       .storeDict(Dictionary.empty()) // consumed_governance_actions,
       .storeRef(beginCell()) // governance_data_source, empty for initial state
       .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
@@ -198,5 +207,40 @@ export class PythTest implements Contract {
     ]);
 
     return result.stack.readNumber();
+  }
+
+  async sendUpdatePriceFeeds(
+    provider: ContractProvider,
+    via: Sender,
+    updateData: Buffer,
+    updateFee: bigint
+  ) {
+    const messageBody = beginCell()
+      .storeUint(1, 32) // OP_UPDATE_PRICE_FEEDS
+      .storeRef(createCellChain(updateData))
+      .endCell();
+
+    await provider.internal(via, {
+      value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
+  }
+
+  async sendUpdateGuardianSet(
+    provider: ContractProvider,
+    via: Sender,
+    vm: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(2, 32) // OP_UPDATE_GUARDIAN_SET
+      .storeRef(createCellChain(vm))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
   }
 }
