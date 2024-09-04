@@ -41,7 +41,6 @@ export const getPeriodicUnlockSchedule = (options: {
   for (let i = 0; i < numPeriods; i++) {
     const unlockTimeStamp =
       Number(startDate) + Number(periodDuration) * (i + 1);
-    console.debug("Unlock timestamp", unlockTimeStamp);
     if (currentTimeStamp < unlockTimeStamp) {
       unlockSchedule.push({
         date: new Date(unlockTimeStamp * 1000),
