@@ -1,8 +1,25 @@
 #include "../imports/stdlib.fc";
 #include "../Pyth.fc";
+#include "../Wormhole.fc";
+
+const int OP_UPDATE_PRICE_FEEDS = 1;
+const int OP_UPDATE_GUARDIAN_SET = 2;
+
 
 () recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-    ;; nop;
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    int op = in_msg_body~load_uint(32);
+    cell data = in_msg_body~load_ref();
+    if (op == OP_UPDATE_PRICE_FEEDS) {
+        update_price_feeds(msg_value, data.begin_parse());
+    } elseif (op == OP_UPDATE_GUARDIAN_SET) {
+        update_guardian_set(data.begin_parse());
+    } else {
+        throw(0xffff); ;; Throw exception for unknown op
+    }
 }
 
 (int, int, int, int) test_get_price_unsafe(int price_feed_id) method_id {

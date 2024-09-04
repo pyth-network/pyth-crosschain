@@ -2,16 +2,11 @@ import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { Cell, toNano } from "@ton/core";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
-import {
-  HexString,
-  parseAccumulatorUpdateData,
-  Price,
-} from "@pythnetwork/price-service-sdk";
+import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { PythTest, PythTestConfig } from "../wrappers/PythTest";
-import { HERMES_BTC_ETH_UPDATE } from "./utils/pyth";
+import { BTC_PRICE_FEED_ID, HERMES_BTC_ETH_UPDATE } from "./utils/pyth";
+import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 
-const PRICE_FEED_ID =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
 const TIME_PERIOD = 60;
 const PRICE = new Price({
   price: "1",
@@ -44,11 +39,16 @@ describe("PythTest", () => {
   });
 
   async function deployContract(
-    priceFeedId: HexString = PRICE_FEED_ID,
+    priceFeedId: HexString = BTC_PRICE_FEED_ID,
     timePeriod: number = TIME_PERIOD,
     price: Price = PRICE,
     emaPrice: Price = EMA_PRICE,
-    singleUpdateFee: number = SINGLE_UPDATE_FEE
+    singleUpdateFee: number = SINGLE_UPDATE_FEE,
+    guardianSetIndex: number = 0,
+    guardianSet: string[] = GUARDIAN_SET_0,
+    chainId: number = 1,
+    governanceChainId: number = 1,
+    governanceContract: string = "0000000000000000000000000000000000000000000000000000000000000004"
   ) {
     const config: PythTestConfig = {
       priceFeedId,
@@ -56,6 +56,11 @@ describe("PythTest", () => {
       price,
       emaPrice,
       singleUpdateFee,
+      guardianSetIndex,
+      guardianSet,
+      chainId,
+      governanceChainId,
+      governanceContract,
     };
 
     pythTest = blockchain.openContract(PythTest.createFromConfig(config, code));
@@ -76,7 +81,7 @@ describe("PythTest", () => {
   it("should correctly get price unsafe", async () => {
     await deployContract();
 
-    const result = await pythTest.getPriceUnsafe(PRICE_FEED_ID);
+    const result = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
     expect(result.price).toBe(1);
     expect(result.conf).toBe(2);
     expect(result.expo).toBe(3);
@@ -91,11 +96,11 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: timeNow,
     });
-    await deployContract(PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
 
     const result = await pythTest.getPriceNoOlderThan(
       TIME_PERIOD,
-      PRICE_FEED_ID
+      BTC_PRICE_FEED_ID
     );
 
     expect(result.price).toBe(1);
@@ -108,7 +113,7 @@ describe("PythTest", () => {
     await deployContract();
 
     await expect(
-      pythTest.getPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
   });
 
@@ -120,11 +125,11 @@ describe("PythTest", () => {
       expo: 7,
       publishTime: timeNow,
     });
-    await deployContract(PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
+    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
 
     const result = await pythTest.getEmaPriceNoOlderThan(
       TIME_PERIOD,
-      PRICE_FEED_ID
+      BTC_PRICE_FEED_ID
     );
 
     expect(result.price).toBe(5);
@@ -137,14 +142,14 @@ describe("PythTest", () => {
     await deployContract();
 
     await expect(
-      pythTest.getEmaPriceNoOlderThan(TIME_PERIOD, PRICE_FEED_ID)
+      pythTest.getEmaPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
   });
 
   it("should correctly get ema price unsafe", async () => {
     await deployContract();
 
-    const result = await pythTest.getEmaPriceUnsafe(PRICE_FEED_ID);
+    const result = await pythTest.getEmaPriceUnsafe(BTC_PRICE_FEED_ID);
 
     expect(result.price).toBe(5);
     expect(result.conf).toBe(6);
@@ -160,5 +165,74 @@ describe("PythTest", () => {
     );
 
     expect(result).toBe(2);
+  });
+
+  it("should correctly update price feeds", async () => {
+    await deployContract();
+    let result;
+
+    const mainnet_upgrade_vaa_1 = MAINNET_UPGRADE_VAAS[0];
+    result = await pythTest.sendUpdateGuardianSet(
+      deployer.getSender(),
+      Buffer.from(mainnet_upgrade_vaa_1, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    const mainnet_upgrade_vaa_2 = MAINNET_UPGRADE_VAAS[1];
+    result = await pythTest.sendUpdateGuardianSet(
+      deployer.getSender(),
+      Buffer.from(mainnet_upgrade_vaa_2, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    const mainnet_upgrade_vaa_3 = MAINNET_UPGRADE_VAAS[2];
+    result = await pythTest.sendUpdateGuardianSet(
+      deployer.getSender(),
+      Buffer.from(mainnet_upgrade_vaa_3, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    const mainnet_upgrade_vaa_4 = MAINNET_UPGRADE_VAAS[3];
+    result = await pythTest.sendUpdateGuardianSet(
+      deployer.getSender(),
+      Buffer.from(mainnet_upgrade_vaa_4, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+
+    result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      toNano(updateFee)
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Check if the price has been updated correctly
+    const updatedPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
+    expect(updatedPrice.price).not.toBe(Number(PRICE.price)); // Since we updated the price, it should not be the same as the initial price
+    expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
   });
 });
