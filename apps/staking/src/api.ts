@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-array-reduce */
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
@@ -45,7 +44,7 @@ type Data = {
   };
   integrityStakingPublishers: {
     name: string;
-    publicKey: `0x${string}`;
+    publicKey: string;
     isSelf: boolean;
     selfStake: bigint;
     poolCapacity: bigint;
@@ -167,6 +166,8 @@ export const loadData = async (context: Context): Promise<Data> => {
   const p = new PublicKey(context.stakeAccount.publicKey);
   const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(p);
 
+  const poolDataAccount = await pythStakingClient.getPoolDataAccount();
+
   const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
 
   const stakeAccountPositions = 
@@ -205,6 +206,25 @@ export const loadData = async (context: Context): Promise<Data> => {
       cooldown2: governanceCooldown2,
     },
     walletAmount: ownerATAAccount.amount,
+    integrityStakingPublishers: poolDataAccount.publishers.map(p => ({
+      apyHistory: [],
+      isSelf: false,
+      name: p.toBase58(),
+      numFeeds: 0,
+      poolCapacity: 100n,
+      poolUtilization: 0n,
+      publicKey: p.toBase58(),
+      qualityRanking: 0,
+      selfStake: 0n,
+      positions: {
+        cooldown: 0n,
+        cooldown2: 0n,
+        staked: 0n,
+        warmup: stakeAccountPosition.data.positions
+        .filter(x => x?.targetWithParameters.integrityPool?.publisher.toBase58() === p.toBase58())
+        .map(x => x!.amount).reduce((sum, amount) => sum + amount, 0n),
+      }
+    }))
    };
 };
 
@@ -274,18 +294,15 @@ export const delegateIntegrityStaking = async (
   publisherKey: string,
   amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  const publisher = MOCK_DATA[
-    context.stakeAccount.publicKey
-  ]!.integrityStakingPublishers.find(
-    (publisher) => publisher.publicKey === publisherKey,
-  );
-  if (publisher) {
-    publisher.positions ||= {};
-    publisher.positions.warmup = (publisher.positions.warmup ?? 0n) + amount;
-  } else {
-    throw new Error(`Invalid publisher key: "${publisherKey}"`);
-  }
+
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  const p = new PublicKey(context.stakeAccount.publicKey);
+
+  await pythStakingClient.stakeToPublisher({
+    stakeAccountPositions: p,
+    publisher: new PublicKey(publisherKey),
+    amount
+  });
 };
 
 export const cancelWarmupIntegrityStaking = async (

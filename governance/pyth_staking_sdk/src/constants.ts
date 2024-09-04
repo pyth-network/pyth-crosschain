@@ -10,9 +10,9 @@ export const STAKING_PROGRAM_ADDRESS = new PublicKey(
 );
 
 export const INTEGRITY_POOL_PROGRAM_ADDRESS = new PublicKey(
-  "BiJszJY5BfRKkvt818SAbY9z9cJLp2jYDPgG2BzsufiE"
+  "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN"
 );
 
 export const PUBLISHER_CAPS_PROGRAM_ADDRESS = new PublicKey(
-  "BZ1jqX41oh3NaF7FmkrCWUrd4eQZQqid1edPLGxzJMc2"
+  "pytcD8uUjPxSLMsNqoVnm9dXQw9tKJJf3CQnGwa8oL7"
 );

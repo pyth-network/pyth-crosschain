@@ -208,4 +208,20 @@ export class PythStakingClient {
 
     await sendTransactions(transactions, this.connection, this.wallet);
   }
+
+  public async stakeToPublisher(options: {
+    stakeAccountPositions: PublicKey;
+    publisher: PublicKey;
+    amount: bigint;
+  }) {
+    const { stakeAccountPositions, publisher, amount } = options;
+    this.integrityPoolProgram.methods
+      .delegate(new BN(amount.toString()))
+      .accounts({
+        owner: this.wallet.publicKey,
+        publisher,
+        stakeAccountPositions,
+      })
+      .rpc();
+  }
 }
