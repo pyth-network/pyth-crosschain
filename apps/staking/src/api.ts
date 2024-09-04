@@ -201,17 +201,15 @@ export const deposit = async (
   amount: bigint,
 ): Promise<void> => {
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.address);
-
-  await pythStakingClient.depositTokensToStakeAccountCustody(p, amount);
+  await pythStakingClient.depositTokensToStakeAccountCustody(context.stakeAccount.address, amount);
 };
 
 export const withdraw = async (
-  _context: Context,
-  _amount: bigint,
+  context: Context,
+  amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  await pythStakingClient.withdrawTokensFromStakeAccountCustody(context.stakeAccount.address, amount);
 };
 
 export const claim = async (_context: Context): Promise<void> => {

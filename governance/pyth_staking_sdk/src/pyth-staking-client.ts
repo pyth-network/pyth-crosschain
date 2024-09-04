@@ -231,6 +231,27 @@ export class PythStakingClient {
     await sendTransactions(transactions, this.connection, this.wallet);
   }
 
+  public async withdrawTokensFromStakeAccountCustody(
+    stakeAccountPositions: PublicKey,
+    amount: bigint
+  ) {
+    const globalConfig = await this.getGlobalConfig();
+    const mint = globalConfig.pythTokenMint;
+
+    const receiverTokenAccount = await getAssociatedTokenAddress(
+      mint,
+      this.wallet.publicKey
+    );
+
+    this.stakingProgram.methods
+      .withdrawStake(new BN(amount.toString()))
+      .accounts({
+        destination: receiverTokenAccount,
+        stakeAccountPositions,
+      })
+      .rpc();
+  }
+
   public async stakeToPublisher(options: {
     stakeAccountPositions: PublicKey;
     publisher: PublicKey;
