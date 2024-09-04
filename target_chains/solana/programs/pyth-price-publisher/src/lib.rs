@@ -3,4 +3,4 @@ pub mod accounts;
 mod entrypoint;
 mod error;
 #[cfg(feature = "solana-program")]
-mod instruction;
+pub mod instruction;

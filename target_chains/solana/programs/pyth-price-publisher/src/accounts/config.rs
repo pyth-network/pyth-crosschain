@@ -1,6 +1,7 @@
 use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use std::mem::size_of;
-use thiserror::Error;
+
+use super::errors::ReadAccountError;
 
 /// Account Magic to avoid Account Confusiong
 const FORMAT: u32 = 1505352794;
@@ -13,16 +14,6 @@ pub struct Config {
 }
 
 pub const SIZE: usize = size_of::<Config>();
-
-#[derive(Debug, Error)]
-pub enum ReadAccountError {
-    #[error("data too short")]
-    DataTooShort,
-    #[error("format mismatch")]
-    FormatMismatch,
-    #[error("already initialized")]
-    AlreadyInitialized,
-}
 
 pub fn read(data: &[u8]) -> Result<&Config, ReadAccountError> {
     if data.len() < size_of::<Config>() {
@@ -46,20 +37,4 @@ pub fn create(data: &mut [u8], authority: [u8; 32]) -> Result<&mut Config, ReadA
     data.format = FORMAT;
     data.authority = authority;
     Ok(data)
-}
-
-#[cfg(feature = "solana-program")]
-mod convert {
-    use super::*;
-    use solana_program::program_error::ProgramError;
-
-    impl From<ReadAccountError> for ProgramError {
-        fn from(value: ReadAccountError) -> Self {
-            match value {
-                ReadAccountError::DataTooShort => ProgramError::AccountDataTooSmall,
-                ReadAccountError::FormatMismatch => ProgramError::InvalidAccountData,
-                ReadAccountError::AlreadyInitialized => ProgramError::AccountAlreadyInitialized,
-            }
-        }
-    }
 }

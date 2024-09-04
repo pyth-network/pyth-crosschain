@@ -1,8 +1,5 @@
 use {
-    crate::{
-        accounts::{self, config::ReadAccountError},
-        ensure,
-    },
+    crate::{accounts, ensure},
     solana_program::{
         account_info::AccountInfo, program_error::ProgramError, program_memory::sol_memcmp,
         pubkey::Pubkey, system_program,
@@ -23,10 +20,7 @@ const CONFIG_SEED: &str = "CONFIG";
 
 /// Seed used to derive the associated buffer account that publishers can
 /// write their updates into.
-const BUFFER_SEED: &str = "BUFFER";
-
-/// Max number of prices allowed to be stored in a single publisher account.
-const MAX_NUM_PRICES: usize = 509;
+const PUBLISHER_CONFIG_SEED: &str = "PUBLISHER_CONFIG";
 
 #[repr(u8)]
 pub enum Instruction {
@@ -34,13 +28,15 @@ pub enum Instruction {
     // key[1] config    [writable]
     // key[2] system    []
     Initialize,
-    // key[0] publisher [signer writable]
-    // key[1] buffer    [writable]
+    // key[0] publisher        [signer writable]
+    // key[1] publisher_config []
+    // key[2] buffer           [writable]
     SubmitPrices,
-    // key[0] autority  [signer writable]
-    // key[1] config    []
-    // key[2] buffer    [writable]
-    // key[3] system    []
+    // key[0] autority         [signer writable]
+    // key[1] config           []
+    // key[2] publisher_config [writable]
+    // key[3] buffer           [writable]
+    // key[4] system           []
     InitializePublisher,
 }
 
@@ -68,7 +64,7 @@ fn validate_system<'a>(account: Option<&AccountInfo<'a>>) -> Result<AccountInfo<
     let system = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
     ensure!(
         ProgramError::InvalidArgument,
-        system_program::check_id(system.key)
+        pubkey_eq(system.key, &system_program::id())
     );
     Ok(system)
 }
@@ -109,11 +105,7 @@ fn validate_authority<'a>(
     ensure!(ProgramError::MissingRequiredSignature, authority.is_signer);
     ensure!(ProgramError::InvalidArgument, authority.is_writable);
     let config_data = config.data.borrow();
-    let config = accounts::config::read(*config_data).map_err(|err| match err {
-        ReadAccountError::DataTooShort => ProgramError::AccountDataTooSmall,
-        ReadAccountError::FormatMismatch => ProgramError::InvalidAccountData,
-        ReadAccountError::AlreadyInitialized => ProgramError::AccountAlreadyInitialized,
-    })?;
+    let config = accounts::config::read(*config_data)?;
     ensure!(
         ProgramError::MissingRequiredSignature,
         authority.key.to_bytes() == config.authority
@@ -121,18 +113,33 @@ fn validate_authority<'a>(
     Ok(authority)
 }
 
-fn validate_buffer<'a>(
+fn validate_publisher_config<'a>(
     account: Option<&AccountInfo<'a>>,
     publisher: &Pubkey,
     program_id: &Pubkey,
+    require_writable: bool,
 ) -> Result<(AccountInfo<'a>, u8), ProgramError> {
-    let buffer = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
-    let buffer_pda =
-        Pubkey::find_program_address(&[BUFFER_SEED.as_bytes(), &publisher.to_bytes()], program_id);
-    ensure!(ProgramError::InvalidArgument, buffer.is_writable);
+    let publisher_config = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    let publisher_config_pda = Pubkey::find_program_address(
+        &[PUBLISHER_CONFIG_SEED.as_bytes(), &publisher.to_bytes()],
+        program_id,
+    );
+    if require_writable {
+        ensure!(ProgramError::InvalidArgument, publisher_config.is_writable);
+    }
     ensure!(
         ProgramError::MissingRequiredSignature,
-        pubkey_eq(buffer.key, &buffer_pda.0)
+        pubkey_eq(publisher_config.key, &publisher_config_pda.0)
     );
-    Ok((buffer, buffer_pda.1))
+    Ok((publisher_config, publisher_config_pda.1))
+}
+
+fn validate_buffer<'a>(
+    account: Option<&AccountInfo<'a>>,
+    program_id: &Pubkey,
+) -> Result<AccountInfo<'a>, ProgramError> {
+    let buffer = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
+    ensure!(ProgramError::InvalidArgument, buffer.is_writable);
+    ensure!(ProgramError::IllegalOwner, buffer.owner == program_id);
+    Ok(buffer)
 }
