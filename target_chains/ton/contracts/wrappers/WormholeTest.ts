@@ -56,14 +56,27 @@ export class WormholeTest implements Contract {
     governanceChainId: number,
     governanceContract: string
   ): Cell {
-    return beginCell()
+    // Group price feeds and update fee (empty for Wormhole)
+    const priceFeedsCell = beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
       .storeUint(0, 256) // single_update_fee, set to 0 for testing
+      .endCell();
+
+    // Group data sources information (empty for initial state)
+    const dataSourcesCell = beginCell()
       .storeDict(Dictionary.empty()) // data_sources, empty for initial state
       .storeUint(0, 32) // num_data_sources, set to 0 for initial state
       .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
+      .endCell();
+
+    // Group guardian set information
+    const guardianSetCell = beginCell()
       .storeUint(guardianSetIndex, 32)
       .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
+      .endCell();
+
+    // Group chain and governance information
+    const governanceCell = beginCell()
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))
@@ -71,6 +84,14 @@ export class WormholeTest implements Contract {
       .storeRef(beginCell()) // governance_data_source, empty for initial state
       .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
       .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
+      .endCell();
+
+    // Create the main cell with references to grouped data
+    return beginCell()
+      .storeRef(priceFeedsCell)
+      .storeRef(dataSourcesCell)
+      .storeRef(guardianSetCell)
+      .storeRef(governanceCell)
       .endCell();
   }
 
