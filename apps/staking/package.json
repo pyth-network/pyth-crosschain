@@ -24,7 +24,6 @@
     "@amplitude/analytics-browser": "^2.9.3",
     "@amplitude/plugin-autocapture-browser": "^0.9.0",
     "@bonfida/spl-name-service": "^3.0.0",
-    "@coral-xyz/anchor": "^0.30.1",
     "@headlessui/react": "^2.1.2",
     "@heroicons/react": "^2.1.4",
     "@next/third-parties": "^14.2.5",

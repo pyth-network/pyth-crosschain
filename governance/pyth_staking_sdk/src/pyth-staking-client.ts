@@ -149,7 +149,7 @@ export class PythStakingClient {
       .rpc();
   }
 
-  public async getOwnerPythATAAccount(): Promise<Account> {
+  public async getOwnerPythAtaAccount(): Promise<Account> {
     const globalConfig = await this.getGlobalConfig();
     return getAccount(
       this.connection,

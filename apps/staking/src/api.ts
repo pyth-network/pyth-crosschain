@@ -157,7 +157,7 @@ export const loadData = async (context: Context): Promise<Data> => {
 
   const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(stakeAccountPositions.address);
   const publishers = await pythStakingClient.getPublishers();
-  const ownerATAAccount = await pythStakingClient.getOwnerPythATAAccount();
+  const ownerAtaAccount = await pythStakingClient.getOwnerPythAtaAccount();
   const currentEpoch = await getCurrentEpoch(context.connection);
 
   const unlockSchedule = await pythStakingClient.getUnlockSchedule({
@@ -177,7 +177,7 @@ export const loadData = async (context: Context): Promise<Data> => {
     },
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
-    walletAmount: ownerATAAccount.amount,
+    walletAmount: ownerAtaAccount.amount,
     integrityStakingPublishers: publishers.map(({pubkey: publisher}) => ({
       apyHistory: [],
       isSelf: false,
