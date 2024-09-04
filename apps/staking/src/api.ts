@@ -164,7 +164,7 @@ export const loadData = async (context: Context): Promise<Data> => {
     stakeAccountPositions: stakeAccountPositions.address
   });
 
-  return { 
+  return {
     lastSlash: undefined,
     availableRewards: 0n,
     expiringRewards: undefined,
