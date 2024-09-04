@@ -286,13 +286,6 @@ pub struct ParsedPublisherStakeCap {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct GetPublisherStakeCapsUpdateDataResponse {
-    pub binary: BinaryUpdate,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceUpdate {
     pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
