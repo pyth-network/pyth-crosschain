@@ -1,3 +1,4 @@
 export * from "./pyth-staking-client";
-export * from "./staking/utils";
+export * from "./utils/clock";
+export * from "./utils/position-state";
 export * from "./types";
