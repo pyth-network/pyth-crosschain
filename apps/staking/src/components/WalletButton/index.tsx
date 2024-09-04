@@ -31,9 +31,11 @@ import {
   type SVGAttributes,
   type ReactNode,
   type ElementType,
+  type Ref,
   useCallback,
   useMemo,
   useState,
+  forwardRef,
 } from "react";
 
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
@@ -191,13 +193,10 @@ type WalletMenuItemProps<T extends ElementType> = Omit<
   icon?: ComponentType<SVGAttributes<SVGSVGElement>>;
 };
 
-const WalletMenuItem = <T extends ElementType>({
-  as,
-  children,
-  icon: Icon,
-  className,
-  ...props
-}: WalletMenuItemProps<T>) => {
+const WalletMenuItemImpl = <T extends ElementType>(
+  { as, children, icon: Icon, className, ...props }: WalletMenuItemProps<T>,
+  ref: Ref<HTMLButtonElement>,
+) => {
   const Component = as ?? "button";
   return (
     <Component
@@ -205,6 +204,7 @@ const WalletMenuItem = <T extends ElementType>({
         "flex items-center gap-2 whitespace-nowrap px-4 py-2 text-left hover:bg-pythpurple-800/20 data-[focus]:bg-pythpurple-800/20",
         className,
       )}
+      ref={ref}
       {...props}
     >
       {Icon && <Icon className="size-4 text-pythpurple-600" />}
@@ -212,6 +212,7 @@ const WalletMenuItem = <T extends ElementType>({
     </Component>
   );
 };
+const WalletMenuItem = forwardRef(WalletMenuItemImpl);
 
 const DisconnectedButton = (props: Props) => {
   const modal = useWalletModal();

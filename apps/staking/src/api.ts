@@ -1,7 +1,7 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import type { WalletContextState } from "@solana/wallet-adapter-react";
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type { Connection } from "@solana/web3.js";
 
 export type StakeAccount = {
@@ -10,7 +10,7 @@ export type StakeAccount = {
 
 export type Context = {
   connection: Connection;
-  wallet: WalletContextState;
+  wallet: AnchorWallet;
   stakeAccount: StakeAccount;
 };
 
@@ -141,7 +141,7 @@ type AccountHistory = {
 
 export const getStakeAccounts = async (
   _connection: Connection,
-  _wallet: WalletContextState,
+  _wallet: AnchorWallet,
 ): Promise<StakeAccount[]> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   return MOCK_STAKE_ACCOUNTS;
