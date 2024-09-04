@@ -89,6 +89,8 @@ pub fn read(data: &[u8]) -> Result<(&BufferHeader, &[BufferedPrice]), ReadAccoun
     if expected_len > prices_bytes.len() {
         return Err(ReadAccountError::InvalidNumPrices);
     }
+    // We don't validate the values of `new_prices` to make the publishing process
+    // more efficient. They will be validated when applied in the validator.
     let prices = cast_slice(&prices_bytes[..expected_len]);
     Ok((header, prices))
 }
@@ -143,9 +145,16 @@ pub fn extend(
         .num_prices
         .checked_add(num_new_prices)
         .expect("unexpected overflow");
-    prices
+
+    let destination = prices
         .get_mut(start..end)
-        .ok_or(ExtendError::NotEnoughSpace)?
-        .copy_from_slice(new_prices);
+        .ok_or(ExtendError::NotEnoughSpace)?;
+
+    // We don't validate the values of `new_prices` to make the publishing process
+    // more efficient. They will be validated when applied in the validator.
+    #[cfg(feature = "solana-program")]
+    solana_program::program_memory::sol_memcpy(destination, new_prices, new_prices.len());
+    #[cfg(not(feature = "solana-program"))]
+    destination.copy_from_slice(new_prices);
     Ok(())
 }

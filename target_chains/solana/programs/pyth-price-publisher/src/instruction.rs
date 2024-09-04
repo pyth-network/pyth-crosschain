@@ -82,19 +82,21 @@ fn pubkey_eq(a: &Pubkey, b: &Pubkey) -> bool {
 
 fn validate_config<'a>(
     account: Option<&AccountInfo<'a>>,
+    bump: u8,
     program_id: &Pubkey,
     require_writable: bool,
-) -> Result<(AccountInfo<'a>, u8), ProgramError> {
+) -> Result<AccountInfo<'a>, ProgramError> {
     let config = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
-    let config_pda = Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], program_id);
+    let config_pda = Pubkey::create_program_address(&[CONFIG_SEED.as_bytes(), &[bump]], program_id)
+        .map_err(|_| ProgramError::InvalidInstructionData)?;
     ensure!(
         ProgramError::InvalidArgument,
-        pubkey_eq(config.key, &config_pda.0)
+        pubkey_eq(config.key, &config_pda)
     );
     if require_writable {
         ensure!(ProgramError::InvalidArgument, config.is_writable);
     }
-    Ok((config, config_pda.1))
+    Ok(config)
 }
 
 fn validate_authority<'a>(
@@ -115,23 +117,29 @@ fn validate_authority<'a>(
 
 fn validate_publisher_config<'a>(
     account: Option<&AccountInfo<'a>>,
+    bump: u8,
     publisher: &Pubkey,
     program_id: &Pubkey,
     require_writable: bool,
-) -> Result<(AccountInfo<'a>, u8), ProgramError> {
+) -> Result<AccountInfo<'a>, ProgramError> {
     let publisher_config = account.cloned().ok_or(ProgramError::NotEnoughAccountKeys)?;
-    let publisher_config_pda = Pubkey::find_program_address(
-        &[PUBLISHER_CONFIG_SEED.as_bytes(), &publisher.to_bytes()],
+    let publisher_config_pda = Pubkey::create_program_address(
+        &[
+            PUBLISHER_CONFIG_SEED.as_bytes(),
+            &publisher.to_bytes(),
+            &[bump],
+        ],
         program_id,
-    );
+    )
+    .map_err(|_| ProgramError::InvalidInstructionData)?;
     if require_writable {
         ensure!(ProgramError::InvalidArgument, publisher_config.is_writable);
     }
     ensure!(
         ProgramError::MissingRequiredSignature,
-        pubkey_eq(publisher_config.key, &publisher_config_pda.0)
+        pubkey_eq(publisher_config.key, &publisher_config_pda)
     );
-    Ok((publisher_config, publisher_config_pda.1))
+    Ok(publisher_config)
 }
 
 fn validate_buffer<'a>(

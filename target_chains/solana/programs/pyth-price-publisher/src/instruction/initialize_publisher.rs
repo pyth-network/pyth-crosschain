@@ -18,6 +18,8 @@ use {
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct Args {
+    pub config_bump: u8,
+    pub publisher_config_bump: u8,
     pub publisher: Pubkey,
 }
 
@@ -31,10 +33,15 @@ pub fn initialize_publisher(
 
     let mut accounts = accounts.iter();
     let first_account = accounts.next();
-    let config = validate_config(accounts.next(), program_id, false)?;
-    let authority = validate_authority(first_account, &config.0)?;
-    let publisher_config =
-        validate_publisher_config(accounts.next(), &args.publisher, program_id, true)?;
+    let config = validate_config(accounts.next(), args.config_bump, program_id, false)?;
+    let authority = validate_authority(first_account, &config)?;
+    let publisher_config = validate_publisher_config(
+        accounts.next(),
+        args.publisher_config_bump,
+        &args.publisher,
+        program_id,
+        true,
+    )?;
     let buffer = validate_buffer(accounts.next(), program_id)?;
     let system = validate_system(accounts.next())?;
 
@@ -45,26 +52,22 @@ pub fn initialize_publisher(
     invoke_signed(
         &system_instruction::create_account(
             authority.key,
-            publisher_config.0.key,
+            publisher_config.key,
             lamports,
             publisher_config::SIZE
                 .try_into()
                 .expect("unexpected overflow"),
             program_id,
         ),
-        &[
-            authority.clone(),
-            publisher_config.0.clone(),
-            system.clone(),
-        ],
+        &[authority.clone(), publisher_config.clone(), system.clone()],
         &[&[
             PUBLISHER_CONFIG_SEED.as_bytes(),
             &args.publisher.to_bytes(),
-            &[publisher_config.1],
+            &[args.publisher_config_bump],
         ]],
     )?;
 
-    let mut publisher_config_data = publisher_config.0.data.borrow_mut();
+    let mut publisher_config_data = publisher_config.data.borrow_mut();
     publisher_config::create(*publisher_config_data, buffer.key.to_bytes())?;
 
     // Write an initial Header into the buffer account to prepare it to receive prices.
@@ -114,11 +117,11 @@ mod tests {
         .await;
 
         // Setup Accounts
-        let config = Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], &id);
+        let (config, config_bump) = Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], &id);
 
         let publisher = Keypair::new();
 
-        let publisher_config = Pubkey::find_program_address(
+        let (publisher_config, publisher_config_bump) = Pubkey::find_program_address(
             &[
                 PUBLISHER_CONFIG_SEED.as_bytes(),
                 &publisher.pubkey().to_bytes(),
@@ -127,7 +130,10 @@ mod tests {
         );
 
         // First we need to initialize the vault PDA for use in the next instruction.
-        let mut data = vec![crate::instruction::Instruction::Initialize as u8];
+        let mut data = vec![
+            crate::instruction::Instruction::Initialize as u8,
+            config_bump,
+        ];
         data.extend_from_slice(&authority.pubkey().to_bytes());
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
@@ -135,7 +141,7 @@ mod tests {
                 data,
                 accounts: vec![
                     AccountMeta::new_readonly(authority.pubkey(), true),
-                    AccountMeta::new(config.0, false),
+                    AccountMeta::new(config, false),
                     AccountMeta::new_readonly(system_program::id(), false),
                 ],
             }],
@@ -166,7 +172,11 @@ mod tests {
         banks_client.process_transaction(transaction).await.unwrap();
 
         // Create a publisher's buffer account.
-        let mut data = vec![crate::instruction::Instruction::InitializePublisher as u8];
+        let mut data = vec![
+            crate::instruction::Instruction::InitializePublisher as u8,
+            config_bump,
+            publisher_config_bump,
+        ];
         data.extend_from_slice(&publisher.pubkey().to_bytes());
         let mut transaction = Transaction::new_with_payer(
             &[Instruction {
@@ -174,8 +184,8 @@ mod tests {
                 data,
                 accounts: vec![
                     AccountMeta::new(authority.pubkey(), true),
-                    AccountMeta::new_readonly(config.0, false),
-                    AccountMeta::new(publisher_config.0, false),
+                    AccountMeta::new_readonly(config, false),
+                    AccountMeta::new(publisher_config, false),
                     AccountMeta::new(buffer_key, false),
                     AccountMeta::new_readonly(system_program::id(), false),
                 ],
@@ -188,7 +198,7 @@ mod tests {
         {
             // Validate the publisher config PDA allocation.
             let buffer = banks_client
-                .get_account(publisher_config.0)
+                .get_account(publisher_config)
                 .await
                 .unwrap()
                 .unwrap();
@@ -223,7 +233,10 @@ mod tests {
         banks_client.process_transaction(transaction).await.unwrap();
 
         // Publish some prices.
-        let mut data = vec![crate::instruction::Instruction::SubmitPrices as u8];
+        let mut data = vec![
+            crate::instruction::Instruction::SubmitPrices as u8,
+            publisher_config_bump,
+        ];
         let prices = [
             BufferedPrice::new(1, 2, 200, 3).unwrap(),
             BufferedPrice::new(2, 3, 300, 4).unwrap(),
@@ -235,7 +248,7 @@ mod tests {
                 data,
                 accounts: vec![
                     AccountMeta::new(publisher.pubkey(), true),
-                    AccountMeta::new_readonly(publisher_config.0, false),
+                    AccountMeta::new_readonly(publisher_config, false),
                     AccountMeta::new(buffer_key, false),
                 ],
             }],

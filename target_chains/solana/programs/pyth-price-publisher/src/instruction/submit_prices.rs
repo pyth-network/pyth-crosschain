@@ -4,24 +4,45 @@ use {
         accounts::{buffer, publisher_config},
         ensure,
     },
+    bytemuck::{try_from_bytes, Pod, Zeroable},
     solana_program::{
         account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
         program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
     },
+    std::mem::size_of,
 };
+
+#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[repr(C, packed)]
+pub struct Args {
+    pub publisher_config_bump: u8,
+}
 
 /// Each time this is called it will append the new pricing information provided
 /// by the Publisher and extend their PublisherPrices account for the validator
 /// to read at the end of the slot. If there are old prices in the account, they
 /// will be removed first.
 pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+    ensure!(
+        ProgramError::InvalidInstructionData,
+        data.len() >= size_of::<Args>()
+    );
+    let (args_data, prices_data) = data.split_at(size_of::<Args>());
+    let args: &Args =
+        try_from_bytes(args_data).map_err(|_| ProgramError::InvalidInstructionData)?;
+
     let mut accounts = accounts.iter();
     let publisher = validate_publisher(accounts.next())?;
-    let publisher_config =
-        validate_publisher_config(accounts.next(), publisher.key, program_id, false)?;
+    let publisher_config = validate_publisher_config(
+        accounts.next(),
+        args.publisher_config_bump,
+        publisher.key,
+        program_id,
+        false,
+    )?;
     let buffer = validate_buffer(accounts.next(), program_id)?;
 
-    let publisher_config_data = publisher_config.0.data.borrow();
+    let publisher_config_data = publisher_config.data.borrow();
     let publisher_config = publisher_config::read(*publisher_config_data)?;
     ensure!(
         ProgramError::InvalidArgument,
@@ -36,7 +57,7 @@ pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8])
         header.slot = current_slot;
         header.num_prices = 0;
     }
-    buffer::extend(header, prices, data)?;
+    buffer::extend(header, prices, prices_data)?;
 
     Ok(())
 }
