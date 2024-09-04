@@ -1,23 +1,20 @@
 use {
-    super::{validate_config, validate_payer, validate_system, CONFIG_SEED},
-    crate::accounts,
-    bytemuck::{try_from_bytes, Pod, Zeroable},
-    solana_program::program_error::ProgramError,
+    crate::{
+        accounts,
+        instruction::{InitializeArgs, CONFIG_SEED},
+        validate::{validate_config, validate_payer, validate_system},
+    },
+    bytemuck::try_from_bytes,
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
-        pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
+        program_error::ProgramError, pubkey::Pubkey, rent::Rent, system_instruction,
+        sysvar::Sysvar,
     },
 };
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C, packed)]
-pub struct Args {
-    pub config_bump: u8,
-    pub authority: Pubkey,
-}
-
 pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let args: &Args = try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
+    let args: &InitializeArgs =
+        try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
 
     let mut accounts = accounts.iter();
     let payer = validate_payer(accounts.next())?;
@@ -40,7 +37,7 @@ pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) ->
         &[&[CONFIG_SEED.as_bytes(), &[args.config_bump]]],
     )?;
 
-    accounts::config::create(*config.data.borrow_mut(), args.authority.to_bytes())?;
+    accounts::config::create(*config.data.borrow_mut(), args.authority)?;
 
     Ok(())
 }
@@ -65,7 +62,7 @@ mod tests {
         let (mut banks_client, payer, recent_blockhash) = ProgramTest::new(
             "publishers",
             id,
-            processor!(crate::entrypoint::process_instruction),
+            processor!(crate::processor::process_instruction),
         )
         .start()
         .await;

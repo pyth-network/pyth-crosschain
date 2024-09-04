@@ -1,6 +1,7 @@
 pub mod accounts;
-#[cfg(feature = "solana-program")]
-mod entrypoint;
 mod error;
-#[cfg(feature = "solana-program")]
 pub mod instruction;
+#[cfg(feature = "solana-program")]
+mod processor;
+#[cfg(feature = "solana-program")]
+mod validate;

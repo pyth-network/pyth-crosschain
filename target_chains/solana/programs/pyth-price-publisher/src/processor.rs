@@ -1,7 +1,15 @@
-use crate::instruction::*;
+mod initialize;
+mod initialize_publisher;
+mod submit_prices;
+
+use crate::instruction::Instruction;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
+};
+use {
+    initialize::initialize, initialize_publisher::initialize_publisher,
+    submit_prices::submit_prices,
 };
 
 solana_program::entrypoint!(process_instruction);

@@ -1,13 +1,14 @@
 use {
-    super::{
-        validate_authority, validate_buffer, validate_config, validate_publisher_config,
-        validate_system, PUBLISHER_CONFIG_SEED,
-    },
     crate::{
         accounts::{buffer, publisher_config},
         ensure,
+        instruction::{InitializePublisherArgs, PUBLISHER_CONFIG_SEED},
+        validate::{
+            validate_authority, validate_buffer, validate_config, validate_publisher_config,
+            validate_system,
+        },
     },
-    bytemuck::{try_from_bytes, Pod, Zeroable},
+    bytemuck::try_from_bytes,
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
         program_error::ProgramError, pubkey::Pubkey, rent::Rent, system_instruction,
@@ -15,21 +16,14 @@ use {
     },
 };
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C, packed)]
-pub struct Args {
-    pub config_bump: u8,
-    pub publisher_config_bump: u8,
-    pub publisher: Pubkey,
-}
-
 // TODO: restrict access?
 pub fn initialize_publisher(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     data: &[u8],
 ) -> ProgramResult {
-    let args: &Args = try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
+    let args: &InitializePublisherArgs =
+        try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
 
     let mut accounts = accounts.iter();
     let first_account = accounts.next();
@@ -38,7 +32,7 @@ pub fn initialize_publisher(
     let publisher_config = validate_publisher_config(
         accounts.next(),
         args.publisher_config_bump,
-        &args.publisher,
+        &args.publisher.into(),
         program_id,
         true,
     )?;
@@ -62,7 +56,7 @@ pub fn initialize_publisher(
         &[authority.clone(), publisher_config.clone(), system.clone()],
         &[&[
             PUBLISHER_CONFIG_SEED.as_bytes(),
-            &args.publisher.to_bytes(),
+            &args.publisher,
             &[args.publisher_config_bump],
         ]],
     )?;
@@ -76,7 +70,7 @@ pub fn initialize_publisher(
         ProgramError::AccountNotRentExempt,
         buffer.lamports() >= rent.minimum_balance(buffer_data.len())
     );
-    buffer::create(*buffer_data, args.publisher.to_bytes())?;
+    buffer::create(*buffer_data, args.publisher)?;
 
     Ok(())
 }
@@ -111,7 +105,7 @@ mod tests {
         let (mut banks_client, authority, recent_blockhash) = ProgramTest::new(
             "publishers",
             id,
-            processor!(crate::entrypoint::process_instruction),
+            processor!(crate::processor::process_instruction),
         )
         .start()
         .await;

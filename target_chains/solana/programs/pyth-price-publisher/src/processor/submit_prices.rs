@@ -1,22 +1,17 @@
 use {
-    super::{validate_buffer, validate_publisher, validate_publisher_config},
     crate::{
         accounts::{buffer, publisher_config},
         ensure,
+        instruction::SubmitPricesArgsHeader,
+        validate::{validate_buffer, validate_publisher, validate_publisher_config},
     },
-    bytemuck::{try_from_bytes, Pod, Zeroable},
+    bytemuck::try_from_bytes,
     solana_program::{
         account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
         program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
     },
     std::mem::size_of,
 };
-
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C, packed)]
-pub struct Args {
-    pub publisher_config_bump: u8,
-}
 
 /// Each time this is called it will append the new pricing information provided
 /// by the Publisher and extend their PublisherPrices account for the validator
@@ -25,10 +20,10 @@ pub struct Args {
 pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     ensure!(
         ProgramError::InvalidInstructionData,
-        data.len() >= size_of::<Args>()
+        data.len() >= size_of::<SubmitPricesArgsHeader>()
     );
-    let (args_data, prices_data) = data.split_at(size_of::<Args>());
-    let args: &Args =
+    let (args_data, prices_data) = data.split_at(size_of::<SubmitPricesArgsHeader>());
+    let args: &SubmitPricesArgsHeader =
         try_from_bytes(args_data).map_err(|_| ProgramError::InvalidInstructionData)?;
 
     let mut accounts = accounts.iter();
