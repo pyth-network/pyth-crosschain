@@ -106,14 +106,14 @@ slice read_and_verify_header(slice data) {
 () update_price_feeds(int msg_value, slice data) impure {
     load_data();
     slice cs = read_and_verify_header(data);
-    
+
     int wormhole_proof_size_bytes = cs~load_uint(16);
     (cell wormhole_proof, slice new_cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
     cs = new_cs;
 
     int num_updates = cs~load_uint(8);
     int fee = single_update_fee * num_updates;
-    
+
     ;; Check if the sender has sent enough TON to cover the fee
     throw_unless(ERROR_INSUFFICIENT_FEE, msg_value >= fee);
 
@@ -157,12 +157,12 @@ slice read_and_verify_header(slice data) {
                 .store_ref(store_price(price, conf, expo, publish_time))
                 .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
             .end_cell();
-        
+
             latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed).end_cell().begin_parse());
         }
     }
 
     throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
-    
+
     store_data();
 }
