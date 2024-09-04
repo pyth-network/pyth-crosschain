@@ -178,7 +178,7 @@ export const loadData = async (context: Context): Promise<Data> => {
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
     walletAmount: ownerATAAccount.amount,
-    integrityStakingPublishers: publishers.map(publisher => ({
+    integrityStakingPublishers: publishers.map(({pubkey: publisher}) => ({
       apyHistory: [],
       isSelf: false,
       name: publisher.toString(),
@@ -221,9 +221,11 @@ export const withdraw = async (
   await pythStakingClient.withdrawTokensFromStakeAccountCustody(context.stakeAccount.address, amount);
 };
 
-export const claim = async (_context: Context): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-
+export const claim = async (context: Context): Promise<void> => {
+  const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
+  await pythStakingClient.advanceDelegationRecord({
+    stakeAccountPositions: context.stakeAccount.address
+  });
 };
 
 export const stakeGovernance = async (

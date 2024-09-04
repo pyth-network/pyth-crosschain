@@ -703,6 +703,61 @@
           "signer": true
         },
         {
+          "name": "config_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                74,
+                158,
+                192,
+                43,
+                86,
+                104,
+                29,
+                164,
+                155,
+                4,
+                186,
+                155,
+                36,
+                207,
+                137,
+                253,
+                128,
+                249,
+                44,
+                241,
+                145,
+                227,
+                125,
+                189,
+                51,
+                111,
+                70,
+                231,
+                183,
+                19,
+                217
+              ]
+            }
+          }
+        },
+        {
           "name": "pool_data",
           "writable": true
         },
@@ -738,10 +793,6 @@
       "args": [
         {
           "name": "reward_program_authority",
-          "type": "pubkey"
-        },
-        {
-          "name": "pyth_token_mint",
           "type": "pubkey"
         },
         {
@@ -1578,16 +1629,16 @@
       ]
     },
     {
-      "name": "update_pyth_token_mint",
+      "name": "update_reward_program_authority",
       "discriminator": [
-        39,
-        50,
-        46,
-        180,
-        14,
-        10,
-        121,
-        154
+        105,
+        58,
+        166,
+        4,
+        99,
+        253,
+        115,
+        225
       ],
       "accounts": [
         {
@@ -1628,7 +1679,7 @@
       ],
       "args": [
         {
-          "name": "pyth_token_mint",
+          "name": "reward_program_authority",
           "type": "pubkey"
         }
       ]
@@ -1702,6 +1753,19 @@
         251,
         132,
         155
+      ]
+    },
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
       ]
     },
     {
@@ -1960,6 +2024,78 @@
                 1024
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "governance_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pyth_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pyth_governance_realm",
+            "type": "pubkey"
+          },
+          {
+            "name": "removed_unlocking_duration",
+            "type": "u8"
+          },
+          {
+            "name": "epoch_duration",
+            "type": "u64"
+          },
+          {
+            "name": "freeze",
+            "type": "bool"
+          },
+          {
+            "name": "pda_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "pyth_token_list_time",
+            "docs": [
+              "Once the pyth token is listed, governance can update the config to set this value.",
+              "Once this value is set, vesting schedules that depend on the token list date can start",
+              "vesting."
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "agreement_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "mock_clock_time",
+            "type": "i64"
+          },
+          {
+            "name": "pool_authority",
+            "type": "pubkey"
           }
         ]
       }

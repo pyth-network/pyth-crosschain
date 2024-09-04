@@ -176,11 +176,24 @@ export class PythStakingClient {
     return convertBNToBigInt(poolDataAccountAnchor);
   }
 
-  public async getPublishers(): Promise<PublicKey[]> {
+  public async getPublishers(): Promise<
+    {
+      pubkey: PublicKey;
+      stakeAccount: PublicKey | null;
+    }[]
+  > {
     const poolData = await this.getPoolDataAccount();
-    return poolData.publishers.filter(
-      (publisher) => publisher && !publisher.equals(PublicKey.default)
-    );
+
+    return poolData.publishers
+      .map((publisher, index) => ({
+        pubkey: publisher,
+        stakeAccount: poolData.publisherStakeAccounts[index]?.equals(
+          PublicKey.default
+        )
+          ? null
+          : poolData.publisherStakeAccounts[index]!,
+      }))
+      .filter(({ pubkey }) => pubkey && !pubkey.equals(PublicKey.default));
   }
 
   public async stakeToGovernance(
@@ -289,5 +302,47 @@ export class PythStakingClient {
       vestingSchedule,
       pythTokenListTime: config.pythTokenListTime!,
     });
+  }
+
+  public async advanceDelegationRecord(options: {
+    stakeAccountPositions: PublicKey;
+  }) {
+    const { stakeAccountPositions } = options;
+    const publishers = await this.getPublishers();
+
+    // anchor does not calculate the correct pda for other programs
+    // therefore we need to manually calculate the pdas
+    const instructions = await Promise.all(
+      publishers.map(({ pubkey, stakeAccount }) =>
+        this.integrityPoolProgram.methods
+          .advanceDelegationRecord()
+          .accountsPartial({
+            payer: this.wallet.publicKey,
+            publisher: pubkey,
+            publisherStakeAccountPositions: stakeAccount,
+            publisherStakeAccountCustody: stakeAccount
+              ? getStakeAccountCustodyAddress(stakeAccount)
+              : null,
+            stakeAccountPositions,
+            stakeAccountCustody: getStakeAccountCustodyAddress(
+              stakeAccountPositions
+            ),
+          })
+          .instruction()
+      )
+    );
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        instructions.slice(0, 1).map((instruction) => ({
+          instruction,
+          signers: [],
+        })),
+        {}
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 }
