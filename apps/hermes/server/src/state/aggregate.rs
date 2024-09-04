@@ -253,7 +253,7 @@ where
         price_ids: &[PriceIdentifier],
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData>;
-    async fn get_publisher_stake_caps_with_update_data(
+    async fn get_latest_publisher_stake_caps_with_update_data(
         &self,
     ) -> Result<PublisherStakeCapsWithUpdateData>;
 }
@@ -417,7 +417,7 @@ where
         }
     }
 
-    async fn get_publisher_stake_caps_with_update_data(
+    async fn get_latest_publisher_stake_caps_with_update_data(
         &self,
     ) -> Result<PublisherStakeCapsWithUpdateData> {
         let messages = self
