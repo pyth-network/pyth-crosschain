@@ -28,7 +28,7 @@
     "@headlessui/react": "^2.1.2",
     "@heroicons/react": "^2.1.4",
     "@next/third-parties": "^14.2.5",
-    "@pythnetwork/pyth-staking-sdk": "workspace:*",
+    "@pythnetwork/staking-sdk": "workspace:*",
     "@solana/wallet-adapter-base": "^0.9.20",
     "@solana/wallet-adapter-react": "^0.15.28",
     "@solana/wallet-adapter-react-ui": "^0.9.27",

@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/pyth-staking-sdk",
+  "name": "@pythnetwork/staking-sdk",
   "version": "0.0.0",
   "description": "Pyth staking SDK",
   "main": "src/index.ts",
