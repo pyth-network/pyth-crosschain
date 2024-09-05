@@ -83,7 +83,7 @@ export type StakeDetails = ReturnType<
 >;
 
 export enum AccountHistoryItemType {
-  Deposit,
+  AddTokens,
   LockedDeposit,
   Withdrawal,
   RewardsCredited,
@@ -97,7 +97,7 @@ export enum AccountHistoryItemType {
 }
 
 const AccountHistoryAction = {
-  Deposit: () => ({ type: AccountHistoryItemType.Deposit as const }),
+  AddTokens: () => ({ type: AccountHistoryItemType.AddTokens as const }),
   LockedDeposit: (unlockDate: Date) => ({
     type: AccountHistoryItemType.LockedDeposit as const,
     unlockDate,
@@ -506,7 +506,7 @@ const MOCK_DATA: Record<string, Data> = {
 const mkMockHistory = (): AccountHistory => [
   {
     timestamp: new Date("2024-06-10T00:00:00Z"),
-    action: AccountHistoryAction.Deposit(),
+    action: AccountHistoryAction.AddTokens(),
     amount: 2_000_000n,
     accountTotal: 2_000_000n,
     availableRewards: 0n,

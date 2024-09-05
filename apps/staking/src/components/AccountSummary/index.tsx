@@ -68,7 +68,7 @@ export const AccountSummary = ({
         <div className="mt-8 flex flex-row items-center gap-4">
           <TransferButton
             actionDescription="Add funds to your balance"
-            actionName="Deposit"
+            actionName="Add Tokens"
             max={walletAmount}
             transfer={deposit}
           />

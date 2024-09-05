@@ -87,8 +87,8 @@ const mkDescription = (action: AccountHistoryAction): string => {
     case AccountHistoryItemType.Claim: {
       return "Rewards claimed";
     }
-    case AccountHistoryItemType.Deposit: {
-      return "Tokens deposited";
+    case AccountHistoryItemType.AddTokens: {
+      return "Tokens added";
     }
     case AccountHistoryItemType.LockedDeposit: {
       return `Locked tokens deposited, unlocking ${action.unlockDate.toLocaleString()}`;
