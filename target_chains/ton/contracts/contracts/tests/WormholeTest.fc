@@ -42,10 +42,6 @@
     return get_guardian_set(index);
 }
 
-(int) test_get_chain_id() method_id {
-    return get_chain_id();
-}
-
 (int) test_get_governance_chain_id() method_id {
     return get_governance_chain_id();
 }
