@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 
 import { convertBNToBigInt } from "./bn";
 import type { Staking } from "../../types/staking";
-import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_SIZE } from "../constants";
+import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_HEADER_SIZE } from "../constants";
 import {
   type Position,
   type PositionAnchor,
@@ -11,6 +11,7 @@ import {
   type StakeAccountPositions,
   type TargetWithParameters,
 } from "../types";
+
 
 export const getPositionState = (
   position: Position,
@@ -70,7 +71,7 @@ export const deserializeStakeAccountPositions = (
   let i = 8; // Skip discriminator
   const owner = new PublicKey(data.slice(i, i + 32));
   const numberOfPositions = Math.floor(
-    (data.length - POSITIONS_ACCOUNT_SIZE) / POSITION_BUFFER_SIZE,
+    (data.length - POSITIONS_ACCOUNT_HEADER_SIZE) / POSITION_BUFFER_SIZE,
   );
   i += 32;
   const positions: PositionAnchor[] = [];
