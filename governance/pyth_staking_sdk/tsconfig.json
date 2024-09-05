@@ -5,10 +5,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
-    "verbatimModuleSyntax": false,
     "noEmit": false,
-    "target": "esnext",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "declaration": true,
     "composite": true,
     "declarationMap": true,
