@@ -277,12 +277,10 @@ export const delegateIntegrityStaking = async (
   publisherKey: string,
   amount: bigint,
 ): Promise<void> => {
-
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.address);
 
   await pythStakingClient.stakeToPublisher({
-    stakeAccountPositions: p,
+    stakeAccountPositions: context.stakeAccount.address,
     publisher: new PublicKey(publisherKey),
     amount
   });
