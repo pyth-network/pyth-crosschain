@@ -154,10 +154,17 @@ export const loadData = async (context: Context): Promise<Data> => {
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
   const stakeAccountPositions = context.stakeAccount;
 
-  const stakeAccountCustody = await pythStakingClient.getStakeAccountCustody(stakeAccountPositions.address);
-  const publishers = await pythStakingClient.getPublishers();
-  const ownerAtaAccount = await pythStakingClient.getOwnerPythAtaAccount();
-  const currentEpoch = await getCurrentEpoch(context.connection);
+  const [
+    stakeAccountCustody,
+    publishers,
+    ownerAtaAccount,
+    currentEpoch,
+  ] = await Promise.all([
+    pythStakingClient.getStakeAccountCustody(stakeAccountPositions.address),
+    pythStakingClient.getPublishers(),
+    pythStakingClient.getOwnerPythAtaAccount(),
+    getCurrentEpoch(context.connection),
+  ]);
 
   const unlockSchedule = await pythStakingClient.getUnlockSchedule({
     stakeAccountPositions: stakeAccountPositions.address
