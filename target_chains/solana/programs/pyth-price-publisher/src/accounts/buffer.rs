@@ -154,3 +154,8 @@ pub fn extend(
     destination.copy_from_slice(new_prices);
     Ok(())
 }
+
+#[test]
+fn test_size() {
+    assert_eq!(size(5000), 100048);
+}
