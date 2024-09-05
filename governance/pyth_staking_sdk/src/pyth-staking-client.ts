@@ -30,7 +30,7 @@ import * as PublisherCapsIdl from "../idl/publisher-caps.json";
 import * as StakingIdl from "../idl/staking.json";
 import type { IntegrityPool } from "../types/integrity-pool";
 import type { PublisherCaps } from "../types/publisher-caps";
-import { type Staking } from "../types/staking";
+import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
