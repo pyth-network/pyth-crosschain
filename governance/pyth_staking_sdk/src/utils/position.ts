@@ -15,21 +15,21 @@ import {
 
 export const getPositionState = (
   position: Position,
-  current_epoch: bigint,
+  currentEpoch: bigint,
 ): PositionState => {
-  if (current_epoch < position.activationEpoch) {
+  if (currentEpoch < position.activationEpoch) {
     return PositionState.LOCKING;
   }
   if (!position.unlockingStart) {
     return PositionState.LOCKED;
   }
-  const has_activated = position.activationEpoch <= current_epoch;
-  const unlock_started = position.unlockingStart <= current_epoch;
-  const unlock_ended = position.unlockingStart + 1n <= current_epoch;
+  const hasActivated = position.activationEpoch <= currentEpoch;
+  const unlockStarted = position.unlockingStart <= currentEpoch;
+  const unlockEnded = position.unlockingStart + 1n <= currentEpoch;
 
-  if (has_activated && !unlock_started) {
+  if (hasActivated && !unlockStarted) {
     return PositionState.PREUNLOCKING;
-  } else if (unlock_started && !unlock_ended) {
+  } else if (unlockStarted && !unlockEnded) {
     return PositionState.UNLOCKING;
   } else {
     return PositionState.UNLOCKED;

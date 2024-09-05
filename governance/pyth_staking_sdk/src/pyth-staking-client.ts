@@ -347,7 +347,7 @@ export class PythStakingClient {
   }) {
     const { stakeAccountPositions, publisher, amount } = options;
     const instruction = await this.integrityPoolProgram.methods
-      .delegate(new BN(amount.toString()))
+      .delegate(convertBigIntToBN(amount))
       .accounts({
         owner: this.wallet.publicKey,
         publisher,
