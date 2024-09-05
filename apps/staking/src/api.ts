@@ -170,16 +170,30 @@ export const loadData = async (context: Context): Promise<Data> => {
     stakeAccountPositions: stakeAccountPositions.address
   });
 
+  const filterGovernancePositions = (positionState: PositionState) => 
+    getAmountByTargetAndState({
+      stakeAccountPositions,
+      targetWithParameters: {voting: {}},
+      positionState, epoch: currentEpoch
+    })
+  const filterOISPositions = (publisher: PublicKey, positionState: PositionState) => 
+    getAmountByTargetAndState({
+      stakeAccountPositions,
+      targetWithParameters: {integrityPool: {publisher}},
+      positionState,
+      epoch: currentEpoch
+    })
+
   return {
     lastSlash: undefined, // TODO
     availableRewards: 0n, // TODO
     expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
     governance: {
-      warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
-      staked: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKED, epoch: currentEpoch}),
-      cooldown: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.PREUNLOCKING, epoch: currentEpoch}),
-      cooldown2: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.UNLOCKED, epoch: currentEpoch}),
+      warmup: filterGovernancePositions(PositionState.LOCKING),
+      staked: filterGovernancePositions(PositionState.LOCKED),
+      cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
+      cooldown2: filterGovernancePositions(PositionState.UNLOCKED),
     },
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
@@ -195,10 +209,10 @@ export const loadData = async (context: Context): Promise<Data> => {
       qualityRanking: 0, // TODO
       selfStake: 0n, // TODO
       positions: {
-        warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
-        staked: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKED, epoch: currentEpoch}),
-        cooldown: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.PREUNLOCKING, epoch: currentEpoch}),
-        cooldown2: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.UNLOCKED, epoch: currentEpoch}),
+        warmup: filterOISPositions(publisher, PositionState.LOCKING),
+        staked: filterOISPositions(publisher, PositionState.LOCKED),
+        cooldown: filterOISPositions(publisher, PositionState.PREUNLOCKING),
+        cooldown2: filterOISPositions(publisher, PositionState.UNLOCKED),
       }
     }))
    };
