@@ -41,3 +41,19 @@ const int OP_UPDATE_GUARDIAN_SET = 2;
 (int) test_get_update_fee(slice in_msg_body) method_id {
     return get_update_fee(in_msg_body);
 }
+
+(int) test_get_chain_id() method_id {
+    return get_chain_id();
+}
+
+(int) test_get_last_executed_governance_sequence() method_id {
+    return get_last_executed_governance_sequence();
+}
+
+(int) test_get_governance_data_source_index() method_id {
+    return get_governance_data_source_index();
+}
+
+(cell) test_get_governance_data_source() method_id {
+    return get_governance_data_source();
+}

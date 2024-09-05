@@ -62,23 +62,21 @@ int get_current_guardian_set_index() method_id {
     return get_guardian_set_internal(index);
 }
 
-int get_chain_id() method_id {
-    return chain_id;
-}
-
 int get_governance_chain_id() method_id {
+    load_data();
     return governance_chain_id;
 }
 
 int get_governance_contract() method_id {
+    load_data();
     return governance_contract;
 }
 
 int governance_action_is_consumed(int hash) method_id {
+    load_data();
     (_, int found?) = consumed_governance_actions.udict_get?(256, hash);
     return found?;
 }
-
 
 () verify_signatures(int hash, cell signatures, int signers_length, cell guardian_set_keys, int guardian_set_size) impure {
     slice cs = signatures.begin_parse();
@@ -143,11 +141,11 @@ int governance_action_is_consumed(int hash) method_id {
 
     ;; Calculate total body length across all references
     int body_length = 0;
-    int continue? = -1; ;; -1 is true
+    int continue? = true;
     do {
         body_length += remaining_body.slice_bits();
         if (remaining_body.slice_refs_empty?()) {
-            continue? = 0;
+            continue? = false;
         } else {
             remaining_body = remaining_body~load_ref().begin_parse();
         }

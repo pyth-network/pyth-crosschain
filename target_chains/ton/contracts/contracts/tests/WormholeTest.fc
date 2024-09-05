@@ -27,3 +27,15 @@
 (int, cell, int) test_get_guardian_set(int index) method_id {
     return get_guardian_set(index);
 }
+
+(int) test_get_governance_chain_id() method_id {
+    return get_governance_chain_id();
+}
+
+(int) test_get_governance_contract() method_id {
+    return get_governance_contract();
+}
+
+(int) test_governance_action_is_consumed(int hash) method_id {
+    return governance_action_is_consumed(hash);
+}
