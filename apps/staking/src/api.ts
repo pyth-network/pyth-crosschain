@@ -1,8 +1,7 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import { getAmountByTargetAndState, getCurrentEpoch, PositionState, PythStakingClient } from "@pythnetwork/staking-sdk";
-import type { StakeAccountPositions } from "@pythnetwork/staking-sdk/src/staking/accounts";
+import { getAmountByTargetAndState, getCurrentEpoch, PositionState, PythStakingClient, type StakeAccountPositions } from "@pythnetwork/staking-sdk";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, type Connection } from "@solana/web3.js";
 
