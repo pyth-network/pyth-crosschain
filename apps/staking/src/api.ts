@@ -171,9 +171,9 @@ export const loadData = async (context: Context): Promise<Data> => {
   });
 
   return {
-    lastSlash: undefined,
-    availableRewards: 0n,
-    expiringRewards: undefined,
+    lastSlash: undefined, // TODO
+    availableRewards: 0n, // TODO
+    expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
     governance: {
       warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {voting: {}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
@@ -185,15 +185,15 @@ export const loadData = async (context: Context): Promise<Data> => {
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
     walletAmount: ownerAtaAccount.amount,
     integrityStakingPublishers: publishers.map(({pubkey: publisher}) => ({
-      apyHistory: [],
-      isSelf: false,
+      apyHistory: [], // TODO
+      isSelf: false, // TODO
       name: publisher.toString(),
-      numFeeds: 0,
-      poolCapacity: 100n,
-      poolUtilization: 0n,
+      numFeeds: 0, // TODO
+      poolCapacity: 100n, // TODO
+      poolUtilization: 0n, // TODO
       publicKey: publisher.toString(),
-      qualityRanking: 0,
-      selfStake: 0n,
+      qualityRanking: 0, // TODO
+      selfStake: 0n, // TODO
       positions: {
         warmup: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKING, epoch: currentEpoch}),
         staked: getAmountByTargetAndState({stakeAccountPositions, targetWithParameters: {integrityPool: {publisher}}, positionState: PositionState.LOCKED, epoch: currentEpoch}),
