@@ -136,8 +136,8 @@ export const AccountSummary = ({
           name="Available Rewards"
           amount={availableRewards}
           description="Rewards you have earned but not yet claimed from the Integrity Staking program"
-          action={<ClaimButton  />}
-          {...(!!expiringRewards && expiringRewards.amount > 0n && {
+          action={<ClaimButton disabled={availableRewards === 0n} />}
+          {...(expiringRewards !== undefined && expiringRewards.amount > 0n && {
             warning: (
               <>
                 <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
