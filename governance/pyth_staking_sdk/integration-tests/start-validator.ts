@@ -57,7 +57,9 @@ export async function startValidatorRaw() {
   const internalController: AbortController = new AbortController();
   const { signal } = internalController;
 
-  const user = loadKeypair("integration-tests/keypairs/localnet-authority.json");
+  const user = loadKeypair(
+    "integration-tests/keypairs/localnet-authority.json",
+  );
 
   const command = `solana-test-validator \
     --ledger ${ledgerDir} \

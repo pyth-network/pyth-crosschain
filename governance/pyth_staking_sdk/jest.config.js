@@ -7,6 +7,6 @@ export default base({
   global: {
     config: {
       testTimeout: 10_000,
-    }
-  }
+    },
+  },
 });

@@ -18,12 +18,14 @@ import {
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
 } from "./pdas";
-import {
-  type StakeAccountPositions,
-  StakeAccountPositionsAnchor,
-} from "./staking/accounts";
-import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
+import type {
+  GlobalConfig,
+  PoolConfig,
+  PoolDataAccount,
+  StakeAccountPositions,
+} from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
+import { deserializeStakeAccountPositions } from "./utils/position";
 import { getUnlockSchedule } from "./utils/vesting";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
 import * as PublisherCapsIdl from "../idl/publisher-caps.json";
@@ -120,14 +122,13 @@ export class PythStakingClient {
           ],
         },
       );
-    return res.map((account) => {
-      const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
+    return res.map((account) =>
+      deserializeStakeAccountPositions(
         account.pubkey,
         account.account.data,
         this.stakingProgram.idl,
-      );
-      return stakeAccountPositionsAnchor.toStakeAccountPositions();
-    });
+      ),
+    );
   }
 
   public async getStakeAccountPositions(
@@ -142,12 +143,11 @@ export class PythStakingClient {
       throw new Error("Stake account not found");
     }
 
-    const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
+    return deserializeStakeAccountPositions(
       stakeAccountPositions,
       account.data,
       this.stakingProgram.idl,
     );
-    return stakeAccountPositionsAnchor.toStakeAccountPositions();
   }
 
   public async getStakeAccountCustody(

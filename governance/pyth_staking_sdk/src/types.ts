@@ -1,4 +1,5 @@
 import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 
 import type { IntegrityPool } from "../types/integrity-pool";
 import type { Staking } from "../types/staking";
@@ -45,10 +46,18 @@ export type UnlockSchedule = {
   amount: bigint;
 }[];
 
+export type StakeAccountPositions = {
+  address: PublicKey;
+  data: {
+    owner: PublicKey;
+    positions: Position[];
+  };
+};
+
 export enum PositionState {
-  UNLOCKED = 0,
-  LOCKING = 1,
-  LOCKED = 2,
-  PREUNLOCKING = 3,
-  UNLOCKING = 4,
+  UNLOCKED,
+  LOCKING,
+  LOCKED,
+  PREUNLOCKING,
+  UNLOCKING,
 }
