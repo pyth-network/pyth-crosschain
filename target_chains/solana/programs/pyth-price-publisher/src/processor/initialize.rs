@@ -12,6 +12,8 @@ use {
     },
 };
 
+// Creates a config account that stores the authority pubkey.
+// The authority is allowed to modify publisher configs.
 pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args: &InitializeArgs =
         try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;

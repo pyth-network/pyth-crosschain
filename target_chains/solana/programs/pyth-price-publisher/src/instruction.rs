@@ -40,20 +40,27 @@ impl Instruction {
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct InitializeArgs {
+    /// PDA bump of the config account.
     pub config_bump: u8,
+    /// The signature of the authority account will be required to execute
+    /// `InitializePublisher` instruction.
     pub authority: [u8; 32],
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct InitializePublisherArgs {
+    /// PDA bump of the config account.
     pub config_bump: u8,
+    /// PDA bump of the publisher config account.
     pub publisher_config_bump: u8,
+    /// The publisher to be initialized.
     pub publisher: [u8; 32],
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct SubmitPricesArgsHeader {
+    /// PDA bump of the publisher config account.
     pub publisher_config_bump: u8,
 }

@@ -13,10 +13,10 @@ use {
     std::mem::size_of,
 };
 
-/// Each time this is called it will append the new pricing information provided
-/// by the Publisher and extend their PublisherPrices account for the validator
-/// to read at the end of the slot. If there are old prices in the account, they
-/// will be removed first.
+/// Append the new pricing information provided by the publisher to
+/// its buffer account. The buffer account will be read and applied by the validator
+/// to read at the end of the slot.
+/// If there are old prices in the account, they will be removed before adding new data.
 pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     ensure!(
         ProgramError::InvalidInstructionData,

@@ -1,7 +1,3 @@
-//! The PublisherPrices account acts as the buffer for storing prices sent
-//! by publishers. It tracks the slot in which it is collecting in order
-//! to allow the validator to stay in sync.
-
 use {
     super::errors::{ExtendError, PublisherPriceError, ReadAccountError},
     bytemuck::{cast_slice, from_bytes, from_bytes_mut, Pod, Zeroable},
@@ -11,12 +7,24 @@ use {
 /// Account Magic to avoid Account Confusiong
 const FORMAT: u32 = 2848712303;
 
+/// A publisher's buffer account. This account acts as the buffer for storing prices sent
+/// by publishers. It tracks the slot in which it is collecting in order
+/// to allow the validator to stay in sync.
+/// Not a PDA because it's not possible
+/// to create a large (>10240 bytes) PDA, but owned by the publisher program.
+/// The account's data is represented by a `BufferHeader` followed by
+/// multiple `BufferedPrice`s.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct BufferHeader {
+    /// Account magic to avoid account confusion.
     pub format: u32,
+    /// The publisher this buffer is associated with.
     pub publisher: [u8; 32],
+    /// The slot corresponding to all prices currently stored in the account.
+    /// Determined by the clock value when `SubmitPrices` is called.
     pub slot: u64,
+    /// The number of prices currently stored in the account.
     pub num_prices: u32,
 }
 

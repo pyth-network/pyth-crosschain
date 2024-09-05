@@ -10,11 +10,16 @@ pub fn format_matches(data: &[u8]) -> bool {
     super::format(data).map_or(false, |f| f == FORMAT)
 }
 
+/// Publisher config stored in a PDA.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct PublisherConfig {
+    /// Account magic to avoid account confusion.
     pub format: u32,
+    /// The publisher this config is associated with.
+    /// Always matches the pubkey used to derive the PDA pubkey.
     pub publisher: [u8; 32],
+    /// The publisher's buffer account.
     pub buffer_account: [u8; 32],
 }
 

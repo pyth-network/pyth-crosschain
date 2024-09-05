@@ -16,7 +16,8 @@ use {
     },
 };
 
-// TODO: restrict access?
+// Creates a publisher config account and stores the buffer account pubkey in it.
+// Verifies and initializes the buffer account.
 pub fn initialize_publisher(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

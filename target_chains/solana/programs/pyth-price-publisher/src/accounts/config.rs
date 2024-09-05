@@ -10,10 +10,14 @@ pub fn format_matches(data: &[u8]) -> bool {
     super::format(data).map_or(false, |f| f == FORMAT)
 }
 
+/// Global config of the program stored in a PDA.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct Config {
+    /// Account magic to avoid account confusion.
     pub format: u32,
+    /// The signature of the authority account will be required to execute
+    /// `InitializePublisher` instruction.
     pub authority: [u8; 32],
 }
 
