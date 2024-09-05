@@ -142,7 +142,7 @@ export const getStakeAccounts = async (
   wallet: AnchorWallet,
 ): Promise<StakeAccountPositions[]> => {
   const pythStakingClient = new PythStakingClient({ connection, wallet });
-  return await pythStakingClient.getAllStakeAccountPositions(wallet.publicKey);
+  return pythStakingClient.getAllStakeAccountPositions(wallet.publicKey);
 };
 
 export const loadData = async (context: Context): Promise<Data> => {
