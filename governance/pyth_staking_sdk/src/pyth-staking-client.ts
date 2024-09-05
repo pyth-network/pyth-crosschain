@@ -1,35 +1,36 @@
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { type Staking } from "../types/staking";
-import * as StakingIdl from "../idl/staking.json";
-import * as IntegrityPoolIdl from "../idl/integrity_pool.json";
-import * as PublisherCapsIdl from "../idl/publisher_caps.json";
 import {
-  getConfigAddress,
-  getPoolConfigAddress,
-  getStakeAccountCustodyAddress,
-  getStakeAccountMetadataAddress,
-} from "./pdas";
-import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
-import {
-  type StakeAccountPositions,
-  StakeAccountPositionsAnchor,
-} from "./staking/accounts";
-import type { IntegrityPool } from "../types/integrity_pool";
+  sendTransactions,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
 import {
   type Account,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import {
-  sendTransactions,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
-import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import type { PublisherCaps } from "../types/publisher_caps";
+import { Connection, PublicKey } from "@solana/web3.js";
+
+import {
+  getConfigAddress,
+  getPoolConfigAddress,
+  getStakeAccountCustodyAddress,
+  getStakeAccountMetadataAddress,
+} from "./pdas";
+import {
+  type StakeAccountPositions,
+  StakeAccountPositionsAnchor,
+} from "./staking/accounts";
+import type { GlobalConfig, PoolConfig, PoolDataAccount } from "./types";
+import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { getUnlockSchedule } from "./utils/vesting";
+import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
+import * as PublisherCapsIdl from "../idl/publisher-caps.json";
+import * as StakingIdl from "../idl/staking.json";
+import type { IntegrityPool } from "../types/integrity-pool";
+import type { PublisherCaps } from "../types/publisher-caps";
+import { type Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
@@ -53,11 +54,11 @@ export class PythStakingClient {
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
     this.integrityPoolProgram = new Program(
       IntegrityPoolIdl as IntegrityPool,
-      this.provider
+      this.provider,
     );
     this.publisherCapsProgram = new Program(
       PublisherCapsIdl as PublisherCaps,
-      this.provider
+      this.provider,
     );
   }
 
@@ -77,7 +78,7 @@ export class PythStakingClient {
             signers: [],
           },
         ],
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);
@@ -86,15 +87,21 @@ export class PythStakingClient {
   async getGlobalConfig(): Promise<GlobalConfig> {
     const globalConfigAnchor =
       await this.stakingProgram.account.globalConfig.fetch(
-        getConfigAddress()[0]
+        getConfigAddress()[0],
       );
     return convertBNToBigInt(globalConfigAnchor);
   }
 
   /** Gets a users stake accounts */
   public async getAllStakeAccountPositions(
-    user: PublicKey
+    user: PublicKey,
   ): Promise<StakeAccountPositions[]> {
+    const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
+      "positionData",
+    ) as {
+      offset: number;
+      bytes: string;
+    };
     const res =
       await this.stakingProgram.provider.connection.getProgramAccounts(
         this.stakingProgram.programId,
@@ -102,7 +109,7 @@ export class PythStakingClient {
           encoding: "base64",
           filters: [
             {
-              memcmp: this.stakingProgram.coder.accounts.memcmp("positionData"),
+              memcmp: positionDataMemcmp,
             },
             {
               memcmp: {
@@ -111,39 +118,44 @@ export class PythStakingClient {
               },
             },
           ],
-        }
+        },
       );
     return res.map((account) => {
       const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
         account.pubkey,
         account.account.data,
-        this.stakingProgram.idl
+        this.stakingProgram.idl,
       );
       return stakeAccountPositionsAnchor.toStakeAccountPositions();
     });
   }
 
   public async getStakeAccountPositions(
-    stakeAccountPositions: PublicKey
+    stakeAccountPositions: PublicKey,
   ): Promise<StakeAccountPositions> {
     const account =
       await this.stakingProgram.provider.connection.getAccountInfo(
-        stakeAccountPositions
+        stakeAccountPositions,
       );
+
+    if (account === null) {
+      throw new Error("Stake account not found");
+    }
+
     const stakeAccountPositionsAnchor = new StakeAccountPositionsAnchor(
       stakeAccountPositions,
-      account!.data,
-      this.stakingProgram.idl
+      account.data,
+      this.stakingProgram.idl,
     );
     return stakeAccountPositionsAnchor.toStakeAccountPositions();
   }
 
   public async getStakeAccountCustody(
-    stakeAccountPositions: PublicKey
+    stakeAccountPositions: PublicKey,
   ): Promise<Account> {
     return getAccount(
       this.connection,
-      getStakeAccountCustodyAddress(stakeAccountPositions)
+      getStakeAccountCustodyAddress(stakeAccountPositions),
     );
   }
 
@@ -174,7 +186,7 @@ export class PythStakingClient {
             signers: [],
           },
         ],
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);
@@ -186,15 +198,15 @@ export class PythStakingClient {
       this.connection,
       await getAssociatedTokenAddress(
         globalConfig.pythTokenMint,
-        this.wallet.publicKey
-      )
+        this.wallet.publicKey,
+      ),
     );
   }
 
   public async getPoolConfigAccount(): Promise<PoolConfig> {
     const poolConfigAnchor =
       await this.integrityPoolProgram.account.poolConfig.fetch(
-        getPoolConfigAddress()
+        getPoolConfigAddress(),
       );
     return convertBNToBigInt(poolConfigAnchor);
   }
@@ -218,25 +230,25 @@ export class PythStakingClient {
     return poolData.publishers
       .map((publisher, index) => ({
         pubkey: publisher,
-        stakeAccount: poolData.publisherStakeAccounts[index]?.equals(
-          PublicKey.default
-        )
-          ? null
-          : poolData.publisherStakeAccounts[index]!,
+        stakeAccount:
+          poolData.publisherStakeAccounts[index] === undefined ||
+          poolData.publisherStakeAccounts[index].equals(PublicKey.default)
+            ? null
+            : poolData.publisherStakeAccounts[index],
       }))
-      .filter(({ pubkey }) => pubkey && !pubkey.equals(PublicKey.default));
+      .filter(({ pubkey }) => !pubkey.equals(PublicKey.default));
   }
 
   public async stakeToGovernance(
     stakeAccountPositions: PublicKey,
-    amount: bigint
+    amount: bigint,
   ) {
     const instruction = await this.stakingProgram.methods
       .createPosition(
         {
           voting: {},
         },
-        new BN(amount.toString())
+        new BN(amount.toString()),
       )
       .accounts({
         stakeAccountPositions,
@@ -253,7 +265,7 @@ export class PythStakingClient {
             signers: [],
           },
         ],
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);
@@ -261,14 +273,14 @@ export class PythStakingClient {
 
   public async depositTokensToStakeAccountCustody(
     stakeAccountPositions: PublicKey,
-    amount: bigint
+    amount: bigint,
   ) {
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
 
     const senderTokenAccount = await getAssociatedTokenAddress(
       mint,
-      this.wallet.publicKey
+      this.wallet.publicKey,
     );
 
     const transactions =
@@ -281,12 +293,12 @@ export class PythStakingClient {
               senderTokenAccount,
               getStakeAccountCustodyAddress(stakeAccountPositions),
               this.wallet.publicKey,
-              amount
+              amount,
             ),
             signers: [],
           },
         ],
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);
@@ -294,14 +306,14 @@ export class PythStakingClient {
 
   public async withdrawTokensFromStakeAccountCustody(
     stakeAccountPositions: PublicKey,
-    amount: bigint
+    amount: bigint,
   ) {
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
 
     const receiverTokenAccount = await getAssociatedTokenAddress(
       mint,
-      this.wallet.publicKey
+      this.wallet.publicKey,
     );
 
     const instruction = await this.stakingProgram.methods
@@ -322,7 +334,7 @@ export class PythStakingClient {
             signers: [],
           },
         ],
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);
@@ -334,14 +346,29 @@ export class PythStakingClient {
     amount: bigint;
   }) {
     const { stakeAccountPositions, publisher, amount } = options;
-    this.integrityPoolProgram.methods
+    const instruction = await this.integrityPoolProgram.methods
       .delegate(new BN(amount.toString()))
       .accounts({
         owner: this.wallet.publicKey,
         publisher,
         stakeAccountPositions,
       })
-      .rpc();
+      .instruction();
+
+    const transactions =
+      await TransactionBuilder.batchIntoVersionedTransactions(
+        this.wallet.publicKey,
+        this.provider.connection,
+        [
+          {
+            instruction,
+            signers: [],
+          },
+        ],
+        {},
+      );
+
+    await sendTransactions(transactions, this.connection, this.wallet);
   }
 
   public async getUnlockSchedule(options: {
@@ -349,19 +376,23 @@ export class PythStakingClient {
   }) {
     const { stakeAccountPositions } = options;
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
-      stakeAccountPositions
+      stakeAccountPositions,
     );
     const stakeAccountMetadata =
       await this.stakingProgram.account.stakeAccountMetadataV2.fetch(
-        stakeAccountMetadataAddress
+        stakeAccountMetadataAddress,
       );
     const vestingSchedule = convertBNToBigInt(stakeAccountMetadata.lock);
 
     const config = await this.getGlobalConfig();
 
+    if (config.pythTokenListTime === null) {
+      throw new Error("Pyth token list time not set in global config");
+    }
+
     return getUnlockSchedule({
       vestingSchedule,
-      pythTokenListTime: config.pythTokenListTime!,
+      pythTokenListTime: config.pythTokenListTime,
     });
   }
 
@@ -387,11 +418,11 @@ export class PythStakingClient {
               : null,
             stakeAccountPositions,
             stakeAccountCustody: getStakeAccountCustodyAddress(
-              stakeAccountPositions
+              stakeAccountPositions,
             ),
           })
-          .instruction()
-      )
+          .instruction(),
+      ),
     );
 
     const transactions =
@@ -402,7 +433,7 @@ export class PythStakingClient {
           instruction,
           signers: [],
         })),
-        {}
+        {},
       );
 
     await sendTransactions(transactions, this.connection, this.wallet);

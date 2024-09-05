@@ -36,7 +36,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -83,14 +83,14 @@ export type IntegrityPool = {
                   126,
                   255,
                   0,
-                  169
+                  169,
                 ];
               },
               {
                 kind: "account";
                 path: "pool_config.pyth_token_mint";
                 account: "poolConfig";
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -126,11 +126,11 @@ export type IntegrityPool = {
                 219,
                 233,
                 248,
-                89
+                89,
               ];
             };
           };
-        }
+        },
       ];
       args: [];
     },
@@ -158,7 +158,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -205,14 +205,14 @@ export type IntegrityPool = {
                   126,
                   255,
                   0,
-                  169
+                  169,
                 ];
               },
               {
                 kind: "account";
                 path: "pool_config.pyth_token_mint";
                 account: "poolConfig";
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -248,7 +248,7 @@ export type IntegrityPool = {
                 219,
                 233,
                 248,
-                89
+                89,
               ];
             };
           };
@@ -265,14 +265,14 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
@@ -292,7 +292,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "publisherStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -320,7 +320,7 @@ export type IntegrityPool = {
                   99,
                   111,
                   114,
-                  100
+                  100,
                 ];
               },
               {
@@ -330,7 +330,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -341,7 +341,7 @@ export type IntegrityPool = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -375,7 +375,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -395,20 +395,20 @@ export type IntegrityPool = {
               {
                 kind: "arg";
                 path: "index";
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -418,7 +418,7 @@ export type IntegrityPool = {
         {
           name: "slashRatio";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -442,14 +442,14 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
@@ -460,7 +460,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -471,7 +471,7 @@ export type IntegrityPool = {
         {
           name: "stakeAccountPositions";
           docs: [
-            "CHECK : This AccountInfo is safe because it will checked in staking program"
+            "CHECK : This AccountInfo is safe because it will checked in staking program",
           ];
           writable: true;
         },
@@ -497,13 +497,13 @@ export type IntegrityPool = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -523,7 +523,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -538,13 +538,13 @@ export type IntegrityPool = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -563,7 +563,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -599,7 +599,7 @@ export type IntegrityPool = {
                 231,
                 183,
                 19,
-                217
+                217,
               ];
             };
           };
@@ -616,14 +616,14 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -633,7 +633,7 @@ export type IntegrityPool = {
         {
           name: "y";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -644,7 +644,7 @@ export type IntegrityPool = {
           name: "owner";
           docs: [
             "CHECK : This instruction is permissionless, this account will be checked against",
-            "stake_account_metadata in the CPI"
+            "stake_account_metadata in the CPI",
           ];
           writable: true;
         },
@@ -659,14 +659,14 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
@@ -692,7 +692,7 @@ export type IntegrityPool = {
                   99,
                   111,
                   114,
-                  100
+                  100,
                 ];
               },
               {
@@ -702,7 +702,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -714,7 +714,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -725,7 +725,7 @@ export type IntegrityPool = {
         {
           name: "stakeAccountPositions";
           docs: [
-            "CHECK : This AccountInfo is safe because it will checked in staking program"
+            "CHECK : This AccountInfo is safe because it will checked in staking program",
           ];
           writable: true;
         },
@@ -751,13 +751,13 @@ export type IntegrityPool = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -768,7 +768,7 @@ export type IntegrityPool = {
         {
           name: "stakingProgram";
           address: "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ";
-        }
+        },
       ];
       args: [];
     },
@@ -783,7 +783,7 @@ export type IntegrityPool = {
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
@@ -798,7 +798,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -808,7 +808,7 @@ export type IntegrityPool = {
         {
           name: "currentStakeAccountPositionsOption";
           optional: true;
-        }
+        },
       ];
       args: [];
     },
@@ -832,7 +832,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -851,7 +851,7 @@ export type IntegrityPool = {
               {
                 kind: "arg";
                 path: "index";
-              }
+              },
             ];
           };
         },
@@ -879,7 +879,7 @@ export type IntegrityPool = {
                   99,
                   111,
                   114,
-                  100
+                  100,
                 ];
               },
               {
@@ -889,14 +889,14 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked in the staking program"
+            "CHECK : The publisher will be checked in the staking program",
           ];
         },
         {
@@ -925,13 +925,13 @@ export type IntegrityPool = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -967,7 +967,7 @@ export type IntegrityPool = {
                 231,
                 183,
                 19,
-                217
+                217,
               ];
             };
           };
@@ -984,7 +984,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -1020,7 +1020,7 @@ export type IntegrityPool = {
                 231,
                 183,
                 19,
-                217
+                217,
               ];
             };
           };
@@ -1033,7 +1033,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -1049,7 +1049,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
         },
@@ -1070,7 +1070,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1081,13 +1081,13 @@ export type IntegrityPool = {
         {
           name: "tokenProgram";
           address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-        }
+        },
       ];
       args: [
         {
           name: "index";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -1111,14 +1111,14 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "publisher";
           docs: [
-            "CHECK : The publisher will be checked against data in the pool_data"
+            "CHECK : The publisher will be checked against data in the pool_data",
           ];
         },
         {
@@ -1129,7 +1129,7 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -1163,13 +1163,13 @@ export type IntegrityPool = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -1189,7 +1189,7 @@ export type IntegrityPool = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
             program: {
               kind: "account";
@@ -1204,7 +1204,7 @@ export type IntegrityPool = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -1214,7 +1214,7 @@ export type IntegrityPool = {
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -1239,20 +1239,20 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
           name: "delegationFee";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -1272,20 +1272,20 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
           name: "rewardProgramAuthority";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -1305,22 +1305,22 @@ export type IntegrityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
           name: "y";
           type: "u64";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -1354,7 +1354,7 @@ export type IntegrityPool = {
     {
       name: "targetMetadata";
       discriminator: [157, 23, 139, 117, 181, 44, 197, 130];
-    }
+    },
   ];
   errors: [
     {
@@ -1458,7 +1458,7 @@ export type IntegrityPool = {
       code: 6023;
       name: "invalidY";
       msg: "Y should not be greater than 1%";
-    }
+    },
   ];
   types: [
     {
@@ -1473,7 +1473,7 @@ export type IntegrityPool = {
           {
             name: "nextSlashEventIndex";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1492,7 +1492,7 @@ export type IntegrityPool = {
           {
             name: "deltaDelegation";
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -1527,10 +1527,10 @@ export type IntegrityPool = {
                     name: "publisherEventData";
                   };
                 },
-                1024
+                1024,
               ];
             };
-          }
+          },
         ];
       };
     },
@@ -1580,7 +1580,7 @@ export type IntegrityPool = {
             docs: [
               "Once the pyth token is listed, governance can update the config to set this value.",
               "Once this value is set, vesting schedules that depend on the token list date can start",
-              "vesting."
+              "vesting.",
             ];
             type: {
               option: "i64";
@@ -1599,7 +1599,7 @@ export type IntegrityPool = {
           {
             name: "poolAuthority";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
@@ -1623,7 +1623,7 @@ export type IntegrityPool = {
           {
             name: "y";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1659,7 +1659,7 @@ export type IntegrityPool = {
                     name: "delegationState";
                   };
                 },
-                1024
+                1024,
               ];
             };
           },
@@ -1672,7 +1672,7 @@ export type IntegrityPool = {
                     name: "delegationState";
                   };
                 },
-                1024
+                1024,
               ];
             };
           },
@@ -1691,7 +1691,7 @@ export type IntegrityPool = {
                     name: "event";
                   };
                 },
-                52
+                52,
               ];
             };
           },
@@ -1710,7 +1710,7 @@ export type IntegrityPool = {
             type: {
               array: ["u64", 1024];
             };
-          }
+          },
         ];
       };
     },
@@ -1727,7 +1727,7 @@ export type IntegrityPool = {
           {
             name: "owner";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
@@ -1757,9 +1757,9 @@ export type IntegrityPool = {
           {
             name: "publisherCapsMessageBuffer";
             type: {
-              array: ["u8", 40971];
+              array: ["u8", 40_971];
             };
-          }
+          },
         ];
       };
     },
@@ -1782,7 +1782,7 @@ export type IntegrityPool = {
           {
             name: "delegationFee";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1802,7 +1802,7 @@ export type IntegrityPool = {
           {
             name: "slashCustody";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
@@ -1811,7 +1811,7 @@ export type IntegrityPool = {
       docs: [
         "This represents a target that users can stake to",
         "Currently we store the last time the target account was updated, the current locked balance",
-        "and the amount by which the locked balance will change in the next epoch"
+        "and the amount by which the locked balance will change in the next epoch",
       ];
       type: {
         kind: "struct";
@@ -1835,9 +1835,9 @@ export type IntegrityPool = {
           {
             name: "deltaLocked";
             type: "i64";
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };

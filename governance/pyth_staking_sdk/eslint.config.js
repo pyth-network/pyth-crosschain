@@ -1,1 +1,11 @@
-export { base as default } from "@cprussin/eslint-config";
+import { base } from "@cprussin/eslint-config";
+
+export default [
+  ...base,
+  {
+    rules: {
+      "n/no-unpublished-import": "off",
+      "unicorn/no-null": "off",
+    },
+  },
+];

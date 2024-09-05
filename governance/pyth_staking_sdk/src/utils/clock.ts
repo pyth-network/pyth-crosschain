@@ -1,17 +1,19 @@
-import { BN } from "@coral-xyz/anchor";
 import { Connection } from "@solana/web3.js";
+
 import { EPOCH_DURATION } from "../constants";
 
 export const getCurrentSolanaTimestamp = async (connection: Connection) => {
   const slot = await connection.getSlot();
   const blockTime = await connection.getBlockTime(slot);
-  return new BN(blockTime!);
+  if (blockTime === null) {
+    throw new Error("Block time is not available");
+  }
+  return BigInt(blockTime);
 };
 
 export const getCurrentEpoch: (
-  connection: Connection
+  connection: Connection,
 ) => Promise<bigint> = async (connection: Connection) => {
-  const timestampBN = await getCurrentSolanaTimestamp(connection);
-  const timestamp = BigInt(timestampBN.toString());
+  const timestamp = await getCurrentSolanaTimestamp(connection);
   return timestamp / EPOCH_DURATION;
 };

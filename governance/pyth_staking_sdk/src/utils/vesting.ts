@@ -16,7 +16,7 @@ export const getUnlockSchedule = (options: {
         vestingSchedule.periodicVestingAfterListing.periodDuration,
       startDate: pythTokenListTime,
     });
-  } else if (vestingSchedule.periodicVesting) {
+  } else {
     return getPeriodicUnlockSchedule({
       balance: vestingSchedule.periodicVesting.initialBalance,
       numPeriods: vestingSchedule.periodicVesting.numPeriods,
@@ -24,7 +24,6 @@ export const getUnlockSchedule = (options: {
       startDate: vestingSchedule.periodicVesting.startDate,
     });
   }
-  assertNever(vestingSchedule);
 };
 
 export const getPeriodicUnlockSchedule = (options: {
@@ -36,7 +35,7 @@ export const getPeriodicUnlockSchedule = (options: {
   const { balance, startDate, periodDuration, numPeriods } = options;
 
   const unlockSchedule: UnlockSchedule = [];
-  const currentTimeStamp = new Date().getTime() / 1000;
+  const currentTimeStamp = Date.now() / 1000;
 
   for (let i = 0; i < numPeriods; i++) {
     const unlockTimeStamp =
@@ -51,8 +50,3 @@ export const getPeriodicUnlockSchedule = (options: {
 
   return unlockSchedule;
 };
-
-// Utility function to assert a value is never
-function assertNever(value: never): never {
-  throw new Error(`Unexpected value: ${value}`);
-}

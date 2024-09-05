@@ -1,20 +1,27 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable unicorn/catch-error-name */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable no-console */
+import { exec } from "node:child_process";
+import { mkdtemp } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { Connection } from "@solana/web3.js";
-import { mkdtemp } from "fs/promises";
-import path from "path";
-import os from "os";
-import { exec } from "child_process";
+
+import { loadKeypair } from "./keys";
 import {
   INTEGRITY_POOL_PROGRAM_ADDRESS,
   PUBLISHER_CAPS_PROGRAM_ADDRESS,
   STAKING_PROGRAM_ADDRESS,
 } from "../src/constants";
-import { loadKeypair } from "./keys";
 
 export function getConnection(): Connection {
   return new Connection(
     `http://127.0.0.1:8899`,
-    AnchorProvider.defaultOptions().commitment
+    AnchorProvider.defaultOptions().commitment,
   );
 }
 
@@ -31,7 +38,7 @@ export class CustomAbortController {
     return new Promise((resolve) => {
       setTimeout(() => {
         this.abortController.abort();
-        resolve(null);
+        resolve(undefined);
       }, 5000);
     });
   }
@@ -50,15 +57,15 @@ export async function startValidatorRaw() {
   const internalController: AbortController = new AbortController();
   const { signal } = internalController;
 
-  const user = loadKeypair("test/keypairs/localnet_authority.json");
+  const user = loadKeypair("test/keypairs/localnet-authority.json");
 
   const command = `solana-test-validator \
     --ledger ${ledgerDir} \
     --reset \
-    --mint ${user.publicKey} \
+    --mint ${user.publicKey.toBase58()} \
     --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} test/programs/staking.so \
     --bpf-program ${INTEGRITY_POOL_PROGRAM_ADDRESS.toBase58()} test/programs/integrity_pool.so \
-    --bpf-program ${PUBLISHER_CAPS_PROGRAM_ADDRESS} test/programs/publisher_caps.so \
+    --bpf-program ${PUBLISHER_CAPS_PROGRAM_ADDRESS.toBase58()} test/programs/publisher_caps.so \
     `;
 
   exec(command, { signal }, (error, stdout, stderr) => {
@@ -86,7 +93,7 @@ export async function startValidatorRaw() {
       // the connection to the validator.
       if (numRetries == 30) {
         console.log(
-          `Failed to start validator or connect to running validator. Caught exception: ${e}`
+          `Failed to start validator or connect to running validator. Caught exception: ${e}`,
         );
         throw e;
       }

@@ -1,3 +1,4 @@
+import { Wallet } from "@coral-xyz/anchor";
 import {
   Keypair,
   PublicKey,
@@ -6,15 +7,15 @@ import {
   Transaction,
   type Connection,
 } from "@solana/web3.js";
+
 import {
   type CustomAbortController,
   startValidatorRaw,
 } from "./start-validator";
-import { PythStakingClient } from "../src/pyth-staking-client";
-import { Wallet } from "@coral-xyz/anchor";
-import { getConfigAddress } from "../src/pdas";
-import type { GlobalConfig } from "../src/types";
 import { getCurrentEpoch } from "../src";
+import { getConfigAddress } from "../src/pdas";
+import { PythStakingClient } from "../src/pyth-staking-client";
+import type { GlobalConfig } from "../src/types";
 
 describe("Test", () => {
   let connection: Connection;
@@ -48,7 +49,7 @@ describe("Test", () => {
       pdaAuthority: PublicKey.unique(),
       governanceProgram: PublicKey.unique(),
       pythTokenListTime: null,
-      agreementHash: new Array(32).fill(0),
+      agreementHash: Array.from<number>({ length: 32 }).fill(0),
       mockClockTime: 0n,
       poolAuthority: PublicKey.unique(),
     };
@@ -62,9 +63,8 @@ describe("Test", () => {
 
   test("initialize pool", async () => {
     const poolDataSpace = 2 * 1024 * 1024;
-    const balance = await connection.getMinimumBalanceForRentExemption(
-      poolDataSpace
-    );
+    const balance =
+      await connection.getMinimumBalanceForRentExemption(poolDataSpace);
 
     const transaction = new Transaction().add(
       SystemProgram.createAccount({
@@ -73,7 +73,7 @@ describe("Test", () => {
         lamports: balance,
         space: poolDataSpace,
         programId: pythStakingClient.integrityPoolProgram.programId,
-      })
+      }),
     );
 
     await sendAndConfirmTransaction(connection, transaction, [
@@ -101,29 +101,31 @@ describe("Test", () => {
     expect(poolDataAccount).toEqual({
       lastUpdatedEpoch: (await getCurrentEpoch(connection)) - 1n,
       claimableRewards: 0n,
-      publishers: Array(1024).fill(PublicKey.default),
-      delState: Array(1024).fill({
+      publishers: Array.from({ length: 1024 }).fill(PublicKey.default),
+      delState: Array.from({ length: 1024 }).fill({
         totalDelegation: 0n,
         deltaDelegation: 0n,
       }),
-      selfDelState: Array(1024).fill({
+      selfDelState: Array.from({ length: 1024 }).fill({
         totalDelegation: 0n,
         deltaDelegation: 0n,
       }),
-      publisherStakeAccounts: Array(1024).fill(PublicKey.default),
-      events: Array(52).fill({
+      publisherStakeAccounts: Array.from({ length: 1024 }).fill(
+        PublicKey.default,
+      ),
+      events: Array.from({ length: 52 }).fill({
         epoch: 0n,
         y: 0n,
-        extraSpace: Array(7).fill(0n),
-        eventData: Array(1024).fill({
+        extraSpace: Array.from({ length: 7 }).fill(0n),
+        eventData: Array.from({ length: 1024 }).fill({
           selfRewardRatio: 0n,
           otherRewardRatio: 0n,
           delegationFee: 0n,
         }),
       }),
       numEvents: 0n,
-      numSlashEvents: Array(1024).fill(0n),
-      delegationFees: Array(1024).fill(0n),
+      numSlashEvents: Array.from({ length: 1024 }).fill(0n),
+      delegationFees: Array.from({ length: 1024 }).fill(0n),
     });
   });
 });

@@ -24,7 +24,7 @@ export type PublisherCaps = {
         {
           name: "publisherCaps";
           writable: true;
-        }
+        },
       ];
       args: [];
     },
@@ -43,7 +43,7 @@ export type PublisherCaps = {
         {
           name: "encodedVaa";
           docs: ["which is the recommended way"];
-        }
+        },
       ];
       args: [
         {
@@ -53,7 +53,7 @@ export type PublisherCaps = {
               array: ["u8", 20];
             };
           };
-        }
+        },
       ];
     },
     {
@@ -68,7 +68,7 @@ export type PublisherCaps = {
         {
           name: "publisherCaps";
           writable: true;
-        }
+        },
       ];
       args: [
         {
@@ -78,15 +78,15 @@ export type PublisherCaps = {
         {
           name: "data";
           type: "bytes";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
       name: "publisherCaps";
       discriminator: [5, 87, 155, 44, 121, 90, 35, 134];
-    }
+    },
   ];
   errors: [
     {
@@ -124,7 +124,7 @@ export type PublisherCaps = {
     {
       code: 6008;
       name: "wrongDiscriminator";
-    }
+    },
   ];
   types: [
     {
@@ -153,11 +153,11 @@ export type PublisherCaps = {
           {
             name: "publisherCapsMessageBuffer";
             type: {
-              array: ["u8", 40971];
+              array: ["u8", 40_971];
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };

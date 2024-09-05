@@ -16,7 +16,7 @@ export type Staking = {
     {
       name: "acceptSplit";
       docs: [
-        "* A split request can only be accepted by the `pda_authority` from\n     * the config account. If accepted, `amount` tokens are transferred to a new stake account\n     * owned by the `recipient` and the split request is reset (by setting `amount` to 0).\n     * The recipient of a transfer can't vote during the epoch of the transfer.\n     *\n     * The `pda_authority` must explicitly approve both the amount of tokens and recipient, and\n     * these parameters must match the request (in the `split_request` account)."
+        "* A split request can only be accepted by the `pda_authority` from\n     * the config account. If accepted, `amount` tokens are transferred to a new stake account\n     * owned by the `recipient` and the split request is reset (by setting `amount` to 0).\n     * The recipient of a transfer can't vote during the epoch of the transfer.\n     *\n     * The `pda_authority` must explicitly approve both the amount of tokens and recipient, and\n     * these parameters must match the request (in the `split_request` account).",
       ];
       discriminator: [177, 172, 17, 93, 193, 86, 54, 222];
       accounts: [
@@ -51,13 +51,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "sourceStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -81,13 +81,13 @@ export type Staking = {
                   117,
                   101,
                   115,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "sourceStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -103,7 +103,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "sourceStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -119,7 +119,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "sourceStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -148,13 +148,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "newStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -170,7 +170,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "newStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -186,7 +186,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "newStakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -197,7 +197,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -216,7 +216,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -226,7 +226,7 @@ export type Staking = {
         {
           name: "recipient";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -241,16 +241,16 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
           name: "seconds";
           type: "i64";
-        }
+        },
       ];
     },
     {
@@ -288,13 +288,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -309,7 +309,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -320,7 +320,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -337,7 +337,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
         },
@@ -349,7 +349,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -367,7 +367,7 @@ export type Staking = {
               name: "targetWithParameters";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -375,7 +375,7 @@ export type Staking = {
       docs: [
         "Creates a position",
         "Looks for the first available place in the array, fails if array is full",
-        "Computes risk and fails if new positions exceed risk limit"
+        "Computes risk and fails if new positions exceed risk limit",
       ];
       discriminator: [48, 215, 197, 153, 96, 203, 180, 133];
       accounts: [
@@ -410,13 +410,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -431,7 +431,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -442,7 +442,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -459,7 +459,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
         },
@@ -471,7 +471,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -485,7 +485,7 @@ export type Staking = {
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -493,7 +493,7 @@ export type Staking = {
       docs: [
         "Trustless instruction that creates a stake account for a user",
         "The main account i.e. the position accounts needs to be initialized outside of the program",
-        "otherwise we run into stack limits"
+        "otherwise we run into stack limits",
       ];
       discriminator: [105, 24, 131, 19, 201, 250, 157, 73];
       accounts: [
@@ -527,13 +527,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -549,7 +549,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -565,7 +565,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -576,7 +576,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -595,7 +595,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -609,7 +609,7 @@ export type Staking = {
               name: "vestingSchedule";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -633,7 +633,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -649,14 +649,14 @@ export type Staking = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -693,13 +693,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -722,13 +722,13 @@ export type Staking = {
                   105,
                   103,
                   104,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -739,14 +739,14 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -767,7 +767,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -778,7 +778,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -788,7 +788,7 @@ export type Staking = {
               name: "position";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -808,7 +808,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -819,7 +819,7 @@ export type Staking = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -829,13 +829,13 @@ export type Staking = {
               name: "globalConfig";
             };
           };
-        }
+        },
       ];
     },
     {
       name: "joinDaoLlc";
       docs: [
-        "* Accept to join the DAO LLC\n     * This must happen before create_position or update_voter_weight\n     * The user signs a hash of the agreement and the program checks that the hash matches the\n     * agreement"
+        "* Accept to join the DAO LLC\n     * This must happen before create_position or update_voter_weight\n     * The user signs a hash of the agreement and the program checks that the hash matches the\n     * agreement",
       ];
       discriminator: [79, 241, 203, 177, 232, 143, 124, 14];
       accounts: [
@@ -868,13 +868,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -885,10 +885,10 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -896,7 +896,7 @@ export type Staking = {
           type: {
             array: ["u8", 32];
           };
-        }
+        },
       ];
     },
     {
@@ -906,7 +906,7 @@ export type Staking = {
         {
           name: "owner";
           docs: [
-            "CHECK : This AccountInfo is safe because it's checked against stake_account_metadata"
+            "CHECK : This AccountInfo is safe because it's checked against stake_account_metadata",
           ];
           writable: true;
           relations: ["stakeAccountMetadata"];
@@ -936,13 +936,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -953,7 +953,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -961,7 +961,7 @@ export type Staking = {
           name: "poolAuthority";
           signer: true;
           optional: true;
-        }
+        },
       ];
       args: [
         {
@@ -971,13 +971,13 @@ export type Staking = {
               name: "targetWithParameters";
             };
           };
-        }
+        },
       ];
     },
     {
       name: "recoverAccount";
       docs: [
-        "Recovers a user's `stake account` ownership by transferring ownership\n     * from a token account to the `owner` of that token account.\n     *\n     * This functionality addresses the scenario where a user mistakenly\n     * created a stake account using their token account address as the owner."
+        "Recovers a user's `stake account` ownership by transferring ownership\n     * from a token account to the `owner` of that token account.\n     *\n     * This functionality addresses the scenario where a user mistakenly\n     * created a stake account using their token account address as the owner.",
       ];
       discriminator: [240, 223, 246, 118, 26, 121, 34, 128];
       accounts: [
@@ -1015,13 +1015,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1044,13 +1044,13 @@ export type Staking = {
                   105,
                   103,
                   104,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1061,17 +1061,17 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [];
     },
     {
       name: "requestSplit";
       docs: [
-        "* Any user of the staking program can request to split their account and\n     * give a part of it to another user.\n     * This is mostly useful to transfer unvested tokens. Each user can only have one active\n     * request at a time.\n     * In the first step, the user requests a split by specifying the `amount` of tokens\n     * they want to give to the other user and the `recipient`'s pubkey."
+        "* Any user of the staking program can request to split their account and\n     * give a part of it to another user.\n     * This is mostly useful to transfer unvested tokens. Each user can only have one active\n     * request at a time.\n     * In the first step, the user requests a split by specifying the `amount` of tokens\n     * they want to give to the other user and the `recipient`'s pubkey.",
       ];
       discriminator: [133, 146, 228, 165, 251, 207, 146, 23];
       accounts: [
@@ -1104,13 +1104,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1134,13 +1134,13 @@ export type Staking = {
                   117,
                   101,
                   115,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1151,14 +1151,14 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -1168,7 +1168,7 @@ export type Staking = {
         {
           name: "recipient";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -1183,7 +1183,7 @@ export type Staking = {
         {
           name: "publisher";
           docs: [
-            "CHECK : This AccountInfo is just used to construct the target that will get slashed"
+            "CHECK : This AccountInfo is just used to construct the target that will get slashed",
           ];
         },
         {
@@ -1211,13 +1211,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1233,7 +1233,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1244,7 +1244,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -1260,7 +1260,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
         },
@@ -1280,20 +1280,20 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
         {
           name: "tokenProgram";
           address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-        }
+        },
       ];
       args: [
         {
           name: "slashRatio";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -1313,10 +1313,10 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -1324,7 +1324,7 @@ export type Staking = {
           type: {
             array: ["u8", 32];
           };
-        }
+        },
       ];
     },
     {
@@ -1344,16 +1344,16 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
           name: "newAuthority";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -1373,7 +1373,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [109, 97, 120, 95, 118, 111, 116, 101, 114];
-              }
+              },
             ];
           };
         },
@@ -1384,14 +1384,14 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -1412,16 +1412,16 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
           name: "newAuthority";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -1441,16 +1441,16 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
           name: "poolAuthority";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -1470,10 +1470,10 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -1481,7 +1481,7 @@ export type Staking = {
           type: {
             option: "i64";
           };
-        }
+        },
       ];
     },
     {
@@ -1516,13 +1516,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1537,7 +1537,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1560,13 +1560,13 @@ export type Staking = {
                   105,
                   103,
                   104,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1577,7 +1577,7 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
@@ -1593,10 +1593,10 @@ export type Staking = {
               {
                 kind: "const";
                 value: [118, 111, 116, 105, 110, 103];
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -1606,7 +1606,7 @@ export type Staking = {
               name: "voterWeightAction";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -1645,13 +1645,13 @@ export type Staking = {
                   100,
                   97,
                   116,
-                  97
+                  97,
                 ];
               },
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1667,7 +1667,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1683,7 +1683,7 @@ export type Staking = {
               {
                 kind: "account";
                 path: "stakeAccountPositions";
-              }
+              },
             ];
           };
         },
@@ -1694,22 +1694,22 @@ export type Staking = {
               {
                 kind: "const";
                 value: [99, 111, 110, 102, 105, 103];
-              }
+              },
             ];
           };
         },
         {
           name: "tokenProgram";
           address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-        }
+        },
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -1739,7 +1739,7 @@ export type Staking = {
     {
       name: "voterWeightRecord";
       discriminator: [46, 249, 155, 75, 153, 248, 116, 9];
-    }
+    },
   ];
   errors: [
     {
@@ -1946,7 +1946,7 @@ export type Staking = {
       code: 6040;
       name: "other";
       msg: "other";
-    }
+    },
   ];
   types: [
     {
@@ -1995,7 +1995,7 @@ export type Staking = {
             docs: [
               "Once the pyth token is listed, governance can update the config to set this value.",
               "Once this value is set, vesting schedules that depend on the token list date can start",
-              "vesting."
+              "vesting.",
             ];
             type: {
               option: "i64";
@@ -2014,14 +2014,14 @@ export type Staking = {
           {
             name: "poolAuthority";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
     {
       name: "maxVoterWeightRecord";
       docs: [
-        "Copied this struct from https://github.com/solana-labs/solana-program-library/blob/master/governance/addin-api/src/max_voter_weight.rs"
+        "Copied this struct from https://github.com/solana-labs/solana-program-library/blob/master/governance/addin-api/src/max_voter_weight.rs",
       ];
       type: {
         kind: "struct";
@@ -2036,7 +2036,7 @@ export type Staking = {
             docs: [
               "Governing Token Mint the MaxVoterWeightRecord is associated with",
               "Note: The addin can take deposits of any tokens and is not restricted to the community or",
-              "council tokens only"
+              "council tokens only",
             ];
             type: "pubkey";
           },
@@ -2044,7 +2044,7 @@ export type Staking = {
             name: "maxVoterWeight";
             docs: [
               "Max voter weight",
-              "The max voter weight provided by the addin for the given realm and governing_token_mint"
+              "The max voter weight provided by the addin for the given realm and governing_token_mint",
             ];
             type: "u64";
           },
@@ -2056,7 +2056,7 @@ export type Staking = {
               "If the max vote weight decays with time, for example for time locked based weights, then",
               "the expiry must be set As a pattern Revise instruction to update the max weight should",
               "be invoked before governance instruction within the same transaction and the expiry set",
-              "to the current slot to provide up to date weight"
+              "to the current slot to provide up to date weight",
             ];
             type: {
               option: "u64";
@@ -2068,7 +2068,7 @@ export type Staking = {
             type: {
               array: ["u8", 8];
             };
-          }
+          },
         ];
       };
     },
@@ -2078,7 +2078,7 @@ export type Staking = {
         "This represents a staking position, i.e. an amount that someone has staked to a particular",
         "target. This is one of the core pieces of our staking design, and stores all",
         "of the state related to a position The voting position is a position where the",
-        "target_with_parameters is VOTING"
+        "target_with_parameters is VOTING",
       ];
       type: {
         kind: "struct";
@@ -2104,7 +2104,7 @@ export type Staking = {
                 name: "targetWithParameters";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -2121,7 +2121,7 @@ export type Staking = {
           {
             name: "owner";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
@@ -2137,7 +2137,7 @@ export type Staking = {
           {
             name: "recipient";
             type: "pubkey";
-          }
+          },
         ];
       };
     },
@@ -2146,7 +2146,7 @@ export type Staking = {
       docs: [
         "This is the metadata account for each staker",
         'It is derived from the positions account with seeds "stake_metadata" and the positions account',
-        "pubkey It stores some PDA bumps, the owner of the account and the vesting schedule"
+        "pubkey It stores some PDA bumps, the owner of the account and the vesting schedule",
       ];
       type: {
         kind: "struct";
@@ -2196,7 +2196,7 @@ export type Staking = {
                 array: ["u8", 32];
               };
             };
-          }
+          },
         ];
       };
     },
@@ -2205,7 +2205,7 @@ export type Staking = {
       docs: [
         "This represents a target that users can stake to",
         "Currently we store the last time the target account was updated, the current locked balance",
-        "and the amount by which the locked balance will change in the next epoch"
+        "and the amount by which the locked balance will change in the next epoch",
       ];
       type: {
         kind: "struct";
@@ -2229,7 +2229,7 @@ export type Staking = {
           {
             name: "deltaLocked";
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -2247,9 +2247,9 @@ export type Staking = {
               {
                 name: "publisher";
                 type: "pubkey";
-              }
+              },
             ];
-          }
+          },
         ];
       };
     },
@@ -2257,7 +2257,7 @@ export type Staking = {
       name: "vestingSchedule";
       docs: [
         "Represents how a given initial balance vests over time",
-        "It is unit-less, but units must be consistent"
+        "It is unit-less, but units must be consistent",
       ];
       repr: {
         kind: "rust";
@@ -2286,7 +2286,7 @@ export type Staking = {
               {
                 name: "numPeriods";
                 type: "u64";
-              }
+              },
             ];
           },
           {
@@ -2303,9 +2303,9 @@ export type Staking = {
               {
                 name: "numPeriods";
                 type: "u64";
-              }
+              },
             ];
-          }
+          },
         ];
       };
     },
@@ -2329,7 +2329,7 @@ export type Staking = {
           },
           {
             name: "signOffProposal";
-          }
+          },
         ];
       };
     },
@@ -2341,7 +2341,7 @@ export type Staking = {
         "work because the error's macros are not updated for anchor 0.22.0.",
         "Even if it did work, the type wouldn't show up in the IDL. SPL doesn't produce an API, which",
         "means that means we'd need the equivalent of this code on the client side.",
-        "If Anchor fixes the macro, we might consider changing it"
+        "If Anchor fixes the macro, we might consider changing it",
       ];
       type: {
         kind: "struct";
@@ -2353,7 +2353,7 @@ export type Staking = {
               "Note: The discriminator size must match the addin implementing program discriminator size",
               "to ensure it's stored in the private space of the account data and it's unique",
               "pub account_discriminator: [u8; 8],",
-              "The Realm the VoterWeightRecord belongs to"
+              "The Realm the VoterWeightRecord belongs to",
             ];
             type: "pubkey";
           },
@@ -2362,7 +2362,7 @@ export type Staking = {
             docs: [
               "Governing Token Mint the VoterWeightRecord is associated with",
               "Note: The addin can take deposits of any tokens and is not restricted to the community or",
-              "council tokens only"
+              "council tokens only",
             ];
             type: "pubkey";
           },
@@ -2370,7 +2370,7 @@ export type Staking = {
             name: "governingTokenOwner";
             docs: [
               "The owner of the governing token and voter",
-              "This is the actual owner (voter) and corresponds to TokenOwnerRecord.governing_token_owner"
+              "This is the actual owner (voter) and corresponds to TokenOwnerRecord.governing_token_owner",
             ];
             type: "pubkey";
           },
@@ -2379,7 +2379,7 @@ export type Staking = {
             docs: [
               "Voter's weight",
               "The weight of the voter provided by the addin for the given realm, governing_token_mint and",
-              "governing_token_owner (voter)"
+              "governing_token_owner (voter)",
             ];
             type: "u64";
           },
@@ -2391,7 +2391,7 @@ export type Staking = {
               "If the voter weight decays with time, for example for time locked based weights, then the",
               "expiry must be set As a common pattern Revise instruction to update the weight should",
               "be invoked before governance instruction within the same transaction and the expiry set",
-              "to the current slot to provide up to date weight"
+              "to the current slot to provide up to date weight",
             ];
             type: {
               option: "u64";
@@ -2403,7 +2403,7 @@ export type Staking = {
               "The governance action the voter's weight pertains to",
               "It allows to provided voter's weight specific to the particular action the weight is",
               "evaluated for When the action is provided then the governance program asserts the",
-              "executing action is the same as specified by the addin"
+              "executing action is the same as specified by the addin",
             ];
             type: {
               option: {
@@ -2420,7 +2420,7 @@ export type Staking = {
               "It allows to provided voter's weight specific to the target the weight is evaluated for",
               "For example when addin supplies weight to vote on a particular proposal then it must",
               "specify the proposal as the action target When the target is provided then the",
-              "governance program asserts the target is the same as specified by the addin"
+              "governance program asserts the target is the same as specified by the addin",
             ];
             type: {
               option: "pubkey";
@@ -2432,9 +2432,9 @@ export type Staking = {
             type: {
               array: ["u8", 8];
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };

@@ -1,4 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { BN } from "@coral-xyz/anchor";
+
 import type { ConvertBigIntToBN, ConvertBNToBigInt } from "../types";
 
 export const convertBNToBigInt = <T>(obj: T): ConvertBNToBigInt<T> => {
@@ -6,19 +10,18 @@ export const convertBNToBigInt = <T>(obj: T): ConvertBNToBigInt<T> => {
     return BigInt(obj.toString()) as any;
   }
   if (Array.isArray(obj)) {
-    return obj.map(convertBNToBigInt) as any;
+    return obj.map((x) => convertBNToBigInt(x)) as any;
   }
   if (typeof obj !== "object" || obj === null || obj.constructor !== Object) {
     return obj as any;
   }
 
-  let newObj = {} as any;
+  const newObj: any = {};
   for (const key in obj) {
-    if (obj[key] instanceof BN) {
-      newObj[key] = BigInt(obj[key].toString());
-    } else {
-      newObj[key] = convertBNToBigInt(obj[key]);
-    }
+    newObj[key] =
+      obj[key] instanceof BN
+        ? BigInt(obj[key].toString())
+        : convertBNToBigInt(obj[key]);
   }
   return newObj;
 };
@@ -28,18 +31,17 @@ export const convertBigIntToBN = <T>(obj: T): ConvertBigIntToBN<T> => {
     return new BN(obj.toString()) as any;
   }
   if (Array.isArray(obj)) {
-    return obj.map(convertBigIntToBN) as any;
+    return obj.map((x) => convertBigIntToBN(x)) as any;
   }
   if (typeof obj !== "object" || obj === null || obj.constructor !== Object) {
     return obj as any;
   }
-  let newObj = {} as any;
+  const newObj: any = {};
   for (const key in obj) {
-    if (typeof obj[key] === "bigint") {
-      newObj[key] = new BN(obj[key].toString());
-    } else {
-      newObj[key] = convertBigIntToBN(obj[key]);
-    }
+    newObj[key] =
+      typeof obj[key] === "bigint"
+        ? new BN(obj[key].toString())
+        : convertBigIntToBN(obj[key]);
   }
   return newObj;
 };

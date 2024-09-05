@@ -7,7 +7,7 @@ import {
 
 export const getPositionState = (
   position: Position,
-  current_epoch: bigint
+  current_epoch: bigint,
 ): PositionState => {
   if (current_epoch < position.activationEpoch) {
     return PositionState.LOCKING;
@@ -38,18 +38,18 @@ export const getAmountByTargetAndState = (options: {
     options;
 
   return stakeAccountPositions.data.positions
-    .filter((p) => p && getPositionState(p, epoch) === positionState)
+    .filter((p) => getPositionState(p, epoch) === positionState)
     .filter((p) => {
       if (targetWithParameters.voting) {
-        return !!p?.targetWithParameters.voting;
+        return p.targetWithParameters.voting !== undefined;
       }
       return (
-        p?.targetWithParameters?.integrityPool?.publisher &&
-        targetWithParameters?.integrityPool?.publisher?.equals(
-          p?.targetWithParameters?.integrityPool?.publisher
+        p.targetWithParameters.integrityPool?.publisher &&
+        targetWithParameters.integrityPool.publisher.equals(
+          p.targetWithParameters.integrityPool.publisher,
         )
       );
     })
-    .map((p) => p!.amount)
+    .map((p) => p.amount)
     .reduce((sum, amount) => sum + amount, 0n);
 };
