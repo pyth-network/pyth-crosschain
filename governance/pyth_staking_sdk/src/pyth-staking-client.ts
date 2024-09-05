@@ -64,7 +64,7 @@ export class PythStakingClient {
     );
   }
 
-  async setGlobalConfig(config: GlobalConfig) {
+  async initGlobalConfig(config: GlobalConfig) {
     const globalConfigAnchor = convertBigIntToBN(config);
     const instruction = await this.stakingProgram.methods
       .initConfig(globalConfigAnchor)

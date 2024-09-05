@@ -54,7 +54,7 @@ describe("Test", () => {
       poolAuthority: PublicKey.unique(),
     };
 
-    await pythStakingClient.setGlobalConfig(tmpConfig);
+    await pythStakingClient.initGlobalConfig(tmpConfig);
 
     config = await pythStakingClient.getGlobalConfig();
 
