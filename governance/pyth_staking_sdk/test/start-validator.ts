@@ -50,15 +50,15 @@ export async function startValidatorRaw() {
   const internalController: AbortController = new AbortController();
   const { signal } = internalController;
 
-  const user = loadKeypair("keypairs/localnet_authority.json");
+  const user = loadKeypair("test/keypairs/localnet_authority.json");
 
   const command = `solana-test-validator \
     --ledger ${ledgerDir} \
     --reset \
     --mint ${user.publicKey} \
-    --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} programs/staking.so \
-    --bpf-program ${INTEGRITY_POOL_PROGRAM_ADDRESS.toBase58()} programs/integrity_pool.so \
-    --bpf-program ${PUBLISHER_CAPS_PROGRAM_ADDRESS} programs/publisher_caps.so \
+    --bpf-program ${STAKING_PROGRAM_ADDRESS.toBase58()} test/programs/staking.so \
+    --bpf-program ${INTEGRITY_POOL_PROGRAM_ADDRESS.toBase58()} test/programs/integrity_pool.so \
+    --bpf-program ${PUBLISHER_CAPS_PROGRAM_ADDRESS} test/programs/publisher_caps.so \
     `;
 
   exec(command, { signal }, (error, stdout, stderr) => {
