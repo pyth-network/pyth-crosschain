@@ -68,11 +68,7 @@ impl BufferedPrice {
 }
 
 pub fn format_matches(data: &[u8]) -> bool {
-    if data.len() < size_of::<u32>() {
-        return false;
-    }
-    let format: &u32 = from_bytes(&data[..size_of::<u32>()]);
-    *format == FORMAT
+    super::format(data).map_or(false, |f| f == FORMAT)
 }
 
 pub fn read(data: &[u8]) -> Result<(&BufferHeader, &[BufferedPrice]), ReadAccountError> {

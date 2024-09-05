@@ -6,6 +6,10 @@ use super::errors::ReadAccountError;
 /// Account Magic to avoid Account Confusiong
 const FORMAT: u32 = 2258188348;
 
+pub fn format_matches(data: &[u8]) -> bool {
+    super::format(data).map_or(false, |f| f == FORMAT)
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct PublisherConfig {
