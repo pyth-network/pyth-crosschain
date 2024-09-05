@@ -200,11 +200,6 @@ export class WormholeTest implements Contract {
     return result.stack.readNumber();
   }
 
-  async getChainId(provider: ContractProvider) {
-    const result = await provider.get("test_get_chain_id", []);
-    return result.stack.readNumber();
-  }
-
   async getGovernanceContract(provider: ContractProvider) {
     const result = await provider.get("test_get_governance_contract", []);
     const bigNumber = result.stack.readBigNumber();

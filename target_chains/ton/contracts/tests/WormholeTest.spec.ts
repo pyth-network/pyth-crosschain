@@ -181,13 +181,6 @@ describe("WormholeTest", () => {
     expect(getGuardianSetResult.keys).toEqual(GUARDIAN_SET_0);
   });
 
-  it("should return the correct chain ID", async () => {
-    await deployContract();
-
-    const result = await wormholeTest.getChainId();
-    expect(result).toEqual(CHAIN_ID);
-  });
-
   it("should return the correct governance chain ID", async () => {
     await deployContract();
 
