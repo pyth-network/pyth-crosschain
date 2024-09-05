@@ -1,0 +1,3 @@
+{
+  "buildCommand": "lerna build --filter @pythnetwork/staking --include-dependencies"
+}
