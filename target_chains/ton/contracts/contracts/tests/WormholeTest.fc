@@ -1,8 +1,19 @@
 #include "../imports/stdlib.fc";
 #include "../Wormhole.fc";
+#include "../common/op.fc";
 
 () recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-    ;; nop;
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    int op = in_msg_body~load_uint(32);
+    cell data = in_msg_body~load_ref();
+    if (op == OP_UPDATE_GUARDIAN_SET) {
+        update_guardian_set(data.begin_parse());
+    } else {
+        throw(0xffff); ;; Throw exception for unknown op
+    }
 }
 
 (int, int, int, cell, int) test_parse_encoded_upgrade(int current_guardian_set_index, slice payload) method_id {
@@ -11,13 +22,6 @@
 
 (int, int, int, int, int, int, int, int, slice, int) test_parse_and_verify_wormhole_vm(slice in_msg_body) method_id {
     return parse_and_verify_wormhole_vm(in_msg_body);
-}
-
-(int) test_update_guardian_set(slice in_msg_body) method_id {
-    int old_guardian_set_index = get_current_guardian_set_index();
-    update_guardian_set(in_msg_body);
-    int new_guardian_set_index = get_current_guardian_set_index();
-    return new_guardian_set_index > old_guardian_set_index;
 }
 
 (int) test_get_current_guardian_set_index() method_id {

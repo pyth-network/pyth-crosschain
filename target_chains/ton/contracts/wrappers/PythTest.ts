@@ -262,7 +262,7 @@ export class PythTest implements Contract {
     updateFee: bigint
   ) {
     const messageBody = beginCell()
-      .storeUint(1, 32) // OP_UPDATE_PRICE_FEEDS
+      .storeUint(2, 32) // OP_UPDATE_PRICE_FEEDS
       .storeRef(createCellChain(updateData))
       .endCell();
 
@@ -279,7 +279,7 @@ export class PythTest implements Contract {
     vm: Buffer
   ) {
     const messageBody = beginCell()
-      .storeUint(2, 32) // OP_UPDATE_GUARDIAN_SET
+      .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
       .storeRef(createCellChain(vm))
       .endCell();
 
@@ -288,5 +288,31 @@ export class PythTest implements Contract {
       sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
     });
+  }
+
+  async getChainId(provider: ContractProvider) {
+    const result = await provider.get("test_get_chain_id", []);
+    return result.stack.readNumber();
+  }
+
+  async getLastExecutedGovernanceSequence(provider: ContractProvider) {
+    const result = await provider.get(
+      "test_get_last_executed_governance_sequence",
+      []
+    );
+    return result.stack.readNumber();
+  }
+
+  async getGovernanceDataSourceIndex(provider: ContractProvider) {
+    const result = await provider.get(
+      "test_get_governance_data_source_index",
+      []
+    );
+    return result.stack.readNumber();
+  }
+
+  async getGovernanceDataSource(provider: ContractProvider) {
+    const result = await provider.get("test_get_governance_data_source", []);
+    return result.stack.readCell();
   }
 }
