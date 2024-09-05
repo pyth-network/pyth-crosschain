@@ -253,9 +253,7 @@ export const stakeGovernance = async (
   amount: bigint,
 ): Promise<void> => {
   const pythStakingClient = new PythStakingClient({ connection: context.connection, wallet: context.wallet });
-  const p = new PublicKey(context.stakeAccount.address);
-
-  await pythStakingClient.stakeToGovernance(p, amount);
+  await pythStakingClient.stakeToGovernance(context.stakeAccount.address, amount);
 };
 
 export const cancelWarmupGovernance = async (
