@@ -1,9 +1,5 @@
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
-  sendTransactions,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
-import {
   type Account,
   createTransferInstruction,
   getAccount,
@@ -26,6 +22,7 @@ import type {
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { deserializeStakeAccountPositions } from "./utils/position";
+import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
 import * as PublisherCapsIdl from "../idl/publisher-caps.json";
@@ -70,20 +67,7 @@ export class PythStakingClient {
       .initConfig(globalConfigAnchor)
       .instruction();
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction,
-            signers: [],
-          },
-        ],
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
@@ -167,7 +151,7 @@ export class PythStakingClient {
     rewardProgramAuthority: PublicKey;
     poolData: PublicKey;
     y: bigint;
-  }): Promise<void> {
+  }) {
     const yAnchor = convertBigIntToBN(y);
     const instruction = await this.integrityPoolProgram.methods
       .initializePool(rewardProgramAuthority, yAnchor)
@@ -176,20 +160,7 @@ export class PythStakingClient {
       })
       .instruction();
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction,
-            signers: [],
-          },
-        ],
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   public async getOwnerPythAtaAccount(): Promise<Account> {
@@ -255,20 +226,7 @@ export class PythStakingClient {
       })
       .instruction();
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction,
-            signers: [],
-          },
-        ],
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   public async depositTokensToStakeAccountCustody(
@@ -283,25 +241,14 @@ export class PythStakingClient {
       this.wallet.publicKey,
     );
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction: createTransferInstruction(
-              senderTokenAccount,
-              getStakeAccountCustodyAddress(stakeAccountPositions),
-              this.wallet.publicKey,
-              amount,
-            ),
-            signers: [],
-          },
-        ],
-        {},
-      );
+    const instruction = createTransferInstruction(
+      senderTokenAccount,
+      getStakeAccountCustodyAddress(stakeAccountPositions),
+      this.wallet.publicKey,
+      amount,
+    );
 
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   public async withdrawTokensFromStakeAccountCustody(
@@ -324,20 +271,7 @@ export class PythStakingClient {
       })
       .instruction();
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction,
-            signers: [],
-          },
-        ],
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   public async stakeToPublisher(options: {
@@ -355,20 +289,7 @@ export class PythStakingClient {
       })
       .instruction();
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        [
-          {
-            instruction,
-            signers: [],
-          },
-        ],
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction([instruction], this.connection, this.wallet);
   }
 
   public async getUnlockSchedule(options: {
@@ -425,17 +346,6 @@ export class PythStakingClient {
       ),
     );
 
-    const transactions =
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        this.wallet.publicKey,
-        this.provider.connection,
-        instructions.map((instruction) => ({
-          instruction,
-          signers: [],
-        })),
-        {},
-      );
-
-    await sendTransactions(transactions, this.connection, this.wallet);
+    return sendTransaction(instructions, this.connection, this.wallet);
   }
 }
