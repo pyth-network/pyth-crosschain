@@ -62,7 +62,11 @@ pub fn initialize_publisher(
     )?;
 
     let mut publisher_config_data = publisher_config.data.borrow_mut();
-    publisher_config::create(*publisher_config_data, buffer.key.to_bytes())?;
+    publisher_config::create(
+        *publisher_config_data,
+        args.publisher,
+        buffer.key.to_bytes(),
+    )?;
 
     // Write an initial Header into the buffer account to prepare it to receive prices.
     let mut buffer_data = buffer.data.borrow_mut();
@@ -197,12 +201,9 @@ mod tests {
                 .unwrap()
                 .unwrap();
             assert_eq!(buffer.owner, id);
-            assert_eq!(
-                accounts::publisher_config::read(&buffer.data)
-                    .unwrap()
-                    .buffer_account,
-                buffer_key.to_bytes(),
-            );
+            let actual = accounts::publisher_config::read(&buffer.data).unwrap();
+            assert_eq!(actual.buffer_account, buffer_key.to_bytes());
+            assert_eq!(actual.publisher, publisher.pubkey().to_bytes());
         }
 
         {

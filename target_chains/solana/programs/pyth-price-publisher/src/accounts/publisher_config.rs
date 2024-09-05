@@ -14,6 +14,7 @@ pub fn format_matches(data: &[u8]) -> bool {
 #[repr(C, packed)]
 pub struct PublisherConfig {
     pub format: u32,
+    pub publisher: [u8; 32],
     pub buffer_account: [u8; 32],
 }
 
@@ -32,6 +33,7 @@ pub fn read(data: &[u8]) -> Result<&PublisherConfig, ReadAccountError> {
 
 pub fn create(
     data: &mut [u8],
+    publisher: [u8; 32],
     buffer_account: [u8; 32],
 ) -> Result<&mut PublisherConfig, ReadAccountError> {
     if data.len() < size_of::<PublisherConfig>() {
@@ -42,6 +44,7 @@ pub fn create(
         return Err(ReadAccountError::AlreadyInitialized);
     }
     data.format = FORMAT;
+    data.publisher = publisher;
     data.buffer_account = buffer_account;
     Ok(data)
 }
