@@ -24,10 +24,12 @@ type Props = {
     | undefined;
   walletAmount: bigint;
   availableRewards: bigint;
-  expiringRewards: {
-    amount: bigint;
-    expiry: Date;
-  } | undefined;
+  expiringRewards:
+    | {
+        amount: bigint;
+        expiry: Date;
+      }
+    | undefined;
   availableToWithdraw: bigint;
 };
 
@@ -137,14 +139,15 @@ export const AccountSummary = ({
           amount={availableRewards}
           description="Rewards you have earned but not yet claimed from the Integrity Staking program"
           action={<ClaimButton disabled={availableRewards === 0n} />}
-          {...(expiringRewards !== undefined && expiringRewards.amount > 0n && {
-            warning: (
-              <>
-                <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
-                {expiringRewards.expiry.toLocaleDateString()}
-              </>
-            ),
-          })}
+          {...(expiringRewards !== undefined &&
+            expiringRewards.amount > 0n && {
+              warning: (
+                <>
+                  <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
+                  {expiringRewards.expiry.toLocaleDateString()}
+                </>
+              ),
+            })}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import type { StakeAccountPositions } from "@pythnetwork/staking-sdk/src/staking/accounts";
+import type { StakeAccountPositions } from "@pythnetwork/staking-sdk";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   type ComponentProps,
