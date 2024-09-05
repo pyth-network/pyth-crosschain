@@ -3,7 +3,10 @@ import { PublicKey } from "@solana/web3.js";
 
 import { convertBNToBigInt } from "./bn";
 import type { Staking } from "../../types/staking";
-import { POSITION_BUFFER_SIZE, POSITIONS_ACCOUNT_HEADER_SIZE } from "../constants";
+import {
+  POSITION_BUFFER_SIZE,
+  POSITIONS_ACCOUNT_HEADER_SIZE,
+} from "../constants";
 import {
   type Position,
   type PositionAnchor,
@@ -11,7 +14,6 @@ import {
   type StakeAccountPositions,
   type TargetWithParameters,
 } from "../types";
-
 
 export const getPositionState = (
   position: Position,
