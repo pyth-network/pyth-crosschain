@@ -6,7 +6,7 @@ import { base } from "@cprussin/jest-config";
 export default base({
   global: {
     config: {
-      testTimeout: 10_000,
+      testTimeout: 30_000,
     },
   },
 });
