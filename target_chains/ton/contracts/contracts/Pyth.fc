@@ -68,11 +68,6 @@ slice read_and_verify_header(slice data) {
     return single_update_fee * num_updates;
 }
 
-int get_chain_id() method_id {
-    load_data();
-    return chain_id;
-}
-
 int get_governance_data_source_index() method_id {
     load_data();
     return governance_data_source_index;
