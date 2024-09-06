@@ -187,3 +187,7 @@ int get_last_executed_governance_sequence() method_id {
 
     store_data();
 }
+
+() execute_governance_action(slice in_msg_body) impure {
+    ;; TODO: Implement
+}

@@ -276,7 +276,3 @@ int parse_wormhole_payload(slice payload) impure {
     consumed_governance_actions~udict_set(256, hash, begin_cell().store_int(true, 1).end_cell().begin_parse());
     store_data();
 }
-
-() execute_governance_action(slice in_msg_body) impure {
-    ;; TODO: Implement
-}
