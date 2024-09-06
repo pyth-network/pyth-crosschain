@@ -52,6 +52,11 @@
 
 
 ;; Get methods
+int get_chain_id() method_id {
+    load_data();
+    return chain_id;
+}
+
 int get_current_guardian_set_index() method_id {
     load_data();
     return current_guardian_set_index;
