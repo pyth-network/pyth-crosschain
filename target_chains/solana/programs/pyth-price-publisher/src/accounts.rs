@@ -1,5 +1,7 @@
-use bytemuck::from_bytes;
-use std::mem::size_of;
+use {
+    bytemuck::from_bytes,
+    std::mem::size_of,
+};
 
 pub mod buffer;
 pub mod config;

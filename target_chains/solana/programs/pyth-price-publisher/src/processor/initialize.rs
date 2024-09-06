@@ -1,23 +1,34 @@
 use {
     crate::{
         accounts,
-        instruction::{InitializeArgs, CONFIG_SEED},
-        validate::{validate_config, validate_payer, validate_system},
+        instruction::{
+            InitializeArgs,
+            CONFIG_SEED,
+        },
+        validate::{
+            validate_config,
+            validate_payer,
+            validate_system,
+        },
     },
-    bytemuck::try_from_bytes,
     solana_program::{
-        account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
-        program_error::ProgramError, pubkey::Pubkey, rent::Rent, system_instruction,
+        account_info::AccountInfo,
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_instruction,
         sysvar::Sysvar,
     },
 };
 
 // Creates a config account that stores the authority pubkey.
 // The authority is allowed to modify publisher configs.
-pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let args: &InitializeArgs =
-        try_from_bytes(data).map_err(|_| ProgramError::InvalidInstructionData)?;
-
+pub fn initialize(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: &InitializeArgs,
+) -> ProgramResult {
     let mut accounts = accounts.iter();
     let payer = validate_payer(accounts.next())?;
     let config = validate_config(accounts.next(), args.config_bump, program_id, true)?;
@@ -47,14 +58,23 @@ pub fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) ->
 #[cfg(test)]
 mod tests {
     use {
-        crate::{accounts, instruction::CONFIG_SEED},
+        crate::{
+            accounts,
+            instruction::CONFIG_SEED,
+        },
         solana_program::{
-            instruction::{AccountMeta, Instruction},
+            instruction::{
+                AccountMeta,
+                Instruction,
+            },
             pubkey::Pubkey,
             system_program,
         },
         solana_program_test::*,
-        solana_sdk::{signature::Signer, transaction::Transaction},
+        solana_sdk::{
+            signature::Signer,
+            transaction::Transaction,
+        },
     };
 
     #[tokio::test]

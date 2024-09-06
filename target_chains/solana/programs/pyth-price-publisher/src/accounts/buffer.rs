@@ -1,6 +1,16 @@
 use {
-    super::errors::{ExtendError, PublisherPriceError, ReadAccountError},
-    bytemuck::{cast_slice, from_bytes, from_bytes_mut, Pod, Zeroable},
+    super::errors::{
+        ExtendError,
+        PublisherPriceError,
+        ReadAccountError,
+    },
+    bytemuck::{
+        cast_slice,
+        from_bytes,
+        from_bytes_mut,
+        Pod,
+        Zeroable,
+    },
     std::mem::size_of,
 };
 
@@ -18,12 +28,12 @@ const FORMAT: u32 = 2848712303;
 #[repr(C, packed)]
 pub struct BufferHeader {
     /// Account magic to avoid account confusion.
-    pub format: u32,
+    pub format:     u32,
     /// The publisher this buffer is associated with.
-    pub publisher: [u8; 32],
+    pub publisher:  [u8; 32],
     /// The slot corresponding to all prices currently stored in the account.
     /// Determined by the clock value when `SubmitPrices` is called.
-    pub slot: u64,
+    pub slot:       u64,
     /// The number of prices currently stored in the account.
     pub num_prices: u32,
 }
@@ -45,8 +55,8 @@ pub struct BufferedPrice {
     // 4 high bits: trading status
     // 28 low bits: feed index
     pub trading_status_and_feed_index: u32,
-    pub price: i64,
-    pub confidence: u64,
+    pub price:                         i64,
+    pub confidence:                    u64,
 }
 
 impl BufferedPrice {

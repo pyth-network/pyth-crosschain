@@ -1,7 +1,13 @@
-use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
-use std::mem::size_of;
-
-use super::errors::ReadAccountError;
+use {
+    super::errors::ReadAccountError,
+    bytemuck::{
+        from_bytes,
+        from_bytes_mut,
+        Pod,
+        Zeroable,
+    },
+    std::mem::size_of,
+};
 
 /// Account Magic to avoid Account Confusiong
 const FORMAT: u32 = 1505352794;
@@ -15,7 +21,7 @@ pub fn format_matches(data: &[u8]) -> bool {
 #[repr(C, packed)]
 pub struct Config {
     /// Account magic to avoid account confusion.
-    pub format: u32,
+    pub format:    u32,
     /// The signature of the authority account will be required to execute
     /// `InitializePublisher` instruction.
     pub authority: [u8; 32],

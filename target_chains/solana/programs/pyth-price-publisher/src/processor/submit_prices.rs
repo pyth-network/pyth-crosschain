@@ -1,31 +1,37 @@
 use {
     crate::{
-        accounts::{buffer, publisher_config},
+        accounts::{
+            buffer,
+            publisher_config,
+        },
         ensure,
         instruction::SubmitPricesArgsHeader,
-        validate::{validate_buffer, validate_publisher, validate_publisher_config},
+        validate::{
+            validate_buffer,
+            validate_publisher,
+            validate_publisher_config,
+        },
     },
-    bytemuck::try_from_bytes,
     solana_program::{
-        account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-        program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
+        account_info::AccountInfo,
+        clock::Clock,
+        entrypoint::ProgramResult,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        sysvar::Sysvar,
     },
-    std::mem::size_of,
 };
 
 /// Append the new pricing information provided by the publisher to
 /// its buffer account. The buffer account will be read and applied by the validator
 /// to read at the end of the slot.
 /// If there are old prices in the account, they will be removed before adding new data.
-pub fn submit_prices(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    ensure!(
-        ProgramError::InvalidInstructionData,
-        data.len() >= size_of::<SubmitPricesArgsHeader>()
-    );
-    let (args_data, prices_data) = data.split_at(size_of::<SubmitPricesArgsHeader>());
-    let args: &SubmitPricesArgsHeader =
-        try_from_bytes(args_data).map_err(|_| ProgramError::InvalidInstructionData)?;
-
+pub fn submit_prices(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: &SubmitPricesArgsHeader,
+    prices_data: &[u8],
+) -> ProgramResult {
     let mut accounts = accounts.iter();
     let publisher = validate_publisher(accounts.next())?;
     let publisher_config = validate_publisher_config(
