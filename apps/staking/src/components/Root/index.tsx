@@ -1,4 +1,5 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import clsx from "clsx";
 import { Red_Hat_Text, Red_Hat_Mono } from "next/font/google";
 import type { ReactNode } from "react";
@@ -8,7 +9,8 @@ import {
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
   WALLETCONNECT_PROJECT_ID,
-  MAINNET_RPC,
+  RPC,
+  IS_MAINNET,
 } from "../../config/server";
 import { LoggerProvider } from "../../hooks/use-logger";
 import { StakeAccountProvider } from "../../hooks/use-stake-account";
@@ -37,7 +39,10 @@ export const Root = ({ children }: Props) => (
   <LoggerProvider>
     <WalletProvider
       walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
-      rpc={MAINNET_RPC}
+      rpc={RPC}
+      network={
+        IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet
+      }
     >
       <StakeAccountProvider>
         <html
