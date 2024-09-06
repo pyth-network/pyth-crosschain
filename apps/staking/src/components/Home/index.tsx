@@ -7,6 +7,7 @@ import useSWR from "swr";
 
 import { loadData } from "../../api";
 import { useApiContext } from "../../hooks/use-api-context";
+import { useLogger } from "../../hooks/use-logger";
 import { StateType, useStakeAccount } from "../../hooks/use-stake-account";
 import { Button } from "../Button";
 import { Dashboard } from "../Dashboard";
@@ -79,6 +80,7 @@ const NoWalletHome = () => {
 
 const StakeAccountLoadedHome = () => {
   const data = useDashboardData();
+  const logger = useLogger();
 
   switch (data.type) {
     case DataStateType.NotLoaded:
@@ -86,6 +88,7 @@ const StakeAccountLoadedHome = () => {
       return <LoadingSpinner />;
     }
     case DataStateType.Error: {
+      logger.error(data.error);
       return <p>Uh oh, an error occured!</p>;
     }
     case DataStateType.Loaded: {
@@ -98,7 +101,7 @@ const useDashboardData = () => {
   const apiContext = useApiContext();
 
   const { data, isLoading, ...rest } = useSWR(
-    apiContext.stakeAccount.publicKey,
+    apiContext.stakeAccount.address.toBase58(),
     () => loadData(apiContext),
     {
       refreshInterval: REFRESH_INTERVAL,

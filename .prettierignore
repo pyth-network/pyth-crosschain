@@ -18,3 +18,4 @@ patches/
 # build graph config.
 apps/api-reference
 apps/staking
+governance/pyth_staking_sdk

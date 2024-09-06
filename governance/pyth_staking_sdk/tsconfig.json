@@ -1,0 +1,17 @@
+{
+  "extends": "@cprussin/tsconfig/base.json",
+  "include": ["**/*.ts", "**/*.json"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "noEmit": false,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "esModuleInterop": true
+  }
+}

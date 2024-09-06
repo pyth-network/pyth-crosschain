@@ -21,8 +21,8 @@ export const useTransfer = (
       // TODO enable mutate without awaiting?
       // Prob by changing `api.ts` to encode the change & history item along with each update?
       await Promise.all([
-        mutate(context.stakeAccount.publicKey),
-        mutate(`${context.stakeAccount.publicKey}/history`),
+        mutate(context.stakeAccount.address.toBase58()),
+        mutate(`${context.stakeAccount.address.toBase58()}/history`),
       ]);
       setState(State.Complete());
     } catch (error: unknown) {

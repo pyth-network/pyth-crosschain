@@ -1,4 +1,3 @@
-import { Wallet } from "@coral-xyz/anchor";
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
@@ -14,6 +13,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { buildJitoTipInstruction } from "./jito";
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
 
 /**
  * If the transaction doesn't contain a `setComputeUnitLimit` instruction, the default compute budget is 200,000 units per instruction.
@@ -419,7 +419,7 @@ export async function sendTransactions(
     signers?: Signer[] | undefined;
   }[],
   connection: Connection,
-  wallet: Wallet,
+  wallet: AnchorWallet,
   maxRetries?: number
 ): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({

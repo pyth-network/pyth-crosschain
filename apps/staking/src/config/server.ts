@@ -34,4 +34,5 @@ export const AMPLITUDE_API_KEY = demandInProduction("AMPLITUDE_API_KEY");
 export const WALLETCONNECT_PROJECT_ID = demandInProduction(
   "WALLETCONNECT_PROJECT_ID",
 );
-export const MAINNET_RPC = process.env.MAINNET_RPC;
+export const RPC = process.env.RPC;
+export const IS_MAINNET = process.env.IS_MAINNET !== undefined;

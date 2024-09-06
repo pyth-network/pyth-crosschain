@@ -19,20 +19,19 @@ import { type ReactNode, useMemo } from "react";
 import { metadata } from "../../metadata";
 
 type Props = {
+  network: WalletAdapterNetwork.Devnet | WalletAdapterNetwork.Mainnet;
   children?: ReactNode | ReactNode[] | undefined;
   walletConnectProjectId?: string | undefined;
   rpc?: string | undefined;
 };
 
 export const WalletProvider = ({
+  network,
   children,
   walletConnectProjectId,
   rpc,
 }: Props) => {
-  const endpoint = useMemo(
-    () => rpc ?? clusterApiUrl(WalletAdapterNetwork.Mainnet),
-    [rpc],
-  );
+  const endpoint = useMemo(() => rpc ?? clusterApiUrl(network), [rpc]);
 
   const wallets = useMemo(
     () => [
@@ -43,7 +42,7 @@ export const WalletProvider = ({
       ...(walletConnectProjectId
         ? [
             new WalletConnectWalletAdapter({
-              network: WalletAdapterNetwork.Mainnet,
+              network,
               options: {
                 relayUrl: "wss://relay.walletconnect.com",
                 projectId: walletConnectProjectId,
