@@ -47,16 +47,16 @@ export const AccountSummary = ({
     <Image
       src={background}
       alt=""
-      className="absolute -right-40 h-full object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)]"
+      className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
     />
-    <div className="relative flex flex-col items-start justify-between gap-16 px-12 py-20 md:flex-row md:items-center">
+    <div className="relative flex flex-col items-start justify-between gap-8 px-6 py-10 sm:gap-16 sm:px-12 sm:py-20 lg:flex-row lg:items-center">
       <div>
-        <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
+        <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400 sm:mb-4">
           Total Balance
         </div>
         <div className="flex flex-row items-center gap-8">
           <span>
-            <Tokens className="text-6xl font-light">{total}</Tokens>
+            <Tokens className="text-4xl font-light sm:text-6xl">{total}</Tokens>
           </span>
           {lastSlash && (
             <p className="max-w-48 text-sm text-red-600">
@@ -65,19 +65,11 @@ export const AccountSummary = ({
             </p>
           )}
         </div>
-        <div className="mt-8 flex flex-row items-center gap-4">
-          <TransferButton
-            actionDescription="Add funds to your balance"
-            actionName="Add Tokens"
-            max={walletAmount}
-            transfer={deposit}
-          />
-        </div>
         {locked > 0n && (
           <>
-            <div className="mt-6 flex flex-row items-center gap-1 text-xl text-pythpurple-100/50">
+            <div className="mt-3 flex flex-row items-center gap-1 text-pythpurple-100/50 sm:mt-6 sm:text-xl">
               <Tokens>{locked}</Tokens>
-              <div>locked</div>
+              <div>locked included</div>
             </div>
             <Modal>
               <ModalButton
@@ -90,7 +82,7 @@ export const AccountSummary = ({
                 title="Unlock Schedule"
                 description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
               >
-                <div className="border border-neutral-600/50 bg-pythpurple-100/10 px-8 py-6">
+                <div className="border border-neutral-600/50 bg-pythpurple-100/10 p-4 sm:px-8 sm:py-6">
                   <table>
                     <thead className="font-medium">
                       <tr>
@@ -101,7 +93,7 @@ export const AccountSummary = ({
                     <tbody>
                       {unlockSchedule.map((unlock, i) => (
                         <tr key={i}>
-                          <td className="pr-12 text-sm opacity-80">
+                          <td className="pr-12 text-xs opacity-80 sm:text-sm">
                             {unlock.date.toLocaleString()}
                           </td>
                           <td>
@@ -116,12 +108,20 @@ export const AccountSummary = ({
             </Modal>
           </>
         )}
+        <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
+          <TransferButton
+            actionDescription="Add funds to your balance"
+            actionName="Add Tokens"
+            max={walletAmount}
+            transfer={deposit}
+          />
+        </div>
       </div>
-      <div className="flex flex-col items-stretch gap-4 xl:flex-row">
+      <div className="flex w-full flex-col items-stretch gap-4 lg:w-auto xl:flex-row">
         <BalanceCategory
-          name="Available for Withdrawal"
+          name="Unlocked & Unstaked"
           amount={availableToWithdraw}
-          description="The lesser of the amount you have available to stake in governance & integrity staking"
+          description="The amount of unlocked tokens that are not staked in either program"
           action={
             <TransferButton
               small
@@ -137,7 +137,7 @@ export const AccountSummary = ({
         <BalanceCategory
           name="Available Rewards"
           amount={availableRewards}
-          description="Rewards you have earned but not yet claimed from the Integrity Staking program"
+          description="Rewards you have earned from OIS"
           action={<ClaimButton disabled={availableRewards === 0n} />}
           {...(expiringRewards !== undefined &&
             expiringRewards.amount > 0n && {
@@ -169,7 +169,7 @@ const BalanceCategory = ({
   action,
   warning,
 }: BalanceCategoryProps) => (
-  <div className="flex flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-6 backdrop-blur">
+  <div className="flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-6 backdrop-blur lg:w-96">
     <div>
       <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}

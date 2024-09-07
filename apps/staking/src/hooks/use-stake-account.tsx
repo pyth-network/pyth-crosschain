@@ -38,7 +38,11 @@ const State = {
     allAccounts,
     selectAccount,
   }),
-  ErrorState: (error: unknown) => ({ type: StateType.Error as const, error }),
+  ErrorState: (error: LoadStakeAccountError, reset: () => void) => ({
+    type: StateType.Error as const,
+    error,
+    reset,
+  }),
 };
 
 type State = ReturnType<(typeof State)[keyof typeof State]>;
@@ -70,7 +74,7 @@ const useStakeAccountState = () => {
     [setState],
   );
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     if (wallet.connected && !wallet.disconnecting && !loading.current) {
       loading.current = true;
       setState(State.Loading());
@@ -101,13 +105,17 @@ const useStakeAccountState = () => {
           }
         })
         .catch((error: unknown) => {
-          setState(State.ErrorState(error));
+          setState(State.ErrorState(new LoadStakeAccountError(error), reset));
         })
         .finally(() => {
           loading.current = false;
         });
     }
   }, [connection, setAccount, wallet]);
+
+  useEffect(() => {
+    reset();
+  }, [reset]);
 
   return wallet.connected && !wallet.disconnecting ? state : State.NoWallet();
 };
@@ -120,6 +128,14 @@ export const useStakeAccount = () => {
     return state;
   }
 };
+
+class LoadStakeAccountError extends Error {
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : "");
+    this.name = "LoadStakeAccountError";
+    this.cause = cause;
+  }
+}
 
 class NotInitializedError extends Error {
   constructor() {

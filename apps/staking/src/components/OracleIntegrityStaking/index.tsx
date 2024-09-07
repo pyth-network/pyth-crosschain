@@ -8,7 +8,6 @@ import {
   unstakeIntegrityStaking,
   calculateApy,
 } from "../../api";
-import { PositionFlowchart } from "../PositionFlowchart";
 import { ProgramSection } from "../ProgramSection";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
@@ -47,80 +46,96 @@ export const OracleIntegrityStaking = ({
 
   return (
     <ProgramSection
-      name="Oracle Integrity Staking"
-      description="Protect DeFi, Earn Yield"
-      className="pb-0"
-      positions={{
-        locked,
-        available: availableToStake,
-        warmup,
-        staked,
-        cooldown,
-        cooldown2,
-        className: "mb-8",
-      }}
+      name="Oracle Integrity Staking (OIS)"
+      description="Protect DeFi"
+      className="pb-0 sm:pb-0"
+      available={availableToStake}
+      warmup={warmup}
+      staked={staked}
+      cooldown={cooldown}
+      cooldown2={cooldown2}
+      {...(locked > 0n && {
+        availableToStakeDetails: (
+          <div className="mt-2 text-xs text-red-600">
+            <Tokens>{locked}</Tokens> are locked and cannot be staked in OIS
+          </div>
+        ),
+      })}
     >
       {self && (
-        <div className="-mx-10 border-t border-neutral-600/50 py-16">
-          <table className="mx-auto border border-neutral-600/50 text-sm">
-            <caption className="mb-4 ml-10 text-2xl font-light">
+        <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-10 sm:mt-10">
+          <div className="relative w-full overflow-x-auto">
+            <h3 className="sticky left-0 mb-4 pl-4 text-2xl font-light sm:pb-4 sm:pl-10 sm:pt-6">
               You ({self.name})
-            </caption>
-            <thead className="bg-pythpurple-400/30 font-light">
+            </h3>
+
+            <table className="mx-auto border border-neutral-600/50 text-sm">
+              <thead className="bg-pythpurple-400/30 font-light">
+                <tr>
+                  <PublisherTableHeader>Pool</PublisherTableHeader>
+                  <PublisherTableHeader>Last epoch APY</PublisherTableHeader>
+                  <PublisherTableHeader>Historical APY</PublisherTableHeader>
+                  <PublisherTableHeader>Number of feeds</PublisherTableHeader>
+                  <PublisherTableHeader>Quality ranking</PublisherTableHeader>
+                  {availableToStake > 0n && <PublisherTableHeader />}
+                </tr>
+              </thead>
+              <tbody className="bg-pythpurple-400/10">
+                <Publisher
+                  isSelf
+                  availableToStake={availableToStake}
+                  publisher={self}
+                  totalStaked={staked}
+                />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      <div
+        className={clsx(
+          "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-10 lg:mt-10",
+          { "mt-6": self === undefined },
+        )}
+      >
+        <div className="relative w-full overflow-x-auto">
+          <h3 className="sticky left-0 mb-4 pl-4 text-2xl font-light sm:pb-4 sm:pl-10 sm:pt-6">
+            {self ? "Other Publishers" : "Publishers"}
+          </h3>
+
+          <table className="min-w-full text-sm">
+            <thead className="bg-pythpurple-100/30 font-light">
               <tr>
+                <PublisherTableHeader className="pl-4 text-left sm:pl-10">
+                  Publisher
+                </PublisherTableHeader>
+                <PublisherTableHeader>Self stake</PublisherTableHeader>
                 <PublisherTableHeader>Pool</PublisherTableHeader>
-                <PublisherTableHeader>APY</PublisherTableHeader>
+                <PublisherTableHeader>Last epoch APY</PublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
                 <PublisherTableHeader>Number of feeds</PublisherTableHeader>
-                <PublisherTableHeader>Quality ranking</PublisherTableHeader>
-                {availableToStake > 0n && <PublisherTableHeader />}
+                <PublisherTableHeader
+                  className={clsx({ "pr-4 sm:pr-10": availableToStake <= 0n })}
+                >
+                  Quality ranking
+                </PublisherTableHeader>
+                {availableToStake > 0n && (
+                  <PublisherTableHeader className="pr-4 sm:pr-10" />
+                )}
               </tr>
             </thead>
-            <tbody className="bg-pythpurple-400/10">
-              <Publisher
-                isSelf
-                availableToStake={availableToStake}
-                publisher={self}
-              />
+            <tbody className="bg-white/5">
+              {otherPublishers.map((publisher) => (
+                <Publisher
+                  key={publisher.publicKey}
+                  availableToStake={availableToStake}
+                  publisher={publisher}
+                  totalStaked={staked}
+                />
+              ))}
             </tbody>
           </table>
         </div>
-      )}
-      <div className="-mx-10 border-t border-neutral-600/50 pt-4">
-        <table className="w-full text-sm">
-          <caption className="mb-4 ml-10 text-left text-2xl font-light">
-            {self ? "Other Publishers" : "Publishers"}
-          </caption>
-          <thead className="bg-pythpurple-100/30 font-light">
-            <tr>
-              <PublisherTableHeader className="pl-10 text-left">
-                Publisher
-              </PublisherTableHeader>
-              <PublisherTableHeader>Self stake</PublisherTableHeader>
-              <PublisherTableHeader>Pool</PublisherTableHeader>
-              <PublisherTableHeader>APY</PublisherTableHeader>
-              <PublisherTableHeader>Historical APY</PublisherTableHeader>
-              <PublisherTableHeader>Number of feeds</PublisherTableHeader>
-              <PublisherTableHeader
-                className={clsx({ "pr-10": availableToStake <= 0n })}
-              >
-                Quality ranking
-              </PublisherTableHeader>
-              {availableToStake > 0n && (
-                <PublisherTableHeader className="pr-10" />
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white/5">
-            {otherPublishers.map((publisher) => (
-              <Publisher
-                key={publisher.publicKey}
-                availableToStake={availableToStake}
-                publisher={publisher}
-              />
-            ))}
-          </tbody>
-        </table>
       </div>
     </ProgramSection>
   );
@@ -133,6 +148,7 @@ const PublisherTableHeader = Styled(
 
 type PublisherProps = {
   availableToStake: bigint;
+  totalStaked: bigint;
   isSelf?: boolean;
   publisher: {
     name: string;
@@ -155,7 +171,29 @@ type PublisherProps = {
   };
 };
 
-const Publisher = ({ publisher, availableToStake, isSelf }: PublisherProps) => {
+const Publisher = ({
+  publisher,
+  availableToStake,
+  totalStaked,
+  isSelf,
+}: PublisherProps) => {
+  const warmup = useMemo(
+    () =>
+      publisher.positions?.warmup !== undefined &&
+      publisher.positions.warmup > 0n
+        ? publisher.positions.warmup
+        : undefined,
+    [publisher.positions?.warmup],
+  );
+  const staked = useMemo(
+    () =>
+      publisher.positions?.staked !== undefined &&
+      publisher.positions.staked > 0n
+        ? publisher.positions.staked
+        : undefined,
+    [publisher.positions?.staked],
+  );
+
   const cancelWarmup = useTransferActionForPublisher(
     cancelWarmupIntegrityStaking,
     publisher.publicKey,
@@ -174,7 +212,7 @@ const Publisher = ({ publisher, availableToStake, isSelf }: PublisherProps) => {
       <tr className="border-t border-neutral-600/50 first:border-0">
         {!isSelf && (
           <>
-            <PublisherTableCell className="py-4 pl-10 font-medium">
+            <PublisherTableCell className="py-4 pl-4 font-medium sm:pl-10">
               {publisher.name}
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
@@ -239,14 +277,14 @@ const Publisher = ({ publisher, availableToStake, isSelf }: PublisherProps) => {
         </PublisherTableCell>
         <PublisherTableCell
           className={clsx("text-center", {
-            "pr-10": availableToStake <= 0n && !isSelf,
+            "pr-4 sm:pr-10": availableToStake <= 0n && !isSelf,
           })}
         >
           {publisher.qualityRanking}
         </PublisherTableCell>
         {availableToStake > 0 && (
           <PublisherTableCell
-            className={clsx("text-right", { "pr-10": !isSelf })}
+            className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
           >
             <StakeToPublisherButton
               availableToStake={availableToStake}
@@ -259,22 +297,69 @@ const Publisher = ({ publisher, availableToStake, isSelf }: PublisherProps) => {
           </PublisherTableCell>
         )}
       </tr>
-      {publisher.positions && (
+      {(warmup !== undefined || staked !== undefined) && (
         <tr>
           <td colSpan={8} className="border-separate border-spacing-8">
-            <div className="mx-auto w-full px-20 pb-8">
-              <PositionFlowchart
-                small
-                className="mx-auto w-[56rem]"
-                warmup={publisher.positions.warmup ?? 0n}
-                staked={publisher.positions.staked ?? 0n}
-                cooldown={publisher.positions.cooldown ?? 0n}
-                cooldown2={publisher.positions.cooldown2 ?? 0n}
-                cancelWarmup={cancelWarmup}
-                cancelWarmupDescription={`Cancel tokens that are in warmup for staking to ${publisher.name}`}
-                unstake={unstake}
-                unstakeDescription={`Unstake tokens from ${publisher.name}`}
-              />
+            <div className="mx-auto mb-8 mt-4 w-[30rem] border border-neutral-600/50 bg-pythpurple-800 px-8 py-6">
+              <table className="w-full">
+                <caption className="mb-2 text-left text-lg font-light">
+                  Your Positions
+                </caption>
+                <tbody>
+                  {warmup !== undefined && (
+                    <tr>
+                      <td className="opacity-80">Warmup</td>
+                      <td className="px-4">
+                        <Tokens>{warmup}</Tokens>
+                      </td>
+                      <td
+                        className={clsx("text-right", {
+                          "pb-2": staked !== undefined,
+                        })}
+                      >
+                        <TransferButton
+                          small
+                          secondary
+                          className="w-28"
+                          actionDescription={`Cancel tokens that are in warmup for staking to ${publisher.name}`}
+                          actionName="Cancel"
+                          submitButtonText="Cancel Warmup"
+                          title="Cancel Warmup"
+                          max={warmup}
+                          transfer={cancelWarmup}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  {staked !== undefined && (
+                    <tr>
+                      <td className="opacity-80">Staked</td>
+                      <td className="px-4">
+                        <div className="flex items-center gap-2">
+                          <Tokens>{staked}</Tokens>
+                          <div className="text-xs opacity-60">
+                            ({Number((100n * staked) / totalStaked)}% of your
+                            staked tokens)
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-0.5 text-right">
+                        <TransferButton
+                          small
+                          secondary
+                          className="w-28"
+                          actionDescription={`Unstake tokens from ${publisher.name}`}
+                          actionName="Unstake"
+                          max={staked}
+                          transfer={unstake}
+                        >
+                          <StakingTimeline cooldownOnly />
+                        </TransferButton>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </td>
         </tr>

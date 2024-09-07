@@ -82,7 +82,7 @@ export const TransferButton = ({
       >
         {(close) => (
           <>
-            <Field className="mb-8 flex w-full min-w-96 flex-col gap-1">
+            <Field className="mb-8 flex w-full flex-col gap-1 sm:min-w-96">
               <div className="flex flex-row items-center justify-between">
                 <Label className="text-sm">Amount</Label>
                 <div className="flex flex-row items-center gap-2">
@@ -112,7 +112,9 @@ export const TransferButton = ({
                 </div>
               </div>
               {state.type === StateType.Error && (
-                <p>Uh oh, an error occurred!</p>
+                <p className="mt-1 text-red-600">
+                  Uh oh, an error occurred! Please try again
+                </p>
               )}
             </Field>
             {children && (

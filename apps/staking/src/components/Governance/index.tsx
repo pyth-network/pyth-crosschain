@@ -23,19 +23,16 @@ export const Governance = ({
   <ProgramSection
     name="Governance"
     description="Vote and Influence the Network"
-    positions={{
-      available: availableToStake,
-      warmup,
-      staked,
-      cooldown,
-      cooldown2,
-      stake: stakeGovernance,
-      stakeDescription: "Stake funds to participate in governance votes",
-      cancelWarmup: cancelWarmupGovernance,
-      cancelWarmupDescription:
-        "Cancel staking tokens for governance that are currently in warmup",
-      unstake: unstakeGovernance,
-      unstakeDescription: "Unstake tokens from the Governance program",
-    }}
+    available={availableToStake}
+    warmup={warmup}
+    staked={staked}
+    cooldown={cooldown}
+    cooldown2={cooldown2}
+    stake={stakeGovernance}
+    stakeDescription="Stake funds to participate in governance votes"
+    cancelWarmup={cancelWarmupGovernance}
+    cancelWarmupDescription="Cancel staking tokens for governance that are currently in warmup"
+    unstake={unstakeGovernance}
+    unstakeDescription="Unstake tokens from the Governance program"
   />
 );

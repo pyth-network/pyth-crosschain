@@ -16,9 +16,9 @@ export const Header = ({
     {...props}
   >
     <div className="border-x border-b border-neutral-600/50 bg-pythpurple-800">
-      <MaxWidth className="-mx-4 flex h-16 items-center justify-between">
-        <Logo className="h-full py-4 text-pythpurple-100" />
-        <WalletButton />
+      <MaxWidth className="flex h-16 items-center justify-between gap-8 sm:-mx-4">
+        <Logo className="max-h-full py-4 text-pythpurple-100" />
+        <WalletButton className="flex-none" />
       </MaxWidth>
     </div>
   </header>

@@ -1,32 +1,26 @@
-import useSWR from "swr";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
 import {
   type AccountHistoryAction,
   type StakeDetails,
   AccountHistoryItemType,
   StakeType,
-  loadAccountHistory,
 } from "../../api";
-import { useApiContext } from "../../hooks/use-api-context";
-import { LoadingSpinner } from "../LoadingSpinner";
+import { StateType, useAccountHistory } from "../../hooks/use-account-history";
 import { Tokens } from "../Tokens";
 
-const ONE_SECOND_IN_MS = 1000;
-const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
-const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
-
 export const AccountHistory = () => {
-  const history = useAccountHistoryData();
+  const history = useAccountHistory();
 
   switch (history.type) {
-    case DataStateType.NotLoaded:
-    case DataStateType.Loading: {
-      return <LoadingSpinner />;
+    case StateType.NotLoaded:
+    case StateType.Loading: {
+      return <ArrowPathIcon className="size-6 animate-spin" />;
     }
-    case DataStateType.Error: {
+    case StateType.Error: {
       return <p>Uh oh, an error occured!</p>;
     }
-    case DataStateType.Loaded: {
+    case StateType.Loaded: {
       return (
         <table className="text-sm">
           <thead className="font-medium">
@@ -56,7 +50,9 @@ export const AccountHistory = () => {
               ) => (
                 <tr key={i}>
                   <td className="pr-4">{timestamp.toLocaleString()}</td>
-                  <td className="pr-4">{mkDescription(action)}</td>
+                  <td className="pr-4">
+                    <Description>{action}</Description>
+                  </td>
                   <td className="pr-4">
                     <Tokens>{amount}</Tokens>
                   </td>
@@ -82,8 +78,8 @@ export const AccountHistory = () => {
   }
 };
 
-const mkDescription = (action: AccountHistoryAction): string => {
-  switch (action.type) {
+const Description = ({ children }: { children: AccountHistoryAction }) => {
+  switch (children.type) {
     case AccountHistoryItemType.Claim: {
       return "Rewards claimed";
     }
@@ -91,28 +87,28 @@ const mkDescription = (action: AccountHistoryAction): string => {
       return "Tokens added";
     }
     case AccountHistoryItemType.LockedDeposit: {
-      return `Locked tokens deposited, unlocking ${action.unlockDate.toLocaleString()}`;
+      return `Locked tokens deposited, unlocking ${children.unlockDate.toLocaleString()}`;
     }
     case AccountHistoryItemType.RewardsCredited: {
       return "Rewards credited";
     }
     case AccountHistoryItemType.Slash: {
-      return `Staked tokens slashed from ${action.publisherName}`;
+      return `Staked tokens slashed from ${children.publisherName}`;
     }
     case AccountHistoryItemType.StakeCreated: {
-      return `Created stake position for ${getStakeDetails(action.details)}`;
+      return `Created stake position for ${getStakeDetails(children.details)}`;
     }
     case AccountHistoryItemType.StakeFinishedWarmup: {
-      return `Warmup complete for position for ${getStakeDetails(action.details)}`;
+      return `Warmup complete for position for ${getStakeDetails(children.details)}`;
     }
     case AccountHistoryItemType.Unlock: {
       return "Locked tokens unlocked";
     }
     case AccountHistoryItemType.UnstakeCreated: {
-      return `Requested unstake for position for ${getStakeDetails(action.details)}`;
+      return `Requested unstake for position for ${getStakeDetails(children.details)}`;
     }
     case AccountHistoryItemType.UnstakeExitedCooldown: {
-      return `Cooldown completed for ${getStakeDetails(action.details)}`;
+      return `Cooldown completed for ${getStakeDetails(children.details)}`;
     }
     case AccountHistoryItemType.Withdrawal: {
       return "Tokens withdrawn to wallet";
@@ -130,46 +126,3 @@ const getStakeDetails = (details: StakeDetails): string => {
     }
   }
 };
-
-const useAccountHistoryData = () => {
-  const apiContext = useApiContext();
-
-  const { data, isLoading, ...rest } = useSWR(
-    `${apiContext.stakeAccount.address.toBase58()}/history`,
-    () => loadAccountHistory(apiContext),
-    {
-      refreshInterval: REFRESH_INTERVAL,
-    },
-  );
-  const error = rest.error as unknown;
-
-  if (error) {
-    return DataState.ErrorState(error);
-  } else if (isLoading) {
-    return DataState.Loading();
-  } else if (data) {
-    return DataState.Loaded(data);
-  } else {
-    return DataState.NotLoaded();
-  }
-};
-
-enum DataStateType {
-  NotLoaded,
-  Loading,
-  Loaded,
-  Error,
-}
-const DataState = {
-  NotLoaded: () => ({ type: DataStateType.NotLoaded as const }),
-  Loading: () => ({ type: DataStateType.Loading as const }),
-  Loaded: (data: Awaited<ReturnType<typeof loadAccountHistory>>) => ({
-    type: DataStateType.Loaded as const,
-    data,
-  }),
-  ErrorState: (error: unknown) => ({
-    type: DataStateType.Error as const,
-    error,
-  }),
-};
-type DataState = ReturnType<(typeof DataState)[keyof typeof DataState]>;

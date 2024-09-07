@@ -118,7 +118,7 @@ export const RawModal = ({
         <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
           <DialogPanel
             transition
-            className="relative border border-neutral-600/50 bg-[#100E21] px-10 py-12 duration-300 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+            className="relative border border-neutral-600/50 bg-[#100E21] px-6 pb-8 pt-12 duration-300 ease-out data-[closed]:scale-95 data-[closed]:opacity-0 sm:px-10 sm:pb-12"
           >
             <DialogTitle as="h2" className="text-3xl font-light leading-6">
               {title}

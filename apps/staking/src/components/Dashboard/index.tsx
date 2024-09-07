@@ -118,10 +118,15 @@ export const Dashboard = ({
         expiringRewards={expiringRewards}
       />
       <TabGroup as="section">
-        <TabList className="flex w-full flex-row font-medium">
+        <TabList className="flex w-full flex-row text-sm font-medium sm:text-base">
           <DashboardTab>Overview</DashboardTab>
           <DashboardTab>Governance</DashboardTab>
-          <DashboardTab>Oracle Integrity Staking</DashboardTab>
+          <DashboardTab>
+            <span className="sm:hidden">Integrity Staking</span>
+            <span className="hidden sm:inline">
+              Oracle Integrity Staking (OIS)
+            </span>
+          </DashboardTab>
         </TabList>
         <TabPanels className="mt-8">
           <DashboardTabPanel>
@@ -159,7 +164,7 @@ export const Dashboard = ({
 
 const DashboardTab = Styled(
   Tab,
-  "grow border-b border-neutral-600/50 px-4 py-2 focus-visible:outline-none data-[selected]:cursor-default data-[selected]:border-pythpurple-400 data-[selected]:data-[hover]:bg-transparent data-[hover]:text-pythpurple-400 data-[selected]:text-pythpurple-400 data-[focus]:outline-none data-[focus]:ring-1 data-[focus]:ring-pythpurple-400",
+  "grow basis-0 border-b border-neutral-600/50 px-4 py-2 focus-visible:outline-none data-[selected]:cursor-default data-[selected]:border-pythpurple-400 data-[selected]:data-[hover]:bg-transparent data-[hover]:text-pythpurple-400 data-[selected]:text-pythpurple-400 data-[focus]:outline-none data-[focus]:ring-1 data-[focus]:ring-pythpurple-400",
 );
 
 const DashboardTabPanel = Styled(

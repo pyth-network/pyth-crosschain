@@ -1,4 +1,4 @@
-const DECIMALS = 6;
+export const DECIMALS = 6;
 
 export const tokensToString = (value: bigint): string => {
   const asStr = value.toString();

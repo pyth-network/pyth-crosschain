@@ -1,26 +1,52 @@
 import clsx from "clsx";
-import { useMemo, type HTMLAttributes } from "react";
+import * as dnum from "dnum";
+import { type ComponentProps, useMemo } from "react";
+import { Button, TooltipTrigger } from "react-aria-components";
 
 import Pyth from "./pyth.svg";
-import { tokensToString } from "../../tokens";
+import { DECIMALS } from "../../tokens";
+import { Tooltip } from "../Tooltip";
 
-type Props = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
+type Props = Omit<ComponentProps<typeof Button>, "children"> & {
   children: bigint;
 };
 
-export const Tokens = ({ children, className, ...props }: Props) => {
-  const value = useMemo(() => tokensToString(children), [children]);
+export const Tokens = ({ children, ...props }: Props) => {
+  const compactValue = useMemo(
+    () => dnum.format([children, DECIMALS], { compact: true }),
+    [children],
+  );
+  const fullValue = useMemo(
+    () => dnum.format([children, DECIMALS]),
+    [children],
+  );
 
-  return (
-    <span
-      className={clsx(
-        "inline-flex items-center gap-[0.25em] align-top",
-        className,
-      )}
-      {...props}
-    >
-      <Pyth className="aspect-square size-[1em]" />
-      <span>{value}</span>
-    </span>
+  return compactValue === fullValue ? (
+    <TokenButton {...props}>{compactValue}</TokenButton>
+  ) : (
+    <TooltipTrigger delay={0}>
+      <TokenButton {...props}>{compactValue}</TokenButton>
+      <Tooltip className="flex flex-row items-center gap-[0.25em]">
+        <Pyth className="aspect-square size-[1em]" />
+        <span>{fullValue}</span>
+      </Tooltip>
+    </TooltipTrigger>
   );
 };
+
+type TokenButtonProps = Omit<ComponentProps<typeof Button>, "children"> & {
+  children: string;
+};
+
+const TokenButton = ({ children, className, ...props }: TokenButtonProps) => (
+  <Button
+    className={clsx(
+      "inline-flex cursor-default items-center gap-[0.25em] align-top active:outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+      className,
+    )}
+    {...props}
+  >
+    <Pyth className="aspect-square size-[1em]" />
+    <span>{children}</span>
+  </Button>
+);
