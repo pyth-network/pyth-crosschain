@@ -274,12 +274,11 @@ export class PythStakingClient {
     return sendTransaction([instruction], this.connection, this.wallet);
   }
 
-  public async stakeToPublisher(options: {
-    stakeAccountPositions: PublicKey;
-    publisher: PublicKey;
-    amount: bigint;
-  }) {
-    const { stakeAccountPositions, publisher, amount } = options;
+  public async stakeToPublisher(
+    stakeAccountPositions: PublicKey,
+    publisher: PublicKey,
+    amount: bigint,
+  ) {
     const instruction = await this.integrityPoolProgram.methods
       .delegate(convertBigIntToBN(amount))
       .accounts({
@@ -292,10 +291,7 @@ export class PythStakingClient {
     return sendTransaction([instruction], this.connection, this.wallet);
   }
 
-  public async getUnlockSchedule(options: {
-    stakeAccountPositions: PublicKey;
-  }) {
-    const { stakeAccountPositions } = options;
+  public async getUnlockSchedule(stakeAccountPositions: PublicKey) {
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
     );
@@ -317,11 +313,8 @@ export class PythStakingClient {
     });
   }
 
-  public async advanceDelegationRecord(options: {
-    stakeAccountPositions: PublicKey;
-  }) {
+  public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
     // TODO: optimize to only send transactions for publishers that have positive rewards
-    const { stakeAccountPositions } = options;
     const publishers = await this.getPublishers();
 
     // anchor does not calculate the correct pda for other programs

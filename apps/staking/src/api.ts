@@ -1,5 +1,5 @@
 // TODO remove these disables when moving off the mock APIs
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/require-await */
 
 import {
   getAmountByTargetAndState,
@@ -8,14 +8,7 @@ import {
   PythStakingClient,
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, type Connection } from "@solana/web3.js";
-
-export type Context = {
-  connection: Connection;
-  wallet: AnchorWallet;
-  stakeAccount: StakeAccountPositions;
-};
+import { PublicKey } from "@solana/web3.js";
 
 type Data = {
   total: bigint;
@@ -46,7 +39,7 @@ type Data = {
   };
   integrityStakingPublishers: {
     name: string;
-    publicKey: string;
+    publicKey: PublicKey;
     isSelf: boolean;
     selfStake: bigint;
     poolCapacity: bigint;
@@ -145,50 +138,42 @@ type AccountHistory = {
 }[];
 
 export const getStakeAccounts = async (
-  connection: Connection,
-  wallet: AnchorWallet,
-): Promise<StakeAccountPositions[]> => {
-  const pythStakingClient = new PythStakingClient({ connection, wallet });
-  return pythStakingClient.getAllStakeAccountPositions(wallet.publicKey);
-};
+  client: PythStakingClient,
+): Promise<StakeAccountPositions[]> =>
+  client.getAllStakeAccountPositions(client.wallet.publicKey);
 
-export const loadData = async (context: Context): Promise<Data> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  // While using mocks we need to clone the MOCK_DATA object every time
-  // `loadData` is called so that swr treats the response as changed and
-  // triggers a rerender.
-
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-  const stakeAccountPositions = context.stakeAccount;
-
-  const [stakeAccountCustody, publishers, ownerAtaAccount, currentEpoch] =
-    await Promise.all([
-      pythStakingClient.getStakeAccountCustody(stakeAccountPositions.address),
-      pythStakingClient.getPublishers(),
-      pythStakingClient.getOwnerPythAtaAccount(),
-      getCurrentEpoch(context.connection),
-    ]);
-
-  const unlockSchedule = await pythStakingClient.getUnlockSchedule({
-    stakeAccountPositions: stakeAccountPositions.address,
-  });
+export const loadData = async (
+  client: PythStakingClient,
+  stakeAccount: StakeAccountPositions,
+): Promise<Data> => {
+  const [
+    stakeAccountCustody,
+    publishers,
+    ownerAtaAccount,
+    currentEpoch,
+    unlockSchedule,
+  ] = await Promise.all([
+    client.getStakeAccountCustody(stakeAccount.address),
+    client.getPublishers(),
+    client.getOwnerPythAtaAccount(),
+    getCurrentEpoch(client.connection),
+    client.getUnlockSchedule(stakeAccount.address),
+  ]);
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
-      stakeAccountPositions,
+      stakeAccountPositions: stakeAccount,
       targetWithParameters: { voting: {} },
       positionState,
       epoch: currentEpoch,
     });
+
   const filterOISPositions = (
     publisher: PublicKey,
     positionState: PositionState,
   ) =>
     getAmountByTargetAndState({
-      stakeAccountPositions,
+      stakeAccountPositions: stakeAccount,
       targetWithParameters: { integrityPool: { publisher } },
       positionState,
       epoch: currentEpoch,
@@ -215,7 +200,7 @@ export const loadData = async (context: Context): Promise<Data> => {
       numFeeds: 0, // TODO
       poolCapacity: 100n, // TODO
       poolUtilization: 0n, // TODO
-      publicKey: publisher.toString(),
+      publicKey: publisher,
       qualityRanking: 0, // TODO
       selfStake: 0n, // TODO
       positions: {
@@ -229,135 +214,85 @@ export const loadData = async (context: Context): Promise<Data> => {
 };
 
 export const loadAccountHistory = async (
-  _context: Context,
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
 ): Promise<AccountHistory> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  return MOCK_HISTORY["0x000000"]!;
+  return mkMockHistory();
 };
 
 export const deposit = async (
-  context: Context,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-  await pythStakingClient.depositTokensToStakeAccountCustody(
-    context.stakeAccount.address,
-    amount,
-  );
+  await client.depositTokensToStakeAccountCustody(stakeAccount, amount);
 };
 
 export const withdraw = async (
-  context: Context,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-  await pythStakingClient.withdrawTokensFromStakeAccountCustody(
-    context.stakeAccount.address,
-    amount,
-  );
+  await client.withdrawTokensFromStakeAccountCustody(stakeAccount, amount);
 };
 
-export const claim = async (context: Context): Promise<void> => {
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-  await pythStakingClient.advanceDelegationRecord({
-    stakeAccountPositions: context.stakeAccount.address,
-  });
+export const claim = async (
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+): Promise<void> => {
+  await client.advanceDelegationRecord(stakeAccount);
 };
 
 export const stakeGovernance = async (
-  context: Context,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-  await pythStakingClient.stakeToGovernance(
-    context.stakeAccount.address,
-    amount,
-  );
+  await client.stakeToGovernance(stakeAccount, amount);
 };
 
 export const cancelWarmupGovernance = async (
-  _context: Context,
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
   _amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+  throw new NotImplementedError();
 };
 
 export const unstakeGovernance = async (
-  _context: Context,
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
   _amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+  throw new NotImplementedError();
 };
 
 export const delegateIntegrityStaking = async (
-  context: Context,
-  publisherKey: string,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  const pythStakingClient = new PythStakingClient({
-    connection: context.connection,
-    wallet: context.wallet,
-  });
-
-  await pythStakingClient.stakeToPublisher({
-    stakeAccountPositions: context.stakeAccount.address,
-    publisher: new PublicKey(publisherKey),
-    amount,
-  });
+  await client.stakeToPublisher(stakeAccount, publisherKey, amount);
 };
 
 export const cancelWarmupIntegrityStaking = async (
-  context: Context,
-  publisherKey: string,
-  amount: bigint,
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
+  _publisherKey: PublicKey,
+  _amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  const publisher = MOCK_DATA[
-    context.stakeAccount.address.toString()
-  ]!.integrityStakingPublishers.find(
-    (publisher) => publisher.publicKey === publisherKey,
-  );
-  if (publisher) {
-    if (publisher.positions?.warmup) {
-      publisher.positions.warmup -= amount;
-    }
-  } else {
-    throw new Error(`Invalid publisher key: "${publisherKey}"`);
-  }
+  throw new NotImplementedError();
 };
 
 export const unstakeIntegrityStaking = async (
-  context: Context,
-  publisherKey: string,
-  amount: bigint,
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
+  _publisherKey: PublicKey,
+  _amount: bigint,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  const publisher = MOCK_DATA[
-    context.stakeAccount.address.toString()
-  ]!.integrityStakingPublishers.find(
-    (publisher) => publisher.publicKey === publisherKey,
-  );
-  if (publisher) {
-    if (publisher.positions?.staked) {
-      publisher.positions.staked -= amount;
-      publisher.positions.cooldown =
-        (publisher.positions.cooldown ?? 0n) + amount;
-    }
-  } else {
-    throw new Error(`Invalid publisher key: "${publisherKey}"`);
-  }
+  throw new NotImplementedError();
 };
 
 export const calculateApy = (
@@ -393,115 +328,6 @@ export const getNextFullEpoch = (): Date => {
 };
 
 const MOCK_DELAY = 500;
-
-const mkMockData = (isDouro: boolean): Data => ({
-  total: 15_000_000n,
-  availableRewards: 156_000n,
-  lastSlash: isDouro
-    ? undefined
-    : {
-        amount: 2147n,
-        date: new Date("2024-05-04T00:00:00Z"),
-      },
-  expiringRewards: {
-    amount: 56_000n,
-    expiry: new Date("2025-08-01T00:00:00Z"),
-  },
-  locked: isDouro ? 3_000_000n : 0n,
-  unlockSchedule: isDouro
-    ? [
-        {
-          amount: 1_000_000n,
-          date: new Date("2025-08-01T00:00:00Z"),
-        },
-        {
-          amount: 2_000_000n,
-          date: new Date("2025-09-01T00:00:00Z"),
-        },
-      ]
-    : [],
-  walletAmount: 5_000_000_000_000n,
-  governance: {
-    warmup: 2_670_000n,
-    staked: 4_150_000n,
-    cooldown: 1_850_000n,
-    cooldown2: 4_765_000n,
-  },
-  integrityStakingPublishers: [
-    {
-      name: "Douro Labs",
-      publicKey: "0xF00",
-      isSelf: isDouro,
-      selfStake: 5_000_000_000n,
-      poolCapacity: 500_000_000n,
-      poolUtilization: 200_000_000n,
-      numFeeds: 42,
-      qualityRanking: 1,
-      apyHistory: [
-        { date: new Date("2024-07-22"), apy: 5 },
-        { date: new Date("2024-07-23"), apy: 10 },
-        { date: new Date("2024-07-24"), apy: 25 },
-        { date: new Date("2024-07-25"), apy: 20 },
-      ],
-      positions: {
-        warmup: 5_000_000n,
-        staked: 4_000_000n,
-        cooldown: 1_000_000n,
-        cooldown2: 460_000n,
-      },
-    },
-    {
-      name: "Jump Trading",
-      publicKey: "0xBA4",
-      isSelf: false,
-      selfStake: 400_000_000n,
-      poolCapacity: 500_000_000n,
-      poolUtilization: 750_000_000n,
-      numFeeds: 84,
-      qualityRanking: 2,
-      apyHistory: [
-        { date: new Date("2024-07-24"), apy: 5 },
-        { date: new Date("2024-07-25"), apy: 10 },
-      ],
-      positions: {
-        staked: 1_000_000n,
-      },
-    },
-    {
-      name: "Cboe",
-      publicKey: "0xAA",
-      isSelf: false,
-      selfStake: 200_000_000n,
-      poolCapacity: 600_000_000n,
-      poolUtilization: 450_000_000n,
-      numFeeds: 17,
-      qualityRanking: 5,
-      apyHistory: [
-        { date: new Date("2024-07-24"), apy: 5 },
-        { date: new Date("2024-07-25"), apy: 10 },
-      ],
-    },
-    {
-      name: "Raydium",
-      publicKey: "0x111",
-      isSelf: false,
-      selfStake: 400_000_000n,
-      poolCapacity: 500_000_000n,
-      poolUtilization: 750_000_000n,
-      numFeeds: 84,
-      qualityRanking: 3,
-      apyHistory: [
-        { date: new Date("2024-07-24"), apy: 5 },
-        { date: new Date("2024-07-25"), apy: 10 },
-      ],
-    },
-  ],
-});
-
-const MOCK_DATA: Record<string, Data> = {
-  "0x000000": mkMockData(true),
-  "0x111111": mkMockData(false),
-};
 
 const mkMockHistory = (): AccountHistory => [
   {
@@ -542,7 +368,9 @@ const mkMockHistory = (): AccountHistory => [
   },
 ];
 
-const MOCK_HISTORY: Record<string, AccountHistory> = {
-  "0x000000": mkMockHistory(),
-  "0x111111": mkMockHistory(),
-};
+class NotImplementedError extends Error {
+  constructor() {
+    super("Not yet implemented!");
+    this.name = "NotImplementedError";
+  }
+}

@@ -1,14 +1,19 @@
+import type { PythStakingClient } from "@pythnetwork/staking-sdk";
+import type { PublicKey } from "@solana/web3.js";
 import { useState, useCallback } from "react";
 import { useSWRConfig } from "swr";
 
 import { getCacheKey as getAccountHistoryCacheKey } from "./use-account-history";
-import { useApiContext } from "./use-api-context";
 import { getCacheKey as getDashboardDataCacheKey } from "./use-dashboard-data";
+import { useSelectedStakeAccount } from "./use-stake-account";
 
 export const useTransfer = (
-  transfer: (context: ReturnType<typeof useApiContext>) => Promise<void>,
+  transfer: (
+    client: PythStakingClient,
+    stakingAccount: PublicKey,
+  ) => Promise<void>,
 ) => {
-  const context = useApiContext();
+  const { client, account } = useSelectedStakeAccount();
   const [state, setState] = useState<State>(State.Base());
   const { mutate } = useSWRConfig();
 
@@ -19,19 +24,19 @@ export const useTransfer = (
 
     setState(State.Submitting());
     try {
-      await transfer(context);
+      await transfer(client, account.address);
       // TODO enable mutate without awaiting?
       // Prob by changing `api.ts` to encode the change & history item along with each update?
       await Promise.all([
-        mutate(getDashboardDataCacheKey(context)),
-        mutate(getAccountHistoryCacheKey(context)),
+        mutate(getDashboardDataCacheKey(account.address)),
+        mutate(getAccountHistoryCacheKey(account.address)),
       ]);
       setState(State.Complete());
     } catch (error: unknown) {
       setState(State.ErrorState(error));
       throw error;
     }
-  }, [state, context, transfer, setState, mutate]);
+  }, [state, client, account.address, transfer, setState, mutate]);
 
   return { state, execute };
 };
@@ -58,5 +63,6 @@ type State = ReturnType<(typeof State)[keyof typeof State]>;
 class DuplicateSubmitError extends Error {
   constructor() {
     super("Attempted to submit a transaction when one is already in process");
+    this.name = "DuplicateSubmitError";
   }
 }

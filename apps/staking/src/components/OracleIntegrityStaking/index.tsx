@@ -1,8 +1,9 @@
+import type { PythStakingClient } from "@pythnetwork/staking-sdk";
+import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import { useMemo, useCallback } from "react";
 
 import {
-  type Context,
   delegateIntegrityStaking,
   cancelWarmupIntegrityStaking,
   unstakeIntegrityStaking,
@@ -127,7 +128,7 @@ export const OracleIntegrityStaking = ({
             <tbody className="bg-white/5">
               {otherPublishers.map((publisher) => (
                 <Publisher
-                  key={publisher.publicKey}
+                  key={publisher.publicKey.toBase58()}
                   availableToStake={availableToStake}
                   publisher={publisher}
                   totalStaked={staked}
@@ -152,7 +153,7 @@ type PublisherProps = {
   isSelf?: boolean;
   publisher: {
     name: string;
-    publicKey: string;
+    publicKey: PublicKey;
     isSelf: boolean;
     selfStake: bigint;
     poolCapacity: bigint;
@@ -372,7 +373,7 @@ const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
 
 type StakeToPublisherButtonProps = {
   publisherName: string;
-  publisherKey: string;
+  publisherKey: PublicKey;
   availableToStake: bigint;
   poolCapacity: bigint;
   poolUtilization: bigint;
@@ -423,13 +424,15 @@ const StakeToPublisherButton = ({
 
 const useTransferActionForPublisher = (
   action: (
-    context: Context,
-    publicKey: string,
+    client: PythStakingClient,
+    stakingAccount: PublicKey,
+    publisher: PublicKey,
     amount: bigint,
   ) => Promise<void>,
-  publicKey: string,
+  publisher: PublicKey,
 ) =>
   useCallback(
-    (context: Context, amount: bigint) => action(context, publicKey, amount),
-    [action, publicKey],
+    (client: PythStakingClient, stakingAccount: PublicKey, amount: bigint) =>
+      action(client, stakingAccount, publisher, amount),
+    [action, publisher],
   );
