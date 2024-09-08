@@ -1,7 +1,25 @@
+import {
+  ChevronUpIcon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import type { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
-import { useMemo, useCallback } from "react";
+import {
+  useMemo,
+  useCallback,
+  useState,
+  type ComponentProps,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import { useFilter } from "react-aria";
+import {
+  SearchField,
+  Input,
+  Button as BaseButton,
+} from "react-aria-components";
 
 import {
   delegateIntegrityStaking,
@@ -9,12 +27,15 @@ import {
   unstakeIntegrityStaking,
   calculateApy,
 } from "../../api";
+import { Button } from "../Button";
 import { ProgramSection } from "../ProgramSection";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
 import { Styled } from "../Styled";
 import { Tokens } from "../Tokens";
 import { AmountType, TransferButton } from "../TransferButton";
+
+const PAGE_SIZE = 10;
 
 type Props = {
   availableToStake: bigint;
@@ -99,46 +120,273 @@ export const OracleIntegrityStaking = ({
           { "mt-6": self === undefined },
         )}
       >
-        <div className="relative w-full overflow-x-auto">
-          <h3 className="sticky left-0 mb-4 pl-4 text-2xl font-light sm:pb-4 sm:pl-10 sm:pt-6">
-            {self ? "Other Publishers" : "Publishers"}
-          </h3>
-
-          <table className="min-w-full text-sm">
-            <thead className="bg-pythpurple-100/30 font-light">
-              <tr>
-                <PublisherTableHeader className="pl-4 text-left sm:pl-10">
-                  Publisher
-                </PublisherTableHeader>
-                <PublisherTableHeader>Self stake</PublisherTableHeader>
-                <PublisherTableHeader>Pool</PublisherTableHeader>
-                <PublisherTableHeader>Last epoch APY</PublisherTableHeader>
-                <PublisherTableHeader>Historical APY</PublisherTableHeader>
-                <PublisherTableHeader>Number of feeds</PublisherTableHeader>
-                <PublisherTableHeader
-                  className={clsx({ "pr-4 sm:pr-10": availableToStake <= 0n })}
-                >
-                  Quality ranking
-                </PublisherTableHeader>
-                {availableToStake > 0n && (
-                  <PublisherTableHeader className="pr-4 sm:pr-10" />
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white/5">
-              {otherPublishers.map((publisher) => (
-                <Publisher
-                  key={publisher.publicKey.toBase58()}
-                  availableToStake={availableToStake}
-                  publisher={publisher}
-                  totalStaked={staked}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PublisherList
+          title={self ? "Other Publishers" : "Publishers"}
+          availableToStake={availableToStake}
+          publishers={otherPublishers}
+          totalStaked={staked}
+        />
       </div>
     </ProgramSection>
+  );
+};
+
+type PublisherListProps = {
+  title: string;
+  availableToStake: bigint;
+  totalStaked: bigint;
+  publishers: PublisherProps["publisher"][];
+};
+
+const PublisherList = ({
+  title,
+  availableToStake,
+  publishers,
+  totalStaked,
+}: PublisherListProps) => {
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState({
+    field: SortField.PoolUtilization,
+    descending: false,
+  });
+  const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const [currentPage, setPage] = useState(0);
+  const filteredSortedPublishers = useMemo(() => {
+    const sorted = publishers
+      .filter(
+        (publisher) =>
+          filter.contains(publisher.publicKey.toBase58(), search) ||
+          (publisher.name !== undefined &&
+            filter.contains(publisher.name, search)),
+      )
+      .sort((a, b) => {
+        switch (sort.field) {
+          case SortField.PublisherName: {
+            return (a.name ?? a.publicKey.toBase58()).localeCompare(
+              b.name ?? b.publicKey.toBase58(),
+            );
+          }
+          case SortField.LastEpochAPY: {
+            return (
+              calculateApy(a.poolCapacity, a.poolUtilization, false) -
+              calculateApy(b.poolCapacity, b.poolUtilization, false)
+            );
+          }
+          case SortField.NumberOfFeeds: {
+            return Number(a.numFeeds - b.numFeeds);
+          }
+          case SortField.PoolUtilization: {
+            return Number(
+              a.poolUtilization * b.poolCapacity -
+                b.poolUtilization * a.poolCapacity,
+            );
+          }
+          case SortField.QualityRanking: {
+            return Number(a.qualityRanking - b.qualityRanking);
+          }
+          case SortField.SelfStake: {
+            return Number(a.selfStake - b.selfStake);
+          }
+        }
+      });
+    return sort.descending ? sorted.reverse() : sorted;
+  }, [publishers, search, sort.field, sort.descending, filter]);
+
+  const paginatedPublishers = useMemo(
+    () =>
+      filteredSortedPublishers.slice(
+        currentPage * PAGE_SIZE,
+        (currentPage + 1) * PAGE_SIZE,
+      ),
+    [filteredSortedPublishers, currentPage],
+  );
+
+  const updateSearch = useCallback<typeof setSearch>(
+    (newSearch) => {
+      setSearch(newSearch);
+      setPage(0);
+    },
+    [setSearch, setPage],
+  );
+
+  const updateSort = useCallback<typeof setSort>(
+    (newSort) => {
+      setSort(newSort);
+      setPage(0);
+    },
+    [setSort, setPage],
+  );
+
+  return (
+    <div className="relative w-full overflow-x-auto">
+      <div className="sticky left-0 mb-4 flex flex-row items-center justify-between gap-6 px-4 text-2xl sm:px-10 sm:pb-4 sm:pt-6">
+        <h3 className="font-light">{title}</h3>
+
+        <SearchField
+          value={search}
+          onChange={updateSearch}
+          aria-label="Search"
+          className="group relative w-full max-w-96"
+        >
+          <Input
+            className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
+            placeholder="Search"
+          />
+          <div className="absolute inset-y-0 left-4 grid place-content-center">
+            <MagnifyingGlassIcon className="size-4 text-pythpurple-400" />
+          </div>
+          <div className="absolute inset-y-0 right-2 grid place-content-center">
+            <BaseButton className="p-2 group-empty:hidden">
+              <XMarkIcon className="size-4" />
+            </BaseButton>
+          </div>
+        </SearchField>
+      </div>
+
+      <table className="min-w-full text-sm">
+        <thead className="bg-pythpurple-100/30 font-light">
+          <tr>
+            <SortablePublisherTableHeader
+              field={SortField.PublisherName}
+              sort={sort}
+              setSort={updateSort}
+              className="pl-4 text-left sm:pl-10"
+            >
+              Publisher
+            </SortablePublisherTableHeader>
+            <SortablePublisherTableHeader
+              field={SortField.SelfStake}
+              sort={sort}
+              setSort={updateSort}
+            >
+              Self stake
+            </SortablePublisherTableHeader>
+            <SortablePublisherTableHeader
+              field={SortField.PoolUtilization}
+              sort={sort}
+              setSort={updateSort}
+            >
+              Pool
+            </SortablePublisherTableHeader>
+            <SortablePublisherTableHeader
+              field={SortField.LastEpochAPY}
+              sort={sort}
+              setSort={updateSort}
+            >
+              Last epoch APY
+            </SortablePublisherTableHeader>
+            <PublisherTableHeader>Historical APY</PublisherTableHeader>
+            <SortablePublisherTableHeader
+              field={SortField.NumberOfFeeds}
+              sort={sort}
+              setSort={updateSort}
+            >
+              Number of feeds
+            </SortablePublisherTableHeader>
+            <SortablePublisherTableHeader
+              field={SortField.QualityRanking}
+              sort={sort}
+              setSort={updateSort}
+              className={clsx({ "pr-4 sm:pr-10": availableToStake <= 0n })}
+            >
+              Quality ranking
+            </SortablePublisherTableHeader>
+            {availableToStake > 0n && (
+              <PublisherTableHeader className="pr-4 sm:pr-10" />
+            )}
+          </tr>
+        </thead>
+
+        <tbody className="bg-white/5">
+          {paginatedPublishers.map((publisher) => (
+            <Publisher
+              key={publisher.publicKey.toBase58()}
+              availableToStake={availableToStake}
+              publisher={publisher}
+              totalStaked={totalStaked}
+            />
+          ))}
+        </tbody>
+      </table>
+
+      {filteredSortedPublishers.length > PAGE_SIZE && (
+        <div className="sticky inset-x-0 flex flex-row items-center justify-end gap-2 border-t border-neutral-600/50 p-4">
+          {range(Math.ceil(filteredSortedPublishers.length / PAGE_SIZE)).map(
+            (page) =>
+              page === currentPage ? (
+                <span
+                  key={page}
+                  className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600"
+                >
+                  {page + 1}
+                </span>
+              ) : (
+                <Button
+                  key={page}
+                  onClick={() => {
+                    setPage(page);
+                  }}
+                  nopad
+                  className="grid size-8 place-content-center"
+                >
+                  {page + 1}
+                </Button>
+              ),
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const range = (length: number) => [...Array.from({ length }).keys()];
+
+type SortablePublisherTableHeaderProps = Omit<
+  ComponentProps<typeof BaseButton>,
+  "children"
+> & {
+  children: string;
+  field: SortField;
+  sort: { field: SortField; descending: boolean };
+  setSort: Dispatch<SetStateAction<{ field: SortField; descending: boolean }>>;
+};
+
+const SortablePublisherTableHeader = ({
+  field,
+  sort,
+  setSort,
+  children,
+  className,
+  ...props
+}: SortablePublisherTableHeaderProps) => {
+  const updateSort = useCallback(() => {
+    setSort((cur) => ({
+      field,
+      descending: cur.field === field ? !cur.descending : false,
+    }));
+  }, [setSort, field]);
+
+  return (
+    <th>
+      <PublisherTableHeader
+        as={BaseButton}
+        className={clsx(
+          "flex size-full flex-row items-center gap-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+          { "bg-black/20": sort.field === field },
+          className,
+        )}
+        onPress={updateSort}
+        {...props}
+      >
+        <span>{children}</span>
+        <ChevronUpIcon
+          className={clsx("size-4 transition-transform", {
+            "rotate-180": sort.descending,
+            "opacity-0": sort.field !== field,
+          })}
+        />
+      </PublisherTableHeader>
+    </th>
   );
 };
 
@@ -152,7 +400,7 @@ type PublisherProps = {
   totalStaked: bigint;
   isSelf?: boolean;
   publisher: {
-    name: string;
+    name: string | undefined;
     publicKey: PublicKey;
     isSelf: boolean;
     selfStake: bigint;
@@ -213,8 +461,8 @@ const Publisher = ({
       <tr className="border-t border-neutral-600/50 first:border-0">
         {!isSelf && (
           <>
-            <PublisherTableCell className="py-4 pl-4 font-medium sm:pl-10">
-              {publisher.name}
+            <PublisherTableCell className="truncate py-4 pl-4 font-medium sm:pl-10">
+              {publisher.name ?? publisher.publicKey.toBase58()}
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
               <Tokens>{publisher.selfStake}</Tokens>
@@ -322,7 +570,7 @@ const Publisher = ({
                           small
                           secondary
                           className="w-28"
-                          actionDescription={`Cancel tokens that are in warmup for staking to ${publisher.name}`}
+                          actionDescription={`Cancel tokens that are in warmup for staking to ${publisher.name ?? publisher.publicKey.toBase58()}`}
                           actionName="Cancel"
                           submitButtonText="Cancel Warmup"
                           title="Cancel Warmup"
@@ -349,7 +597,7 @@ const Publisher = ({
                           small
                           secondary
                           className="w-28"
-                          actionDescription={`Unstake tokens from ${publisher.name}`}
+                          actionDescription={`Unstake tokens from ${publisher.name ?? publisher.publicKey.toBase58()}`}
                           actionName="Unstake"
                           max={staked}
                           transfer={unstake}
@@ -372,7 +620,7 @@ const Publisher = ({
 const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
 
 type StakeToPublisherButtonProps = {
-  publisherName: string;
+  publisherName: string | undefined;
   publisherKey: PublicKey;
   availableToStake: bigint;
   poolCapacity: bigint;
@@ -396,7 +644,7 @@ const StakeToPublisherButton = ({
   return (
     <TransferButton
       small
-      actionDescription={`Stake to ${publisherName}`}
+      actionDescription={`Stake to ${publisherName ?? publisherKey.toBase58()}`}
       actionName="Stake"
       max={availableToStake}
       transfer={delegate}
@@ -436,3 +684,12 @@ const useTransferActionForPublisher = (
       action(client, stakingAccount, publisher, amount),
     [action, publisher],
   );
+
+enum SortField {
+  PublisherName,
+  PoolUtilization,
+  LastEpochAPY,
+  SelfStake,
+  NumberOfFeeds,
+  QualityRanking,
+}

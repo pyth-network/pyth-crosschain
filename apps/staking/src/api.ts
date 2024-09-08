@@ -38,7 +38,7 @@ type Data = {
     cooldown2: bigint;
   };
   integrityStakingPublishers: {
-    name: string;
+    name: string | undefined;
     publicKey: PublicKey;
     isSelf: boolean;
     selfStake: bigint;
@@ -196,7 +196,7 @@ export const loadData = async (
     integrityStakingPublishers: publishers.map(({ pubkey: publisher }) => ({
       apyHistory: [], // TODO
       isSelf: false, // TODO
-      name: publisher.toString(),
+      name: undefined, // TODO
       numFeeds: 0, // TODO
       poolCapacity: 100n, // TODO
       poolUtilization: 0n, // TODO

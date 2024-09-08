@@ -36,12 +36,12 @@ export const Footer = ({
 }: Omit<HTMLAttributes<HTMLElement>, "children">) => (
   <footer
     className={clsx(
-      "sticky bottom-0 mt-4 px-4 text-xs font-light text-neutral-400",
+      "sticky bottom-0 mt-4 text-xs font-light text-neutral-400 sm:px-4",
       className,
     )}
     {...props}
   >
-    <div className="border-x border-t border-neutral-600/50 bg-pythpurple-800">
+    <div className="border-t border-neutral-600/50 bg-pythpurple-800 sm:border-x">
       <MaxWidth className="flex h-16 items-center justify-between sm:-mx-4">
         <div>© 2024 Pyth Data Association</div>
         <div className="relative -right-3 flex h-full items-center">
