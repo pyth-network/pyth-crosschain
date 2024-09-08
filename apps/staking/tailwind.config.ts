@@ -1,10 +1,12 @@
 import forms from "@tailwindcss/forms";
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
+import reactAria from "tailwindcss-react-aria-components";
 
 const tailwindConfig = {
   darkMode: "class",
   content: ["src/components/**/*.{ts,tsx}", "src/markdown-components.tsx"],
-  plugins: [forms],
+  plugins: [forms, animate, reactAria],
   theme: {
     extend: {
       backgroundImage: {

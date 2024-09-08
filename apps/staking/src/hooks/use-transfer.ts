@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { useSWRConfig } from "swr";
 
+import { getCacheKey as getAccountHistoryCacheKey } from "./use-account-history";
 import { useApiContext } from "./use-api-context";
+import { getCacheKey as getDashboardDataCacheKey } from "./use-dashboard-data";
 
 export const useTransfer = (
   transfer: (context: ReturnType<typeof useApiContext>) => Promise<void>,
@@ -21,8 +23,8 @@ export const useTransfer = (
       // TODO enable mutate without awaiting?
       // Prob by changing `api.ts` to encode the change & history item along with each update?
       await Promise.all([
-        mutate(context.stakeAccount.address.toBase58()),
-        mutate(`${context.stakeAccount.address.toBase58()}/history`),
+        mutate(getDashboardDataCacheKey(context)),
+        mutate(getAccountHistoryCacheKey(context)),
       ]);
       setState(State.Complete());
     } catch (error: unknown) {

@@ -7,6 +7,10 @@ import {
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
+  BraveWalletAdapter,
+  BackpackWalletAdapter,
+  CoinbaseWalletAdapter,
+  PhantomWalletAdapter,
   GlowWalletAdapter,
   LedgerWalletAdapter,
   SolflareWalletAdapter,
@@ -31,10 +35,14 @@ export const WalletProvider = ({
   walletConnectProjectId,
   rpc,
 }: Props) => {
-  const endpoint = useMemo(() => rpc ?? clusterApiUrl(network), [rpc]);
+  const endpoint = useMemo(() => rpc ?? clusterApiUrl(network), [rpc, network]);
 
   const wallets = useMemo(
     () => [
+      new BraveWalletAdapter(),
+      new BackpackWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new PhantomWalletAdapter(),
       new GlowWalletAdapter(),
       new LedgerWalletAdapter(),
       new SolflareWalletAdapter(),
@@ -57,7 +65,7 @@ export const WalletProvider = ({
           ]
         : []),
     ],
-    [walletConnectProjectId],
+    [walletConnectProjectId, network],
   );
 
   return (

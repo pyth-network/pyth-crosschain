@@ -81,7 +81,7 @@ const ConnectedButton = (props: Props) => {
       <Menu as="div" className="relative">
         <MenuButton as="div" className="group">
           <ButtonComponent
-            className="w-52 group-data-[open]:bg-pythpurple-600/60"
+            className="group-data-[open]:bg-pythpurple-600/60"
             {...props}
           >
             <span className="truncate">
@@ -93,7 +93,7 @@ const ConnectedButton = (props: Props) => {
         <MenuItems
           transition
           anchor="bottom end"
-          className="z-10 flex min-w-[var(--button-width)] origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus-visible:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="z-10 flex min-w-[var(--button-width)] origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0 focus-visible:outline-none"
         >
           <MenuSection className="flex w-full flex-col">
             {stakeAccountState.type === StateType.Loaded &&
@@ -107,7 +107,7 @@ const ConnectedButton = (props: Props) => {
                     <ChevronRightIcon className="size-4" />
                   </WalletMenuItem>
                   <ListboxOptions
-                    className="z-10 flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus-visible:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                    className="z-10 flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0 focus-visible:outline-none"
                     anchor="left start"
                     transition
                   >
@@ -201,7 +201,7 @@ const WalletMenuItemImpl = <T extends ElementType>(
   return (
     <Component
       className={clsx(
-        "flex items-center gap-2 whitespace-nowrap px-4 py-2 text-left hover:bg-pythpurple-800/20 data-[focus]:bg-pythpurple-800/20",
+        "flex items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[focus]:bg-pythpurple-800/20 hover:bg-pythpurple-800/20",
         className,
       )}
       ref={ref}
@@ -221,7 +221,7 @@ const DisconnectedButton = (props: Props) => {
   }, [modal]);
 
   return (
-    <ButtonComponent onClick={showModal} className="w-52" {...props}>
+    <ButtonComponent onClick={showModal} {...props}>
       <span>Connect wallet</span>
     </ButtonComponent>
   );
@@ -241,7 +241,10 @@ const ButtonComponent = ({
   ...props
 }: ButtonComponentProps) => (
   <Button
-    className={clsx("flex flex-row items-center gap-2", className)}
+    className={clsx(
+      "flex w-36 flex-row items-center justify-center gap-2 text-sm sm:w-52 sm:text-base",
+      className,
+    )}
     {...props}
   >
     <WalletIcon className="size-4 flex-none opacity-60" />

@@ -42,7 +42,7 @@ export const Footer = ({
     {...props}
   >
     <div className="border-x border-t border-neutral-600/50 bg-pythpurple-800">
-      <MaxWidth className="-mx-4 flex h-16 items-center justify-between">
+      <MaxWidth className="flex h-16 items-center justify-between sm:-mx-4">
         <div>© 2024 Pyth Data Association</div>
         <div className="relative -right-3 flex h-full items-center">
           {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
@@ -50,7 +50,7 @@ export const Footer = ({
               target="_blank"
               href={href}
               key={name}
-              className="grid h-full place-content-center px-3 hover:text-pythpurple-400"
+              className="grid h-full place-content-center px-2 hover:text-pythpurple-400 sm:px-3"
               rel="noreferrer"
             >
               <Icon className="size-4" />
