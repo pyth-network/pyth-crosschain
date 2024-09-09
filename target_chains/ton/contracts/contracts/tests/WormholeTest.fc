@@ -1,3 +1,13 @@
+{-
+  This test contract serves two main purposes:
+  1. It allows testing of non-getter functions in FunC without requiring specific opcodes for each function.
+  2. It provides access to internal functions through wrapper getter functions.
+  
+  This approach is common in FunC development, where a separate test contract is used for unit testing.
+  It enables more comprehensive testing of the contract's functionality, including internal operations
+  that are not directly accessible through standard getter methods.
+-}
+
 #include "../imports/stdlib.fc";
 #include "../Wormhole.fc";
 #include "../common/op.fc";
