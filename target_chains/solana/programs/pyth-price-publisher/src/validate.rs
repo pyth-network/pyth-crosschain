@@ -45,6 +45,7 @@ pub fn validate_payer<'a, 'b>(
     Ok(payer)
 }
 
+#[inline]
 fn pubkey_eq(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), 32) == 0
 }

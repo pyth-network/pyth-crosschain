@@ -17,6 +17,7 @@ use {
         clock::Clock,
         entrypoint::ProgramResult,
         program_error::ProgramError,
+        program_memory::sol_memcmp,
         pubkey::Pubkey,
         sysvar::Sysvar,
     },
@@ -47,18 +48,13 @@ pub fn submit_prices(
     let publisher_config = publisher_config::read(*publisher_config_data)?;
     ensure!(
         ProgramError::InvalidArgument,
-        buffer.key.to_bytes() == publisher_config.buffer_account
+        sol_memcmp(&buffer.key.to_bytes(), &publisher_config.buffer_account, 32) == 0
     );
 
     // Access and update PublisherPrices account with new data.
     let mut buffer_data = buffer.data.borrow_mut();
     let (header, prices) = buffer::read_mut(*buffer_data)?;
-    let current_slot = Clock::get()?.slot;
-    if header.slot != current_slot {
-        header.slot = current_slot;
-        header.num_prices = 0;
-    }
-    buffer::extend(header, prices, prices_data)?;
+    buffer::extend(header, prices, Clock::get()?.slot, prices_data)?;
 
     Ok(())
 }

@@ -144,10 +144,17 @@ pub fn create(
 pub fn extend(
     header: &mut BufferHeader,
     prices: &mut [u8],
+    current_slot: u64,
     new_prices: &[u8],
 ) -> Result<(), ExtendError> {
     if new_prices.len() % size_of::<BufferedPrice>() != 0 {
         return Err(ExtendError::InvalidLength);
+    }
+    // We expect the validator to apply the buffered prices at the end of each slot,
+    // so when we observe a new slot we remove previously stored prices.
+    if header.slot != current_slot {
+        header.slot = current_slot;
+        header.num_prices = 0;
     }
     let num_new_prices = (new_prices.len() / size_of::<BufferedPrice>())
         .try_into()
@@ -174,6 +181,29 @@ pub fn extend(
 }
 
 #[test]
-fn test_size() {
+fn test_recommended_size() {
+    // Recommended buffer size, enough to hold 5000 prices.
     assert_eq!(size(5000), 100048);
+}
+
+#[test]
+fn test_extend_clears_old_prices() {
+    let mut buf = vec![0u8; size(30)];
+    create(&mut buf, Default::default()).unwrap();
+    assert!(read(&buf).unwrap().1.is_empty());
+    {
+        let (header, prices) = read_mut(&mut buf).unwrap();
+        extend(header, prices, 1, &vec![1; 40]).unwrap();
+    }
+    assert_eq!(read(&buf).unwrap().1.len(), 2);
+    {
+        let (header, prices) = read_mut(&mut buf).unwrap();
+        extend(header, prices, 1, &vec![1; 60]).unwrap();
+    }
+    assert_eq!(read(&buf).unwrap().1.len(), 5);
+    {
+        let (header, prices) = read_mut(&mut buf).unwrap();
+        extend(header, prices, 2, &vec![1; 60]).unwrap();
+    }
+    assert_eq!(read(&buf).unwrap().1.len(), 3);
 }
