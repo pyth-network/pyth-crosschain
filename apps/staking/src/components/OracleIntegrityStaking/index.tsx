@@ -19,6 +19,8 @@ import {
   SearchField,
   Input,
   Button as BaseButton,
+  Meter,
+  Label,
 } from "react-aria-components";
 
 import {
@@ -88,7 +90,7 @@ export const OracleIntegrityStaking = ({
         <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-10 sm:mt-10">
           <div className="relative w-full overflow-x-auto">
             <h3 className="sticky left-0 mb-4 pl-4 text-2xl font-light sm:pb-4 sm:pl-10 sm:pt-6">
-              You ({self.name})
+              You ({self.name ?? self.publicKey.toBase58()})
             </h3>
 
             <table className="mx-auto border border-neutral-600/50 text-sm">
@@ -323,10 +325,10 @@ const PublisherList = ({
               ) : (
                 <Button
                   key={page}
-                  onClick={() => {
+                  onPress={() => {
                     setPage(page);
                   }}
-                  nopad
+                  size="nopad"
                   className="grid size-8 place-content-center"
                 >
                   {page + 1}
@@ -470,36 +472,39 @@ const Publisher = ({
           </>
         )}
         <PublisherTableCell className="text-center">
-          <div className="relative mx-auto grid h-5 w-52 place-content-center border border-black bg-pythpurple-600/50">
-            <div
-              style={{
-                width: `${utilizationPercent.toString()}%`,
-              }}
-              className={clsx(
-                "absolute inset-0 max-w-full",
-                publisher.poolUtilization > publisher.poolCapacity
-                  ? "bg-fuchsia-900"
-                  : "bg-pythpurple-400",
-              )}
-            />
-            <div
-              className={clsx("isolate text-sm font-medium", {
-                "mix-blend-difference":
-                  publisher.poolUtilization <= publisher.poolCapacity,
-              })}
-            >
-              {utilizationPercent.toString()}%
-            </div>
-          </div>
-          <div className="mt-2 flex flex-row items-center justify-center gap-1 text-sm">
-            <span>
-              <Tokens>{publisher.poolUtilization}</Tokens>
-            </span>
-            <span>/</span>
-            <span>
-              <Tokens>{publisher.poolCapacity}</Tokens>
-            </span>
-          </div>
+          <Meter value={utilizationPercent}>
+            {({ percentage }) => (
+              <>
+                <div className="relative mx-auto grid h-5 w-52 place-content-center border border-black bg-pythpurple-600/50">
+                  <div
+                    style={{
+                      width: `${percentage.toString()}%`,
+                    }}
+                    className={clsx(
+                      "absolute inset-0 max-w-full",
+                      percentage < 100 ? "bg-pythpurple-400" : "bg-fuchsia-900",
+                    )}
+                  />
+                  <div
+                    className={clsx("isolate text-sm font-medium", {
+                      "mix-blend-difference": percentage < 100,
+                    })}
+                  >
+                    {`${utilizationPercent.toString()}%`}
+                  </div>
+                </div>
+                <Label className="mt-1 flex flex-row items-center justify-center gap-1 text-sm">
+                  <span>
+                    <Tokens>{publisher.poolUtilization}</Tokens>
+                  </span>
+                  <span>/</span>
+                  <span>
+                    <Tokens>{publisher.poolCapacity}</Tokens>
+                  </span>
+                </Label>
+              </>
+            )}
+          </Meter>
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
           <div>
@@ -567,8 +572,8 @@ const Publisher = ({
                         })}
                       >
                         <TransferButton
-                          small
-                          secondary
+                          size="small"
+                          variant="secondary"
                           className="w-28"
                           actionDescription={`Cancel tokens that are in warmup for staking to ${publisher.name ?? publisher.publicKey.toBase58()}`}
                           actionName="Cancel"
@@ -594,8 +599,8 @@ const Publisher = ({
                       </td>
                       <td className="py-0.5 text-right">
                         <TransferButton
-                          small
-                          secondary
+                          size="small"
+                          variant="secondary"
                           className="w-28"
                           actionDescription={`Unstake tokens from ${publisher.name ?? publisher.publicKey.toBase58()}`}
                           actionName="Unstake"
@@ -643,7 +648,7 @@ const StakeToPublisherButton = ({
 
   return (
     <TransferButton
-      small
+      size="small"
       actionDescription={`Stake to ${publisherName ?? publisherKey.toBase58()}`}
       actionName="Stake"
       max={availableToStake}

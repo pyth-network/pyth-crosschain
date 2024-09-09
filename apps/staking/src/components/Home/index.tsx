@@ -72,7 +72,7 @@ const NoWalletHome = () => {
         publishers.
       </p>
       <div className="grid w-full place-content-center">
-        <Button onClick={showModal}>Connect your wallet to participate</Button>
+        <Button onPress={showModal}>Connect your wallet to participate</Button>
       </div>
     </main>
   );

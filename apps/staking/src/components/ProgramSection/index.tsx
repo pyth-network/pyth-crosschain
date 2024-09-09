@@ -83,7 +83,7 @@ export const ProgramSection = ({
               available > 0n && {
                 actions: (
                   <TransferButton
-                    small
+                    size="small"
                     actionDescription={stakeDescription}
                     actionName="Stake"
                     max={available}
@@ -111,8 +111,8 @@ export const ProgramSection = ({
           ...(cancelWarmup !== undefined && {
             actions: (
               <TransferButton
-                small
-                secondary
+                size="small"
+                variant="secondary"
                 actionDescription={cancelWarmupDescription}
                 actionName="Cancel"
                 submitButtonText="Cancel Warmup"
@@ -134,8 +134,8 @@ export const ProgramSection = ({
           staked > 0n && {
             actions: (
               <TransferButton
-                small
-                secondary
+                size="small"
+                variant="secondary"
                 actionDescription={unstakeDescription}
                 actionName="Unstake"
                 max={staked}
@@ -195,19 +195,19 @@ const Position = ({
 }: PositionProps) => (
   <div
     className={clsx(
-      "w-full overflow-hidden border border-neutral-600/50 bg-pythpurple-800 p-4 sm:p-6",
+      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-pythpurple-800 p-4 sm:p-6",
       className,
     )}
   >
     <div
       className={clsx(
-        "mb-2 inline-block border border-neutral-600/50 px-1 py-0.5 text-xs text-neutral-400 sm:px-3 sm:py-1",
+        "mb-2 inline-block flex-none border border-neutral-600/50 px-1 py-0.5 text-xs text-neutral-400 sm:px-3 sm:py-1",
         nameClassName,
       )}
     >
       {name}
     </div>
-    <div className="flex flex-row items-end justify-between gap-6 xl:flex-col xl:items-start">
+    <div className="flex grow flex-row items-end justify-between gap-6 xl:flex-col xl:items-start">
       <div>
         <div>
           <Tokens className="text-xl font-light sm:text-3xl">{children}</Tokens>

@@ -1,24 +1,30 @@
-import { Field, Input, Label } from "@headlessui/react";
 import type { PythStakingClient } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
 import {
-  type ChangeEvent,
   type ComponentProps,
   type ReactNode,
+  type FormEvent,
   useCallback,
   useMemo,
   useState,
 } from "react";
+import {
+  DialogTrigger,
+  TextField,
+  Label,
+  Input,
+  Form,
+  Group,
+} from "react-aria-components";
 
-import { useLogger } from "../../hooks/use-logger";
 import { StateType, useTransfer } from "../../hooks/use-transfer";
 import { stringToTokens, tokensToString } from "../../tokens";
 import { Button } from "../Button";
-import { Modal, ModalButton, ModalPanel } from "../Modal";
+import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import PythTokensIcon from "../Tokens/pyth.svg";
 
-type Props = {
+type Props = Omit<ComponentProps<typeof Button>, "children"> & {
   actionName: string;
   actionDescription: string;
   title?: string | undefined;
@@ -34,10 +40,6 @@ type Props = {
     stakingAccount: PublicKey,
     amount: bigint,
   ) => Promise<void>;
-  className?: string | undefined;
-  secondary?: boolean | undefined;
-  small?: boolean | undefined;
-  disabled?: boolean | undefined;
 };
 
 export const TransferButton = ({
@@ -48,128 +50,54 @@ export const TransferButton = ({
   max,
   transfer,
   children,
-  className,
-  secondary,
-  small,
-  disabled,
+  ...props
 }: Props) => {
-  const { amountInput, setAmount, updateAmount, resetAmount, amount } =
-    useAmountInput(max);
-  const doTransfer = useCallback(
-    (client: PythStakingClient, stakingAccount: PublicKey) =>
-      amount.type === AmountType.Valid
-        ? transfer(client, stakingAccount, amount.amount)
-        : Promise.reject(new InvalidAmountError()),
-    [amount, transfer],
-  );
-  const setMax = useCallback(() => {
-    setAmount(tokensToString(max));
-  }, [setAmount, max]);
-
-  const { state, execute } = useTransfer(doTransfer);
-  const isSubmitting = state.type === StateType.Submitting;
+  const [closeDisabled, setCloseDisabled] = useState(false);
 
   return (
-    <Modal>
-      <ModalButton
-        className={className}
-        secondary={secondary}
-        small={small}
-        disabled={disabled}
-      >
-        {actionName}
-      </ModalButton>
-      <ModalPanel
+    <DialogTrigger>
+      <Button {...props}>{actionName}</Button>
+      <ModalDialog
         title={title ?? actionName}
-        closeDisabled={isSubmitting}
+        closeDisabled={closeDisabled}
         description={actionDescription}
-        afterLeave={resetAmount}
       >
-        {(close) => (
-          <>
-            <Field className="mb-8 flex w-full flex-col gap-1 sm:min-w-96">
-              <div className="flex flex-row items-center justify-between">
-                <Label className="text-sm">Amount</Label>
-                <div className="flex flex-row items-center gap-2">
-                  <Tokens>{max}</Tokens>
-                  <span className="text-xs opacity-60">Max</span>
-                </div>
-              </div>
-              <div className="relative w-full">
-                <Input
-                  name="amount"
-                  className="w-full truncate border border-neutral-600/50 bg-transparent py-3 pl-12 pr-24 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
-                  value={amountInput}
-                  onChange={updateAmount}
-                  placeholder="0.00"
-                />
-                <div className="pointer-events-none absolute inset-y-0 flex w-full items-center justify-between px-4">
-                  <PythTokensIcon className="size-6" />
-                  <Button
-                    small
-                    secondary
-                    className="pointer-events-auto"
-                    onClick={setMax}
-                    disabled={isSubmitting}
-                  >
-                    max
-                  </Button>
-                </div>
-              </div>
-              {state.type === StateType.Error && (
-                <p className="mt-1 text-red-600">
-                  Uh oh, an error occurred! Please try again
-                </p>
-              )}
-            </Field>
-            {children && (
-              <>
-                {typeof children === "function" ? children(amount) : children}
-              </>
-            )}
-            <ExecuteButton
-              amount={amount}
-              execute={execute}
-              loading={isSubmitting}
-              close={close}
-              className="mt-6 w-full"
-            >
-              {submitButtonText ?? actionName}
-            </ExecuteButton>
-          </>
+        {({ close }) => (
+          <DialogContents
+            max={max}
+            transfer={transfer}
+            setCloseDisabled={setCloseDisabled}
+            submitButtonText={submitButtonText ?? actionName}
+            close={close}
+          >
+            {children}
+          </DialogContents>
         )}
-      </ModalPanel>
-    </Modal>
+      </ModalDialog>
+    </DialogTrigger>
   );
 };
 
-type ExecuteButtonProps = Omit<
-  ComponentProps<typeof Button>,
-  "onClick" | "disabled" | "children"
-> & {
-  children: ReactNode | ReactNode[];
-  amount: Amount;
-  execute: () => Promise<void>;
+type DialogContentsProps = {
+  max: bigint;
+  children: Props["children"];
+  transfer: Props["transfer"];
+  setCloseDisabled: (value: boolean) => void;
+  submitButtonText: string;
   close: () => void;
 };
 
-const ExecuteButton = ({
-  amount,
-  execute,
-  close,
+const DialogContents = ({
+  max,
+  transfer,
   children,
-  ...props
-}: ExecuteButtonProps) => {
-  const logger = useLogger();
-  const handleClick = useCallback(async () => {
-    try {
-      await execute();
-      close();
-    } catch (error: unknown) {
-      logger.error(error);
-    }
-  }, [execute, close, logger]);
-  const contents = useMemo(() => {
+  submitButtonText,
+  setCloseDisabled,
+  close,
+}: DialogContentsProps) => {
+  const { amount, setAmount, setMax, stringValue } = useAmountInput(max);
+
+  const validationError = useMemo(() => {
     switch (amount.type) {
       case AmountType.Empty: {
         return "Enter an amount";
@@ -184,46 +112,114 @@ const ExecuteButton = ({
         return "Enter a valid amount";
       }
       case AmountType.Valid: {
-        return children;
+        return;
       }
     }
-  }, [amount, children]);
+  }, [amount]);
+
+  const doTransfer = useCallback(
+    (client: PythStakingClient, stakingAccount: PublicKey) =>
+      amount.type === AmountType.Valid
+        ? transfer(client, stakingAccount, amount.amount)
+        : Promise.reject(new InvalidAmountError()),
+    [amount, transfer],
+  );
+
+  const { execute, state } = useTransfer(doTransfer);
+
+  const handleSubmit = useCallback(
+    (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setCloseDisabled(true);
+      execute()
+        .then(() => {
+          close();
+        })
+        .catch(() => {
+          /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
+        })
+        .finally(() => {
+          setCloseDisabled(false);
+        });
+    },
+    [execute, close, setCloseDisabled],
+  );
 
   return (
-    <Button
-      disabled={amount.type !== AmountType.Valid}
-      onClick={handleClick}
-      {...props}
-    >
-      {contents}
-    </Button>
+    <Form onSubmit={handleSubmit}>
+      <TextField
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus
+        isInvalid={validationError !== undefined}
+        value={stringValue}
+        onChange={setAmount}
+        validationBehavior="aria"
+        name="amount"
+        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
+      >
+        <div className="flex flex-row items-center justify-between">
+          <Label className="text-sm">Amount</Label>
+          <div className="flex flex-row items-center gap-2">
+            <Tokens>{max}</Tokens>
+            <span className="text-xs opacity-60">Max</span>
+          </div>
+        </div>
+        <Group className="relative w-full">
+          <Input
+            className="focused:outline-none focused:ring-0 focused:border-pythpurple-400 w-full truncate border border-neutral-600/50 bg-transparent py-3 pl-12 pr-24 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0"
+            placeholder="0.00"
+          />
+          <div className="pointer-events-none absolute inset-y-0 flex w-full items-center justify-between px-4">
+            <PythTokensIcon className="size-6" />
+            <Button
+              size="small"
+              variant="secondary"
+              className="pointer-events-auto"
+              onPress={setMax}
+              isDisabled={state.type === StateType.Submitting}
+            >
+              max
+            </Button>
+          </div>
+        </Group>
+        {state.type === StateType.Error && (
+          <p className="mt-1 text-red-600">
+            Uh oh, an error occurred! Please try again
+          </p>
+        )}
+      </TextField>
+      {children && (
+        <>{typeof children === "function" ? children(amount) : children}</>
+      )}
+      <Button
+        className="mt-6 w-full"
+        type="submit"
+        isLoading={state.type === StateType.Submitting}
+        isDisabled={amount.type !== AmountType.Valid}
+      >
+        {validationError ?? submitButtonText}
+      </Button>
+    </Form>
   );
 };
 
 const useAmountInput = (max: bigint) => {
-  const [amountInput, setAmountInput] = useState<string>("");
+  const [stringValue, setAmount] = useState<string>("");
 
   return {
-    amountInput,
+    stringValue,
 
-    setAmount: setAmountInput,
+    setAmount,
 
-    updateAmount: useCallback(
-      (event: ChangeEvent<HTMLInputElement>) => {
-        setAmountInput(event.target.value);
-      },
-      [setAmountInput],
-    ),
-
-    resetAmount: useCallback(() => {
-      setAmountInput("");
-    }, [setAmountInput]),
+    setMax: useCallback(() => {
+      setAmount(tokensToString(max));
+    }, [setAmount, max]),
 
     amount: useMemo((): Amount => {
-      if (amountInput === "") {
+      if (stringValue === "") {
         return Amount.Empty();
       } else {
-        const amountAsTokens = stringToTokens(amountInput);
+        const amountAsTokens = stringToTokens(stringValue);
         if (amountAsTokens === undefined) {
           return Amount.Invalid();
         } else if (amountAsTokens > max) {
@@ -234,7 +230,7 @@ const useAmountInput = (max: bigint) => {
           return Amount.Valid(amountAsTokens);
         }
       }
-    }, [amountInput, max]),
+    }, [stringValue, max]),
   };
 };
 

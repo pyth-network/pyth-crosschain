@@ -19,6 +19,7 @@ import { Footer } from "../Footer";
 import { Header } from "../Header";
 import { MaxWidth } from "../MaxWidth";
 import { ReportAccessibility } from "../ReportAccessibility";
+import { RouterProvider } from "../RouterProvider";
 import { WalletProvider } from "../WalletProvider";
 
 const redHatText = Red_Hat_Text({
@@ -36,32 +37,36 @@ type Props = {
 };
 
 export const Root = ({ children }: Props) => (
-  <LoggerProvider>
-    <WalletProvider
-      walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
-      rpc={RPC}
-      network={
-        IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet
-      }
-    >
-      <StakeAccountProvider>
-        <html
-          lang="en"
-          dir="ltr"
-          className={clsx(redHatText.variable, redHatMono.variable)}
-        >
-          <body className="grid min-h-dvh grid-rows-[auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60">
-            <Header className="z-10" />
-            <MaxWidth className="my-4">{children}</MaxWidth>
-            <Footer className="z-10" />
-          </body>
-          {GOOGLE_ANALYTICS_ID && (
-            <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />
-          )}
-          {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
-          {!IS_PRODUCTION_SERVER && <ReportAccessibility />}
-        </html>
-      </StakeAccountProvider>
-    </WalletProvider>
-  </LoggerProvider>
+  <RouterProvider>
+    <LoggerProvider>
+      <WalletProvider
+        walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
+        rpc={RPC}
+        network={
+          IS_MAINNET
+            ? WalletAdapterNetwork.Mainnet
+            : WalletAdapterNetwork.Devnet
+        }
+      >
+        <StakeAccountProvider>
+          <html
+            lang="en"
+            dir="ltr"
+            className={clsx(redHatText.variable, redHatMono.variable)}
+          >
+            <body className="grid min-h-dvh grid-rows-[auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60">
+              <Header className="z-10" />
+              <MaxWidth className="my-4">{children}</MaxWidth>
+              <Footer className="z-10" />
+            </body>
+            {GOOGLE_ANALYTICS_ID && (
+              <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />
+            )}
+            {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
+            {!IS_PRODUCTION_SERVER && <ReportAccessibility />}
+          </html>
+        </StakeAccountProvider>
+      </WalletProvider>
+    </LoggerProvider>
+  </RouterProvider>
 );
