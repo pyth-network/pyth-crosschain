@@ -64,7 +64,12 @@ export const OracleIntegrityStaking = ({
   );
 
   const otherPublishers = useMemo(
-    () => publishers.filter((publisher) => !publisher.isSelf),
+    () =>
+      publishers.filter(
+        (publisher) =>
+          !publisher.isSelf &&
+          (publisher.poolCapacity > 0n || hasAnyPositions(publisher)),
+      ),
     [publishers],
   );
 
@@ -454,7 +459,10 @@ const Publisher = ({
     publisher.publicKey,
   );
   const utilizationPercent = useMemo(
-    () => Number((100n * publisher.poolUtilization) / publisher.poolCapacity),
+    () =>
+      publisher.poolCapacity > 0n
+        ? Number((100n * publisher.poolUtilization) / publisher.poolCapacity)
+        : Number.NaN,
     [publisher.poolUtilization, publisher.poolCapacity],
   );
 
@@ -490,7 +498,9 @@ const Publisher = ({
                       "mix-blend-difference": percentage < 100,
                     })}
                   >
-                    {`${utilizationPercent.toString()}%`}
+                    {Number.isNaN(utilizationPercent)
+                      ? "Empty Pool"
+                      : `${utilizationPercent.toString()}%`}
                   </div>
                 </div>
                 <Label className="mt-1 flex flex-row items-center justify-center gap-1 text-sm">
@@ -689,6 +699,15 @@ const useTransferActionForPublisher = (
       action(client, stakingAccount, publisher, amount),
     [action, publisher],
   );
+
+const hasAnyPositions = ({ positions }: PublisherProps["publisher"]) =>
+  positions !== undefined &&
+  [
+    positions.warmup,
+    positions.staked,
+    positions.cooldown,
+    positions.cooldown2,
+  ].some((value) => value !== undefined && value > 0n);
 
 enum SortField {
   PublisherName,
