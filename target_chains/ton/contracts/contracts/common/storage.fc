@@ -23,7 +23,7 @@ global cell guardian_sets;
 global int chain_id;
 global int governance_chain_id;
 global int governance_contract;
-global cell consumed_governance_actions;
+global cell consumed_governance_actions; ;; Dictionary of int (0 as false, -1 as true), keyed by int (hash of the governance action)
 global cell governance_data_source; ;; Single DataSource tuple
 global int last_executed_governance_sequence; ;; u64
 global int governance_data_source_index; ;; u32

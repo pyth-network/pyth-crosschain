@@ -245,4 +245,41 @@ describe("PythTest", () => {
     expect(updatedPrice.price).not.toBe(Number(PRICE.price)); // Since we updated the price, it should not be the same as the initial price
     expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
   });
+
+  it("should return the correct chain ID", async () => {
+    await deployContract();
+
+    const result = await pythTest.getChainId();
+    expect(result).toEqual(1);
+  });
+
+  it("should return the correct last executed governance sequence", async () => {
+    await deployContract();
+
+    const result = await pythTest.getLastExecutedGovernanceSequence();
+    expect(result).toEqual(0); // Initial value should be 0
+
+    // TODO: add more tests for other governance sequences
+  });
+
+  it("should return the correct governance data source index", async () => {
+    await deployContract();
+
+    const result = await pythTest.getGovernanceDataSourceIndex();
+    expect(result).toEqual(0); // Initial value should be 0
+
+    // TODO: add more tests for other governance data source index
+  });
+
+  it("should return an empty cell for governance data source", async () => {
+    await deployContract();
+
+    const result = await pythTest.getGovernanceDataSource();
+    // assert that the result is an empty cell initally
+    expect(result).toBeDefined();
+    expect(result.bits.length).toBe(0);
+    expect(result.refs.length).toBe(0);
+
+    // TODO: add more tests for other governance data source
+  });
 });

@@ -1,0 +1,2 @@
+const int OP_UPDATE_GUARDIAN_SET = 1;
+const int OP_UPDATE_PRICE_FEEDS = 2;
