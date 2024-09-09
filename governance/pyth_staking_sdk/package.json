@@ -8,14 +8,14 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "echo disabled # pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
+    "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
     "test:lint": "jest --selectProjects lint",
     "test:types": "tsc",
-    "test:integration": "jest --selectProjects integration"
+    "test:integration": "echo disabled # jest --selectProjects integration"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "^3.0.0",

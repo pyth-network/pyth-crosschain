@@ -1,6 +1,7 @@
 "use client";
 
 import type { StakeAccountPositions } from "@pythnetwork/staking-sdk";
+import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   type ComponentProps,
@@ -25,21 +26,36 @@ export enum StateType {
 
 const State = {
   Initialized: () => ({ type: StateType.Initialized as const }),
+
   NoWallet: () => ({ type: StateType.NoWallet as const }),
+
   Loading: () => ({ type: StateType.Loading as const }),
-  NoAccounts: () => ({ type: StateType.NoAccounts as const }),
+
+  NoAccounts: (client: PythStakingClient) => ({
+    type: StateType.NoAccounts as const,
+    client,
+  }),
+
   Loaded: (
+    client: PythStakingClient,
     account: StakeAccountPositions,
     allAccounts: [StakeAccountPositions, ...StakeAccountPositions[]],
     selectAccount: (account: StakeAccountPositions) => void,
   ) => ({
     type: StateType.Loaded as const,
+    client,
     account,
     allAccounts,
     selectAccount,
   }),
-  ErrorState: (error: LoadStakeAccountError, reset: () => void) => ({
+
+  ErrorState: (
+    client: PythStakingClient,
+    error: LoadStakeAccountError,
+    reset: () => void,
+  ) => ({
     type: StateType.Error as const,
+    client,
     error,
     reset,
   }),
@@ -67,7 +83,7 @@ const useStakeAccountState = () => {
     (account: StakeAccountPositions) => {
       setState((cur) =>
         cur.type === StateType.Loaded
-          ? State.Loaded(account, cur.allAccounts, setAccount)
+          ? State.Loaded(cur.client, account, cur.allAccounts, setAccount)
           : cur,
       );
     },
@@ -85,27 +101,34 @@ const useStakeAccountState = () => {
       ) {
         throw new WalletConnectedButInvalidError();
       }
-      getStakeAccounts(connection, {
-        publicKey: wallet.publicKey,
-        signAllTransactions: wallet.signAllTransactions,
-        signTransaction: wallet.signTransaction,
-      })
+      const client = new PythStakingClient({
+        connection,
+        wallet: {
+          publicKey: wallet.publicKey,
+          signAllTransactions: wallet.signAllTransactions,
+          signTransaction: wallet.signTransaction,
+        },
+      });
+      getStakeAccounts(client)
         .then((accounts) => {
           const [firstAccount, ...otherAccounts] = accounts;
           if (firstAccount) {
             setState(
               State.Loaded(
+                client,
                 firstAccount,
                 [firstAccount, ...otherAccounts],
                 setAccount,
               ),
             );
           } else {
-            setState(State.NoAccounts());
+            setState(State.NoAccounts(client));
           }
         })
         .catch((error: unknown) => {
-          setState(State.ErrorState(new LoadStakeAccountError(error), reset));
+          setState(
+            State.ErrorState(client, new LoadStakeAccountError(error), reset),
+          );
         })
         .finally(() => {
           loading.current = false;
@@ -126,6 +149,15 @@ export const useStakeAccount = () => {
     throw new NotInitializedError();
   } else {
     return state;
+  }
+};
+
+export const useSelectedStakeAccount = () => {
+  const state = useStakeAccount();
+  if (state.type === StateType.Loaded) {
+    return state;
+  } else {
+    throw new InvalidStateError();
   }
 };
 
@@ -150,5 +182,14 @@ class WalletConnectedButInvalidError extends Error {
     super(
       "The wallet is connected but is missing a public key or methods to sign transactions!",
     );
+  }
+}
+
+class InvalidStateError extends Error {
+  constructor() {
+    super(
+      "Cannot use `useSelectedStakeAccount` when stake accounts aren't loaded or a stake account isn't selected!  Ensure this hook is only called when a stake account is selected.",
+    );
+    this.name = "InvalidStateError";
   }
 }

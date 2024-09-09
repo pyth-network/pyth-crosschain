@@ -1,4 +1,6 @@
 import { Field, Input, Label } from "@headlessui/react";
+import type { PythStakingClient } from "@pythnetwork/staking-sdk";
+import type { PublicKey } from "@solana/web3.js";
 import {
   type ChangeEvent,
   type ComponentProps,
@@ -8,7 +10,6 @@ import {
   useState,
 } from "react";
 
-import type { Context } from "../../api";
 import { useLogger } from "../../hooks/use-logger";
 import { StateType, useTransfer } from "../../hooks/use-transfer";
 import { stringToTokens, tokensToString } from "../../tokens";
@@ -28,7 +29,11 @@ type Props = {
     | ReactNode
     | ReactNode[]
     | undefined;
-  transfer: (context: Context, amount: bigint) => Promise<void>;
+  transfer: (
+    client: PythStakingClient,
+    stakingAccount: PublicKey,
+    amount: bigint,
+  ) => Promise<void>;
   className?: string | undefined;
   secondary?: boolean | undefined;
   small?: boolean | undefined;
@@ -51,9 +56,9 @@ export const TransferButton = ({
   const { amountInput, setAmount, updateAmount, resetAmount, amount } =
     useAmountInput(max);
   const doTransfer = useCallback(
-    (context: Context) =>
+    (client: PythStakingClient, stakingAccount: PublicKey) =>
       amount.type === AmountType.Valid
-        ? transfer(context, amount.amount)
+        ? transfer(client, stakingAccount, amount.amount)
         : Promise.reject(new InvalidAmountError()),
     [amount, transfer],
   );

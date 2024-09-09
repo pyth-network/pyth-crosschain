@@ -12,7 +12,7 @@ const demand = (key: string): string => {
   if (value && value !== "") {
     return value;
   } else {
-    throw new Error(`Missing environment variable ${key}!`);
+    throw new MissingEnvironmentError(key);
   }
 };
 
@@ -36,3 +36,10 @@ export const WALLETCONNECT_PROJECT_ID = demandInProduction(
 );
 export const RPC = process.env.RPC;
 export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
+
+class MissingEnvironmentError extends Error {
+  constructor(name: string) {
+    super(`Missing environment variable: ${name}!`);
+    this.name = "MissingEnvironmentError";
+  }
+}

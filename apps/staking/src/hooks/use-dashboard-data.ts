@@ -1,23 +1,22 @@
+import { PublicKey } from "@solana/web3.js";
 import { useCallback } from "react";
 import useSWR from "swr";
 
-import { useApiContext } from "./use-api-context";
+import { useSelectedStakeAccount } from "./use-stake-account";
 import { loadData } from "../api";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const getCacheKey = ({
-  stakeAccount,
-}: ReturnType<typeof useApiContext>) => stakeAccount.address.toBase58();
+export const getCacheKey = (stakeAccount: PublicKey) => stakeAccount.toBase58();
 
 export const useDashboardData = () => {
-  const apiContext = useApiContext();
+  const { client, account } = useSelectedStakeAccount();
 
   const { data, isLoading, mutate, ...rest } = useSWR(
-    getCacheKey(apiContext),
-    () => loadData(apiContext),
+    getCacheKey(account.address),
+    () => loadData(client, account),
     {
       refreshInterval: REFRESH_INTERVAL,
     },
