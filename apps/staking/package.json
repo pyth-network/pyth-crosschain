@@ -24,7 +24,6 @@
     "@amplitude/analytics-browser": "^2.9.3",
     "@amplitude/plugin-autocapture-browser": "^0.9.0",
     "@bonfida/spl-name-service": "^3.0.0",
-    "@headlessui/react": "^2.1.2",
     "@heroicons/react": "^2.1.4",
     "@next/third-parties": "^14.2.5",
     "@pythnetwork/staking-sdk": "workspace:*",
@@ -42,8 +41,7 @@
     "react-aria-components": "^1.3.3",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7",
-    "swr": "^2.2.5",
-    "zod": "^3.23.8"
+    "swr": "^2.2.5"
   },
   "devDependencies": {
     "@axe-core/react": "^4.9.1",

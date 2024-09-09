@@ -1,5 +1,5 @@
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { type ComponentProps, useMemo } from "react";
+import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
 import { AccountSummary } from "../AccountSummary";
 import { Governance } from "../Governance";
@@ -117,54 +117,55 @@ export const Dashboard = ({
         availableRewards={availableRewards}
         expiringRewards={expiringRewards}
       />
-      <TabGroup as="section">
-        <TabList className="flex w-full flex-row text-sm font-medium sm:text-base">
-          <DashboardTab>Overview</DashboardTab>
-          <DashboardTab>Governance</DashboardTab>
-          <DashboardTab>
+      <Tabs>
+        <TabList
+          className="mb-8 flex w-full flex-row text-sm font-medium sm:text-base"
+          aria-label="Programs"
+        >
+          <DashboardTab id={TabIds.Overview}>Overview</DashboardTab>
+          <DashboardTab id={TabIds.Governance}>Governance</DashboardTab>
+          <DashboardTab id={TabIds.IntegrityStaking}>
             <span className="sm:hidden">Integrity Staking</span>
             <span className="hidden sm:inline">
               Oracle Integrity Staking (OIS)
             </span>
           </DashboardTab>
         </TabList>
-        <TabPanels className="mt-8">
-          <DashboardTabPanel>
-            <section className="py-20">
-              <p className="text-center">
-                This is an overview of the staking programs
-              </p>
-            </section>
-          </DashboardTabPanel>
-          <DashboardTabPanel>
-            <Governance
-              availableToStake={availableToStakeGovernance}
-              warmup={governance.warmup}
-              staked={governance.staked}
-              cooldown={governance.cooldown}
-              cooldown2={governance.cooldown2}
-            />
-          </DashboardTabPanel>
-          <DashboardTabPanel>
-            <OracleIntegrityStaking
-              availableToStake={availableToStakeIntegrity}
-              locked={locked}
-              warmup={integrityStakingWarmup}
-              staked={integrityStakingStaked}
-              cooldown={integrityStakingCooldown}
-              cooldown2={integrityStakingCooldown2}
-              publishers={integrityStakingPublishers}
-            />
-          </DashboardTabPanel>
-        </TabPanels>
-      </TabGroup>
+        <DashboardTabPanel id={TabIds.Overview}>
+          <section className="py-20">
+            <p className="text-center">
+              This is an overview of the staking programs
+            </p>
+          </section>
+        </DashboardTabPanel>
+        <DashboardTabPanel id={TabIds.Governance}>
+          <Governance
+            availableToStake={availableToStakeGovernance}
+            warmup={governance.warmup}
+            staked={governance.staked}
+            cooldown={governance.cooldown}
+            cooldown2={governance.cooldown2}
+          />
+        </DashboardTabPanel>
+        <DashboardTabPanel id={TabIds.IntegrityStaking}>
+          <OracleIntegrityStaking
+            availableToStake={availableToStakeIntegrity}
+            locked={locked}
+            warmup={integrityStakingWarmup}
+            staked={integrityStakingStaked}
+            cooldown={integrityStakingCooldown}
+            cooldown2={integrityStakingCooldown2}
+            publishers={integrityStakingPublishers}
+          />
+        </DashboardTabPanel>
+      </Tabs>
     </div>
   );
 };
 
 const DashboardTab = Styled(
   Tab,
-  "grow basis-0 border-b border-neutral-600/50 px-4 py-2 focus-visible:outline-none data-[selected]:cursor-default data-[selected]:border-pythpurple-400 data-[selected]:data-[hover]:bg-transparent data-[hover]:text-pythpurple-400 data-[selected]:text-pythpurple-400 data-[focus]:outline-none data-[focus]:ring-1 data-[focus]:ring-pythpurple-400",
+  "grow basis-0 border-b border-neutral-600/50 px-4 py-2 focus-visible:outline-none selected:cursor-default selected:border-pythpurple-400 selected:hover:bg-transparent hover:text-pythpurple-400 selected:text-pythpurple-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 cursor-pointer text-center",
 );
 
 const DashboardTabPanel = Styled(
@@ -187,3 +188,9 @@ const useIntegrityStakingSum = (
 
 // eslint-disable-next-line unicorn/no-array-reduce
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
+
+enum TabIds {
+  Overview,
+  Governance,
+  IntegrityStaking,
+}

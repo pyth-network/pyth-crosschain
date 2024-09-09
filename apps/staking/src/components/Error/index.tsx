@@ -27,7 +27,7 @@ export const Error = ({ error, reset }: Props) => {
       <strong className="mb-8 border border-pythpurple-400/20 bg-pythpurple-600/50 px-1 py-0.5 text-sm opacity-50">
         {error.digest ?? error.message}
       </strong>
-      {reset && <Button onClick={reset}>Reset</Button>}
+      {reset && <Button onPress={reset}>Reset</Button>}
     </main>
   );
 };

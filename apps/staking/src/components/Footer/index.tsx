@@ -7,6 +7,7 @@ import LinkedIn from "./linkedin.svg";
 import Telegram from "./telegram.svg";
 import X from "./x.svg";
 import Youtube from "./youtube.svg";
+import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 
 const SOCIAL_LINKS = [
@@ -46,7 +47,7 @@ export const Footer = ({
         <div>© 2024 Pyth Data Association</div>
         <div className="relative -right-3 flex h-full items-center">
           {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
-            <a
+            <Link
               target="_blank"
               href={href}
               key={name}
@@ -55,7 +56,7 @@ export const Footer = ({
             >
               <Icon className="size-4" />
               <span className="sr-only">{name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </MaxWidth>

@@ -1,11 +1,15 @@
 import Image from "next/image";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useCallback } from "react";
+import {
+  DialogTrigger,
+  Button as ReactAriaButton,
+} from "react-aria-components";
 
 import background from "./background.png";
 import { deposit, withdraw, claim } from "../../api";
 import { StateType, useTransfer } from "../../hooks/use-transfer";
 import { Button } from "../Button";
-import { Modal, ModalButton, ModalPanel } from "../Modal";
+import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
 
@@ -71,14 +75,11 @@ export const AccountSummary = ({
               <Tokens>{locked}</Tokens>
               <div>locked included</div>
             </div>
-            <Modal>
-              <ModalButton
-                as="button"
-                className="mt-1 text-sm text-pythpurple-400 hover:underline"
-              >
+            <DialogTrigger>
+              <ReactAriaButton className="mt-1 text-sm text-pythpurple-400 hover:underline focus:outline-none focus-visible:underline focus-visible:outline-none">
                 Show Unlock Schedule
-              </ModalButton>
-              <ModalPanel
+              </ReactAriaButton>
+              <ModalDialog
                 title="Unlock Schedule"
                 description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
               >
@@ -104,8 +105,8 @@ export const AccountSummary = ({
                     </tbody>
                   </table>
                 </div>
-              </ModalPanel>
-            </Modal>
+              </ModalDialog>
+            </DialogTrigger>
           </>
         )}
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
@@ -124,13 +125,13 @@ export const AccountSummary = ({
           description="The amount of unlocked tokens that are not staked in either program"
           action={
             <TransferButton
-              small
-              secondary
+              size="small"
+              variant="secondary"
               actionDescription="Move funds from your account back to your wallet"
               actionName="Withdraw"
               max={availableToWithdraw}
               transfer={withdraw}
-              disabled={availableToWithdraw === 0n}
+              isDisabled={availableToWithdraw === 0n}
             />
           }
         />
@@ -138,7 +139,7 @@ export const AccountSummary = ({
           name="Available Rewards"
           amount={availableRewards}
           description="Rewards you have earned from OIS"
-          action={<ClaimButton disabled={availableRewards === 0n} />}
+          action={<ClaimButton isDisabled={availableRewards === 0n} />}
           {...(expiringRewards !== undefined &&
             expiringRewards.amount > 0n && {
               warning: (
@@ -194,13 +195,19 @@ const ClaimButton = (
 ) => {
   const { state, execute } = useTransfer(claim);
 
+  const doClaim = useCallback(() => {
+    execute().catch(() => {
+      /* TODO figure out a better UI treatment for when claim fails */
+    });
+  }, [execute]);
+
   return (
     <Button
-      small
-      secondary
-      onClick={execute}
-      disabled={state.type !== StateType.Base}
-      loading={state.type === StateType.Submitting}
+      size="small"
+      variant="secondary"
+      onPress={doClaim}
+      isDisabled={state.type !== StateType.Base}
+      isLoading={state.type === StateType.Submitting}
       {...props}
     >
       Claim

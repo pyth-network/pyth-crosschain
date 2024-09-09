@@ -5,6 +5,7 @@ import { useSWRConfig } from "swr";
 
 import { getCacheKey as getAccountHistoryCacheKey } from "./use-account-history";
 import { getCacheKey as getDashboardDataCacheKey } from "./use-dashboard-data";
+import { useLogger } from "./use-logger";
 import { useSelectedStakeAccount } from "./use-stake-account";
 
 export const useTransfer = (
@@ -14,6 +15,7 @@ export const useTransfer = (
   ) => Promise<void>,
 ) => {
   const { client, account } = useSelectedStakeAccount();
+  const logger = useLogger();
   const [state, setState] = useState<State>(State.Base());
   const { mutate } = useSWRConfig();
 
@@ -33,10 +35,11 @@ export const useTransfer = (
       ]);
       setState(State.Complete());
     } catch (error: unknown) {
+      logger.error(error);
       setState(State.ErrorState(error));
       throw error;
     }
-  }, [state, client, account.address, transfer, setState, mutate]);
+  }, [state, client, account.address, transfer, setState, mutate, logger]);
 
   return { state, execute };
 };
