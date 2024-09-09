@@ -8,6 +8,7 @@ import {
   Dictionary,
   Sender,
   SendMode,
+  toNano,
 } from "@ton/core";
 import { createCellChain } from "../tests/utils";
 import {
@@ -178,14 +179,6 @@ export class WormholeTest implements Contract {
     return result.stack.readNumber();
   }
 
-  async getUpdateGuardianSet(provider: ContractProvider, vm: Buffer) {
-    const result = await provider.get("test_update_guardian_set", [
-      { type: "slice", cell: createCellChain(vm) },
-    ]);
-
-    return result.stack.readNumber();
-  }
-
   async getGuardianSet(provider: ContractProvider, index: number) {
     const result = await provider.get("test_get_guardian_set", [
       { type: "int", value: BigInt(index) },
@@ -200,5 +193,48 @@ export class WormholeTest implements Contract {
       keys,
       keyCount,
     };
+  }
+
+  async getGovernanceChainId(provider: ContractProvider) {
+    const result = await provider.get("test_get_governance_chain_id", []);
+    return result.stack.readNumber();
+  }
+
+  async getChainId(provider: ContractProvider) {
+    const result = await provider.get("test_get_chain_id", []);
+    return result.stack.readNumber();
+  }
+
+  async getGovernanceContract(provider: ContractProvider) {
+    const result = await provider.get("test_get_governance_contract", []);
+    const bigNumber = result.stack.readBigNumber();
+    return bigNumber.toString(16).padStart(64, "0");
+  }
+
+  async getGovernanceActionIsConsumed(
+    provider: ContractProvider,
+    hash: bigint
+  ) {
+    const result = await provider.get("test_governance_action_is_consumed", [
+      { type: "int", value: hash },
+    ]);
+    return result.stack.readBoolean();
+  }
+
+  async sendUpdateGuardianSet(
+    provider: ContractProvider,
+    via: Sender,
+    vm: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
+      .storeRef(createCellChain(vm))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
   }
 }

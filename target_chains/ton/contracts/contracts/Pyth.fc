@@ -50,6 +50,14 @@ slice read_and_verify_header(slice data) {
     return (price_id, price, conf, expo, publish_time, prev_publish_time, ema_price, ema_conf, cs);
 }
 
+(int, int, int, int) parse_price(slice price_feed) {
+    int price = price_feed~load_int(64);
+    int conf = price_feed~load_uint(64);
+    int expo = price_feed~load_int(32);
+    int publish_time = price_feed~load_uint(64);
+    return (price, conf, expo, publish_time);
+}
+
 (int) get_update_fee(slice data) method_id {
     load_data();
     slice cs = read_and_verify_header(data);
@@ -59,13 +67,19 @@ slice read_and_verify_header(slice data) {
     return single_update_fee * num_updates;
 }
 
+int get_governance_data_source_index() method_id {
+    load_data();
+    return governance_data_source_index;
+}
 
-(int, int, int, int) parse_price(slice price_feed) {
-    int price = price_feed~load_int(64);
-    int conf = price_feed~load_uint(64);
-    int expo = price_feed~load_int(32);
-    int publish_time = price_feed~load_uint(64);
-    return (price, conf, expo, publish_time);
+cell get_governance_data_source() method_id {
+    load_data();
+    return governance_data_source;
+}
+
+int get_last_executed_governance_sequence() method_id {
+    load_data();
+    return last_executed_governance_sequence;
 }
 
 (int, int, int, int) get_price_unsafe(int price_feed_id) method_id {
@@ -103,6 +117,13 @@ slice read_and_verify_header(slice data) {
     return (price, conf, expo, publish_time);
 }
 
+(int, int) parse_data_source(cell data_source) {
+    slice ds = data_source.begin_parse();
+    int emitter_chain = ds~load_uint(16);
+    int emitter_address = ds~load_uint(256);
+    return (emitter_chain, emitter_address);
+}
+
 () update_price_feeds(int msg_value, slice data) impure {
     load_data();
     slice cs = read_and_verify_header(data);
@@ -131,7 +152,7 @@ slice read_and_verify_header(slice data) {
     (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
     throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
     int valid = value~load_int(1);
-    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, (valid == -1));
+    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
 
 
     int root_digest = parse_wormhole_payload(payload);
@@ -165,4 +186,8 @@ slice read_and_verify_header(slice data) {
     throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
 
     store_data();
+}
+
+() execute_governance_action(slice in_msg_body) impure {
+    ;; TODO: Implement
 }
