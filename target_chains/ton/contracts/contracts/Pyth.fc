@@ -125,6 +125,20 @@ int get_last_executed_governance_sequence() method_id {
     return (emitter_chain, emitter_address);
 }
 
+int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
+    int accumulator_wormhole_magic = payload~load_uint(32);
+    throw_unless(ERROR_INVALID_MAGIC, accumulator_wormhole_magic == ACCUMULATOR_WORMHOLE_MAGIC);
+
+    int update_type = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
+
+    payload~load_uint(64);  ;; Skip slot
+    payload~load_uint(32);  ;; Skip ring_size
+
+    return payload~load_uint(160);  ;; Return root_digest
+}
+
+
 () update_price_feeds(int msg_value, slice data) impure {
     load_data();
     slice cs = read_and_verify_header(data);
@@ -156,7 +170,7 @@ int get_last_executed_governance_sequence() method_id {
     throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
 
 
-    int root_digest = parse_wormhole_payload(payload);
+    int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
     repeat(num_updates) {
         (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
