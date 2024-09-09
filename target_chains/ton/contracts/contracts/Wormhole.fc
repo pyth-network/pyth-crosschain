@@ -186,19 +186,6 @@ int governance_action_is_consumed(int hash) method_id {
     );
 }
 
-int parse_wormhole_payload(slice payload) impure {
-    int accumulator_wormhole_magic = payload~load_uint(32);
-    throw_unless(ERROR_INVALID_MAGIC, accumulator_wormhole_magic == ACCUMULATOR_WORMHOLE_MAGIC);
-
-    int update_type = payload~load_uint(8);
-    throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
-
-    payload~load_uint(64);  ;; Skip slot
-    payload~load_uint(32);  ;; Skip ring_size
-
-    return payload~load_uint(160);  ;; Return root_digest
-}
-
 (int, int, int, cell, int) parse_encoded_upgrade(int current_guardian_set_index, slice payload) impure {
     int module = payload~load_uint(256);
     throw_unless(ERROR_INVALID_MODULE, module == UPGRADE_MODULE);
