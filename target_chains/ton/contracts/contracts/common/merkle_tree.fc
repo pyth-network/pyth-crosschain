@@ -4,14 +4,6 @@
 const int MERKLE_LEAF_PREFIX = 0;
 const int MERKLE_NODE_PREFIX = 1;
 
-int to_u160(int value) {
-    ;; (1 << 160) creates a number with only the 161st bit set to 1 and all other bits set to 0.
-    ;; Subtracting 1 from this number flips all the bits below the 161st bit to 1, creating a mask of 160 1's.
-    ;; Finally, the & operation with this mask keeps only the 160 least significant bits of the input value and sets all other bits to 0.
-    int mask = (1 << 160) - 1;
-    return value & mask;
-}
-
 int leaf_hash(slice message) {
     int hash = keccak256_slice(begin_cell()
         .store_uint(MERKLE_LEAF_PREFIX, 8)
@@ -25,8 +17,8 @@ int node_hash(int a, int b) {
     int max_value = max(a, b);
     int hash = keccak256_slice(begin_cell()
         .store_uint(MERKLE_NODE_PREFIX, 8)
-        .store_uint(to_u160(min_value), 160)
-        .store_uint(to_u160(max_value), 160)
+        .store_uint(min_value, 160)
+        .store_uint(max_value, 160)
     .end_cell().begin_parse());
     return hash >> 96;
 }
@@ -37,16 +29,9 @@ slice read_and_verify_proof(int root_digest, slice message, slice cs) impure {
 
     repeat(proof_size) {
         builder sibling_digest = begin_cell();
-        int bits_loaded = 0;
-        while (bits_loaded < 160) {
-            int bits_to_load = min(cs.slice_bits(), 160 - bits_loaded);
-            sibling_digest = sibling_digest.store_slice(cs~load_bits(bits_to_load));
-            bits_loaded += bits_to_load;
-            if (bits_loaded < 160) {
-                throw_unless(ERROR_INVALID_PROOF_SIZE, ~ cs.slice_refs_empty?());
-                cs = cs~load_ref().begin_parse();
-            }
-        }
+        (cell digest_cell, cs) = read_and_store_large_data(cs, 160);
+        slice digest_slice = digest_cell.begin_parse();
+        sibling_digest = sibling_digest.store_slice(digest_slice);
         slice sibling_digest_slice = sibling_digest.end_cell().begin_parse();
         int sibling_digest_int = sibling_digest_slice~load_uint(160);
         current_hash = node_hash(current_hash, sibling_digest_int);
