@@ -1,12 +1,21 @@
 import forms from "@tailwindcss/forms";
 import type { Config } from "tailwindcss";
+import tailwindPlugin from "tailwindcss/plugin";
 import animate from "tailwindcss-animate";
 import reactAria from "tailwindcss-react-aria-components";
 
 const tailwindConfig = {
   darkMode: "class",
   content: ["src/components/**/*.{ts,tsx}", "src/markdown-components.tsx"],
-  plugins: [forms, animate, reactAria],
+  plugins: [
+    forms,
+    animate,
+    reactAria,
+    tailwindPlugin(({ addVariant }) => {
+      addVariant("search-cancel", "&::-webkit-search-cancel-button");
+      addVariant("search-decoration", "&::-webkit-search-decoration");
+    }),
+  ],
   theme: {
     extend: {
       backgroundImage: {

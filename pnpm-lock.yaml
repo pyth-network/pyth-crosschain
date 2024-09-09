@@ -1573,49 +1573,6 @@ importers:
         specifier: ^1.0.0-rc.1
         version: 1.1.3(prettier@2.8.8)
 
-  target_chains/ethereum/examples/coin_flip/app:
-    dependencies:
-      '@pythnetwork/pyth-evm-js':
-        specifier: workspace:*
-        version: link:../../../sdk/js
-      '@pythnetwork/pyth-sdk-solidity':
-        specifier: workspace:*
-        version: link:../../../sdk/solidity
-      '@truffle/hdwallet-provider':
-        specifier: ^2.1.15
-        version: 2.1.15(@babel/core@7.24.7)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@types/jest':
-        specifier: ^27.5.2
-        version: 27.5.2
-      '@types/node':
-        specifier: ^16.11.64
-        version: 16.18.60
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
-      ethers:
-        specifier: ^5.7.2
-        version: 5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      prettier:
-        specifier: ^2.7.1
-        version: 2.8.8
-      typescript:
-        specifier: ^4.8.4
-        version: 4.9.5
-      web3:
-        specifier: ^1.8.1
-        version: 1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      yargs:
-        specifier: ^17.7.2
-        version: 17.7.2
-    devDependencies:
-      '@types/yargs':
-        specifier: ^17.0.32
-        version: 17.0.32
-      ts-node:
-        specifier: ^10.9.1
-        version: 10.9.1(@types/node@16.18.60)(typescript@4.9.5)
-
   target_chains/ethereum/sdk/js:
     dependencies:
       '@pythnetwork/price-service-client':
@@ -8459,9 +8416,6 @@ packages:
 
   '@types/node@16.18.11':
     resolution: {integrity: sha512-3oJbGBUWuS6ahSnEq1eN2XrCyf4YsWI8OyCvo7c64zQJNplk3mO84t53o8lfTk+2ji59g5ycfc6qQ3fdHliHuA==}
-
-  '@types/node@16.18.60':
-    resolution: {integrity: sha512-ZUGPWx5vKfN+G2/yN7pcSNLkIkXEvlwNaJEd4e0ppX7W2S8XAkdc/37hM4OUNJB9sa0p12AOvGvxL4JCPiz9DA==}
 
   '@types/node@18.11.18':
     resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
@@ -33332,27 +33286,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@truffle/hdwallet-provider@2.1.15(@babel/core@7.24.7)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@ethereumjs/common': 2.6.5
-      '@ethereumjs/tx': 3.5.2
-      '@metamask/eth-sig-util': 4.0.1
-      '@truffle/hdwallet': 0.1.4
-      '@types/ethereum-protocol': 1.0.2
-      '@types/web3': 1.0.20
-      '@types/web3-provider-engine': 14.0.1
-      ethereum-cryptography: 1.1.2
-      ethereum-protocol: 1.0.1
-      ethereumjs-util: 7.1.5
-      web3: 1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      web3-provider-engine: 16.0.3(@babel/core@7.24.7)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-
   '@truffle/hdwallet-provider@2.1.5(@babel/core@7.24.7)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@ethereumjs/common': 2.6.5
@@ -33804,8 +33737,6 @@ snapshots:
   '@types/node@16.18.101': {}
 
   '@types/node@16.18.11': {}
-
-  '@types/node@16.18.60': {}
 
   '@types/node@18.11.18': {}
 
@@ -50529,24 +50460,6 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
-  ts-node@10.9.1(@types/node@16.18.60)(typescript@4.9.5):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.9
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.3
-      '@types/node': 16.18.60
-      acorn: 8.11.3
-      acorn-walk: 8.2.0
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 4.9.5
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-
   ts-node@10.9.1(@types/node@22.5.1)(typescript@4.9.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -51601,16 +51514,6 @@ snapshots:
       '@types/node': 12.20.55
       got: 12.1.0
       swarm-js: 0.1.42(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  web3-bzz@1.10.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
-    dependencies:
-      '@types/node': 12.20.55
-      got: 12.1.0
-      swarm-js: 0.1.42(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -52676,21 +52579,6 @@ snapshots:
   web3@1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3):
     dependencies:
       web3-bzz: 1.10.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-      web3-core: 1.10.0(encoding@0.1.13)
-      web3-eth: 1.10.0(encoding@0.1.13)
-      web3-eth-personal: 1.10.0(encoding@0.1.13)
-      web3-net: 1.10.0(encoding@0.1.13)
-      web3-shh: 1.10.0(encoding@0.1.13)
-      web3-utils: 1.10.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  web3@1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10):
-    dependencies:
-      web3-bzz: 1.10.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       web3-core: 1.10.0(encoding@0.1.13)
       web3-eth: 1.10.0(encoding@0.1.13)
       web3-eth-personal: 1.10.0(encoding@0.1.13)
