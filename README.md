@@ -12,7 +12,7 @@ Within this monorepo you will find the following subprojects:
 This directory contains on-chain contracts and SDKs for all of the various
 blockchain runtimes that Pyth supports. Each subdirectory corresponds to a
 blockchain runtime. Inside each subdirectory, there are subfolders for
-contracts, SDKs, and examples.
+contracts and SDKs.
 
 ## Hermes
 
@@ -27,7 +27,7 @@ The [`price_service/client`](./price_service/client/) directory provides an SDK 
 However, most users will interact with the price service via a chain-specific SDK
 
 For a guide on utilising this service in your project, see the chain-specific SDK
-and examples for your blockchain runtime in the `target_chains` directory.
+and [examples](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds) for your blockchain runtime in the `target_chains` directory.
 
 ## Fortuna
 

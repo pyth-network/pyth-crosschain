@@ -1,7 +1,0 @@
-[profile.default]
-solc = '0.8.4'
-src = 'src'
-out = 'out'
-libs = ['lib', '../../../entropy_sdk/solidity']
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
