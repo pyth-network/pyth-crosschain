@@ -7,6 +7,10 @@ members = [
     "common_test_utils",
 ]
 
+exclude = [
+    "programs/pyth-price-publisher"
+]
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

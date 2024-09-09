@@ -1,0 +1,30 @@
+[package]
+name = "pyth-price-publisher"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+solana-program = ["dep:solana-program", "cc", "jobserver"]
+
+[dependencies]
+bytemuck = { version = "1.13.0", features = ["derive"] }
+solana-program = { version = "=1.14.17", optional = true }
+thiserror = "1.0.40"
+
+# Select older packages which are compatible with solana's Rust toolchain
+cc = { version = "=1.0.67", optional = true }
+jobserver =  { version = "=0.1.20", optional = true }
+
+[dev-dependencies]
+solana-program-test = "=1.14.17"
+solana-sdk = "=1.14.17"
+tokio = "*"
+
+[profile.release]
+opt-level     = "z"
+strip         = true
+lto           = true
+codegen-units = 1
