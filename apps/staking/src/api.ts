@@ -164,6 +164,7 @@ export const loadData = async (
     ownerAtaAccount,
     unlockSchedule,
     poolConfig,
+    claimableRewards,
     currentEpoch,
     publisherRankingsResponse,
     publisherCaps,
@@ -173,6 +174,7 @@ export const loadData = async (
     client.getOwnerPythAtaAccount(),
     client.getUnlockSchedule(stakeAccount.address),
     client.getPoolConfigAccount(),
+    client.getClaimableRewards(stakeAccount.address),
     getCurrentEpoch(client.connection),
     fetch("/api/publishers-ranking"),
     hermesClient.getLatestPublisherCaps({
@@ -213,7 +215,7 @@ export const loadData = async (
 
   return {
     lastSlash: undefined, // TODO
-    availableRewards: 0n, // TODO
+    availableRewards: claimableRewards,
     expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
     yieldRate: poolConfig.y,

@@ -6,7 +6,7 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
 import {
   getConfigAddress,
@@ -410,14 +410,22 @@ export class PythStakingClient {
     });
   }
 
-  public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
-    // TODO: optimize to only send transactions for publishers that have positive rewards
+  async getAdvanceDelegationRecordInstructions(stakeAccountPositions: PublicKey) {
     const poolData = await this.getPoolDataAccount();
-    const publishers = extractPublisherData(poolData);
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const allPublishers = extractPublisherData(poolData);
+    const publishers = allPublishers.filter(({ pubkey }) =>
+      stakeAccountPositionsData.data.positions.some(
+        ({ targetWithParameters }) =>
+          targetWithParameters.integrityPool?.publisher.equals(pubkey),
+      ),
+    );
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
-    const instructions = await Promise.all(
+    return Promise.all(
       publishers.map(({ pubkey, stakeAccount }) =>
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
@@ -436,7 +444,21 @@ export class PythStakingClient {
           .instruction(),
       ),
     );
+  }
+
+  public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
+    const instructions = await this.getAdvanceDelegationRecordInstructions(stakeAccountPositions);
 
     return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
+  public async getClaimableRewards(stakeAccountPositions: PublicKey) {
+    const instructions = await this.getAdvanceDelegationRecordInstructions(stakeAccountPositions);
+
+    for (const instruction of instructions) {
+      await this.connection.simulateTransaction(new Transaction().add(instruction));
+    }
+
+    return 1n;
   }
 }
