@@ -250,11 +250,12 @@ int apply_decimal_expo(int value, int expo) {
     return result;
 }
 
-() execute_set_fee(slice payload) impure {
-    int value = payload~load_uint(64);
-    int expo = payload~load_uint(64);
-    int new_fee = apply_decimal_expo(value, expo);
-    single_update_fee = new_fee;
+() execute_upgrade_contract(slice payload) impure {
+    ;; TODO: Implement
+}
+
+() execute_authorize_governance_data_source_transfer(slice payload) impure {
+    ;; TODO: Implement
 }
 
 () execute_set_data_sources(slice payload) impure {
@@ -278,11 +279,34 @@ int apply_decimal_expo(int value, int expo) {
     is_valid_data_source = new_data_sources;
 }
 
+() execute_set_fee(slice payload) impure {
+    int value = payload~load_uint(64);
+    int expo = payload~load_uint(64);
+    int new_fee = apply_decimal_expo(value, expo);
+    single_update_fee = new_fee;
+}
+
+() execute_set_valid_period(slice payload) impure {
+    ;; TODO: Implement
+}
+
+() execute_request_governance_data_source_transfer(slice payload) impure {
+    ;; TODO: Implement
+}
+
 () execute_governance_payload(int action, slice payload) impure {
-    if (action == SET_DATA_SOURCES) {
+    if (action == UPGRADE_CONTRACT) {
+        execute_upgrade_contract(payload);
+    } elseif (action == AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER) {
+        execute_authorize_governance_data_source_transfer(payload);
+    } elseif (action == SET_DATA_SOURCES) {
         execute_set_data_sources(payload);
     } elseif (action == SET_FEE) {
         execute_set_fee(payload);
+    } elseif (action == SET_VALID_PERIOD) {
+        execute_set_valid_period(payload);
+    } elseif (action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER) {
+        execute_request_governance_data_source_transfer(payload);
     } else {
         throw(ERROR_INVALID_GOVERNANCE_ACTION);
     }
