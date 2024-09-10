@@ -47,6 +47,7 @@ type Props = {
   cooldown: bigint;
   cooldown2: bigint;
   publishers: PublisherProps["publisher"][];
+  yieldRate: bigint;
 };
 
 export const OracleIntegrityStaking = ({
@@ -57,6 +58,7 @@ export const OracleIntegrityStaking = ({
   cooldown,
   cooldown2,
   publishers,
+  yieldRate,
 }: Props) => {
   const self = useMemo(
     () => publishers.find((publisher) => publisher.isSelf),
@@ -115,6 +117,7 @@ export const OracleIntegrityStaking = ({
                   availableToStake={availableToStake}
                   publisher={self}
                   totalStaked={staked}
+                  yieldRate={yieldRate}
                 />
               </tbody>
             </table>
@@ -132,6 +135,7 @@ export const OracleIntegrityStaking = ({
           availableToStake={availableToStake}
           publishers={otherPublishers}
           totalStaked={staked}
+          yieldRate={yieldRate}
         />
       </div>
     </ProgramSection>
@@ -143,6 +147,7 @@ type PublisherListProps = {
   availableToStake: bigint;
   totalStaked: bigint;
   publishers: PublisherProps["publisher"][];
+  yieldRate: bigint;
 };
 
 const PublisherList = ({
@@ -150,6 +155,7 @@ const PublisherList = ({
   availableToStake,
   publishers,
   totalStaked,
+  yieldRate,
 }: PublisherListProps) => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({
@@ -173,10 +179,22 @@ const PublisherList = ({
               b.name ?? b.publicKey.toBase58(),
             );
           }
-          case SortField.LastEpochAPY: {
+          case SortField.APY: {
             return (
-              calculateApy(a.poolCapacity, a.poolUtilization, false) -
-              calculateApy(b.poolCapacity, b.poolUtilization, false)
+              calculateApy({
+                isSelf: false,
+                selfStake: a.selfStake,
+                poolCapacity: a.poolCapacity,
+                poolUtilization: a.poolUtilization,
+                yieldRate,
+              }) -
+              calculateApy({
+                isSelf: false,
+                selfStake: b.selfStake,
+                poolCapacity: b.poolCapacity,
+                poolUtilization: b.poolUtilization,
+                yieldRate,
+              })
             );
           }
           case SortField.NumberOfFeeds: {
@@ -197,7 +215,7 @@ const PublisherList = ({
         }
       });
     return sort.descending ? sorted.reverse() : sorted;
-  }, [publishers, search, sort.field, sort.descending, filter]);
+  }, [publishers, search, sort.field, sort.descending, filter, yieldRate]);
 
   const paginatedPublishers = useMemo(
     () =>
@@ -276,11 +294,11 @@ const PublisherList = ({
               Pool
             </SortablePublisherTableHeader>
             <SortablePublisherTableHeader
-              field={SortField.LastEpochAPY}
+              field={SortField.APY}
               sort={sort}
               setSort={updateSort}
             >
-              Last epoch APY
+              APY
             </SortablePublisherTableHeader>
             <PublisherTableHeader>Historical APY</PublisherTableHeader>
             <SortablePublisherTableHeader
@@ -311,6 +329,7 @@ const PublisherList = ({
               availableToStake={availableToStake}
               publisher={publisher}
               totalStaked={totalStaked}
+              yieldRate={yieldRate}
             />
           ))}
         </tbody>
@@ -416,7 +435,6 @@ type PublisherProps = {
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
-    lastApy: number;
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -426,6 +444,7 @@ type PublisherProps = {
         }
       | undefined;
   };
+  yieldRate: bigint;
 };
 
 const Publisher = ({
@@ -433,6 +452,7 @@ const Publisher = ({
   availableToStake,
   totalStaked,
   isSelf,
+  yieldRate,
 }: PublisherProps) => {
   const warmup = useMemo(
     () =>
@@ -518,7 +538,16 @@ const Publisher = ({
           </Meter>
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
-          <div>{publisher.lastApy}%</div>
+          <div>
+            {calculateApy({
+              isSelf: publisher.isSelf,
+              selfStake: publisher.selfStake,
+              poolCapacity: publisher.poolCapacity,
+              poolUtilization: publisher.poolUtilization,
+              yieldRate,
+            })}
+            %
+          </div>
         </PublisherTableCell>
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">
@@ -551,6 +580,8 @@ const Publisher = ({
               publisherKey={publisher.publicKey}
               publisherName={publisher.name}
               isSelf={publisher.isSelf}
+              selfStake={publisher.selfStake}
+              yieldRate={yieldRate}
             />
           </PublisherTableCell>
         )}
@@ -635,6 +666,8 @@ type StakeToPublisherButtonProps = {
   poolCapacity: bigint;
   poolUtilization: bigint;
   isSelf: boolean;
+  selfStake: bigint;
+  yieldRate: bigint;
 };
 
 const StakeToPublisherButton = ({
@@ -644,6 +677,8 @@ const StakeToPublisherButton = ({
   poolUtilization,
   availableToStake,
   isSelf,
+  selfStake,
+  yieldRate,
 }: StakeToPublisherButtonProps) => {
   const delegate = useTransferActionForPublisher(
     delegateIntegrityStaking,
@@ -663,12 +698,25 @@ const StakeToPublisherButton = ({
           <div className="mb-8 flex flex-row items-center justify-between text-sm">
             <div>APY after staking</div>
             <div className="font-medium">
-              {calculateApy(
-                poolCapacity,
-                poolUtilization +
-                  (amount.type === AmountType.Valid ? amount.amount : 0n),
-                isSelf,
-              )}
+              {isSelf
+                ? calculateApy({
+                    isSelf,
+                    selfStake:
+                      selfStake +
+                      (amount.type === AmountType.Valid ? amount.amount : 0n),
+                    poolCapacity,
+                    poolUtilization,
+                    yieldRate,
+                  })
+                : calculateApy({
+                    isSelf,
+                    selfStake,
+                    poolCapacity,
+                    poolUtilization:
+                      poolUtilization +
+                      (amount.type === AmountType.Valid ? amount.amount : 0n),
+                    yieldRate,
+                  })}
               %
             </div>
           </div>
@@ -706,7 +754,7 @@ const hasAnyPositions = ({ positions }: PublisherProps["publisher"]) =>
 enum SortField {
   PublisherName,
   PoolUtilization,
-  LastEpochAPY,
+  APY,
   SelfStake,
   NumberOfFeeds,
   QualityRanking,

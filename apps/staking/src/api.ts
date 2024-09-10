@@ -47,6 +47,7 @@ type Data = {
     cooldown: bigint;
     cooldown2: bigint;
   };
+  yieldRate: bigint;
   integrityStakingPublishers: {
     name: string | undefined;
     publicKey: PublicKey;
@@ -56,7 +57,6 @@ type Data = {
     poolUtilization: bigint;
     numFeeds: number;
     qualityRanking: number;
-    lastApy: number;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -162,19 +162,26 @@ export const loadData = async (
     stakeAccountCustody,
     poolData,
     ownerAtaAccount,
-    currentEpoch,
     unlockSchedule,
+    poolConfig,
+    currentEpoch,
+    publisherRankingsResponse,
+    publisherCaps,
   ] = await Promise.all([
     client.getStakeAccountCustody(stakeAccount.address),
     client.getPoolDataAccount(),
     client.getOwnerPythAtaAccount(),
-    getCurrentEpoch(client.connection),
     client.getUnlockSchedule(stakeAccount.address),
+    client.getPoolConfigAccount(),
+    getCurrentEpoch(client.connection),
+    fetch("/api/publishers-ranking"),
+    hermesClient.getLatestPublisherCaps({
+      parsed: true,
+    }),
   ]);
 
   const publishers = extractPublisherData(poolData);
 
-  const publisherRankingsResponse = await fetch("/api/publishers-ranking");
   const publisherRankings =
     (await publisherRankingsResponse.json()) as PublisherRankings;
 
@@ -197,10 +204,6 @@ export const loadData = async (
       epoch: currentEpoch,
     });
 
-  const publisherCaps = await hermesClient.getLatestPublisherCaps({
-    parsed: true,
-  });
-
   const getPublisherCap = (publisher: PublicKey) =>
     BigInt(
       publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
@@ -213,6 +216,7 @@ export const loadData = async (
     availableRewards: 0n, // TODO
     expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
+    yieldRate: poolConfig.y,
     governance: {
       warmup: filterGovernancePositions(PositionState.LOCKING),
       staked: filterGovernancePositions(PositionState.LOCKED),
@@ -232,7 +236,6 @@ export const loadData = async (
       }));
       return {
         apyHistory,
-        lastApy: apyHistory.at(-1)?.apy ?? 0,
         isSelf:
           publisherData.stakeAccount?.equals(stakeAccount.address) ?? false,
         name: undefined, // TODO
@@ -347,19 +350,39 @@ export const unstakeIntegrityStaking = async (
   throw new NotImplementedError();
 };
 
-export const calculateApy = (
-  poolCapacity: bigint,
-  poolUtilization: bigint,
-  isSelf: boolean,
-) => {
-  const maxApy = isSelf ? 25 : 20;
-  const minApy = isSelf ? 10 : 5;
-  return Math.min(
-    Math.max(
-      maxApy - Number((poolUtilization - poolCapacity) / 100_000_000n),
-      minApy,
-    ),
-    maxApy,
+export const calculateApy = (options: {
+  selfStake: bigint;
+  poolUtilization: bigint;
+  poolCapacity: bigint;
+  yieldRate: bigint;
+  isSelf: boolean;
+}) => {
+  const { selfStake, poolUtilization, poolCapacity, yieldRate, isSelf } =
+    options;
+  const eligibleSelfStake = selfStake > poolCapacity ? poolCapacity : selfStake;
+
+  const apyPercentage = (Number(yieldRate) * 52 * 100) / 1_000_000;
+
+  if (isSelf) {
+    if (selfStake === 0n) {
+      return apyPercentage;
+    }
+    return (apyPercentage * Number(eligibleSelfStake)) / Number(selfStake);
+  }
+
+  const delegatorPoolUtilization = poolUtilization - selfStake;
+  const delegatorPoolCapacity = poolCapacity - eligibleSelfStake;
+  const eligibleStake =
+    delegatorPoolUtilization > delegatorPoolCapacity
+      ? delegatorPoolCapacity
+      : delegatorPoolUtilization;
+
+  if (poolUtilization === selfStake) {
+    return apyPercentage;
+  }
+
+  return (
+    (apyPercentage * Number(eligibleStake)) / Number(delegatorPoolUtilization)
   );
 };
 
