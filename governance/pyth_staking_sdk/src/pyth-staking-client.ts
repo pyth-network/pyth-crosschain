@@ -6,7 +6,7 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 import {
   getConfigAddress,
@@ -14,15 +14,17 @@ import {
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
 } from "./pdas";
-import type {
-  GlobalConfig,
-  PoolConfig,
-  PoolDataAccount,
-  StakeAccountPositions,
+import {
+  PositionState,
+  type GlobalConfig,
+  type PoolConfig,
+  type PoolDataAccount,
+  type StakeAccountPositions,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
+import { getCurrentEpoch } from "./utils/clock";
 import { extractPublisherData } from "./utils/pool";
-import { deserializeStakeAccountPositions } from "./utils/position";
+import { deserializeStakeAccountPositions, getPositionState } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
@@ -208,6 +210,48 @@ export class PythStakingClient {
       .instruction();
 
     return sendTransaction([instruction], this.connection, this.wallet);
+  }
+
+  public async unstakeFromGovernance(
+    stakeAccountPositions: PublicKey,
+    positionState: PositionState.LOCKED | PositionState.LOCKING,
+    amount: bigint,
+  ) {
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const currentEpoch = await getCurrentEpoch(this.connection);
+   
+    let remainingAmount = amount;
+    const instructionPromises: Promise<TransactionInstruction>[] = [];
+
+    const eligiblePositions = stakeAccountPositionsData.data.positions
+    .map((p, i) => ({position: p, index: i}))
+    .reverse()
+    .filter(
+      ({position}) => position.targetWithParameters.voting !== undefined && 
+      positionState === getPositionState(position, currentEpoch))
+
+    for (const {position, index} of eligiblePositions) {
+      if (position.amount < remainingAmount) {
+        instructionPromises.push(
+          this.stakingProgram.methods.closePosition(index, convertBigIntToBN(position.amount), {voting: {}}).accounts({
+            stakeAccountPositions,
+          }).instruction()
+        );
+        remainingAmount -= position.amount;
+      } else {
+        instructionPromises.push(
+          this.stakingProgram.methods.closePosition(index, convertBigIntToBN(remainingAmount), {voting: {}}).accounts({
+            stakeAccountPositions,
+          }).instruction()
+        );
+        break;
+      }
+    }
+
+    const instructions = await Promise.all(instructionPromises);
+    return sendTransaction(instructions, this.connection, this.wallet);
   }
 
   public async depositTokensToStakeAccountCustody(

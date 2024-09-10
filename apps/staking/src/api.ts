@@ -308,19 +308,19 @@ export const stakeGovernance = async (
 };
 
 export const cancelWarmupGovernance = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromGovernance(stakeAccount, PositionState.LOCKING, amount);
 };
 
 export const unstakeGovernance = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromGovernance(stakeAccount, PositionState.LOCKED, amount);
 };
 
 export const delegateIntegrityStaking = async (
