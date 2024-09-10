@@ -6,7 +6,12 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 
 import {
   getConfigAddress,
@@ -410,7 +415,9 @@ export class PythStakingClient {
     });
   }
 
-  async getAdvanceDelegationRecordInstructions(stakeAccountPositions: PublicKey) {
+  async getAdvanceDelegationRecordInstructions(
+    stakeAccountPositions: PublicKey,
+  ) {
     const poolData = await this.getPoolDataAccount();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
       stakeAccountPositions,
@@ -447,16 +454,22 @@ export class PythStakingClient {
   }
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
-    const instructions = await this.getAdvanceDelegationRecordInstructions(stakeAccountPositions);
+    const instructions = await this.getAdvanceDelegationRecordInstructions(
+      stakeAccountPositions,
+    );
 
     return sendTransaction(instructions, this.connection, this.wallet);
   }
 
   public async getClaimableRewards(stakeAccountPositions: PublicKey) {
-    const instructions = await this.getAdvanceDelegationRecordInstructions(stakeAccountPositions);
+    const instructions = await this.getAdvanceDelegationRecordInstructions(
+      stakeAccountPositions,
+    );
 
     for (const instruction of instructions) {
-      await this.connection.simulateTransaction(new Transaction().add(instruction));
+      await this.connection.simulateTransaction(
+        new Transaction().add(instruction),
+      );
     }
 
     return 1n;
