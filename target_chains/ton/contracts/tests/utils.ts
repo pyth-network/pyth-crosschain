@@ -1,3 +1,4 @@
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { Cell, beginCell } from "@ton/core";
 
 export function createCellChain(buffer: Buffer): Cell {
@@ -42,4 +43,12 @@ function bufferToChunks(
   }
 
   return chunks;
+}
+
+// Helper function to parse DataSource from a Cell
+export function parseDataSource(cell: Cell): DataSource {
+  const slice = cell.beginParse();
+  const emitterChain = slice.loadUint(16);
+  const emitterAddress = slice.loadUint(256).toString(16).padStart(64, "0");
+  return { emitterChain, emitterAddress };
 }

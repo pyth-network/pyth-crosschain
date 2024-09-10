@@ -255,7 +255,33 @@ int apply_decimal_expo(int value, int expo) {
 }
 
 () execute_authorize_governance_data_source_transfer(slice payload) impure {
-    ;; TODO: Implement
+    ;; Verify the claim VAA
+    (_, _, _, _, int emitter_chain_id, int emitter_address, int sequence, _, slice claim_payload, _) = parse_and_verify_wormhole_vm(payload);
+
+    ;; Parse the claim payload
+    (int target_chain_id, int action, slice claim_payload) = parse_governance_instruction(claim_payload);
+
+    ;; Verify that this is a valid governance action for this chain
+    throw_if(ERROR_INVALID_GOVERNANCE_TARGET, (target_chain_id != 0) & (target_chain_id != chain_id));
+    throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER);
+
+    ;; Extract the new governance data source index from the claim payload
+    int new_governance_data_source_index = claim_payload~load_uint(32);
+
+    ;; Verify that the new index is greater than the current index
+    int current_index = governance_data_source_index;
+    throw_if(ERROR_OLD_GOVERNANCE_MESSAGE, new_governance_data_source_index <= current_index);
+
+    ;; Update the governance data source
+    governance_data_source = begin_cell()
+        .store_uint(emitter_chain_id, 16)
+        .store_uint(emitter_address, 256)
+    .end_cell();
+
+    governance_data_source_index = new_governance_data_source_index;
+
+    ;; Update the last executed governance sequence
+    last_executed_governance_sequence = sequence;
 }
 
 () execute_set_data_sources(slice payload) impure {
@@ -290,10 +316,6 @@ int apply_decimal_expo(int value, int expo) {
     ;; TODO: Implement
 }
 
-() execute_request_governance_data_source_transfer(slice payload) impure {
-    ;; TODO: Implement
-}
-
 () execute_governance_payload(int action, slice payload) impure {
     if (action == UPGRADE_CONTRACT) {
         execute_upgrade_contract(payload);
@@ -306,7 +328,9 @@ int apply_decimal_expo(int value, int expo) {
     } elseif (action == SET_VALID_PERIOD) {
         execute_set_valid_period(payload);
     } elseif (action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER) {
-        execute_request_governance_data_source_transfer(payload);
+        ;; RequestGovernanceDataSourceTransfer can only be part of
+        ;; AuthorizeGovernanceDataSourceTransfer message
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
     } else {
         throw(ERROR_INVALID_GOVERNANCE_ACTION);
     }

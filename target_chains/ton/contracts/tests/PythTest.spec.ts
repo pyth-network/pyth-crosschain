@@ -10,9 +10,12 @@ import {
   PYTH_SET_DATA_SOURCES,
   PYTH_SET_FEE,
   TEST_GUARDIAN_ADDRESS1,
+  PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER,
+  PYTH_REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
+import { parseDataSource } from "./utils";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -35,11 +38,18 @@ const DATA_SOURCES: DataSource[] = [
       "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
   },
 ];
-const TEST_GOVERNANCE_DATA_SOURCE: DataSource = {
-  emitterChain: 1,
-  emitterAddress:
-    "0000000000000000000000000000000000000000000000000000000000000029",
-};
+const TEST_GOVERNANCE_DATA_SOURCES: DataSource[] = [
+  {
+    emitterChain: 1,
+    emitterAddress:
+      "0000000000000000000000000000000000000000000000000000000000000029",
+  },
+  {
+    emitterChain: 2,
+    emitterAddress:
+      "000000000000000000000000000000000000000000000000000000000000002b",
+  },
+];
 
 describe("PythTest", () => {
   let code: Cell;
@@ -318,7 +328,7 @@ describe("PythTest", () => {
       60051, // CHAIN_ID of starknet since we are using the test payload for starknet
       1,
       "0000000000000000000000000000000000000000000000000000000000000004",
-      TEST_GOVERNANCE_DATA_SOURCE
+      TEST_GOVERNANCE_DATA_SOURCES[0]
     );
 
     // Get the initial fee
@@ -354,7 +364,7 @@ describe("PythTest", () => {
       60051, // CHAIN_ID of starknet since we are using the test payload for starknet
       1,
       "0000000000000000000000000000000000000000000000000000000000000004",
-      TEST_GOVERNANCE_DATA_SOURCE
+      TEST_GOVERNANCE_DATA_SOURCES[0]
     );
 
     // Execute the governance action
@@ -389,9 +399,103 @@ describe("PythTest", () => {
 
     // Verify that the old data source is no longer valid
     const oldDataSource = DATA_SOURCES[0];
-    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
-      oldDataSource
-    );
+    const oldDataSourceIsValid =
+      await pythTest.getIsValidDataSource(oldDataSource);
     expect(oldDataSourceIsValid).toBe(false);
+  });
+
+  it("should execute authorize governance data source transfer", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    // Get the initial governance data source index
+    const initialIndex = await pythTest.getGovernanceDataSourceIndex();
+    expect(initialIndex).toEqual(0); // Initial value should be 0
+
+    // Get the initial governance data source
+    const initialDataSourceCell = await pythTest.getGovernanceDataSource();
+    const initialDataSource = parseDataSource(initialDataSourceCell);
+    expect(initialDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
+
+    // Get the initial last executed governance sequence
+    const initialSequence = await pythTest.getLastExecutedGovernanceSequence();
+    expect(initialSequence).toEqual(0); // Initial value should be 0
+
+    // Execute the governance action
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Get the new governance data source index
+    const newIndex = await pythTest.getGovernanceDataSourceIndex();
+    expect(newIndex).toEqual(1); // The new index value should match the one in the test payload
+
+    // Get the new governance data source
+    const newDataSourceCell = await pythTest.getGovernanceDataSource();
+    const newDataSource = parseDataSource(newDataSourceCell);
+    expect(newDataSource).not.toEqual(initialDataSource); // The data source should have changed
+    expect(newDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // The data source should have changed
+
+    // Get the new last executed governance sequence
+    const newSequence = await pythTest.getLastExecutedGovernanceSequence();
+    expect(newSequence).toBeGreaterThan(initialSequence); // The sequence should have increased
+    expect(newSequence).toBe(1);
+  });
+
+  it("should fail when executing request governance data source transfer directly", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[1]
+    );
+
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER, "hex")
+    );
+
+    // Check that the transaction did not succeed
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1012, // ERROR_INVALID_GOVERNANCE_ACTION = 1012
+    });
+
+    // Verify that the governance data source index hasn't changed
+    const index = await pythTest.getGovernanceDataSourceIndex();
+    expect(index).toEqual(0); // Should still be the initial value
+
+    // Verify that the governance data source hasn't changed
+    const dataSourceCell = await pythTest.getGovernanceDataSource();
+    const dataSource = parseDataSource(dataSourceCell);
+    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // Should still be the initial value
   });
 });
