@@ -2,6 +2,9 @@
 name = "pyth-price-store"
 version = "0.1.0"
 edition = "2021"
+description = "A solana on-chain program that allows publishers to push prices on Pythnet."
+license = "Apache-2.0"
+
 
 [lib]
 crate-type = ["cdylib", "lib"]

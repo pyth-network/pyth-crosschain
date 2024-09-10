@@ -1,4 +1,4 @@
-name: Publish Pyth Price Publisher to crates.io
+name: Publish Pyth Price Store to crates.io
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - pyth-price-store-v*
 jobs:
   publish-pyth-price-store:
-    name: Publish Pyth Price Publisher
+    name: Publish Pyth Price Store
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
