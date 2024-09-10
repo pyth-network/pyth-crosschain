@@ -3,7 +3,7 @@ import {
   XMarkIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import type { PythStakingClient } from "@pythnetwork/staking-sdk";
+import { calculateApy, type PythStakingClient } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import {
@@ -27,7 +27,6 @@ import {
   delegateIntegrityStaking,
   cancelWarmupIntegrityStaking,
   unstakeIntegrityStaking,
-  calculateApy,
 } from "../../api";
 import { Button } from "../Button";
 import { ProgramSection } from "../ProgramSection";
@@ -705,7 +704,6 @@ const StakeToPublisherButton = ({
                       selfStake +
                       (amount.type === AmountType.Valid ? amount.amount : 0n),
                     poolCapacity,
-                    poolUtilization,
                     yieldRate,
                   })
                 : calculateApy({
