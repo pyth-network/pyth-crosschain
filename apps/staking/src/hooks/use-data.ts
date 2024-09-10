@@ -1,26 +1,15 @@
-import { PublicKey } from "@solana/web3.js";
 import { useCallback } from "react";
 import useSWR from "swr";
-
-import { useSelectedStakeAccount } from "./use-stake-account";
-import { loadData } from "../api";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const getCacheKey = (stakeAccount: PublicKey) => stakeAccount.toBase58();
+export const useData = <T>(cacheKey: string, loadData: () => Promise<T>) => {
+  const { data, isLoading, mutate, ...rest } = useSWR(cacheKey, loadData, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
 
-export const useDashboardData = () => {
-  const { client, hermesClient, account } = useSelectedStakeAccount();
-
-  const { data, isLoading, mutate, ...rest } = useSWR(
-    getCacheKey(account.address),
-    () => loadData(client, hermesClient, account),
-    {
-      refreshInterval: REFRESH_INTERVAL,
-    },
-  );
   const error = rest.error as unknown;
 
   const reset = useCallback(() => {
@@ -50,7 +39,7 @@ export enum StateType {
 const State = {
   NotLoaded: () => ({ type: StateType.NotLoaded as const }),
   Loading: () => ({ type: StateType.Loading as const }),
-  Loaded: (data: Awaited<ReturnType<typeof loadData>>) => ({
+  Loaded: <T>(data: T) => ({
     type: StateType.Loaded as const,
     data,
   }),
@@ -60,8 +49,6 @@ const State = {
     reset,
   }),
 };
-
-type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 class LoadDashboardDataError extends Error {
   constructor(cause: unknown) {

@@ -33,9 +33,13 @@ import {
   SubmenuTrigger,
 } from "react-aria-components";
 
+import {
+  StateType as ApiStateType,
+  type States,
+  useApi,
+} from "../../hooks/use-api";
 import { useLogger } from "../../hooks/use-logger";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
-import { StateType, useStakeAccount } from "../../hooks/use-stake-account";
 import { AccountHistory } from "../AccountHistory";
 import { Button } from "../Button";
 import { ModalDialog } from "../ModalDialog";
@@ -43,16 +47,36 @@ import { ModalDialog } from "../ModalDialog";
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
 export const WalletButton = (props: Props) => {
-  const wallet = useWallet();
+  const api = useApi();
 
-  return wallet.connected ? (
-    <ConnectedButton {...props} />
-  ) : (
-    <DisconnectedButton {...props} />
-  );
+  switch (api.type) {
+    case ApiStateType.NotLoaded:
+    case ApiStateType.NoWallet: {
+      return <DisconnectedButton {...props} />;
+    }
+
+    case ApiStateType.ErrorLoadingStakeAccounts:
+    case ApiStateType.Loaded:
+    case ApiStateType.LoadedNoStakeAccount:
+    case ApiStateType.LoadingStakeAccounts: {
+      return <ConnectedButton {...props} api={api} />;
+    }
+  }
 };
 
-const ConnectedButton = ({ className, ...props }: Props) => {
+type ConnectedButtonProps = Props & {
+  api:
+    | States[ApiStateType.ErrorLoadingStakeAccounts]
+    | States[ApiStateType.Loaded]
+    | States[ApiStateType.LoadedNoStakeAccount]
+    | States[ApiStateType.LoadingStakeAccounts];
+};
+
+const ConnectedButton = ({
+  className,
+  api,
+  ...props
+}: ConnectedButtonProps) => {
   const [accountHistoryOpen, setAccountHistoryOpen] = useState(false);
   const openAccountHistory = useCallback(() => {
     setAccountHistoryOpen(true);
@@ -61,9 +85,8 @@ const ConnectedButton = ({ className, ...props }: Props) => {
   const showModal = useCallback(() => {
     modal.setVisible(true);
   }, [modal]);
-  const stakeAccountState = useStakeAccount();
-  const wallet = useWallet();
   const logger = useLogger();
+  const wallet = useWallet();
   const disconnectWallet = useCallback(() => {
     wallet.disconnect().catch((error: unknown) => {
       logger.error(error);
@@ -86,46 +109,45 @@ const ConnectedButton = ({ className, ...props }: Props) => {
           <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
         </ButtonComponent>
         <StyledMenu className="min-w-[var(--trigger-width)]">
-          {stakeAccountState.type === StateType.Loaded && (
+          {api.type === ApiStateType.Loaded && (
             <>
-              <SubmenuTrigger>
-                <WalletMenuItem
-                  icon={BanknotesIcon}
-                  textValue="Select stake account"
-                >
-                  <span>Select stake account</span>
-                  <ChevronRightIcon className="size-4" />
-                </WalletMenuItem>
-                <StyledMenu
-                  items={stakeAccountState.allAccounts.map((account) => ({
-                    account,
-                    id: account.address.toBase58(),
-                  }))}
-                >
-                  {(item) => (
-                    <WalletMenuItem
-                      onAction={() => {
-                        stakeAccountState.selectAccount(item.account);
-                      }}
-                      className={clsx({
-                        "font-semibold":
-                          item.account === stakeAccountState.account,
-                      })}
-                      isDisabled={item.account === stakeAccountState.account}
-                    >
-                      <CheckIcon
-                        className={clsx("size-4 text-pythpurple-600", {
-                          invisible: item.account !== stakeAccountState.account,
-                        })}
-                      />
-                      <pre>
-                        <TruncatedKey>{item.account.address}</TruncatedKey>
-                      </pre>
-                    </WalletMenuItem>
-                  )}
-                </StyledMenu>
-              </SubmenuTrigger>
               <Section className="flex w-full flex-col">
+                <SubmenuTrigger>
+                  <WalletMenuItem
+                    icon={BanknotesIcon}
+                    textValue="Select stake account"
+                  >
+                    <span>Select stake account</span>
+                    <ChevronRightIcon className="size-4" />
+                  </WalletMenuItem>
+                  <StyledMenu
+                    items={api.allAccounts.map((account) => ({
+                      account,
+                      id: account.address.toBase58(),
+                    }))}
+                  >
+                    {(item) => (
+                      <WalletMenuItem
+                        onAction={() => {
+                          api.selectAccount(item.account);
+                        }}
+                        className={clsx({
+                          "font-semibold": item.account === api.account,
+                        })}
+                        isDisabled={item.account === api.account}
+                      >
+                        <CheckIcon
+                          className={clsx("size-4 text-pythpurple-600", {
+                            invisible: item.account !== api.account,
+                          })}
+                        />
+                        <pre>
+                          <TruncatedKey>{item.account.address}</TruncatedKey>
+                        </pre>
+                      </WalletMenuItem>
+                    )}
+                  </StyledMenu>
+                </SubmenuTrigger>
                 <WalletMenuItem
                   onAction={openAccountHistory}
                   icon={TableCellsIcon}
@@ -146,14 +168,14 @@ const ConnectedButton = ({ className, ...props }: Props) => {
           </Section>
         </StyledMenu>
       </MenuTrigger>
-      {stakeAccountState.type === StateType.Loaded && (
+      {api.type === ApiStateType.Loaded && (
         <ModalDialog
           isOpen={accountHistoryOpen}
           onOpenChange={setAccountHistoryOpen}
           title="Account history"
           description="A history of events that have affected your account balances"
         >
-          <AccountHistory />
+          <AccountHistory api={api} />
         </ModalDialog>
       )}
     </>

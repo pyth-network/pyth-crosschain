@@ -6,11 +6,14 @@ import {
   AccountHistoryItemType,
   StakeType,
 } from "../../api";
-import { StateType, useAccountHistory } from "../../hooks/use-account-history";
+import type { States, StateType as ApiStateType } from "../../hooks/use-api";
+import { StateType, useData } from "../../hooks/use-data";
 import { Tokens } from "../Tokens";
 
-export const AccountHistory = () => {
-  const history = useAccountHistory();
+type Props = { api: States[ApiStateType.Loaded] };
+
+export const AccountHistory = ({ api }: Props) => {
+  const history = useData(api.accountHisoryCacheKey, api.loadAccountHistory);
 
   switch (history.type) {
     case StateType.NotLoaded:

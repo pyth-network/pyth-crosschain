@@ -1,12 +1,14 @@
 import { type ComponentProps, useMemo } from "react";
 import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
+import type { States, StateType as ApiStateType } from "../../hooks/use-api";
 import { AccountSummary } from "../AccountSummary";
 import { Governance } from "../Governance";
 import { OracleIntegrityStaking } from "../OracleIntegrityStaking";
 import { Styled } from "../Styled";
 
 type Props = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   total: bigint;
   lastSlash:
     | {
@@ -22,7 +24,6 @@ type Props = {
         expiry: Date;
       }
     | undefined;
-  locked: bigint;
   unlockSchedule: {
     amount: bigint;
     date: Date;
@@ -40,6 +41,7 @@ type Props = {
 };
 
 export const Dashboard = ({
+  api,
   total,
   lastSlash,
   walletAmount,
@@ -47,7 +49,6 @@ export const Dashboard = ({
   expiringRewards,
   governance,
   integrityStakingPublishers,
-  locked,
   unlockSchedule,
   yieldRate,
 }: Props) => {
@@ -84,6 +85,11 @@ export const Dashboard = ({
     "cooldown2",
   );
 
+  const locked = useMemo(
+    () => unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
+    [unlockSchedule],
+  );
+
   const availableToStakeIntegrity = useMemo(
     () =>
       total -
@@ -110,6 +116,7 @@ export const Dashboard = ({
   return (
     <div className="flex w-full flex-col gap-8">
       <AccountSummary
+        api={api}
         locked={locked}
         unlockSchedule={unlockSchedule}
         lastSlash={lastSlash}
@@ -142,6 +149,7 @@ export const Dashboard = ({
         </DashboardTabPanel>
         <DashboardTabPanel id={TabIds.Governance}>
           <Governance
+            api={api}
             availableToStake={availableToStakeGovernance}
             warmup={governance.warmup}
             staked={governance.staked}
@@ -151,6 +159,7 @@ export const Dashboard = ({
         </DashboardTabPanel>
         <DashboardTabPanel id={TabIds.IntegrityStaking}>
           <OracleIntegrityStaking
+            api={api}
             availableToStake={availableToStakeIntegrity}
             locked={locked}
             warmup={integrityStakingWarmup}

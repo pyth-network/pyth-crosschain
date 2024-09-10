@@ -6,14 +6,15 @@ import {
 } from "react-aria-components";
 
 import background from "./background.png";
-import { deposit, withdraw, claim } from "../../api";
-import { StateType, useTransfer } from "../../hooks/use-transfer";
+import { type States, StateType as ApiStateType } from "../../hooks/use-api";
+import { StateType, useAsync } from "../../hooks/use-async";
 import { Button } from "../Button";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
 
 type Props = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   total: bigint;
   locked: bigint;
   unlockSchedule: {
@@ -38,6 +39,7 @@ type Props = {
 };
 
 export const AccountSummary = ({
+  api,
   locked,
   unlockSchedule,
   lastSlash,
@@ -114,7 +116,7 @@ export const AccountSummary = ({
             actionDescription="Add funds to your balance"
             actionName="Add Tokens"
             max={walletAmount}
-            transfer={deposit}
+            transfer={api.deposit}
           />
         </div>
       </div>
@@ -130,8 +132,9 @@ export const AccountSummary = ({
               actionDescription="Move funds from your account back to your wallet"
               actionName="Withdraw"
               max={availableToWithdraw}
-              transfer={withdraw}
-              isDisabled={availableToWithdraw === 0n}
+              {...(api.type === ApiStateType.Loaded && {
+                transfer: api.withdraw,
+              })}
             />
           }
         />
@@ -139,7 +142,15 @@ export const AccountSummary = ({
           name="Available Rewards"
           amount={availableRewards}
           description="Rewards you have earned from OIS"
-          action={<ClaimButton isDisabled={availableRewards === 0n} />}
+          action={
+            api.type === ApiStateType.Loaded ? (
+              <ClaimButton isDisabled={availableRewards === 0n} api={api} />
+            ) : (
+              <Button size="small" variant="secondary" isDisabled={true}>
+                Claim
+              </Button>
+            )
+          }
           {...(expiringRewards !== undefined &&
             expiringRewards.amount > 0n && {
               warning: (
@@ -187,13 +198,15 @@ const BalanceCategory = ({
   </div>
 );
 
-const ClaimButton = (
-  props: Omit<
-    ComponentProps<typeof Button>,
-    "onClick" | "disabled" | "loading"
-  >,
-) => {
-  const { state, execute } = useTransfer(claim);
+type ClaimButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "onClick" | "disabled" | "loading"
+> & {
+  api: States[ApiStateType.Loaded];
+};
+
+const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
+  const { state, execute } = useAsync(api.claim);
 
   const doClaim = useCallback(() => {
     execute().catch(() => {
@@ -207,7 +220,7 @@ const ClaimButton = (
       variant="secondary"
       onPress={doClaim}
       isDisabled={state.type !== StateType.Base}
-      isLoading={state.type === StateType.Submitting}
+      isLoading={state.type === StateType.Running}
       {...props}
     >
       Claim
