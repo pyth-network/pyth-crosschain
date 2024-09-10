@@ -27,6 +27,10 @@ use {
 /// its buffer account. The buffer account will be read and applied by the validator
 /// to read at the end of the slot.
 /// If there are old prices in the account, they will be removed before adding new data.
+/// See `Instruction` for the list of required accounts.
+/// The publisher config account must be an initialized PDA account with an expected seed
+/// (depending on the publisher account that signed the instruction).
+/// The buffer account must match the buffer key stored in the publisher config account.
 pub fn submit_prices(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -54,7 +58,7 @@ pub fn submit_prices(
     // Access and update PublisherPrices account with new data.
     let mut buffer_data = buffer.data.borrow_mut();
     let (header, prices) = buffer::read_mut(*buffer_data)?;
-    buffer::extend(header, prices, Clock::get()?.slot, prices_data)?;
+    buffer::update(header, prices, Clock::get()?.slot, prices_data)?;
 
     Ok(())
 }
