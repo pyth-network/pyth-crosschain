@@ -4,6 +4,7 @@
 #include "common/utils.fc";
 #include "common/constants.fc";
 #include "common/merkle_tree.fc";
+#include "common/governance_actions.fc";
 #include "./Wormhole.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
@@ -59,13 +60,18 @@ slice read_and_verify_header(slice data) {
     return (price, conf, expo, publish_time);
 }
 
-(int) get_update_fee(slice data) method_id {
+int get_update_fee(slice data) method_id {
     load_data();
     slice cs = read_and_verify_header(data);
     int wormhole_proof_size_bytes = cs~load_uint(16);
     (cell wormhole_proof, slice cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
     int num_updates = cs~load_uint(8);
     return single_update_fee * num_updates;
+}
+
+int get_single_update_fee() method_id {
+    load_data();
+    return single_update_fee;
 }
 
 int get_governance_data_source_index() method_id {
@@ -203,6 +209,65 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     store_data();
 }
 
+() verify_governance_vm(int emitter_chain_id, int emitter_address, int sequence) impure {
+    (int gov_chain_id, int gov_address) = parse_data_source(governance_data_source);
+    throw_unless(ERROR_INVALID_GOVERNANCE_DATA_SOURCE, emitter_chain_id == gov_chain_id);
+    throw_unless(ERROR_INVALID_GOVERNANCE_DATA_SOURCE, emitter_address == gov_address);
+    throw_if(ERROR_OLD_GOVERNANCE_MESSAGE, sequence <= last_executed_governance_sequence);
+    last_executed_governance_sequence = sequence;
+}
+
+(int, int, slice) parse_governance_instruction(slice payload) {
+    int magic = payload~load_uint(32);
+    throw_unless(ERROR_INVALID_GOVERNANCE_MAGIC, magic == GOVERNANCE_MAGIC);
+
+    int module = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_GOVERNANCE_MODULE, module == GOVERNANCE_MODULE);
+
+    int action = payload~load_uint(8);
+
+    int target_chain_id = payload~load_uint(16);
+
+    return (target_chain_id, action, payload);
+}
+
+int apply_decimal_expo(int value, int expo) {
+    int result = value;
+    repeat (expo) {
+        result *= 10;
+    }
+    return result;
+}
+
+() execute_set_fee(int value, int expo) impure {
+    load_data();
+    int new_fee = apply_decimal_expo(value, expo);
+    single_update_fee = new_fee;
+    store_data();
+}
+
+() execute_governance_payload(int action, slice payload) impure {
+    if (action == SET_FEE) {
+        int value = payload~load_uint(64);
+        int expo = payload~load_uint(64);
+        execute_set_fee(value, expo);
+    } else {
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
+    }
+}
+
 () execute_governance_action(slice in_msg_body) impure {
-    ;; TODO: Implement
+    load_data();
+
+    (_, _, _, _, int emitter_chain_id, int emitter_address, int sequence, _, slice payload, _) = parse_and_verify_wormhole_vm(in_msg_body);
+
+    verify_governance_vm(emitter_chain_id, emitter_address, sequence);
+
+    (int target_chain_id, int action, slice payload) = parse_governance_instruction(payload);
+
+    throw_if(ERROR_INVALID_GOVERNANCE_TARGET, (target_chain_id != 0) & (target_chain_id != chain_id));
+
+    execute_governance_payload(action, payload);
+
+    store_data();
 }

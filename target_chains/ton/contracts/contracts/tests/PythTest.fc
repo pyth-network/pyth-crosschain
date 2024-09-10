@@ -24,6 +24,8 @@
         update_guardian_set(data.begin_parse());
     } elseif (op == OP_UPDATE_PRICE_FEEDS) {
         update_price_feeds(msg_value, data.begin_parse());
+    } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
+        execute_governance_action(data.begin_parse());
     } else {
         throw(0xffff); ;; Throw exception for unknown op
     }
@@ -47,6 +49,10 @@
 
 (int) test_get_update_fee(slice in_msg_body) method_id {
     return get_update_fee(in_msg_body);
+}
+
+(int) test_get_single_update_fee() method_id {
+    return get_single_update_fee();
 }
 
 (int) test_get_chain_id() method_id {
