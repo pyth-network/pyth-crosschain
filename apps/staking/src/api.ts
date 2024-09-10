@@ -14,13 +14,14 @@ import {
 import { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
-const publishersRankingSchema = z.object({
-  publisher: z.string(),
-  rank: z.number(),
-  numSymbols: z.number(),
-  timestamp: z.string(),
-}).array();
-
+const publishersRankingSchema = z
+  .object({
+    publisher: z.string(),
+    rank: z.number(),
+    numSymbols: z.number(),
+    timestamp: z.string(),
+  })
+  .array();
 
 type Data = {
   total: bigint;
@@ -186,8 +187,9 @@ export const loadData = async (
 
   const publishers = extractPublisherData(poolData);
 
-  const publisherRankings =
-    publishersRankingSchema.parse(await publisherRankingsResponse.json());
+  const publisherRankings = publishersRankingSchema.parse(
+    await publisherRankingsResponse.json(),
+  );
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
