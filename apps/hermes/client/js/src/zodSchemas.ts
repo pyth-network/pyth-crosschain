@@ -9,7 +9,7 @@ const PriceFeedMetadata = z
   .passthrough();
 const PriceIdInput = z.string();
 const EncodingType = z.enum(["hex", "base64"]);
-const BinaryPriceUpdate = z
+const BinaryUpdate = z
   .object({ data: z.array(z.string()), encoding: EncodingType })
   .passthrough();
 const RpcPrice = z
@@ -38,10 +38,24 @@ const ParsedPriceUpdate = z
   .passthrough();
 const PriceUpdate = z
   .object({
-    binary: BinaryPriceUpdate,
+    binary: BinaryUpdate,
     parsed: z.array(ParsedPriceUpdate).nullish(),
   })
   .passthrough();
+const ParsedPublisherCap = z.object({
+  publisher: z.string(),
+  cap: z.number().int(),
+});
+
+const PublisherCaps = z.object({
+  binary: BinaryUpdate,
+  parsed: z
+    .object({
+      publisher_stake_caps: z.array(ParsedPublisherCap),
+    })
+    .array()
+    .nullish(),
+});
 
 export const schemas = {
   AssetType,
@@ -50,11 +64,12 @@ export const schemas = {
   PriceFeedMetadata,
   PriceIdInput,
   EncodingType,
-  BinaryPriceUpdate,
+  BinaryUpdate,
   RpcPrice,
   RpcPriceFeedMetadataV2,
   ParsedPriceUpdate,
   PriceUpdate,
+  PublisherCaps,
 };
 
 const endpoints = makeApi([
@@ -195,6 +210,26 @@ Given a collection of price feed ids, retrieve the latest Pyth price for each pr
         schema: z.void(),
       },
     ],
+  },
+  {
+    method: "get",
+    path: "/v2/updates/publisher_stake_caps/latest",
+    alias: "latest_publisher_stake_caps",
+    description: `Get the most recent publisher stake caps update data.`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "encoding",
+        type: "Query",
+        schema: z.enum(["hex", "base64"]).optional(),
+      },
+      {
+        name: "parsed",
+        type: "Query",
+        schema: z.boolean().optional(),
+      },
+    ],
+    response: z.array(PublisherCaps),
   },
 ]);
 
