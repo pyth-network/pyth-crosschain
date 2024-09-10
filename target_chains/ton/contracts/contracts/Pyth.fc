@@ -2,13 +2,20 @@
 #include "common/errors.fc";
 #include "common/storage.fc";
 #include "common/utils.fc";
+#include "common/constants.fc";
+#include "common/merkle_tree.fc";
 #include "./Wormhole.fc";
 
-const int ACCUMULATOR_MAGIC = 0x504e4155; ;; "PNAU" (Pyth Network Accumulator Update)
-const int MAJOR_VERSION = 1;
-const int MINIMUM_ALLOWED_MINOR_VERSION = 0;
+cell store_price(int price, int conf, int expo, int publish_time) {
+    return begin_cell()
+        .store_int(price, 64)
+        .store_uint(conf, 64)
+        .store_int(expo, 32)
+        .store_uint(publish_time, 64)
+    .end_cell();
+}
 
-slice verify_header(slice data) {
+slice read_and_verify_header(slice data) {
     int magic = data~load_uint(32);
     throw_unless(ERROR_INVALID_MAGIC, magic == ACCUMULATOR_MAGIC);
     int major_version = data~load_uint(8);
@@ -16,28 +23,64 @@ slice verify_header(slice data) {
     int minor_version = data~load_uint(8);
     throw_if(ERROR_INVALID_MINOR_VERSION, minor_version < MINIMUM_ALLOWED_MINOR_VERSION);
     int trailing_header_size = data~load_uint(8);
-    ;; skip trailing headers and update type (uint8)
+    ;; skip trailing headers
     data~skip_bits(trailing_header_size);
-    data~skip_bits(8);
+    int update_type = data~load_uint(8);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
     return data;
+}
+
+(int, int, int, int, int, int, int, int, slice) read_and_verify_message(slice cs, int root_digest) impure {
+    int message_size = cs~load_uint(16);
+    (cell message, slice cs) = read_and_store_large_data(cs, message_size * 8);
+    slice message = message.begin_parse();
+    slice cs = read_and_verify_proof(root_digest, message, cs);
+
+    int message_type = message~load_uint(8);
+    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == 0);  ;; 0 corresponds to PriceFeed
+
+    int price_id = message~load_uint(256);
+    int price = message~load_int(64);
+    int conf = message~load_uint(64);
+    int expo = message~load_int(32);
+    int publish_time = message~load_uint(64);
+    int prev_publish_time = message~load_uint(64);
+    int ema_price = message~load_int(64);
+    int ema_conf = message~load_uint(64);
+
+    return (price_id, price, conf, expo, publish_time, prev_publish_time, ema_price, ema_conf, cs);
+}
+
+(int, int, int, int) parse_price(slice price_feed) {
+    int price = price_feed~load_int(64);
+    int conf = price_feed~load_uint(64);
+    int expo = price_feed~load_int(32);
+    int publish_time = price_feed~load_uint(64);
+    return (price, conf, expo, publish_time);
 }
 
 (int) get_update_fee(slice data) method_id {
     load_data();
-    slice cs = verify_header(data);
+    slice cs = read_and_verify_header(data);
     int wormhole_proof_size_bytes = cs~load_uint(16);
     (cell wormhole_proof, slice cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
     int num_updates = cs~load_uint(8);
     return single_update_fee * num_updates;
 }
 
+int get_governance_data_source_index() method_id {
+    load_data();
+    return governance_data_source_index;
+}
 
-(int, int, int, int) parse_price(slice price_feed) {
-    int price = price_feed~load_int(256);
-    int conf = price_feed~load_uint(64);
-    int expo = price_feed~load_int(32);
-    int publish_time = price_feed~load_uint(64);
-    return (price, conf, expo, publish_time);
+cell get_governance_data_source() method_id {
+    load_data();
+    return governance_data_source;
+}
+
+int get_last_executed_governance_sequence() method_id {
+    load_data();
+    return last_executed_governance_sequence;
 }
 
 (int, int, int, int) get_price_unsafe(int price_feed_id) method_id {
@@ -73,4 +116,93 @@ slice verify_header(slice data) {
     int current_time = now();
     throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
     return (price, conf, expo, publish_time);
+}
+
+(int, int) parse_data_source(cell data_source) {
+    slice ds = data_source.begin_parse();
+    int emitter_chain = ds~load_uint(16);
+    int emitter_address = ds~load_uint(256);
+    return (emitter_chain, emitter_address);
+}
+
+int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
+    int accumulator_wormhole_magic = payload~load_uint(32);
+    throw_unless(ERROR_INVALID_MAGIC, accumulator_wormhole_magic == ACCUMULATOR_WORMHOLE_MAGIC);
+
+    int update_type = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
+
+    payload~load_uint(64);  ;; Skip slot
+    payload~load_uint(32);  ;; Skip ring_size
+
+    return payload~load_uint(160);  ;; Return root_digest
+}
+
+
+() update_price_feeds(int msg_value, slice data) impure {
+    load_data();
+    slice cs = read_and_verify_header(data);
+
+    int wormhole_proof_size_bytes = cs~load_uint(16);
+    (cell wormhole_proof, slice new_cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
+    cs = new_cs;
+
+    int num_updates = cs~load_uint(8);
+    int fee = single_update_fee * num_updates;
+
+    ;; Check if the sender has sent enough TON to cover the fee
+    throw_unless(ERROR_INSUFFICIENT_FEE, msg_value >= fee);
+
+    (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
+
+    ;; Check if the data source is valid
+    cell data_source = begin_cell()
+        .store_uint(emitter_chain_id, 16)
+        .store_uint(emitter_address, 256)
+        .end_cell();
+
+    ;; Dictionary doesn't support cell as key, so we use cell_hash to create a 256-bit integer key
+    int data_source_key = cell_hash(data_source);
+
+    (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
+    throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
+    int valid = value~load_int(1);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
+
+
+    int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
+
+    repeat(num_updates) {
+        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        cs = new_cs;
+
+        (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
+        int latest_publish_time = 0;
+        if (found?) {
+            slice price_feed_slice = latest_price_info~load_ref().begin_parse();
+            slice price_slice = price_feed_slice~load_ref().begin_parse();
+
+            price_slice~load_int(64);  ;; Skip price
+            price_slice~load_uint(64); ;; Skip conf
+            price_slice~load_int(32);  ;; Skip expo
+            latest_publish_time = price_slice~load_uint(64);
+        }
+
+        if (publish_time > latest_publish_time) {
+            cell price_feed = begin_cell()
+                .store_ref(store_price(price, conf, expo, publish_time))
+                .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
+            .end_cell();
+
+            latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed).end_cell().begin_parse());
+        }
+    }
+
+    throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
+
+    store_data();
+}
+
+() execute_governance_action(slice in_msg_body) impure {
+    ;; TODO: Implement
 }

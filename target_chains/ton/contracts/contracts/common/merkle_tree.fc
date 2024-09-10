@@ -1,0 +1,42 @@
+#include "../imports/stdlib.fc";
+#include "utils.fc";
+
+const int MERKLE_LEAF_PREFIX = 0;
+const int MERKLE_NODE_PREFIX = 1;
+
+int leaf_hash(slice message) {
+    int hash = keccak256_slice(begin_cell()
+        .store_uint(MERKLE_LEAF_PREFIX, 8)
+        .store_slice(message)
+    .end_cell().begin_parse());
+    return hash >> 96;
+}
+
+int node_hash(int a, int b) {
+    int min_value = min(a, b);
+    int max_value = max(a, b);
+    int hash = keccak256_slice(begin_cell()
+        .store_uint(MERKLE_NODE_PREFIX, 8)
+        .store_uint(min_value, 160)
+        .store_uint(max_value, 160)
+    .end_cell().begin_parse());
+    return hash >> 96;
+}
+
+slice read_and_verify_proof(int root_digest, slice message, slice cs) impure {
+    int current_hash = leaf_hash(message);
+    int proof_size = cs~load_uint(8);
+
+    repeat(proof_size) {
+        builder sibling_digest = begin_cell();
+        (cell digest_cell, cs) = read_and_store_large_data(cs, 160);
+        slice digest_slice = digest_cell.begin_parse();
+        sibling_digest = sibling_digest.store_slice(digest_slice);
+        slice sibling_digest_slice = sibling_digest.end_cell().begin_parse();
+        int sibling_digest_int = sibling_digest_slice~load_uint(160);
+        current_hash = node_hash(current_hash, sibling_digest_int);
+    }
+
+    throw_unless(ERROR_DIGEST_MISMATCH, root_digest == current_hash);
+    return cs;
+}
