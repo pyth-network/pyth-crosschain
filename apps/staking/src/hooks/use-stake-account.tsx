@@ -1,5 +1,6 @@
 "use client";
 
+import { HermesClient } from "@pythnetwork/hermes-client";
 import type { StakeAccountPositions } from "@pythnetwork/staking-sdk";
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
@@ -38,12 +39,14 @@ const State = {
 
   Loaded: (
     client: PythStakingClient,
+    hermesClient: HermesClient,
     account: StakeAccountPositions,
     allAccounts: [StakeAccountPositions, ...StakeAccountPositions[]],
     selectAccount: (account: StakeAccountPositions) => void,
   ) => ({
     type: StateType.Loaded as const,
     client,
+    hermesClient,
     account,
     allAccounts,
     selectAccount,
@@ -83,7 +86,7 @@ const useStakeAccountState = () => {
     (account: StakeAccountPositions) => {
       setState((cur) =>
         cur.type === StateType.Loaded
-          ? State.Loaded(cur.client, account, cur.allAccounts, setAccount)
+          ? State.Loaded(cur.client, cur.hermesClient, account, cur.allAccounts, setAccount)
           : cur,
       );
     },
@@ -109,6 +112,8 @@ const useStakeAccountState = () => {
           signTransaction: wallet.signTransaction,
         },
       });
+      // TODO: use env var to support mainnet
+      const hermesClient = new HermesClient("https://hermes-beta.pyth.network");
       getStakeAccounts(client)
         .then((accounts) => {
           const [firstAccount, ...otherAccounts] = accounts;
@@ -116,6 +121,7 @@ const useStakeAccountState = () => {
             setState(
               State.Loaded(
                 client,
+                hermesClient,
                 firstAccount,
                 [firstAccount, ...otherAccounts],
                 setAccount,

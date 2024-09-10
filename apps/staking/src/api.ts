@@ -1,6 +1,7 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/require-await */
 
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
   getAmountByTargetAndState,
   getCurrentEpoch,
@@ -144,6 +145,7 @@ export const getStakeAccounts = async (
 
 export const loadData = async (
   client: PythStakingClient,
+  hermesClient: HermesClient,
   stakeAccount: StakeAccountPositions,
 ): Promise<Data> => {
   const [
@@ -179,6 +181,15 @@ export const loadData = async (
       epoch: currentEpoch,
     });
 
+  const publisherCaps = await hermesClient.getLatestPublisherCaps({
+    parsed: true,
+  });
+
+  const getPublisherCap = (publisher: PublicKey) =>
+    BigInt(publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+      ({ publisher: p }) => p === publisher.toBase58(),
+    )?.cap ?? 0);
+
   return {
     lastSlash: undefined, // TODO
     availableRewards: 0n, // TODO
@@ -198,7 +209,7 @@ export const loadData = async (
       isSelf: false, // TODO
       name: undefined, // TODO
       numFeeds: 0, // TODO
-      poolCapacity: 100n, // TODO
+      poolCapacity: getPublisherCap(publisher),
       poolUtilization: 0n, // TODO
       publicKey: publisher,
       qualityRanking: 0, // TODO

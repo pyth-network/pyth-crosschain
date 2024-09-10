@@ -12,11 +12,11 @@ const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 export const getCacheKey = (stakeAccount: PublicKey) => stakeAccount.toBase58();
 
 export const useDashboardData = () => {
-  const { client, account } = useSelectedStakeAccount();
+  const { client, hermesClient, account } = useSelectedStakeAccount();
 
   const { data, isLoading, mutate, ...rest } = useSWR(
     getCacheKey(account.address),
-    () => loadData(client, account),
+    () => loadData(client, hermesClient, account),
     {
       refreshInterval: REFRESH_INTERVAL,
     },
