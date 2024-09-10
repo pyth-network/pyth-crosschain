@@ -12,13 +12,15 @@ import {
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
+import { z } from "zod";
 
-type PublisherRankings = {
-  publisher: string;
-  rank: number;
-  numSymbols: number;
-  timestamp: string;
-}[];
+const publishersRankingSchema = z.object({
+  publisher: z.string(),
+  rank: z.number(),
+  numSymbols: z.number(),
+  timestamp: z.string(),
+}).array();
+
 
 type Data = {
   total: bigint;
@@ -185,7 +187,7 @@ export const loadData = async (
   const publishers = extractPublisherData(poolData);
 
   const publisherRankings =
-    (await publisherRankingsResponse.json()) as PublisherRankings;
+    publishersRankingSchema.parse(await publisherRankingsResponse.json());
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
