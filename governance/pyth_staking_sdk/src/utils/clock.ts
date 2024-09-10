@@ -17,3 +17,7 @@ export const getCurrentEpoch: (
   const timestamp = await getCurrentSolanaTimestamp(connection);
   return timestamp / EPOCH_DURATION;
 };
+
+export const epochToDate = (epoch: bigint): Date => {
+  return new Date(Number(epoch * EPOCH_DURATION * 1000n));
+};

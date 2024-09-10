@@ -54,6 +54,14 @@ export type StakeAccountPositions = {
   };
 };
 
+export type PublisherData = {
+  pubkey: PublicKey;
+  stakeAccount: PublicKey | null;
+  totalDelegation: bigint;
+  selfDelegation: bigint;
+  apyHistory: { epoch: bigint; apy: bigint, selfApy: bigint }[];
+}[];
+
 export enum PositionState {
   UNLOCKED,
   LOCKING,

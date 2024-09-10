@@ -86,7 +86,13 @@ const useStakeAccountState = () => {
     (account: StakeAccountPositions) => {
       setState((cur) =>
         cur.type === StateType.Loaded
-          ? State.Loaded(cur.client, cur.hermesClient, account, cur.allAccounts, setAccount)
+          ? State.Loaded(
+              cur.client,
+              cur.hermesClient,
+              account,
+              cur.allAccounts,
+              setAccount,
+            )
           : cur,
       );
     },

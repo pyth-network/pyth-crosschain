@@ -3,6 +3,8 @@
 
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
+  epochToDate,
+  extractPublisherData,
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
@@ -10,6 +12,13 @@ import {
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
+
+type PublisherRankings = {
+  publisher: string;
+  rank: number;
+  numSymbols: number;
+  timestamp: string;
+}[];
 
 type Data = {
   total: bigint;
@@ -150,17 +159,23 @@ export const loadData = async (
 ): Promise<Data> => {
   const [
     stakeAccountCustody,
-    publishers,
+    poolData,
     ownerAtaAccount,
     currentEpoch,
     unlockSchedule,
   ] = await Promise.all([
     client.getStakeAccountCustody(stakeAccount.address),
-    client.getPublishers(),
+    client.getPoolDataAccount(),
     client.getOwnerPythAtaAccount(),
     getCurrentEpoch(client.connection),
     client.getUnlockSchedule(stakeAccount.address),
   ]);
+
+  const publishers = extractPublisherData(poolData);
+
+  const publisherRankingsResponse = await fetch("/api/publishers-ranking");
+  const publisherRankings =
+    (await publisherRankingsResponse.json()) as PublisherRankings;
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
@@ -186,9 +201,11 @@ export const loadData = async (
   });
 
   const getPublisherCap = (publisher: PublicKey) =>
-    BigInt(publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
-      ({ publisher: p }) => p === publisher.toBase58(),
-    )?.cap ?? 0);
+    BigInt(
+      publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+        ({ publisher: p }) => p === publisher.toBase58(),
+      )?.cap ?? 0,
+    );
 
   return {
     lastSlash: undefined, // TODO
@@ -204,23 +221,44 @@ export const loadData = async (
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
     walletAmount: ownerAtaAccount.amount,
-    integrityStakingPublishers: publishers.map(({ pubkey: publisher }) => ({
-      apyHistory: [], // TODO
-      isSelf: false, // TODO
-      name: undefined, // TODO
-      numFeeds: 0, // TODO
-      poolCapacity: getPublisherCap(publisher),
-      poolUtilization: 0n, // TODO
-      publicKey: publisher,
-      qualityRanking: 0, // TODO
-      selfStake: 0n, // TODO
-      positions: {
-        warmup: filterOISPositions(publisher, PositionState.LOCKING),
-        staked: filterOISPositions(publisher, PositionState.LOCKED),
-        cooldown: filterOISPositions(publisher, PositionState.PREUNLOCKING),
-        cooldown2: filterOISPositions(publisher, PositionState.UNLOCKED),
-      },
-    })),
+    integrityStakingPublishers: publishers.map((publisherData) => {
+      const publisherRanking = publisherRankings.find(
+        (ranking) => ranking.publisher === publisherData.pubkey.toBase58(),
+      );
+      return {
+        apyHistory: publisherData.apyHistory.map(({ epoch, apy }) => ({
+          date: epochToDate(epoch + 1n),
+          apy: Number(apy),
+        })),
+        isSelf:
+          publisherData.stakeAccount?.equals(stakeAccount.address) ?? false,
+        name: undefined, // TODO
+        numFeeds: publisherRanking?.numSymbols ?? 0,
+        poolCapacity: getPublisherCap(publisherData.pubkey),
+        poolUtilization: publisherData.totalDelegation,
+        publicKey: publisherData.pubkey,
+        qualityRanking: publisherRanking?.rank ?? 0,
+        selfStake: publisherData.selfDelegation,
+        positions: {
+          warmup: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.LOCKING,
+          ),
+          staked: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.LOCKED,
+          ),
+          cooldown: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.PREUNLOCKING,
+          ),
+          cooldown2: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.UNLOCKED,
+          ),
+        },
+      };
+    }),
   };
 };
 

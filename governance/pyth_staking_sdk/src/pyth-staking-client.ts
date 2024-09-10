@@ -21,6 +21,7 @@ import type {
   StakeAccountPositions,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
+import { extractPublisherData } from "./utils/pool";
 import { deserializeStakeAccountPositions } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
@@ -190,26 +191,6 @@ export class PythStakingClient {
     return convertBNToBigInt(poolDataAccountAnchor);
   }
 
-  public async getPublishers(): Promise<
-    {
-      pubkey: PublicKey;
-      stakeAccount: PublicKey | null;
-    }[]
-  > {
-    const poolData = await this.getPoolDataAccount();
-
-    return poolData.publishers
-      .map((publisher, index) => ({
-        pubkey: publisher,
-        stakeAccount:
-          poolData.publisherStakeAccounts[index] === undefined ||
-          poolData.publisherStakeAccounts[index].equals(PublicKey.default)
-            ? null
-            : poolData.publisherStakeAccounts[index],
-      }))
-      .filter(({ pubkey }) => !pubkey.equals(PublicKey.default));
-  }
-
   public async stakeToGovernance(
     stakeAccountPositions: PublicKey,
     amount: bigint,
@@ -315,7 +296,8 @@ export class PythStakingClient {
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
     // TODO: optimize to only send transactions for publishers that have positive rewards
-    const publishers = await this.getPublishers();
+    const poolData = await this.getPoolDataAccount();
+    const publishers = extractPublisherData(poolData);
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
