@@ -349,4 +349,20 @@ export class PythTest implements Contract {
       body: messageBody,
     });
   }
+
+  async getIsValidDataSource(
+    provider: ContractProvider,
+    dataSource: DataSource
+  ) {
+    const result = await provider.get("test_get_is_valid_data_source", [
+      {
+        type: "cell",
+        cell: beginCell()
+          .storeUint(dataSource.emitterChain, 16)
+          .storeUint(BigInt("0x" + dataSource.emitterAddress), 256)
+          .endCell(),
+      },
+    ]);
+    return result.stack.readBoolean();
+  }
 }

@@ -7,6 +7,7 @@ import { PythTest, PythTestConfig } from "../wrappers/PythTest";
 import {
   BTC_PRICE_FEED_ID,
   HERMES_BTC_ETH_UPDATE,
+  PYTH_SET_DATA_SOURCES,
   PYTH_SET_FEE,
   TEST_GUARDIAN_ADDRESS1,
 } from "./utils/pyth";
@@ -338,5 +339,59 @@ describe("PythTest", () => {
     // Get the new fee
     const newFee = await pythTest.getSingleUpdateFee();
     expect(newFee).toEqual(4200);
+  });
+
+  it("should execute set data sources governance instruction", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCE
+    );
+
+    // Execute the governance action
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_DATA_SOURCES, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Verify that the new data sources are set correctly
+    const newDataSources: DataSource[] = [
+      {
+        emitterChain: 1,
+        emitterAddress:
+          "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+      },
+      {
+        emitterChain: 3,
+        emitterAddress:
+          "000000000000000000000000000000000000000000000000000000000000012d",
+      },
+    ];
+
+    for (const dataSource of newDataSources) {
+      const isValid = await pythTest.getIsValidDataSource(dataSource);
+      expect(isValid).toBe(true);
+    }
+
+    // Verify that the old data source is no longer valid
+    const oldDataSource = DATA_SOURCES[0];
+    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
+      oldDataSource
+    );
+    expect(oldDataSourceIsValid).toBe(false);
   });
 });

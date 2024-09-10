@@ -70,3 +70,7 @@
 (cell) test_get_governance_data_source() method_id {
     return get_governance_data_source();
 }
+
+(int) test_get_is_valid_data_source(cell data_source) method_id {
+    return get_is_valid_data_source(data_source);
+}
