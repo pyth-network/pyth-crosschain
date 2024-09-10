@@ -518,10 +518,7 @@ const Publisher = ({
           </Meter>
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
-          <div>
-            {publisher.lastApy}
-            %
-          </div>
+          <div>{publisher.lastApy}%</div>
         </PublisherTableCell>
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">

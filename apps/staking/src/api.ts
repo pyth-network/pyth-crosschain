@@ -229,7 +229,7 @@ export const loadData = async (
       const apyHistory = publisherData.apyHistory.map(({ epoch, apy }) => ({
         date: epochToDate(epoch + 1n),
         apy: Number(apy),
-      }))
+      }));
       return {
         apyHistory,
         lastApy: apyHistory.at(-1)?.apy ?? 0,
