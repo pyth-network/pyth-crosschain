@@ -185,6 +185,15 @@ export class PythStakingClient {
     );
   }
 
+  public async getOwnerPythBalance(): Promise<bigint> {
+    try {
+      const ataAccount = await this.getOwnerPythAtaAccount();
+      return ataAccount.amount;
+    } catch {
+      return 0n;
+    }
+  }
+
   public async getPoolConfigAccount(): Promise<PoolConfig> {
     const poolConfigAnchor =
       await this.integrityPoolProgram.account.poolConfig.fetch(

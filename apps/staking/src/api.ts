@@ -164,7 +164,7 @@ export const loadData = async (
   const [
     stakeAccountCustody,
     poolData,
-    ownerAtaAccount,
+    ownerPythBalance,
     unlockSchedule,
     poolConfig,
     claimableRewards,
@@ -174,7 +174,7 @@ export const loadData = async (
   ] = await Promise.all([
     client.getStakeAccountCustody(stakeAccount.address),
     client.getPoolDataAccount(),
-    client.getOwnerPythAtaAccount(),
+    client.getOwnerPythBalance(),
     client.getUnlockSchedule(stakeAccount.address),
     client.getPoolConfigAccount(),
     client.getClaimableRewards(stakeAccount.address),
@@ -231,7 +231,7 @@ export const loadData = async (
     },
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
-    walletAmount: ownerAtaAccount.amount,
+    walletAmount: ownerPythBalance,
     integrityStakingPublishers: publishers.map((publisherData) => {
       const publisherRanking = publisherRankings.find(
         (ranking) => ranking.publisher === publisherData.pubkey.toBase58(),
