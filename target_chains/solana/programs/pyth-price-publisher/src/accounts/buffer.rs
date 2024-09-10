@@ -85,10 +85,13 @@ impl BufferedPrice {
     }
 }
 
+/// Verifies the account magic.
 pub fn format_matches(data: &[u8]) -> bool {
     super::format(data).map_or(false, |f| f == FORMAT)
 }
 
+/// Verifies the account size and header. Returns the header and the currently stored prices
+/// (as indicated by the `num_prices` field in the header).
 pub fn read(data: &[u8]) -> Result<(&BufferHeader, &[BufferedPrice]), ReadAccountError> {
     if data.len() < size_of::<BufferHeader>() {
         return Err(ReadAccountError::DataTooShort);
@@ -109,10 +112,13 @@ pub fn read(data: &[u8]) -> Result<(&BufferHeader, &[BufferedPrice]), ReadAccoun
     Ok((header, prices))
 }
 
+/// Returns the buffer size required to hold the specified number of prices.
 pub fn size(max_prices: usize) -> usize {
     size_of::<BufferHeader>() + max_prices * size_of::<BufferedPrice>()
 }
 
+/// Verifies the account size and header. Returns the header and the remaining buffer space.
+/// The remaining space may contain some prices, as indicated by the `num_prices` field in the header.
 pub fn read_mut(data: &mut [u8]) -> Result<(&mut BufferHeader, &mut [u8]), ReadAccountError> {
     if data.len() < size_of::<BufferHeader>() {
         return Err(ReadAccountError::DataTooShort);
@@ -125,6 +131,7 @@ pub fn read_mut(data: &mut [u8]) -> Result<(&mut BufferHeader, &mut [u8]), ReadA
     Ok((header, prices))
 }
 
+/// Initializes the buffer. Returns the header and the remaining buffer space.
 pub fn create(
     data: &mut [u8],
     publisher: [u8; 32],
@@ -141,7 +148,8 @@ pub fn create(
     Ok((header, prices))
 }
 
-pub fn extend(
+/// Removes prices for the other slot from the buffer (if any) and adds new prices.
+pub fn update(
     header: &mut BufferHeader,
     prices: &mut [u8],
     current_slot: u64,
@@ -193,17 +201,17 @@ fn test_extend_clears_old_prices() {
     assert!(read(&buf).unwrap().1.is_empty());
     {
         let (header, prices) = read_mut(&mut buf).unwrap();
-        extend(header, prices, 1, &vec![1; 40]).unwrap();
+        update(header, prices, 1, &vec![1; 40]).unwrap();
     }
     assert_eq!(read(&buf).unwrap().1.len(), 2);
     {
         let (header, prices) = read_mut(&mut buf).unwrap();
-        extend(header, prices, 1, &vec![1; 60]).unwrap();
+        update(header, prices, 1, &vec![1; 60]).unwrap();
     }
     assert_eq!(read(&buf).unwrap().1.len(), 5);
     {
         let (header, prices) = read_mut(&mut buf).unwrap();
-        extend(header, prices, 2, &vec![1; 60]).unwrap();
+        update(header, prices, 2, &vec![1; 60]).unwrap();
     }
     assert_eq!(read(&buf).unwrap().1.len(), 3);
 }
