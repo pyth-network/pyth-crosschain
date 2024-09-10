@@ -312,10 +312,6 @@ int apply_decimal_expo(int value, int expo) {
     single_update_fee = new_fee;
 }
 
-() execute_set_valid_period(slice payload) impure {
-    ;; TODO: Implement
-}
-
 () execute_governance_payload(int action, slice payload) impure {
     if (action == UPGRADE_CONTRACT) {
         execute_upgrade_contract(payload);
@@ -326,7 +322,8 @@ int apply_decimal_expo(int value, int expo) {
     } elseif (action == SET_FEE) {
         execute_set_fee(payload);
     } elseif (action == SET_VALID_PERIOD) {
-        execute_set_valid_period(payload);
+        ;; Unsupported governance action
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
     } elseif (action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER) {
         ;; RequestGovernanceDataSourceTransfer can only be part of
         ;; AuthorizeGovernanceDataSourceTransfer message
