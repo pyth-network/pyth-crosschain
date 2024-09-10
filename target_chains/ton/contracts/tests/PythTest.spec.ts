@@ -4,7 +4,12 @@ import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { PythTest, PythTestConfig } from "../wrappers/PythTest";
-import { BTC_PRICE_FEED_ID, HERMES_BTC_ETH_UPDATE } from "./utils/pyth";
+import {
+  BTC_PRICE_FEED_ID,
+  HERMES_BTC_ETH_UPDATE,
+  PYTH_SET_FEE,
+  TEST_GUARDIAN_ADDRESS1,
+} from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 
@@ -29,6 +34,11 @@ const DATA_SOURCES: DataSource[] = [
       "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
   },
 ];
+const TEST_GOVERNANCE_DATA_SOURCE: DataSource = {
+  emitterChain: 1,
+  emitterAddress:
+    "0000000000000000000000000000000000000000000000000000000000000029",
+};
 
 describe("PythTest", () => {
   let code: Cell;
@@ -57,7 +67,8 @@ describe("PythTest", () => {
     guardianSet: string[] = GUARDIAN_SET_0,
     chainId: number = 1,
     governanceChainId: number = 1,
-    governanceContract: string = "0000000000000000000000000000000000000000000000000000000000000004"
+    governanceContract: string = "0000000000000000000000000000000000000000000000000000000000000004",
+    governanceDataSource?: DataSource
   ) {
     const config: PythTestConfig = {
       priceFeedId,
@@ -71,6 +82,7 @@ describe("PythTest", () => {
       chainId,
       governanceChainId,
       governanceContract,
+      governanceDataSource,
     };
 
     pythTest = blockchain.openContract(PythTest.createFromConfig(config, code));
@@ -281,5 +293,50 @@ describe("PythTest", () => {
     expect(result.refs.length).toBe(0);
 
     // TODO: add more tests for other governance data source
+  });
+
+  it("should correctly get single update fee", async () => {
+    await deployContract();
+
+    // Get the initial fee
+    const result = await pythTest.getSingleUpdateFee();
+
+    expect(result).toBe(SINGLE_UPDATE_FEE);
+  });
+
+  it("should execute set fee governance instruction", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCE
+    );
+
+    // Get the initial fee
+    const initialFee = await pythTest.getSingleUpdateFee();
+    expect(initialFee).toEqual(SINGLE_UPDATE_FEE);
+
+    // Execute the governance action
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Get the new fee
+    const newFee = await pythTest.getSingleUpdateFee();
+    expect(newFee).toEqual(4200);
   });
 });

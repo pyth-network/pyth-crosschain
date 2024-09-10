@@ -27,6 +27,7 @@ export type PythTestConfig = {
   chainId: number;
   governanceChainId: number;
   governanceContract: string;
+  governanceDataSource?: DataSource;
 };
 
 export class PythTest implements Contract {
@@ -51,7 +52,8 @@ export class PythTest implements Contract {
       config.guardianSet,
       config.chainId,
       config.governanceChainId,
-      config.governanceContract
+      config.governanceContract,
+      config.governanceDataSource
     );
     const init = { code, data };
     return new PythTest(contractAddress(workchain, init), init);
@@ -68,7 +70,8 @@ export class PythTest implements Contract {
     guardianSet: string[],
     chainId: number,
     governanceChainId: number,
-    governanceContract: string
+    governanceContract: string,
+    governanceDataSource?: DataSource
   ): Cell {
     const priceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
@@ -143,7 +146,16 @@ export class PythTest implements Contract {
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))
       .storeDict(Dictionary.empty()) // consumed_governance_actions
-      .storeRef(beginCell()) // governance_data_source, empty for initial state
+      .storeRef(
+        governanceDataSource
+          ? beginCell()
+              .storeUint(governanceDataSource.emitterChain, 16)
+              .storeBuffer(
+                Buffer.from(governanceDataSource.emitterAddress, "hex")
+              )
+              .endCell()
+          : beginCell().endCell()
+      ) // governance_data_source
       .storeUint(0, 64) // last_executed_governance_sequence
       .storeUint(0, 32) // governance_data_source_index
       .endCell();
@@ -255,6 +267,11 @@ export class PythTest implements Contract {
     return result.stack.readNumber();
   }
 
+  async getSingleUpdateFee(provider: ContractProvider) {
+    const result = await provider.get("test_get_single_update_fee", []);
+    return result.stack.readNumber();
+  }
+
   async sendUpdatePriceFeeds(
     provider: ContractProvider,
     via: Sender,
@@ -314,5 +331,22 @@ export class PythTest implements Contract {
   async getGovernanceDataSource(provider: ContractProvider) {
     const result = await provider.get("test_get_governance_data_source", []);
     return result.stack.readCell();
+  }
+
+  async sendExecuteGovernanceAction(
+    provider: ContractProvider,
+    via: Sender,
+    governanceAction: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(3, 32) // OP_EXECUTE_GOVERNANCE_ACTION
+      .storeRef(createCellChain(governanceAction))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
   }
 }
