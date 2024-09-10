@@ -1,5 +1,5 @@
 // TODO remove these disables when moving off the mock APIs
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
@@ -312,7 +312,11 @@ export const cancelWarmupGovernance = async (
   stakeAccount: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  await client.unstakeFromGovernance(stakeAccount, PositionState.LOCKING, amount);
+  await client.unstakeFromGovernance(
+    stakeAccount,
+    PositionState.LOCKING,
+    amount,
+  );
 };
 
 export const unstakeGovernance = async (
@@ -320,7 +324,11 @@ export const unstakeGovernance = async (
   stakeAccount: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  await client.unstakeFromGovernance(stakeAccount, PositionState.LOCKED, amount);
+  await client.unstakeFromGovernance(
+    stakeAccount,
+    PositionState.LOCKED,
+    amount,
+  );
 };
 
 export const delegateIntegrityStaking = async (
@@ -338,7 +346,12 @@ export const cancelWarmupIntegrityStaking = async (
   publisherKey: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  await client.unstakeFromPublisher(stakeAccount, publisherKey, PositionState.LOCKING, amount);
+  await client.unstakeFromPublisher(
+    stakeAccount,
+    publisherKey,
+    PositionState.LOCKING,
+    amount,
+  );
 };
 
 export const unstakeIntegrityStaking = async (
@@ -347,7 +360,12 @@ export const unstakeIntegrityStaking = async (
   publisherKey: PublicKey,
   amount: bigint,
 ): Promise<void> => {
-  await client.unstakeFromPublisher(stakeAccount, publisherKey, PositionState.LOCKED, amount);
+  await client.unstakeFromPublisher(
+    stakeAccount,
+    publisherKey,
+    PositionState.LOCKED,
+    amount,
+  );
 };
 
 export const getUpcomingEpoch = (): Date => {
@@ -406,10 +424,3 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
-
-class NotImplementedError extends Error {
-  constructor() {
-    super("Not yet implemented!");
-    this.name = "NotImplementedError";
-  }
-}
