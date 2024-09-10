@@ -56,6 +56,7 @@ type Data = {
     poolUtilization: bigint;
     numFeeds: number;
     qualityRanking: number;
+    lastApy: number;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -225,11 +226,13 @@ export const loadData = async (
       const publisherRanking = publisherRankings.find(
         (ranking) => ranking.publisher === publisherData.pubkey.toBase58(),
       );
+      const apyHistory = publisherData.apyHistory.map(({ epoch, apy }) => ({
+        date: epochToDate(epoch + 1n),
+        apy: Number(apy),
+      }))
       return {
-        apyHistory: publisherData.apyHistory.map(({ epoch, apy }) => ({
-          date: epochToDate(epoch + 1n),
-          apy: Number(apy),
-        })),
+        apyHistory,
+        lastApy: apyHistory.at(-1)?.apy ?? 0,
         isSelf:
           publisherData.stakeAccount?.equals(stakeAccount.address) ?? false,
         name: undefined, // TODO

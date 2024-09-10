@@ -416,6 +416,7 @@ type PublisherProps = {
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
+    lastApy: number;
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -518,11 +519,7 @@ const Publisher = ({
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
           <div>
-            {calculateApy(
-              publisher.poolCapacity,
-              publisher.poolUtilization,
-              publisher.isSelf,
-            )}
+            {publisher.lastApy}
             %
           </div>
         </PublisherTableCell>
