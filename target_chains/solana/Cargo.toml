@@ -8,7 +8,7 @@ members = [
 ]
 
 exclude = [
-    "programs/pyth-price-publisher"
+    "programs/pyth-price-store"
 ]
 
 [profile.release]
