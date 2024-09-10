@@ -333,21 +333,21 @@ export const delegateIntegrityStaking = async (
 };
 
 export const cancelWarmupIntegrityStaking = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _publisherKey: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromPublisher(stakeAccount, publisherKey, PositionState.LOCKING, amount);
 };
 
 export const unstakeIntegrityStaking = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _publisherKey: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromPublisher(stakeAccount, publisherKey, PositionState.LOCKED, amount);
 };
 
 export const getUpcomingEpoch = (): Date => {

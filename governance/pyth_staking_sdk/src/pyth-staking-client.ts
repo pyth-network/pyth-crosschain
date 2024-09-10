@@ -24,7 +24,10 @@ import {
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { getCurrentEpoch } from "./utils/clock";
 import { extractPublisherData } from "./utils/pool";
-import { deserializeStakeAccountPositions, getPositionState } from "./utils/position";
+import {
+  deserializeStakeAccountPositions,
+  getPositionState,
+} from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
@@ -221,30 +224,99 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
     const currentEpoch = await getCurrentEpoch(this.connection);
-   
+
     let remainingAmount = amount;
     const instructionPromises: Promise<TransactionInstruction>[] = [];
 
     const eligiblePositions = stakeAccountPositionsData.data.positions
-    .map((p, i) => ({position: p, index: i}))
-    .reverse()
-    .filter(
-      ({position}) => position.targetWithParameters.voting !== undefined && 
-      positionState === getPositionState(position, currentEpoch))
+      .map((p, i) => ({ position: p, index: i }))
+      .reverse()
+      .filter(
+        ({ position }) =>
+          position.targetWithParameters.voting !== undefined &&
+          positionState === getPositionState(position, currentEpoch),
+      );
 
-    for (const {position, index} of eligiblePositions) {
+    for (const { position, index } of eligiblePositions) {
       if (position.amount < remainingAmount) {
         instructionPromises.push(
-          this.stakingProgram.methods.closePosition(index, convertBigIntToBN(position.amount), {voting: {}}).accounts({
-            stakeAccountPositions,
-          }).instruction()
+          this.stakingProgram.methods
+            .closePosition(index, convertBigIntToBN(position.amount), {
+              voting: {},
+            })
+            .accounts({
+              stakeAccountPositions,
+            })
+            .instruction(),
         );
         remainingAmount -= position.amount;
       } else {
         instructionPromises.push(
-          this.stakingProgram.methods.closePosition(index, convertBigIntToBN(remainingAmount), {voting: {}}).accounts({
-            stakeAccountPositions,
-          }).instruction()
+          this.stakingProgram.methods
+            .closePosition(index, convertBigIntToBN(remainingAmount), {
+              voting: {},
+            })
+            .accounts({
+              stakeAccountPositions,
+            })
+            .instruction(),
+        );
+        break;
+      }
+    }
+
+    const instructions = await Promise.all(instructionPromises);
+    return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
+  public async unstakeFromPublisher(
+    stakeAccountPositions: PublicKey,
+    publisher: PublicKey,
+    positionState: PositionState.LOCKED | PositionState.LOCKING,
+    amount: bigint,
+  ) {
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    let remainingAmount = amount;
+    const instructionPromises: Promise<TransactionInstruction>[] = [];
+
+    const eligiblePositions = stakeAccountPositionsData.data.positions
+      .map((p, i) => ({ position: p, index: i }))
+      .reverse()
+      .filter(
+        ({ position }) =>
+          position.targetWithParameters.integrityPool?.publisher !==
+            undefined &&
+          position.targetWithParameters.integrityPool.publisher.equals(
+            publisher,
+          ) &&
+          positionState === getPositionState(position, currentEpoch),
+      );
+
+    for (const { position, index } of eligiblePositions) {
+      if (position.amount < remainingAmount) {
+        instructionPromises.push(
+          this.integrityPoolProgram.methods
+            .undelegate(index, convertBigIntToBN(position.amount))
+            .accounts({
+              stakeAccountPositions,
+              publisher,
+            })
+            .instruction(),
+        );
+        remainingAmount -= position.amount;
+      } else {
+        instructionPromises.push(
+          this.integrityPoolProgram.methods
+            .undelegate(index, convertBigIntToBN(remainingAmount))
+            .accounts({
+              stakeAccountPositions,
+              publisher,
+            })
+            .instruction(),
         );
         break;
       }
