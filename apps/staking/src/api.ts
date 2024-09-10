@@ -233,8 +233,9 @@ export const loadData = async (
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
     walletAmount: ownerPythBalance,
     integrityStakingPublishers: publishers.map((publisherData) => {
+      const publisherPubkeyString = publisherData.pubkey.toBase58();
       const publisherRanking = publisherRankings.find(
-        (ranking) => ranking.publisher === publisherData.pubkey.toBase58(),
+        (ranking) => ranking.publisher === publisherPubkeyString,
       );
       const apyHistory = publisherData.apyHistory.map(({ epoch, apy }) => ({
         date: epochToDate(epoch + 1n),
