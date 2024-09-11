@@ -9,6 +9,7 @@ import { Styled } from "../Styled";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  currentEpoch: bigint;
   total: bigint;
   lastSlash:
     | {
@@ -42,6 +43,7 @@ type Props = {
 
 export const Dashboard = ({
   api,
+  currentEpoch,
   total,
   lastSlash,
   walletAmount,
@@ -150,6 +152,7 @@ export const Dashboard = ({
         <DashboardTabPanel id={TabIds.Governance}>
           <Governance
             api={api}
+            currentEpoch={currentEpoch}
             availableToStake={availableToStakeGovernance}
             warmup={governance.warmup}
             staked={governance.staked}
@@ -160,6 +163,7 @@ export const Dashboard = ({
         <DashboardTabPanel id={TabIds.IntegrityStaking}>
           <OracleIntegrityStaking
             api={api}
+            currentEpoch={currentEpoch}
             availableToStake={availableToStakeIntegrity}
             locked={locked}
             warmup={integrityStakingWarmup}

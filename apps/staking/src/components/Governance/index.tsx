@@ -3,6 +3,7 @@ import { ProgramSection } from "../ProgramSection";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  currentEpoch: bigint;
   availableToStake: bigint;
   warmup: bigint;
   staked: bigint;
@@ -12,6 +13,7 @@ type Props = {
 
 export const Governance = ({
   api,
+  currentEpoch,
   availableToStake,
   warmup,
   staked,
@@ -21,6 +23,7 @@ export const Governance = ({
   <ProgramSection
     name="Governance"
     description="Vote and Influence the Network"
+    currentEpoch={currentEpoch}
     available={availableToStake}
     warmup={warmup}
     staked={staked}
