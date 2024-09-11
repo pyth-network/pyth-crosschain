@@ -475,12 +475,20 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
 
+    let totalRewards = 0n;
+
     for (const instruction of instructions) {
-      await this.connection.simulateTransaction(
-        new Transaction().add(instruction),
-      );
+      const tx = new Transaction().add(instruction);
+      tx.feePayer = this.wallet.publicKey;
+      const res = await this.connection.simulateTransaction(tx);
+      const val = res.value.returnData?.data[0];
+      if (val === undefined) {
+        continue;
+      }
+      const buffer = Buffer.from(val, "base64");
+      totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
-    return 1n;
+    return totalRewards;
   }
 }
