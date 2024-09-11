@@ -11,3 +11,13 @@
  * with the optimized React build, etc.
  */
 export const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
+
+/**
+ * Region-blocked requests will be redirected here.  This is used in the
+ * middleware to implement the block, and also consumed in any components that
+ * are part of the page layout but need to know if the request is blocked from
+ * accessing the app, such as the WalletButton in the app header.
+ *
+ * Don't change unless you also change the relevant app route path to match.
+ */
+export const BLOCKED_SEGMENT = "blocked";
