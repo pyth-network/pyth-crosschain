@@ -71,18 +71,20 @@ export const OracleIntegrityStaking = ({
   yieldRate,
 }: Props) => {
   const self = useMemo(
-    () => publishers.find((publisher) => publisher.isSelf),
-    [publishers],
+    () =>
+      api.type === ApiStateType.Loaded &&
+      publishers.find((publisher) =>
+        publisher.stakeAccount?.equals(api.account.address),
+      ),
+    [publishers, api],
   );
 
   const otherPublishers = useMemo(
     () =>
-      publishers.filter(
-        (publisher) =>
-          !publisher.isSelf &&
-          (publisher.poolCapacity > 0n || hasAnyPositions(publisher)),
-      ),
-    [publishers],
+      self === undefined
+        ? publishers
+        : publishers.filter((publisher) => publisher !== self),
+    [publishers, self],
   );
 
   return (
@@ -697,11 +699,11 @@ type PublisherProps = {
   currentEpoch: bigint;
   availableToStake: bigint;
   totalStaked: bigint;
-  isSelf?: boolean;
+  isSelf?: boolean | undefined;
   publisher: {
     name: string | undefined;
     publicKey: PublicKey;
-    isSelf: boolean;
+    stakeAccount: PublicKey | undefined;
     selfStake: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
@@ -817,7 +819,7 @@ const Publisher = ({
         <PublisherTableCell className="text-center">
           <div>
             {calculateApy({
-              isSelf: publisher.isSelf,
+              isSelf: isSelf ?? false,
               selfStake: publisher.selfStake,
               poolCapacity: publisher.poolCapacity,
               poolUtilization: publisher.poolUtilization,
@@ -851,6 +853,7 @@ const Publisher = ({
             availableToStake={availableToStake}
             publisher={publisher}
             yieldRate={yieldRate}
+            isSelf={isSelf ?? false}
           />
         </PublisherTableCell>
       </tr>
@@ -950,6 +953,7 @@ type StakeToPublisherButtonProps = {
   currentEpoch: bigint;
   availableToStake: bigint;
   yieldRate: bigint;
+  isSelf: boolean;
 };
 
 const StakeToPublisherButton = ({
@@ -958,6 +962,7 @@ const StakeToPublisherButton = ({
   availableToStake,
   publisher,
   yieldRate,
+  isSelf,
 }: StakeToPublisherButtonProps) => {
   const delegate = useTransferActionForPublisher(
     api.type === ApiStateType.Loaded ? api.delegateIntegrityStaking : undefined,
@@ -981,33 +986,63 @@ const StakeToPublisherButton = ({
         <>
           <div className="mb-8 flex flex-row items-center justify-between text-sm">
             <div>APY after staking</div>
-            <div className="font-medium">
-              {publisher.isSelf
-                ? calculateApy({
-                    isSelf: publisher.isSelf,
-                    selfStake:
-                      publisher.selfStake +
-                      (amount.type === AmountType.Valid ? amount.amount : 0n),
-                    poolCapacity: publisher.poolCapacity,
-                    yieldRate,
-                  })
-                : calculateApy({
-                    isSelf: publisher.isSelf,
-                    selfStake: publisher.selfStake,
-                    poolCapacity: publisher.poolCapacity,
-                    poolUtilization:
-                      publisher.poolUtilization +
-                      (amount.type === AmountType.Valid ? amount.amount : 0n),
-                    yieldRate,
-                  })}
-              %
-            </div>
+            <NewApy
+              className="font-medium"
+              isSelf={isSelf}
+              publisher={publisher}
+              yieldRate={yieldRate}
+            >
+              {amount.type === AmountType.Valid ? amount.amount : 0n}
+            </NewApy>
           </div>
           <StakingTimeline currentEpoch={currentEpoch} />
         </>
       )}
     </TransferButton>
   );
+};
+
+type NewApyProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+  isSelf: boolean;
+  publisher: PublisherProps["publisher"];
+  yieldRate: bigint;
+  children: bigint;
+};
+
+const NewApy = ({
+  isSelf,
+  publisher,
+  yieldRate,
+  children,
+  ...props
+}: NewApyProps) => {
+  const apy = useMemo(
+    () =>
+      calculateApy({
+        poolCapacity: publisher.poolCapacity,
+        yieldRate,
+        ...(isSelf
+          ? {
+              isSelf: true,
+              selfStake: publisher.selfStake + children,
+            }
+          : {
+              isSelf: false,
+              selfStake: publisher.selfStake,
+              poolUtilization: publisher.poolUtilization + children,
+            }),
+      }),
+    [
+      publisher.poolCapacity,
+      yieldRate,
+      isSelf,
+      publisher.selfStake,
+      publisher.poolUtilization,
+      children,
+    ],
+  );
+
+  return <div {...props}>{apy}%</div>;
 };
 
 type PublisherNameProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
