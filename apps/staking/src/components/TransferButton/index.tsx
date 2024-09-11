@@ -23,6 +23,7 @@ import { Tokens } from "../Tokens";
 import PythTokensIcon from "../Tokens/pyth.svg";
 
 type Props = Omit<ComponentProps<typeof Button>, "children"> & {
+  enableWithZeroMax?: boolean | undefined;
   actionName: ReactNode;
   actionDescription: ReactNode;
   title?: ReactNode | undefined;
@@ -37,6 +38,7 @@ type Props = Omit<ComponentProps<typeof Button>, "children"> & {
 };
 
 export const TransferButton = ({
+  enableWithZeroMax,
   actionName,
   submitButtonText,
   actionDescription,
@@ -49,7 +51,9 @@ export const TransferButton = ({
 }: Props) => {
   const [closeDisabled, setCloseDisabled] = useState(false);
 
-  return transfer === undefined || isDisabled === true || max === 0n ? (
+  return transfer === undefined ||
+    isDisabled === true ||
+    (max === 0n && !enableWithZeroMax) ? (
     <Button isDisabled={true} {...props}>
       {actionName}
     </Button>
