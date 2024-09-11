@@ -9,7 +9,7 @@ const PriceFeedMetadata = z
   .passthrough();
 const PriceIdInput = z.string();
 const EncodingType = z.enum(["hex", "base64"]);
-const BinaryPriceUpdate = z
+const BinaryUpdate = z
   .object({ data: z.array(z.string()), encoding: EncodingType })
   .passthrough();
 const RpcPrice = z
@@ -38,8 +38,20 @@ const ParsedPriceUpdate = z
   .passthrough();
 const PriceUpdate = z
   .object({
-    binary: BinaryPriceUpdate,
+    binary: BinaryUpdate,
     parsed: z.array(ParsedPriceUpdate).nullish(),
+  })
+  .passthrough();
+const ParsedPublisherStakeCap = z
+  .object({ cap: z.number().int().gte(0), publisher: z.string() })
+  .passthrough();
+const ParsedPublisherStakeCapsUpdate = z
+  .object({ publisher_stake_caps: z.array(ParsedPublisherStakeCap) })
+  .passthrough();
+const LatestPublisherStakeCapsUpdateDataResponse = z
+  .object({
+    binary: BinaryUpdate,
+    parsed: z.array(ParsedPublisherStakeCapsUpdate).nullish(),
   })
   .passthrough();
 
@@ -50,11 +62,14 @@ export const schemas = {
   PriceFeedMetadata,
   PriceIdInput,
   EncodingType,
-  BinaryPriceUpdate,
+  BinaryUpdate,
   RpcPrice,
   RpcPriceFeedMetadataV2,
   ParsedPriceUpdate,
   PriceUpdate,
+  ParsedPublisherStakeCap,
+  ParsedPublisherStakeCapsUpdate,
+  LatestPublisherStakeCapsUpdateDataResponse,
 };
 
 const endpoints = makeApi([
@@ -195,6 +210,26 @@ Given a collection of price feed ids, retrieve the latest Pyth price for each pr
         schema: z.void(),
       },
     ],
+  },
+  {
+    method: "get",
+    path: "/v2/updates/publisher_stake_caps/latest",
+    alias: "latest_publisher_stake_caps",
+    description: `Get the most recent publisher stake caps update data.`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "encoding",
+        type: "Query",
+        schema: z.enum(["hex", "base64"]).optional(),
+      },
+      {
+        name: "parsed",
+        type: "Query",
+        schema: z.boolean().optional(),
+      },
+    ],
+    response: LatestPublisherStakeCapsUpdateDataResponse,
   },
 ]);
 
