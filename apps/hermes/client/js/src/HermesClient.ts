@@ -127,8 +127,8 @@ export class HermesClient {
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param options Optional parameters:
-   *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *        - encoding: Encoding type. If specified, return the publisher caps in the encoding specified by the encoding parameter. Default is hex.
+   *        - parsed: Boolean to specify if the parsed publisher caps should be included in the response. Default is false.
    *
    * @returns PublisherCaps object containing the latest publisher stake caps.
    */
