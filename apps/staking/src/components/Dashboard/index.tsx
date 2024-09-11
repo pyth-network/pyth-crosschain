@@ -33,6 +33,7 @@ type Props = {
     cooldown: bigint;
     cooldown2: bigint;
   };
+  yieldRate: bigint;
   integrityStakingPublishers: ComponentProps<
     typeof OracleIntegrityStaking
   >["publishers"];
@@ -48,6 +49,7 @@ export const Dashboard = ({
   integrityStakingPublishers,
   locked,
   unlockSchedule,
+  yieldRate,
 }: Props) => {
   const availableToStakeGovernance = useMemo(
     () =>
@@ -156,6 +158,7 @@ export const Dashboard = ({
             cooldown={integrityStakingCooldown}
             cooldown2={integrityStakingCooldown2}
             publishers={integrityStakingPublishers}
+            yieldRate={yieldRate}
           />
         </DashboardTabPanel>
       </Tabs>

@@ -6,7 +6,12 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 
 import {
   getConfigAddress,
@@ -14,14 +19,20 @@ import {
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
 } from "./pdas";
-import type {
-  GlobalConfig,
-  PoolConfig,
-  PoolDataAccount,
-  StakeAccountPositions,
+import {
+  PositionState,
+  type GlobalConfig,
+  type PoolConfig,
+  type PoolDataAccount,
+  type StakeAccountPositions,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
-import { deserializeStakeAccountPositions } from "./utils/position";
+import { getCurrentEpoch } from "./utils/clock";
+import { extractPublisherData } from "./utils/pool";
+import {
+  deserializeStakeAccountPositions,
+  getPositionState,
+} from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
@@ -174,6 +185,15 @@ export class PythStakingClient {
     );
   }
 
+  public async getOwnerPythBalance(): Promise<bigint> {
+    try {
+      const ataAccount = await this.getOwnerPythAtaAccount();
+      return ataAccount.amount;
+    } catch {
+      return 0n;
+    }
+  }
+
   public async getPoolConfigAccount(): Promise<PoolConfig> {
     const poolConfigAnchor =
       await this.integrityPoolProgram.account.poolConfig.fetch(
@@ -188,26 +208,6 @@ export class PythStakingClient {
     const poolDataAccountAnchor =
       await this.integrityPoolProgram.account.poolData.fetch(poolDataAddress);
     return convertBNToBigInt(poolDataAccountAnchor);
-  }
-
-  public async getPublishers(): Promise<
-    {
-      pubkey: PublicKey;
-      stakeAccount: PublicKey | null;
-    }[]
-  > {
-    const poolData = await this.getPoolDataAccount();
-
-    return poolData.publishers
-      .map((publisher, index) => ({
-        pubkey: publisher,
-        stakeAccount:
-          poolData.publisherStakeAccounts[index] === undefined ||
-          poolData.publisherStakeAccounts[index].equals(PublicKey.default)
-            ? null
-            : poolData.publisherStakeAccounts[index],
-      }))
-      .filter(({ pubkey }) => !pubkey.equals(PublicKey.default));
   }
 
   public async stakeToGovernance(
@@ -227,6 +227,117 @@ export class PythStakingClient {
       .instruction();
 
     return sendTransaction([instruction], this.connection, this.wallet);
+  }
+
+  public async unstakeFromGovernance(
+    stakeAccountPositions: PublicKey,
+    positionState: PositionState.LOCKED | PositionState.LOCKING,
+    amount: bigint,
+  ) {
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    let remainingAmount = amount;
+    const instructionPromises: Promise<TransactionInstruction>[] = [];
+
+    const eligiblePositions = stakeAccountPositionsData.data.positions
+      .map((p, i) => ({ position: p, index: i }))
+      .reverse()
+      .filter(
+        ({ position }) =>
+          position.targetWithParameters.voting !== undefined &&
+          positionState === getPositionState(position, currentEpoch),
+      );
+
+    for (const { position, index } of eligiblePositions) {
+      if (position.amount < remainingAmount) {
+        instructionPromises.push(
+          this.stakingProgram.methods
+            .closePosition(index, convertBigIntToBN(position.amount), {
+              voting: {},
+            })
+            .accounts({
+              stakeAccountPositions,
+            })
+            .instruction(),
+        );
+        remainingAmount -= position.amount;
+      } else {
+        instructionPromises.push(
+          this.stakingProgram.methods
+            .closePosition(index, convertBigIntToBN(remainingAmount), {
+              voting: {},
+            })
+            .accounts({
+              stakeAccountPositions,
+            })
+            .instruction(),
+        );
+        break;
+      }
+    }
+
+    const instructions = await Promise.all(instructionPromises);
+    return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
+  public async unstakeFromPublisher(
+    stakeAccountPositions: PublicKey,
+    publisher: PublicKey,
+    positionState: PositionState.LOCKED | PositionState.LOCKING,
+    amount: bigint,
+  ) {
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    let remainingAmount = amount;
+    const instructionPromises: Promise<TransactionInstruction>[] = [];
+
+    const eligiblePositions = stakeAccountPositionsData.data.positions
+      .map((p, i) => ({ position: p, index: i }))
+      .reverse()
+      .filter(
+        ({ position }) =>
+          position.targetWithParameters.integrityPool?.publisher !==
+            undefined &&
+          position.targetWithParameters.integrityPool.publisher.equals(
+            publisher,
+          ) &&
+          positionState === getPositionState(position, currentEpoch),
+      );
+
+    for (const { position, index } of eligiblePositions) {
+      if (position.amount < remainingAmount) {
+        instructionPromises.push(
+          this.integrityPoolProgram.methods
+            .undelegate(index, convertBigIntToBN(position.amount))
+            .accounts({
+              stakeAccountPositions,
+              publisher,
+            })
+            .instruction(),
+        );
+        remainingAmount -= position.amount;
+      } else {
+        instructionPromises.push(
+          this.integrityPoolProgram.methods
+            .undelegate(index, convertBigIntToBN(remainingAmount))
+            .accounts({
+              stakeAccountPositions,
+              publisher,
+            })
+            .instruction(),
+        );
+        break;
+      }
+    }
+
+    const instructions = await Promise.all(instructionPromises);
+    return sendTransaction(instructions, this.connection, this.wallet);
   }
 
   public async depositTokensToStakeAccountCustody(
@@ -313,13 +424,24 @@ export class PythStakingClient {
     });
   }
 
-  public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
-    // TODO: optimize to only send transactions for publishers that have positive rewards
-    const publishers = await this.getPublishers();
+  async getAdvanceDelegationRecordInstructions(
+    stakeAccountPositions: PublicKey,
+  ) {
+    const poolData = await this.getPoolDataAccount();
+    const stakeAccountPositionsData = await this.getStakeAccountPositions(
+      stakeAccountPositions,
+    );
+    const allPublishers = extractPublisherData(poolData);
+    const publishers = allPublishers.filter(({ pubkey }) =>
+      stakeAccountPositionsData.data.positions.some(
+        ({ targetWithParameters }) =>
+          targetWithParameters.integrityPool?.publisher.equals(pubkey),
+      ),
+    );
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
-    const instructions = await Promise.all(
+    return Promise.all(
       publishers.map(({ pubkey, stakeAccount }) =>
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
@@ -338,7 +460,27 @@ export class PythStakingClient {
           .instruction(),
       ),
     );
+  }
+
+  public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
+    const instructions = await this.getAdvanceDelegationRecordInstructions(
+      stakeAccountPositions,
+    );
 
     return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
+  public async getClaimableRewards(stakeAccountPositions: PublicKey) {
+    const instructions = await this.getAdvanceDelegationRecordInstructions(
+      stakeAccountPositions,
+    );
+
+    for (const instruction of instructions) {
+      await this.connection.simulateTransaction(
+        new Transaction().add(instruction),
+      );
+    }
+
+    return 1n;
   }
 }

@@ -11,13 +11,7 @@ export type Convert<T, From, To> = T extends From
     ? Convert<U, From, To>[]
     : T extends Record<string, unknown>
       ? {
-          [K in keyof T]: T[K] extends From
-            ? To
-            : T[K] extends From | null
-              ? To | null
-              : T[K] extends Record<string, unknown> | unknown[]
-                ? Convert<T[K], From, To>
-                : T[K];
+          [K in keyof T]: Convert<T[K], From, To>;
         }
       : T;
 
@@ -53,6 +47,14 @@ export type StakeAccountPositions = {
     positions: Position[];
   };
 };
+
+export type PublisherData = {
+  pubkey: PublicKey;
+  stakeAccount: PublicKey | null;
+  totalDelegation: bigint;
+  selfDelegation: bigint;
+  apyHistory: { epoch: bigint; apy: bigint; selfApy: bigint }[];
+}[];
 
 export enum PositionState {
   UNLOCKED,

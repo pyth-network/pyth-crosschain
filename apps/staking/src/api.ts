@@ -1,7 +1,10 @@
 // TODO remove these disables when moving off the mock APIs
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
+  epochToDate,
+  extractPublisherData,
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
@@ -9,6 +12,16 @@ import {
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
+import { z } from "zod";
+
+const publishersRankingSchema = z
+  .object({
+    publisher: z.string(),
+    rank: z.number(),
+    numSymbols: z.number(),
+    timestamp: z.string(),
+  })
+  .array();
 
 type Data = {
   total: bigint;
@@ -37,6 +50,7 @@ type Data = {
     cooldown: bigint;
     cooldown2: bigint;
   };
+  yieldRate: bigint;
   integrityStakingPublishers: {
     name: string | undefined;
     publicKey: PublicKey;
@@ -144,21 +158,38 @@ export const getStakeAccounts = async (
 
 export const loadData = async (
   client: PythStakingClient,
+  hermesClient: HermesClient,
   stakeAccount: StakeAccountPositions,
 ): Promise<Data> => {
   const [
     stakeAccountCustody,
-    publishers,
-    ownerAtaAccount,
-    currentEpoch,
+    poolData,
+    ownerPythBalance,
     unlockSchedule,
+    poolConfig,
+    claimableRewards,
+    currentEpoch,
+    publisherRankingsResponse,
+    publisherCaps,
   ] = await Promise.all([
     client.getStakeAccountCustody(stakeAccount.address),
-    client.getPublishers(),
-    client.getOwnerPythAtaAccount(),
-    getCurrentEpoch(client.connection),
+    client.getPoolDataAccount(),
+    client.getOwnerPythBalance(),
     client.getUnlockSchedule(stakeAccount.address),
+    client.getPoolConfigAccount(),
+    client.getClaimableRewards(stakeAccount.address),
+    getCurrentEpoch(client.connection),
+    fetch("/api/publishers-ranking"),
+    hermesClient.getLatestPublisherCaps({
+      parsed: true,
+    }),
   ]);
+
+  const publishers = extractPublisherData(poolData);
+
+  const publisherRankings = publishersRankingSchema.parse(
+    await publisherRankingsResponse.json(),
+  );
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
@@ -179,11 +210,19 @@ export const loadData = async (
       epoch: currentEpoch,
     });
 
+  const getPublisherCap = (publisher: PublicKey) =>
+    BigInt(
+      publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+        ({ publisher: p }) => p === publisher.toBase58(),
+      )?.cap ?? 0,
+    );
+
   return {
     lastSlash: undefined, // TODO
-    availableRewards: 0n, // TODO
+    availableRewards: claimableRewards,
     expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
+    yieldRate: poolConfig.y,
     governance: {
       warmup: filterGovernancePositions(PositionState.LOCKING),
       staked: filterGovernancePositions(PositionState.LOCKED),
@@ -192,24 +231,47 @@ export const loadData = async (
     },
     unlockSchedule,
     locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
-    walletAmount: ownerAtaAccount.amount,
-    integrityStakingPublishers: publishers.map(({ pubkey: publisher }) => ({
-      apyHistory: [], // TODO
-      isSelf: false, // TODO
-      name: undefined, // TODO
-      numFeeds: 0, // TODO
-      poolCapacity: 100n, // TODO
-      poolUtilization: 0n, // TODO
-      publicKey: publisher,
-      qualityRanking: 0, // TODO
-      selfStake: 0n, // TODO
-      positions: {
-        warmup: filterOISPositions(publisher, PositionState.LOCKING),
-        staked: filterOISPositions(publisher, PositionState.LOCKED),
-        cooldown: filterOISPositions(publisher, PositionState.PREUNLOCKING),
-        cooldown2: filterOISPositions(publisher, PositionState.UNLOCKED),
-      },
-    })),
+    walletAmount: ownerPythBalance,
+    integrityStakingPublishers: publishers.map((publisherData) => {
+      const publisherPubkeyString = publisherData.pubkey.toBase58();
+      const publisherRanking = publisherRankings.find(
+        (ranking) => ranking.publisher === publisherPubkeyString,
+      );
+      const apyHistory = publisherData.apyHistory.map(({ epoch, apy }) => ({
+        date: epochToDate(epoch + 1n),
+        apy: Number(apy),
+      }));
+      return {
+        apyHistory,
+        isSelf:
+          publisherData.stakeAccount?.equals(stakeAccount.address) ?? false,
+        name: undefined, // TODO
+        numFeeds: publisherRanking?.numSymbols ?? 0,
+        poolCapacity: getPublisherCap(publisherData.pubkey),
+        poolUtilization: publisherData.totalDelegation,
+        publicKey: publisherData.pubkey,
+        qualityRanking: publisherRanking?.rank ?? 0,
+        selfStake: publisherData.selfDelegation,
+        positions: {
+          warmup: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.LOCKING,
+          ),
+          staked: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.LOCKED,
+          ),
+          cooldown: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.PREUNLOCKING,
+          ),
+          cooldown2: filterOISPositions(
+            publisherData.pubkey,
+            PositionState.UNLOCKED,
+          ),
+        },
+      };
+    }),
   };
 };
 
@@ -253,19 +315,27 @@ export const stakeGovernance = async (
 };
 
 export const cancelWarmupGovernance = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromGovernance(
+    stakeAccount,
+    PositionState.LOCKING,
+    amount,
+  );
 };
 
 export const unstakeGovernance = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromGovernance(
+    stakeAccount,
+    PositionState.LOCKED,
+    amount,
+  );
 };
 
 export const delegateIntegrityStaking = async (
@@ -278,36 +348,30 @@ export const delegateIntegrityStaking = async (
 };
 
 export const cancelWarmupIntegrityStaking = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _publisherKey: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
+  await client.unstakeFromPublisher(
+    stakeAccount,
+    publisherKey,
+    PositionState.LOCKING,
+    amount,
+  );
 };
 
 export const unstakeIntegrityStaking = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _publisherKey: PublicKey,
-  _amount: bigint,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
+  amount: bigint,
 ): Promise<void> => {
-  throw new NotImplementedError();
-};
-
-export const calculateApy = (
-  poolCapacity: bigint,
-  poolUtilization: bigint,
-  isSelf: boolean,
-) => {
-  const maxApy = isSelf ? 25 : 20;
-  const minApy = isSelf ? 10 : 5;
-  return Math.min(
-    Math.max(
-      maxApy - Number((poolUtilization - poolCapacity) / 100_000_000n),
-      minApy,
-    ),
-    maxApy,
+  await client.unstakeFromPublisher(
+    stakeAccount,
+    publisherKey,
+    PositionState.LOCKED,
+    amount,
   );
 };
 
@@ -367,10 +431,3 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
-
-class NotImplementedError extends Error {
-  constructor() {
-    super("Not yet implemented!");
-    this.name = "NotImplementedError";
-  }
-}

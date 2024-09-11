@@ -52,4 +52,14 @@ export default {
       ],
     },
   ],
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/publishers-ranking",
+        destination:
+          "https://web-api.pyth.network/publishers_ranking?cluster=pythnet",
+      },
+    ];
+  },
 };
