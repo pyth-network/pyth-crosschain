@@ -36,6 +36,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import expressRelayIdl from "./idl/idlExpressRelay.json";
 import { ExpressRelay } from "./expressRelayTypes";
+import { getConfigRouterPda, getExpressRelayMetadataPda } from "./svmPda";
 
 export * from "./types";
 
@@ -638,17 +639,9 @@ export class Client {
       {} as AnchorProvider
     );
 
+    const configRouter = getConfigRouterPda(chainId, router);
+    const expressRelayMetadata = getExpressRelayMetadataPda(chainId);
     const svmConstants = SVM_CONSTANTS[chainId];
-
-    const routerConfig = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("config_router"), router.toBuffer()],
-      svmConstants.expressRelayProgram
-    )[0];
-
-    const expressRelayMetadata = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("metadata")],
-      svmConstants.expressRelayProgram
-    )[0];
 
     const ixSubmitBid = await expressRelay.methods
       .submitBid({
@@ -660,9 +653,9 @@ export class Client {
         relayerSigner: svmConstants.relayerSigner,
         permission: permissionKey,
         router,
-        routerConfig,
-        feeReceiverRelayer: svmConstants.feeReceiverRelayer,
+        configRouter,
         expressRelayMetadata,
+        feeReceiverRelayer: svmConstants.feeReceiverRelayer,
         systemProgram: anchor.web3.SystemProgram.programId,
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
       })
