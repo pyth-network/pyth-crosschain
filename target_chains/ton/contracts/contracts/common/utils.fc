@@ -1,24 +1,36 @@
+#include "../imports/stdlib.fc";
+
 ;; Built-in assembly functions
 int keccak256(slice s) asm "1 PUSHINT HASHEXT_KECCAK256"; ;; Keccak-256 hash function
-;; TODO: Implement a Fift-based solution for arbitrary-sized input.
-int keccack256_4(slice s1, slice s2, slice s3, slice s4) asm "4 PUSHINT HASHEXT_KECCAK256";
+int keccak256_tuple(tuple t) asm "DUP TLEN EXPLODEVAR HASHEXT_KECCAK256";
 
 const MAX_BITS = 1016;
 
-int hash_vm_body(slice s) inline {
-    ;; Assumes the input slice 's' contains a VM body stored across 4 cells,
-    ;; each containing up to 1016 bits of data.
-    ;; The total size of the VM body should not exceed 4064 bits (4 * 1016).
-    slice s1 = s~load_bits(s.slice_bits());
-    s = s~load_ref().begin_parse();
-    slice s2 = s~load_bits(s.slice_bits());
-    s = s~load_ref().begin_parse();
-    slice s3 = s~load_bits(s.slice_bits());
-    s = s~load_ref().begin_parse();
-    slice s4 = s~load_bits(s.slice_bits());
-    int hash = keccack256_4(s1, s2, s3, s4);
+int keccak256_int(int hash) inline {
     slice hash_slice = begin_cell().store_uint(hash, 256).end_cell().begin_parse();
     return keccak256(hash_slice);
+}
+
+int keccak256_slice(slice s) inline {
+    tuple slices = empty_tuple();
+    int continue = true;
+
+    while (continue) {
+        if (~ s.slice_empty?()) {
+            slice current_slice = s~load_bits(s.slice_bits());
+            slices~tpush(current_slice);
+
+            if (s.slice_refs_empty?()) {
+                continue = false;
+            } else {
+                s = s~load_ref().begin_parse();
+            }
+        } else {
+            continue = false;
+        }
+    }
+
+    return keccak256_tuple(slices);
 }
 
 ;; Splits a slice into chunks of MAX_BITS bits or less, in reverse order
@@ -62,7 +74,7 @@ Note:
    - The function uses a maximum of 1016 bits per cell (instead of 1023) to ensure byte alignment
    - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
 -}
-(cell, slice) read_and_store_large_data(slice in_msg_body, int size) impure {
+(cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
     (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
     cell last_cell = null();
     while (~ cell_null?(chunks)) {

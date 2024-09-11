@@ -1,4 +1,4 @@
-import { Cell } from "@ton/core";
+import { beginCell, Cell, Dictionary } from "@ton/core";
 
 export const GUARDIAN_SET_0 = ["0x58CC3AE5C097B213CE3C81979E1B9F9570746AA5"];
 
@@ -135,6 +135,31 @@ export function createGuardianSetUpgradeBytes(
   }
 
   return payload.subarray(0, offset);
+}
+
+export function createGuardianSetsDict(
+  guardianSet: string[],
+  guardianSetIndex: number
+): Dictionary<number, Cell> {
+  const guardianSetDict = Dictionary.empty(
+    Dictionary.Keys.Uint(8),
+    Dictionary.Values.Buffer(20)
+  );
+  guardianSet.forEach((key, index) => {
+    guardianSetDict.set(index, Buffer.from(key.slice(2), "hex"));
+  });
+
+  const guardianSets = Dictionary.empty(
+    Dictionary.Keys.Uint(32),
+    Dictionary.Values.Cell()
+  );
+  const guardianSetCell = beginCell()
+    .storeUint(0, 64) // expiration_time, set to 0 for testing
+    .storeDict(guardianSetDict)
+    .endCell();
+  guardianSets.set(guardianSetIndex, guardianSetCell);
+
+  return guardianSets;
 }
 
 export function parseGuardianSetKeys(cell: Cell): string[] {

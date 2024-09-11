@@ -29,8 +29,19 @@ use {
     },
 };
 
-// Creates a publisher config account and stores the buffer account pubkey in it.
-// Verifies and initializes the buffer account.
+/// Creates a publisher config account and stores the buffer account pubkey in it.
+/// Verifies and initializes the buffer account.
+/// See `Instruction` for the list of required accounts.
+/// The config account must be an initialized PDA account with an expected seed.
+/// The authority account that signed the instruction
+/// must match the authority key stored in the config account.
+/// The publisher config account must be a non-existing PDA account with an expected seed.
+/// The buffer config must be an existing, zero-filled account owned by the program.
+/// Note: we aren't using a PDA for the buffer because the program can't create
+/// a PDA larger than 10240 bytes in a single transaction.
+/// Note: currently, the publisher config can only be set once and can only contain
+/// a single buffer key. If we need to modify the buffer key or create multiple buffer keys
+/// per publisher, we'll need to upgrade the program.
 pub fn initialize_publisher(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

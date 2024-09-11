@@ -436,7 +436,7 @@ where
                         .caps
                         .iter()
                         .map(|cap| ParsedPublisherStakeCap {
-                            publisher: Pubkey::from(cap.publisher),
+                            publisher: Pubkey::from(cap.publisher).to_string(),
                             cap:       cap.cap,
                         })
                         .collect(),
