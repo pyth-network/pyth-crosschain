@@ -23,10 +23,10 @@ import { Tokens } from "../Tokens";
 import PythTokensIcon from "../Tokens/pyth.svg";
 
 type Props = Omit<ComponentProps<typeof Button>, "children"> & {
-  actionName: string;
-  actionDescription: string;
-  title?: string | undefined;
-  submitButtonText?: string | undefined;
+  actionName: ReactNode;
+  actionDescription: ReactNode;
+  title?: ReactNode | undefined;
+  submitButtonText?: ReactNode | undefined;
   max: bigint;
   children?:
     | ((amount: Amount) => ReactNode | ReactNode[])
@@ -82,7 +82,7 @@ type DialogContentsProps = {
   children: Props["children"];
   transfer: (amount: bigint) => Promise<void>;
   setCloseDisabled: (value: boolean) => void;
-  submitButtonText: string;
+  submitButtonText: ReactNode;
   close: () => void;
 };
 
@@ -165,6 +165,7 @@ const DialogContents = ({
         </div>
         <Group className="relative w-full">
           <Input
+            required
             className="focused:outline-none focused:ring-0 focused:border-pythpurple-400 w-full truncate border border-neutral-600/50 bg-transparent py-3 pl-12 pr-24 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0"
             placeholder="0.00"
           />

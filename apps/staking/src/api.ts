@@ -437,6 +437,23 @@ export const unstakeIntegrityStaking = async (
   );
 };
 
+export const reassignPublisherAccount = async (
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
+  _targetAccount: PublicKey,
+): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+  throw new NotImplementedError();
+};
+
+export const optPublisherOut = async (
+  _client: PythStakingClient,
+  _stakeAccount: PublicKey,
+): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+  throw new NotImplementedError();
+};
+
 export const getUpcomingEpoch = (): Date => {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + ((5 + 7 - d.getUTCDay()) % 7 || 7));
