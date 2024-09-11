@@ -6,6 +6,7 @@ export default [
     rules: {
       "n/no-unpublished-import": "off",
       "unicorn/no-null": "off",
+      "unicorn/prefer-node-protocol": "off",
     },
   },
 ];
