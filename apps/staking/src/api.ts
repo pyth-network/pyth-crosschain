@@ -339,11 +339,10 @@ export const loadAccountHistory = async (
 };
 
 export const createStakeAccountAndDeposit = async (
-  _client: PythStakingClient,
-  _amount: bigint,
+  client: PythStakingClient,
+  amount: bigint,
 ): Promise<StakeAccountPositions> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  return client.createStakeAccountAndDeposit(amount);
 };
 
 export const deposit = async (
