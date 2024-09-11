@@ -132,7 +132,10 @@ where
                 types::ParsedPriceUpdate,
                 types::RpcPriceFeedMetadataV2,
                 types::PriceFeedMetadata,
-                types::AssetType
+                types::LatestPublisherStakeCapsUpdateDataResponse,
+                types::ParsedPublisherStakeCapsUpdate,
+                types::ParsedPublisherStakeCap,
+                types::AssetType,
             )
         ),
         tags(
