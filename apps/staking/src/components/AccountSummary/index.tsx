@@ -117,6 +117,7 @@ export const AccountSummary = ({
             actionName="Add Tokens"
             max={walletAmount}
             transfer={api.deposit}
+            enableWithZeroMax
           />
         </div>
       </div>
