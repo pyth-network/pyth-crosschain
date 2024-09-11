@@ -24,7 +24,7 @@ export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
 };
 
 export const SVM_CONSTANTS: Record<string, SvmConstantsConfig> = {
-  solana: {
+  "development-solana": {
     relayerSigner: new PublicKey(
       "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
     ),

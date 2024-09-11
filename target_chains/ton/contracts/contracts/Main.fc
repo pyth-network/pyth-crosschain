@@ -2,6 +2,7 @@
 #include "common/errors.fc";
 #include "common/storage.fc";
 #include "Wormhole.fc";
+#include "Pyth.fc";
 
 ;; Opcodes
 const int OP_UPDATE_GUARDIAN_SET = 1;

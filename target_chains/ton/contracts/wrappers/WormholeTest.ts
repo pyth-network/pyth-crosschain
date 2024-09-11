@@ -8,9 +8,13 @@ import {
   Dictionary,
   Sender,
   SendMode,
+  toNano,
 } from "@ton/core";
 import { createCellChain } from "../tests/utils";
-import { parseGuardianSetKeys } from "../tests/utils/wormhole";
+import {
+  createGuardianSetsDict,
+  parseGuardianSetKeys,
+} from "../tests/utils/wormhole";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;
@@ -53,32 +57,42 @@ export class WormholeTest implements Contract {
     governanceChainId: number,
     governanceContract: string
   ): Cell {
-    const guardianSetDict = Dictionary.empty(
-      Dictionary.Keys.Uint(8),
-      Dictionary.Values.Buffer(20)
-    );
-    guardianSet.forEach((key, index) => {
-      guardianSetDict.set(index, Buffer.from(key.slice(2), "hex"));
-    });
-    const guardianSets = Dictionary.empty(
-      Dictionary.Keys.Uint(32),
-      Dictionary.Values.Cell()
-    );
-    const guardianSetCell = beginCell()
-      .storeUint(0, 64) // expiration_time, set to 0 for testing
-      .storeDict(guardianSetDict)
-      .endCell();
-    guardianSets.set(guardianSetIndex, guardianSetCell);
-
-    return beginCell()
+    // Group price feeds and update fee (empty for Wormhole)
+    const priceFeedsCell = beginCell()
       .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
       .storeUint(0, 256) // single_update_fee, set to 0 for testing
+      .endCell();
+
+    // Group data sources information (empty for initial state)
+    const dataSourcesCell = beginCell()
+      .storeDict(Dictionary.empty()) // data_sources, empty for initial state
+      .storeUint(0, 32) // num_data_sources, set to 0 for initial state
+      .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
+      .endCell();
+
+    // Group guardian set information
+    const guardianSetCell = beginCell()
       .storeUint(guardianSetIndex, 32)
-      .storeDict(guardianSets)
+      .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
+      .endCell();
+
+    // Group chain and governance information
+    const governanceCell = beginCell()
       .storeUint(chainId, 16)
       .storeUint(governanceChainId, 16)
       .storeBuffer(Buffer.from(governanceContract, "hex"))
       .storeDict(Dictionary.empty()) // consumed_governance_actions, empty for initial state
+      .storeRef(beginCell()) // governance_data_source, empty for initial state
+      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
+      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
+      .endCell();
+
+    // Create the main cell with references to grouped data
+    return beginCell()
+      .storeRef(priceFeedsCell)
+      .storeRef(dataSourcesCell)
+      .storeRef(guardianSetCell)
+      .storeRef(governanceCell)
       .endCell();
   }
 
@@ -165,14 +179,6 @@ export class WormholeTest implements Contract {
     return result.stack.readNumber();
   }
 
-  async getUpdateGuardianSet(provider: ContractProvider, vm: Buffer) {
-    const result = await provider.get("test_update_guardian_set", [
-      { type: "slice", cell: createCellChain(vm) },
-    ]);
-
-    return result.stack.readNumber();
-  }
-
   async getGuardianSet(provider: ContractProvider, index: number) {
     const result = await provider.get("test_get_guardian_set", [
       { type: "int", value: BigInt(index) },
@@ -187,5 +193,48 @@ export class WormholeTest implements Contract {
       keys,
       keyCount,
     };
+  }
+
+  async getGovernanceChainId(provider: ContractProvider) {
+    const result = await provider.get("test_get_governance_chain_id", []);
+    return result.stack.readNumber();
+  }
+
+  async getChainId(provider: ContractProvider) {
+    const result = await provider.get("test_get_chain_id", []);
+    return result.stack.readNumber();
+  }
+
+  async getGovernanceContract(provider: ContractProvider) {
+    const result = await provider.get("test_get_governance_contract", []);
+    const bigNumber = result.stack.readBigNumber();
+    return bigNumber.toString(16).padStart(64, "0");
+  }
+
+  async getGovernanceActionIsConsumed(
+    provider: ContractProvider,
+    hash: bigint
+  ) {
+    const result = await provider.get("test_governance_action_is_consumed", [
+      { type: "int", value: hash },
+    ]);
+    return result.stack.readBoolean();
+  }
+
+  async sendUpdateGuardianSet(
+    provider: ContractProvider,
+    via: Sender,
+    vm: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
+      .storeRef(createCellChain(vm))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
   }
 }

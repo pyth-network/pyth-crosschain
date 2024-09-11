@@ -10,7 +10,9 @@ export type EncodingType = z.infer<typeof schemas.EncodingType>;
 export type PriceFeedMetadata = z.infer<typeof schemas.PriceFeedMetadata>;
 export type PriceIdInput = z.infer<typeof schemas.PriceIdInput>;
 export type PriceUpdate = z.infer<typeof schemas.PriceUpdate>;
-export type PublisherCaps = z.infer<typeof schemas.PublisherCaps>;
+export type PublisherCaps = z.infer<
+  typeof schemas.LatestPublisherStakeCapsUpdateDataResponse
+>;
 
 const DEFAULT_TIMEOUT: DurationInMs = 5000;
 const DEFAULT_HTTP_RETRIES = 3;
@@ -127,8 +129,8 @@ export class HermesClient {
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
    * @param options Optional parameters:
-   *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
-   *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *        - encoding: Encoding type. If specified, return the publisher caps in the encoding specified by the encoding parameter. Default is hex.
+   *        - parsed: Boolean to specify if the parsed publisher caps should be included in the response. Default is false.
    *
    * @returns PublisherCaps object containing the latest publisher stake caps.
    */
@@ -140,7 +142,10 @@ export class HermesClient {
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
-    return await this.httpRequest(url.toString(), schemas.PublisherCaps);
+    return await this.httpRequest(
+      url.toString(),
+      schemas.LatestPublisherStakeCapsUpdateDataResponse
+    );
   }
 
   /**

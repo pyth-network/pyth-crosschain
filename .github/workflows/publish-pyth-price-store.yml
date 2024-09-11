@@ -1,0 +1,24 @@
+name: Publish Pyth Price Store to crates.io
+
+on:
+  push:
+    tags:
+      - pyth-price-store-v*
+jobs:
+  publish-pyth-price-store:
+    name: Publish Pyth Price Store
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          profile: minimal
+      - name: Publish
+        run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        working-directory: "target_chains/solana/programs/pyth-price-store"

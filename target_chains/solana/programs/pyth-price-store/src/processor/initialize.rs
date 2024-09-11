@@ -22,8 +22,10 @@ use {
     },
 };
 
-// Creates a config account that stores the authority pubkey.
-// The authority is allowed to modify publisher configs.
+/// Creates a config account that stores the authority pubkey.
+/// The authority is the account that will be allowed to modify publisher configs.
+/// See `Instruction` for the list of required accounts.
+/// The config account must be a non-existing PDA account with an expected seed.
 pub fn initialize(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

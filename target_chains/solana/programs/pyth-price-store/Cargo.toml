@@ -1,7 +1,10 @@
 [package]
-name = "pyth-price-publisher"
+name = "pyth-price-store"
 version = "0.1.0"
 edition = "2021"
+description = "A solana on-chain program that allows publishers to push prices on Pythnet."
+license = "Apache-2.0"
+
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -21,7 +24,7 @@ jobserver =  { version = "=0.1.20", optional = true }
 [dev-dependencies]
 solana-program-test = "=1.14.17"
 solana-sdk = "=1.14.17"
-tokio = "*"
+tokio = "1.14.1"
 
 [profile.release]
 opt-level     = "z"
