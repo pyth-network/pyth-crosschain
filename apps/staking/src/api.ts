@@ -26,6 +26,7 @@ const publishersRankingSchema = z
 type Data = {
   total: bigint;
   availableRewards: bigint;
+  currentEpoch: bigint;
   lastSlash:
     | {
         amount: bigint;
@@ -202,13 +203,11 @@ const loadDataForStakeAccount = async (
     stakeAccountCustody,
     unlockSchedule,
     claimableRewards,
-    currentEpoch,
   ] = await Promise.all([
     loadBaseInfo(client, hermesClient),
     client.getStakeAccountCustody(stakeAccount.address),
     client.getUnlockSchedule(stakeAccount.address),
     client.getClaimableRewards(stakeAccount.address),
-    getCurrentEpoch(client.connection),
   ]);
 
   const filterGovernancePositions = (positionState: PositionState) =>
@@ -216,7 +215,7 @@ const loadDataForStakeAccount = async (
       stakeAccountPositions: stakeAccount,
       targetWithParameters: { voting: {} },
       positionState,
-      epoch: currentEpoch,
+      epoch: baseInfo.currentEpoch,
     });
 
   const filterOISPositions = (
@@ -227,7 +226,7 @@ const loadDataForStakeAccount = async (
       stakeAccountPositions: stakeAccount,
       targetWithParameters: { integrityPool: { publisher } },
       positionState,
-      epoch: currentEpoch,
+      epoch: baseInfo.currentEpoch,
     });
 
   return {
@@ -271,13 +270,15 @@ const loadBaseInfo = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
 ) => {
-  const [publishers, walletAmount, poolConfig] = await Promise.all([
-    loadPublisherData(client, hermesClient),
-    client.getOwnerPythBalance(),
-    client.getPoolConfigAccount(),
-  ]);
+  const [publishers, walletAmount, poolConfig, currentEpoch] =
+    await Promise.all([
+      loadPublisherData(client, hermesClient),
+      client.getOwnerPythBalance(),
+      client.getPoolConfigAccount(),
+      getCurrentEpoch(client.connection),
+    ]);
 
-  return { yieldRate: poolConfig.y, walletAmount, publishers };
+  return { yieldRate: poolConfig.y, walletAmount, publishers, currentEpoch };
 };
 
 const loadPublisherData = async (
@@ -452,22 +453,6 @@ export const optPublisherOut = async (
 ): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   throw new NotImplementedError();
-};
-
-export const getUpcomingEpoch = (): Date => {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + ((5 + 7 - d.getUTCDay()) % 7 || 7));
-  d.setUTCHours(0);
-  d.setUTCMinutes(0);
-  d.setUTCSeconds(0);
-  d.setUTCMilliseconds(0);
-  return d;
-};
-
-export const getNextFullEpoch = (): Date => {
-  const d = getUpcomingEpoch();
-  d.setUTCDate(d.getUTCDate() + 7);
-  return d;
 };
 
 const MOCK_DELAY = 500;

@@ -1,8 +1,8 @@
 import { ArrowLongDownIcon } from "@heroicons/react/24/outline";
+import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
 import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
 
-import { getUpcomingEpoch, getNextFullEpoch } from "../../api";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
@@ -10,6 +10,7 @@ import { TransferButton } from "../TransferButton";
 type Props = HTMLAttributes<HTMLDivElement> & {
   name: string;
   description: string;
+  currentEpoch: bigint;
   warmup: bigint;
   staked: bigint;
   cooldown: bigint;
@@ -45,6 +46,7 @@ export const ProgramSection = ({
   name,
   description,
   children,
+  currentEpoch,
   warmup,
   staked,
   cooldown,
@@ -82,7 +84,7 @@ export const ProgramSection = ({
               max={available}
               transfer={stake}
             >
-              <StakingTimeline />
+              <StakingTimeline currentEpoch={currentEpoch} />
             </TransferButton>
           ),
         })}
@@ -96,7 +98,7 @@ export const ProgramSection = ({
         {...(warmup > 0n && {
           details: (
             <div className="mt-2 text-xs text-neutral-500">
-              Staking {getUpcomingEpoch().toLocaleString()}
+              Staking {epochToDate(currentEpoch + 1n).toLocaleString()}
             </div>
           ),
         })}
@@ -131,7 +133,7 @@ export const ProgramSection = ({
               max={staked}
               transfer={unstake}
             >
-              <StakingTimeline cooldownOnly />
+              <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
             </TransferButton>
           ),
         })}
@@ -147,13 +149,13 @@ export const ProgramSection = ({
             {cooldown > 0n && (
               <div className="mt-2 text-xs text-neutral-500">
                 <Tokens>{cooldown}</Tokens> end{" "}
-                {getUpcomingEpoch().toLocaleString()}
+                {epochToDate(currentEpoch + 1n).toLocaleString()}
               </div>
             )}
             {cooldown2 > 0n && (
               <div className="mt-2 text-xs text-neutral-500">
                 <Tokens>{cooldown2}</Tokens> end{" "}
-                {getNextFullEpoch().toLocaleString()}
+                {epochToDate(currentEpoch + 2n).toLocaleString()}
               </div>
             )}
           </>

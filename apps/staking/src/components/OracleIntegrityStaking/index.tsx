@@ -47,6 +47,7 @@ const PAGE_SIZE = 10;
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  currentEpoch: bigint;
   availableToStake: bigint;
   locked: bigint;
   warmup: bigint;
@@ -59,6 +60,7 @@ type Props = {
 
 export const OracleIntegrityStaking = ({
   api,
+  currentEpoch,
   availableToStake,
   locked,
   warmup,
@@ -88,6 +90,7 @@ export const OracleIntegrityStaking = ({
       name="Oracle Integrity Staking (OIS)"
       description="Protect DeFi"
       className="pb-0 sm:pb-0"
+      currentEpoch={currentEpoch}
       available={availableToStake}
       warmup={warmup}
       staked={staked}
@@ -129,6 +132,7 @@ export const OracleIntegrityStaking = ({
                 <Publisher
                   api={api}
                   isSelf
+                  currentEpoch={currentEpoch}
                   availableToStake={availableToStake}
                   publisher={self}
                   totalStaked={staked}
@@ -147,6 +151,7 @@ export const OracleIntegrityStaking = ({
       >
         <PublisherList
           api={api}
+          currentEpoch={currentEpoch}
           title={self ? "Other Publishers" : "Publishers"}
           availableToStake={availableToStake}
           publishers={otherPublishers}
@@ -401,6 +406,7 @@ const OptOutButton = ({ api, self }: OptOutButtonProps) => {
 
 type PublisherListProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  currentEpoch: bigint;
   title: string;
   availableToStake: bigint;
   totalStaked: bigint;
@@ -410,6 +416,7 @@ type PublisherListProps = {
 
 const PublisherList = ({
   api,
+  currentEpoch,
   title,
   availableToStake,
   publishers,
@@ -583,6 +590,7 @@ const PublisherList = ({
             {paginatedPublishers.map((publisher) => (
               <Publisher
                 api={api}
+                currentEpoch={currentEpoch}
                 key={publisher.publicKey.toBase58()}
                 availableToStake={availableToStake}
                 publisher={publisher}
@@ -686,6 +694,7 @@ const PublisherTableHeader = Styled(
 
 type PublisherProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  currentEpoch: bigint;
   availableToStake: bigint;
   totalStaked: bigint;
   isSelf?: boolean;
@@ -713,6 +722,7 @@ type PublisherProps = {
 
 const Publisher = ({
   api,
+  currentEpoch,
   publisher,
   availableToStake,
   totalStaked,
@@ -837,6 +847,7 @@ const Publisher = ({
         >
           <StakeToPublisherButton
             api={api}
+            currentEpoch={currentEpoch}
             availableToStake={availableToStake}
             publisher={publisher}
             yieldRate={yieldRate}
@@ -913,7 +924,10 @@ const Publisher = ({
                           max={staked}
                           transfer={unstake}
                         >
-                          <StakingTimeline cooldownOnly />
+                          <StakingTimeline
+                            cooldownOnly
+                            currentEpoch={currentEpoch}
+                          />
                         </TransferButton>
                       </td>
                     </tr>
@@ -933,12 +947,14 @@ const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
 type StakeToPublisherButtonProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   publisher: PublisherProps["publisher"];
+  currentEpoch: bigint;
   availableToStake: bigint;
   yieldRate: bigint;
 };
 
 const StakeToPublisherButton = ({
   api,
+  currentEpoch,
   availableToStake,
   publisher,
   yieldRate,
@@ -987,7 +1003,7 @@ const StakeToPublisherButton = ({
               %
             </div>
           </div>
-          <StakingTimeline />
+          <StakingTimeline currentEpoch={currentEpoch} />
         </>
       )}
     </TransferButton>
