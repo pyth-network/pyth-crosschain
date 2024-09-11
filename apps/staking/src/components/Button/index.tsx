@@ -8,7 +8,7 @@ import { Link } from "../Link";
 
 type VariantProps = {
   variant?: "secondary" | undefined;
-  size?: "small" | "nopad" | undefined;
+  size?: "small" | "nopad" | "noshrink" | undefined;
 };
 
 type ButtonProps = Omit<ComponentProps<typeof ReactAriaButton>, "isDisabled"> &
@@ -76,6 +76,9 @@ const sizeClassName = (size: VariantProps["size"]) => {
     }
     case "nopad": {
       return "px-0 py-0";
+    }
+    case "noshrink": {
+      return "px-8 py-2";
     }
     case undefined: {
       return "px-2 sm:px-4 md:px-8 py-2";

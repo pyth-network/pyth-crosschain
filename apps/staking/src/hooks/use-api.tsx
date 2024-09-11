@@ -115,6 +115,8 @@ const State = {
       delegateIntegrityStaking: bindApi(api.delegateIntegrityStaking),
       unstakeIntegrityStaking: bindApi(api.unstakeIntegrityStaking),
       cancelWarmupIntegrityStaking: bindApi(api.cancelWarmupIntegrityStaking),
+      reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
+      optPublisherOut: bindApi(api.optPublisherOut),
     };
   },
 

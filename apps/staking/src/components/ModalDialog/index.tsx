@@ -1,4 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 
@@ -14,8 +15,9 @@ type ModalDialogProps = Omit<
   "children"
 > & {
   closeDisabled?: boolean | undefined;
+  closeButtonText?: string;
   title: ReactNode | ReactNode[];
-  description?: string;
+  description?: ReactNode;
   children?:
     | ((options: DialogRenderProps) => ReactNode | ReactNode[])
     | ReactNode
@@ -25,6 +27,7 @@ type ModalDialogProps = Omit<
 
 export const ModalDialog = ({
   closeDisabled,
+  closeButtonText,
   children,
   title,
   description,
@@ -37,7 +40,7 @@ export const ModalDialog = ({
     {...props}
   >
     <Modal className="data-[entering]:duration-500 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:zoom-in-90 data-[exiting]:zoom-out-110">
-      <Dialog className="relative border border-neutral-600/50 bg-[#100E21] px-6 pb-8 pt-12 focus:outline-none sm:px-10 sm:pb-12">
+      <Dialog className="relative mx-8 border border-neutral-600/50 bg-[#100E21] px-6 pb-8 pt-12 focus:outline-none sm:px-10 sm:pb-12">
         {(options) => (
           <>
             <Button
@@ -48,13 +51,25 @@ export const ModalDialog = ({
             >
               <XMarkIcon className="size-6" />
             </Button>
-            <Heading className="text-3xl font-light leading-6" slot="title">
+            <Heading
+              className={clsx("text-3xl font-light leading-6", {
+                "mb-10": description === undefined,
+              })}
+              slot="title"
+            >
               {title}
             </Heading>
             {description && (
               <p className="mb-10 mt-2 max-w-96 opacity-60">{description}</p>
             )}
             {typeof children === "function" ? children(options) : children}
+            {closeButtonText !== undefined && (
+              <div className="mt-14 flex flex-row justify-end">
+                <Button size="noshrink" onPress={options.close}>
+                  {closeButtonText}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </Dialog>

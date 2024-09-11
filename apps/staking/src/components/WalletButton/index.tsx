@@ -12,7 +12,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import type { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import {
   type ComponentProps,
@@ -20,7 +19,6 @@ import {
   type SVGAttributes,
   type ReactNode,
   useCallback,
-  useMemo,
   useState,
 } from "react";
 import {
@@ -43,6 +41,7 @@ import { usePrimaryDomain } from "../../hooks/use-primary-domain";
 import { AccountHistory } from "../AccountHistory";
 import { Button } from "../Button";
 import { ModalDialog } from "../ModalDialog";
+import { TruncatedKey } from "../TruncatedKey";
 
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
@@ -141,9 +140,7 @@ const ConnectedButton = ({
                             invisible: item.account !== api.account,
                           })}
                         />
-                        <pre>
-                          <TruncatedKey>{item.account.address}</TruncatedKey>
-                        </pre>
+                        <TruncatedKey>{item.account.address}</TruncatedKey>
                       </WalletMenuItem>
                     )}
                   </StyledMenu>
@@ -204,20 +201,13 @@ const ButtonContent = () => {
   if (primaryDomain) {
     return primaryDomain;
   } else if (wallet.publicKey) {
-    return <TruncatedKey>{wallet.publicKey}</TruncatedKey>;
+    return <TruncatedKey className="text-sm">{wallet.publicKey}</TruncatedKey>;
   } else if (wallet.connecting) {
     return "Connecting...";
   } else {
     return "Connect";
   }
 };
-
-const TruncatedKey = ({ children }: { children: PublicKey | `0x${string}` }) =>
-  useMemo(() => {
-    const isHex = typeof children === "string";
-    const asString = isHex ? children : children.toBase58();
-    return asString.slice(0, isHex ? 6 : 4) + ".." + asString.slice(-4);
-  }, [children]);
 
 type WalletMenuItemProps = Omit<ComponentProps<typeof MenuItem>, "children"> & {
   icon?: ComponentType<SVGAttributes<SVGSVGElement>>;
