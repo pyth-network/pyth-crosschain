@@ -11,9 +11,10 @@ type VariantProps = {
   size?: "small" | "nopad" | undefined;
 };
 
-type ButtonProps = ComponentProps<typeof ReactAriaButton> &
+type ButtonProps = Omit<ComponentProps<typeof ReactAriaButton>, "isDisabled"> &
   VariantProps & {
     isLoading?: boolean | undefined;
+    isDisabled?: boolean | undefined;
   };
 
 export const Button = ({

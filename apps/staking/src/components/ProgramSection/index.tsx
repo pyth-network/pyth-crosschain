@@ -14,15 +14,11 @@ type Props = HTMLAttributes<HTMLDivElement> & {
   staked: bigint;
   cooldown: bigint;
   cooldown2: bigint;
+  available: bigint;
   availableToStakeDetails?: ReactNode | ReactNode[] | undefined;
 } & (
+    | { stake?: never; stakeDescription?: never }
     | {
-        stake?: never;
-        stakeDescription?: never;
-        available?: bigint | undefined;
-      }
-    | {
-        available: bigint;
         stake: ComponentProps<typeof TransferButton>["transfer"] | undefined;
         stakeDescription: string;
       }
@@ -73,32 +69,27 @@ export const ProgramSection = ({
     <h2 className="text-xl font-light sm:text-3xl">{name}</h2>
     <p className="text-sm sm:text-base">{description}</p>
     <div className="mt-8 flex flex-col items-stretch justify-center border border-neutral-600/50 bg-white/5 px-2 py-6 sm:p-10 xl:flex-row">
-      {available !== undefined && (
-        <>
-          <Position
-            name="Available to Stake"
-            nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
-            details={availableToStakeDetails}
-            {...(stake !== undefined &&
-              available > 0n && {
-                actions: (
-                  <TransferButton
-                    size="small"
-                    actionDescription={stakeDescription}
-                    actionName="Stake"
-                    max={available}
-                    transfer={stake}
-                  >
-                    <StakingTimeline />
-                  </TransferButton>
-                ),
-              })}
-          >
-            {available}
-          </Position>
-          <Arrow />
-        </>
-      )}
+      <Position
+        name="Available to Stake"
+        nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
+        details={availableToStakeDetails}
+        {...(stakeDescription !== undefined && {
+          actions: (
+            <TransferButton
+              size="small"
+              actionDescription={stakeDescription}
+              actionName="Stake"
+              max={available}
+              transfer={stake}
+            >
+              <StakingTimeline />
+            </TransferButton>
+          ),
+        })}
+      >
+        {available}
+      </Position>
+      <Arrow />
       <Position
         name="Warmup"
         nameClassName="bg-[rgba(206,_153,_247,_0.25)]"
@@ -108,20 +99,20 @@ export const ProgramSection = ({
               Staking {getUpcomingEpoch().toLocaleString()}
             </div>
           ),
-          ...(cancelWarmup !== undefined && {
-            actions: (
-              <TransferButton
-                size="small"
-                variant="secondary"
-                actionDescription={cancelWarmupDescription}
-                actionName="Cancel"
-                submitButtonText="Cancel Warmup"
-                title="Cancel Warmup"
-                max={warmup}
-                transfer={cancelWarmup}
-              />
-            ),
-          }),
+        })}
+        {...(cancelWarmupDescription !== undefined && {
+          actions: (
+            <TransferButton
+              size="small"
+              variant="secondary"
+              actionDescription={cancelWarmupDescription}
+              actionName="Cancel"
+              submitButtonText="Cancel Warmup"
+              title="Cancel Warmup"
+              max={warmup}
+              transfer={cancelWarmup}
+            />
+          ),
         })}
       >
         {warmup}
@@ -130,21 +121,20 @@ export const ProgramSection = ({
       <Position
         name="Staked"
         nameClassName="bg-[rgba(105,_24,_238,_0.25)]"
-        {...(unstake !== undefined &&
-          staked > 0n && {
-            actions: (
-              <TransferButton
-                size="small"
-                variant="secondary"
-                actionDescription={unstakeDescription}
-                actionName="Unstake"
-                max={staked}
-                transfer={unstake}
-              >
-                <StakingTimeline cooldownOnly />
-              </TransferButton>
-            ),
-          })}
+        {...(unstakeDescription !== undefined && {
+          actions: (
+            <TransferButton
+              size="small"
+              variant="secondary"
+              actionDescription={unstakeDescription}
+              actionName="Unstake"
+              max={staked}
+              transfer={unstake}
+            >
+              <StakingTimeline cooldownOnly />
+            </TransferButton>
+          ),
+        })}
       >
         {staked}
       </Position>

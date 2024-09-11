@@ -1,11 +1,8 @@
-import {
-  stakeGovernance,
-  cancelWarmupGovernance,
-  unstakeGovernance,
-} from "../../api";
+import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { ProgramSection } from "../ProgramSection";
 
 type Props = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   availableToStake: bigint;
   warmup: bigint;
   staked: bigint;
@@ -14,6 +11,7 @@ type Props = {
 };
 
 export const Governance = ({
+  api,
   availableToStake,
   warmup,
   staked,
@@ -28,11 +26,15 @@ export const Governance = ({
     staked={staked}
     cooldown={cooldown}
     cooldown2={cooldown2}
-    stake={stakeGovernance}
+    stake={api.type === ApiStateType.Loaded ? api.stakeGovernance : undefined}
     stakeDescription="Stake funds to participate in governance votes"
-    cancelWarmup={cancelWarmupGovernance}
+    cancelWarmup={
+      api.type === ApiStateType.Loaded ? api.cancelWarmupGovernance : undefined
+    }
     cancelWarmupDescription="Cancel staking tokens for governance that are currently in warmup"
-    unstake={unstakeGovernance}
+    unstake={
+      api.type === ApiStateType.Loaded ? api.unstakeGovernance : undefined
+    }
     unstakeDescription="Unstake tokens from the Governance program"
   />
 );

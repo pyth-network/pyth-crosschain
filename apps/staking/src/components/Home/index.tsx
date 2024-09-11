@@ -5,13 +5,14 @@ import { useCallback } from "react";
 import { useIsSSR } from "react-aria";
 
 import {
-  StateType as DashboardDataStateType,
-  useDashboardData,
-} from "../../hooks/use-dashboard-data";
+  type States,
+  StateType as ApiStateType,
+  useApi,
+} from "../../hooks/use-api";
 import {
-  StateType as StakeAccountStateType,
-  useStakeAccount,
-} from "../../hooks/use-stake-account";
+  StateType as DashboardDataStateType,
+  useData,
+} from "../../hooks/use-data";
 import { Button } from "../Button";
 import { Dashboard } from "../Dashboard";
 import { Error as ErrorPage } from "../Error";
@@ -24,33 +25,22 @@ export const Home = () => {
 };
 
 const MountedHome = () => {
-  const stakeAccountState = useStakeAccount();
+  const api = useApi();
 
-  switch (stakeAccountState.type) {
-    case StakeAccountStateType.Initialized:
-    case StakeAccountStateType.Loading: {
+  switch (api.type) {
+    case ApiStateType.NotLoaded:
+    case ApiStateType.LoadingStakeAccounts: {
       return <Loading />;
     }
-    case StakeAccountStateType.NoAccounts: {
-      return (
-        <main className="my-20">
-          <p>No stake account found for your wallet!</p>
-        </main>
-      );
-    }
-    case StakeAccountStateType.NoWallet: {
+    case ApiStateType.NoWallet: {
       return <NoWalletHome />;
     }
-    case StakeAccountStateType.Error: {
-      return (
-        <ErrorPage
-          error={stakeAccountState.error}
-          reset={stakeAccountState.reset}
-        />
-      );
+    case ApiStateType.ErrorLoadingStakeAccounts: {
+      return <ErrorPage error={api.error} reset={api.reset} />;
     }
-    case StakeAccountStateType.Loaded: {
-      return <StakeAccountLoadedHome />;
+    case ApiStateType.LoadedNoStakeAccount:
+    case ApiStateType.Loaded: {
+      return <StakeAccountLoadedHome api={api} />;
     }
   }
 };
@@ -78,8 +68,12 @@ const NoWalletHome = () => {
   );
 };
 
-const StakeAccountLoadedHome = () => {
-  const data = useDashboardData();
+type StakeAccountLoadedHomeProps = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+};
+
+const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
+  const data = useData(api.dashboardDataCacheKey, api.loadData);
 
   switch (data.type) {
     case DashboardDataStateType.NotLoaded:
@@ -94,7 +88,7 @@ const StakeAccountLoadedHome = () => {
     case DashboardDataStateType.Loaded: {
       return (
         <main className="mx-4 my-6">
-          <Dashboard {...data.data} />
+          <Dashboard {...data.data} api={api} />
         </main>
       );
     }

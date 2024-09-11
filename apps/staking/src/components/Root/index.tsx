@@ -12,8 +12,8 @@ import {
   RPC,
   IS_MAINNET,
 } from "../../config/server";
+import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
-import { StakeAccountProvider } from "../../hooks/use-stake-account";
 import { Amplitude } from "../Amplitude";
 import { Footer } from "../Footer";
 import { Header } from "../Header";
@@ -48,7 +48,7 @@ export const Root = ({ children }: Props) => (
             : WalletAdapterNetwork.Devnet
         }
       >
-        <StakeAccountProvider>
+        <ApiProvider isMainnet={IS_MAINNET}>
           <html
             lang="en"
             dir="ltr"
@@ -65,7 +65,7 @@ export const Root = ({ children }: Props) => (
             {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
             {!IS_PRODUCTION_SERVER && <ReportAccessibility />}
           </html>
-        </StakeAccountProvider>
+        </ApiProvider>
       </WalletProvider>
     </LoggerProvider>
   </RouterProvider>

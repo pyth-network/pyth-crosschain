@@ -1,7 +1,7 @@
 // TODO remove these disables when moving off the mock APIs
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import type { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import {
   epochToDate,
   extractPublisherData,
@@ -38,7 +38,6 @@ type Data = {
         expiry: Date;
       }
     | undefined;
-  locked: bigint;
   unlockSchedule: {
     date: Date;
     amount: bigint;
@@ -141,7 +140,7 @@ export type AccountHistoryAction = ReturnType<
   (typeof AccountHistoryAction)[keyof typeof AccountHistoryAction]
 >;
 
-type AccountHistory = {
+export type AccountHistory = {
   timestamp: Date;
   action: AccountHistoryAction;
   amount: bigint;
@@ -159,37 +158,58 @@ export const getStakeAccounts = async (
 export const loadData = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
-  stakeAccount: StakeAccountPositions,
+  stakeAccount?: StakeAccountPositions | undefined,
+): Promise<Data> =>
+  stakeAccount === undefined
+    ? loadDataNoStakeAccount(client, hermesClient)
+    : loadDataForStakeAccount(client, hermesClient, stakeAccount);
+
+const loadDataNoStakeAccount = async (
+  client: PythStakingClient,
+  hermesClient: HermesClient,
 ): Promise<Data> => {
+  const { publishers, ...baseInfo } = await loadBaseInfo(client, hermesClient);
+
+  return {
+    ...baseInfo,
+    lastSlash: undefined,
+    availableRewards: 0n,
+    expiringRewards: undefined,
+    total: 0n,
+    governance: {
+      warmup: 0n,
+      staked: 0n,
+      cooldown: 0n,
+      cooldown2: 0n,
+    },
+    unlockSchedule: [],
+    integrityStakingPublishers: publishers.map(
+      ({ stakeAccount, ...publisher }) => ({
+        ...publisher,
+        isSelf: false,
+      }),
+    ),
+  };
+};
+
+const loadDataForStakeAccount = async (
+  client: PythStakingClient,
+  hermesClient: HermesClient,
+  stakeAccount: StakeAccountPositions,
+) => {
   const [
+    { publishers, ...baseInfo },
     stakeAccountCustody,
-    poolData,
-    ownerPythBalance,
     unlockSchedule,
-    poolConfig,
     claimableRewards,
     currentEpoch,
-    publisherRankingsResponse,
-    publisherCaps,
   ] = await Promise.all([
+    loadBaseInfo(client, hermesClient),
     client.getStakeAccountCustody(stakeAccount.address),
-    client.getPoolDataAccount(),
-    client.getOwnerPythBalance(),
     client.getUnlockSchedule(stakeAccount.address),
-    client.getPoolConfigAccount(),
     client.getClaimableRewards(stakeAccount.address),
     getCurrentEpoch(client.connection),
-    fetch("/api/publishers-ranking"),
-    hermesClient.getLatestPublisherCaps({
-      parsed: true,
-    }),
   ]);
-
-  const publishers = extractPublisherData(poolData);
-
-  const publisherRankings = publishersRankingSchema.parse(
-    await publisherRankingsResponse.json(),
-  );
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
@@ -210,19 +230,12 @@ export const loadData = async (
       epoch: currentEpoch,
     });
 
-  const getPublisherCap = (publisher: PublicKey) =>
-    BigInt(
-      publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
-        ({ publisher: p }) => p === publisher.toBase58(),
-      )?.cap ?? 0,
-    );
-
   return {
+    ...baseInfo,
     lastSlash: undefined, // TODO
     availableRewards: claimableRewards,
     expiringRewards: undefined, // TODO
     total: stakeAccountCustody.amount,
-    yieldRate: poolConfig.y,
     governance: {
       warmup: filterGovernancePositions(PositionState.LOCKING),
       staked: filterGovernancePositions(PositionState.LOCKED),
@@ -230,50 +243,91 @@ export const loadData = async (
       cooldown2: filterGovernancePositions(PositionState.UNLOCKED),
     },
     unlockSchedule,
-    locked: unlockSchedule.reduce((sum, { amount }) => sum + amount, 0n),
-    walletAmount: ownerPythBalance,
-    integrityStakingPublishers: publishers.map((publisherData) => {
-      const publisherPubkeyString = publisherData.pubkey.toBase58();
-      const publisherRanking = publisherRankings.find(
-        (ranking) => ranking.publisher === publisherPubkeyString,
-      );
-      const apyHistory = publisherData.apyHistory.map(({ epoch, apy }) => ({
-        date: epochToDate(epoch + 1n),
-        apy: Number(apy),
-      }));
-      return {
-        apyHistory,
-        isSelf:
-          publisherData.stakeAccount?.equals(stakeAccount.address) ?? false,
-        name: undefined, // TODO
-        numFeeds: publisherRanking?.numSymbols ?? 0,
-        poolCapacity: getPublisherCap(publisherData.pubkey),
-        poolUtilization: publisherData.totalDelegation,
-        publicKey: publisherData.pubkey,
-        qualityRanking: publisherRanking?.rank ?? 0,
-        selfStake: publisherData.selfDelegation,
+    integrityStakingPublishers: publishers.map(
+      ({ stakeAccount: publisherStakeAccount, ...publisher }) => ({
+        ...publisher,
+        isSelf: publisherStakeAccount?.equals(stakeAccount.address) ?? false,
         positions: {
           warmup: filterOISPositions(
-            publisherData.pubkey,
+            publisher.publicKey,
             PositionState.LOCKING,
           ),
-          staked: filterOISPositions(
-            publisherData.pubkey,
-            PositionState.LOCKED,
-          ),
+          staked: filterOISPositions(publisher.publicKey, PositionState.LOCKED),
           cooldown: filterOISPositions(
-            publisherData.pubkey,
+            publisher.publicKey,
             PositionState.PREUNLOCKING,
           ),
           cooldown2: filterOISPositions(
-            publisherData.pubkey,
+            publisher.publicKey,
             PositionState.UNLOCKED,
           ),
         },
-      };
-    }),
+      }),
+    ),
   };
 };
+
+const loadBaseInfo = async (
+  client: PythStakingClient,
+  hermesClient: HermesClient,
+) => {
+  const [publishers, walletAmount, poolConfig] = await Promise.all([
+    loadPublisherData(client, hermesClient),
+    client.getOwnerPythBalance(),
+    client.getPoolConfigAccount(),
+  ]);
+
+  return { yieldRate: poolConfig.y, walletAmount, publishers };
+};
+
+const loadPublisherData = async (
+  client: PythStakingClient,
+  hermesClient: HermesClient,
+) => {
+  const [poolData, publisherRankings, publisherCaps] = await Promise.all([
+    client.getPoolDataAccount(),
+    getPublisherRankings(),
+    hermesClient.getLatestPublisherCaps({
+      parsed: true,
+    }),
+  ]);
+
+  return extractPublisherData(poolData).map((publisher) => {
+    const publisherPubkeyString = publisher.pubkey.toBase58();
+    const publisherRanking = publisherRankings.find(
+      (ranking) => ranking.publisher === publisherPubkeyString,
+    );
+    const apyHistory = publisher.apyHistory.map(({ epoch, apy }) => ({
+      date: epochToDate(epoch + 1n),
+      apy: Number(apy),
+    }));
+
+    return {
+      apyHistory,
+      name: undefined, // TODO
+      numFeeds: publisherRanking?.numSymbols ?? 0,
+      poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
+      poolUtilization: publisher.totalDelegation,
+      publicKey: publisher.pubkey,
+      qualityRanking: publisherRanking?.rank ?? 0,
+      selfStake: publisher.selfDelegation,
+      stakeAccount: publisher.stakeAccount,
+    };
+  });
+};
+
+const getPublisherRankings = async () => {
+  const response = await fetch("/api/publishers-ranking");
+  const responseAsJson: unknown = await response.json();
+  return publishersRankingSchema.parseAsync(responseAsJson);
+};
+
+const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
+  BigInt(
+    publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+      ({ publisher: p }) => p === publisher.toBase58(),
+    )?.cap ?? 0,
+  );
 
 export const loadAccountHistory = async (
   _client: PythStakingClient,
@@ -281,6 +335,14 @@ export const loadAccountHistory = async (
 ): Promise<AccountHistory> => {
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
   return mkMockHistory();
+};
+
+export const createStakeAccountAndDeposit = async (
+  _client: PythStakingClient,
+  _amount: bigint,
+): Promise<StakeAccountPositions> => {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+  throw new NotImplementedError();
 };
 
 export const deposit = async (
@@ -431,3 +493,10 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
+
+class NotImplementedError extends Error {
+  constructor() {
+    super("Not yet implemented!");
+    this.name = "NotImplementedError";
+  }
+}

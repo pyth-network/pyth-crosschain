@@ -3,7 +3,7 @@ import {
   XMarkIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { calculateApy, type PythStakingClient } from "@pythnetwork/staking-sdk";
+import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import {
@@ -23,11 +23,7 @@ import {
   Label,
 } from "react-aria-components";
 
-import {
-  delegateIntegrityStaking,
-  cancelWarmupIntegrityStaking,
-  unstakeIntegrityStaking,
-} from "../../api";
+import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { Button } from "../Button";
 import { ProgramSection } from "../ProgramSection";
 import { SparkChart } from "../SparkChart";
@@ -39,6 +35,7 @@ import { AmountType, TransferButton } from "../TransferButton";
 const PAGE_SIZE = 10;
 
 type Props = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   availableToStake: bigint;
   locked: bigint;
   warmup: bigint;
@@ -50,6 +47,7 @@ type Props = {
 };
 
 export const OracleIntegrityStaking = ({
+  api,
   availableToStake,
   locked,
   warmup,
@@ -112,6 +110,7 @@ export const OracleIntegrityStaking = ({
               </thead>
               <tbody className="bg-pythpurple-400/10">
                 <Publisher
+                  api={api}
                   isSelf
                   availableToStake={availableToStake}
                   publisher={self}
@@ -130,6 +129,7 @@ export const OracleIntegrityStaking = ({
         )}
       >
         <PublisherList
+          api={api}
           title={self ? "Other Publishers" : "Publishers"}
           availableToStake={availableToStake}
           publishers={otherPublishers}
@@ -142,6 +142,7 @@ export const OracleIntegrityStaking = ({
 };
 
 type PublisherListProps = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   title: string;
   availableToStake: bigint;
   totalStaked: bigint;
@@ -150,6 +151,7 @@ type PublisherListProps = {
 };
 
 const PublisherList = ({
+  api,
   title,
   availableToStake,
   publishers,
@@ -311,19 +313,17 @@ const PublisherList = ({
               field={SortField.QualityRanking}
               sort={sort}
               setSort={updateSort}
-              className={clsx({ "pr-4 sm:pr-10": availableToStake <= 0n })}
             >
               Quality ranking
             </SortablePublisherTableHeader>
-            {availableToStake > 0n && (
-              <PublisherTableHeader className="pr-4 sm:pr-10" />
-            )}
+            <PublisherTableHeader className="pr-4 sm:pr-10" />
           </tr>
         </thead>
 
         <tbody className="bg-white/5">
           {paginatedPublishers.map((publisher) => (
             <Publisher
+              api={api}
               key={publisher.publicKey.toBase58()}
               availableToStake={availableToStake}
               publisher={publisher}
@@ -421,6 +421,7 @@ const PublisherTableHeader = Styled(
 );
 
 type PublisherProps = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   availableToStake: bigint;
   totalStaked: bigint;
   isSelf?: boolean;
@@ -447,6 +448,7 @@ type PublisherProps = {
 };
 
 const Publisher = ({
+  api,
   publisher,
   availableToStake,
   totalStaked,
@@ -471,11 +473,13 @@ const Publisher = ({
   );
 
   const cancelWarmup = useTransferActionForPublisher(
-    cancelWarmupIntegrityStaking,
+    api.type === ApiStateType.Loaded
+      ? api.cancelWarmupIntegrityStaking
+      : undefined,
     publisher.publicKey,
   );
   const unstake = useTransferActionForPublisher(
-    unstakeIntegrityStaking,
+    api.type === ApiStateType.Loaded ? api.unstakeIntegrityStaking : undefined,
     publisher.publicKey,
   );
   const utilizationPercent = useMemo(
@@ -561,29 +565,24 @@ const Publisher = ({
         <PublisherTableCell className="text-center">
           {publisher.numFeeds}
         </PublisherTableCell>
-        <PublisherTableCell
-          className={clsx("text-center", {
-            "pr-4 sm:pr-10": availableToStake <= 0n && !isSelf,
-          })}
-        >
+        <PublisherTableCell className="text-center">
           {publisher.qualityRanking}
         </PublisherTableCell>
-        {availableToStake > 0 && (
-          <PublisherTableCell
-            className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
-          >
-            <StakeToPublisherButton
-              availableToStake={availableToStake}
-              poolCapacity={publisher.poolCapacity}
-              poolUtilization={publisher.poolUtilization}
-              publisherKey={publisher.publicKey}
-              publisherName={publisher.name}
-              isSelf={publisher.isSelf}
-              selfStake={publisher.selfStake}
-              yieldRate={yieldRate}
-            />
-          </PublisherTableCell>
-        )}
+        <PublisherTableCell
+          className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
+        >
+          <StakeToPublisherButton
+            api={api}
+            availableToStake={availableToStake}
+            poolCapacity={publisher.poolCapacity}
+            poolUtilization={publisher.poolUtilization}
+            publisherKey={publisher.publicKey}
+            publisherName={publisher.name}
+            isSelf={publisher.isSelf}
+            selfStake={publisher.selfStake}
+            yieldRate={yieldRate}
+          />
+        </PublisherTableCell>
       </tr>
       {(warmup !== undefined || staked !== undefined) && (
         <tr>
@@ -659,6 +658,7 @@ const Publisher = ({
 const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
 
 type StakeToPublisherButtonProps = {
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
   publisherName: string | undefined;
   publisherKey: PublicKey;
   availableToStake: bigint;
@@ -670,6 +670,7 @@ type StakeToPublisherButtonProps = {
 };
 
 const StakeToPublisherButton = ({
+  api,
   publisherName,
   publisherKey,
   poolCapacity,
@@ -680,7 +681,7 @@ const StakeToPublisherButton = ({
   yieldRate,
 }: StakeToPublisherButtonProps) => {
   const delegate = useTransferActionForPublisher(
-    delegateIntegrityStaking,
+    api.type === ApiStateType.Loaded ? api.delegateIntegrityStaking : undefined,
     publisherKey,
   );
 
@@ -726,17 +727,14 @@ const StakeToPublisherButton = ({
 };
 
 const useTransferActionForPublisher = (
-  action: (
-    client: PythStakingClient,
-    stakingAccount: PublicKey,
-    publisher: PublicKey,
-    amount: bigint,
-  ) => Promise<void>,
+  action: ((publisher: PublicKey, amount: bigint) => Promise<void>) | undefined,
   publisher: PublicKey,
 ) =>
-  useCallback(
-    (client: PythStakingClient, stakingAccount: PublicKey, amount: bigint) =>
-      action(client, stakingAccount, publisher, amount),
+  useMemo(
+    () =>
+      action === undefined
+        ? undefined
+        : (amount: bigint) => action(publisher, amount),
     [action, publisher],
   );
 

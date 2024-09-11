@@ -1,5 +1,3 @@
-import type { PythStakingClient } from "@pythnetwork/staking-sdk";
-import type { PublicKey } from "@solana/web3.js";
 import {
   type ComponentProps,
   type ReactNode,
@@ -17,7 +15,7 @@ import {
   Group,
 } from "react-aria-components";
 
-import { StateType, useTransfer } from "../../hooks/use-transfer";
+import { StateType, useAsync } from "../../hooks/use-async";
 import { stringToTokens, tokensToString } from "../../tokens";
 import { Button } from "../Button";
 import { ModalDialog } from "../ModalDialog";
@@ -35,11 +33,7 @@ type Props = Omit<ComponentProps<typeof Button>, "children"> & {
     | ReactNode
     | ReactNode[]
     | undefined;
-  transfer: (
-    client: PythStakingClient,
-    stakingAccount: PublicKey,
-    amount: bigint,
-  ) => Promise<void>;
+  transfer?: ((amount: bigint) => Promise<void>) | undefined;
 };
 
 export const TransferButton = ({
@@ -50,11 +44,16 @@ export const TransferButton = ({
   max,
   transfer,
   children,
+  isDisabled,
   ...props
 }: Props) => {
   const [closeDisabled, setCloseDisabled] = useState(false);
 
-  return (
+  return transfer === undefined || isDisabled === true || max === 0n ? (
+    <Button isDisabled={true} {...props}>
+      {actionName}
+    </Button>
+  ) : (
     <DialogTrigger>
       <Button {...props}>{actionName}</Button>
       <ModalDialog
@@ -81,7 +80,7 @@ export const TransferButton = ({
 type DialogContentsProps = {
   max: bigint;
   children: Props["children"];
-  transfer: Props["transfer"];
+  transfer: (amount: bigint) => Promise<void>;
   setCloseDisabled: (value: boolean) => void;
   submitButtonText: string;
   close: () => void;
@@ -118,14 +117,14 @@ const DialogContents = ({
   }, [amount]);
 
   const doTransfer = useCallback(
-    (client: PythStakingClient, stakingAccount: PublicKey) =>
+    () =>
       amount.type === AmountType.Valid
-        ? transfer(client, stakingAccount, amount.amount)
+        ? transfer(amount.amount)
         : Promise.reject(new InvalidAmountError()),
     [amount, transfer],
   );
 
-  const { execute, state } = useTransfer(doTransfer);
+  const { execute, state } = useAsync(doTransfer);
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -176,7 +175,7 @@ const DialogContents = ({
               variant="secondary"
               className="pointer-events-auto"
               onPress={setMax}
-              isDisabled={state.type === StateType.Submitting}
+              isDisabled={state.type === StateType.Running}
             >
               max
             </Button>
@@ -194,7 +193,7 @@ const DialogContents = ({
       <Button
         className="mt-6 w-full"
         type="submit"
-        isLoading={state.type === StateType.Submitting}
+        isLoading={state.type === StateType.Running}
         isDisabled={amount.type !== AmountType.Valid}
       >
         {validationError ?? submitButtonText}
