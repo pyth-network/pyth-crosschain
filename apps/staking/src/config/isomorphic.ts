@@ -20,4 +20,12 @@ export const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
  *
  * Don't change unless you also change the relevant app route path to match.
  */
-export const BLOCKED_SEGMENT = "blocked";
+export const REGION_BLOCKED_SEGMENT = "region-blocked";
+
+/**
+ * Similar to `REGION_BLOCKED_SEGMENT`; this is where vpn-blocked traffic will
+ * be rewritten to.
+ *
+ * Don't change unless you also change the relevant app route path to match.
+ */
+export const VPN_BLOCKED_SEGMENT = "vpn-blocked";

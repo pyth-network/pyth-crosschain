@@ -43,6 +43,7 @@ export const BLOCKED_REGIONS =
     : process.env.BLOCKED_REGIONS.split(",").map((region) =>
         region.toLowerCase().trim(),
       );
+export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 
 class MissingEnvironmentError extends Error {
   constructor(name: string) {

@@ -1,21 +1,46 @@
 import { type NextRequest, NextResponse } from "next/server";
+import ProxyCheck from "proxycheck-ts";
 
-import { BLOCKED_SEGMENT } from "./config/isomorphic";
-import { BLOCKED_REGIONS } from "./config/server";
+import {
+  REGION_BLOCKED_SEGMENT,
+  VPN_BLOCKED_SEGMENT,
+} from "./config/isomorphic";
+import { BLOCKED_REGIONS, PROXYCHECK_API_KEY } from "./config/server";
 
-export const middleware = (request: NextRequest) => {
-  if (blockRequest(request)) {
-    return NextResponse.rewrite(new URL(`/${BLOCKED_SEGMENT}`, request.url));
-  } else if (request.nextUrl.pathname.startsWith("/blocked")) {
-    return NextResponse.rewrite(new URL("/not-found", request.url));
+const proxyCheckClient = PROXYCHECK_API_KEY
+  ? new ProxyCheck({ api_key: PROXYCHECK_API_KEY })
+  : undefined;
+
+export const middleware = async (request: NextRequest) => {
+  if (isRegionBlocked(request)) {
+    return NextResponse.rewrite(
+      new URL(`/${REGION_BLOCKED_SEGMENT}`, request.url),
+    );
+  } else if (await isProxyBlocked(request)) {
+    return NextResponse.rewrite(
+      new URL(`/${VPN_BLOCKED_SEGMENT}`, request.url),
+    );
   } else {
-    return;
+    const { pathname } = request.nextUrl;
+    return pathname.startsWith(`/${REGION_BLOCKED_SEGMENT}`) ||
+      pathname.startsWith(`/${VPN_BLOCKED_SEGMENT}`)
+      ? NextResponse.rewrite(new URL("/not-found", request.url))
+      : undefined;
   }
 };
 
-const blockRequest = (request: NextRequest) =>
+const isRegionBlocked = (request: NextRequest) =>
   request.geo?.country !== undefined &&
   BLOCKED_REGIONS.includes(request.geo.country.toLowerCase());
+
+const isProxyBlocked = async ({ ip }: NextRequest) => {
+  if (proxyCheckClient === undefined || ip === undefined) {
+    return false;
+  } else {
+    const result = await proxyCheckClient.checkIP(ip, { vpn: 2 });
+    return result[ip]?.proxy === "yes";
+  }
+};
 
 export const config = {
   matcher: [
