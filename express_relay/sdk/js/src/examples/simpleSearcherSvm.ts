@@ -9,10 +9,13 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import dummyIdl from "./idl/idlDummy.json";
 import { Dummy } from "./dummyTypes";
+import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svmPda";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const DUMMY_PIDS: Record<string, PublicKey> = {
-  solana: new PublicKey("HYCgALnu6CM2gkQVopa1HGaNf8Vzbs9bomWRiKP267P3"),
+  "development-solana": new PublicKey(
+    "HYCgALnu6CM2gkQVopa1HGaNf8Vzbs9bomWRiKP267P3"
+  ),
 };
 
 class SimpleSearcherSvm {
@@ -69,7 +72,6 @@ class SimpleSearcherSvm {
 
     const permission = PublicKey.default;
     const router = Keypair.generate().publicKey;
-    const bidAmount = new anchor.BN(argv.bid);
 
     const svmConstants = SVM_CONSTANTS[this.chainId];
     if (!(this.chainId in DUMMY_PIDS)) {
@@ -77,14 +79,27 @@ class SimpleSearcherSvm {
     }
     const dummyPid = DUMMY_PIDS[this.chainId];
 
+    const configRouter = getConfigRouterPda(this.chainId, router);
+    const expressRelayMetadata = getExpressRelayMetadataPda(this.chainId);
+    const accounting = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("accounting")],
+      dummyPid
+    )[0];
+
+    const bidAmount = new anchor.BN(argv.bid);
+
     const ixDummy = await dummy.methods
       .doNothing()
       .accountsStrict({
         payer: searcher.publicKey,
         expressRelay: svmConstants.expressRelayProgram,
+        expressRelayMetadata,
         sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         permission,
         router,
+        configRouter,
+        accounting,
+        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .instruction();
     ixDummy.programId = dummyPid;

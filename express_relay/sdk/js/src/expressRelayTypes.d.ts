@@ -8,13 +8,19 @@ export type ExpressRelay = {
   address: "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM";
   metadata: {
     name: "expressRelay";
-    version: "0.1.0";
+    version: "0.2.0";
     spec: "0.1.0";
-    description: "Created with Anchor";
+    description: "Pyth Express Relay program for handling permissioning and bid distribution";
+    repository: "https://github.com/pyth-network/per";
   };
   instructions: [
     {
       name: "checkPermission";
+      docs: [
+        "Checks if permissioning exists for a particular (permission, router) pair within the same transaction",
+        "Permissioning takes the form of a SubmitBid instruction with matching permission and router accounts",
+        "Returns the fees paid to the router in the matching instructions"
+      ];
       discriminator: [154, 199, 232, 242, 96, 72, 197, 236];
       accounts: [
         {
@@ -26,9 +32,50 @@ export type ExpressRelay = {
         },
         {
           name: "router";
+        },
+        {
+          name: "configRouter";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  114
+                ];
+              },
+              {
+                kind: "account";
+                path: "router";
+              }
+            ];
+          };
+        },
+        {
+          name: "expressRelayMetadata";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [109, 101, 116, 97, 100, 97, 116, 97];
+              }
+            ];
+          };
         }
       ];
       args: [];
+      returns: "u64";
     },
     {
       name: "initialize";
@@ -146,7 +193,7 @@ export type ExpressRelay = {
           relations: ["expressRelayMetadata"];
         },
         {
-          name: "routerConfig";
+          name: "configRouter";
           writable: true;
           pda: {
             seeds: [
@@ -241,6 +288,9 @@ export type ExpressRelay = {
     },
     {
       name: "submitBid";
+      docs: [
+        "Submits a bid for a particular (permission, router) pair and distributes bids according to splits"
+      ];
       discriminator: [19, 164, 237, 254, 64, 139, 237, 93];
       accounts: [
         {
@@ -261,7 +311,7 @@ export type ExpressRelay = {
           writable: true;
         },
         {
-          name: "routerConfig";
+          name: "configRouter";
           pda: {
             seeds: [
               {
@@ -290,11 +340,6 @@ export type ExpressRelay = {
           };
         },
         {
-          name: "feeReceiverRelayer";
-          writable: true;
-          relations: ["expressRelayMetadata"];
-        },
-        {
           name: "expressRelayMetadata";
           writable: true;
           pda: {
@@ -305,6 +350,11 @@ export type ExpressRelay = {
               }
             ];
           };
+        },
+        {
+          name: "feeReceiverRelayer";
+          writable: true;
+          relations: ["expressRelayMetadata"];
         },
         {
           name: "systemProgram";
