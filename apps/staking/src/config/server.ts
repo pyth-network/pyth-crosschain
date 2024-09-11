@@ -36,6 +36,13 @@ export const WALLETCONNECT_PROJECT_ID = demandInProduction(
 );
 export const RPC = process.env.RPC;
 export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
+export const BLOCKED_REGIONS =
+  process.env.BLOCKED_REGIONS === undefined ||
+  process.env.BLOCKED_REGIONS === ""
+    ? []
+    : process.env.BLOCKED_REGIONS.split(",").map((region) =>
+        region.toLowerCase().trim(),
+      );
 
 class MissingEnvironmentError extends Error {
   constructor(name: string) {

@@ -13,6 +13,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
+import { useSelectedLayoutSegment } from "next/navigation";
 import {
   type ComponentProps,
   type ComponentType,
@@ -31,6 +32,7 @@ import {
   SubmenuTrigger,
 } from "react-aria-components";
 
+import { BLOCKED_SEGMENT } from "../../config/isomorphic";
 import {
   StateType as ApiStateType,
   type States,
@@ -46,6 +48,12 @@ import { TruncatedKey } from "../TruncatedKey";
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
 export const WalletButton = (props: Props) => {
+  const segment = useSelectedLayoutSegment();
+  // eslint-disable-next-line unicorn/no-null
+  return segment === BLOCKED_SEGMENT ? null : <WalletButtonImpl {...props} />;
+};
+
+const WalletButtonImpl = (props: Props) => {
   const api = useApi();
 
   switch (api.type) {
