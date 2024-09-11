@@ -10,7 +10,9 @@ export type EncodingType = z.infer<typeof schemas.EncodingType>;
 export type PriceFeedMetadata = z.infer<typeof schemas.PriceFeedMetadata>;
 export type PriceIdInput = z.infer<typeof schemas.PriceIdInput>;
 export type PriceUpdate = z.infer<typeof schemas.PriceUpdate>;
-export type PublisherCaps = z.infer<typeof schemas.PublisherCaps>;
+export type PublisherCaps = z.infer<
+  typeof schemas.LatestPublisherStakeCapsUpdateDataResponse
+>;
 
 const DEFAULT_TIMEOUT: DurationInMs = 5000;
 const DEFAULT_HTTP_RETRIES = 3;
@@ -140,7 +142,10 @@ export class HermesClient {
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
-    return await this.httpRequest(url.toString(), schemas.PublisherCaps);
+    return await this.httpRequest(
+      url.toString(),
+      schemas.LatestPublisherStakeCapsUpdateDataResponse
+    );
   }
 
   /**

@@ -42,20 +42,18 @@ const PriceUpdate = z
     parsed: z.array(ParsedPriceUpdate).nullish(),
   })
   .passthrough();
-const ParsedPublisherCap = z.object({
-  publisher: z.string(),
-  cap: z.number().int(),
-});
-
-const PublisherCaps = z.object({
-  binary: BinaryUpdate,
-  parsed: z
-    .object({
-      publisher_stake_caps: z.array(ParsedPublisherCap),
-    })
-    .array()
-    .nullish(),
-});
+const ParsedPublisherStakeCap = z
+  .object({ cap: z.number().int().gte(0), publisher: z.string() })
+  .passthrough();
+const ParsedPublisherStakeCapsUpdate = z
+  .object({ publisher_stake_caps: z.array(ParsedPublisherStakeCap) })
+  .passthrough();
+const LatestPublisherStakeCapsUpdateDataResponse = z
+  .object({
+    binary: BinaryUpdate,
+    parsed: z.array(ParsedPublisherStakeCapsUpdate).nullish(),
+  })
+  .passthrough();
 
 export const schemas = {
   AssetType,
@@ -69,7 +67,9 @@ export const schemas = {
   RpcPriceFeedMetadataV2,
   ParsedPriceUpdate,
   PriceUpdate,
-  PublisherCaps,
+  ParsedPublisherStakeCap,
+  ParsedPublisherStakeCapsUpdate,
+  LatestPublisherStakeCapsUpdateDataResponse,
 };
 
 const endpoints = makeApi([
@@ -229,7 +229,7 @@ Given a collection of price feed ids, retrieve the latest Pyth price for each pr
         schema: z.boolean().optional(),
       },
     ],
-    response: z.array(PublisherCaps),
+    response: LatestPublisherStakeCapsUpdateDataResponse,
   },
 ]);
 
