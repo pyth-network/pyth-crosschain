@@ -54,7 +54,7 @@ type Data = {
   integrityStakingPublishers: {
     name: string | undefined;
     publicKey: PublicKey;
-    isSelf: boolean;
+    stakeAccount: PublicKey | undefined;
     selfStake: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
@@ -184,12 +184,7 @@ const loadDataNoStakeAccount = async (
       cooldown2: 0n,
     },
     unlockSchedule: [],
-    integrityStakingPublishers: publishers.map(
-      ({ stakeAccount, ...publisher }) => ({
-        ...publisher,
-        isSelf: false,
-      }),
-    ),
+    integrityStakingPublishers: publishers,
   };
 };
 
@@ -242,27 +237,21 @@ const loadDataForStakeAccount = async (
       cooldown2: filterGovernancePositions(PositionState.UNLOCKED),
     },
     unlockSchedule,
-    integrityStakingPublishers: publishers.map(
-      ({ stakeAccount: publisherStakeAccount, ...publisher }) => ({
-        ...publisher,
-        isSelf: publisherStakeAccount?.equals(stakeAccount.address) ?? false,
-        positions: {
-          warmup: filterOISPositions(
-            publisher.publicKey,
-            PositionState.LOCKING,
-          ),
-          staked: filterOISPositions(publisher.publicKey, PositionState.LOCKED),
-          cooldown: filterOISPositions(
-            publisher.publicKey,
-            PositionState.PREUNLOCKING,
-          ),
-          cooldown2: filterOISPositions(
-            publisher.publicKey,
-            PositionState.UNLOCKED,
-          ),
-        },
-      }),
-    ),
+    integrityStakingPublishers: publishers.map((publisher) => ({
+      ...publisher,
+      positions: {
+        warmup: filterOISPositions(publisher.publicKey, PositionState.LOCKING),
+        staked: filterOISPositions(publisher.publicKey, PositionState.LOCKED),
+        cooldown: filterOISPositions(
+          publisher.publicKey,
+          PositionState.PREUNLOCKING,
+        ),
+        cooldown2: filterOISPositions(
+          publisher.publicKey,
+          PositionState.UNLOCKED,
+        ),
+      },
+    })),
   };
 };
 
@@ -312,7 +301,7 @@ const loadPublisherData = async (
       publicKey: publisher.pubkey,
       qualityRanking: publisherRanking?.rank ?? 0,
       selfStake: publisher.selfDelegation,
-      stakeAccount: publisher.stakeAccount,
+      stakeAccount: publisher.stakeAccount ?? undefined,
     };
   });
 };
