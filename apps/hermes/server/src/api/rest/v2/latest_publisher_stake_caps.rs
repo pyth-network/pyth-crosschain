@@ -5,6 +5,7 @@ use {
             types::{
                 BinaryUpdate,
                 EncodingType,
+                LatestPublisherStakeCapsUpdateDataResponse,
                 ParsedPublisherStakeCapsUpdate,
             },
             ApiState,
@@ -20,15 +21,9 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    serde::Deserialize,
     serde_qs::axum::QsQuery,
-    utoipa::{
-        IntoParams,
-        ToSchema,
-    },
+    utoipa::IntoParams,
 };
 
 
@@ -50,19 +45,12 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct LatestPublisherStakeCapsUpdateDataResponse {
-    pub binary: BinaryUpdate,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>>,
-}
-
 /// Get the most recent publisher stake caps update data.
 #[utoipa::path(
     get,
     path = "/v2/updates/publisher_stake_caps/latest",
     responses(
-        (status = 200, description = "Publisher stake caps update data retrieved succesfully", body = Vec<PriceFeedMetadata>)
+        (status = 200, description = "Publisher stake caps update data retrieved successfully", body = LatestPublisherStakeCapsUpdateDataResponse)
     ),
     params(
         LatestPublisherStakeCapsUpdateData
