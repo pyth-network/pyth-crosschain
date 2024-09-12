@@ -234,7 +234,7 @@ const loadDataForStakeAccount = async (
       warmup: filterGovernancePositions(PositionState.LOCKING),
       staked: filterGovernancePositions(PositionState.LOCKED),
       cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
-      cooldown2: filterGovernancePositions(PositionState.UNLOCKED),
+      cooldown2: filterGovernancePositions(PositionState.UNLOCKING),
     },
     unlockSchedule,
     integrityStakingPublishers: publishers.map((publisher) => ({
@@ -248,7 +248,7 @@ const loadDataForStakeAccount = async (
         ),
         cooldown2: filterOISPositions(
           publisher.publicKey,
-          PositionState.UNLOCKED,
+          PositionState.UNLOCKING,
         ),
       },
     })),
