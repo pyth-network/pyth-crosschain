@@ -23,11 +23,21 @@ export const extractPublisherData = (
         .map((event) => ({
           epoch: event.epoch,
           apy:
-            (event.y * (event.eventData[index]?.otherRewardRatio ?? 0n)) /
-            1_000_000n,
+            (52 *
+              100 *
+              Number(
+                event.y * (event.eventData[index]?.otherRewardRatio ?? 0n),
+              )) /
+            1_000_000 /
+            1_000_000,
           selfApy:
-            (event.y * (event.eventData[index]?.selfRewardRatio ?? 0n)) /
-            1_000_000n,
+            (52 *
+              100 *
+              Number(
+                event.y * (event.eventData[index]?.selfRewardRatio ?? 0n),
+              )) /
+            1_000_000 /
+            1_000_000,
         }))
         .sort((a, b) => Number(a.epoch) - Number(b.epoch)),
     }));
