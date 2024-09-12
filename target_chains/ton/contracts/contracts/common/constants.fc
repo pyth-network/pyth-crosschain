@@ -10,4 +10,16 @@ const int UPGRADE_MODULE = 0x000000000000000000000000000000000000000000000000000
 
 const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
 
+{-
+  The main workchain ID in TON. Currently, TON has two blockchains:
+  1. Masterchain: Used for system-level operations and consensus.
+  2. Basechain/Workchain: The primary chain for user accounts and smart contracts.
+
+  While TON supports up to 2^32 workchains, currently only Workchain 0 is active.
+  This constant defines the default workchain for smart contract deployment and interactions.
+
+  Note: Gas costs differ between chains:
+  - Basechain: 1 gas = 400 nanotons = 0.0000004 TON
+  - Masterchain: 1 gas = 10000 nanotons = 0.00001 TON (25x more expensive)
+-}
 const int WORKCHAIN = 0;
