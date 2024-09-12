@@ -111,6 +111,23 @@ describe("PythTest", () => {
     });
   }
 
+  async function updateGuardianSets(
+    pythTest: SandboxContract<PythTest>,
+    deployer: SandboxContract<TreasuryContract>
+  ) {
+    for (const vaa of MAINNET_UPGRADE_VAAS) {
+      const result = await pythTest.sendUpdateGuardianSet(
+        deployer.getSender(),
+        Buffer.from(vaa, "hex")
+      );
+      expect(result.transactions).toHaveTransaction({
+        from: deployer.address,
+        to: pythTest.address,
+        success: true,
+      });
+    }
+  }
+
   it("should correctly get price unsafe", async () => {
     await deployContract();
 
@@ -204,49 +221,7 @@ describe("PythTest", () => {
     await deployContract();
     let result;
 
-    const mainnet_upgrade_vaa_1 = MAINNET_UPGRADE_VAAS[0];
-    result = await pythTest.sendUpdateGuardianSet(
-      deployer.getSender(),
-      Buffer.from(mainnet_upgrade_vaa_1, "hex")
-    );
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: true,
-    });
-
-    const mainnet_upgrade_vaa_2 = MAINNET_UPGRADE_VAAS[1];
-    result = await pythTest.sendUpdateGuardianSet(
-      deployer.getSender(),
-      Buffer.from(mainnet_upgrade_vaa_2, "hex")
-    );
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: true,
-    });
-
-    const mainnet_upgrade_vaa_3 = MAINNET_UPGRADE_VAAS[2];
-    result = await pythTest.sendUpdateGuardianSet(
-      deployer.getSender(),
-      Buffer.from(mainnet_upgrade_vaa_3, "hex")
-    );
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: true,
-    });
-
-    const mainnet_upgrade_vaa_4 = MAINNET_UPGRADE_VAAS[3];
-    result = await pythTest.sendUpdateGuardianSet(
-      deployer.getSender(),
-      Buffer.from(mainnet_upgrade_vaa_4, "hex")
-    );
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: true,
-    });
+    await updateGuardianSets(pythTest, deployer);
 
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
@@ -267,6 +242,32 @@ describe("PythTest", () => {
     const updatedPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
     expect(updatedPrice.price).not.toBe(Number(PRICE.price)); // Since we updated the price, it should not be the same as the initial price
     expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
+  });
+
+  it("should fail to update price feeds with insufficient fee", async () => {
+    await deployContract();
+
+    await updateGuardianSets(pythTest, deployer);
+
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+
+    // Send less than the required fee
+    const insufficientFee = updateFee - 1;
+
+    const result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      156000000n + BigInt(insufficientFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
+    );
+
+    // Check that the transaction did not succeed
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1030, // ERROR_INSUFFICIENT_FEE = 1030
+    });
   });
 
   it("should return the correct chain ID", async () => {
@@ -399,9 +400,8 @@ describe("PythTest", () => {
 
     // Verify that the old data source is no longer valid
     const oldDataSource = DATA_SOURCES[0];
-    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
-      oldDataSource
-    );
+    const oldDataSourceIsValid =
+      await pythTest.getIsValidDataSource(oldDataSource);
     expect(oldDataSourceIsValid).toBe(false);
   });
 

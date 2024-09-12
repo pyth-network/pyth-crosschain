@@ -5,6 +5,7 @@
 #include "common/constants.fc";
 #include "common/merkle_tree.fc";
 #include "common/governance_actions.fc";
+#include "common/gas.fc";
 #include "./Wormhole.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
@@ -165,10 +166,13 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     cs = new_cs;
 
     int num_updates = cs~load_uint(8);
-    int fee = single_update_fee * num_updates;
+    int update_fee = single_update_fee * num_updates;
+    int compute_fee = get_compute_fee(WORKCHAIN, UPDATE_PRICE_FEEDS_GAS);
+    throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
+    int remaining_msg_value = msg_value - compute_fee;
 
-    ;; Check if the sender has sent enough TON to cover the fee
-    throw_unless(ERROR_INSUFFICIENT_FEE, msg_value >= fee);
+    ;; Check if the sender has sent enough TON to cover the update_fee
+    throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
 
     (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
 

@@ -9,3 +9,5 @@ const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
 const int UPGRADE_MODULE = 0x0000000000000000000000000000000000000000000000000000000000436f7265; ;; "Core" (left-padded to 256 bits) in hex
 
 const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
+
+const int WORKCHAIN = 0;
