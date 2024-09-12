@@ -34,8 +34,14 @@ export const AMPLITUDE_API_KEY = demandInProduction("AMPLITUDE_API_KEY");
 export const WALLETCONNECT_PROJECT_ID = demandInProduction(
   "WALLETCONNECT_PROJECT_ID",
 );
-export const RPC = process.env.RPC;
-export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
+export const RPC = demandInProduction("RPC");
+export const IS_MAINNET =
+  IS_PRODUCTION_SERVER || process.env.IS_MAINNET !== undefined;
+export const HERMES_URL =
+  process.env.HERMES_URL ??
+  (IS_MAINNET
+    ? "https://hermes.pyth.network"
+    : "https://hermes-beta.pyth.network");
 export const BLOCKED_REGIONS =
   process.env.BLOCKED_REGIONS === undefined ||
   process.env.BLOCKED_REGIONS === ""
