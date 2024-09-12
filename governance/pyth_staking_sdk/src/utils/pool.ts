@@ -1,5 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
+import { convertEpochYieldToApy } from "./apy";
+import { FRACTION_PRECISION_N } from "../constants";
 import type { PoolDataAccount, PublisherData } from "../types";
 
 export const extractPublisherData = (
@@ -22,22 +24,14 @@ export const extractPublisherData = (
         .filter((event) => event.epoch > 0n)
         .map((event) => ({
           epoch: event.epoch,
-          apy:
-            (52 *
-              100 *
-              Number(
-                event.y * (event.eventData[index]?.otherRewardRatio ?? 0n),
-              )) /
-            1_000_000 /
-            1_000_000,
-          selfApy:
-            (52 *
-              100 *
-              Number(
-                event.y * (event.eventData[index]?.selfRewardRatio ?? 0n),
-              )) /
-            1_000_000 /
-            1_000_000,
+          apy: convertEpochYieldToApy(
+            (event.y * (event.eventData[index]?.otherRewardRatio ?? 0n)) /
+              FRACTION_PRECISION_N,
+          ),
+          selfApy: convertEpochYieldToApy(
+            (event.y * (event.eventData[index]?.selfRewardRatio ?? 0n)) /
+              FRACTION_PRECISION_N,
+          ),
         }))
         .sort((a, b) => Number(a.epoch) - Number(b.epoch)),
     }));
