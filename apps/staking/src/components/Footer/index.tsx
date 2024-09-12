@@ -7,6 +7,7 @@ import LinkedIn from "./linkedin.svg";
 import Telegram from "./telegram.svg";
 import X from "./x.svg";
 import Youtube from "./youtube.svg";
+import Logo from "../Header/logo.svg";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 
@@ -37,21 +38,26 @@ export const Footer = ({
 }: Omit<HTMLAttributes<HTMLElement>, "children">) => (
   <footer
     className={clsx(
-      "sticky bottom-0 mt-4 text-xs font-light text-neutral-400 sm:px-4",
+      "mt-4 text-xs font-light sm:sticky sm:bottom-0 sm:px-4",
       className,
     )}
     {...props}
   >
     <div className="border-t border-neutral-600/50 bg-pythpurple-800 sm:border-x">
-      <MaxWidth className="flex h-16 items-center justify-between sm:-mx-4">
-        <div>© 2024 Pyth Data Association</div>
-        <div className="relative -right-3 flex h-full items-center">
+      <MaxWidth className="flex flex-col items-center gap-10 py-8 sm:-mx-4 sm:h-16 sm:flex-row sm:justify-between">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4 md:gap-8">
+          <Link href="https://www.pyth.network" target="_blank">
+            <Logo className="h-10 sm:h-8" />
+          </Link>
+          <div>© 2024 Pyth Data Association</div>
+        </div>
+        <div className="relative flex h-full items-center sm:-right-3">
           {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
             <Link
               target="_blank"
               href={href}
               key={name}
-              className="grid h-full place-content-center px-2 hover:text-pythpurple-400 sm:px-3"
+              className="grid h-full place-content-center px-3 hover:text-pythpurple-400"
               rel="noreferrer"
             >
               <Icon className="size-4" />

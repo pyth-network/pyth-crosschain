@@ -49,13 +49,13 @@ export const AccountSummary = ({
   availableRewards,
   expiringRewards,
 }: Props) => (
-  <section className="relative w-full overflow-hidden border border-neutral-600/50 bg-pythpurple-800">
+  <section className="relative w-full overflow-hidden sm:border sm:border-neutral-600/50 sm:bg-pythpurple-800">
     <Image
       src={background}
       alt=""
       className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
     />
-    <div className="relative flex flex-col items-start justify-between gap-8 px-6 py-10 sm:gap-16 sm:px-12 sm:py-20 lg:flex-row lg:items-center">
+    <div className="relative flex flex-col items-start justify-between gap-8 sm:px-6 sm:py-10 md:gap-16 md:px-12 md:py-20 xl:flex-row xl:items-center">
       <div>
         <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400 sm:mb-4">
           Total Balance
@@ -121,7 +121,7 @@ export const AccountSummary = ({
           />
         </div>
       </div>
-      <div className="flex w-full flex-col items-stretch gap-4 lg:w-auto xl:flex-row">
+      <div className="flex w-full flex-row items-stretch gap-4 xl:w-auto">
         <BalanceCategory
           name="Unlocked & Unstaked"
           amount={availableToWithdraw}
@@ -182,7 +182,7 @@ const BalanceCategory = ({
   action,
   warning,
 }: BalanceCategoryProps) => (
-  <div className="flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-6 backdrop-blur lg:w-96">
+  <div className="flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-6 backdrop-blur xl:w-96">
     <div>
       <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}

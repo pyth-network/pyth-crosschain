@@ -249,7 +249,7 @@ const useApiContext = (hermesUrl: string) => {
     reset();
   }, [reset]);
 
-  return (wallet.connected && !wallet.disconnecting) || wallet.connecting
+  return wallet.connected && !wallet.disconnecting
     ? state
     : State[StateType.NoWallet]();
 };
