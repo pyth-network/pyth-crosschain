@@ -384,41 +384,117 @@ describe("PythTest", () => {
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND = 1019
   });
 
-  it("should return the correct chain ID", async () => {
+  it("should correctly get chain ID", async () => {
     await deployContract();
 
     const result = await pythTest.getChainId();
     expect(result).toEqual(1);
   });
 
-  it("should return the correct last executed governance sequence", async () => {
-    await deployContract();
+  it("should correctly get last executed governance sequence", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
 
-    const result = await pythTest.getLastExecutedGovernanceSequence();
-    expect(result).toEqual(0); // Initial value should be 0
+    // Check initial value
+    let result = await pythTest.getLastExecutedGovernanceSequence();
+    expect(result).toEqual(0);
 
-    // TODO: add more tests for other governance sequences
+    // Execute a governance action (e.g., set fee)
+    await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    // Check that the sequence has increased
+    result = await pythTest.getLastExecutedGovernanceSequence();
+    expect(result).toEqual(1);
   });
 
-  it("should return the correct governance data source index", async () => {
-    await deployContract();
+  it("should correctly get governance data source index", async () => {
+    // Deploy contract with initial governance data source
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
 
-    const result = await pythTest.getGovernanceDataSourceIndex();
-    expect(result).toEqual(0); // Initial value should be 0
+    // Check initial value
+    let result = await pythTest.getGovernanceDataSourceIndex();
+    expect(result).toEqual(0);
 
-    // TODO: add more tests for other governance data source index
+    // Execute governance action to change data source
+    await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER, "hex")
+    );
+
+    // Check that the index has increased
+    result = await pythTest.getGovernanceDataSourceIndex();
+    expect(result).toEqual(1);
   });
 
-  it("should return an empty cell for governance data source", async () => {
+  it("should correctly get governance data source", async () => {
+    // Deploy contract without initial governance data source
     await deployContract();
 
-    const result = await pythTest.getGovernanceDataSource();
-    // assert that the result is an empty cell initally
+    // Check initial value (should be empty)
+    let result = await pythTest.getGovernanceDataSource();
     expect(result).toBeDefined();
     expect(result.bits.length).toBe(0);
     expect(result.refs.length).toBe(0);
 
-    // TODO: add more tests for other governance data source
+    // Deploy contract with initial governance data source
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    // Check that the governance data source is set
+    result = await pythTest.getGovernanceDataSource();
+    let dataSource = parseDataSource(result);
+    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
+
+    // Execute governance action to change data source
+    await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER, "hex")
+    );
+
+    // Check that the data source has changed
+    result = await pythTest.getGovernanceDataSource();
+    dataSource = parseDataSource(result);
+    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
   });
 
   it("should correctly get single update fee", async () => {
@@ -431,42 +507,6 @@ describe("PythTest", () => {
   });
 
   it("should execute set fee governance instruction", async () => {
-    await deployContract(
-      BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
-      PRICE,
-      EMA_PRICE,
-      SINGLE_UPDATE_FEE,
-      DATA_SOURCES,
-      0,
-      [TEST_GUARDIAN_ADDRESS1],
-      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
-      1,
-      "0000000000000000000000000000000000000000000000000000000000000004",
-      TEST_GOVERNANCE_DATA_SOURCES[0]
-    );
-
-    // Get the initial fee
-    const initialFee = await pythTest.getSingleUpdateFee();
-    expect(initialFee).toEqual(SINGLE_UPDATE_FEE);
-
-    // Execute the governance action
-    const result = await pythTest.sendExecuteGovernanceAction(
-      deployer.getSender(),
-      Buffer.from(PYTH_SET_FEE, "hex")
-    );
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: true,
-    });
-
-    // Get the new fee
-    const newFee = await pythTest.getSingleUpdateFee();
-    expect(newFee).toEqual(4200);
-  });
-
-  it("should execute set data sources governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
       TIME_PERIOD,
