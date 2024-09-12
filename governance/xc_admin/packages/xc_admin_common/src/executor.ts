@@ -25,6 +25,12 @@ import {
   TransactionBuilder,
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
+import {
+  findDetermisticPublisherBufferAddress,
+  PRICE_STORE_BUFFER_SPACE,
+  PRICE_STORE_PROGRAM_ID,
+  PriceStoreMultisigInstruction,
+} from "./price_store";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -134,6 +140,27 @@ export async function executeProposal(
       } else {
         throw Error("Product account not found");
       }
+    } else if (
+      parsedInstruction instanceof PriceStoreMultisigInstruction &&
+      parsedInstruction.name == "InitializePublisher"
+    ) {
+      const [bufferKey, bufferSeed] =
+        await findDetermisticPublisherBufferAddress(
+          parsedInstruction.args.publisherKey
+        );
+      transaction.add(
+        SystemProgram.createAccountWithSeed({
+          fromPubkey: squad.wallet.publicKey,
+          basePubkey: squad.wallet.publicKey,
+          newAccountPubkey: bufferKey,
+          seed: bufferSeed,
+          space: PRICE_STORE_BUFFER_SPACE,
+          lamports: await squad.connection.getMinimumBalanceForRentExemption(
+            PRICE_STORE_BUFFER_SPACE
+          ),
+          programId: PRICE_STORE_PROGRAM_ID,
+        })
+      );
     }
 
     TransactionBuilder.addPriorityFee(transaction, priorityFeeConfig);
