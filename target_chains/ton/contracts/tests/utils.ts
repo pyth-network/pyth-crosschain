@@ -1,4 +1,5 @@
-import { Cell, beginCell } from "@ton/core";
+import { DataSource } from "@pythnetwork/xc-admin-common";
+import { Cell, Transaction, beginCell } from "@ton/core";
 
 export function createCellChain(buffer: Buffer): Cell {
   let chunks = bufferToChunks(buffer, 127);
@@ -42,4 +43,27 @@ function bufferToChunks(
   }
 
   return chunks;
+}
+
+// Helper function to parse DataSource from a Cell
+export function parseDataSource(cell: Cell): DataSource {
+  const slice = cell.beginParse();
+  const emitterChain = slice.loadUint(16);
+  const emitterAddress = slice.loadUint(256).toString(16).padStart(64, "0");
+  return { emitterChain, emitterAddress };
+}
+
+function computedGeneric(transaction: Transaction) {
+  if (transaction.description.type !== "generic")
+    throw "Expected generic transactionaction";
+  if (transaction.description.computePhase.type !== "vm")
+    throw "Compute phase expected";
+  return transaction.description.computePhase;
+}
+
+export function printTxGasStats(name: string, transaction: Transaction) {
+  const txComputed = computedGeneric(transaction);
+  console.log(`${name} used ${txComputed.gasUsed} gas`);
+  console.log(`${name} gas cost: ${txComputed.gasFees}`);
+  return txComputed.gasFees;
 }

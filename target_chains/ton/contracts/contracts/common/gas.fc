@@ -1,0 +1,4 @@
+int get_compute_fee(int workchain, int gas_used) asm(gas_used workchain) "GETGASFEE";
+
+;; The actual gas used for the transaction is 350166 but we add ~10% (385182.6) and round up (390000) to be on the safe side because the amount of gas used can vary based on the current state of the blockchain
+const int UPDATE_PRICE_FEEDS_GAS = 390000;

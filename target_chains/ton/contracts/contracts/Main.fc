@@ -1,12 +1,9 @@
 #include "imports/stdlib.fc";
 #include "common/errors.fc";
 #include "common/storage.fc";
+#include "common/op.fc";
 #include "Wormhole.fc";
 #include "Pyth.fc";
-
-;; Opcodes
-const int OP_UPDATE_GUARDIAN_SET = 1;
-const int OP_EXECUTE_GOVERNANCE_ACTION = 2;
 
 ;; Internal message handler
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {

@@ -1,5 +1,7 @@
 const int ACCUMULATOR_MAGIC = 0x504e4155; ;; "PNAU" (Pyth Network Accumulator Update)
-const int ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; ;; Stands for AUWV (Accumulator Update Wormhole Verficiation)
+const int ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; ;; "AUWV" (Accumulator Update Wormhole Verficiation)
+const int GOVERNANCE_MAGIC = 0x5054474d; ;; "PTGM" (Pyth Governance Message)
+const int GOVERNANCE_MODULE = 1;
 const int MAJOR_VERSION = 1;
 const int MINIMUM_ALLOWED_MINOR_VERSION = 0;
 
@@ -7,3 +9,17 @@ const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
 const int UPGRADE_MODULE = 0x0000000000000000000000000000000000000000000000000000000000436f7265; ;; "Core" (left-padded to 256 bits) in hex
 
 const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
+
+{-
+  The main workchain ID in TON. Currently, TON has two blockchains:
+  1. Masterchain: Used for system-level operations and consensus.
+  2. Basechain/Workchain: The primary chain for user accounts and smart contracts.
+
+  While TON supports up to 2^32 workchains, currently only Workchain 0 is active.
+  This constant defines the default workchain for smart contract deployment and interactions.
+
+  Note: Gas costs differ between chains:
+  - Basechain: 1 gas = 400 nanotons = 0.0000004 TON
+  - Masterchain: 1 gas = 10000 nanotons = 0.00001 TON (25x more expensive)
+-}
+const int WORKCHAIN = 0;
