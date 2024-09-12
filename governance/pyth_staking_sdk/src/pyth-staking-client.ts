@@ -485,7 +485,7 @@ export class PythStakingClient {
       if (val === undefined) {
         continue;
       }
-      const buffer = Buffer.from(val, "base64");
+      const buffer = Buffer.from(val, "base64").reverse();
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
