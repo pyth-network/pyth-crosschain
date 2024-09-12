@@ -1,3 +1,9 @@
+import { FRACTION_PRECISION } from "../constants";
+
+export const convertEpochYieldToApy = (epochYield: bigint) => {
+  return (Number(epochYield) * 52 * 100) / FRACTION_PRECISION;
+};
+
 export const calculateApy = (
   options: {
     selfStake: bigint;
@@ -8,7 +14,7 @@ export const calculateApy = (
   const { selfStake, poolCapacity, yieldRate, isSelf } = options;
   const eligibleSelfStake = selfStake > poolCapacity ? poolCapacity : selfStake;
 
-  const apyPercentage = (Number(yieldRate) * 52 * 100) / 1_000_000;
+  const apyPercentage = convertEpochYieldToApy(yieldRate);
 
   if (isSelf) {
     if (selfStake === 0n) {
