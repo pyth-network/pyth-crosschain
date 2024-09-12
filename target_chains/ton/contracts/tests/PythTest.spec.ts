@@ -244,6 +244,109 @@ describe("PythTest", () => {
     expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
   });
 
+  it("should fail to get update fee with invalid data", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const invalidUpdateData = Buffer.from("invalid data");
+
+    await expect(pythTest.getUpdateFee(invalidUpdateData)).rejects.toThrow(
+      "Unable to execute get method. Got exit_code: 1021"
+    ); // ERROR_INVALID_MAGIC = 1021
+  });
+
+  it("should fail to update price feeds with invalid data", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const invalidUpdateData = Buffer.from("invalid data");
+
+    // Use a fixed value for updateFee since we can't get it from getUpdateFee
+    const updateFee = toNano("0.1"); // Use a reasonable amount
+
+    const result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      invalidUpdateData,
+      updateFee
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1021, // ERROR_INVALID_MAGIC
+    });
+  });
+
+  it("should fail to update price feeds with outdated guardian set", async () => {
+    await deployContract();
+    // Don't update guardian sets
+
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+
+    const result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      toNano(updateFee)
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1002, // ERROR_GUARDIAN_SET_NOT_FOUND
+    });
+  });
+
+  it("should fail to update price feeds with invalid data source", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      [] // Empty data sources
+    );
+    await updateGuardianSets(pythTest, deployer);
+
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+
+    const result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      toNano(updateFee)
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1024, // ERROR_UPDATE_DATA_SOURCE_NOT_FOUND
+    });
+  });
+
+  it("should fail to update price feeds with insufficient gas", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+
+    const result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      toNano("0.1") // Insufficient gas
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1037, // ERROR_INSUFFICIENT_GAS
+    });
+  });
+
   it("should fail to update price feeds with insufficient fee", async () => {
     await deployContract();
 
@@ -268,6 +371,17 @@ describe("PythTest", () => {
       success: false,
       exitCode: 1030, // ERROR_INSUFFICIENT_FEE = 1030
     });
+  });
+
+  it("should fail to get price for non-existent price feed", async () => {
+    await deployContract();
+
+    const nonExistentPriceFeedId =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+
+    await expect(
+      pythTest.getPriceUnsafe(nonExistentPriceFeedId)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND = 1019
   });
 
   it("should return the correct chain ID", async () => {
@@ -499,5 +613,70 @@ describe("PythTest", () => {
     const dataSourceCell = await pythTest.getGovernanceDataSource();
     const dataSource = parseDataSource(dataSourceCell);
     expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // Should still be the initial value
+  });
+
+  it("should fail to execute governance action with invalid governance data source", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[1]
+    );
+
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1032, // ERROR_INVALID_GOVERNANCE_DATA_SOURCE
+    });
+  });
+
+  it("should fail to execute governance action with old sequence number", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    // Execute a governance action to increase the sequence number
+    await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    // Try to execute the same governance action again
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1033, // ERROR_OLD_GOVERNANCE_MESSAGE
+    });
   });
 });
