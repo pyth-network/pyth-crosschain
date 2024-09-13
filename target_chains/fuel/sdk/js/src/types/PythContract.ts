@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.94.2
+  Fuels version: 0.94.5
 */
 
 import { Contract, Interface } from "fuels";
@@ -2123,7 +2123,7 @@ const abi = {
       name: "DEPLOYER",
       concreteTypeId:
         "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
-      offset: 131600,
+      offset: 132984,
     },
   ],
 };
@@ -2178,6 +2178,7 @@ const storageSlots: StorageSlot[] = [
     value: "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
+
 export class PythContractInterface extends Interface {
   constructor() {
     super(abi);
