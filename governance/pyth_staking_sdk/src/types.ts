@@ -53,7 +53,7 @@ export type PublisherData = {
   stakeAccount: PublicKey | null;
   totalDelegation: bigint;
   selfDelegation: bigint;
-  apyHistory: { epoch: bigint; apy: bigint; selfApy: bigint }[];
+  apyHistory: { epoch: bigint; apy: number; selfApy: number }[];
 }[];
 
 export enum PositionState {

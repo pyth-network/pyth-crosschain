@@ -4,6 +4,8 @@
 #include "common/utils.fc";
 #include "common/constants.fc";
 #include "common/merkle_tree.fc";
+#include "common/governance_actions.fc";
+#include "common/gas.fc";
 #include "./Wormhole.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
@@ -59,13 +61,18 @@ slice read_and_verify_header(slice data) {
     return (price, conf, expo, publish_time);
 }
 
-(int) get_update_fee(slice data) method_id {
+int get_update_fee(slice data) method_id {
     load_data();
     slice cs = read_and_verify_header(data);
     int wormhole_proof_size_bytes = cs~load_uint(16);
     (cell wormhole_proof, slice cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
     int num_updates = cs~load_uint(8);
     return single_update_fee * num_updates;
+}
+
+int get_single_update_fee() method_id {
+    load_data();
+    return single_update_fee;
 }
 
 int get_governance_data_source_index() method_id {
@@ -81,6 +88,17 @@ cell get_governance_data_source() method_id {
 int get_last_executed_governance_sequence() method_id {
     load_data();
     return last_executed_governance_sequence;
+}
+
+int get_is_valid_data_source(cell data_source) method_id {
+    load_data();
+    int data_source_key = cell_hash(data_source);
+    (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
+    if (found?) {
+        return value~load_int(1);
+    } else {
+        return 0;
+    }
 }
 
 (int, int, int, int) get_price_unsafe(int price_feed_id) method_id {
@@ -148,10 +166,13 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     cs = new_cs;
 
     int num_updates = cs~load_uint(8);
-    int fee = single_update_fee * num_updates;
+    int update_fee = single_update_fee * num_updates;
+    int compute_fee = get_compute_fee(WORKCHAIN, UPDATE_PRICE_FEEDS_GAS);
+    throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
+    int remaining_msg_value = msg_value - compute_fee;
 
-    ;; Check if the sender has sent enough TON to cover the fee
-    throw_unless(ERROR_INSUFFICIENT_FEE, msg_value >= fee);
+    ;; Check if the sender has sent enough TON to cover the update_fee
+    throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
 
     (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
 
@@ -203,6 +224,131 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     store_data();
 }
 
-() execute_governance_action(slice in_msg_body) impure {
+() verify_governance_vm(int emitter_chain_id, int emitter_address, int sequence) impure {
+    (int gov_chain_id, int gov_address) = parse_data_source(governance_data_source);
+    throw_unless(ERROR_INVALID_GOVERNANCE_DATA_SOURCE, emitter_chain_id == gov_chain_id);
+    throw_unless(ERROR_INVALID_GOVERNANCE_DATA_SOURCE, emitter_address == gov_address);
+    throw_if(ERROR_OLD_GOVERNANCE_MESSAGE, sequence <= last_executed_governance_sequence);
+    last_executed_governance_sequence = sequence;
+}
+
+(int, int, slice) parse_governance_instruction(slice payload) {
+    int magic = payload~load_uint(32);
+    throw_unless(ERROR_INVALID_GOVERNANCE_MAGIC, magic == GOVERNANCE_MAGIC);
+
+    int module = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_GOVERNANCE_MODULE, module == GOVERNANCE_MODULE);
+
+    int action = payload~load_uint(8);
+
+    int target_chain_id = payload~load_uint(16);
+
+    return (target_chain_id, action, payload);
+}
+
+int apply_decimal_expo(int value, int expo) {
+    int result = value;
+    repeat (expo) {
+        result *= 10;
+    }
+    return result;
+}
+
+() execute_upgrade_contract(slice payload) impure {
     ;; TODO: Implement
+}
+
+() execute_authorize_governance_data_source_transfer(slice payload) impure {
+    ;; Verify the claim VAA
+    (_, _, _, _, int emitter_chain_id, int emitter_address, int sequence, _, slice claim_payload, _) = parse_and_verify_wormhole_vm(payload);
+
+    ;; Parse the claim payload
+    (int target_chain_id, int action, slice claim_payload) = parse_governance_instruction(claim_payload);
+
+    ;; Verify that this is a valid governance action for this chain
+    throw_if(ERROR_INVALID_GOVERNANCE_TARGET, (target_chain_id != 0) & (target_chain_id != chain_id));
+    throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER);
+
+    ;; Extract the new governance data source index from the claim payload
+    int new_governance_data_source_index = claim_payload~load_uint(32);
+
+    ;; Verify that the new index is greater than the current index
+    int current_index = governance_data_source_index;
+    throw_if(ERROR_OLD_GOVERNANCE_MESSAGE, new_governance_data_source_index <= current_index);
+
+    ;; Update the governance data source
+    governance_data_source = begin_cell()
+        .store_uint(emitter_chain_id, 16)
+        .store_uint(emitter_address, 256)
+    .end_cell();
+
+    governance_data_source_index = new_governance_data_source_index;
+
+    ;; Update the last executed governance sequence
+    last_executed_governance_sequence = sequence;
+}
+
+() execute_set_data_sources(slice payload) impure {
+    int num_sources = payload~load_uint(8);
+    cell new_data_sources = new_dict();
+
+    repeat(num_sources) {
+        (cell data_source, slice new_payload) = read_and_store_large_data(payload, 272); ;; 272 = 256 + 16
+        payload = new_payload;
+        slice data_source_slice = data_source.begin_parse();
+        int emitter_chain_id = data_source_slice~load_uint(16);
+        int emitter_address = data_source_slice~load_uint(256);
+        cell data_source = begin_cell()
+            .store_uint(emitter_chain_id, 16)
+            .store_uint(emitter_address, 256)
+        .end_cell();
+        int data_source_key = cell_hash(data_source);
+        new_data_sources~udict_set(256, data_source_key, begin_cell().store_int(true, 1).end_cell().begin_parse());
+    }
+
+    is_valid_data_source = new_data_sources;
+}
+
+() execute_set_fee(slice payload) impure {
+    int value = payload~load_uint(64);
+    int expo = payload~load_uint(64);
+    int new_fee = apply_decimal_expo(value, expo);
+    single_update_fee = new_fee;
+}
+
+() execute_governance_payload(int action, slice payload) impure {
+    if (action == UPGRADE_CONTRACT) {
+        execute_upgrade_contract(payload);
+    } elseif (action == AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER) {
+        execute_authorize_governance_data_source_transfer(payload);
+    } elseif (action == SET_DATA_SOURCES) {
+        execute_set_data_sources(payload);
+    } elseif (action == SET_FEE) {
+        execute_set_fee(payload);
+    } elseif (action == SET_VALID_PERIOD) {
+        ;; Unsupported governance action
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
+    } elseif (action == REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER) {
+        ;; RequestGovernanceDataSourceTransfer can only be part of
+        ;; AuthorizeGovernanceDataSourceTransfer message
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
+    } else {
+        throw(ERROR_INVALID_GOVERNANCE_ACTION);
+    }
+}
+
+() execute_governance_action(slice in_msg_body) impure {
+    load_data();
+
+    (_, _, _, _, int emitter_chain_id, int emitter_address, int sequence, _, slice payload, _) = parse_and_verify_wormhole_vm(in_msg_body);
+
+    verify_governance_vm(emitter_chain_id, emitter_address, sequence);
+
+    (int target_chain_id, int action, slice payload) = parse_governance_instruction(payload);
+
+    throw_if(ERROR_INVALID_GOVERNANCE_TARGET, (target_chain_id != 0) & (target_chain_id != chain_id));
+
+    execute_governance_payload(action, payload);
+
+    store_data();
 }

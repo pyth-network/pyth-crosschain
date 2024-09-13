@@ -543,7 +543,7 @@ export class PythStakingClient {
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
-    return Promise.all(
+    const advanceDelegationRecordInstructions = await Promise.all(
       publishers.map(({ pubkey, stakeAccount }) =>
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
@@ -560,8 +560,25 @@ export class PythStakingClient {
             ),
           })
           .instruction(),
-      ),
-    );
+      ));
+
+      const mergePositionsInstruction = await Promise.all(
+        publishers.map(({ pubkey }) =>
+          this.integrityPoolProgram.methods
+            .mergeDelegationPositions()
+            .accounts({
+              owner: this.wallet.publicKey,
+              publisher: pubkey,
+              stakeAccountPositions,
+            })
+            .instruction(),
+        ),
+      );
+
+      return {
+        advanceDelegationRecordInstructions,
+        mergePositionsInstruction,
+      };
   }
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
@@ -569,7 +586,11 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
 
-    return sendTransaction(instructions, this.connection, this.wallet);
+
+    return sendTransaction([
+      ...instructions.advanceDelegationRecordInstructions,
+      ...instructions.mergePositionsInstruction,
+    ], this.connection, this.wallet);
   }
 
   public async getClaimableRewards(stakeAccountPositions: PublicKey) {
@@ -579,7 +600,7 @@ export class PythStakingClient {
 
     let totalRewards = 0n;
 
-    for (const instruction of instructions) {
+    for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
       tx.feePayer = this.wallet.publicKey;
       const res = await this.connection.simulateTransaction(tx);
@@ -587,10 +608,9 @@ export class PythStakingClient {
       if (val === undefined) {
         continue;
       }
-      const buffer = Buffer.from(val, "base64");
+      const buffer = Buffer.from(val, "base64").reverse();
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
-
     return totalRewards;
   }
 }
