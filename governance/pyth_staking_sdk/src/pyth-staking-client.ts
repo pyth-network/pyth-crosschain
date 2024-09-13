@@ -611,4 +611,21 @@ export class PythStakingClient {
     }
     return totalRewards;
   }
+
+  public async setPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey,
+  ) {
+    const instruction = await this.integrityPoolProgram.methods
+      .setPublisherStakeAccount()
+      .accounts({
+        currentStakeAccountPositionsOption: stakeAccountPositions,
+        newStakeAccountPositions,
+        publisher,
+      }).instruction();
+
+    await sendTransaction([instruction], this.connection, this.wallet);
+    return;
+  }
 }

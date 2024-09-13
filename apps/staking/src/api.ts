@@ -435,12 +435,16 @@ export const unstakeIntegrityStaking = async (
 };
 
 export const reassignPublisherAccount = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _targetAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  targetAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  return client.setPublisherStakeAccount(
+    publisherKey,
+    stakeAccount,
+    targetAccount,
+  );
 };
 
 export const optPublisherOut = async (

@@ -211,6 +211,7 @@ const ReassignStakeAccountButton = ({
           {({ close }) => (
             <ReassignStakeAccountForm
               api={api}
+              publisherPubkey={self.publicKey}
               close={close}
               setCloseDisabled={setCloseDisabled}
             />
@@ -223,12 +224,14 @@ const ReassignStakeAccountButton = ({
 
 type ReassignStakeAccountFormProps = {
   api: States[ApiStateType.Loaded];
+  publisherPubkey: PublicKey;
   close: () => void;
   setCloseDisabled: (value: boolean) => void;
 };
 
 const ReassignStakeAccountForm = ({
   api,
+  publisherPubkey,
   close,
   setCloseDisabled,
 }: ReassignStakeAccountFormProps) => {
@@ -246,8 +249,8 @@ const ReassignStakeAccountForm = ({
     () =>
       key === undefined
         ? Promise.reject(new InvalidKeyError())
-        : api.reassignPublisherAccount(key),
-    [api, key],
+        : api.reassignPublisherAccount(key, publisherPubkey),
+    [api, key, publisherPubkey],
   );
 
   const { state, execute } = useAsync(doReassign);
