@@ -344,6 +344,7 @@ export type IntegrityPool = {
         },
       ];
       args: [];
+      returns: "u64";
     },
     {
       name: "createSlashEvent";
@@ -361,6 +362,7 @@ export type IntegrityPool = {
         },
         {
           name: "slashCustody";
+          relations: ["poolConfig"];
         },
         {
           name: "poolData";
@@ -621,6 +623,9 @@ export type IntegrityPool = {
           };
         },
         {
+          name: "slashCustody";
+        },
+        {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
         },
@@ -803,7 +808,8 @@ export type IntegrityPool = {
           };
         },
         {
-          name: "newStakeAccountPositions";
+          name: "newStakeAccountPositionsOption";
+          optional: true;
         },
         {
           name: "currentStakeAccountPositionsOption";
@@ -1363,7 +1369,7 @@ export type IntegrityPool = {
     },
     {
       code: 6001;
-      name: "publisherNeedsToSign";
+      name: "publisherOrRewardAuthorityNeedsToSign";
     },
     {
       code: 6002;
@@ -1458,6 +1464,10 @@ export type IntegrityPool = {
       code: 6023;
       name: "invalidY";
       msg: "Y should not be greater than 1%";
+    },
+    {
+      code: 6024;
+      name: "invalidSlashCustodyAccount";
     },
   ];
   types: [
@@ -1623,6 +1633,10 @@ export type IntegrityPool = {
           {
             name: "y";
             type: "u64";
+          },
+          {
+            name: "slashCustody";
+            type: "pubkey";
           },
         ];
       };

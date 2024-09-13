@@ -430,20 +430,24 @@ export const unstakeIntegrityStaking = async (
 };
 
 export const reassignPublisherAccount = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _targetAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  targetAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  return client.reassignPublisherStakeAccount(
+    publisherKey,
+    stakeAccount,
+    targetAccount,
+  );
 };
 
 export const optPublisherOut = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  await client.removePublisherStakeAccount(stakeAccount, publisherKey);
 };
 
 const MOCK_DELAY = 500;
@@ -486,10 +490,3 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
-
-class NotImplementedError extends Error {
-  constructor() {
-    super("Not yet implemented!");
-    this.name = "NotImplementedError";
-  }
-}

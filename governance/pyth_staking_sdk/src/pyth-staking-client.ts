@@ -183,6 +183,7 @@ export class PythStakingClient {
       .initializePool(rewardProgramAuthority, yAnchor)
       .accounts({
         poolData,
+        slashCustody: getStakeAccountCustodyAddress(poolData),
       })
       .instruction();
 
@@ -641,5 +642,46 @@ export class PythStakingClient {
       expiry:
         lowestEpoch === undefined ? undefined : epochToDate(lowestEpoch + 52n),
     };
+  }
+
+  async setPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey | undefined,
+  ) {
+    const instruction = await this.integrityPoolProgram.methods
+      .setPublisherStakeAccount()
+      .accounts({
+        currentStakeAccountPositionsOption: stakeAccountPositions,
+        newStakeAccountPositionsOption: newStakeAccountPositions ?? null,
+        publisher,
+      })
+      .instruction();
+
+    await sendTransaction([instruction], this.connection, this.wallet);
+    return;
+  }
+
+  public async reassignPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      newStakeAccountPositions,
+    );
+  }
+
+  public async removePublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      undefined,
+    );
   }
 }
