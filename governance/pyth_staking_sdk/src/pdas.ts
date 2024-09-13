@@ -36,3 +36,17 @@ export const getPoolConfigAddress = () => {
     INTEGRITY_POOL_PROGRAM_ADDRESS,
   )[0];
 };
+
+export const getDelegationRecordAddress = (
+  stakeAccountPositions: PublicKey,
+  publisher: PublicKey,
+) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("delegation_record"),
+      publisher.toBuffer(),
+      stakeAccountPositions.toBuffer(),
+    ],
+    INTEGRITY_POOL_PROGRAM_ADDRESS,
+  )[0];
+};
