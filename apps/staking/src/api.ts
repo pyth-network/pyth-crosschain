@@ -338,7 +338,7 @@ export const loadAccountHistory = async (
 export const createStakeAccountAndDeposit = async (
   client: PythStakingClient,
   amount: bigint,
-): Promise<StakeAccountPositions> => {
+): Promise<PublicKey> => {
   return client.createStakeAccountAndDeposit(amount);
 };
 

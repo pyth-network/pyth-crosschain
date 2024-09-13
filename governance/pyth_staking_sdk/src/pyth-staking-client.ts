@@ -433,7 +433,7 @@ export class PythStakingClient {
 
     await sendTransaction(instructions, this.connection, this.wallet);
 
-    return this.getStakeAccountPositions(stakeAccountPositions);
+    return stakeAccountPositions;
   }
 
   public async depositTokensToStakeAccountCustody(
