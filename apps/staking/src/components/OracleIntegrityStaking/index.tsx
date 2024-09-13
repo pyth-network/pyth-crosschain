@@ -26,7 +26,6 @@ import {
   DialogTrigger,
   TextField,
   Form,
-  Switch,
 } from "react-aria-components";
 
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
@@ -35,7 +34,6 @@ import {
   useAsync,
 } from "../../hooks/use-async";
 import { Button } from "../Button";
-import { CopyButton } from "../CopyButton";
 import { ModalDialog } from "../ModalDialog";
 import { ProgramSection } from "../ProgramSection";
 import { SparkChart } from "../SparkChart";
@@ -113,7 +111,7 @@ export const OracleIntegrityStaking = ({
           <div className="relative w-full overflow-x-auto">
             <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
               <h3 className="text-2xl font-light">
-                You - <PublisherName fullKey>{self}</PublisherName>
+                You (<PublisherName>{self}</PublisherName>)
               </h3>
               <div className="flex flex-row items-center gap-4">
                 <ReassignStakeAccountButton self={self} api={api} />
@@ -428,45 +426,64 @@ const PublisherList = ({
   yieldRate,
 }: PublisherListProps) => {
   const [search, setSearch] = useState("");
-  const [yoursFirst, setYoursFirst] = useState(true);
   const [sort, setSort] = useState({
     field: SortField.PoolUtilization,
-    descending: true,
+    descending: false,
   });
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(0);
-  const filteredSortedPublishers = useMemo(
-    () =>
-      publishers
-        .filter(
-          (publisher) =>
-            filter.contains(publisher.publicKey.toBase58(), search) ||
-            (publisher.name !== undefined &&
-              filter.contains(publisher.name, search)),
-        )
-        .sort((a, b) => {
-          if (yoursFirst) {
-            const aHasPositions = hasAnyPositions(a);
-            const bHasPositions = hasAnyPositions(b);
-            if (aHasPositions && !bHasPositions) {
-              return -1;
-            } else if (bHasPositions && !aHasPositions) {
-              return 1;
-            }
+  const filteredSortedPublishers = useMemo(() => {
+    const sorted = publishers
+      .filter(
+        (publisher) =>
+          filter.contains(publisher.publicKey.toBase58(), search) ||
+          (publisher.name !== undefined &&
+            filter.contains(publisher.name, search)),
+      )
+      .sort((a, b) => {
+        switch (sort.field) {
+          case SortField.PublisherName: {
+            return (a.name ?? a.publicKey.toBase58()).localeCompare(
+              b.name ?? b.publicKey.toBase58(),
+            );
           }
-          const sortResult = doSort(a, b, yieldRate, sort.field);
-          return sort.descending ? sortResult * -1 : sortResult;
-        }),
-    [
-      publishers,
-      search,
-      sort.field,
-      sort.descending,
-      filter,
-      yieldRate,
-      yoursFirst,
-    ],
-  );
+          case SortField.APY: {
+            return (
+              calculateApy({
+                isSelf: false,
+                selfStake: a.selfStake,
+                poolCapacity: a.poolCapacity,
+                poolUtilization: a.poolUtilization,
+                yieldRate,
+              }) -
+              calculateApy({
+                isSelf: false,
+                selfStake: b.selfStake,
+                poolCapacity: b.poolCapacity,
+                poolUtilization: b.poolUtilization,
+                yieldRate,
+              })
+            );
+          }
+          case SortField.NumberOfFeeds: {
+            return Number(a.numFeeds - b.numFeeds);
+          }
+          case SortField.PoolUtilization: {
+            return Number(
+              a.poolUtilization * b.poolCapacity -
+                b.poolUtilization * a.poolCapacity,
+            );
+          }
+          case SortField.QualityRanking: {
+            return Number(a.qualityRanking - b.qualityRanking);
+          }
+          case SortField.SelfStake: {
+            return Number(a.selfStake - b.selfStake);
+          }
+        }
+      });
+    return sort.descending ? sorted.reverse() : sorted;
+  }, [publishers, search, sort.field, sort.descending, filter, yieldRate]);
 
   const paginatedPublishers = useMemo(
     () =>
@@ -495,42 +512,28 @@ const PublisherList = ({
 
   return (
     <div className="relative w-full overflow-x-auto">
-      <div className="sticky left-0 mb-4 flex flex-col gap-4 px-4 sm:px-10 sm:pb-4 sm:pt-6 md:flex-row md:items-center md:justify-between md:gap-12">
-        <h3 className="flex-none text-2xl font-light">{title}</h3>
+      <div className="sticky left-0 mb-4 flex flex-row items-center justify-between gap-6 px-4 text-2xl sm:px-10 sm:pb-4 sm:pt-6">
+        <h3 className="font-light">{title}</h3>
 
-        <div className="flex flex-none grow flex-col items-end gap-2 lg:flex-row-reverse lg:items-center lg:justify-start lg:gap-10 xl:gap-16">
-          <SearchField
-            value={search}
-            onChange={updateSearch}
-            aria-label="Search"
-            className="group relative w-full md:max-w-96"
-          >
-            <Input
-              className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
-              placeholder="Search"
-            />
-            <div className="absolute inset-y-0 left-4 grid place-content-center">
-              <MagnifyingGlassIcon className="size-4 text-pythpurple-400" />
-            </div>
-            <div className="absolute inset-y-0 right-2 grid place-content-center">
-              <BaseButton className="p-2 group-empty:hidden">
-                <XMarkIcon className="size-4" />
-              </BaseButton>
-            </div>
-          </SearchField>
-          <Switch
-            isSelected={yoursFirst}
-            onChange={setYoursFirst}
-            className="group flex cursor-pointer flex-row items-center gap-2"
-          >
-            <div className="whitespace-nowrap opacity-80">
-              Show your positions first
-            </div>
-            <div className="h-8 w-16 flex-none rounded-full border border-neutral-400/50 bg-neutral-800/50 p-1 transition group-data-[selected]:border-pythpurple-600 group-data-[selected]:bg-pythpurple-600/10">
-              <div className="aspect-square h-full rounded-full bg-neutral-400/50 transition group-data-[selected]:translate-x-8 group-data-[selected]:bg-pythpurple-600" />
-            </div>
-          </Switch>
-        </div>
+        <SearchField
+          value={search}
+          onChange={updateSearch}
+          aria-label="Search"
+          className="group relative w-full max-w-96"
+        >
+          <Input
+            className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
+            placeholder="Search"
+          />
+          <div className="absolute inset-y-0 left-4 grid place-content-center">
+            <MagnifyingGlassIcon className="size-4 text-pythpurple-400" />
+          </div>
+          <div className="absolute inset-y-0 right-2 grid place-content-center">
+            <BaseButton className="p-2 group-empty:hidden">
+              <XMarkIcon className="size-4" />
+            </BaseButton>
+          </div>
+        </SearchField>
       </div>
 
       {filteredSortedPublishers.length > 0 ? (
@@ -541,8 +544,7 @@ const PublisherList = ({
                 field={SortField.PublisherName}
                 sort={sort}
                 setSort={updateSort}
-                alignment="left"
-                className="pl-4 sm:pl-10"
+                className="pl-4 text-left sm:pl-10"
               >
                 Publisher
               </SortablePublisherTableHeader>
@@ -551,7 +553,7 @@ const PublisherList = ({
                 sort={sort}
                 setSort={updateSort}
               >
-                {"Publisher's stake"}
+                Self stake
               </SortablePublisherTableHeader>
               <SortablePublisherTableHeader
                 field={SortField.PoolUtilization}
@@ -636,54 +638,6 @@ const PublisherList = ({
   );
 };
 
-const doSort = (
-  a: PublisherProps["publisher"],
-  b: PublisherProps["publisher"],
-  yieldRate: bigint,
-  sortField: SortField,
-): number => {
-  switch (sortField) {
-    case SortField.PublisherName: {
-      return (a.name ?? a.publicKey.toBase58()).localeCompare(
-        b.name ?? b.publicKey.toBase58(),
-      );
-    }
-    case SortField.APY: {
-      return (
-        calculateApy({
-          isSelf: false,
-          selfStake: a.selfStake,
-          poolCapacity: a.poolCapacity,
-          poolUtilization: a.poolUtilization,
-          yieldRate,
-        }) -
-        calculateApy({
-          isSelf: false,
-          selfStake: b.selfStake,
-          poolCapacity: b.poolCapacity,
-          poolUtilization: b.poolUtilization,
-          yieldRate,
-        })
-      );
-    }
-    case SortField.NumberOfFeeds: {
-      return Number(a.numFeeds - b.numFeeds);
-    }
-    case SortField.PoolUtilization: {
-      const value = Number(
-        a.poolUtilization * b.poolCapacity - b.poolUtilization * a.poolCapacity,
-      );
-      return value === 0 ? Number(a.poolCapacity - b.poolCapacity) : value;
-    }
-    case SortField.QualityRanking: {
-      return Number(a.qualityRanking - b.qualityRanking);
-    }
-    case SortField.SelfStake: {
-      return Number(a.selfStake - b.selfStake);
-    }
-  }
-};
-
 const range = (length: number) => [...Array.from({ length }).keys()];
 
 type SortablePublisherTableHeaderProps = Omit<
@@ -694,7 +648,6 @@ type SortablePublisherTableHeaderProps = Omit<
   field: SortField;
   sort: { field: SortField; descending: boolean };
   setSort: Dispatch<SetStateAction<{ field: SortField; descending: boolean }>>;
-  alignment?: "left" | "right";
 };
 
 const SortablePublisherTableHeader = ({
@@ -703,7 +656,6 @@ const SortablePublisherTableHeader = ({
   setSort,
   children,
   className,
-  alignment,
   ...props
 }: SortablePublisherTableHeaderProps) => {
   const updateSort = useCallback(() => {
@@ -718,17 +670,20 @@ const SortablePublisherTableHeader = ({
       <PublisherTableHeader
         as={BaseButton}
         className={clsx(
-          "group size-full data-[sorted]:bg-black/20 data-[alignment=center]:data-[sorted]:px-2.5 data-[alignment=left]:text-left data-[alignment=right]:text-right focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+          "flex size-full flex-row items-center gap-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+          { "bg-black/20": sort.field === field },
           className,
         )}
         onPress={updateSort}
-        {...(sort.field === field && { "data-sorted": true })}
-        {...(sort.descending && { "data-descending": true })}
-        data-alignment={alignment ?? "center"}
         {...props}
       >
-        <span className="align-middle">{children}</span>
-        <ChevronUpIcon className="ml-2 hidden size-3 transition-transform group-data-[sorted]:inline group-data-[descending]:rotate-180" />
+        <span>{children}</span>
+        <ChevronUpIcon
+          className={clsx("size-4 transition-transform", {
+            "rotate-180": sort.descending,
+            "opacity-0": sort.field !== field,
+          })}
+        />
       </PublisherTableHeader>
     </th>
   );
@@ -1090,30 +1045,25 @@ const NewApy = ({
   return <div {...props}>{apy}%</div>;
 };
 
-type PublisherNameProps = {
-  className?: string | undefined;
+type PublisherNameProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
   children: PublisherProps["publisher"];
   fullKey?: boolean | undefined;
 };
 
-const PublisherName = ({ children, fullKey, className }: PublisherNameProps) =>
-  children.name ? (
-    <span className={className}>{children.name}</span>
-  ) : (
-    <CopyButton
-      text={children.publicKey.toBase58()}
-      {...(className && { className })}
-    >
-      {fullKey === true && (
-        <code className="hidden 2xl:inline">
-          {children.publicKey.toBase58()}
-        </code>
-      )}
-      <TruncatedKey className={clsx({ "2xl:hidden": fullKey })}>
-        {children.publicKey}
-      </TruncatedKey>
-    </CopyButton>
-  );
+const PublisherName = ({ children, fullKey, ...props }: PublisherNameProps) => (
+  <span {...props}>
+    {children.name ?? (
+      <>
+        {fullKey === true && (
+          <code className="hidden 2xl:block">
+            {children.publicKey.toBase58()}
+          </code>
+        )}
+        <TruncatedKey className="2xl:hidden">{children.publicKey}</TruncatedKey>
+      </>
+    )}
+  </span>
+);
 
 const useTransferActionForPublisher = (
   action: ((publisher: PublicKey, amount: bigint) => Promise<void>) | undefined,

@@ -10,7 +10,6 @@ import {
   AMPLITUDE_API_KEY,
   WALLETCONNECT_PROJECT_ID,
   RPC,
-  HERMES_URL,
   IS_MAINNET,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
@@ -49,7 +48,7 @@ export const Root = ({ children }: Props) => (
             : WalletAdapterNetwork.Devnet
         }
       >
-        <ApiProvider hermesUrl={HERMES_URL}>
+        <ApiProvider isMainnet={IS_MAINNET}>
           <html
             lang="en"
             dir="ltr"

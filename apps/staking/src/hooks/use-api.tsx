@@ -20,6 +20,9 @@ import { useSWRConfig } from "swr";
 
 import * as api from "../api";
 
+const MAINNET_HERMES_URL = "https://hermes.pyth.network";
+const DEVNET_HERMES_URL = "https://hermes-beta.pyth.network";
+
 export enum StateType {
   NotLoaded,
   NoWallet,
@@ -140,16 +143,16 @@ type ApiProviderProps = Omit<
   ComponentProps<typeof ApiContext.Provider>,
   "value"
 > & {
-  hermesUrl: string;
+  isMainnet: boolean;
 };
 
-export const ApiProvider = ({ hermesUrl, ...props }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl);
+export const ApiProvider = ({ isMainnet, ...props }: ApiProviderProps) => {
+  const state = useApiContext(isMainnet);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (hermesUrl: string) => {
+const useApiContext = (isMainnet: boolean) => {
   const loading = useRef(false);
   const wallet = useWallet();
   const { connection } = useConnection();
@@ -192,7 +195,9 @@ const useApiContext = (hermesUrl: string) => {
           signTransaction: wallet.signTransaction,
         },
       });
-      const hermesClient = new HermesClient(hermesUrl);
+      const hermesClient = new HermesClient(
+        isMainnet ? MAINNET_HERMES_URL : DEVNET_HERMES_URL,
+      );
       setState(State[StateType.LoadingStakeAccounts](client, hermesClient));
       api
         .getStakeAccounts(client)
@@ -243,7 +248,7 @@ const useApiContext = (hermesUrl: string) => {
           loading.current = false;
         });
     }
-  }, [connection, setAccount, wallet, mutate, hermesUrl]);
+  }, [connection, setAccount, wallet, mutate, isMainnet]);
 
   useEffect(() => {
     reset();
