@@ -18,10 +18,10 @@ export const CurrentStakeAccount = ({
       <div className="flex flex-col items-end text-xs md:flex-row md:items-baseline md:text-sm">
         <div className="font-semibold">Stake account:</div>
         <CopyButton
-          text={api.account.address.toBase58()}
+          text={api.account.toBase58()}
           className="-mr-2 ml-2 text-pythpurple-400 md:mr-0"
         >
-          <TruncatedKey>{api.account.address}</TruncatedKey>
+          <TruncatedKey>{api.account}</TruncatedKey>
         </CopyButton>
       </div>
     </div>

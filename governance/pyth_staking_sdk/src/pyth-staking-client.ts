@@ -101,7 +101,7 @@ export class PythStakingClient {
   /** Gets a users stake accounts */
   public async getAllStakeAccountPositions(
     user: PublicKey,
-  ): Promise<StakeAccountPositions[]> {
+  ): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -126,13 +126,7 @@ export class PythStakingClient {
           ],
         },
       );
-    return res.map((account) =>
-      deserializeStakeAccountPositions(
-        account.pubkey,
-        account.account.data,
-        this.stakingProgram.idl,
-      ),
-    );
+    return res.map((account) => account.pubkey);
   }
 
   public async getStakeAccountPositions(

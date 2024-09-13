@@ -1,10 +1,7 @@
 "use client";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
-import {
-  type StakeAccountPositions,
-  PythStakingClient,
-} from "@pythnetwork/staking-sdk";
+import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import type { PublicKey } from "@solana/web3.js";
 import {
@@ -46,7 +43,7 @@ const State = {
   [StateType.LoadedNoStakeAccount]: (
     client: PythStakingClient,
     hermesClient: HermesClient,
-    onCreateAccount: (newAccount: StakeAccountPositions) => void,
+    onCreateAccount: (newAccount: PublicKey) => void,
   ) => ({
     type: StateType.LoadedNoStakeAccount as const,
     client,
@@ -62,18 +59,18 @@ const State = {
   [StateType.Loaded]: (
     client: PythStakingClient,
     hermesClient: HermesClient,
-    account: StakeAccountPositions,
-    allAccounts: [StakeAccountPositions, ...StakeAccountPositions[]],
-    selectAccount: (account: StakeAccountPositions) => void,
+    account: PublicKey,
+    allAccounts: [PublicKey, ...PublicKey[]],
+    selectAccount: (account: PublicKey) => void,
     mutate: ReturnType<typeof useSWRConfig>["mutate"],
   ) => {
-    const dashboardDataCacheKey = account.address.toBase58();
-    const accountHisoryCacheKey = `${account.address.toBase58()}/history`;
+    const dashboardDataCacheKey = account.toBase58();
+    const accountHistoryCacheKey = `${account.toBase58()}/history`;
 
     const reload = async () => {
       await Promise.all([
         mutate(dashboardDataCacheKey),
-        mutate(accountHisoryCacheKey),
+        mutate(accountHistoryCacheKey),
       ]);
     };
 
@@ -86,7 +83,7 @@ const State = {
         ) => Promise<void>,
       ) =>
       async (...args: T) => {
-        await fn(client, account.address, ...args);
+        await fn(client, account, ...args);
         await reload();
       };
 
@@ -98,10 +95,10 @@ const State = {
       allAccounts,
       selectAccount,
       dashboardDataCacheKey,
-      accountHisoryCacheKey,
+      accountHistoryCacheKey,
 
       loadData: () => api.loadData(client, hermesClient, account),
-      loadAccountHistory: () => api.loadAccountHistory(client, account.address),
+      loadAccountHistory: () => api.loadAccountHistory(client, account),
 
       claim: bindApi(api.claim),
       deposit: bindApi(api.deposit),
@@ -157,7 +154,7 @@ const useApiContext = (hermesUrl: string) => {
   const { mutate } = useSWRConfig();
 
   const setAccount = useCallback(
-    (account: StakeAccountPositions) => {
+    (account: PublicKey) => {
       setState((cur) =>
         cur.type === StateType.Loaded
           ? State[StateType.Loaded](
@@ -195,7 +192,7 @@ const useApiContext = (hermesUrl: string) => {
       const hermesClient = new HermesClient(hermesUrl);
       setState(State[StateType.LoadingStakeAccounts](client, hermesClient));
       api
-        .getStakeAccounts(client)
+        .getAllStakeAccountAddresses(client)
         .then((accounts) => {
           const [firstAccount, ...otherAccounts] = accounts;
           if (firstAccount) {

@@ -151,15 +151,21 @@ export type AccountHistory = {
   locked: bigint;
 }[];
 
-export const getStakeAccounts = async (
+export const getAllStakeAccountAddresses = async (
   client: PythStakingClient,
-): Promise<StakeAccountPositions[]> =>
+): Promise<PublicKey[]> =>
   client.getAllStakeAccountPositions(client.wallet.publicKey);
+
+export const getStakeAccount = async (
+  client: PythStakingClient,
+  stakeAccountAddress: PublicKey,
+): Promise<StakeAccountPositions> =>
+  client.getStakeAccountPositions(stakeAccountAddress);
 
 export const loadData = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
-  stakeAccount?: StakeAccountPositions | undefined,
+  stakeAccount?: PublicKey | undefined,
 ): Promise<Data> =>
   stakeAccount === undefined
     ? loadDataNoStakeAccount(client, hermesClient)
@@ -191,23 +197,25 @@ const loadDataNoStakeAccount = async (
 const loadDataForStakeAccount = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
-  stakeAccount: StakeAccountPositions,
+  stakeAccount: PublicKey,
 ) => {
   const [
     { publishers, ...baseInfo },
     stakeAccountCustody,
     unlockSchedule,
     claimableRewards,
+    stakeAccountPositions,
   ] = await Promise.all([
     loadBaseInfo(client, hermesClient),
-    client.getStakeAccountCustody(stakeAccount.address),
-    client.getUnlockSchedule(stakeAccount.address),
-    client.getClaimableRewards(stakeAccount.address),
+    client.getStakeAccountCustody(stakeAccount),
+    client.getUnlockSchedule(stakeAccount),
+    client.getClaimableRewards(stakeAccount),
+    client.getStakeAccountPositions(stakeAccount),
   ]);
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
-      stakeAccountPositions: stakeAccount,
+      stakeAccountPositions,
       targetWithParameters: { voting: {} },
       positionState,
       epoch: baseInfo.currentEpoch,
@@ -218,7 +226,7 @@ const loadDataForStakeAccount = async (
     positionState: PositionState,
   ) =>
     getAmountByTargetAndState({
-      stakeAccountPositions: stakeAccount,
+      stakeAccountPositions,
       targetWithParameters: { integrityPool: { publisher } },
       positionState,
       epoch: baseInfo.currentEpoch,
