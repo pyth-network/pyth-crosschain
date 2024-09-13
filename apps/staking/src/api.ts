@@ -435,7 +435,7 @@ export const reassignPublisherAccount = async (
   targetAccount: PublicKey,
   publisherKey: PublicKey,
 ): Promise<void> => {
-  return client.setPublisherStakeAccount(
+  return client.reassignPublisherStakeAccount(
     publisherKey,
     stakeAccount,
     targetAccount,
@@ -447,7 +447,7 @@ export const optPublisherOut = async (
   stakeAccount: PublicKey,
   publisherKey: PublicKey,
 ): Promise<void> => {
-  await client.setPublisherStakeAccount(publisherKey, stakeAccount, undefined);
+  await client.removePublisherStakeAccount(stakeAccount, publisherKey);
 };
 
 const MOCK_DELAY = 500;

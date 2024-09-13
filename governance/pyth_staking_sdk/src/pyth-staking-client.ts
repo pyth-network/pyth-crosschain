@@ -644,7 +644,7 @@ export class PythStakingClient {
     };
   }
 
-  public async setPublisherStakeAccount(
+  async setPublisherStakeAccount(
     publisher: PublicKey,
     stakeAccountPositions: PublicKey,
     newStakeAccountPositions: PublicKey | undefined,
@@ -660,5 +660,28 @@ export class PythStakingClient {
 
     await sendTransaction([instruction], this.connection, this.wallet);
     return;
+  }
+
+  public async reassignPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      newStakeAccountPositions,
+    );
+  }
+
+  public async removePublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      undefined,
+    );
   }
 }
