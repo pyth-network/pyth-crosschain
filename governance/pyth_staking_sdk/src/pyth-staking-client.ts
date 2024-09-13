@@ -1,4 +1,11 @@
+import * as crypto from "crypto";
+
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import {
+  getTokenOwnerRecordAddress,
+  PROGRAM_VERSION_V2,
+  withCreateTokenOwnerRecord,
+} from "@solana/spl-governance";
 import {
   type Account,
   createTransferInstruction,
@@ -9,10 +16,12 @@ import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 
+import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
 import {
   getConfigAddress,
   getPoolConfigAddress,
@@ -332,6 +341,99 @@ export class PythStakingClient {
 
     const instructions = await Promise.all(instructionPromises);
     return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
+  public async hasGovernanceRecord(config: GlobalConfig): Promise<boolean> {
+    const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
+      GOVERNANCE_ADDRESS,
+      config.pythGovernanceRealm,
+      config.pythTokenMint,
+      this.wallet.publicKey,
+    );
+    const voterAccountInfo =
+      await this.stakingProgram.provider.connection.getAccountInfo(
+        tokenOwnerRecordAddress,
+      );
+
+    return Boolean(voterAccountInfo);
+  }
+
+  public async createStakeAccountAndDeposit(amount: bigint) {
+    const globalConfig = await this.getGlobalConfig();
+
+    const senderTokenAccount = await getAssociatedTokenAddress(
+      globalConfig.pythTokenMint,
+      this.wallet.publicKey,
+    );
+
+    const nonce = crypto.randomBytes(16).toString("hex");
+    const stakeAccountPositions = await PublicKey.createWithSeed(
+      this.wallet.publicKey,
+      nonce,
+      this.stakingProgram.programId,
+    );
+
+    const minimumBalance =
+      await this.stakingProgram.provider.connection.getMinimumBalanceForRentExemption(
+        POSITIONS_ACCOUNT_SIZE,
+      );
+
+    const instructions = [];
+
+    instructions.push(
+      SystemProgram.createAccountWithSeed({
+        fromPubkey: this.wallet.publicKey,
+        newAccountPubkey: stakeAccountPositions,
+        basePubkey: this.wallet.publicKey,
+        seed: nonce,
+        lamports: minimumBalance,
+        space: POSITIONS_ACCOUNT_SIZE,
+        programId: this.stakingProgram.programId,
+      }),
+      await this.stakingProgram.methods
+        .createStakeAccount(this.wallet.publicKey, { fullyVested: {} })
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+      await this.stakingProgram.methods
+        .createVoterRecord()
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
+
+    if (!(await this.hasGovernanceRecord(globalConfig))) {
+      await withCreateTokenOwnerRecord(
+        instructions,
+        GOVERNANCE_ADDRESS,
+        PROGRAM_VERSION_V2,
+        globalConfig.pythGovernanceRealm,
+        this.wallet.publicKey,
+        globalConfig.pythTokenMint,
+        this.wallet.publicKey,
+      );
+    }
+
+    instructions.push(
+      await this.stakingProgram.methods
+        .joinDaoLlc(globalConfig.agreementHash)
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+      createTransferInstruction(
+        senderTokenAccount,
+        getStakeAccountCustodyAddress(stakeAccountPositions),
+        this.wallet.publicKey,
+        amount,
+      ),
+    );
+
+    await sendTransaction(instructions, this.connection, this.wallet);
+
+    return stakeAccountPositions;
   }
 
   public async depositTokensToStakeAccountCustody(
