@@ -35,7 +35,11 @@
     "oracle",
     "evm",
     "ethereum",
-    "injective"
+    "injective",
+    "fuel",
+    "aptos",
+    "sui",
+    "near"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
@@ -63,9 +67,11 @@
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
+    "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@solana/web3.js": "^1.93.0",
     "@types/pino": "^7.0.5",
     "aptos": "^1.8.5",
+    "fuels": "^0.94.5",
     "jito-ts": "^3.0.1",
     "joi": "^17.6.0",
     "near-api-js": "^3.0.2",
