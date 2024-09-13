@@ -125,7 +125,9 @@ export const OracleIntegrityStaking = ({
               <thead className="bg-pythpurple-400/30 font-light">
                 <tr>
                   <PublisherTableHeader>Pool</PublisherTableHeader>
-                  <PublisherTableHeader>Estimated next APY</PublisherTableHeader>
+                  <PublisherTableHeader>
+                    Estimated next APY
+                  </PublisherTableHeader>
                   <PublisherTableHeader>Historical APY</PublisherTableHeader>
                   <PublisherTableHeader>Number of feeds</PublisherTableHeader>
                   <PublisherTableHeader>Quality ranking</PublisherTableHeader>
@@ -1077,7 +1079,8 @@ const NewApy = ({
         ...(isSelf
           ? {
               isSelf: true,
-              selfStake: publisher.selfStake + publisher.selfStakeDelta + children,
+              selfStake:
+                publisher.selfStake + publisher.selfStakeDelta + children,
             }
           : {
               isSelf: false,
