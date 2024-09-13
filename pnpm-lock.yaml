@@ -111,7 +111,7 @@ importers:
         version: 4.9.1
       '@cprussin/eslint-config':
         specifier: ^3.0.0
-        version: 3.0.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.5.0)(typescript@5.5.2))(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))(typescript@5.5.2)
+        version: 3.0.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2))(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))(typescript@5.5.2)
       '@cprussin/jest-config':
         specifier: ^1.4.1
         version: 1.4.1(@babel/core@7.24.7)(@jest/globals@29.7.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(@types/jest@29.5.12)(@types/node@20.14.7)(babel-jest@29.7.0(@babel/core@7.24.7))(bufferutil@4.0.8)(eslint@9.5.0)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))(utf-8-validate@5.0.10)
@@ -396,7 +396,7 @@ importers:
         version: 4.9.1
       '@cprussin/eslint-config':
         specifier: ^3.0.0
-        version: 3.0.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)
+        version: 3.0.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)
       '@cprussin/jest-config':
         specifier: ^1.4.1
         version: 1.4.1(@babel/core@7.24.7)(@jest/globals@29.7.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(@types/jest@29.5.12)(@types/node@22.2.0)(babel-jest@29.7.0(@babel/core@7.24.7))(bufferutil@4.0.8)(eslint@9.9.0(jiti@1.21.0))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(utf-8-validate@5.0.10)
@@ -1652,9 +1652,12 @@ importers:
   target_chains/fuel/sdk/js:
     dependencies:
       fuels:
-        specifier: ^0.94.2
-        version: 0.94.2(encoding@0.1.13)
+        specifier: ^0.94.5
+        version: 0.94.5(encoding@0.1.13)
     devDependencies:
+      '@pythnetwork/hermes-client':
+        specifier: workspace:*
+        version: link:../../../../apps/hermes/client/js
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.7.0
         version: 7.7.1(@typescript-eslint/parser@7.13.0(eslint@8.56.0)(typescript@5.4.5))(eslint@8.56.0)(typescript@5.4.5)
@@ -1812,7 +1815,7 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.12
-        version: 0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)
+        version: 0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@6.0.4)
       '@mysten/sui':
         specifier: ^1.3.0
         version: 1.3.0(svelte@4.2.18)(typescript@5.4.5)
@@ -1821,7 +1824,7 @@ importers:
         version: link:../../../contract_manager
       '@pythnetwork/price-service-client':
         specifier: ^1.4.0
-        version: 1.9.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+        version: 1.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@pythnetwork/price-service-sdk':
         specifier: ^1.2.0
         version: 1.7.1
@@ -4131,8 +4134,8 @@ packages:
     resolution: {integrity: sha512-WFjt3pjgb9p1SSGDuqIblPs7aIaZccDFVK66fMPyCBr9jFkpyc16xv7k8gf+yOAxxAdxktne747420XZ9ZJarA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/abi-coder@0.94.2':
-    resolution: {integrity: sha512-AHb2r+bAPsvcsuiDrr4tDLmsceWdOZJPXSivm3+hKtsPnvh/uhY/+TXauwZav8YrBGGfZj4SL+E/S4OD14zkjw==}
+  '@fuel-ts/abi-coder@0.94.5':
+    resolution: {integrity: sha512-I+AwyndD3qae13+oIqFtiAc1Q/bS229h/mNXgCdhZAko3BinIZadYjwrdIkOEPqC8JcW8XtVSFbOGowucFT1cA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/abi-typegen@0.94.0':
@@ -4140,8 +4143,8 @@ packages:
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
-  '@fuel-ts/abi-typegen@0.94.2':
-    resolution: {integrity: sha512-MHVJspjniyhLzY7eYB7Ot6JEmWObX/qvuEGLImJSWuft+aJkUP/MM87f6mU2RFwvM2RjixyCmVyVjO6pu/BHtg==}
+  '@fuel-ts/abi-typegen@0.94.5':
+    resolution: {integrity: sha512-adHmwiUFDZrK3rlyp2iGUyexTctZTHL0ztReSwEq4tzu59A8YDXIk3zfwsrjEUi4CkT8BngA02+N7znfssMLUw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
@@ -4149,24 +4152,24 @@ packages:
     resolution: {integrity: sha512-/vENitnkvMbHn5wGW+K+acTRPWYligCkxD31jFTuSbe/mCR9ccHxdHaerh5333L5i4CffJNjB+wVVrUyu+g+dA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/account@0.94.2':
-    resolution: {integrity: sha512-ufs/DQeQo1HHSKZJHIsUz7gbviw8P/4YGVszeHXBAN4HXBba5LkZTnk1wariyokeIRpSlyPtGDIopuUDqs8T4A==}
+  '@fuel-ts/account@0.94.5':
+    resolution: {integrity: sha512-PslXlASVWeLS5Df/jlAER/rCOMotyPievIj51hYKoHuRsXhv5PscYcQCkiAdNIJ46e6GE3201FsukfKXfgd72g==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/address@0.94.0':
     resolution: {integrity: sha512-MHcpEyXViosuq6/vG6D07crsICIwpX6CVeF1wu0FWPv/B2lc/h0Vo1S8au4G/b4WFlinxvlAFhe1eSs2t49xMQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/address@0.94.2':
-    resolution: {integrity: sha512-IONof8FX+3bBArhHP5iDP9rJD+Kb1508j3/F1PcrllkzUDPWt3AroQaLFlya7H3p2IqPRzNNVAWs2z8WQ0/MQw==}
+  '@fuel-ts/address@0.94.5':
+    resolution: {integrity: sha512-LM7X3+KCept/o2ymsxAip7BP6SYb357IxkuFWaI789TyJiv3/unpud9t3CZ57H9oSMNIngccuRIXEBvgpxa1wQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/contract@0.94.0':
     resolution: {integrity: sha512-04lDY+J6hAJuWoH1NLRuQXAphhp0uCjn4vG6C4lEEU1UA/JGFPU3OVRMyEAACwL/u9tuTOGaPvEhPStnIdjPlQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/contract@0.94.2':
-    resolution: {integrity: sha512-CGxCIEDPmOf3IC3hVxnz9Ms7I0pSm+onVP5FQnDuDgbPOkTAiL7U7VUOC5C5hNWU7xBmNQs1eIh36sn/tfGAtA==}
+  '@fuel-ts/contract@0.94.5':
+    resolution: {integrity: sha512-zbfgWHq63UNsa+S8wx4h/SjOKE0VWRxS0/xg0PPlRgFAGAb84J81A74DHlKTCOAZ0mzCUg716psFJ8OovWr7TQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/crypto@0.94.0':
@@ -4177,12 +4180,20 @@ packages:
     resolution: {integrity: sha512-ampjWQ2QPmQvs0tjvvRgOEnIMYlHvGD9NSZoReFuTFszQeR6CS5J+IodJyURLJUQQb/mzF9UaZpVxVK3ObaHKQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/crypto@0.94.5':
+    resolution: {integrity: sha512-mou6rHnNGDiGGQO5AQorE9/aaDOBe3PsVVRmficET4DXcUIVmKY7DoEMRGLaL5IzHRSDcs+FEQU/LbdTiZp/Cw==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/errors@0.94.0':
     resolution: {integrity: sha512-8QJNRKG+2GdAsl+BDsOit7QoI4g6nGwclSS+G1OyQBgoRowkMsIJkQpthYnzs5Wicv4vsQ2AniV9L7blea3IvA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/errors@0.94.2':
     resolution: {integrity: sha512-411p4ll6wy+NSOhyKTI6AUS8dw741yQl9NhOCyAMvaVoyDqzcQQXnYpEfB+IekhnVJpvpnfXUYNySi4i3cjeBQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/errors@0.94.5':
+    resolution: {integrity: sha512-AexZ38XYLkwhniq+NlRoD4+gC6h557XmwNinWsgjLKIh1zAqTQw8Ihn5Qz/qKXtMtcqhvhMBZWsYZHgnXSejiQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/hasher@0.94.0':
@@ -4193,12 +4204,20 @@ packages:
     resolution: {integrity: sha512-k1lyCpUxYj0uWYIr2uRVbHpBf0HBrV2WQKZ8kks2tzsnVno9WK/q4wE5STuHeqqLyxula4Tws0DIm421XpT0/A==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/hasher@0.94.5':
+    resolution: {integrity: sha512-g7yGxxKLG36n/DNqYgrv0rqvltOanVbagRCe6IoKvzy2MU482RSNlIeiFKvXm8hl5Jr8OZKXgojKhTxcNS/x3A==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/interfaces@0.94.0':
     resolution: {integrity: sha512-9P7jnFL2TGOp67PRJ42W0vVR3CHbfck5Bynt6CCVsHE1tC47l2yZ/TUzKbem67Gxy88H2X9eLgt6Y8vvIP81tw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/interfaces@0.94.2':
     resolution: {integrity: sha512-69g94oaPrugBR40ex5OLreiQ8xZtHP9ZK+8iWnV4CJZDEfKxVTh1EtSNR7ClL4sBCWiEFp6qb9e5Gil152Zbhw==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/interfaces@0.94.5':
+    resolution: {integrity: sha512-oUY46owirHLmBKOUrqNsvbx3gW5nH1GCdHjo1R8Ui3ljiPjBH8LFhlxScVBwJK8IumxXE9Za2UHJowHvvFTC5A==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/math@0.94.0':
@@ -4209,36 +4228,40 @@ packages:
     resolution: {integrity: sha512-091s0fSAa1Jmm5kgIGaRNc5BtoYwSMsdjd/ZEo4zra4/JOngVw9BesSyQ0Wg4exWtO6G7ZwhBDiVGHSq13FGiQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/math@0.94.5':
+    resolution: {integrity: sha512-+LLlYsd1AbO97BKVhBNiO81/KLeLw+B38YFM2Fx3lvr52kkZo/+pPVdM+DBXej1APBdpPJx8u2w/DOQRSp855Q==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/merkle@0.94.0':
     resolution: {integrity: sha512-rmCx15cutbFJi4L9ecvFQSI/eRb81GbeGtbeZNrwucmVjkKvJ2/3czNuaVE9whG0Ay0cni19EbqujldhpiLpEQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/merkle@0.94.2':
-    resolution: {integrity: sha512-3bh3ecc63oP3x73c5Z/jkmv8HUxyp1mBQsGZeYXswqmJ2AIeEHlcvql6WMbWXMt9V4SAo8IkFv92DCL+YOxTQw==}
+  '@fuel-ts/merkle@0.94.5':
+    resolution: {integrity: sha512-SqiZZt76zBT5SdIGDoVt2Q97teLHkkx02eWYf/wCsHXPveQ6BzaAWjIepcv2wLPC8bD7+jjrbY/xs59fl1S1Jw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/program@0.94.0':
     resolution: {integrity: sha512-3yEQPe1uAhbjlTC3WgnJiPZTFSIeml80dmaMJy5xcWcKYzaLafmcDVJpLcMLoXqUI8ZXODlfwLjFZPyhicTO4A==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/program@0.94.2':
-    resolution: {integrity: sha512-LPjxkQWBLevAsHqLHWndmL3B2989+vtNGJPfhQhYJos+wl1Jvk6sYGzMca+Jb1yfNs/MhPDfIOT/VMGZ78EWDA==}
+  '@fuel-ts/program@0.94.5':
+    resolution: {integrity: sha512-RvdQ6RRZ7/+ODI1zQGtam/E2Zl+VF9uljNc8xQpdwRWqu4F/0kuHxvt3polScESe0/Fdt/T/p/TETKhZrCw1Gg==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/script@0.94.0':
     resolution: {integrity: sha512-AprAvYzadtpr0N0olqDJ7Mp9IRb9fY3k3oQ6OXyW3e0TSJ+gac8mOSb1Kr/jiGEhrW9dEiHG9mgEVuNZZbLsaw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/script@0.94.2':
-    resolution: {integrity: sha512-1xjcAi+sP9PjAhekhodakbbblVYXJpDkoaIeIQ74Mx2813YNH4U6/WRSlWaBEdXyjRRy4mJ2cBB5PGtzUGoTpg==}
+  '@fuel-ts/script@0.94.5':
+    resolution: {integrity: sha512-s20lExkXYP0OMD0bL9O9pZ7x3RVCkSMlbWjIoYVg4txSEhlE7sXdjwnsmXGfWcZTKGYHyCPt/r5j0DKGU3NEaw==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/transactions@0.94.0':
     resolution: {integrity: sha512-DMrA/35/a2wUQVkyu2a/X4CE72Y8nh1f4BzbA7toWEc12c5txkrr5x/8AbDc51THyN2fXQRwx6sLhekKUB9M4w==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
-  '@fuel-ts/transactions@0.94.2':
-    resolution: {integrity: sha512-vGrY+sJPiblWz1DF78D0D2b+NlkpKdPjEBYzRab8orApm6obYVQM1BeU9wmcWllFm2O4S55RjlZltjQSR59sng==}
+  '@fuel-ts/transactions@0.94.5':
+    resolution: {integrity: sha512-wKgRbP8UC3kYFPciJqwXeCe6givLkpPkRF7qwLOxPGdDUtgYlOV4ZvypJxyZKIzhOTyaR+9rliFfh2IRwAFU7w==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
   '@fuel-ts/utils@0.94.0':
@@ -4249,6 +4272,10 @@ packages:
     resolution: {integrity: sha512-8aaOUX/HArkcMKD/qhbnjG1/BtjWySST1c3KyGqCbkuGdUkBDnppZfTw/TkQtPwY4Ua9hO3w5maeYn5rlFXRGg==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
 
+  '@fuel-ts/utils@0.94.5':
+    resolution: {integrity: sha512-WWE7Ezt0bXjSoqhVTCnv5riQUMcpI+heCMy/7JIS/2hLX21hNpzib9qBVHS6E5l5xqxL1n//nqlP0q0DJ+t2bQ==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
   '@fuel-ts/versions@0.94.0':
     resolution: {integrity: sha512-RQJDTWVxK8cDrSBri+I0Xvh7NpU8u23Re8uDHoO3DV8ASKJxWqUm9fFizBj4ZaR11ecTKNmjy9nw7DoFX4hvzA==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
@@ -4256,6 +4283,11 @@ packages:
 
   '@fuel-ts/versions@0.94.2':
     resolution: {integrity: sha512-Sve2ba5yu1Y9YqQDgSRKynYPMwmOyLw2XkBL7Ki2eEhcNzjO+Hy10rmxsrz8/OUbUXUBLexR8OZvKvUg63QYHg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    hasBin: true
+
+  '@fuel-ts/versions@0.94.5':
+    resolution: {integrity: sha512-jjM32SNdaSDEDl/61u8hEo9powlpU6AxYwchFcPwAhZAgvYGet53/GHhy+p/2RsPo7tKDdjvNH8XiYXtk/D9dQ==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
@@ -12929,8 +12961,8 @@ packages:
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
-  fuels@0.94.2:
-    resolution: {integrity: sha512-VftWnqLA55FGSOwymhZwm9fm/PvNJ15+k8UhIWzPAwKOj5muJjBJQ8PLf0KSECzIbLu6LXm82inSy5g6TR4wNQ==}
+  fuels@0.94.5:
+    resolution: {integrity: sha512-6tXokvg2hcJlemZedk6vJAiGTQIq10UElKDlMW7qMltQ1U1DK84Kd66sfvC/rEdlBt5PRHtCUOB1bca0AQr7Rg==}
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
@@ -19020,8 +19052,8 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
-  uglify-js@3.19.2:
-    resolution: {integrity: sha512-S8KA6DDI47nQXJSi2ctQ629YzwOVs+bQML6DAtvy0wgNdpi+0ySpQK0g2pxBq2xfF2z3YCscu7NNA8nXT9PlIQ==}
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
     hasBin: true
 
@@ -23638,15 +23670,15 @@ snapshots:
       - subscriptions-transport-ws
       - utf-8-validate
 
-  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)':
+  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@6.0.4)':
     dependencies:
       '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
       '@certusone/wormhole-sdk-wasm': 0.0.1
-      '@coral-xyz/borsh': 0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@mysten/sui.js': 0.32.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      '@project-serum/anchor': 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/spl-token': 0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))
+      '@mysten/sui.js': 0.32.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@project-serum/anchor': 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
+      '@solana/spl-token': 0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
       '@terra-money/terra.js': 3.1.9
       '@xpla/xpla.js': 0.2.3
       algosdk: 2.7.0
@@ -23660,7 +23692,7 @@ snapshots:
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
       '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
-      '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
+      '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
     transitivePeerDependencies:
       - bufferutil
@@ -23836,6 +23868,12 @@ snapshots:
   '@coral-xyz/borsh@0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      bn.js: 5.2.1
+      buffer-layout: 1.2.2
+
+  '@coral-xyz/borsh@0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))':
+    dependencies:
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
@@ -24029,6 +24067,17 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@cosmjs/socket@0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@cosmjs/stream': 0.30.1
+      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      xstream: 11.14.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
   '@cosmjs/socket@0.32.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@cosmjs/stream': 0.32.3
@@ -24107,6 +24156,26 @@ snapshots:
       - bufferutil
       - debug
       - utf-8-validate
+
+  '@cosmjs/stargate@0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@confio/ics23': 0.6.8
+      '@cosmjs/amino': 0.30.1
+      '@cosmjs/encoding': 0.30.1
+      '@cosmjs/math': 0.30.1
+      '@cosmjs/proto-signing': 0.30.1
+      '@cosmjs/stream': 0.30.1
+      '@cosmjs/tendermint-rpc': 0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@cosmjs/utils': 0.30.1
+      cosmjs-types: 0.7.2
+      long: 4.0.0
+      protobufjs: 6.11.4
+      xstream: 11.14.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
+    optional: true
 
   '@cosmjs/stargate@0.32.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
     dependencies:
@@ -24220,6 +24289,24 @@ snapshots:
       - debug
       - utf-8-validate
 
+  '@cosmjs/tendermint-rpc@0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@cosmjs/crypto': 0.30.1
+      '@cosmjs/encoding': 0.30.1
+      '@cosmjs/json-rpc': 0.30.1
+      '@cosmjs/math': 0.30.1
+      '@cosmjs/socket': 0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@cosmjs/stream': 0.30.1
+      '@cosmjs/utils': 0.30.1
+      axios: 0.21.4(debug@4.3.6)
+      readonly-date: 1.0.0
+      xstream: 11.14.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
+    optional: true
+
   '@cosmjs/tendermint-rpc@0.32.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@cosmjs/crypto': 0.32.3
@@ -24281,7 +24368,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)':
+  '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2))(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))(typescript@5.5.2)':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/eslint-parser': 7.24.7(@babel/core@7.24.7)(eslint@9.5.0)
@@ -24293,22 +24380,22 @@ snapshots:
       eslint: 9.5.0
       eslint-config-prettier: 9.1.0(eslint@9.5.0)
       eslint-config-turbo: 1.13.4(eslint@9.5.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.5.0)
-      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)
+      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(typescript@5.5.2)
       eslint-plugin-jest-dom: 5.4.0(eslint@9.5.0)
       eslint-plugin-jsonc: 2.16.0(eslint@9.5.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@9.5.0)
       eslint-plugin-n: 17.9.0(eslint@9.5.0)
       eslint-plugin-react: 7.34.2(eslint@9.5.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@9.5.0)
-      eslint-plugin-storybook: 0.8.0(eslint@9.5.0)(typescript@5.5.4)
-      eslint-plugin-tailwindcss: 3.17.3(tailwindcss@3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))
-      eslint-plugin-testing-library: 6.2.2(eslint@9.5.0)(typescript@5.5.4)
+      eslint-plugin-storybook: 0.8.0(eslint@9.5.0)(typescript@5.5.2)
+      eslint-plugin-tailwindcss: 3.17.3(tailwindcss@3.4.4(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))
+      eslint-plugin-testing-library: 6.2.2(eslint@9.5.0)(typescript@5.5.2)
       eslint-plugin-tsdoc: 0.3.0
       eslint-plugin-unicorn: 53.0.0(eslint@9.5.0)
       globals: 15.6.0
-      tailwindcss: 3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
-      typescript-eslint: 7.13.1(eslint@9.5.0)(typescript@5.5.4)
+      tailwindcss: 3.4.4(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))
+      typescript-eslint: 7.13.1(eslint@9.5.0)(typescript@5.5.2)
     transitivePeerDependencies:
       - '@testing-library/dom'
       - '@typescript-eslint/eslint-plugin'
@@ -24359,7 +24446,7 @@ snapshots:
       - ts-node
       - typescript
 
-  '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.5.0)(typescript@5.5.2))(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))(typescript@5.5.2)':
+  '@cprussin/eslint-config@3.0.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))(typescript@5.5.4)':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/eslint-parser': 7.24.7(@babel/core@7.24.7)(eslint@9.5.0)
@@ -24371,22 +24458,22 @@ snapshots:
       eslint: 9.5.0
       eslint-config-prettier: 9.1.0(eslint@9.5.0)
       eslint-config-turbo: 1.13.4(eslint@9.5.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.5.0)
-      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(typescript@5.5.2)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)
+      eslint-plugin-jest: 28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4)
       eslint-plugin-jest-dom: 5.4.0(eslint@9.5.0)
       eslint-plugin-jsonc: 2.16.0(eslint@9.5.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@9.5.0)
       eslint-plugin-n: 17.9.0(eslint@9.5.0)
       eslint-plugin-react: 7.34.2(eslint@9.5.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@9.5.0)
-      eslint-plugin-storybook: 0.8.0(eslint@9.5.0)(typescript@5.5.2)
-      eslint-plugin-tailwindcss: 3.17.3(tailwindcss@3.4.4(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))
-      eslint-plugin-testing-library: 6.2.2(eslint@9.5.0)(typescript@5.5.2)
+      eslint-plugin-storybook: 0.8.0(eslint@9.5.0)(typescript@5.5.4)
+      eslint-plugin-tailwindcss: 3.17.3(tailwindcss@3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))
+      eslint-plugin-testing-library: 6.2.2(eslint@9.5.0)(typescript@5.5.4)
       eslint-plugin-tsdoc: 0.3.0
       eslint-plugin-unicorn: 53.0.0(eslint@9.5.0)
       globals: 15.6.0
-      tailwindcss: 3.4.4(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))
-      typescript-eslint: 7.13.1(eslint@9.5.0)(typescript@5.5.2)
+      tailwindcss: 3.4.4(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
+      typescript-eslint: 7.13.1(eslint@9.5.0)(typescript@5.5.4)
     transitivePeerDependencies:
       - '@testing-library/dom'
       - '@typescript-eslint/eslint-plugin'
@@ -25009,6 +25096,33 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@ethersproject/providers@5.7.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@ethersproject/abstract-provider': 5.7.0
+      '@ethersproject/abstract-signer': 5.7.0
+      '@ethersproject/address': 5.7.0
+      '@ethersproject/base64': 5.7.0
+      '@ethersproject/basex': 5.7.0
+      '@ethersproject/bignumber': 5.7.0
+      '@ethersproject/bytes': 5.7.0
+      '@ethersproject/constants': 5.7.0
+      '@ethersproject/hash': 5.7.0
+      '@ethersproject/logger': 5.7.0
+      '@ethersproject/networks': 5.7.1
+      '@ethersproject/properties': 5.7.0
+      '@ethersproject/random': 5.7.0
+      '@ethersproject/rlp': 5.7.0
+      '@ethersproject/sha2': 5.7.0
+      '@ethersproject/strings': 5.7.0
+      '@ethersproject/transactions': 5.7.0
+      '@ethersproject/web': 5.7.1
+      bech32: 1.1.4
+      ws: 7.4.6(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
   '@ethersproject/random@5.7.0':
     dependencies:
       '@ethersproject/bytes': 5.7.0
@@ -25186,26 +25300,26 @@ snapshots:
     dependencies:
       '@fuel-ts/crypto': 0.94.0
       '@fuel-ts/errors': 0.94.0
-      '@fuel-ts/hasher': 0.94.0
+      '@fuel-ts/hasher': 0.94.2
       '@fuel-ts/interfaces': 0.94.0
       '@fuel-ts/math': 0.94.0
       '@fuel-ts/utils': 0.94.0
       type-fest: 4.25.0
 
-  '@fuel-ts/abi-coder@0.94.2':
+  '@fuel-ts/abi-coder@0.94.5':
     dependencies:
-      '@fuel-ts/crypto': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/utils': 0.94.5
       type-fest: 4.25.0
 
   '@fuel-ts/abi-typegen@0.94.0':
     dependencies:
       '@fuel-ts/errors': 0.94.0
-      '@fuel-ts/interfaces': 0.94.0
+      '@fuel-ts/interfaces': 0.94.2
       '@fuel-ts/utils': 0.94.0
       '@fuel-ts/versions': 0.94.0
       commander: 12.1.0
@@ -25215,12 +25329,12 @@ snapshots:
       ramda: 0.30.1
       rimraf: 5.0.9
 
-  '@fuel-ts/abi-typegen@0.94.2':
+  '@fuel-ts/abi-typegen@0.94.5':
     dependencies:
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/utils': 0.94.2
-      '@fuel-ts/versions': 0.94.2
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@fuel-ts/versions': 0.94.5
       commander: 12.1.0
       glob: 10.4.5
       handlebars: 4.7.8
@@ -25253,19 +25367,19 @@ snapshots:
       - encoding
       - supports-color
 
-  '@fuel-ts/account@0.94.2(encoding@0.1.13)':
+  '@fuel-ts/account@0.94.5(encoding@0.1.13)':
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/address': 0.94.2
-      '@fuel-ts/crypto': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/merkle': 0.94.2
-      '@fuel-ts/transactions': 0.94.2
-      '@fuel-ts/utils': 0.94.2
-      '@fuel-ts/versions': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/address': 0.94.5
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/merkle': 0.94.5
+      '@fuel-ts/transactions': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@fuel-ts/versions': 0.94.5
       '@fuels/vm-asm': 0.56.0
       '@noble/curves': 1.4.2
       events: 3.3.0
@@ -25283,16 +25397,16 @@ snapshots:
       '@fuel-ts/crypto': 0.94.0
       '@fuel-ts/errors': 0.94.0
       '@fuel-ts/interfaces': 0.94.0
-      '@fuel-ts/utils': 0.94.0
+      '@fuel-ts/utils': 0.94.2
       '@noble/hashes': 1.4.0
       bech32: 2.0.0
 
-  '@fuel-ts/address@0.94.2':
+  '@fuel-ts/address@0.94.5':
     dependencies:
-      '@fuel-ts/crypto': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/utils': 0.94.5
       '@noble/hashes': 1.4.0
       bech32: 2.0.0
 
@@ -25303,8 +25417,8 @@ snapshots:
       '@fuel-ts/crypto': 0.94.0
       '@fuel-ts/errors': 0.94.0
       '@fuel-ts/hasher': 0.94.0
-      '@fuel-ts/interfaces': 0.94.0
-      '@fuel-ts/math': 0.94.0
+      '@fuel-ts/interfaces': 0.94.2
+      '@fuel-ts/math': 0.94.2
       '@fuel-ts/merkle': 0.94.0
       '@fuel-ts/program': 0.94.0(encoding@0.1.13)
       '@fuel-ts/transactions': 0.94.0
@@ -25316,20 +25430,20 @@ snapshots:
       - encoding
       - supports-color
 
-  '@fuel-ts/contract@0.94.2(encoding@0.1.13)':
+  '@fuel-ts/contract@0.94.5(encoding@0.1.13)':
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/crypto': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/merkle': 0.94.2
-      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/transactions': 0.94.2
-      '@fuel-ts/utils': 0.94.2
-      '@fuel-ts/versions': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/account': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/merkle': 0.94.5
+      '@fuel-ts/program': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@fuel-ts/versions': 0.94.5
       '@fuels/vm-asm': 0.56.0
       ramda: 0.30.1
     transitivePeerDependencies:
@@ -25341,7 +25455,7 @@ snapshots:
       '@fuel-ts/errors': 0.94.0
       '@fuel-ts/interfaces': 0.94.0
       '@fuel-ts/math': 0.94.0
-      '@fuel-ts/utils': 0.94.0
+      '@fuel-ts/utils': 0.94.2
       '@noble/hashes': 1.4.0
 
   '@fuel-ts/crypto@0.94.2':
@@ -25352,6 +25466,14 @@ snapshots:
       '@fuel-ts/utils': 0.94.2
       '@noble/hashes': 1.4.0
 
+  '@fuel-ts/crypto@0.94.5':
+    dependencies:
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@noble/hashes': 1.4.0
+
   '@fuel-ts/errors@0.94.0':
     dependencies:
       '@fuel-ts/versions': 0.94.0
@@ -25360,10 +25482,14 @@ snapshots:
     dependencies:
       '@fuel-ts/versions': 0.94.2
 
+  '@fuel-ts/errors@0.94.5':
+    dependencies:
+      '@fuel-ts/versions': 0.94.5
+
   '@fuel-ts/hasher@0.94.0':
     dependencies:
       '@fuel-ts/crypto': 0.94.0
-      '@fuel-ts/interfaces': 0.94.0
+      '@fuel-ts/interfaces': 0.94.2
       '@fuel-ts/utils': 0.94.0
       '@noble/hashes': 1.4.0
 
@@ -25374,9 +25500,18 @@ snapshots:
       '@fuel-ts/utils': 0.94.2
       '@noble/hashes': 1.4.0
 
+  '@fuel-ts/hasher@0.94.5':
+    dependencies:
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@noble/hashes': 1.4.0
+
   '@fuel-ts/interfaces@0.94.0': {}
 
   '@fuel-ts/interfaces@0.94.2': {}
+
+  '@fuel-ts/interfaces@0.94.5': {}
 
   '@fuel-ts/math@0.94.0':
     dependencies:
@@ -25390,15 +25525,21 @@ snapshots:
       '@types/bn.js': 5.1.5
       bn.js: 5.2.1
 
+  '@fuel-ts/math@0.94.5':
+    dependencies:
+      '@fuel-ts/errors': 0.94.5
+      '@types/bn.js': 5.1.5
+      bn.js: 5.2.1
+
   '@fuel-ts/merkle@0.94.0':
     dependencies:
-      '@fuel-ts/hasher': 0.94.0
+      '@fuel-ts/hasher': 0.94.2
       '@fuel-ts/math': 0.94.0
 
-  '@fuel-ts/merkle@0.94.2':
+  '@fuel-ts/merkle@0.94.5':
     dependencies:
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/math': 0.94.2
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/math': 0.94.5
 
   '@fuel-ts/program@0.94.0(encoding@0.1.13)':
     dependencies:
@@ -25416,16 +25557,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@fuel-ts/program@0.94.2(encoding@0.1.13)':
+  '@fuel-ts/program@0.94.5(encoding@0.1.13)':
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/address': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/transactions': 0.94.2
-      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/account': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/transactions': 0.94.5
+      '@fuel-ts/utils': 0.94.5
       '@fuels/vm-asm': 0.56.0
       ramda: 0.30.1
     transitivePeerDependencies:
@@ -25447,17 +25588,17 @@ snapshots:
       - encoding
       - supports-color
 
-  '@fuel-ts/script@0.94.2(encoding@0.1.13)':
+  '@fuel-ts/script@0.94.5(encoding@0.1.13)':
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/address': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/transactions': 0.94.2
-      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/account': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/program': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.5
+      '@fuel-ts/utils': 0.94.5
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -25467,20 +25608,20 @@ snapshots:
       '@fuel-ts/abi-coder': 0.94.0
       '@fuel-ts/address': 0.94.0
       '@fuel-ts/errors': 0.94.0
-      '@fuel-ts/hasher': 0.94.0
-      '@fuel-ts/interfaces': 0.94.0
+      '@fuel-ts/hasher': 0.94.2
+      '@fuel-ts/interfaces': 0.94.2
       '@fuel-ts/math': 0.94.0
       '@fuel-ts/utils': 0.94.0
 
-  '@fuel-ts/transactions@0.94.2':
+  '@fuel-ts/transactions@0.94.5':
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/address': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/utils': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/address': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/utils': 0.94.5
 
   '@fuel-ts/utils@0.94.0':
     dependencies:
@@ -25498,12 +25639,25 @@ snapshots:
       '@fuel-ts/versions': 0.94.2
       fflate: 0.8.2
 
+  '@fuel-ts/utils@0.94.5':
+    dependencies:
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/versions': 0.94.5
+      fflate: 0.8.2
+
   '@fuel-ts/versions@0.94.0':
     dependencies:
       chalk: 4.1.2
       cli-table: 0.3.11
 
   '@fuel-ts/versions@0.94.2':
+    dependencies:
+      chalk: 4.1.2
+      cli-table: 0.3.11
+
+  '@fuel-ts/versions@0.94.5':
     dependencies:
       chalk: 4.1.2
       cli-table: 0.3.11
@@ -26054,6 +26208,54 @@ snapshots:
       - react-dom
       - subscriptions-transport-ws
       - utf-8-validate
+
+  '@injectivelabs/sdk-ts@1.10.72(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@apollo/client': 3.7.13(graphql@16.6.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@cosmjs/amino': 0.30.1
+      '@cosmjs/proto-signing': 0.30.1
+      '@cosmjs/stargate': 0.30.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@ethersproject/bytes': 5.7.0
+      '@injectivelabs/core-proto-ts': 0.0.14
+      '@injectivelabs/exceptions': 1.14.6(google-protobuf@3.21.2)
+      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.2)
+      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.2))
+      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.2))
+      '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
+      '@injectivelabs/mito-proto-ts': 1.0.9
+      '@injectivelabs/networks': 1.14.6(google-protobuf@3.21.2)
+      '@injectivelabs/test-utils': 1.14.4
+      '@injectivelabs/token-metadata': 1.10.42(google-protobuf@3.21.2)
+      '@injectivelabs/ts-types': 1.14.6
+      '@injectivelabs/utils': 1.14.6(google-protobuf@3.21.2)
+      '@metamask/eth-sig-util': 4.0.1
+      axios: 0.27.2
+      bech32: 2.0.0
+      bip39: 3.0.4
+      cosmjs-types: 0.7.2
+      eth-crypto: 2.6.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      ethereumjs-util: 7.1.5
+      ethers: 5.7.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      google-protobuf: 3.21.2
+      graphql: 16.6.0
+      http-status-codes: 2.2.0
+      js-sha3: 0.8.0
+      jscrypto: 1.0.3
+      keccak256: 1.0.6
+      link-module-alias: 1.2.0
+      rxjs: 7.8.0
+      secp256k1: 4.0.3
+      shx: 0.3.4
+      snakecase-keys: 5.4.5
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - graphql-ws
+      - react
+      - react-dom
+      - subscriptions-transport-ws
+      - utf-8-validate
+    optional: true
 
   '@injectivelabs/sdk-ts@1.14.7(bufferutil@4.0.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)':
     dependencies:
@@ -28293,6 +28495,22 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@mysten/sui.js@0.32.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@mysten/bcs': 0.7.1
+      '@noble/curves': 1.4.2
+      '@noble/hashes': 1.4.0
+      '@scure/bip32': 1.4.0
+      '@scure/bip39': 1.3.0
+      '@suchipi/femver': 1.0.0
+      jayson: 4.1.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      rpc-websockets: 7.5.1
+      superstruct: 1.0.4
+      tweetnacl: 1.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@mysten/sui@1.3.0(svelte@4.2.18)(typescript@5.4.5)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.9.0)
@@ -29225,6 +29443,28 @@ snapshots:
       - encoding
       - utf-8-validate
 
+  '@project-serum/anchor@0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@project-serum/borsh': 0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
+      base64-js: 1.5.1
+      bn.js: 5.2.1
+      bs58: 4.0.1
+      buffer-layout: 1.2.2
+      camelcase: 5.3.1
+      cross-fetch: 3.1.5(encoding@0.1.13)
+      crypto-hash: 1.3.0
+      eventemitter3: 4.0.7
+      js-sha256: 0.9.0
+      pako: 2.1.0
+      snake-case: 3.0.4
+      superstruct: 0.15.5
+      toml: 3.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   '@project-serum/borsh@0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -29240,6 +29480,12 @@ snapshots:
   '@project-serum/borsh@0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      bn.js: 5.2.1
+      buffer-layout: 1.2.2
+
+  '@project-serum/borsh@0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))':
+    dependencies:
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
@@ -29305,15 +29551,15 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@pythnetwork/price-service-client@1.9.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
+  '@pythnetwork/price-service-client@1.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
     dependencies:
       '@pythnetwork/price-service-sdk': 1.7.1
       '@types/ws': 8.5.4
       axios: 1.7.2
       axios-retry: 3.9.1
-      isomorphic-ws: 4.0.1(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      isomorphic-ws: 4.0.1(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       ts-log: 2.2.5
-      ws: 8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      ws: 8.17.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -31216,6 +31462,17 @@ snapshots:
       - encoding
       - utf-8-validate
 
+  '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@solana/buffer-layout': 4.0.1
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
+      bigint-buffer: 1.1.5
+      bignumber.js: 9.1.2
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   '@solana/buffer-layout@4.0.1':
     dependencies:
       buffer: 6.0.3
@@ -31305,6 +31562,17 @@ snapshots:
       '@solana/buffer-layout': 4.0.1
       '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      buffer: 6.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@solana/spl-token@0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@solana/buffer-layout': 4.0.1
+      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)
       buffer: 6.0.3
     transitivePeerDependencies:
       - bufferutil
@@ -32059,6 +32327,28 @@ snapshots:
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      node-fetch: 2.7.0(encoding@0.1.13)
+      rpc-websockets: 8.0.1
+      superstruct: 1.0.4
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)':
+    dependencies:
+      '@babel/runtime': 7.25.0
+      '@noble/curves': 1.4.2
+      '@noble/hashes': 1.4.0
+      '@solana/buffer-layout': 4.0.1
+      agentkeepalive: 4.5.0
+      bigint-buffer: 1.1.5
+      bn.js: 5.2.1
+      borsh: 0.7.0
+      bs58: 4.0.1
+      buffer: 6.0.3
+      fast-stable-stringify: 1.0.0
+      jayson: 4.1.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       node-fetch: 2.7.0(encoding@0.1.13)
       rpc-websockets: 8.0.1
       superstruct: 1.0.4
@@ -33764,7 +34054,7 @@ snapshots:
   '@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.5.0)(typescript@5.5.4)':
     dependencies:
       '@eslint-community/regexpp': 4.10.0
-      '@typescript-eslint/parser': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
+      '@typescript-eslint/parser': 7.13.1(eslint@9.5.0)(typescript@5.5.4)
       '@typescript-eslint/scope-manager': 7.13.1
       '@typescript-eslint/type-utils': 7.13.1(eslint@9.5.0)(typescript@5.5.4)
       '@typescript-eslint/utils': 7.13.1(eslint@9.5.0)(typescript@5.5.4)
@@ -33778,25 +34068,6 @@ snapshots:
       typescript: 5.5.4
     transitivePeerDependencies:
       - supports-color
-
-  '@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)':
-    dependencies:
-      '@eslint-community/regexpp': 4.10.0
-      '@typescript-eslint/parser': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-      '@typescript-eslint/scope-manager': 7.13.1
-      '@typescript-eslint/type-utils': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-      '@typescript-eslint/utils': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-      '@typescript-eslint/visitor-keys': 7.13.1
-      eslint: 9.9.0(jiti@1.21.0)
-      graphemer: 1.4.0
-      ignore: 5.3.1
-      natural-compare: 1.4.0
-      ts-api-utils: 1.3.0(typescript@5.5.4)
-    optionalDependencies:
-      typescript: 5.5.4
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   '@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)':
     dependencies:
@@ -33946,14 +34217,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)':
+  '@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4)':
     dependencies:
       '@typescript-eslint/scope-manager': 7.13.1
       '@typescript-eslint/types': 7.13.1
       '@typescript-eslint/typescript-estree': 7.13.1(typescript@5.5.4)
       '@typescript-eslint/visitor-keys': 7.13.1
       debug: 4.3.5
-      eslint: 9.9.0(jiti@1.21.0)
+      eslint: 9.5.0
     optionalDependencies:
       typescript: 5.5.4
     transitivePeerDependencies:
@@ -37766,7 +38037,7 @@ snapshots:
     dependencies:
       conventional-commits-filter: 2.0.7
       dateformat: 3.0.3
-      handlebars: 4.7.7
+      handlebars: 4.7.8
       json-stringify-safe: 5.0.1
       lodash: 4.17.21
       meow: 8.1.2
@@ -39305,11 +39576,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
+      '@typescript-eslint/parser': 7.13.1(eslint@9.5.0)(typescript@5.5.2)
       eslint: 9.5.0
       eslint-import-resolver-node: 0.3.9
     transitivePeerDependencies:
@@ -39332,7 +39603,7 @@ snapshots:
       eslint: 9.5.0
       eslint-compat-utils: 0.5.1(eslint@9.5.0)
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.5.0):
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0):
     dependencies:
       array-includes: 3.1.8
       array.prototype.findlastindex: 1.2.5
@@ -39342,7 +39613,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.5.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint-import-resolver-node@0.3.9)(eslint@9.5.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -39353,7 +39624,7 @@ snapshots:
       semver: 6.3.1
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
+      '@typescript-eslint/parser': 7.13.1(eslint@9.5.0)(typescript@5.5.2)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -39419,13 +39690,13 @@ snapshots:
       eslint: 9.5.0
       requireindex: 1.2.0
 
-  eslint-plugin-jest@28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.5.0)(jest@29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4)))(typescript@5.5.4):
+  eslint-plugin-jest@28.6.0(@typescript-eslint/eslint-plugin@7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(typescript@5.5.2):
     dependencies:
-      '@typescript-eslint/utils': 7.7.1(eslint@9.5.0)(typescript@5.5.4)
+      '@typescript-eslint/utils': 7.7.1(eslint@9.5.0)(typescript@5.5.2)
       eslint: 9.5.0
     optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
-      jest: 29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
+      '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2)
+      jest: 29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -39437,17 +39708,6 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@8.3.0(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
       jest: 29.7.0(@types/node@22.2.0)(ts-node@10.9.2(@types/node@22.2.0)(typescript@5.5.4))
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
-  eslint-plugin-jest@28.6.0(@typescript-eslint/eslint-plugin@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(jest@29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2)))(typescript@5.5.2):
-    dependencies:
-      '@typescript-eslint/utils': 7.7.1(eslint@9.5.0)(typescript@5.5.2)
-      eslint: 9.5.0
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.2))(eslint@9.5.0)(typescript@5.5.2)
-      jest: 29.7.0(@types/node@20.14.7)(ts-node@10.9.2(@types/node@20.14.7)(typescript@5.5.2))
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -39999,6 +40259,20 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  eth-crypto@2.6.0(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    dependencies:
+      '@babel/runtime': 7.20.13
+      '@ethereumjs/tx': 3.5.2
+      '@types/bn.js': 5.1.1
+      eccrypto: 1.1.6(patch_hash=rjcfmtfgn3z72mudpdif5oxmye)
+      ethereumjs-util: 7.1.5
+      ethers: 5.7.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      secp256k1: 5.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
   eth-ens-namehash@2.0.8:
     dependencies:
       idna-uts46-hx: 2.3.1
@@ -40376,6 +40650,43 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    dependencies:
+      '@ethersproject/abi': 5.7.0
+      '@ethersproject/abstract-provider': 5.7.0
+      '@ethersproject/abstract-signer': 5.7.0
+      '@ethersproject/address': 5.7.0
+      '@ethersproject/base64': 5.7.0
+      '@ethersproject/basex': 5.7.0
+      '@ethersproject/bignumber': 5.7.0
+      '@ethersproject/bytes': 5.7.0
+      '@ethersproject/constants': 5.7.0
+      '@ethersproject/contracts': 5.7.0
+      '@ethersproject/hash': 5.7.0
+      '@ethersproject/hdnode': 5.7.0
+      '@ethersproject/json-wallets': 5.7.0
+      '@ethersproject/keccak256': 5.7.0
+      '@ethersproject/logger': 5.7.0
+      '@ethersproject/networks': 5.7.1
+      '@ethersproject/pbkdf2': 5.7.0
+      '@ethersproject/properties': 5.7.0
+      '@ethersproject/providers': 5.7.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@ethersproject/random': 5.7.0
+      '@ethersproject/rlp': 5.7.0
+      '@ethersproject/sha2': 5.7.0
+      '@ethersproject/signing-key': 5.7.0
+      '@ethersproject/solidity': 5.7.0
+      '@ethersproject/strings': 5.7.0
+      '@ethersproject/transactions': 5.7.0
+      '@ethersproject/units': 5.7.0
+      '@ethersproject/wallet': 5.7.0
+      '@ethersproject/web': 5.7.1
+      '@ethersproject/wordlists': 5.7.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
 
   ethers@6.13.2(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
@@ -40957,24 +41268,24 @@ snapshots:
       - encoding
       - supports-color
 
-  fuels@0.94.2(encoding@0.1.13):
+  fuels@0.94.5(encoding@0.1.13):
     dependencies:
-      '@fuel-ts/abi-coder': 0.94.2
-      '@fuel-ts/abi-typegen': 0.94.2
-      '@fuel-ts/account': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/address': 0.94.2
-      '@fuel-ts/contract': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/crypto': 0.94.2
-      '@fuel-ts/errors': 0.94.2
-      '@fuel-ts/hasher': 0.94.2
-      '@fuel-ts/interfaces': 0.94.2
-      '@fuel-ts/math': 0.94.2
-      '@fuel-ts/merkle': 0.94.2
-      '@fuel-ts/program': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/script': 0.94.2(encoding@0.1.13)
-      '@fuel-ts/transactions': 0.94.2
-      '@fuel-ts/utils': 0.94.2
-      '@fuel-ts/versions': 0.94.2
+      '@fuel-ts/abi-coder': 0.94.5
+      '@fuel-ts/abi-typegen': 0.94.5
+      '@fuel-ts/account': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/address': 0.94.5
+      '@fuel-ts/contract': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/crypto': 0.94.5
+      '@fuel-ts/errors': 0.94.5
+      '@fuel-ts/hasher': 0.94.5
+      '@fuel-ts/interfaces': 0.94.5
+      '@fuel-ts/math': 0.94.5
+      '@fuel-ts/merkle': 0.94.5
+      '@fuel-ts/program': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/script': 0.94.5(encoding@0.1.13)
+      '@fuel-ts/transactions': 0.94.5
+      '@fuel-ts/utils': 0.94.5
+      '@fuel-ts/versions': 0.94.5
       bundle-require: 5.0.0(esbuild@0.22.0)
       chalk: 4.1.2
       chokidar: 3.6.0
@@ -40986,7 +41297,7 @@ snapshots:
       lodash.camelcase: 4.3.0
       portfinder: 1.0.32
       toml: 3.0.0
-      uglify-js: 3.19.2
+      uglify-js: 3.19.3
       yup: 1.4.0
     transitivePeerDependencies:
       - encoding
@@ -41450,7 +41761,7 @@ snapshots:
       source-map: 0.6.1
       wordwrap: 1.0.0
     optionalDependencies:
-      uglify-js: 3.19.2
+      uglify-js: 3.19.3
 
   har-schema@2.0.0: {}
 
@@ -42213,13 +42524,17 @@ snapshots:
     dependencies:
       ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
 
+  isomorphic-ws@4.0.1(ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)):
+    dependencies:
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+
   isomorphic-ws@4.0.1(ws@8.16.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)):
     dependencies:
       ws: 8.16.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
 
-  isomorphic-ws@4.0.1(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
+  isomorphic-ws@4.0.1(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)):
     dependencies:
-      ws: 8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      ws: 8.17.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
 
   isomorphic-ws@5.0.0(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
@@ -42389,6 +42704,24 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  jayson@4.1.0(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    dependencies:
+      '@types/connect': 3.4.38
+      '@types/node': 12.20.55
+      '@types/ws': 7.4.7
+      JSONStream: 1.3.5
+      commander: 2.20.3
+      delay: 5.0.0
+      es6-promisify: 5.0.0
+      eyes: 0.1.8
+      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+      json-stringify-safe: 5.0.1
+      uuid: 8.3.2
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   jayson@4.1.1(bufferutil@4.0.7)(utf-8-validate@5.0.10):
     dependencies:
       '@types/connect': 3.4.38
@@ -42439,6 +42772,24 @@ snapshots:
       json-stringify-safe: 5.0.1
       uuid: 8.3.2
       ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  jayson@4.1.1(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    dependencies:
+      '@types/connect': 3.4.38
+      '@types/node': 12.20.55
+      '@types/ws': 7.4.7
+      JSONStream: 1.3.5
+      commander: 2.20.3
+      delay: 5.0.0
+      es6-promisify: 5.0.0
+      eyes: 0.1.8
+      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+      json-stringify-safe: 5.0.1
+      uuid: 8.3.2
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -44313,7 +44664,7 @@ snapshots:
 
   json5@1.0.2:
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
 
   json5@2.2.3: {}
 
@@ -45551,7 +45902,7 @@ snapshots:
 
   mkdirp-promise@5.0.1:
     dependencies:
-      mkdirp: 1.0.4
+      mkdirp: 3.0.1
 
   mkdirp@0.5.6:
     dependencies:
@@ -46701,7 +47052,7 @@ snapshots:
   path-scurry@1.10.1:
     dependencies:
       lru-cache: 10.2.0
-      minipass: 7.0.3
+      minipass: 7.1.2
 
   path-scurry@1.11.1:
     dependencies:
@@ -47177,7 +47528,7 @@ snapshots:
       detect-libc: 2.0.1
       expand-template: 2.0.3
       github-from-package: 0.0.0
-      minimist: 1.2.7
+      minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 1.0.2
       node-abi: 3.31.0
@@ -47583,7 +47934,7 @@ snapshots:
     dependencies:
       deep-extend: 0.6.0
       ini: 1.3.8
-      minimist: 1.2.7
+      minimist: 1.2.8
       strip-json-comments: 2.0.1
 
   react-aria-components@1.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
@@ -49213,7 +49564,7 @@ snapshots:
   strong-log-transformer@2.1.0:
     dependencies:
       duplexer: 0.1.2
-      minimist: 1.2.7
+      minimist: 1.2.8
       through: 2.3.8
 
   style-to-object@1.0.6:
@@ -50449,7 +50800,7 @@ snapshots:
   tsconfig-paths@4.1.2:
     dependencies:
       json5: 2.2.3
-      minimist: 1.2.7
+      minimist: 1.2.8
       strip-bom: 3.0.0
 
   tslib@1.14.1: {}
@@ -50599,7 +50950,7 @@ snapshots:
   typescript-eslint@7.13.1(eslint@9.5.0)(typescript@5.5.4):
     dependencies:
       '@typescript-eslint/eslint-plugin': 7.13.1(@typescript-eslint/parser@7.13.1(eslint@9.5.0)(typescript@5.5.4))(eslint@9.5.0)(typescript@5.5.4)
-      '@typescript-eslint/parser': 7.13.1(eslint@9.9.0(jiti@1.21.0))(typescript@5.5.4)
+      '@typescript-eslint/parser': 7.13.1(eslint@9.5.0)(typescript@5.5.4)
       '@typescript-eslint/utils': 7.13.1(eslint@9.5.0)(typescript@5.5.4)
       eslint: 9.5.0
     optionalDependencies:
@@ -50633,7 +50984,7 @@ snapshots:
 
   uglify-js@3.18.0: {}
 
-  uglify-js@3.19.2: {}
+  uglify-js@3.19.3: {}
 
   uid-promise@1.0.0: {}
 
@@ -52709,6 +53060,12 @@ snapshots:
       bufferutil: 4.0.8
       utf-8-validate: 5.0.10
 
+  ws@7.4.6(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    optionalDependencies:
+      bufferutil: 4.0.8
+      utf-8-validate: 6.0.4
+    optional: true
+
   ws@7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10):
     optionalDependencies:
       bufferutil: 4.0.7
@@ -52723,6 +53080,11 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.8
       utf-8-validate: 5.0.10
+
+  ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    optionalDependencies:
+      bufferutil: 4.0.8
+      utf-8-validate: 6.0.4
 
   ws@8.11.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
     optionalDependencies:
@@ -52758,6 +53120,11 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.8
       utf-8-validate: 5.0.10
+
+  ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    optionalDependencies:
+      bufferutil: 4.0.8
+      utf-8-validate: 6.0.4
 
   xdg-app-paths@5.1.0:
     dependencies:
