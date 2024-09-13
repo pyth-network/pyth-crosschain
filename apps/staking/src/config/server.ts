@@ -39,7 +39,7 @@ export const IS_MAINNET =
   IS_PRODUCTION_SERVER || process.env.IS_MAINNET !== undefined;
 export const HERMES_URL =
   process.env.HERMES_URL ??
-  (IS_MAINNET
+  (IS_PRODUCTION_SERVER
     ? "https://hermes.pyth.network"
     : "https://hermes-beta.pyth.network");
 export const BLOCKED_REGIONS =
