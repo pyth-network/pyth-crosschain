@@ -51,8 +51,10 @@ type Data = {
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
+    selfStakeDelta: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
+    poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
