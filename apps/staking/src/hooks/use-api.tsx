@@ -2,24 +2,20 @@
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
+import { useLocalStorageValue } from "@react-hookz/web";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import type { PublicKey } from "@solana/web3.js";
-import {
-  type ComponentProps,
-  createContext,
-  useContext,
-  useCallback,
-  useState,
-  useEffect,
-  useRef,
-} from "react";
+import { type ComponentProps, createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
+import { StateType as DataStateType, useData } from "./use-data";
 import * as api from "../api";
 
 export enum StateType {
   NotLoaded,
   NoWallet,
+  WalletDisconnecting,
+  WalletConnecting,
   LoadingStakeAccounts,
   LoadedNoStakeAccount,
   Loaded,
@@ -31,28 +27,29 @@ const State = {
 
   [StateType.NoWallet]: () => ({ type: StateType.NoWallet as const }),
 
-  [StateType.LoadingStakeAccounts]: (
-    client: PythStakingClient,
-    hermesClient: HermesClient,
-  ) => ({
+  [StateType.WalletDisconnecting]: () => ({
+    type: StateType.WalletDisconnecting as const,
+  }),
+
+  [StateType.WalletConnecting]: () => ({
+    type: StateType.WalletConnecting as const,
+  }),
+
+  [StateType.LoadingStakeAccounts]: () => ({
     type: StateType.LoadingStakeAccounts as const,
-    client,
-    hermesClient,
   }),
 
   [StateType.LoadedNoStakeAccount]: (
     client: PythStakingClient,
     hermesClient: HermesClient,
-    onCreateAccount: (newAccount: PublicKey) => void,
+    onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
     type: StateType.LoadedNoStakeAccount as const,
-    client,
-    hermesClient,
     dashboardDataCacheKey: client.wallet.publicKey.toBase58(),
     loadData: () => api.loadData(client, hermesClient),
     deposit: async (amount: bigint) => {
       const account = await api.createStakeAccountAndDeposit(client, amount);
-      onCreateAccount(account);
+      return onCreateAccount(account);
     },
   }),
 
@@ -89,8 +86,6 @@ const State = {
 
     return {
       type: StateType.Loaded as const,
-      client,
-      hermesClient,
       account,
       allAccounts,
       selectAccount,
@@ -115,15 +110,9 @@ const State = {
   },
 
   [StateType.ErrorLoadingStakeAccounts]: (
-    client: PythStakingClient,
     error: LoadStakeAccountsError,
     reset: () => void,
-  ) => ({
-    type: StateType.ErrorLoadingStakeAccounts as const,
-    client,
-    error,
-    reset,
-  }),
+  ) => ({ type: StateType.ErrorLoadingStakeAccounts as const, error, reset }),
 };
 
 export type States = {
@@ -147,108 +136,107 @@ export const ApiProvider = ({ hermesUrl, ...props }: ApiProviderProps) => {
 };
 
 const useApiContext = (hermesUrl: string) => {
-  const loading = useRef(false);
   const wallet = useWallet();
   const { connection } = useConnection();
-  const [state, setState] = useState<State>(State[StateType.NotLoaded]());
   const { mutate } = useSWRConfig();
-
-  const setAccount = useCallback(
-    (account: PublicKey) => {
-      setState((cur) =>
-        cur.type === StateType.Loaded
-          ? State[StateType.Loaded](
-              cur.client,
-              cur.hermesClient,
-              account,
-              cur.allAccounts,
-              setAccount,
-              mutate,
-            )
-          : cur,
-      );
-    },
-    [setState, mutate],
+  const hermesClient = useMemo(() => new HermesClient(hermesUrl), [hermesUrl]);
+  const pythStakingClient = useMemo(
+    () =>
+      wallet.publicKey && wallet.signAllTransactions && wallet.signTransaction
+        ? new PythStakingClient({
+            connection,
+            wallet: {
+              publicKey: wallet.publicKey,
+              signAllTransactions: wallet.signAllTransactions,
+              signTransaction: wallet.signTransaction,
+            },
+          })
+        : undefined,
+    [
+      wallet.publicKey,
+      wallet.signAllTransactions,
+      wallet.signTransaction,
+      connection,
+    ],
   );
+  const stakeAccounts = useData(
+    () => (pythStakingClient ? ["stakeAccounts", wallet.publicKey] : undefined),
+    () =>
+      pythStakingClient
+        ? api.getAllStakeAccountAddresses(pythStakingClient)
+        : undefined,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    },
+  );
+  const lastStakeAccount = useLocalStorageValue<string>("last-stake-account");
 
-  const reset = useCallback(() => {
-    if (wallet.connected && !wallet.disconnecting && !loading.current) {
-      loading.current = true;
-      if (
-        !wallet.publicKey ||
-        !wallet.signAllTransactions ||
-        !wallet.signTransaction
-      ) {
-        throw new WalletConnectedButInvalidError();
-      }
-      const client = new PythStakingClient({
-        connection,
-        wallet: {
-          publicKey: wallet.publicKey,
-          signAllTransactions: wallet.signAllTransactions,
-          signTransaction: wallet.signTransaction,
-        },
-      });
-      const hermesClient = new HermesClient(hermesUrl);
-      setState(State[StateType.LoadingStakeAccounts](client, hermesClient));
-      api
-        .getAllStakeAccountAddresses(client)
-        .then((accounts) => {
-          const [firstAccount, ...otherAccounts] = accounts;
-          if (firstAccount) {
-            setState(
-              State[StateType.Loaded](
-                client,
-                hermesClient,
-                firstAccount,
-                [firstAccount, ...otherAccounts],
-                setAccount,
-                mutate,
-              ),
-            );
-          } else {
-            setState(
-              State[StateType.LoadedNoStakeAccount](
-                client,
-                hermesClient,
-                (newAccount) => {
-                  setState(
-                    State[StateType.Loaded](
-                      client,
-                      hermesClient,
-                      newAccount,
-                      [newAccount],
-                      setAccount,
-                      mutate,
-                    ),
-                  );
-                },
-              ),
-            );
-          }
-        })
-        .catch((error: unknown) => {
-          setState(
-            State[StateType.ErrorLoadingStakeAccounts](
-              client,
-              new LoadStakeAccountsError(error),
-              reset,
-            ),
+  return useMemo(() => {
+    if (wallet.connecting) {
+      return State[StateType.WalletConnecting]();
+    } else if (wallet.disconnecting) {
+      return State[StateType.WalletDisconnecting]();
+    } else if (wallet.connected && pythStakingClient) {
+      switch (stakeAccounts.type) {
+        case DataStateType.NotLoaded: {
+          return State[StateType.NotLoaded]();
+        }
+        case DataStateType.Loading: {
+          return State[StateType.LoadingStakeAccounts]();
+        }
+        case DataStateType.Error: {
+          return State[StateType.ErrorLoadingStakeAccounts](
+            new LoadStakeAccountsError(stakeAccounts.error),
+            stakeAccounts.reset,
           );
-        })
-        .finally(() => {
-          loading.current = false;
-        });
+        }
+        case DataStateType.Loaded: {
+          if (stakeAccounts.data === undefined) {
+            throw new InvalidStateError();
+          } else {
+            const [firstAccount, ...otherAccounts] = stakeAccounts.data;
+            if (firstAccount) {
+              const selectedAccount = lastStakeAccount.value
+                ? stakeAccounts.data.find(
+                    (account) => account.toBase58() === lastStakeAccount.value,
+                  )
+                : undefined;
+              return State[StateType.Loaded](
+                pythStakingClient,
+                hermesClient,
+                selectedAccount ?? firstAccount,
+                [firstAccount, ...otherAccounts],
+                (account: PublicKey) => {
+                  lastStakeAccount.set(account.toBase58());
+                },
+                mutate,
+              );
+            } else {
+              return State[StateType.LoadedNoStakeAccount](
+                pythStakingClient,
+                hermesClient,
+                async (newAccount) => {
+                  await stakeAccounts.mutate([newAccount]);
+                },
+              );
+            }
+          }
+        }
+      }
+    } else {
+      return State[StateType.NoWallet]();
     }
-  }, [connection, setAccount, wallet, mutate, hermesUrl]);
-
-  useEffect(() => {
-    reset();
-  }, [reset]);
-
-  return wallet.connected && !wallet.disconnecting
-    ? state
-    : State[StateType.NoWallet]();
+  }, [
+    wallet.connecting,
+    wallet.disconnecting,
+    wallet.connected,
+    pythStakingClient,
+    stakeAccounts,
+    hermesClient,
+    lastStakeAccount,
+    mutate,
+  ]);
 };
 
 export const useApi = () => {
@@ -273,13 +261,15 @@ class NotInitializedError extends Error {
     super(
       "This component must be a child of <WalletProvider> to use the `useWallet` hook",
     );
+    this.name = "NotInitializedError";
   }
 }
 
-class WalletConnectedButInvalidError extends Error {
+class InvalidStateError extends Error {
   constructor() {
     super(
-      "The wallet is connected but is missing a public key or methods to sign transactions!",
+      "State invariant expectation failed: stake accounts were loaded but no data was returned",
     );
+    this.name = "InvalidStateError";
   }
 }

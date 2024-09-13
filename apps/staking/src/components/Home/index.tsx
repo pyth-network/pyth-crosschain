@@ -16,6 +16,10 @@ import { Error as ErrorPage } from "../Error";
 import { Loading } from "../Loading";
 import { NoWalletHome } from "../NoWalletHome";
 
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
+
 export const Home = () => {
   const isSSR = useIsSSR();
 
@@ -30,6 +34,8 @@ const MountedHome = () => {
     case ApiStateType.LoadingStakeAccounts: {
       return <Loading />;
     }
+    case ApiStateType.WalletDisconnecting:
+    case ApiStateType.WalletConnecting:
     case ApiStateType.NoWallet: {
       return <NoWalletHome />;
     }
@@ -48,7 +54,9 @@ type StakeAccountLoadedHomeProps = {
 };
 
 const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
-  const data = useData(api.dashboardDataCacheKey, api.loadData);
+  const data = useData(api.dashboardDataCacheKey, api.loadData, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
 
   switch (data.type) {
     case DashboardDataStateType.NotLoaded:

@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import type { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
 import {
@@ -21,6 +22,8 @@ import {
   type ReactNode,
   useCallback,
   useState,
+  useMemo,
+  type ReactElement,
 } from "react";
 import {
   Menu,
@@ -30,6 +33,8 @@ import {
   Separator,
   Section,
   SubmenuTrigger,
+  Header,
+  Collection,
 } from "react-aria-components";
 
 import {
@@ -41,12 +46,17 @@ import {
   type States,
   useApi,
 } from "../../hooks/use-api";
+import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { useLogger } from "../../hooks/use-logger";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
 import { AccountHistory } from "../AccountHistory";
 import { Button } from "../Button";
 import { ModalDialog } from "../ModalDialog";
 import { TruncatedKey } from "../TruncatedKey";
+
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
@@ -63,6 +73,15 @@ const WalletButtonImpl = (props: Props) => {
   const api = useApi();
 
   switch (api.type) {
+    case ApiStateType.WalletDisconnecting:
+    case ApiStateType.WalletConnecting: {
+      return (
+        <ButtonComponent isLoading={true} {...props}>
+          Loading...
+        </ButtonComponent>
+      );
+    }
+
     case ApiStateType.NotLoaded:
     case ApiStateType.NoWallet: {
       return <DisconnectedButton {...props} />;
@@ -125,7 +144,7 @@ const ConnectedButton = ({
           {api.type === ApiStateType.Loaded && (
             <>
               <Section className="flex w-full flex-col">
-                <SubmenuTrigger>
+                <StakeAccountSelector api={api}>
                   <WalletMenuItem
                     icon={BanknotesIcon}
                     textValue="Select stake account"
@@ -133,32 +152,7 @@ const ConnectedButton = ({
                     <span>Select stake account</span>
                     <ChevronRightIcon className="size-4" />
                   </WalletMenuItem>
-                  <StyledMenu
-                    items={api.allAccounts.map((account) => ({
-                      account,
-                      id: account.toBase58(),
-                    }))}
-                  >
-                    {(item) => (
-                      <WalletMenuItem
-                        onAction={() => {
-                          api.selectAccount(item.account);
-                        }}
-                        className={clsx({
-                          "font-semibold": item.account === api.account,
-                        })}
-                        isDisabled={item.account === api.account}
-                      >
-                        <CheckIcon
-                          className={clsx("size-4 text-pythpurple-600", {
-                            invisible: item.account !== api.account,
-                          })}
-                        />
-                        <TruncatedKey>{item.account}</TruncatedKey>
-                      </WalletMenuItem>
-                    )}
-                  </StyledMenu>
-                </SubmenuTrigger>
+                </StakeAccountSelector>
                 <WalletMenuItem
                   onAction={openAccountHistory}
                   icon={TableCellsIcon}
@@ -193,14 +187,109 @@ const ConnectedButton = ({
   );
 };
 
+type StakeAccountSelectorProps = {
+  api: States[ApiStateType.Loaded];
+  children: ReactElement;
+};
+
+const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
+  const data = useData(api.dashboardDataCacheKey, api.loadData, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
+  const accounts = useMemo(() => {
+    if (data.type === DataStateType.Loaded) {
+      const main = api.allAccounts.find((account) =>
+        data.data.integrityStakingPublishers.some((publisher) =>
+          publisher.stakeAccount?.equals(account),
+        ),
+      );
+      const other = api.allAccounts
+        .filter((account) => account !== main)
+        .map((account) => ({
+          account,
+          id: account.toBase58(),
+        }));
+      return { main, other };
+    } else {
+      return;
+    }
+  }, [data, api]);
+
+  if (accounts === undefined) {
+    // eslint-disable-next-line unicorn/no-null
+    return null;
+  } else if (accounts.main === undefined) {
+    return accounts.other.length > 1 ? (
+      <SubmenuTrigger>
+        {children}
+        <StyledMenu items={accounts.other}>
+          {({ account }) => <AccountMenuItem account={account} api={api} />}
+        </StyledMenu>
+      </SubmenuTrigger>
+    ) : // eslint-disable-next-line unicorn/no-null
+    null;
+  } else {
+    return (
+      <SubmenuTrigger>
+        {children}
+        <StyledMenu>
+          <Section className="flex w-full flex-col">
+            <Header className="mx-4 text-sm font-semibold">Main Account</Header>
+            <AccountMenuItem account={accounts.main} api={api} />
+          </Section>
+          {accounts.other.length > 0 && (
+            <>
+              <Separator className="mx-2 my-1 h-px bg-black/20" />
+              <Section className="flex w-full flex-col">
+                <Header className="mx-4 text-sm font-semibold">
+                  Other Accounts
+                </Header>
+                <Collection items={accounts.other}>
+                  {({ account }) => (
+                    <AccountMenuItem account={account} api={api} />
+                  )}
+                </Collection>
+              </Section>
+            </>
+          )}
+        </StyledMenu>
+      </SubmenuTrigger>
+    );
+  }
+};
+
+type AccountMenuItemProps = {
+  api: States[ApiStateType.Loaded];
+  account: PublicKey;
+};
+
+const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
+  <WalletMenuItem
+    onAction={() => {
+      api.selectAccount(account);
+    }}
+    className={clsx({
+      "pr-8 font-semibold": account === api.account,
+    })}
+    isDisabled={account === api.account}
+  >
+    <CheckIcon
+      className={clsx("size-4 text-pythpurple-600", {
+        invisible: account !== api.account,
+      })}
+    />
+    <TruncatedKey>{account}</TruncatedKey>
+  </WalletMenuItem>
+);
+
 const StyledMenu = <T extends object>({
   className,
   ...props
 }: ComponentProps<typeof Menu<T>>) => (
-  <Popover className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out focus:outline-none focus-visible:outline-none focus-visible:ring-0">
+  <Popover className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
     <Menu
       className={clsx(
-        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
+        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
         className,
       )}
       {...props}

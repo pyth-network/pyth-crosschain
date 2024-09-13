@@ -343,7 +343,7 @@ const OptOutButton = ({ api, self }: OptOutButtonProps) => {
 
   const doOptOut = useCallback(() => {
     execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
+      /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
     });
   }, [execute]);
 
@@ -375,13 +375,9 @@ const OptOutButton = ({ api, self }: OptOutButtonProps) => {
                 </p>
                 <p className="opacity-90">
                   Opting out of rewards will prevent you from earning the
-                  publisher yield rate. You will still be able to participate in
-                  OIS after opting out of rewards, but{" "}
-                  <PublisherName className="font-semibold">
-                    {self}
-                  </PublisherName>{" "}
-                  will no longer be able to receive delegated stake, and you
-                  will no longer receive the self-staking yield.
+                  publisher yield rate and delegation fees from your delegators.
+                  You will still be able to participate in OIS after opting out
+                  of rewards.
                 </p>
               </div>
               {state.type === UseAsyncStateType.Error && (
@@ -879,7 +875,7 @@ const Publisher = ({
               poolUtilization:
                 publisher.poolUtilization + publisher.poolUtilizationDelta,
               yieldRate,
-            })}
+            }).toFixed(2)}
             %
           </div>
         </PublisherTableCell>
@@ -1047,7 +1043,10 @@ const StakeToPublisherButton = ({
               publisher={publisher}
               yieldRate={yieldRate}
             >
-              {amount.type === AmountType.Valid ? amount.amount : 0n}
+              {amount.type === AmountType.Valid ||
+              amount.type === AmountType.AboveMax
+                ? amount.amount
+                : 0n}
             </NewApy>
           </div>
           <StakingTimeline currentEpoch={currentEpoch} />
