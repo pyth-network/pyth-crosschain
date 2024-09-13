@@ -33,12 +33,7 @@ type Data = {
         date: Date;
       }
     | undefined;
-  expiringRewards:
-    | {
-        amount: bigint;
-        expiry: Date;
-      }
-    | undefined;
+  expiringRewards: Date | undefined;
   unlockSchedule: {
     date: Date;
     amount: bigint;
@@ -235,8 +230,8 @@ const loadDataForStakeAccount = async (
   return {
     ...baseInfo,
     lastSlash: undefined, // TODO
-    availableRewards: claimableRewards,
-    expiringRewards: undefined, // TODO
+    availableRewards: claimableRewards.totalRewards,
+    expiringRewards: claimableRewards.expiry,
     total: stakeAccountCustody.amount,
     governance: {
       warmup: filterGovernancePositions(PositionState.LOCKING),

@@ -19,12 +19,7 @@ type Props = {
     | undefined;
   walletAmount: bigint;
   availableRewards: bigint;
-  expiringRewards:
-    | {
-        amount: bigint;
-        expiry: Date;
-      }
-    | undefined;
+  expiringRewards: Date | undefined;
   unlockSchedule: {
     amount: bigint;
     date: Date;
