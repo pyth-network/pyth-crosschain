@@ -335,7 +335,9 @@ type OptOutButtonProps = {
 };
 
 const OptOutButton = ({ api, self }: OptOutButtonProps) => {
-  const { state, execute } = useAsync(api.optPublisherOut);
+  const { state, execute } = useAsync(() =>
+    api.optPublisherOut(self.publicKey),
+  );
 
   const doOptOut = useCallback(() => {
     execute().catch(() => {

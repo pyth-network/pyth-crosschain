@@ -448,11 +448,11 @@ export const reassignPublisherAccount = async (
 };
 
 export const optPublisherOut = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  await client.setPublisherStakeAccount(publisherKey, stakeAccount, undefined);
 };
 
 const MOCK_DELAY = 500;

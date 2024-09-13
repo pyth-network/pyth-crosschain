@@ -206,7 +206,8 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [],
+      "returns": "u64"
     },
     {
       "name": "create_slash_event",
@@ -223,7 +224,8 @@
           "relations": ["pool_config"]
         },
         {
-          "name": "slash_custody"
+          "name": "slash_custody",
+          "relations": ["pool_config"]
         },
         {
           "name": "pool_data",
@@ -449,6 +451,9 @@
           }
         },
         {
+          "name": "slash_custody"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -608,7 +613,8 @@
           }
         },
         {
-          "name": "new_stake_account_positions"
+          "name": "new_stake_account_positions_option",
+          "optional": true
         },
         {
           "name": "current_stake_account_positions_option",
@@ -1083,7 +1089,7 @@
     },
     {
       "code": 6001,
-      "name": "PublisherNeedsToSign"
+      "name": "PublisherOrRewardAuthorityNeedsToSign"
     },
     {
       "code": 6002,
@@ -1178,6 +1184,10 @@
       "code": 6023,
       "name": "InvalidY",
       "msg": "Y should not be greater than 1%"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidSlashCustodyAccount"
     }
   ],
   "types": [
@@ -1343,6 +1353,10 @@
           {
             "name": "y",
             "type": "u64"
+          },
+          {
+            "name": "slash_custody",
+            "type": "pubkey"
           }
         ]
       }

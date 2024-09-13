@@ -14,6 +14,22 @@ export type PublisherCaps = {
   };
   instructions: [
     {
+      name: "closePublisherCaps";
+      discriminator: [36, 234, 184, 214, 76, 203, 153, 144];
+      accounts: [
+        {
+          name: "writeAuthority";
+          signer: true;
+          relations: ["publisherCaps"];
+        },
+        {
+          name: "publisherCaps";
+          writable: true;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "initPublisherCaps";
       discriminator: [193, 208, 32, 97, 144, 247, 246, 168];
       accounts: [
