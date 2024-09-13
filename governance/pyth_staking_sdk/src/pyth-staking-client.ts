@@ -92,7 +92,7 @@ export class PythStakingClient {
   /** Gets a users stake accounts */
   public async getAllStakeAccountPositions(
     user: PublicKey,
-  ): Promise<StakeAccountPositions[]> {
+  ): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -117,13 +117,7 @@ export class PythStakingClient {
           ],
         },
       );
-    return res.map((account) =>
-      deserializeStakeAccountPositions(
-        account.pubkey,
-        account.account.data,
-        this.stakingProgram.idl,
-      ),
-    );
+    return res.map((account) => account.pubkey);
   }
 
   public async getStakeAccountPositions(
@@ -458,25 +452,26 @@ export class PythStakingClient {
             ),
           })
           .instruction(),
-      ));
+      ),
+    );
 
-      const mergePositionsInstruction = await Promise.all(
-        publishers.map(({ pubkey }) =>
-          this.integrityPoolProgram.methods
-            .mergeDelegationPositions()
-            .accounts({
-              owner: this.wallet.publicKey,
-              publisher: pubkey,
-              stakeAccountPositions,
-            })
-            .instruction(),
-        ),
-      );
+    const mergePositionsInstruction = await Promise.all(
+      publishers.map(({ pubkey }) =>
+        this.integrityPoolProgram.methods
+          .mergeDelegationPositions()
+          .accounts({
+            owner: this.wallet.publicKey,
+            publisher: pubkey,
+            stakeAccountPositions,
+          })
+          .instruction(),
+      ),
+    );
 
-      return {
-        advanceDelegationRecordInstructions,
-        mergePositionsInstruction,
-      };
+    return {
+      advanceDelegationRecordInstructions,
+      mergePositionsInstruction,
+    };
   }
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
@@ -484,11 +479,14 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
 
-
-    return sendTransaction([
-      ...instructions.advanceDelegationRecordInstructions,
-      ...instructions.mergePositionsInstruction,
-    ], this.connection, this.wallet);
+    return sendTransaction(
+      [
+        ...instructions.advanceDelegationRecordInstructions,
+        ...instructions.mergePositionsInstruction,
+      ],
+      this.connection,
+      this.wallet,
+    );
   }
 
   public async getClaimableRewards(stakeAccountPositions: PublicKey) {

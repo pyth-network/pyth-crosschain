@@ -136,7 +136,7 @@ const ConnectedButton = ({
                   <StyledMenu
                     items={api.allAccounts.map((account) => ({
                       account,
-                      id: account.address.toBase58(),
+                      id: account.toBase58(),
                     }))}
                   >
                     {(item) => (
@@ -154,7 +154,7 @@ const ConnectedButton = ({
                             invisible: item.account !== api.account,
                           })}
                         />
-                        <TruncatedKey>{item.account.address}</TruncatedKey>
+                        <TruncatedKey>{item.account}</TruncatedKey>
                       </WalletMenuItem>
                     )}
                   </StyledMenu>
