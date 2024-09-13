@@ -29,12 +29,7 @@ type Props = {
     | undefined;
   walletAmount: bigint;
   availableRewards: bigint;
-  expiringRewards:
-    | {
-        amount: bigint;
-        expiry: Date;
-      }
-    | undefined;
+  expiringRewards: Date | undefined;
   availableToWithdraw: bigint;
 };
 
@@ -153,11 +148,12 @@ export const AccountSummary = ({
             )
           }
           {...(expiringRewards !== undefined &&
-            expiringRewards.amount > 0n && {
+            availableRewards > 0n && {
               warning: (
                 <>
-                  <Tokens>{expiringRewards.amount}</Tokens> will expire on{" "}
-                  {expiringRewards.expiry.toLocaleDateString()}
+                  Rewards expire one year from the epoch in which they were
+                  earned. You have rewards expiring on{" "}
+                  {expiringRewards.toLocaleDateString()}.
                 </>
               ),
             })}

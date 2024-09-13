@@ -24,6 +24,7 @@ import {
 import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
 import {
   getConfigAddress,
+  getDelegationRecordAddress,
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
@@ -36,7 +37,7 @@ import {
   type StakeAccountPositions,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
-import { getCurrentEpoch } from "./utils/clock";
+import { epochToDate, getCurrentEpoch } from "./utils/clock";
 import { extractPublisherData } from "./utils/pool";
 import {
   deserializeStakeAccountPositions,
@@ -146,6 +147,17 @@ export class PythStakingClient {
       account.data,
       this.stakingProgram.idl,
     );
+  }
+
+  public async getDelegationRecord(
+    stakeAccountPositions: PublicKey,
+    publisher: PublicKey,
+  ) {
+    const delegationRecord =
+      await this.integrityPoolProgram.account.delegationRecord.fetch(
+        getDelegationRecordAddress(stakeAccountPositions, publisher),
+      );
+    return convertBNToBigInt(delegationRecord);
   }
 
   public async getStakeAccountCustody(
@@ -574,6 +586,7 @@ export class PythStakingClient {
     return {
       advanceDelegationRecordInstructions,
       mergePositionsInstruction,
+      publishers,
     };
   }
 
@@ -610,7 +623,25 @@ export class PythStakingClient {
       const buffer = Buffer.from(val, "base64").reverse();
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
-    return totalRewards;
+
+    const delegationRecords = await Promise.all(
+      instructions.publishers.map(({ pubkey }) =>
+        this.getDelegationRecord(stakeAccountPositions, pubkey),
+      ),
+    );
+
+    let lowestEpoch: bigint | undefined;
+    for (const record of delegationRecords) {
+      if (lowestEpoch === undefined || record.lastEpoch < lowestEpoch) {
+        lowestEpoch = record.lastEpoch;
+      }
+    }
+
+    return {
+      totalRewards,
+      expiry:
+        lowestEpoch === undefined ? undefined : epochToDate(lowestEpoch + 52n),
+    };
   }
 
   public async setPublisherStakeAccount(
