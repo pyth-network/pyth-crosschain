@@ -51,8 +51,10 @@ type Data = {
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
+    selfStakeDelta: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
+    poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
@@ -301,9 +303,11 @@ const loadPublisherData = async (
       numFeeds: publisherRanking?.numSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
+      poolUtilizationDelta: publisher.totalDelegationDelta,
       publicKey: publisher.pubkey,
       qualityRanking: publisherRanking?.rank ?? 0,
       selfStake: publisher.selfDelegation,
+      selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
     };
   });

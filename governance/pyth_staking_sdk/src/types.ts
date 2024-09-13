@@ -52,7 +52,9 @@ export type PublisherData = {
   pubkey: PublicKey;
   stakeAccount: PublicKey | null;
   totalDelegation: bigint;
+  totalDelegationDelta: bigint;
   selfDelegation: bigint;
+  selfDelegationDelta: bigint;
   apyHistory: { epoch: bigint; apy: number; selfApy: number }[];
 }[];
 
