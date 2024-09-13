@@ -153,11 +153,9 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     publisher: PublicKey,
   ) {
-    const delegationRecord =
-      await this.integrityPoolProgram.account.delegationRecord.fetch(
-        getDelegationRecordAddress(stakeAccountPositions, publisher),
-      );
-    return convertBNToBigInt(delegationRecord);
+    return this.integrityPoolProgram.account.delegationRecord
+      .fetch(getDelegationRecordAddress(stakeAccountPositions, publisher))
+      .then((record) => convertBNToBigInt(record));
   }
 
   public async getStakeAccountCustody(
@@ -624,7 +622,7 @@ export class PythStakingClient {
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
-    const delegationRecords = await Promise.all(
+    const delegationRecords = await Promise.allSettled(
       instructions.publishers.map(({ pubkey }) =>
         this.getDelegationRecord(stakeAccountPositions, pubkey),
       ),
@@ -632,8 +630,11 @@ export class PythStakingClient {
 
     let lowestEpoch: bigint | undefined;
     for (const record of delegationRecords) {
-      if (lowestEpoch === undefined || record.lastEpoch < lowestEpoch) {
-        lowestEpoch = record.lastEpoch;
+      if (record.status === "fulfilled") {
+        const { lastEpoch } = record.value;
+        if (lowestEpoch === undefined || lastEpoch < lowestEpoch) {
+          lowestEpoch = lastEpoch;
+        }
       }
     }
 

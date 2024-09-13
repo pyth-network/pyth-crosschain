@@ -19,7 +19,11 @@ export const extractPublisherData = (
       totalDelegation:
         (poolData.delState[index]?.totalDelegation ?? 0n) +
         (poolData.selfDelState[index]?.totalDelegation ?? 0n),
+      totalDelegationDelta:
+        (poolData.delState[index]?.deltaDelegation ?? 0n) +
+        (poolData.selfDelState[index]?.deltaDelegation ?? 0n),
       selfDelegation: poolData.selfDelState[index]?.totalDelegation ?? 0n,
+      selfDelegationDelta: poolData.selfDelState[index]?.deltaDelegation ?? 0n,
       apyHistory: poolData.events
         .filter((event) => event.epoch > 0n)
         .map((event) => ({

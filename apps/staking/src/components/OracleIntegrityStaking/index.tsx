@@ -570,7 +570,7 @@ const PublisherList = ({
                 sort={sort}
                 setSort={updateSort}
               >
-                APY
+                Estimated next APY
               </SortablePublisherTableHeader>
               <PublisherTableHeader>Historical APY</PublisherTableHeader>
               <SortablePublisherTableHeader
@@ -657,16 +657,16 @@ const doSort = (
       return (
         calculateApy({
           isSelf: false,
-          selfStake: a.selfStake,
+          selfStake: a.selfStake + a.selfStakeDelta,
           poolCapacity: a.poolCapacity,
-          poolUtilization: a.poolUtilization,
+          poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
           yieldRate,
         }) -
         calculateApy({
           isSelf: false,
-          selfStake: b.selfStake,
+          selfStake: b.selfStake + b.selfStakeDelta,
           poolCapacity: b.poolCapacity,
-          poolUtilization: b.poolUtilization,
+          poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
           yieldRate,
         })
       );
@@ -755,8 +755,10 @@ type PublisherProps = {
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
+    selfStakeDelta: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
+    poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
@@ -870,9 +872,10 @@ const Publisher = ({
           <div>
             {calculateApy({
               isSelf: isSelf ?? false,
-              selfStake: publisher.selfStake,
+              selfStake: publisher.selfStake + publisher.selfStakeDelta,
               poolCapacity: publisher.poolCapacity,
-              poolUtilization: publisher.poolUtilization,
+              poolUtilization:
+                publisher.poolUtilization + publisher.poolUtilizationDelta,
               yieldRate,
             })}
             %
@@ -1074,12 +1077,15 @@ const NewApy = ({
         ...(isSelf
           ? {
               isSelf: true,
-              selfStake: publisher.selfStake + children,
+              selfStake: publisher.selfStake + publisher.selfStakeDelta + children,
             }
           : {
               isSelf: false,
               selfStake: publisher.selfStake,
-              poolUtilization: publisher.poolUtilization + children,
+              poolUtilization:
+                publisher.poolUtilization +
+                publisher.poolUtilizationDelta +
+                children,
             }),
       }),
     [
@@ -1087,7 +1093,9 @@ const NewApy = ({
       yieldRate,
       isSelf,
       publisher.selfStake,
+      publisher.selfStakeDelta,
       publisher.poolUtilization,
+      publisher.poolUtilizationDelta,
       children,
     ],
   );
