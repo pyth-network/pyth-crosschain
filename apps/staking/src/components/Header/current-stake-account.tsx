@@ -15,7 +15,7 @@ export const CurrentStakeAccount = ({
 
   return api.type === ApiStateType.Loaded ? (
     <div className={clsx("grid place-content-center", className)} {...props}>
-      <div className="flex flex-col items-end text-xs md:flex-row md:items-baseline md:text-sm">
+      <div className="flex flex-col items-end text-xs md:flex-row md:items-center md:text-sm">
         <div className="font-semibold">Stake account:</div>
         <CopyButton
           text={api.account.toBase58()}
