@@ -76,7 +76,7 @@ export const OracleIntegrityStaking = ({
     () =>
       api.type === ApiStateType.Loaded &&
       publishers.find((publisher) =>
-        publisher.stakeAccount?.equals(api.account.address),
+        publisher.stakeAccount?.equals(api.account),
       ),
     [publishers, api],
   );

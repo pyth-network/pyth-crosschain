@@ -13,7 +13,7 @@ import { Tokens } from "../Tokens";
 type Props = { api: States[ApiStateType.Loaded] };
 
 export const AccountHistory = ({ api }: Props) => {
-  const history = useData(api.accountHisoryCacheKey, api.loadAccountHistory);
+  const history = useData(api.accountHistoryCacheKey, api.loadAccountHistory);
 
   switch (history.type) {
     case StateType.NotLoaded:
