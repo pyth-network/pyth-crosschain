@@ -125,7 +125,7 @@ export const OracleIntegrityStaking = ({
               <thead className="bg-pythpurple-400/30 font-light">
                 <tr>
                   <PublisherTableHeader>Pool</PublisherTableHeader>
-                  <PublisherTableHeader>Last epoch APY</PublisherTableHeader>
+                  <PublisherTableHeader>Estimated next APY</PublisherTableHeader>
                   <PublisherTableHeader>Historical APY</PublisherTableHeader>
                   <PublisherTableHeader>Number of feeds</PublisherTableHeader>
                   <PublisherTableHeader>Quality ranking</PublisherTableHeader>
