@@ -490,10 +490,3 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
-
-class NotImplementedError extends Error {
-  constructor() {
-    super("Not yet implemented!");
-    this.name = "NotImplementedError";
-  }
-}
