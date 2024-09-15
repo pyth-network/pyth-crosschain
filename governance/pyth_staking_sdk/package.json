@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "private": true,
   "scripts": {
     "build": "tsc",
     "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
