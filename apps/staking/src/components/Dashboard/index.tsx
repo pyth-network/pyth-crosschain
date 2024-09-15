@@ -1,11 +1,20 @@
-import { type ComponentProps, useMemo } from "react";
-import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
+import clsx from "clsx";
+import Image, { type StaticImageData } from "next/image";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
+import { Tabs, TabList, TabPanel, Tab } from "react-aria-components";
 
 import type { States, StateType as ApiStateType } from "../../hooks/use-api";
 import { AccountSummary } from "../AccountSummary";
 import { Governance } from "../Governance";
+import governanceImage from "../NoWalletHome/governance.png";
+import ois from "../NoWalletHome/ois.png";
 import { OracleIntegrityStaking } from "../OracleIntegrityStaking";
-import { Styled } from "../Styled";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
@@ -49,6 +58,8 @@ export const Dashboard = ({
   unlockSchedule,
   yieldRate,
 }: Props) => {
+  const [tab, setTab] = useState<TabId>(TabIds.Empty);
+
   const availableToStakeGovernance = useMemo(
     () =>
       total -
@@ -110,8 +121,12 @@ export const Dashboard = ({
     [availableToStakeGovernance, availableToStakeIntegrity],
   );
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [tab]);
+
   return (
-    <div className="flex w-full flex-col gap-8">
+    <main className="flex w-full flex-col gap-8 xl:mx-4 xl:my-6">
       <AccountSummary
         api={api}
         locked={locked}
@@ -123,39 +138,40 @@ export const Dashboard = ({
         availableRewards={availableRewards}
         expiringRewards={expiringRewards}
       />
-      <Tabs>
-        <TabList
-          className="mb-8 flex w-full flex-row text-sm font-medium sm:text-base"
-          aria-label="Programs"
-        >
-          <DashboardTab id={TabIds.Overview}>Overview</DashboardTab>
-          <DashboardTab id={TabIds.Governance}>Governance</DashboardTab>
-          <DashboardTab id={TabIds.IntegrityStaking}>
-            <span className="sm:hidden">Integrity Staking</span>
-            <span className="hidden sm:inline">
-              Oracle Integrity Staking (OIS)
-            </span>
-          </DashboardTab>
+      <Tabs
+        selectedKey={tab}
+        onSelectionChange={setTab}
+        className="group border-neutral-600/50 data-[empty]:mb-20 data-[empty]:mt-6 data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 data-[empty]:md:border-0 data-[empty]:md:bg-transparent data-[empty]:md:p-0"
+        {...(tab === TabIds.Empty && { "data-empty": true })}
+      >
+        <h1 className="my-4 hidden text-center text-3xl/tight font-light group-data-[empty]:block md:mb-14 md:mt-8 md:text-5xl">
+          Choose Your Journey
+        </h1>
+        <TabList className="sticky top-header-height z-10 flex flex-row items-stretch justify-center group-data-[empty]:mx-auto group-data-[empty]:max-w-7xl group-data-[empty]:flex-col group-data-[empty]:gap-2 group-data-[empty]:md:flex-row">
+          <Tab id={TabIds.Empty} className="hidden" />
+          <Journey
+            longText="Oracle Integrity Staking (OIS)"
+            shortText="OIS"
+            image={ois}
+            id={TabIds.IntegrityStaking}
+          >
+            <span>Secure the Oracle</span>
+            <br />
+            <span className="font-semibold">to Earn Rewards</span>
+          </Journey>
+          <Journey
+            longText="Pyth Governance"
+            shortText="Governance"
+            image={governanceImage}
+            id={TabIds.Governance}
+          >
+            <span>Gain Voting Power</span>
+            <br />
+            <span className="font-semibold">for Governance</span>
+          </Journey>
         </TabList>
-        <DashboardTabPanel id={TabIds.Overview}>
-          <section className="py-20">
-            <p className="text-center">
-              This is an overview of the staking programs
-            </p>
-          </section>
-        </DashboardTabPanel>
-        <DashboardTabPanel id={TabIds.Governance}>
-          <Governance
-            api={api}
-            currentEpoch={currentEpoch}
-            availableToStake={availableToStakeGovernance}
-            warmup={governance.warmup}
-            staked={governance.staked}
-            cooldown={governance.cooldown}
-            cooldown2={governance.cooldown2}
-          />
-        </DashboardTabPanel>
-        <DashboardTabPanel id={TabIds.IntegrityStaking}>
+        <TabPanel id={TabIds.Empty}></TabPanel>
+        <TabPanel id={TabIds.IntegrityStaking}>
           <OracleIntegrityStaking
             api={api}
             currentEpoch={currentEpoch}
@@ -168,21 +184,22 @@ export const Dashboard = ({
             publishers={integrityStakingPublishers}
             yieldRate={yieldRate}
           />
-        </DashboardTabPanel>
+        </TabPanel>
+        <TabPanel id={TabIds.Governance}>
+          <Governance
+            api={api}
+            currentEpoch={currentEpoch}
+            availableToStake={availableToStakeGovernance}
+            warmup={governance.warmup}
+            staked={governance.staked}
+            cooldown={governance.cooldown}
+            cooldown2={governance.cooldown2}
+          />
+        </TabPanel>
       </Tabs>
-    </div>
+    </main>
   );
 };
-
-const DashboardTab = Styled(
-  Tab,
-  "grow basis-0 border-b border-neutral-600/50 px-4 py-2 focus-visible:outline-none selected:cursor-default selected:border-pythpurple-400 selected:hover:bg-transparent hover:text-pythpurple-400 selected:text-pythpurple-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 cursor-pointer text-center",
-);
-
-const DashboardTabPanel = Styled(
-  TabPanel,
-  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400/50",
-);
 
 const useIntegrityStakingSum = (
   publishers: Props["integrityStakingPublishers"],
@@ -200,8 +217,48 @@ const useIntegrityStakingSum = (
 // eslint-disable-next-line unicorn/no-array-reduce
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
-enum TabIds {
-  Overview,
-  Governance,
-  IntegrityStaking,
+type TabId = Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>;
+
+type JourneyProps = ComponentProps<typeof Tab> & {
+  children: ReactNode | ReactNode[];
+  longText: ReactNode;
+  shortText: ReactNode;
+  image: StaticImageData;
+};
+
+const Journey = ({
+  className,
+  children,
+  image,
+  longText,
+  shortText,
+  ...props
+}: JourneyProps) => (
+  <Tab
+    className={clsx(
+      "group/tab flex flex-1 cursor-pointer flex-col items-center bg-pythpurple-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default group-data-[empty]:md:bg-transparent",
+      className,
+    )}
+    {...props}
+  >
+    <div className="relative hidden w-4/5 opacity-30 transition group-hover/tab:opacity-100 group-data-[empty]:md:block">
+      <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
+      <Image src={image} alt="" className="size-full" />
+      <div className="absolute inset-0 top-16 text-center text-2xl text-pythpurple-800 lg:text-3xl">
+        {children}
+      </div>
+    </div>
+    <div className="grid size-full place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-hover/tab:bg-pythpurple-600/30 group-selected/tab:border-pythpurple-400/60 group-selected/tab:bg-pythpurple-600/60 group-hover/tab:group-selected/tab:bg-pythpurple-600/60 md:p-4 md:text-lg">
+      <span className="hidden group-data-[empty]:inline sm:inline">
+        {longText}
+      </span>
+      <span className="group-data-[empty]:hidden sm:hidden">{shortText}</span>
+    </div>
+  </Tab>
+);
+
+export enum TabIds {
+  Empty = "empty",
+  Governance = "governance",
+  IntegrityStaking = "ois",
 }

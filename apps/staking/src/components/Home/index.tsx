@@ -69,11 +69,7 @@ const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
     }
 
     case DashboardDataStateType.Loaded: {
-      return (
-        <main className="mx-4 my-6">
-          <Dashboard {...data.data} api={api} />
-        </main>
-      );
+      return <Dashboard {...data.data} api={api} />;
     }
   }
 };

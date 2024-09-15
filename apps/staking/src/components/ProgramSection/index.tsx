@@ -2,14 +2,18 @@ import { ArrowLongDownIcon } from "@heroicons/react/24/outline";
 import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
 import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
+import { DialogTrigger } from "react-aria-components";
 
+import { Button } from "../Button";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
 
 type Props = HTMLAttributes<HTMLDivElement> & {
   name: string;
-  description: string;
+  helpDialog: ReactNode;
+  description: ReactNode;
+  tagline: ReactNode;
   currentEpoch: bigint;
   warmup: bigint;
   staked: bigint;
@@ -42,9 +46,11 @@ type Props = HTMLAttributes<HTMLDivElement> & {
   );
 
 export const ProgramSection = ({
-  className,
   name,
+  className,
+  helpDialog,
   description,
+  tagline,
   children,
   currentEpoch,
   warmup,
@@ -63,14 +69,31 @@ export const ProgramSection = ({
 }: Props) => (
   <section
     className={clsx(
-      "border border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:p-10",
+      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-2 py-4 lg:px-4 lg:py-6",
       className,
     )}
     {...props}
   >
-    <h2 className="text-xl font-light sm:text-3xl">{name}</h2>
-    <p className="text-sm sm:text-base">{description}</p>
-    <div className="mt-8 flex flex-col items-stretch justify-center border border-neutral-600/50 bg-white/5 px-2 py-6 sm:p-10 xl:flex-row">
+    <div className="mx-auto flex max-w-4xl flex-col gap-2 px-2 pb-6 sm:px-6 sm:py-10">
+      <div className="flex flex-row items-start gap-8">
+        <div className="grow">
+          <h1 className="mb-2 text-xl font-light sm:text-3xl">{name}</h1>
+          <div className="text-sm opacity-60 sm:text-lg md:font-semibold md:opacity-100">
+            {tagline}
+          </div>
+        </div>
+        <div className="my-2 flex-none">
+          <DialogTrigger>
+            <Button variant="secondary">Help</Button>
+            {helpDialog}
+          </DialogTrigger>
+        </div>
+      </div>
+      <div className="hidden max-w-prose text-sm opacity-60 md:block">
+        {description}
+      </div>
+    </div>
+    <div className="flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:border lg:bg-white/5 lg:px-2 lg:py-6">
       <Position
         name="Available to Stake"
         nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
@@ -187,7 +210,7 @@ const Position = ({
 }: PositionProps) => (
   <div
     className={clsx(
-      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-pythpurple-800 p-4 sm:p-6",
+      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-2 sm:p-4 lg:bg-pythpurple-800 lg:p-6",
       className,
     )}
   >
@@ -199,10 +222,12 @@ const Position = ({
     >
       {name}
     </div>
-    <div className="flex grow flex-row items-end justify-between gap-6 xl:flex-col xl:items-start">
+    <div className="flex grow flex-row items-end justify-between gap-6 sm:flex-col sm:items-start">
       <div>
         <div>
-          <Tokens className="text-xl font-light sm:text-3xl">{children}</Tokens>
+          <Tokens className="text-lg font-light sm:text-xl lg:text-3xl">
+            {children}
+          </Tokens>
         </div>
         {details}
       </div>
@@ -213,6 +238,6 @@ const Position = ({
 
 const Arrow = () => (
   <div className="grid place-content-center">
-    <ArrowLongDownIcon className="m-4 size-4 flex-none scale-y-[200%] [mask-image:linear-gradient(to_bottom,_transparent,_black_125%)] xl:-rotate-90" />
+    <ArrowLongDownIcon className="m-2 size-4 flex-none [mask-image:linear-gradient(to_bottom,_transparent,_black_125%)] md:-rotate-90 lg:m-4 lg:scale-y-[200%]" />
   </div>
 );

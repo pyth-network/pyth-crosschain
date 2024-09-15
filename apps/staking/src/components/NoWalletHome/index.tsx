@@ -9,6 +9,8 @@ import {
   type ComponentProps,
   useCallback,
   useState,
+  useRef,
+  useEffect,
 } from "react";
 import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
@@ -29,10 +31,17 @@ export const NoWalletHome = () => {
   const [tab, setTab] = useState<
     Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>
   >(TabId.IntegrityStaking);
+  const scrollTarget = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (scrollTarget.current) {
+      scrollTarget.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [tab]);
 
   return (
     <main className="flex flex-col items-center">
-      <div className="my-20 flex flex-col gap-12 text-center">
+      <div className="mb-20 mt-12 flex flex-col gap-12 text-center">
         <div className="text-sm/normal tracking-[0.5rem]">
           WELCOME
           <br />
@@ -55,6 +64,8 @@ export const NoWalletHome = () => {
       </div>
 
       <Tabs selectedKey={tab} onSelectionChange={setTab}>
+        <div ref={scrollTarget} />
+
         <div className="relative mx-auto max-h-96 overflow-hidden md:hidden">
           <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
           <Image
@@ -78,7 +89,8 @@ export const NoWalletHome = () => {
             )}
           </div>
         </div>
-        <TabList className="-mx-4 mb-8 flex max-w-7xl flex-row items-stretch justify-center gap-2 border border-neutral-600/50 bg-pythpurple-800 px-4 py-2 md:border-none md:bg-transparent md:p-0">
+
+        <TabList className="sticky top-header-height -mx-4 mb-8 flex max-w-7xl flex-row items-stretch justify-center gap-2 border border-neutral-600/50 bg-pythpurple-800 px-4 py-2 md:static md:border-none md:bg-transparent md:p-0">
           <ProgramTab
             id={TabId.IntegrityStaking}
             image={ois}
@@ -215,8 +227,10 @@ const ProgramTab = ({
         {description}
       </div>
     </div>
-    <div className="grid size-full place-content-center border border-transparent p-2 text-center font-semibold transition group-hover:bg-pythpurple-600/60 group-selected:border-pythpurple-400 group-selected:bg-pythpurple-600 md:border-neutral-600/50 md:bg-pythpurple-800 md:p-4 md:text-lg md:group-selected:border-pythpurple-400">
-      {children}
+    <div className="size-full border border-transparent text-center font-semibold leading-none transition group-selected:border-pythpurple-400 group-selected:bg-pythpurple-600 md:border-neutral-600/50 md:bg-pythpurple-800 md:text-lg md:group-selected:border-pythpurple-400">
+      <div className="grid size-full place-content-center p-2 group-hover:bg-pythpurple-600/60 md:p-4">
+        {children}
+      </div>
     </div>
   </Tab>
 );
@@ -247,7 +261,7 @@ const ProgramPanel = ({
   >
     <div className="flex flex-col gap-8 bg-[#1C1B2C] px-8 pb-16 pt-12 md:px-12">
       <span className="text-sm/normal tracking-[0.5rem]">{eyebrow}</span>
-      <h3 className="text-4xl font-light md:text-5xl">{header}</h3>
+      <h2 className="text-4xl font-light md:text-5xl">{header}</h2>
     </div>
     <ol className="divide-y divide-neutral-600/50 bg-pythpurple-800">
       {steps.map(({ icon: Icon, title, body }, i) => (
@@ -263,7 +277,7 @@ const ProgramPanel = ({
                 <div className="text-sm/normal tracking-[0.5rem]">
                   STEP {i + 1}
                 </div>
-                <h4 className="text-3xl font-light">{title}</h4>
+                <h3 className="text-3xl font-light">{title}</h3>
               </div>
             </div>
             <p>{body}</p>

@@ -38,16 +38,17 @@ export const Footer = ({
 }: Omit<HTMLAttributes<HTMLElement>, "children">) => (
   <footer
     className={clsx(
-      "mt-4 text-xs font-light sm:sticky sm:bottom-0 sm:px-4",
+      "mt-4 text-xs font-light sm:sticky sm:bottom-0 lg:px-4",
       className,
     )}
     {...props}
   >
-    <div className="border-t border-neutral-600/50 bg-pythpurple-800 sm:border-x">
-      <MaxWidth className="flex flex-col items-center gap-10 py-8 sm:-mx-4 sm:h-16 sm:flex-row sm:justify-between">
+    <div className="border-t border-neutral-600/50 bg-pythpurple-800 lg:border-x">
+      <MaxWidth className="flex flex-col items-center gap-10 py-8 sm:h-16 sm:flex-row sm:justify-between lg:-mx-4">
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4 md:gap-8">
           <Link href="https://www.pyth.network" target="_blank">
             <Logo className="h-10 sm:h-8" />
+            <span className="sr-only">Pyth homepage</span>
           </Link>
           <div>© 2024 Pyth Data Association</div>
         </div>

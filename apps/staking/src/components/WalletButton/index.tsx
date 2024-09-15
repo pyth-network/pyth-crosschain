@@ -17,8 +17,6 @@ import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
 import {
   type ComponentProps,
-  type ComponentType,
-  type SVGAttributes,
   type ReactNode,
   useCallback,
   useState,
@@ -26,12 +24,7 @@ import {
   type ReactElement,
 } from "react";
 import {
-  Menu,
-  MenuItem,
   MenuTrigger,
-  Popover,
-  Separator,
-  Section,
   SubmenuTrigger,
   Header,
   Collection,
@@ -51,6 +44,7 @@ import { useLogger } from "../../hooks/use-logger";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
 import { AccountHistory } from "../AccountHistory";
 import { Button } from "../Button";
+import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { ModalDialog } from "../ModalDialog";
 import { TruncatedKey } from "../TruncatedKey";
 
@@ -140,38 +134,35 @@ const ConnectedButton = ({
           </span>
           <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
         </ButtonComponent>
-        <StyledMenu className="min-w-[var(--trigger-width)]">
+        <Menu className="min-w-[var(--trigger-width)]">
           {api.type === ApiStateType.Loaded && (
             <>
-              <Section className="flex w-full flex-col">
+              <Section>
                 <StakeAccountSelector api={api}>
-                  <WalletMenuItem
+                  <MenuItem
                     icon={BanknotesIcon}
                     textValue="Select stake account"
                   >
                     <span>Select stake account</span>
                     <ChevronRightIcon className="size-4" />
-                  </WalletMenuItem>
+                  </MenuItem>
                 </StakeAccountSelector>
-                <WalletMenuItem
-                  onAction={openAccountHistory}
-                  icon={TableCellsIcon}
-                >
+                <MenuItem onAction={openAccountHistory} icon={TableCellsIcon}>
                   Account history
-                </WalletMenuItem>
+                </MenuItem>
               </Section>
-              <Separator className="mx-2 my-1 h-px bg-black/20" />
+              <Separator />
             </>
           )}
-          <Section className="flex w-full flex-col">
-            <WalletMenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>
+          <Section>
+            <MenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>
               Change wallet
-            </WalletMenuItem>
-            <WalletMenuItem onAction={disconnectWallet} icon={XCircleIcon}>
+            </MenuItem>
+            <MenuItem onAction={disconnectWallet} icon={XCircleIcon}>
               Disconnect
-            </WalletMenuItem>
+            </MenuItem>
           </Section>
-        </StyledMenu>
+        </Menu>
       </MenuTrigger>
       {api.type === ApiStateType.Loaded && (
         <ModalDialog
@@ -222,9 +213,9 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
     return accounts.other.length > 1 ? (
       <SubmenuTrigger>
         {children}
-        <StyledMenu items={accounts.other}>
+        <Menu items={accounts.other} className="-mr-20 xs:mr-0">
           {({ account }) => <AccountMenuItem account={account} api={api} />}
-        </StyledMenu>
+        </Menu>
       </SubmenuTrigger>
     ) : // eslint-disable-next-line unicorn/no-null
     null;
@@ -232,15 +223,15 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
     return (
       <SubmenuTrigger>
         {children}
-        <StyledMenu>
-          <Section className="flex w-full flex-col">
+        <Menu className="-mr-20 xs:mr-0">
+          <Section>
             <Header className="mx-4 text-sm font-semibold">Main Account</Header>
             <AccountMenuItem account={accounts.main} api={api} />
           </Section>
           {accounts.other.length > 0 && (
             <>
-              <Separator className="mx-2 my-1 h-px bg-black/20" />
-              <Section className="flex w-full flex-col">
+              <Separator />
+              <Section>
                 <Header className="mx-4 text-sm font-semibold">
                   Other Accounts
                 </Header>
@@ -252,7 +243,7 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
               </Section>
             </>
           )}
-        </StyledMenu>
+        </Menu>
       </SubmenuTrigger>
     );
   }
@@ -264,7 +255,7 @@ type AccountMenuItemProps = {
 };
 
 const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
-  <WalletMenuItem
+  <MenuItem
     onAction={() => {
       api.selectAccount(account);
     }}
@@ -279,22 +270,7 @@ const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
       })}
     />
     <TruncatedKey>{account}</TruncatedKey>
-  </WalletMenuItem>
-);
-
-const StyledMenu = <T extends object>({
-  className,
-  ...props
-}: ComponentProps<typeof Menu<T>>) => (
-  <Popover className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
-    <Menu
-      className={clsx(
-        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-        className,
-      )}
-      {...props}
-    />
-  </Popover>
+  </MenuItem>
 );
 
 const ButtonContent = () => {
@@ -311,31 +287,6 @@ const ButtonContent = () => {
     return "Connect";
   }
 };
-
-type WalletMenuItemProps = Omit<ComponentProps<typeof MenuItem>, "children"> & {
-  icon?: ComponentType<SVGAttributes<SVGSVGElement>>;
-  children: ReactNode;
-};
-
-const WalletMenuItem = ({
-  children,
-  icon: Icon,
-  className,
-  textValue,
-  ...props
-}: WalletMenuItemProps) => (
-  <MenuItem
-    textValue={textValue ?? (typeof children === "string" ? children : "")}
-    className={clsx(
-      "flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none",
-      className,
-    )}
-    {...props}
-  >
-    {Icon && <Icon className="size-4 text-pythpurple-600" />}
-    {children}
-  </MenuItem>
-);
 
 const DisconnectedButton = (props: Props) => {
   const modal = useWalletModal();
