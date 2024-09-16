@@ -126,7 +126,7 @@ export const Dashboard = ({
   }, [tab]);
 
   return (
-    <main className="flex w-full flex-col gap-8 xl:mx-4 xl:my-6">
+    <main className="flex w-full flex-col gap-8 xl:px-4 xl:py-6">
       <AccountSummary
         api={api}
         locked={locked}
@@ -141,7 +141,7 @@ export const Dashboard = ({
       <Tabs
         selectedKey={tab}
         onSelectionChange={setTab}
-        className="group border-neutral-600/50 data-[empty]:mb-20 data-[empty]:mt-6 data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 data-[empty]:md:border-0 data-[empty]:md:bg-transparent data-[empty]:md:p-0"
+        className="group border-neutral-600/50 data-[empty]:mb-20 data-[empty]:mt-6 data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 sm:p-4 data-[empty]:md:border-0 data-[empty]:md:bg-transparent data-[empty]:md:p-0"
         {...(tab === TabIds.Empty && { "data-empty": true })}
       >
         <h1 className="my-4 hidden text-center text-3xl/tight font-light group-data-[empty]:block md:mb-14 md:mt-8 md:text-5xl">

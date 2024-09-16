@@ -115,11 +115,32 @@ export const AccountSummary = ({
             transfer={api.deposit}
             enableWithZeroMax
           />
-          <WithdrawButton
-            api={api}
-            max={availableToWithdraw}
-            className="xl:hidden"
-          />
+          {availableToWithdraw === 0n ? (
+            <DialogTrigger>
+              <Button variant="secondary" className="xl:hidden">
+                Withdraw
+              </Button>
+              <ModalDialog title="No Withdrawable Tokens" closeButtonText="Ok">
+                <p className="mb-8 font-semibold">
+                  You have no tokens available for withdrawal
+                </p>
+
+                <div className="-mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
+                  <InformationCircleIcon className="size-8 flex-none" />
+                  <div className="text-sm">
+                    You can only withdraw tokens that are unlocked and not
+                    staked in either OIS or Pyth Governance
+                  </div>
+                </div>
+              </ModalDialog>
+            </DialogTrigger>
+          ) : (
+            <WithdrawButton
+              api={api}
+              max={availableToWithdraw}
+              className="xl:hidden"
+            />
+          )}
           {api.type === ApiStateType.Loaded ? (
             <DialogTrigger>
               <Button variant="secondary" className="xl:hidden">

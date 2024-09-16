@@ -58,6 +58,12 @@ export const HelpMenu = () => {
           <Separator />
           <Section>
             <MenuItem onAction={openPublisherFaq}>Data Publisher FAQ</MenuItem>
+            <MenuItem
+              href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
+              target="_blank"
+            >
+              Data Publisher Guide
+            </MenuItem>
           </Section>
         </Menu>
       </MenuTrigger>

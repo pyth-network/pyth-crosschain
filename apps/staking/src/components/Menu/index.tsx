@@ -23,12 +23,12 @@ export const Menu = <T extends object>({
   ...props
 }: MenuProps<T>) => (
   <Popover
-    className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+    className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
     {...(placement && { placement })}
   >
     <BaseMenu
       className={clsx(
-        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none",
         className,
       )}
       {...props}
