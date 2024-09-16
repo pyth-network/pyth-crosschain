@@ -20,7 +20,7 @@ export const Header = ({
       <MaxWidth className="flex h-header items-center justify-between gap-2 lg:-mx-4">
         <Logo className="hidden max-h-full py-4 text-pythpurple-100 sm:block" />
         <Logomark className="max-h-full py-4 text-pythpurple-100 sm:hidden" />
-        <div className="flex flex-none flex-row items-stretch gap-2 xs:gap-4 sm:gap-8">
+        <div className="flex flex-none flex-row items-stretch gap-4 sm:gap-8">
           <CurrentStakeAccount />
           <WalletButton className="flex-none" />
           <HelpMenu />

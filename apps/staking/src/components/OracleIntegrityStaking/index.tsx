@@ -113,7 +113,7 @@ export const OracleIntegrityStaking = ({
       })}
     >
       {self && api.type == ApiStateType.Loaded && (
-        <div className="relative -mx-2 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:mt-10 lg:-mx-4">
+        <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 sm:mt-10">
           <div className="relative w-full overflow-x-auto">
             <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
               <h3 className="text-2xl font-light">
@@ -159,7 +159,7 @@ export const OracleIntegrityStaking = ({
       )}
       <div
         className={clsx(
-          "relative -mx-2 overflow-hidden border-t border-neutral-600/50 pt-6 lg:-mx-4 lg:mt-10",
+          "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 lg:mt-10",
           { "mt-6": self === undefined },
         )}
       >

@@ -63,7 +63,7 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
               id={index.toString()}
               className="group flex cursor-pointer flex-row items-center gap-4 border border-neutral-600/50 px-6 py-4 transition focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default selected:border-pythpurple-600 selected:bg-pythpurple-600/20 md:flex-1 md:px-4 md:py-2 lg:border-b lg:border-x-transparent lg:border-t-transparent lg:bg-black/40 lg:px-4 lg:py-6 lg:selected:border-neutral-600/50 lg:selected:border-b-transparent lg:selected:bg-black/40 xl:px-10 2xl:px-20"
             >
-              <div className="relative isolate opacity-50 group-selected:opacity-100">
+              <div className="relative isolate opacity-50 transition group-selected:opacity-100">
                 <Icon className="size-10 flex-none fill-black/80" />
                 <div className="absolute inset-0 rounded-full bg-pythpurple-600 mix-blend-overlay" />
               </div>
@@ -71,7 +71,7 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
                 <div className="text-sm tracking-[0.5rem] opacity-50 md:tracking-wide">
                   STEP {index + 1}
                 </div>
-                <div className="opacity-50 group-selected:opacity-100 xl:text-xl">
+                <div className="opacity-50 transition group-selected:opacity-100 xl:text-xl">
                   {title}
                 </div>
               </div>
@@ -90,7 +90,10 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
                   {description}
                 </div>
               </div>
-              <Tabs className="mb-20 px-6">
+              <Tabs
+                defaultSelectedKey={subTabs[0]?.index.toString() ?? ""}
+                className="mb-20 px-6"
+              >
                 <TabList items={subTabs} className="flex flex-col sm:flex-row">
                   {({ title, index: subtabIndex }) => (
                     <Tab
