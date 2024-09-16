@@ -39,9 +39,12 @@ import {
   MultisigParser,
   MultisigVault,
   PROGRAM_AUTHORITY_ESCROW,
+  createDetermisticPriceStoreInitializePublisherInstruction,
+  createPriceStoreInstruction,
   findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
+  isPriceStorePublisherInitialized,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -558,6 +561,73 @@ multisigCommand(
     DEFAULT_PRIORITY_FEE_CONFIG
   );
 });
+
+multisigCommand("init-price-store", "Init price store program").action(
+  async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const authorityKey = await vault.getVaultAuthorityPDA(cluster);
+    const instruction = createPriceStoreInstruction({
+      type: "Initialize",
+      data: {
+        authorityKey,
+        payerKey: authorityKey,
+      },
+    });
+    await vault.proposeInstructions(
+      [instruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  }
+);
+
+multisigCommand("init-price-store-buffers", "Init price store buffers").action(
+  async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const oracleProgramId = getPythProgramKeyForCluster(cluster);
+    const connection = new Connection(getPythClusterApiUrl(cluster));
+    const authorityKey = await vault.getVaultAuthorityPDA(cluster);
+
+    const allPythAccounts = await connection.getProgramAccounts(
+      oracleProgramId
+    );
+    const allPublishers: Set<PublicKey> = new Set();
+    for (const account of allPythAccounts) {
+      const data = account.account.data;
+      const base = parseBaseData(data);
+      if (base?.type === AccountType.Price) {
+        const parsed = parsePriceData(data);
+        for (const component of parsed.priceComponents.slice(
+          0,
+          parsed.numComponentPrices
+        )) {
+          allPublishers.add(component.publisher);
+        }
+      }
+    }
+
+    let instructions = [];
+    for (const publisherKey of allPublishers) {
+      if (await isPriceStorePublisherInitialized(connection, publisherKey)) {
+        // Already configured.
+        continue;
+      }
+      instructions.push(
+        await createDetermisticPriceStoreInitializePublisherInstruction(
+          authorityKey,
+          publisherKey
+        )
+      );
+    }
+    await vault.proposeInstructions(
+      instructions,
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  }
+);
 
 program
   .command("parse-transaction")
