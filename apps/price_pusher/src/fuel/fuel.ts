@@ -13,7 +13,10 @@ import {
   FUEL_ETH_ASSET_ID,
 } from "@pythnetwork/pyth-fuel-js";
 
+// Convert TAI64 timestamp to Unix timestamp
 function tai64ToUnix(tai64: BN): number {
+  // TAI64 is 2^62 seconds ahead of Unix epoch (1970-01-01)
+  // Additional 10-second offset accounts for TAI being ahead of UTC at Unix epoch
   const result = BigInt(tai64.toString()) - BigInt(2n ** 62n) - 10n;
   return Number(result);
 }
