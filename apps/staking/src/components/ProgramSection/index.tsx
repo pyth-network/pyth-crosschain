@@ -69,7 +69,7 @@ export const ProgramSection = ({
 }: Props) => (
   <section
     className={clsx(
-      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-2 py-4 lg:px-4 lg:py-6",
+      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
       className,
     )}
     {...props}
@@ -93,7 +93,7 @@ export const ProgramSection = ({
         {description}
       </div>
     </div>
-    <div className="flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:border lg:bg-white/5 lg:px-2 lg:py-6">
+    <div className="flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:mx-auto lg:border lg:bg-white/5 lg:p-6">
       <Position
         name="Available to Stake"
         nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
@@ -210,7 +210,7 @@ const Position = ({
 }: PositionProps) => (
   <div
     className={clsx(
-      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-2 sm:p-4 lg:bg-pythpurple-800 lg:p-6",
+      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-4 lg:max-w-64 lg:bg-pythpurple-800 lg:p-6",
       className,
     )}
   >

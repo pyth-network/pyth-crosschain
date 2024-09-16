@@ -28,13 +28,17 @@ export const NoWalletHome = () => {
   const showModal = useCallback(() => {
     modal.setVisible(true);
   }, [modal]);
+  const lastTab = useRef<
+    Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>
+  >(TabId.IntegrityStaking);
   const [tab, setTab] = useState<
     Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>
   >(TabId.IntegrityStaking);
   const scrollTarget = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (scrollTarget.current) {
+    if (scrollTarget.current && tab !== lastTab.current) {
+      lastTab.current = tab;
       scrollTarget.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [tab]);
