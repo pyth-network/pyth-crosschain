@@ -37,7 +37,9 @@ import {
 import { Button } from "../Button";
 import { CopyButton } from "../CopyButton";
 import { ModalDialog } from "../ModalDialog";
+import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { ProgramSection } from "../ProgramSection";
+import { PublisherFaq } from "../PublisherFaq";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
 import { Styled } from "../Styled";
@@ -92,7 +94,9 @@ export const OracleIntegrityStaking = ({
   return (
     <ProgramSection
       name="Oracle Integrity Staking (OIS)"
-      description="Protect DeFi"
+      tagline="Protect DeFi"
+      description="OIS allows anyone to help secure Pyth and protect DeFi. Through decentralized staking rewards and slashing, OIS incentivizes Pyth publishers to maintain high-quality data contributions. PYTH holders can stake to publishers to further reinforce oracle security. Rewards are programmatically distributed to high quality publishers and the stakers supporting them to strengthen oracle integrity."
+      helpDialog={<OracleIntegrityStakingGuide />}
       className="pb-0 sm:pb-0"
       currentEpoch={currentEpoch}
       available={availableToStake}
@@ -109,13 +113,17 @@ export const OracleIntegrityStaking = ({
       })}
     >
       {self && api.type == ApiStateType.Loaded && (
-        <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-10 sm:mt-10">
+        <div className="relative -mx-2 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:mt-10 lg:-mx-4">
           <div className="relative w-full overflow-x-auto">
             <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
               <h3 className="text-2xl font-light">
                 You - <PublisherName fullKey>{self}</PublisherName>
               </h3>
               <div className="flex flex-row items-center gap-4">
+                <DialogTrigger>
+                  <Button size="small">Publisher FAQ</Button>
+                  <PublisherFaq />
+                </DialogTrigger>
                 <ReassignStakeAccountButton self={self} api={api} />
                 <OptOutButton self={self} api={api} />
               </div>
@@ -151,7 +159,7 @@ export const OracleIntegrityStaking = ({
       )}
       <div
         className={clsx(
-          "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-10 lg:mt-10",
+          "relative -mx-2 overflow-hidden border-t border-neutral-600/50 pt-6 lg:-mx-4 lg:mt-10",
           { "mt-6": self === undefined },
         )}
       >

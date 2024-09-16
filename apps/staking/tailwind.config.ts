@@ -35,6 +35,15 @@ const tailwindConfig = {
           950: "#0C0B1A",
         },
       },
+      height: {
+        header: "var(--header-height)",
+      },
+      spacing: {
+        "header-height": "var(--header-height)",
+      },
+      screens: {
+        xs: "425px",
+      },
     },
   },
 } satisfies Config;

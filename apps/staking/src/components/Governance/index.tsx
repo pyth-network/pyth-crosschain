@@ -1,4 +1,5 @@
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
+import { GovernanceGuide } from "../GovernanceGuide";
 import { ProgramSection } from "../ProgramSection";
 
 type Props = {
@@ -21,8 +22,10 @@ export const Governance = ({
   cooldown2,
 }: Props) => (
   <ProgramSection
-    name="Governance"
-    description="Vote and Influence the Network"
+    name="Pyth Governance"
+    helpDialog={<GovernanceGuide />}
+    tagline="Vote and Influence the Network"
+    description="Pyth Governance lets the community influence the direction of the Pyth Network by voting on key proposals. By staking tokens, community members can gain a say in decisions that shape the network’s operations and development, ensuring Pyth Network evolves effectively and aligns with DeFi’s needs."
     currentEpoch={currentEpoch}
     available={availableToStake}
     warmup={warmup}
