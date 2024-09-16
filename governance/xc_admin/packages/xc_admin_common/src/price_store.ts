@@ -1,4 +1,5 @@
 import {
+  AccountMeta,
   MAX_SEED_LENGTH,
   PublicKey,
   SystemProgram,
@@ -47,89 +48,94 @@ enum InstructionId {
 export function createPriceStoreInstruction(
   data: PriceStoreInstruction
 ): TransactionInstruction {
-  if (data.type == "Initialize") {
-    const [configKey, configBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("CONFIG")],
-      PRICE_STORE_PROGRAM_ID
-    );
-    const instructionData = Buffer.concat([
-      Buffer.from([InstructionId.Initialize, configBump]),
-      data.data.authorityKey.toBuffer(),
-    ]);
-
-    return new TransactionInstruction({
-      keys: [
-        {
-          pubkey: data.data.payerKey,
-          isSigner: true,
-          isWritable: true,
-        },
-        {
-          pubkey: configKey,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: SystemProgram.programId,
-          isSigner: false,
-          isWritable: false,
-        },
-      ],
-      programId: PRICE_STORE_PROGRAM_ID,
-      data: instructionData,
-    });
-  } else if (data.type == "InitializePublisher") {
-    const [configKey, configBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("CONFIG")],
-      PRICE_STORE_PROGRAM_ID
-    );
-    const [publisherConfigKey, publisherConfigBump] =
-      PublicKey.findProgramAddressSync(
-        [Buffer.from("PUBLISHER_CONFIG"), data.data.publisherKey.toBuffer()],
+  switch (data.type) {
+    case "Initialize": {
+      const [configKey, configBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from("CONFIG")],
         PRICE_STORE_PROGRAM_ID
       );
-    const instructionData = Buffer.concat([
-      Buffer.from([
-        InstructionId.InitializePublisher,
-        configBump,
-        publisherConfigBump,
-      ]),
-      data.data.publisherKey.toBuffer(),
-    ]);
-    return new TransactionInstruction({
-      keys: [
-        {
-          pubkey: data.data.authorityKey,
-          isSigner: true,
-          isWritable: true,
-        },
-        {
-          pubkey: configKey,
-          isSigner: false,
-          isWritable: false,
-        },
-        {
-          pubkey: publisherConfigKey,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: data.data.bufferKey,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: SystemProgram.programId,
-          isSigner: false,
-          isWritable: false,
-        },
-      ],
-      programId: PRICE_STORE_PROGRAM_ID,
-      data: instructionData,
-    });
+      const instructionData = Buffer.concat([
+        Buffer.from([InstructionId.Initialize, configBump]),
+        data.data.authorityKey.toBuffer(),
+      ]);
+
+      return new TransactionInstruction({
+        keys: [
+          {
+            pubkey: data.data.payerKey,
+            isSigner: true,
+            isWritable: true,
+          },
+          {
+            pubkey: configKey,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+          },
+        ],
+        programId: PRICE_STORE_PROGRAM_ID,
+        data: instructionData,
+      });
+    }
+    case "InitializePublisher": {
+      const [configKey, configBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from("CONFIG")],
+        PRICE_STORE_PROGRAM_ID
+      );
+      const [publisherConfigKey, publisherConfigBump] =
+        PublicKey.findProgramAddressSync(
+          [Buffer.from("PUBLISHER_CONFIG"), data.data.publisherKey.toBuffer()],
+          PRICE_STORE_PROGRAM_ID
+        );
+      const instructionData = Buffer.concat([
+        Buffer.from([
+          InstructionId.InitializePublisher,
+          configBump,
+          publisherConfigBump,
+        ]),
+        data.data.publisherKey.toBuffer(),
+      ]);
+      return new TransactionInstruction({
+        keys: [
+          {
+            pubkey: data.data.authorityKey,
+            isSigner: true,
+            isWritable: true,
+          },
+          {
+            pubkey: configKey,
+            isSigner: false,
+            isWritable: false,
+          },
+          {
+            pubkey: publisherConfigKey,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: data.data.bufferKey,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+          },
+        ],
+        programId: PRICE_STORE_PROGRAM_ID,
+        data: instructionData,
+      });
+    }
+    default: {
+      // No need to support SubmitPrices instruction.
+      throw new Error("invalid type");
+    }
   }
-  // No need to support SubmitPrices instruction.
-  throw new Error("invalid type");
 }
 
 export function parsePriceStoreInstruction(
@@ -142,42 +148,77 @@ export function parsePriceStoreInstruction(
     throw new Error("instruction data is too short");
   }
   const instructionId = instruction.data.readInt8(0);
-  if (instructionId == InstructionId.Initialize) {
-    if (instruction.data.length < 34) {
-      throw new Error("instruction data is too short");
+  let data: PriceStoreInstruction;
+  switch (instructionId) {
+    case InstructionId.Initialize: {
+      if (instruction.data.length < 34) {
+        throw new Error("instruction data is too short");
+      }
+      const authorityKey = new PublicKey(instruction.data.subarray(2, 34));
+      if (instruction.keys.length != 3) {
+        throw new Error("invalid number of accounts");
+      }
+      data = {
+        type: "Initialize",
+        data: {
+          payerKey: instruction.keys[0].pubkey,
+          authorityKey,
+        },
+      };
+      break;
     }
-    const authorityKey = new PublicKey(instruction.data.subarray(2, 34));
-    if (instruction.keys.length != 3) {
-      throw new Error("invalid number of accounts");
+    case InstructionId.InitializePublisher: {
+      if (instruction.data.length < 35) {
+        throw new Error("instruction data is too short");
+      }
+      const publisherKey = new PublicKey(instruction.data.subarray(3, 35));
+      if (instruction.keys.length != 5) {
+        throw new Error("invalid number of accounts");
+      }
+      data = {
+        type: "InitializePublisher",
+        data: {
+          authorityKey: instruction.keys[0].pubkey,
+          bufferKey: instruction.keys[3].pubkey,
+          publisherKey,
+        },
+      };
+      break;
     }
-    return {
-      type: "Initialize",
-      data: {
-        payerKey: instruction.keys[0].pubkey,
-        authorityKey,
-      },
-    };
-  } else if (instructionId == InstructionId.InitializePublisher) {
-    if (instruction.data.length < 35) {
-      throw new Error("instruction data is too short");
+    case InstructionId.SubmitPrices: {
+      throw new Error("SubmitPrices instruction is not supported");
     }
-    const publisherKey = new PublicKey(instruction.data.subarray(3, 35));
-    if (instruction.keys.length != 5) {
-      throw new Error("invalid number of accounts");
+    default: {
+      throw new Error("unrecognized instruction id");
     }
-    return {
-      type: "InitializePublisher",
-      data: {
-        authorityKey: instruction.keys[0].pubkey,
-        bufferKey: instruction.keys[3].pubkey,
-        publisherKey,
-      },
-    };
-  } else if (instructionId == InstructionId.SubmitPrices) {
-    throw new Error("SubmitPrices instruction is not supported");
-  } else {
-    throw new Error("unrecognized instruction id");
   }
+
+  const expected = createPriceStoreInstruction(data);
+
+  if (!expected.data.equals(instruction.data)) {
+    const expectedJson = JSON.stringify(expected.data);
+    const actualJson = JSON.stringify(instruction.data);
+    throw new Error(
+      `invalid instruction data: expected ${expectedJson}, got ${actualJson}`
+    );
+  }
+
+  const accountEquals = (a: AccountMeta, b: AccountMeta) =>
+    a.isSigner == b.isSigner &&
+    a.isWritable == b.isWritable &&
+    a.pubkey.equals(b.pubkey);
+
+  const accountMismatch = expected.keys.some(
+    (ex, index) => !accountEquals(ex, instruction.keys[index])
+  );
+  if (accountMismatch) {
+    const expectedJson = JSON.stringify(expected.keys);
+    const actualJson = JSON.stringify(instruction.keys);
+    throw new Error(
+      `invalid accounts: expected ${expectedJson}, got ${actualJson}`
+    );
+  }
+  return data;
 }
 
 export class PriceStoreMultisigInstruction implements MultisigInstruction {
