@@ -34,7 +34,7 @@ import {
   StateType as UseAsyncStateType,
   useAsync,
 } from "../../hooks/use-async";
-import { Button } from "../Button";
+import { Button, LinkButton } from "../Button";
 import { CopyButton } from "../CopyButton";
 import { ModalDialog } from "../ModalDialog";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
@@ -120,6 +120,13 @@ export const OracleIntegrityStaking = ({
                 You - <PublisherName fullKey>{self}</PublisherName>
               </h3>
               <div className="flex flex-row items-center gap-4">
+                <LinkButton
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
+                  target="_blank"
+                  size="small"
+                >
+                  Publisher Guide
+                </LinkButton>
                 <DialogTrigger>
                   <Button size="small">Publisher FAQ</Button>
                   <PublisherFaq />
