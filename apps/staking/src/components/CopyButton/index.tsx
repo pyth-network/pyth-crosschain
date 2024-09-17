@@ -52,7 +52,7 @@ export const CopyButton = ({
       onPress={copy}
       isDisabled={isCopied}
       className={clsx(
-        "group -mt-0.5 rounded-md px-2 py-0.5 align-middle transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+        "group -mx-2 -mt-0.5 rounded-md px-2 py-0.5 align-middle transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
         className,
       )}
       {...(isCopied && { "data-is-copied": true })}

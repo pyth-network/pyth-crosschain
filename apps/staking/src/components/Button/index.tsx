@@ -53,7 +53,7 @@ export const LinkButton = ({
 
 const baseClassName = (props: VariantProps) =>
   clsx(
-    "border border-pythpurple-600 transition duration-100 hover:bg-pythpurple-600/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+    "border border-pythpurple-600 text-center transition duration-100 hover:bg-pythpurple-600/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
     variantClassName(props.variant),
     sizeClassName(props.size),
   );

@@ -42,7 +42,7 @@ const tailwindConfig = {
         "header-height": "var(--header-height)",
       },
       screens: {
-        xs: "425px",
+        xs: "412px",
       },
     },
   },

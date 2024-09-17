@@ -2,6 +2,8 @@ import {
   ChevronUpIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
+  Bars3Icon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
@@ -23,10 +25,10 @@ import {
   Button as BaseButton,
   Meter,
   Label,
-  DialogTrigger,
   TextField,
   Form,
   Switch,
+  MenuTrigger,
 } from "react-aria-components";
 
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
@@ -36,6 +38,7 @@ import {
 } from "../../hooks/use-async";
 import { Button, LinkButton } from "../Button";
 import { CopyButton } from "../CopyButton";
+import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { ModalDialog } from "../ModalDialog";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { ProgramSection } from "../ProgramSection";
@@ -98,71 +101,31 @@ export const OracleIntegrityStaking = ({
       description="OIS allows anyone to help secure Pyth and protect DeFi. Through decentralized staking rewards and slashing, OIS incentivizes Pyth publishers to maintain high-quality data contributions. PYTH holders can stake to publishers to further reinforce oracle security. Rewards are programmatically distributed to high quality publishers and the stakers supporting them to strengthen oracle integrity."
       helpDialog={<OracleIntegrityStakingGuide />}
       className="pb-0 sm:pb-0"
-      currentEpoch={currentEpoch}
-      available={availableToStake}
-      warmup={warmup}
-      staked={staked}
-      cooldown={cooldown}
-      cooldown2={cooldown2}
-      {...(locked > 0n && {
-        availableToStakeDetails: (
-          <div className="mt-2 text-xs text-red-600">
-            <Tokens>{locked}</Tokens> are locked and cannot be staked in OIS
-          </div>
-        ),
-      })}
+      collapseTokenOverview
+      tokenOverview={{
+        currentEpoch,
+        available: availableToStake,
+        warmup,
+        staked,
+        cooldown,
+        cooldown2,
+        ...(locked > 0n && {
+          availableToStakeDetails: (
+            <div className="mt-2 text-xs text-red-600">
+              <Tokens>{locked}</Tokens> are locked and cannot be staked in OIS
+            </div>
+          ),
+        }),
+      }}
     >
       {self && api.type == ApiStateType.Loaded && (
-        <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 sm:mt-10">
-          <div className="relative w-full overflow-x-auto">
-            <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
-              <h3 className="text-2xl font-light">
-                You - <PublisherName fullKey>{self}</PublisherName>
-              </h3>
-              <div className="flex flex-row items-center gap-4">
-                <LinkButton
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
-                  target="_blank"
-                  size="small"
-                >
-                  Publisher Guide
-                </LinkButton>
-                <DialogTrigger>
-                  <Button size="small">Publisher FAQ</Button>
-                  <PublisherFaq />
-                </DialogTrigger>
-                <ReassignStakeAccountButton self={self} api={api} />
-                <OptOutButton self={self} api={api} />
-              </div>
-            </div>
-
-            <table className="mx-auto border border-neutral-600/50 text-sm">
-              <thead className="bg-pythpurple-400/30 font-light">
-                <tr>
-                  <PublisherTableHeader>Pool</PublisherTableHeader>
-                  <PublisherTableHeader>
-                    Estimated next APY
-                  </PublisherTableHeader>
-                  <PublisherTableHeader>Historical APY</PublisherTableHeader>
-                  <PublisherTableHeader>Number of feeds</PublisherTableHeader>
-                  <PublisherTableHeader>Quality ranking</PublisherTableHeader>
-                  {availableToStake > 0n && <PublisherTableHeader />}
-                </tr>
-              </thead>
-              <tbody className="bg-pythpurple-400/10">
-                <Publisher
-                  api={api}
-                  isSelf
-                  currentEpoch={currentEpoch}
-                  availableToStake={availableToStake}
-                  publisher={self}
-                  totalStaked={staked}
-                  yieldRate={yieldRate}
-                />
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <SelfStaking
+          api={api}
+          self={self}
+          currentEpoch={currentEpoch}
+          availableToStake={availableToStake}
+          yieldRate={yieldRate}
+        />
       )}
       <div
         className={clsx(
@@ -184,58 +147,210 @@ export const OracleIntegrityStaking = ({
   );
 };
 
-type ReassignStakeAccountButtonProps = {
+type SelfStakingProps = {
+  api: States[ApiStateType.Loaded];
+  self: PublisherProps["publisher"];
+  currentEpoch: bigint;
+  availableToStake: bigint;
+  yieldRate: bigint;
+};
+
+const SelfStaking = ({
+  self,
+  api,
+  currentEpoch,
+  availableToStake,
+  yieldRate,
+}: SelfStakingProps) => {
+  const [publisherFaqOpen, setPublisherFaqOpen] = useState(false);
+  const openPublisherFaq = useCallback(() => {
+    setPublisherFaqOpen(true);
+  }, [setPublisherFaqOpen]);
+
+  const [reassignStakeAccountOpen, setReassignStakeAccountOpen] =
+    useState(false);
+  const openReassignStakeAccount = useCallback(() => {
+    setReassignStakeAccountOpen(true);
+  }, [setReassignStakeAccountOpen]);
+
+  const [optOutOpen, setOptOutOpen] = useState(false);
+  const openOptOut = useCallback(() => {
+    setOptOutOpen(true);
+  }, [setOptOutOpen]);
+
+  return (
+    <>
+      <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 sm:mt-10">
+        <div className="relative w-full overflow-x-auto">
+          <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
+            <div>
+              <h3 className="text-2xl font-light">Self Staking</h3>
+              <PublisherName fullKey className="opacity-60">
+                {self}
+              </PublisherName>
+            </div>
+            <div className="flex flex-row items-center gap-4">
+              <MenuTrigger>
+                <Button
+                  variant="secondary"
+                  className="group flex flex-row items-center gap-2 lg:hidden"
+                >
+                  <Bars3Icon className="size-6 flex-none" />
+                  <span className="sr-only">Publisher Menu</span>
+                  <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
+                </Button>
+                <Menu placement="bottom end">
+                  <Section>
+                    <MenuItem onAction={openReassignStakeAccount}>
+                      Reassign Stake Account
+                    </MenuItem>
+                    <MenuItem onAction={openOptOut}>
+                      Opt Out of Rewards
+                    </MenuItem>
+                  </Section>
+                  <Separator />
+                  <Section>
+                    <MenuItem onAction={openPublisherFaq}>
+                      Data Publisher FAQ
+                    </MenuItem>
+                    <MenuItem
+                      href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
+                      target="_blank"
+                    >
+                      Data Publisher Guide
+                    </MenuItem>
+                  </Section>
+                </Menu>
+              </MenuTrigger>
+              <LinkButton
+                href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
+                target="_blank"
+                size="small"
+                className="hidden lg:block"
+              >
+                Publisher Guide
+              </LinkButton>
+              <Button
+                size="small"
+                onPress={openPublisherFaq}
+                className="hidden lg:block"
+              >
+                Publisher FAQ
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                onPress={openReassignStakeAccount}
+                className="hidden lg:block"
+              >
+                Reassign Stake Account
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                onPress={openOptOut}
+                className="hidden lg:block"
+              >
+                Opt Out of Rewards
+              </Button>
+            </div>
+          </div>
+
+          <table className="mx-auto border border-neutral-600/50 text-sm">
+            <thead className="bg-pythpurple-400/30 font-light">
+              <tr>
+                <PublisherTableHeader>Pool</PublisherTableHeader>
+                <PublisherTableHeader>Estimated next APY</PublisherTableHeader>
+                <PublisherTableHeader>Historical APY</PublisherTableHeader>
+                <PublisherTableHeader>Number of feeds</PublisherTableHeader>
+                <PublisherTableHeader>Quality ranking</PublisherTableHeader>
+                {availableToStake > 0n && <PublisherTableHeader />}
+              </tr>
+            </thead>
+            <tbody className="bg-pythpurple-400/10">
+              <Publisher
+                api={api}
+                isSelf
+                currentEpoch={currentEpoch}
+                availableToStake={availableToStake}
+                publisher={self}
+                totalStaked={self.positions?.staked ?? 0n}
+                yieldRate={yieldRate}
+              />
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <PublisherFaq
+        isOpen={publisherFaqOpen}
+        onOpenChange={setPublisherFaqOpen}
+      />
+      <ReassignStakeAccount
+        api={api}
+        self={self}
+        isOpen={reassignStakeAccountOpen}
+        onOpenChange={setReassignStakeAccountOpen}
+      />
+      <OptOut
+        api={api}
+        self={self}
+        isOpen={optOutOpen}
+        onOpenChange={setOptOutOpen}
+      />
+    </>
+  );
+};
+
+type ReassignStakeAccountButtonProps = Omit<
+  ComponentProps<typeof ModalDialog>,
+  "title" | "children" | "closeButtonText" | "closeDisabled" | "description"
+> & {
   api: States[ApiStateType.Loaded];
   self: PublisherProps["publisher"];
 };
 
-const ReassignStakeAccountButton = ({
+const ReassignStakeAccount = ({
   api,
   self,
+  ...props
 }: ReassignStakeAccountButtonProps) => {
   const [closeDisabled, setCloseDisabled] = useState(false);
 
-  return (
-    <DialogTrigger>
-      <Button variant="secondary" size="small">
-        Reassign Stake Account
-      </Button>
-      {hasAnyPositions(self) ? (
-        <ModalDialog title="You must unstake first" closeButtonText="Ok">
-          <div className="flex max-w-prose flex-col gap-4">
-            <p className="font-semibold">
-              You cannot designate another account while self-staked.
-            </p>
-            <p className="opacity-90">
-              Please close all self-staking positions, wait the cooldown period
-              (if applicable), and try again once your self-stake is fully
-              closed.
-            </p>
-          </div>
-        </ModalDialog>
-      ) : (
-        <ModalDialog
-          title="Reassign Stake Account"
-          closeDisabled={closeDisabled}
-          description={
-            <>
-              Designate a different stake account as the self-staking account
-              for{" "}
-              <PublisherName className="font-semibold">{self}</PublisherName>
-            </>
-          }
-        >
-          {({ close }) => (
-            <ReassignStakeAccountForm
-              api={api}
-              publisherPubkey={self.publicKey}
-              close={close}
-              setCloseDisabled={setCloseDisabled}
-            />
-          )}
-        </ModalDialog>
+  return hasAnyPositions(self) ? (
+    <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
+      <div className="flex max-w-prose flex-col gap-4">
+        <p className="font-semibold">
+          You cannot designate another account while self-staked.
+        </p>
+        <p className="opacity-90">
+          Please close all self-staking positions, wait the cooldown period (if
+          applicable), and try again once your self-stake is fully closed.
+        </p>
+      </div>
+    </ModalDialog>
+  ) : (
+    <ModalDialog
+      title="Reassign Stake Account"
+      closeDisabled={closeDisabled}
+      description={
+        <>
+          <span className="mr-3 align-middle">
+            Designate a different stake account as the self-staking account for
+          </span>
+          <PublisherName className="font-semibold">{self}</PublisherName>
+        </>
+      }
+      {...props}
+    >
+      {({ close }) => (
+        <ReassignStakeAccountForm
+          api={api}
+          publisherPubkey={self.publicKey}
+          close={close}
+          setCloseDisabled={setCloseDisabled}
+        />
       )}
-    </DialogTrigger>
+    </ModalDialog>
   );
 };
 
@@ -346,12 +461,15 @@ const ReassignStakeAccountButtonContents = ({
   }
 };
 
-type OptOutButtonProps = {
+type OptOut = Omit<
+  ComponentProps<typeof ModalDialog>,
+  "title" | "children" | "closeButtonText" | "closeDisabled" | "description"
+> & {
   api: States[ApiStateType.Loaded];
   self: PublisherProps["publisher"];
 };
 
-const OptOutButton = ({ api, self }: OptOutButtonProps) => {
+const OptOut = ({ api, self, ...props }: OptOut) => {
   const { state, execute } = useAsync(() =>
     api.optPublisherOut(self.publicKey),
   );
@@ -362,67 +480,58 @@ const OptOutButton = ({ api, self }: OptOutButtonProps) => {
     });
   }, [execute]);
 
-  return (
-    <DialogTrigger>
-      <Button variant="secondary" size="small">
-        Opt Out of Rewards
-      </Button>
-      {hasAnyPositions(self) ? (
-        <ModalDialog title="You must unstake first" closeButtonText="Ok">
+  return hasAnyPositions(self) ? (
+    <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
+      <div className="flex max-w-prose flex-col gap-4">
+        <p className="font-semibold">
+          You cannot opt out of rewards while self-staked.
+        </p>
+        <p className="opacity-90">
+          Please close all self-staking positions, wait the cooldown period (if
+          applicable), and try again once your self-stake is fully closed.
+        </p>
+      </div>
+    </ModalDialog>
+  ) : (
+    <ModalDialog title="Are you sure?" {...props}>
+      {({ close }) => (
+        <>
           <div className="flex max-w-prose flex-col gap-4">
             <p className="font-semibold">
-              You cannot opt out of rewards while self-staked.
+              Are you sure you want to opt out of rewards?
             </p>
             <p className="opacity-90">
-              Please close all self-staking positions, wait the cooldown period
-              (if applicable), and try again once your self-stake is fully
-              closed.
+              Opting out of rewards will prevent you from earning the publisher
+              yield rate and delegation fees from your delegators. You will
+              still be able to participate in OIS after opting out of rewards.
             </p>
           </div>
-        </ModalDialog>
-      ) : (
-        <ModalDialog title="Are you sure?">
-          {({ close }) => (
-            <>
-              <div className="flex max-w-prose flex-col gap-4">
-                <p className="font-semibold">
-                  Are you sure you want to opt out of rewards?
-                </p>
-                <p className="opacity-90">
-                  Opting out of rewards will prevent you from earning the
-                  publisher yield rate and delegation fees from your delegators.
-                  You will still be able to participate in OIS after opting out
-                  of rewards.
-                </p>
-              </div>
-              {state.type === UseAsyncStateType.Error && (
-                <p className="mt-8 text-red-600">
-                  Uh oh, an error occurred! Please try again
-                </p>
-              )}
-              <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-                <Button
-                  className="w-full sm:w-auto"
-                  size="noshrink"
-                  onPress={close}
-                >
-                  No, I want rewards!
-                </Button>
-                <Button
-                  className="w-full sm:w-auto"
-                  variant="secondary"
-                  size="noshrink"
-                  isLoading={state.type === UseAsyncStateType.Running}
-                  onPress={doOptOut}
-                >
-                  Yes, opt me out
-                </Button>
-              </div>
-            </>
+          {state.type === UseAsyncStateType.Error && (
+            <p className="mt-8 text-red-600">
+              Uh oh, an error occurred! Please try again
+            </p>
           )}
-        </ModalDialog>
+          <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+            <Button
+              className="w-full sm:w-auto"
+              size="noshrink"
+              onPress={close}
+            >
+              No, I want rewards!
+            </Button>
+            <Button
+              className="w-full sm:w-auto"
+              variant="secondary"
+              size="noshrink"
+              isLoading={state.type === UseAsyncStateType.Running}
+              onPress={doOptOut}
+            >
+              Yes, opt me out
+            </Button>
+          </div>
+        </>
       )}
-    </DialogTrigger>
+    </ModalDialog>
   );
 };
 
@@ -949,7 +1058,9 @@ const Publisher = ({
                           className="w-28"
                           actionDescription={
                             <>
-                              Cancel tokens that are in warmup for staking to{" "}
+                              <span className="mr-3 align-middle">
+                                Cancel tokens that are in warmup for staking to
+                              </span>
                               <PublisherName className="font-semibold">
                                 {publisher}
                               </PublisherName>
@@ -983,7 +1094,9 @@ const Publisher = ({
                           className="w-28"
                           actionDescription={
                             <>
-                              Unstake tokens from{" "}
+                              <span className="mr-3 align-middle">
+                                Unstake tokens from
+                              </span>
                               <PublisherName className="font-semibold">
                                 {publisher}
                               </PublisherName>
@@ -1040,7 +1153,7 @@ const StakeToPublisherButton = ({
       size="small"
       actionDescription={
         <>
-          Stake to{" "}
+          <span className="mr-3 align-middle">Stake to</span>
           <PublisherName className="font-semibold">{publisher}</PublisherName>
         </>
       }

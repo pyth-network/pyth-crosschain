@@ -141,28 +141,23 @@ export const AccountSummary = ({
               className="xl:hidden"
             />
           )}
-          {api.type === ApiStateType.Loaded ? (
-            <DialogTrigger>
-              <Button variant="secondary" className="xl:hidden">
-                Claim
-              </Button>
-              {availableRewards > 0n ? (
-                <ClaimDialog
-                  expiringRewards={expiringRewards}
-                  availableRewards={availableRewards}
-                  api={api}
-                />
-              ) : (
-                <ModalDialog title="No Rewards" closeButtonText="Ok">
-                  <p>You have no rewards available to be claimed</p>
-                </ModalDialog>
-              )}
-            </DialogTrigger>
-          ) : (
-            <Button variant="secondary" isDisabled={true} className="lg:hidden">
+          <DialogTrigger>
+            <Button variant="secondary" className="xl:hidden">
               Claim
             </Button>
-          )}
+            {availableRewards === 0n ||
+            api.type === ApiStateType.LoadedNoStakeAccount ? (
+              <ModalDialog title="No Rewards" closeButtonText="Ok">
+                <p>You have no rewards available to be claimed</p>
+              </ModalDialog>
+            ) : (
+              <ClaimDialog
+                expiringRewards={expiringRewards}
+                availableRewards={availableRewards}
+                api={api}
+              />
+            )}
+          </DialogTrigger>
         </div>
       </div>
       <div className="hidden w-auto items-stretch gap-4 xl:flex">

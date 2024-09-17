@@ -35,7 +35,7 @@ export const ModalDialog = ({
 }: ModalDialogProps) => (
   <ModalOverlay
     isKeyboardDismissDisabled={closeDisabled === true}
-    className="fixed left-0 top-0 z-50 h-[var(--visual-viewport-height)] w-screen overflow-y-auto bg-black/30 px-4 py-8 backdrop-blur data-[entering]:duration-300 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out sm:px-8 sm:py-16"
+    className="fixed left-0 top-0 z-50 h-[var(--visual-viewport-height)] w-screen overflow-y-auto bg-black/30 px-4 py-8 backdrop-blur data-[entering]:duration-300 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out xs:py-16 sm:px-8 sm:py-32"
     isDismissable={!closeDisabled}
     {...props}
   >
