@@ -24,6 +24,7 @@ import { AnchorProvider } from "@project-serum/anchor";
 import {
   TransactionBuilder,
   PriorityFeeConfig,
+  sendTransactions,
 } from "@pythnetwork/solana-utils";
 import {
   findDetermisticPublisherBufferAddress,
@@ -31,6 +32,7 @@ import {
   PRICE_STORE_PROGRAM_ID,
   PriceStoreMultisigInstruction,
 } from "./price_store";
+import { Wallet } from "@coral-xyz/anchor";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -173,10 +175,11 @@ export async function executeProposal(
     );
 
     signatures.push(
-      await new AnchorProvider(squad.connection, squad.wallet, {
-        commitment: commitment,
-        preflightCommitment: commitment,
-      }).sendAndConfirm(transaction, [], { skipPreflight: true })
+      ...(await sendTransactions(
+        [{ tx: transaction, signers: [] }],
+        squad.connection,
+        squad.wallet as Wallet
+      ))
     );
   }
   return signatures;

@@ -6,7 +6,6 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   SystemProgram,
   ConfirmOptions,
-  sendAndConfirmRawTransaction,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
