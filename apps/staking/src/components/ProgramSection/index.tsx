@@ -5,6 +5,7 @@ import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 import { Button } from "../Button";
+import { ModalDialog } from "../ModalDialog";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
@@ -14,6 +15,66 @@ type Props = HTMLAttributes<HTMLDivElement> & {
   helpDialog: ReactNode;
   description: ReactNode;
   tagline: ReactNode;
+  collapseTokenOverview?: boolean | undefined;
+  tokenOverview: TokenOverviewProps;
+};
+
+export const ProgramSection = ({
+  name,
+  className,
+  helpDialog,
+  description,
+  tagline,
+  children,
+  tokenOverview,
+  collapseTokenOverview,
+  ...props
+}: Props) => (
+  <section
+    className={clsx(
+      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
+      className,
+    )}
+    {...props}
+  >
+    <div className="mx-auto flex max-w-4xl flex-col gap-2 px-2 pb-6 sm:px-6 sm:py-10">
+      <div className="flex flex-row items-start gap-8">
+        <div className="grow">
+          <h1 className="text-xl font-light sm:mb-2 sm:text-3xl">{name}</h1>
+          <div className="text-sm opacity-60 sm:text-lg md:font-semibold md:opacity-100">
+            {tagline}
+          </div>
+        </div>
+        <div className="my-2 flex-none">
+          <DialogTrigger>
+            <Button variant="secondary">Help</Button>
+            {helpDialog}
+          </DialogTrigger>
+        </div>
+      </div>
+      <div className="hidden max-w-prose text-sm opacity-60 md:block">
+        {description}
+      </div>
+    </div>
+    {collapseTokenOverview && (
+      <DialogTrigger>
+        <Button className="mx-auto block w-full max-w-96 lg:hidden">
+          Token Overview
+        </Button>
+        <ModalDialog title="Token Overview" description={name}>
+          <TokenOverview className={className} {...tokenOverview} />
+        </ModalDialog>
+      </DialogTrigger>
+    )}
+    <TokenOverview
+      className={clsx({ "hidden lg:flex": collapseTokenOverview })}
+      {...tokenOverview}
+    />
+    {children}
+  </section>
+);
+
+type TokenOverviewProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   currentEpoch: bigint;
   warmup: bigint;
   staked: bigint;
@@ -45,13 +106,8 @@ type Props = HTMLAttributes<HTMLDivElement> & {
       }
   );
 
-export const ProgramSection = ({
-  name,
+const TokenOverview = ({
   className,
-  helpDialog,
-  description,
-  tagline,
-  children,
   currentEpoch,
   warmup,
   staked,
@@ -66,129 +122,107 @@ export const ProgramSection = ({
   unstake,
   unstakeDescription,
   ...props
-}: Props) => (
-  <section
+}: TokenOverviewProps) => (
+  <div
     className={clsx(
-      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
+      "flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:mx-auto lg:border lg:bg-white/5 lg:p-6",
       className,
     )}
     {...props}
   >
-    <div className="mx-auto flex max-w-4xl flex-col gap-2 px-2 pb-6 sm:px-6 sm:py-10">
-      <div className="flex flex-row items-start gap-8">
-        <div className="grow">
-          <h1 className="mb-2 text-xl font-light sm:text-3xl">{name}</h1>
-          <div className="text-sm opacity-60 sm:text-lg md:font-semibold md:opacity-100">
-            {tagline}
+    <Position
+      name="Available to Stake"
+      nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
+      details={availableToStakeDetails}
+      {...(stakeDescription !== undefined && {
+        actions: (
+          <TransferButton
+            size="small"
+            actionDescription={stakeDescription}
+            actionName="Stake"
+            max={available}
+            transfer={stake}
+          >
+            <StakingTimeline currentEpoch={currentEpoch} />
+          </TransferButton>
+        ),
+      })}
+    >
+      {available}
+    </Position>
+    <Arrow />
+    <Position
+      name="Warmup"
+      nameClassName="bg-[rgba(206,_153,_247,_0.25)]"
+      {...(warmup > 0n && {
+        details: (
+          <div className="mt-2 text-xs text-neutral-500">
+            Staking {epochToDate(currentEpoch + 1n).toLocaleString()}
           </div>
-        </div>
-        <div className="my-2 flex-none">
-          <DialogTrigger>
-            <Button variant="secondary">Help</Button>
-            {helpDialog}
-          </DialogTrigger>
-        </div>
-      </div>
-      <div className="hidden max-w-prose text-sm opacity-60 md:block">
-        {description}
-      </div>
-    </div>
-    <div className="flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:mx-auto lg:border lg:bg-white/5 lg:p-6">
-      <Position
-        name="Available to Stake"
-        nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
-        details={availableToStakeDetails}
-        {...(stakeDescription !== undefined && {
-          actions: (
-            <TransferButton
-              size="small"
-              actionDescription={stakeDescription}
-              actionName="Stake"
-              max={available}
-              transfer={stake}
-            >
-              <StakingTimeline currentEpoch={currentEpoch} />
-            </TransferButton>
-          ),
-        })}
-      >
-        {available}
-      </Position>
-      <Arrow />
-      <Position
-        name="Warmup"
-        nameClassName="bg-[rgba(206,_153,_247,_0.25)]"
-        {...(warmup > 0n && {
-          details: (
+        ),
+      })}
+      {...(cancelWarmupDescription !== undefined && {
+        actions: (
+          <TransferButton
+            size="small"
+            variant="secondary"
+            actionDescription={cancelWarmupDescription}
+            actionName="Cancel"
+            submitButtonText="Cancel Warmup"
+            title="Cancel Warmup"
+            max={warmup}
+            transfer={cancelWarmup}
+          />
+        ),
+      })}
+    >
+      {warmup}
+    </Position>
+    <Arrow />
+    <Position
+      name="Staked"
+      nameClassName="bg-[rgba(105,_24,_238,_0.25)]"
+      {...(unstakeDescription !== undefined && {
+        actions: (
+          <TransferButton
+            size="small"
+            variant="secondary"
+            actionDescription={unstakeDescription}
+            actionName="Unstake"
+            max={staked}
+            transfer={unstake}
+          >
+            <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
+          </TransferButton>
+        ),
+      })}
+    >
+      {staked}
+    </Position>
+    <Arrow />
+    <Position
+      name="Cooldown"
+      nameClassName="bg-[rgba(179,_157,_222,_0.25)]"
+      details={
+        <>
+          {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
-              Staking {epochToDate(currentEpoch + 1n).toLocaleString()}
+              <Tokens>{cooldown}</Tokens> end{" "}
+              {epochToDate(currentEpoch + 1n).toLocaleString()}
             </div>
-          ),
-        })}
-        {...(cancelWarmupDescription !== undefined && {
-          actions: (
-            <TransferButton
-              size="small"
-              variant="secondary"
-              actionDescription={cancelWarmupDescription}
-              actionName="Cancel"
-              submitButtonText="Cancel Warmup"
-              title="Cancel Warmup"
-              max={warmup}
-              transfer={cancelWarmup}
-            />
-          ),
-        })}
-      >
-        {warmup}
-      </Position>
-      <Arrow />
-      <Position
-        name="Staked"
-        nameClassName="bg-[rgba(105,_24,_238,_0.25)]"
-        {...(unstakeDescription !== undefined && {
-          actions: (
-            <TransferButton
-              size="small"
-              variant="secondary"
-              actionDescription={unstakeDescription}
-              actionName="Unstake"
-              max={staked}
-              transfer={unstake}
-            >
-              <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
-            </TransferButton>
-          ),
-        })}
-      >
-        {staked}
-      </Position>
-      <Arrow />
-      <Position
-        name="Cooldown"
-        nameClassName="bg-[rgba(179,_157,_222,_0.25)]"
-        details={
-          <>
-            {cooldown > 0n && (
-              <div className="mt-2 text-xs text-neutral-500">
-                <Tokens>{cooldown}</Tokens> end{" "}
-                {epochToDate(currentEpoch + 1n).toLocaleString()}
-              </div>
-            )}
-            {cooldown2 > 0n && (
-              <div className="mt-2 text-xs text-neutral-500">
-                <Tokens>{cooldown2}</Tokens> end{" "}
-                {epochToDate(currentEpoch + 2n).toLocaleString()}
-              </div>
-            )}
-          </>
-        }
-      >
-        {cooldown + cooldown2}
-      </Position>
-    </div>
-    {children}
-  </section>
+          )}
+          {cooldown2 > 0n && (
+            <div className="mt-2 text-xs text-neutral-500">
+              <Tokens>{cooldown2}</Tokens> end{" "}
+              {epochToDate(currentEpoch + 2n).toLocaleString()}
+            </div>
+          )}
+        </>
+      }
+    >
+      {cooldown + cooldown2}
+    </Position>
+  </div>
 );
 
 type PositionProps = {
