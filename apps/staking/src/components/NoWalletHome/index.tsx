@@ -16,9 +16,9 @@ import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
 import governance from "./governance.png";
 import Info from "./info.svg";
+import ObtainRewards from "./obtain-rewards.svg";
 import ois from "./ois.png";
 import Safebox from "./safebox.svg";
-import SecurePyth from "./secure-pyth.svg";
 import SelectPublishers from "./select-publishers.svg";
 import TokenWarmup from "./token-warmup.svg";
 import { Button } from "../Button";
@@ -146,7 +146,7 @@ export const NoWalletHome = () => {
             {
               title: "Secure Pyth to Obtain Rewards",
               body: "The protocol programmatically distributes rewards to publishers who contributed high quality data, and then distributes remaining rewards to the stakers who supported these publishers. Rewards are generated every epoch—one week period.",
-              icon: SecurePyth,
+              icon: ObtainRewards,
             },
           ]}
         />
