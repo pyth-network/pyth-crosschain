@@ -1,0 +1,20 @@
+<svg viewBox="0 0 55 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.650391" y="1.07617" width="53.8477" height="53.8477" rx="26.9238" fill="#7731EA" fill-opacity="0.15"/>
+<rect x="0.650391" y="1.07617" width="53.8477" height="53.8477" rx="26.9238" stroke="#7731EA"/>
+<mask id="mask0_7884_2087" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="13" y="13" width="29" height="30">
+<path d="M40.9087 41.3359V14.6655H14.2383V41.3359H40.9087Z" fill="white" stroke="white" stroke-width="2"/>
+</mask>
+<g mask="url(#mask0_7884_2087)">
+<path d="M40.2286 31.6248V25.9531H14.918V41.7764H40.2286V36.1046" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M32.6504 20.8897H35.1586L40.2286 25.9531H14.918L19.9781 20.8897H23.7468" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<path d="M21.875 23.4209H33.2809" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+<mask id="mask1_7884_2087" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="13" y="13" width="29" height="30">
+<path d="M40.9087 41.3359V14.6655H14.2383V41.3359H40.9087Z" fill="white" stroke="white" stroke-width="2"/>
+</mask>
+<g mask="url(#mask1_7884_2087)">
+<path d="M27.5767 29.4969C25.1645 29.4969 23.209 31.4524 23.209 33.8647C23.209 36.2769 25.1645 38.2324 27.5767 38.2324C29.989 38.2324 31.9445 36.2769 31.9445 33.8647C31.9445 31.4524 29.989 29.4969 27.5767 29.4969Z" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.8398 33.6064L27.0684 34.835L29.3133 32.59" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28.9563 15.9973L23.2617 21.6919L24.9908 23.4209H30.0656L34.9945 18.492L30.7281 14.2255L28.9563 15.9973Z" stroke="#7731EA" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

@@ -15,8 +15,8 @@ import totalBalance from "./total-balance.png";
 import unlockedAndUnstaked from "./unlocked-and-unstaked.png";
 import warmupPeriods from "./warmup-periods.png";
 import { Guide } from "../Guide";
+import ObtainRewards from "../NoWalletHome/obtain-rewards.svg";
 import Safebox from "../NoWalletHome/safebox.svg";
-import SecurePyth from "../NoWalletHome/secure-pyth.svg";
 import SelectPublishers from "../NoWalletHome/select-publishers.svg";
 import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 
@@ -324,7 +324,7 @@ export const OracleIntegrityStakingGuide = (
       },
       {
         title: "Obtain Rewards",
-        icon: SecurePyth,
+        icon: ObtainRewards,
         description: (
           <>
             <p>

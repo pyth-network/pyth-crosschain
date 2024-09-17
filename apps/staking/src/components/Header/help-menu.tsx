@@ -37,7 +37,7 @@ export const HelpMenu = () => {
   return (
     <>
       <MenuTrigger>
-        <Button className="group -mx-2 flex flex-row items-center gap-2 p-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400">
+        <Button className="group -mx-2 flex flex-row items-center gap-2 rounded-sm px-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 pressed:bg-white/10 sm:-mx-4 sm:px-4">
           <QuestionMarkCircleIcon className="size-6 flex-none" />
           <span className="sr-only">Help</span>
           <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
