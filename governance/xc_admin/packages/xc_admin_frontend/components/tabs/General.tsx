@@ -21,6 +21,8 @@ import {
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
   getMaximumNumberOfPublishers,
+  isPriceStorePublisherInitialized,
+  createDetermisticPriceStoreInitializePublisherInstruction,
 } from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -288,6 +290,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const handleSendProposalButtonClick = async () => {
     if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
+      const publisherInitializationsVerified: PublicKey[] = []
+
       for (const symbol of Object.keys(dataChanges)) {
         const multisigAuthority = squads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
@@ -296,6 +300,30 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         const fundingAccount = isRemote
           ? mapKey(multisigAuthority)
           : multisigAuthority
+
+        const initPublisher = async (publisherKey: PublicKey) => {
+          if (
+            publisherInitializationsVerified.every(
+              (el) => !el.equals(publisherKey)
+            )
+          ) {
+            if (
+              !connection ||
+              !(await isPriceStorePublisherInitialized(
+                connection,
+                publisherKey
+              ))
+            ) {
+              instructions.push(
+                await createDetermisticPriceStoreInitializePublisherInstruction(
+                  fundingAccount,
+                  publisherKey
+                )
+              )
+            }
+            publisherInitializationsVerified.push(publisherKey)
+          }
+        }
         const { prev, new: newChanges } = dataChanges[symbol]
         // if prev is undefined, it means that the symbol is new
         if (!prev) {
@@ -377,6 +405,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 })
                 .instruction()
             )
+            await initPublisher(publisherKey)
           }
 
           // create set min publisher instruction if there are any publishers
@@ -545,6 +574,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 })
                 .instruction()
             )
+            await initPublisher(publisherKey)
           }
         }
       }

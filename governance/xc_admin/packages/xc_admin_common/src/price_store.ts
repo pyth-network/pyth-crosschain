@@ -1,5 +1,6 @@
 import {
   AccountMeta,
+  Connection,
   MAX_SEED_LENGTH,
   PublicKey,
   SystemProgram,
@@ -45,15 +46,28 @@ enum InstructionId {
   InitializePublisher = 2,
 }
 
+export function findPriceStoreConfigAddress(): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("CONFIG")],
+    PRICE_STORE_PROGRAM_ID
+  );
+}
+
+export function findPriceStorePublisherConfigAddress(
+  publisherKey: PublicKey
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("PUBLISHER_CONFIG"), publisherKey.toBuffer()],
+    PRICE_STORE_PROGRAM_ID
+  );
+}
+
 export function createPriceStoreInstruction(
   data: PriceStoreInstruction
 ): TransactionInstruction {
   switch (data.type) {
     case "Initialize": {
-      const [configKey, configBump] = PublicKey.findProgramAddressSync(
-        [Buffer.from("CONFIG")],
-        PRICE_STORE_PROGRAM_ID
-      );
+      const [configKey, configBump] = findPriceStoreConfigAddress();
       const instructionData = Buffer.concat([
         Buffer.from([InstructionId.Initialize, configBump]),
         data.data.authorityKey.toBuffer(),
@@ -82,15 +96,9 @@ export function createPriceStoreInstruction(
       });
     }
     case "InitializePublisher": {
-      const [configKey, configBump] = PublicKey.findProgramAddressSync(
-        [Buffer.from("CONFIG")],
-        PRICE_STORE_PROGRAM_ID
-      );
+      const [configKey, configBump] = findPriceStoreConfigAddress();
       const [publisherConfigKey, publisherConfigBump] =
-        PublicKey.findProgramAddressSync(
-          [Buffer.from("PUBLISHER_CONFIG"), data.data.publisherKey.toBuffer()],
-          PRICE_STORE_PROGRAM_ID
-        );
+        findPriceStorePublisherConfigAddress(data.data.publisherKey);
       const instructionData = Buffer.concat([
         Buffer.from([
           InstructionId.InitializePublisher,
@@ -271,6 +279,33 @@ export async function findDetermisticPublisherBufferAddress(
     PRICE_STORE_PROGRAM_ID
   );
   return [address, seed];
+}
+
+export async function createDetermisticPriceStoreInitializePublisherInstruction(
+  authorityKey: PublicKey,
+  publisherKey: PublicKey
+): Promise<TransactionInstruction> {
+  const bufferKey = (
+    await findDetermisticPublisherBufferAddress(publisherKey)
+  )[0];
+  return createPriceStoreInstruction({
+    type: "InitializePublisher",
+    data: {
+      authorityKey,
+      bufferKey,
+      publisherKey,
+    },
+  });
+}
+
+export async function isPriceStorePublisherInitialized(
+  connection: Connection,
+  publisherKey: PublicKey
+): Promise<boolean> {
+  const publisherConfigKey =
+    findPriceStorePublisherConfigAddress(publisherKey)[0];
+  const response = await connection.getAccountInfo(publisherConfigKey);
+  return response !== null;
 }
 
 // Recommended buffer size, enough to hold 5000 prices.
