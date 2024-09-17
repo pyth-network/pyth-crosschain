@@ -1,6 +1,7 @@
 export {
   PythSolanaReceiver,
   PythTransactionBuilder,
+  getPriceFeedAccountForProgram,
 } from "./PythSolanaReceiver";
 export {
   TransactionBuilder,
