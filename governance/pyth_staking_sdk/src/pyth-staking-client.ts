@@ -113,9 +113,8 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getAllStakeAccountPositions(
-    user: PublicKey,
-  ): Promise<PublicKey[]> {
+  public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
+    this.assertWallet();
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -134,7 +133,7 @@ export class PythStakingClient {
             {
               memcmp: {
                 offset: 8,
-                bytes: user.toBase58(),
+                bytes: this.wallet.publicKey.toBase58(),
               },
             },
           ],

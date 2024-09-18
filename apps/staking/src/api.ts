@@ -150,8 +150,7 @@ export type AccountHistory = {
 
 export const getAllStakeAccountAddresses = async (
   client: PythStakingClient,
-): Promise<PublicKey[]> =>
-  client.getAllStakeAccountPositions(client.wallet.publicKey);
+): Promise<PublicKey[]> => client.getAllStakeAccountPositions();
 
 export const getStakeAccount = async (
   client: PythStakingClient,
