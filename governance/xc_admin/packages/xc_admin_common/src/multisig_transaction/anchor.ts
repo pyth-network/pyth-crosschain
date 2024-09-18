@@ -33,7 +33,10 @@ export function resolveAccountNames(
   return { named, remaining };
 }
 
-export const IDL_SET_BUFFER_DISCRIMINATOR = Buffer.from("40f4bc78a7e9690a03");
+export const IDL_SET_BUFFER_DISCRIMINATOR = Buffer.from(
+  "40f4bc78a7e9690a03",
+  "hex"
+);
 
 async function getIdlAddress(programId: PublicKey): Promise<PublicKey> {
   const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
