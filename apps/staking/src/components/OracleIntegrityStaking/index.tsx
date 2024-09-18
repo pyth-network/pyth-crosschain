@@ -798,7 +798,8 @@ const doSort = (
     }
     case SortField.PoolUtilization: {
       const value = Number(
-        a.poolUtilization * b.poolCapacity - b.poolUtilization * a.poolCapacity,
+        (a.poolUtilization + a.poolUtilizationDelta) * b.poolCapacity -
+          (b.poolUtilization + b.poolUtilizationDelta) * a.poolCapacity,
       );
       return value === 0 ? Number(a.poolCapacity - b.poolCapacity) : value;
     }
@@ -935,9 +936,17 @@ const Publisher = ({
   const utilizationPercent = useMemo(
     () =>
       publisher.poolCapacity > 0n
-        ? Number((100n * publisher.poolUtilization) / publisher.poolCapacity)
+        ? Number(
+            (100n *
+              (publisher.poolUtilization + publisher.poolUtilizationDelta)) /
+              publisher.poolCapacity,
+          )
         : Number.NaN,
-    [publisher.poolUtilization, publisher.poolCapacity],
+    [
+      publisher.poolUtilization,
+      publisher.poolUtilizationDelta,
+      publisher.poolCapacity,
+    ],
   );
 
   return (
@@ -979,7 +988,10 @@ const Publisher = ({
                 </div>
                 <Label className="mt-1 flex flex-row items-center justify-center gap-1 text-sm">
                   <span>
-                    <Tokens>{publisher.poolUtilization}</Tokens>
+                    <Tokens>
+                      {publisher.poolUtilization +
+                        publisher.poolUtilizationDelta}
+                    </Tokens>
                   </span>
                   <span>/</span>
                   <span>
