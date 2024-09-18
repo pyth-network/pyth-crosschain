@@ -70,9 +70,13 @@ export class PythStakingClient {
     this.wallet = config.wallet;
 
     // {} as AnchorWallet is a workaround for AnchorProvider requiring a wallet
-    this.provider = new AnchorProvider(this.connection, this.wallet ?? {} as AnchorWallet, {
-      skipPreflight: true,
-    });
+    this.provider = new AnchorProvider(
+      this.connection,
+      this.wallet ?? ({} as AnchorWallet),
+      {
+        skipPreflight: true,
+      },
+    );
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
     this.integrityPoolProgram = new Program(
       IntegrityPoolIdl as IntegrityPool,
