@@ -40,7 +40,9 @@ export const ProgramSection = ({
     <div className="mx-auto flex max-w-4xl flex-col gap-2 px-2 pb-6 sm:px-6 sm:py-10">
       <div className="flex flex-row items-start gap-8">
         <div className="grow">
-          <h1 className="text-xl font-light sm:mb-2 sm:text-3xl">{name}</h1>
+          <h1 className="text-lg font-light xs:text-xl sm:mb-2 sm:text-2xl md:text-3xl">
+            {name}
+          </h1>
           <div className="text-sm opacity-60 sm:text-lg md:font-semibold md:opacity-100">
             {tagline}
           </div>
@@ -244,7 +246,7 @@ const Position = ({
 }: PositionProps) => (
   <div
     className={clsx(
-      "flex w-full flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-4 lg:max-w-64 lg:bg-pythpurple-800 lg:p-6",
+      "mx-auto flex w-full max-w-64 flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-4 md:mx-0 lg:bg-pythpurple-800 lg:p-6",
       className,
     )}
   >

@@ -45,7 +45,7 @@ export const NoWalletHome = () => {
 
   return (
     <main className="flex flex-col items-center">
-      <div className="mb-20 mt-12 flex flex-col gap-12 text-center">
+      <div className="mb-10 mt-6 flex flex-col gap-6 text-center md:mb-20 md:mt-12 md:gap-12">
         <div className="text-sm/normal tracking-[0.5rem]">
           WELCOME
           <br />

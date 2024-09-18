@@ -12,10 +12,7 @@ export const Header = ({
   className,
   ...props
 }: Omit<HTMLAttributes<HTMLElement>, "children">) => (
-  <header
-    className={clsx("sticky top-0 mb-4 w-full lg:px-4", className)}
-    {...props}
-  >
+  <header className={clsx("sticky top-0 w-full lg:px-4", className)} {...props}>
     <div className="border-b border-neutral-600/50 bg-pythpurple-800 lg:border-x">
       <MaxWidth className="flex h-header items-center justify-between gap-2 lg:-mx-4">
         <Logo className="hidden max-h-full py-4 text-pythpurple-100 sm:block" />

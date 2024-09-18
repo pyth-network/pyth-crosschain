@@ -51,12 +51,12 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
 
   return (
     <ModalDialog title={title} {...props}>
-      <div className="my-12 max-w-prose opacity-60">{description}</div>
+      <div className="mb-6 max-w-prose opacity-60 md:mb-12">{description}</div>
       <Tabs className="lg:bg-black/40">
         <div ref={scrollTarget} />
         <TabList
           items={stepsWithIndices}
-          className="top-[calc(-1_*_(2rem_+_1px))] z-10 flex flex-col bg-[#100E21] sm:top-[calc(-1_*_(4rem_+_1px))] md:sticky md:flex-row lg:flex-row"
+          className="top-[calc(-1_*_(2rem_+_1px))] z-10 flex flex-col bg-[#100E21] xs:top-[calc(-1_*_(4rem_+_1px))] sm:top-[calc(-1_*_(8rem_+_1px))] md:sticky md:flex-row lg:flex-row"
         >
           {({ title, icon: Icon, index }) => (
             <Tab
