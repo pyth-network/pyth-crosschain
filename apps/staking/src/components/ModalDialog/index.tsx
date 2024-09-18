@@ -53,14 +53,16 @@ export const ModalDialog = ({
             </Button>
             <Heading
               className={clsx("mr-10 text-3xl font-light", {
-                "mb-10": description === undefined,
+                "mb-4 md:mb-10": description === undefined,
               })}
               slot="title"
             >
               {title}
             </Heading>
             {description && (
-              <p className="mb-10 mt-2 max-w-96 opacity-60">{description}</p>
+              <p className="mb-4 mt-2 max-w-96 opacity-60 md:mb-10">
+                {description}
+              </p>
             )}
             {typeof children === "function" ? children(options) : children}
             {closeButtonText !== undefined && (

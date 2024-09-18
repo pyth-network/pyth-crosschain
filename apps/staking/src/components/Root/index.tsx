@@ -66,7 +66,9 @@ export const Root = ({ children }: Props) => (
           >
             <body className="grid min-h-dvh grid-rows-[auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60">
               <Header className="z-10" />
-              <MaxWidth className="z-0 my-4">{children}</MaxWidth>
+              <MaxWidth className="z-0 min-h-[calc(100dvh_-_var(--header-height))] py-8 sm:min-h-0">
+                {children}
+              </MaxWidth>
               <Footer className="z-10" />
             </body>
             {GOOGLE_ANALYTICS_ID && (
