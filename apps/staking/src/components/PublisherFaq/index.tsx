@@ -1,225 +1,525 @@
 import type { ComponentProps } from "react";
 
-import { Faq } from "../Faq";
+import { FaqSection } from "../Faq";
+import { Link } from "../Link";
 import { ModalDialog } from "../ModalDialog";
 
 export const PublisherFaq = (
   props: Omit<ComponentProps<typeof ModalDialog>, "title" | "children">,
 ) => (
   <ModalDialog title="Publisher FAQ" {...props}>
-    <Faq
-      className="px-2"
+    <FaqSection
+      header="Preparation"
       questions={[
         {
-          question: "Which MDPs can receive delegated stake?",
-          answer:
-            "Stakers can delegate PYTH tokens to any MDP that is permissioned on Pythnet through Oracle Integrity Staking.",
-        },
-        {
-          question: "What is my incentive to receive delegated stake?",
-          answer:
-            "Data publishers that have received delegated stake are eligible to earn 5% (delegation fee) of the rewards received by their delegators, provided they have opted-into receiving rewards by declaring their stake account.",
-        },
-        {
-          question: "How do I opt-in to receive rewards?",
+          question:
+            "Is there an Market Data Publisher (MDP) specific guide or tutorial?",
           answer: (
             <>
               <p>
-                Data publishers that have received locked tokens in the past (in
-                the context of publishing rewards like PRP) are automatically
-                opted-in with their existing stake account with the most funds
-                as their “declared stake account”.
+                For a comprehensive walkthrough of the OIS program, publishers
+                can refer to the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>
+                . It is highly recommended to read this guide first.
               </p>
               <p>
-                Data publishers that have never received locked tokens and are
-                interested to opt-in will need to get onboarded. They will be
-                opted-out by default.
+                For a guide on the OIS parameters and reward calculations,
+                publishers can refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Documentation
+                </Link>
+                .
+              </p>
+              <p>
+                For an explanation of slashing events and their conditions,
+                publishers can refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook#slashing-conditions"
+                  className="underline"
+                  target="_blank"
+                >
+                  Slashing Rulebook
+                </Link>
+                .
               </p>
             </>
           ),
         },
         {
-          question: "Where are my rewards sent?",
-          answer: "They will get sent to your declared stake account.",
+          question: "Which MDPs can participate in OIS?",
+          answer:
+            "All publishers can choose to participate in OIS. All publishers are already assigned a stake pool for OIS.",
+        },
+
+        {
+          question: "Is participation in OIS mandatory?",
+          answer:
+            "Participation in OIS as a publisher is optional and voluntary. If you choose not to participate in OIS, you do not need to perform any actions in addition to your regular publisher activities. There are no penalties for choosing not to participate in OIS.",
         },
         {
-          question: "How do I claim my rewards?",
+          question: "How do I opt in to receive OIS rewards as an MDP?",
           answer: (
             <>
               <p>
-                Rewards from self-stake will appear in the Available Rewards
-                bucket on the website.
+                Publishers that have locked tokens are{" "}
+                <strong>automatically opted-in</strong> with their existing
+                stake account with the most funds as their main stake account.
               </p>
               <p>
-                Rewards from delegated-stake will appear in the Unlocked &
-                Unstaked bucket on the website.
+                Publishers that have never received locked tokens will be
+                opted-out by default. The opt-in process for these publishers
+                will be announced later.
+              </p>
+              <p>
+                If you wish to opt out of rewards, please follow the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                and follow the <strong>Opt Out of Rewards</strong> section.
               </p>
             </>
           ),
         },
         {
-          question: "Are rewards unlocked or locked tokens?",
-          answer:
-            "OIS accepts unlocked tokens, so are the rewards paid by the program",
-        },
-        {
-          question: "When are rewards distributed?",
-          answer:
-            "Rewards are distributed at the beginning of each Pyth epoch and are calculated based on the state during and performance during the latest complete epoch",
-        },
-        {
-          question: "What is a Pyth epoch?",
-          answer:
-            "A Pyth epoch has a duration of 7 days and starts every Thursday at 00:00 UTC",
-        },
-        {
-          question: "Can I change stake account?",
+          question: "How do I opt out of receiving OIS rewards as an MDP?",
           answer: (
             <>
               <p>
-                Yes, keep in mind that to be able to change stake account both
-                the current and the new stake account may not have any
-                integrity-staked tokens. It is possible to change stake accounts
-                that have governance-staked tokens.
+                If you choose <strong>not</strong> to participate in OIS{" "}
+                <em>and</em> you need to ensure that the main stake account
+                assigned to your publisher key does <strong>not</strong> receive
+                any rewards, you must opt out of OIS rewards before Thursday,
+                October 3, 2024 (00:00 UTC).
               </p>
               <p>
-                If you want to change your declared stake account at the
-                beginning of the program, please do so before staking your
-                tokens.
+                Please follow the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                and follow the <strong>Opt Out of Rewards</strong> section.
               </p>
             </>
           ),
         },
         {
           question:
-            "Can I designate a different stake account as my associated publisher account? Thre",
+            "If I opt in to receiving OIS rewards, do I have to stake as well?",
           answer:
-            "Yes, there will be a button in the Self-Stake Section (”designate different account”) that will allow you to designate a different stake account to your associated publisher account.* Please note: You can only perform this action if you have 0 self-staked tokens in OIS.",
+            "No. You are not obligated to stake to OIS, even if you remain opted in for OIS rewards.",
         },
         {
-          question: "Can I opt-out of all rewards?",
+          question:
+            "Does opting in make me subject to both the staking rewards and slashing mechanisms?",
           answer: (
             <>
               <p>
-                Any data publisher can opt-out of all rewards at any time. If
-                you have been automatically opted-in you have until October the
-                3rd 00:00am UTC to opt-out. That’s when the first rewards will
-                start getting distributed.
+                Yes. Opting in makes you subject to OIS’ decentralized staking
+                rewards and slashing mechanisms. Programmatic rewards for
+                staking for publishers are determined by a number of stake pool
+                parameters. Programmatic slashing is capped at a 5% percentage
+                amount of the total stake within a publisher’s stake pool. The
+                Pyth DAO can vote to adjust these parameters.
               </p>
-              <p>Publishers can’t opt-out of being delegated to.</p>
               <p>
-                There will be a button (”Opt-out of rewards”) in the Self-Stake
-                Section that will allow you to opt-out of rewards. Please note:
-                You can only perform this action if you have 0 self-staked
-                tokens in OIS.
+                Please refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Documentation
+                </Link>{" "}
+                for the requirements, rules, and calculations for these
+                mechanisms.
+              </p>
+            </>
+          ),
+        },
+      ]}
+    />
+    <FaqSection
+      header="Understanding OIS"
+      questions={[
+        {
+          question: "What are the risks associated with OIS?",
+          answer: (
+            <>
+              <p>
+                OIS includes provisions for dealing with data integrity issues
+                that can amount to a slashing event.
+              </p>
+              <p>
+                Slashing is a process in which some portion of staked tokens (by
+                a publisher or by another participant) is slashed as a punitive
+                measure for a data integrity issue that the impacted publisher
+                is responsible for.
+              </p>
+              <p>
+                It is important to understand the requirements,
+                responsibilities, and implications of participating in OIS. The{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                offers a quick guide on understanding whether OIS is right for
+                you.
               </p>
             </>
           ),
         },
         {
-          question: "Why should I stake?",
-          answer:
-            "Staking as a data publisher makes you eligible to receive 100% of the available rewards. This is 20x the amount of rewards you make as only being an opted-in delegatee.",
-        },
-
-        {
           question:
-            "If I opt-in to receiving rewards, do I have to stake as well?",
-          answer: "No",
-        },
-
-        {
-          question:
-            "Are there any penalties for not participating in Oracle Integrity Staking?",
-          answer: "No",
-        },
-
-        {
-          question:
-            "What are the rewards accrued and how are they split between delegatee and delegators.",
-          answer:
-            "The rewards accrued are a function the publisher’s stake soft cap, the amount of self-stake, and the amount of delegated stake. Self-stake is prioritized with regards to rewards vs delegated staked. For more details link to docs.",
-        },
-
-        {
-          question: "How is my soft cap calculated?",
-          answer:
-            "Soft-cap is a function how many symbols you’re permissioned to publish on Pythnet. Being permissioned to a symbol with fewer publishers increases your cap more than being permissioned to a symbol with many publishers. Link to docs.",
-        },
-
-        {
-          question: "How is the yield generated?",
-          answer:
-            "The yield is currently subsidized by a grant of 100M PYTH tokens by the PDA.",
-        },
-
-        {
-          question: "How does slashing take place?",
-          answer:
-            "Slashing needs to happen in the epoch right after the epoch where the incident happens. The Pythian Council can choose to slash at any time for issues happened in the previous epoch.",
-        },
-
-        {
-          question: "How much of my stake will I lose in slashing?",
-          answer: "5% in the unlikely event of a data quality issue",
-        },
-
-        {
-          question:
-            "Is there a cooldown period for unstaking? If so, how long?",
-          answer:
-            "There is a cooldown for unstaking of 1 full epoch. This means you will have to wait for the end of the current epoch and then 1 full epoch. This is because you can’t withdraw your funds until the Pythian Council has had one epoch to review the price data during the epoch where your stake was active.",
-        },
-
-        {
-          question:
-            "Would staking affect the PRP award results at all, or is Oracle Integrity Staking considered something categorically separate from the PRP?",
-          answer: "These are separate rewards and separate programs",
-        },
-        {
-          question:
-            "How is Oracle Integrity Staking different from staking on https://staking.pyth.network/",
+            "I have previously staked in Pyth Governance (the previous program found on staking.pyth.network). Is OIS the same program?",
           answer: (
             <>
               <p>
-                Previously, staking was limited to participation in governance.
-                Now, Oracle Integrity Staking is also available. A token can be
-                staked in Oracle Integrity Staking and governance staking
-                simultaneously and the new website allows managing both types of
-                staking.
+                No. The program available on{" "}
+                <Link
+                  href="http://staking.pyth.network"
+                  className="underline"
+                  target="_blank"
+                >
+                  staking.pyth.network
+                </Link>{" "}
+                before Sep 21, 2024 is the Pyth Governance (PG) program, which
+                enables PYTH holders to participate in the governance of Pyth
+                Network in accordance with the{" "}
+                <Link
+                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
+                  className="underline"
+                  target="_blank"
+                >
+                  Pyth DAO Constitution
+                </Link>
+                .
               </p>
               <p>
-                Oracle Integrity Staking is analogous to governance staking with
-                3 main differences:
+                Oracle Integrity Staking (OIS) is a new and separate program.
+                OIS enables PYTH holders to improve the integrity of Pyth Price
+                Feeds through decentralized staking and slashing mechanisms.
               </p>
-              <ul className="mx-10 list-disc">
-                <li>Oracle Integrity Staking exposes the users to slashing</li>
-                <li>Oracle Integrity Staking is eligible for rewards</li>
-                <li>
-                  Oracle Integrity Staking doesn’t provide any voting power
-                </li>
-              </ul>
             </>
           ),
         },
         {
           question:
-            "How does delegated staking take place from a community member/retail user perspective",
+            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
           answer:
-            "Community members use the same portal to stake their tokens.",
+            "Yes. You can participate in OIS, PG, both, or neither programs. The same PYTH token can be staked simultaneously in OIS and PG in any order. To withdraw your tokens back to your wallet, the tokens must be unstaked from both OIS and PG.",
         },
 
         {
-          question:
-            "Are there any plans to make staking a mandatory requirement to publish data on Pythnet?",
-          answer: "Not right now.",
+          question: "Does participating in OIS affect my participation in PG?",
+          answer:
+            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIS does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
         },
 
         {
-          question:
-            "If I dont stake, is there any penalty possible for me as a publisher in case of misprint?",
+          question: "Does slashing reduce voting weights?",
           answer:
-            "There won’t be any direct penalty. However there are reputational risks.",
+            "If your tokens are slashed and these tokens were also staked in PG, then your voting power would be reduced insofar that the slashing event reduces the total amount of tokens that were staked in both OIS and PG.",
+        },
+        {
+          question: "Can I stake tokens if my tokens have a lockup schedule?",
+          answer: (
+            <>
+              <p>
+                You can only stake unlocked tokens in OIS, as slashing can only
+                operate on unlocked tokens. However, you can stake in Pyth
+                Governance using both locked and unlocked tokens.
+              </p>
+              <p>
+                You can use the Pyth Staking Dashboard to see your lockup
+                schedule.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "Are OIS rewards unlocked or locked tokens?",
+          answer:
+            "In its current design, OIS rewards come in the form of unlocked PYTH tokens.",
+        },
+        {
+          question: "When are OIS rewards distributed?",
+          answer: (
+            <>
+              <p>
+                OIS rewards are calculated and distributed at the beginning of
+                each new epoch and are calculated based on the state and
+                performance of the previous epoch.
+              </p>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS documentation
+                </Link>{" "}
+                for more details.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "Does OIS affect other publisher reward programs?",
+          answer:
+            "No. OIS is a separate program and set of rewards from the other publisher reward programs.",
+        },
+      ]}
+    />
+    <FaqSection
+      header="Getting Started"
+      questions={[
+        {
+          question: "Which wallet should I connect?",
+          answer: (
+            <>
+              <p>
+                While publishers can use any wallet address and stake account
+                for OIS, it is recommended that you connect the wallet that
+                holds your main stake account.
+              </p>
+              <p>
+                Your main stake account is the stake account where you last
+                received locked tokens from publishing rewards. (The latest
+                rewards were distributed in August 2024).
+              </p>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                for more details.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "How do I know if I have connected my main stake account?",
+          answer: (
+            <>
+              <p>
+                In the upper-right corner of the homepage, click your wallet
+                address and hover over <strong>Select stake account</strong>. If
+                your main stake account is connected, its address will appear
+                under the <strong>Main Account</strong> header and will be
+                highlighted.
+              </p>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                for more details.
+              </p>
+            </>
+          ),
+        },
+        {
+          question:
+            "Can I reassign a different stake account as my main stake account?",
+          answer: (
+            <>
+              <p>
+                Yes. You can reassign a different stake account as your main
+                stake account. First, connect your old main stake account. Then
+                proceed to the{" "}
+                <strong>Oracle Integrity Staking (OIS) tab</strong>. Find your{" "}
+                <strong>Self-Staking Section</strong> and click{" "}
+                <strong>Reassign Stake Account</strong>.
+              </p>
+              <p>
+                Please note that in order to reassign your{" "}
+                <strong>main stake account</strong>, both the current{" "}
+                <strong>main stake account</strong> and new stake account cannot
+                have any tokens staked in OIS.
+              </p>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                for more details.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "How do I start staking as an MDP?",
+          answer: (
+            <>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS Guide for MDPs
+                </Link>{" "}
+                for a comprehensive guide on how to use OIS.
+              </p>
+              <p>
+                You can also find a quick visual guide by proceeding to the{" "}
+                <strong>Oracle Integrity Staking (OIS) tab</strong> in the Pyth
+                Staking Dashboard homepage and clicking <strong>Help</strong>.
+              </p>
+            </>
+          ),
+        },
+      ]}
+    />
+    <FaqSection
+      header="Staking and Slashing"
+      questions={[
+        {
+          question: "How are staking rewards calculated and distributed?",
+          answer: (
+            <>
+              <p>
+                By staking tokens to your pool as a publisher, you can become
+                eligible for on-chain rewards for your published data. Rewards
+                for each stake pool are generated at the end of every epoch.
+              </p>
+              <p>
+                The OIS program first distributes rewards to publishers, with
+                any remaining rewards going to the stakers who supported those
+                publishers. Additionally, as a publisher, you earn delegation
+                fees from the rewards to your pool.
+              </p>
+              <p>
+                For a detailed breakdown, you can refer to these{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/examples"
+                  className="underline"
+                  target="_blank"
+                >
+                  reward calculation examples
+                </Link>
+                .
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "What factors affect my reward potential as an MDP?",
+          answer: (
+            <>
+              <p>
+                The total amount of rewards a stake pool generates is determined
+                by the total number of tokens staked in the pool (by both the
+                publisher and stakers).
+              </p>
+              <p>
+                The reward amount increases with the size of the total stake, up
+                to a limit called the <strong>stake cap</strong>. The stake cap
+                is a function how many symbols you are permissioned to publish
+                on Pythnet. The increase in the cap for adding a new symbol is
+                inversely proportional to the number of publishers supporting
+                it.
+              </p>
+              <p>
+                For a detailed explanation, you can refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
+                  className="underline"
+                  target="_blank"
+                >
+                  OIS documentation
+                </Link>
+                .
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "What is the source of OIS rewards?",
+          answer: (
+            <>
+              <p>
+                This initial set of OIS rewards is bootstrapped by Pyth Data
+                Association. Please refer to the{" "}
+                <Link
+                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
+                  className="underline"
+                  target="_blank"
+                >
+                  official announcemen
+                </Link>
+                t for more information.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "What triggers a slashing event?",
+          answer: (
+            <>
+              <p>
+                An on-chain protocol can report a potential data error for the
+                previous epoch. If a report is raised, the Pythian Council
+                reviews it by comparing it with the reference data. If a
+                discrepancy is confirmed, a slashing event is triggered.
+              </p>
+              <p>
+                During the same epoch, the stakes of the subset of publishers
+                involved in the error and their stakers are slashed. Slashed
+                amounts are sent to the DAO wallet for future decisions.
+              </p>
+              <p>
+                Please refer to the{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook"
+                  className="underline"
+                  target="_blank"
+                >
+                  Slashing Rulebook
+                </Link>{" "}
+                for more details.
+              </p>
+            </>
+          ),
+        },
+        {
+          question: "What is the slashing penalty rate?",
+          answer:
+            "The current slashing rate is capped at 5% of a pool’s total stake. The Pyth DAO can vote to adjust this rate.",
         },
       ]}
     />
