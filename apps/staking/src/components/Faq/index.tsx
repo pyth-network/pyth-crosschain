@@ -1,6 +1,11 @@
 import clsx from "clsx";
 import { LazyMotion, m, domAnimation } from "framer-motion";
-import { type HTMLProps, type ReactNode, useState } from "react";
+import {
+  type HTMLProps,
+  type ReactNode,
+  type ComponentProps,
+  useState,
+} from "react";
 import { Button } from "react-aria-components";
 
 type Props = Omit<HTMLProps<HTMLDivElement>, "title"> & {
@@ -68,3 +73,20 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
     </LazyMotion>
   );
 };
+
+type FaqSectionProps = Omit<HTMLProps<HTMLDivElement>, "children"> & {
+  questions: ComponentProps<typeof Faq>["questions"];
+  header: ReactNode;
+};
+
+export const FaqSection = ({
+  className,
+  header,
+  questions,
+  ...props
+}: FaqSectionProps) => (
+  <section className={clsx("mb-28 last:mb-0", className)} {...props}>
+    <h2 className="text-xl font-light sm:text-2xl">{header}</h2>
+    <Faq className="ml-4 sm:ml-10" questions={questions} />
+  </section>
+);

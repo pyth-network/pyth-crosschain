@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import { Faq } from "../Faq";
+import { FaqSection } from "../Faq";
 import { Link } from "../Link";
 import { ModalDialog } from "../ModalDialog";
 
@@ -8,59 +8,50 @@ export const GeneralFaq = (
   props: Omit<ComponentProps<typeof ModalDialog>, "title" | "children">,
 ) => (
   <ModalDialog title="FAQ" {...props}>
-    <Faq
+    <FaqSection
+      header="General"
       questions={[
         {
-          question: "What is OIS?",
+          question: "What is Oracle Integrity Staking (OIS)?",
           answer: (
             <>
               <p>
-                Oracle Integrity Staking is the process by which a PYTH token
-                holder assigns some or all of their tokens to a particular data
-                publisher in order to increase the quality of the data published
-                by such data publisher and thus increase the integrity of Pyth’s
-                price feeds. Assigning your tokens to add to a delegatee is
-                known as “delegating” your tokens.
+                The Oracle Integrity Staking (OIS) program is an upgrade to Pyth
+                Price Feeds which allows participants to support the security
+                and reliability of the Pyth price oracle.
               </p>
               <p>
-                By staking tokens with one or many data publishers, the token
-                holder indicates a degree of trust in the publisher they chose
-                to delegate to. The accumulated stake by each data publisher
-                acts as “proof” to the network that the data published is of
-                good quality. By weighing the collective votes from all
-                validators against the proportion of stake that has been
-                delegated to them, the network reaches consensus by this Proof
-                of Stake.
+                In OIS, each Pyth Network publisher is programmatically assigned
+                a stake pool. Publishers can stake tokens into those pools to
+                become eligible for programmatic rewards, which are tied to the
+                accuracy of the price data they provide.
+              </p>
+              <p>
+                When non-publishers stake tokens to a publisher’s pool, that
+                stake helps enhance publisher potential rewards, contributing to
+                the security of Price Feeds. Rewards are programmatically
+                distributed to publishers first, with the remaining rewards
+                going to stakers.
+              </p>
+              <p>
+                Learn more by visiting the <strong>Help</strong> section on the
+                OIS dashboard or by checking out the{" "}
+                <Link
+                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
+                  className="underline"
+                  target="_blank"
+                >
+                  official announcement
+                </Link>
+                .
               </p>
             </>
           ),
         },
         {
-          question: "Who can stake into OIS?",
+          question: "Who can participate in OIS?",
           answer:
-            "Anyone who holds unlocked PYTH tokens can stake their unlocked tokens through the Pyth Staking Dashboard to the Oracle Integrity Staking program and or Pyth Governance program at any time.",
-        },
-
-        {
-          question:
-            "How is Oracle Integrity Staking (OIS) different from previous/existing Pyth staking?",
-          answer: (
-            <p>
-              Existing staking program enables PYTH Token holders to participate
-              in the governance of Pyth in accordance with the{" "}
-              <Link
-                className="underline"
-                target="_blank"
-                href="https://forum.pyth.network/t/about-the-pyth-dao/14"
-              >
-                Pyth DAO Constitution
-              </Link>
-              . OIS is an additional program that enables PYTH Token holders to
-              secure the integrity of price feeds by staking directly (if you
-              are a data publisher) or through delegation of stake to one or
-              many data publishers
-            </p>
-          ),
+            "Anyone with PYTH tokens can participate in OIS and interact with its contract. Whether you are a publisher or just someone who wants to help secure the oracle network, you can stake your tokens and become part of the OIS program.",
         },
         {
           question: "What are the risks associated with OIS?",
@@ -68,71 +59,175 @@ export const GeneralFaq = (
             <>
               <p>
                 OIS includes provisions for dealing with data integrity issues
-                that can amount to a “slashing” event. Slashing is a process by
-                which some portion of staked tokens (directly by a data
-                publisher or delegated to a data publisher) is reduced from the
-                total staked amount as a punitive measure for a data integrity
-                issue that the impacted data publisher has been found to be
-                responsible for.
+                that can amount to a slashing event.
               </p>
               <p>
-                This mechanism incentivises data publishers (also acting as
-                delegatees) to provide the highest quality data and avoid
-                integrity issues, as less stake committed by and/or delegated to
-                a data publisher means that such data publisher then accrues
-                fewer rewards. Being slashed can also be seen as a reputational
-                risk for retaining current or attracting potential future stake.
-              </p>
-              <p>
-                The presence of slashing also incentivises token holders to only
-                delegate their tokens to data publishers they assess to be
-                performant, and not to delegate all their tokens to a single or
-                small number of publishers.
+                Slashing is a process in which some portion of staked tokens (by
+                a publisher or by another participant) is reduced from the total
+                staked amount as a punitive measure for a data integrity issue
+                that the impacted publisher is responsible for.
               </p>
             </>
           ),
         },
         {
-          question: "Does OIS increase voting weights?",
-          answer:
-            "No, delegated stake does NOT impact the voting weight of a delegatee. Staked tokens",
+          question:
+            "How is OIS different from the previous Pyth staking program?",
+          answer: (
+            <>
+              <p>
+                The previous staking program is the Pyth Governance (PG)
+                program, which enables PYTH holders to participate in the
+                governance of Pyth Network in accordance with the{" "}
+                <Link
+                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
+                  className="underline"
+                  target="_blank"
+                >
+                  Pyth DAO Constitution
+                </Link>
+                .
+              </p>
+              <p>
+                Oracle Integrity Staking (OIS) is a new and separate program.
+                OIS enables PYTH holders to improve the integrity of Pyth Price
+                Feeds through decentralized staking and slashing mechanisms.
+              </p>
+            </>
+          ),
         },
-
+        {
+          question:
+            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
+          answer:
+            "Yes. You can participate in OIS, PG, both, or neither programs. The same PYTH token can be staked simultaneously in OIS and PG in any order. To withdraw your tokens back to your wallet, the tokens must be unstaked from both OIS and PG.",
+        },
+        {
+          question: "Does participating in OIS affect my participation in PG?",
+          answer:
+            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIs does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
+        },
         {
           question: "Does slashing reduce voting weights?",
           answer:
-            "If token slashed were also staked for governance purposes, then the voting power is reduced when such stake is reduced by a slashing event",
+            "If your tokens are slashed and these tokens were also staked in PG, then your voting power would be reduced by the slashing event",
+        },
+        {
+          question: "Can I stake tokens if my tokens have a lockup schedule?",
+          answer: (
+            <>
+              <p>
+                You can only stake unlocked tokens in OIS, as slashing can only
+                operate on unlocked tokens. However, you can stake in Pyth
+                Governance using both locked and unlocked tokens.
+              </p>
+              <p>
+                You can use the Pyth Staking Dashboard to see your lockup
+                schedule.
+              </p>
+            </>
+          ),
+        },
+      ]}
+    />
+    <FaqSection
+      header="OIS Parameters"
+      questions={[
+        {
+          question: "Where do staking rewards come from?",
+          answer:
+            "The current reward pool is sponsored by the Pyth Data Association. In the future, the Pyth DAO can vote to decide on future sources for rewards such as, for example, oracle fees or other on-chain sources.",
+        },
+
+        {
+          question: "What is the expected rate of rewards?",
+          answer:
+            "The reward rate is a function of the rewards available in the program, the amount of PYTH that is staked in OIS, and the parameters of the OIS program. The Pyth DAO can vote to adjust these parameters.",
+        },
+
+        {
+          question: "What is the delegation fee?",
+          answer:
+            "OIS currently charges a delegation fee for publishers from participants who staked to their pool. The delegation fee is currently set universally at 20%. OIS currently does not support separate fees. The Pyth DAO can vote to change this parameter.",
+        },
+
+        {
+          question: "When do rewards begin accumulating?",
+          answer:
+            "Staked tokens which are eligible for programmatic rewards (or slashing) accumulates rewards at the end of each full epoch when the stake becomes effective (post-warmup and not subject to cooldown).",
         },
 
         {
           question:
-            "Does delegation of stake give the data publisher additional powers?",
+            "Are tokens in the Warmup Period eligible for rewards or slashing?",
           answer:
-            "No. The data publisher(s) to whom you delegate does NOT get any additional rights over the tokens delegated apart from charging delegation fees on any rewards paid by the program or contributing pro-rata to the amount slashed in the case of a slashing event. Delegation does NOT give the data publisher ownership or control over your tokens.",
+            "No. Tokens in warmup are not subject to rewards and slashing because they are not staked.",
         },
-
+        {
+          question:
+            "Are tokens in the Cooldown Period eligible for rewards or slashing?",
+          answer: (
+            <>
+              <p>
+                The Cooldown Period has two phases: from the time you click{" "}
+                <strong>Unstake</strong> until the end of the current epoch,
+                followed by a full epoch. Tokens in the first phase are subject
+                to rewards and slashing. Tokens in the second phase are not.
+              </p>
+            </>
+          ),
+        },
         {
           question: "Where can I learn about data publishers?",
           answer: (
-            <Link
-              className="underline"
-              target="_blank"
-              href="https://pyth.network/publishers"
-            >
-              https://pyth.network/publishers
-            </Link>
+            <>
+              <p>
+                You can see the full list of Pyth Network publishers{" "}
+                <Link
+                  href="https://pyth.network/publishers"
+                  className="underline"
+                  target="_blank"
+                >
+                  here
+                </Link>
+                . You can learn more about how Pyth Price Feeds work by visiting
+                the{" "}
+                <Link
+                  href="https://docs.pyth.network/price-feeds/how-pyth-works"
+                  className="underline"
+                  target="_blank"
+                >
+                  docs
+                </Link>
+                .
+              </p>
+            </>
           ),
         },
-
         {
-          question: "Can I stake tokens if my tokens have a lockup schedule?",
-          answer:
-            "You can only stake unlocked tokens through OIS, as slashing can only operate on unlocked tokens. Staking for Governance supports both locked and unlocked tokens.",
+          question: "How are publisher quality rankings calculated?",
+          answer: (
+            <>
+              <p>
+                Quality rankings are calculated based on a publisher’s price
+                deviation, uptime, and price staleness. You can learn more about
+                quality ranking calculations{" "}
+                <Link
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
+                  className="underline"
+                  target="_blank"
+                >
+                  here
+                </Link>
+                .
+              </p>
+            </>
+          ),
         },
         {
-          question: "Where are the rewards coming from?",
+          question: "Can the Pyth DAO change the parameters of OIS?",
           answer:
-            "Initially, the reward pool is sponsored by the Pyth Data Association. In the future, the reward pool will collect fees from the usage of the products and protocols that Pyth provides to DeFi",
+            "Yes. Changes to important parameters such as stake cap inputs, delegation fees, slashing amounts, and more are subject to Operational Pyth Improvement Proposals that any PYTH token holder can raise for the consideration of the Pyth DAO.",
         },
       ]}
     />
