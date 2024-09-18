@@ -629,7 +629,6 @@ export class PythStakingClient {
   }
 
   public async getClaimableRewards(stakeAccountPositions: PublicKey) {
-    this.assertWallet();
     const instructions = await this.getAdvanceDelegationRecordInstructions(
       stakeAccountPositions,
     );
@@ -638,7 +637,7 @@ export class PythStakingClient {
 
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
-      tx.feePayer = this.wallet.publicKey;
+      tx.feePayer = PublicKey.default;
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {
