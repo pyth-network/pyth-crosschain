@@ -4,7 +4,11 @@ import {
   UNRECOGNIZED_INSTRUCTION,
   UnrecognizedProgram,
 } from ".";
-import { AnchorAccounts, resolveAccountNames } from "./anchor";
+import {
+  AnchorAccounts,
+  IDL_SET_BUFFER_DISCRIMINATOR,
+  resolveAccountNames,
+} from "./anchor";
 import messageBufferIdl from "message_buffer/idl/message_buffer.json";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Idl, BorshCoder } from "@coral-xyz/anchor";
@@ -65,6 +69,23 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         break;
       default:
         return UnrecognizedProgram.fromTransactionInstruction(instruction);
+    }
+
+    /// Special case for IDL instructions that all programs have
+    if (instruction.data.equals(IDL_SET_BUFFER_DISCRIMINATOR)) {
+      return new AnchorMultisigInstruction(
+        program,
+        "IdlSetBuffer",
+        {},
+        {
+          named: {
+            buffer: instruction.keys[0],
+            idlAccount: instruction.keys[1],
+            idlAuthority: instruction.keys[2],
+          },
+          remaining: instruction.keys.slice(3),
+        }
+      );
     }
     const instructionCoder = new BorshCoder(idl).instruction;
 

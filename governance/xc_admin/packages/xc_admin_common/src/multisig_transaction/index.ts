@@ -167,6 +167,7 @@ export class MultisigParser {
   }
 }
 
+export { idlSetBuffer } from "./anchor";
 export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { AnchorMultisigInstruction } from "./MessageBufferMultisigInstruction";
