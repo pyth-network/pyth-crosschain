@@ -49,8 +49,6 @@ export const TransferButton = ({
   isDisabled,
   ...props
 }: Props) => {
-  const [closeDisabled, setCloseDisabled] = useState(false);
-
   return transfer === undefined ||
     isDisabled === true ||
     (max === 0n && !enableWithZeroMax) ? (
@@ -60,24 +58,56 @@ export const TransferButton = ({
   ) : (
     <DialogTrigger>
       <Button {...props}>{actionName}</Button>
-      <ModalDialog
+      <TransferDialog
         title={title ?? actionName}
-        closeDisabled={closeDisabled}
         description={actionDescription}
+        max={max}
+        transfer={transfer}
+        submitButtonText={submitButtonText ?? actionName}
       >
-        {({ close }) => (
-          <DialogContents
-            max={max}
-            transfer={transfer}
-            setCloseDisabled={setCloseDisabled}
-            submitButtonText={submitButtonText ?? actionName}
-            close={close}
-          >
-            {children}
-          </DialogContents>
-        )}
-      </ModalDialog>
+        {children}
+      </TransferDialog>
     </DialogTrigger>
+  );
+};
+
+type TransferDialogProps = Omit<
+  ComponentProps<typeof ModalDialog>,
+  "children"
+> & {
+  max: bigint;
+  transfer: (amount: bigint) => Promise<void>;
+  submitButtonText: ReactNode;
+  children?:
+    | ((amount: Amount) => ReactNode | ReactNode[])
+    | ReactNode
+    | ReactNode[]
+    | undefined;
+};
+
+export const TransferDialog = ({
+  max,
+  transfer,
+  submitButtonText,
+  children,
+  ...props
+}: TransferDialogProps) => {
+  const [closeDisabled, setCloseDisabled] = useState(false);
+
+  return (
+    <ModalDialog closeDisabled={closeDisabled} {...props}>
+      {({ close }) => (
+        <DialogContents
+          max={max}
+          transfer={transfer}
+          setCloseDisabled={setCloseDisabled}
+          submitButtonText={submitButtonText}
+          close={close}
+        >
+          {children}
+        </DialogContents>
+      )}
+    </ModalDialog>
   );
 };
 

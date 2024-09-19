@@ -79,10 +79,11 @@ export const OracleIntegrityStaking = ({
 }: Props) => {
   const self = useMemo(
     () =>
-      api.type === ApiStateType.Loaded &&
-      publishers.find((publisher) =>
-        publisher.stakeAccount?.equals(api.account),
-      ),
+      api.type === ApiStateType.Loaded
+        ? publishers.find((publisher) =>
+            publisher.stakeAccount?.equals(api.account),
+          )
+        : undefined,
     [publishers, api],
   );
 
@@ -130,7 +131,7 @@ export const OracleIntegrityStaking = ({
       <div
         className={clsx(
           "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 lg:mt-10",
-          { "mt-6": self === undefined },
+          { "mt-6 sm:mt-12": self === undefined },
         )}
       >
         <PublisherList
@@ -622,8 +623,10 @@ const PublisherList = ({
 
   return (
     <div className="relative w-full overflow-x-auto">
-      <div className="sticky left-0 mb-4 flex flex-col gap-4 px-4 sm:px-10 sm:pb-4 sm:pt-6 md:flex-row md:items-center md:justify-between md:gap-12">
-        <h3 className="flex-none text-2xl font-light">{title}</h3>
+      <div className="sticky left-0 mb-4 flex flex-col gap-4 px-4 sm:px-10 sm:pb-4 sm:pt-6 md:flex-row md:justify-between md:gap-12 lg:items-center">
+        <h3 className="flex-none text-2xl font-light md:mt-1 lg:mt-0">
+          {title}
+        </h3>
 
         <div className="flex flex-none grow flex-col items-end gap-2 lg:flex-row-reverse lg:items-center lg:justify-start lg:gap-10 xl:gap-16">
           <SearchField
