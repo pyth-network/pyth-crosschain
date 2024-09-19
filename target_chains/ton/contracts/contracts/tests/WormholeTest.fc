@@ -19,8 +19,9 @@
 
     int op = in_msg_body~load_uint(32);
     cell data = in_msg_body~load_ref();
+    slice data_slice = data.begin_parse();
     if (op == OP_UPDATE_GUARDIAN_SET) {
-        update_guardian_set(data.begin_parse());
+        update_guardian_set(data_slice);
     } else {
         throw(0xffff); ;; Throw exception for unknown op
     }

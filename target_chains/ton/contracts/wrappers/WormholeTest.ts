@@ -85,6 +85,7 @@ export class WormholeTest implements Contract {
       .storeRef(beginCell()) // governance_data_source, empty for initial state
       .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
       .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
+      .storeUint(0, 256) // upgrade_code_hash, set to 0 for initial state
       .endCell();
 
     // Create the main cell with references to grouped data

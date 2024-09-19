@@ -1,11 +1,5 @@
 {-
-  This test contract serves two main purposes:
-  1. It allows testing of non-getter functions in FunC without requiring specific opcodes for each function.
-  2. It provides access to internal functions through wrapper getter functions.
-
-  This approach is common in FunC development, where a separate test contract is used for unit testing.
-  It enables more comprehensive testing of the contract's functionality, including internal operations
-  that are not directly accessible through standard getter methods.
+  This test contract is an upgraded version of PythTest.fc. This is used to test the upgrade functionality of the Pyth contract.
 -}
 
 #include "../imports/stdlib.fc";
@@ -76,4 +70,9 @@
 
 (int) test_get_is_valid_data_source(cell data_source) method_id {
     return get_is_valid_data_source(data_source);
+}
+
+;; Add a new function to demonstrate the upgrade
+(int) test_new_function() method_id {
+    return 1;
 }
