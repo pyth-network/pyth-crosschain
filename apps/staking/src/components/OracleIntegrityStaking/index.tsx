@@ -804,7 +804,15 @@ const doSort = (
       return value === 0 ? Number(a.poolCapacity - b.poolCapacity) : value;
     }
     case SortField.QualityRanking: {
-      return Number(a.qualityRanking - b.qualityRanking);
+      if (a.qualityRanking === 0 && b.qualityRanking === 0) {
+        return 0;
+      } else if (a.qualityRanking === 0) {
+        return 1;
+      } else if (b.qualityRanking === 0) {
+        return -1;
+      } else {
+        return Number(a.qualityRanking - b.qualityRanking);
+      }
     }
     case SortField.SelfStake: {
       return Number(a.selfStake - b.selfStake);
@@ -1029,7 +1037,7 @@ const Publisher = ({
           {publisher.numFeeds}
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
-          {publisher.qualityRanking}
+          {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
         </PublisherTableCell>
         <PublisherTableCell
           className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
