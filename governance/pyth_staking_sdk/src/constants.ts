@@ -8,6 +8,8 @@ const ONE_WEEK_IN_SECONDS = 7n * ONE_DAY_IN_SECONDS;
 
 export const EPOCH_DURATION = ONE_WEEK_IN_SECONDS;
 
+export const MAX_VOTER_WEIGHT = 10_000_000_000_000_000; // 10 Billion with 6 decimals
+
 export const FRACTION_PRECISION = 1_000_000;
 export const FRACTION_PRECISION_N = 1_000_000n;
 

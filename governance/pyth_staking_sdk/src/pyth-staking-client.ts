@@ -21,13 +21,18 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
+import {
+  GOVERNANCE_ADDRESS,
+  MAX_VOTER_WEIGHT,
+  POSITIONS_ACCOUNT_SIZE,
+} from "./constants";
 import {
   getConfigAddress,
   getDelegationRecordAddress,
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
+  getTargetAccountAddress,
 } from "./pdas";
 import {
   PositionState,
@@ -35,6 +40,7 @@ import {
   type PoolConfig,
   type PoolDataAccount,
   type StakeAccountPositions,
+  type TargetAccount,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -709,5 +715,22 @@ export class PythStakingClient {
       stakeAccountPositions,
       undefined,
     );
+  }
+
+  public async getTargetAccount(): Promise<TargetAccount> {
+    const targetAccount =
+      await this.stakingProgram.account.targetMetadata.fetch(
+        getTargetAccountAddress(),
+      );
+    return convertBNToBigInt(targetAccount);
+  }
+
+  /**
+   * This returns the current scaling factor between staked tokens and realms voter weight.
+   * The formula is n_staked_tokens = scaling_factor * n_voter_weight
+   */
+  public async getScalingFactor(): Promise<number> {
+    const targetAccount = await this.getTargetAccount();
+    return Number(targetAccount.locked) / MAX_VOTER_WEIGHT;
   }
 }
