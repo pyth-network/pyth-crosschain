@@ -5,7 +5,7 @@ export const RegionBlocked = () => (
 );
 
 export const VpnBlocked = () => (
-  <Blocked reason="You cannot access this app via a VPN.  Please disable your VPN and try aagin." />
+  <Blocked reason="You cannot access this app via a VPN.  Please disable your VPN and try again." />
 );
 
 type Props = {
