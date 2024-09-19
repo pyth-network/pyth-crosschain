@@ -733,4 +733,27 @@ export class PythStakingClient {
     const targetAccount = await this.getTargetAccount();
     return Number(targetAccount.locked) / MAX_VOTER_WEIGHT;
   }
+
+  public async getRecoverAccountInstruction(
+    stakeAccountPositions: PublicKey,
+  ): Promise<TransactionInstruction> {
+    return this.stakingProgram.methods
+      .recoverAccount()
+      .accounts({
+        stakeAccountPositions,
+      })
+      .instruction();
+  }
+
+  public async getUpdatePoolAuthorityInstruction(
+    governanceAuthority: PublicKey,
+    poolAuthority: PublicKey,
+  ): Promise<TransactionInstruction> {
+    return this.stakingProgram.methods
+      .updatePoolAuthority(poolAuthority)
+      .accounts({
+        governanceAuthority,
+      })
+      .instruction();
+  }
 }
