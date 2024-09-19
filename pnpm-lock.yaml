@@ -890,9 +890,6 @@ importers:
       commander:
         specifier: ^9.5.0
         version: 9.5.0
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.5.1)(typescript@4.9.5)
       typescript:
         specifier: ^4.9.4
         version: 4.9.5
@@ -43648,7 +43645,7 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 20.14.15
-      ts-node: 10.9.2(@types/node@22.5.1)(typescript@4.9.5)
+      ts-node: 10.9.2(@types/node@18.19.34)(typescript@4.9.5)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
