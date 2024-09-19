@@ -178,7 +178,7 @@ fn main() -> Result<()> {
                 header:       GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&system_instruction::transfer(
                     &executor_key,
-                    &executor_key,
+                    &payer.pubkey(),
                     1,
                 ))],
             }
