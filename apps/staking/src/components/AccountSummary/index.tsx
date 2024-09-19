@@ -1,18 +1,28 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { useLocalStorageValue } from "@react-hookz/web";
 import Image from "next/image";
-import { type ComponentProps, type ReactNode, useCallback } from "react";
+import {
+  type ComponentProps,
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useState,
+} from "react";
 import {
   DialogTrigger,
+  Form,
   Button as ReactAriaButton,
 } from "react-aria-components";
 
 import background from "./background.png";
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
-import { Button } from "../Button";
+import { Button, LinkButton } from "../Button";
+import { Checkbox } from "../Checkbox";
+import { Link } from "../Link";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
-import { TransferButton } from "../TransferButton";
+import { TransferButton, TransferDialog } from "../TransferButton";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
@@ -108,13 +118,7 @@ export const AccountSummary = ({
           </>
         )}
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
-          <TransferButton
-            actionDescription="Add funds to your balance"
-            actionName="Add Tokens"
-            max={walletAmount}
-            transfer={api.deposit}
-            enableWithZeroMax
-          />
+          <AddTokensButton walletAmount={walletAmount} api={api} />
           {availableToWithdraw === 0n ? (
             <DialogTrigger>
               <Button variant="secondary" className="xl:hidden">
@@ -352,5 +356,149 @@ const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
     >
       Claim
     </Button>
+  );
+};
+
+type AddTokensButtonProps = {
+  walletAmount: bigint;
+  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+};
+
+const AddTokensButton = ({ walletAmount, api }: AddTokensButtonProps) => {
+  const hasAcknowledgedLegal = useLocalStorageValue("has-acknowledged-legal");
+  const [transferOpen, setTransferOpen] = useState(false);
+  const openTransfer = useCallback(() => {
+    setTransferOpen(true);
+  }, [setTransferOpen]);
+  const acknowledgeLegal = useCallback(() => {
+    hasAcknowledgedLegal.set("true");
+    openTransfer();
+  }, [hasAcknowledgedLegal, openTransfer]);
+
+  return (
+    <>
+      {hasAcknowledgedLegal.value ? (
+        <Button onPress={openTransfer}>Add Tokens</Button>
+      ) : (
+        <DisclosureButton onAcknowledge={acknowledgeLegal} />
+      )}
+      <TransferDialog
+        title="Add tokens"
+        description="Add funds to your balance"
+        max={walletAmount}
+        transfer={api.deposit}
+        submitButtonText="Add tokens"
+        isOpen={transferOpen}
+        onOpenChange={setTransferOpen}
+      />
+    </>
+  );
+};
+
+type DisclosureButtonProps = {
+  onAcknowledge: () => void;
+};
+
+const DisclosureButton = ({ onAcknowledge }: DisclosureButtonProps) => {
+  const [understood, setUnderstood] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [open, setOpen] = useState(false);
+  const acknowledge = useCallback(
+    (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setOpen(false);
+      setTimeout(onAcknowledge, 400);
+    },
+    [setOpen, onAcknowledge],
+  );
+
+  return (
+    <>
+      <DialogTrigger isOpen={open} onOpenChange={setOpen}>
+        <Button>Add Tokens</Button>
+        <ModalDialog title="Disclosure">
+          <Form onSubmit={acknowledge}>
+            <p className="max-w-prose text-sm opacity-60">
+              THE SERVICES WERE NOT DEVELOPED FOR, AND ARE NOT AVAILABLE TO
+              PERSONS OR ENTITIES WHO RESIDE IN, ARE LOCATED IN, ARE
+              INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR PRINCIPAL PLACE OF
+              BUSINESS IN THE UNITED STATES OF AMERICA, THE UNITED KINGDOM OR
+              CANADA (COLLECTIVELY, “BLOCKED PERSONS”). MOREOVER, THE SERVICES
+              ARE NOT OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE CITIZENS
+              OF, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED
+              OFFICE OR PRINCIPAL PLACE OF BUSINESS IN ANY RESTRICTED
+              JURISDICTION OR COUNTRY SUBJECT TO ANY SANCTIONS OR RESTRICTIONS
+              PURSUANT TO ANY APPLICABLE LAW, INCLUDING THE CRIMEA REGION, CUBA,
+              IRAN, NORTH KOREA, SYRIA, MYANMAR (BURMA, DONETSK, LUHANSK, OR ANY
+              OTHER COUNTRY TO WHICH THE UNITED STATES, THE UNITED KINGDOM, THE
+              EUROPEAN UNION OR ANY OTHER JURISDICTIONS EMBARGOES GOODS OR
+              IMPOSES SIMILAR SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES
+              (COLLECTIVELY, THE “RESTRICTED JURISDICTIONS” AND EACH A
+              “RESTRICTED JURISDICTION”) OR ANY PERSON OWNED, CONTROLLED,
+              LOCATED IN OR ORGANIZED UNDER THE LAWS OF ANY JURISDICTION UNDER
+              EMBARGO OR CONNECTED OR AFFILIATED WITH ANY SUCH PERSON
+              (COLLECTIVELY, “RESTRICTED PERSONS”). THE WEBSITE WAS NOT
+              SPECIFICALLY DEVELOPED FOR, AND IS NOT AIMED AT OR BEING ACTIVELY
+              MARKETED TO, PERSONS OR ENTITIES WHO RESIDE IN, ARE LOCATED IN,
+              ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR PRINCIPAL
+              PLACE OF BUSINESS IN THE EUROPEAN UNION. THERE ARE NO EXCEPTIONS.
+              IF YOU ARE A BLOCKED PERSON OR A RESTRICTED PERSON, THEN DO NOT
+              USE OR ATTEMPT TO USE THE SERVICES. USE OF ANY TECHNOLOGY OR
+              MECHANISM, SUCH AS A VIRTUAL PRIVATE NETWORK (“VPN”) TO CIRCUMVENT
+              THE RESTRICTIONS SET FORTH HEREIN IS PROHIBITED.
+            </p>
+            <Checkbox
+              className="my-4 block max-w-prose"
+              isSelected={understood}
+              onChange={setUnderstood}
+            >
+              I understand
+            </Checkbox>
+            <Checkbox
+              className="my-4 block max-w-prose"
+              isSelected={agreed}
+              onChange={setAgreed}
+            >
+              By checking the box and access the Services, you acknowledge and
+              agree to the terms and conditions of our{" "}
+              <Link
+                href="https://www.pyth.network/terms-of-use"
+                target="_blank"
+                className="underline"
+              >
+                Terms of Use
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="https://www.pyth.network/privacy-policy"
+                target="_blank"
+                className="underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </Checkbox>
+            <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+              <LinkButton
+                className="w-full sm:w-auto"
+                href="https://pyth.network/"
+                variant="secondary"
+                size="noshrink"
+              >
+                Exit
+              </LinkButton>
+              <Button
+                className="w-full sm:w-auto"
+                size="noshrink"
+                type="submit"
+                isDisabled={!understood || !agreed}
+              >
+                Confirm
+              </Button>
+            </div>
+          </Form>
+        </ModalDialog>
+      </DialogTrigger>
+    </>
   );
 };
