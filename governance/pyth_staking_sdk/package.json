@@ -6,9 +6,11 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/update-package-json.js",
     "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
