@@ -70,13 +70,9 @@ export class PythStakingClient {
     this.connection = config.connection;
     this.wallet = config.wallet ?? new Wallet(Keypair.generate());
 
-    this.provider = new AnchorProvider(
-      this.connection,
-      this.wallet,
-      {
-        skipPreflight: true,
-      },
-    );
+    this.provider = new AnchorProvider(this.connection, this.wallet, {
+      skipPreflight: true,
+    });
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
     this.integrityPoolProgram = new Program(
       IntegrityPoolIdl as IntegrityPool,
