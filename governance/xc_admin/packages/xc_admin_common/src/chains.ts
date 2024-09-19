@@ -83,6 +83,7 @@ export const RECEIVER_CHAINS = {
   cronos_zkevm_mainnet: 60059,
   idex_xchain_mainnet: 60060,
   apechain_mainnet: 60061,
+  flow_mainnet: 60062,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -187,6 +188,7 @@ export const RECEIVER_CHAINS = {
   flow_testnet: 50094,
   apechain_testnet: 50095,
   soneium_minato_testnet: 50096,
+  unichain_testnet: 50099,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
