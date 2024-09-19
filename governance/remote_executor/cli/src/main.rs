@@ -87,9 +87,11 @@ fn main() -> Result<()> {
             let wormhole_config_data =
                 Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
+            let guardian_set_data_offset = if cli.chain == 26 { 0 } else { 8 }; // Pythnet's guardian set account has no discriminator
             let guardian_set = GuardianSet::key(&wormhole, wormhole_config_data.guardian_set_index);
-            let guardian_set_data =
-                GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?)?;
+            let guardian_set_data = GuardianSet::try_from_slice(
+                &rpc_client.get_account_data(&guardian_set)?[guardian_set_data_offset..],
+            )?;
 
             let signature_set_keypair = Keypair::new();
 
@@ -167,9 +169,18 @@ fn main() -> Result<()> {
             let wormhole_config_data =
                 Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
+            let executor_key = Pubkey::find_program_address(
+                &[EXECUTOR_KEY_SEED.as_bytes(), &payer.pubkey().to_bytes()],
+                &ID,
+            )
+            .0;
             let payload = ExecutorPayload {
                 header:       GovernanceHeader::executor_governance_header(cli.chain),
-                instructions: vec![],
+                instructions: vec![InstructionData::from(&system_instruction::transfer(
+                    &executor_key,
+                    &executor_key,
+                    1,
+                ))],
             }
             .try_to_vec()?;
 
