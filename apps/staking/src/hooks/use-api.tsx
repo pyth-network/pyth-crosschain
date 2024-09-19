@@ -45,7 +45,7 @@ const State = {
     onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
     type: StateType.LoadedNoStakeAccount as const,
-    dashboardDataCacheKey: client.wallet?.publicKey.toBase58(),
+    dashboardDataCacheKey: client.wallet.publicKey.toBase58(),
     loadData: () => api.loadData(client, hermesClient),
     deposit: async (amount: bigint) => {
       const account = await api.createStakeAccountAndDeposit(client, amount);
