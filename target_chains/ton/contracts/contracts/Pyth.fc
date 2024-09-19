@@ -258,13 +258,13 @@ int apply_decimal_expo(int value, int expo) {
     load_data();
     int hash_code = cell_hash(new_code);
     throw_unless(ERROR_INVALID_CODE_HASH, upgrade_code_hash == hash_code);
-    
+
     ;; Set the new code
     set_code(new_code);
-    
+
     ;; Set the code continuation to the new code
     set_c3(new_code.begin_parse().bless());
-    
+
     ;; Throw an exception to end the current execution
     ;; The contract will be restarted with the new code
     throw(0);
