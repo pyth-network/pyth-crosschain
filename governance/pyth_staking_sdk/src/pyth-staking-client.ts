@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 
-import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
   PROGRAM_VERSION_V2,
@@ -15,7 +15,6 @@ import {
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
-  Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -46,6 +45,7 @@ import {
 } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
+import { DummyWallet } from "./utils/wallet";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
 import * as PublisherCapsIdl from "../idl/publisher-caps.json";
 import * as StakingIdl from "../idl/staking.json";
@@ -67,8 +67,10 @@ export class PythStakingClient {
   publisherCapsProgram: Program<PublisherCaps>;
 
   constructor(config: PythStakingClientConfig) {
-    this.connection = config.connection;
-    this.wallet = config.wallet ?? new Wallet(Keypair.generate());
+    const { connection, wallet = DummyWallet } = config;
+    
+    this.connection = connection;
+    this.wallet = wallet;
 
     this.provider = new AnchorProvider(this.connection, this.wallet, {
       skipPreflight: true,
