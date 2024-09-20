@@ -90,6 +90,9 @@ export interface components {
       status: string;
     };
     BidStatus:
+      | components["schemas"]["BidStatusEvm"]
+      | components["schemas"]["BidStatusSvm"];
+    BidStatusEvm:
       | {
           /** @enum {string} */
           type: "pending";
@@ -123,6 +126,29 @@ export interface components {
            */
           index: number;
           /** @example 0x103d4fbd777a36311b5161f2062490f761f25b67406badb2bace62bb170aa4e3 */
+          result: string;
+          /** @enum {string} */
+          type: "won";
+        };
+    BidStatusSvm:
+      | {
+          /** @enum {string} */
+          type: "pending";
+        }
+      | {
+          /** @example Jb2urXPyEh4xiBgzYvwEFe4q1iMxG1DNxWGGQg94AmKgqFTwLAiTiHrYiYxwHUB4DV8u5ahNEVtMMDm3sNSRdTg */
+          result: string;
+          /** @enum {string} */
+          type: "submitted";
+        }
+      | {
+          /** @example Jb2urXPyEh4xiBgzYvwEFe4q1iMxG1DNxWGGQg94AmKgqFTwLAiTiHrYiYxwHUB4DV8u5ahNEVtMMDm3sNSRdTg */
+          result?: string | null;
+          /** @enum {string} */
+          type: "lost";
+        }
+      | {
+          /** @example Jb2urXPyEh4xiBgzYvwEFe4q1iMxG1DNxWGGQg94AmKgqFTwLAiTiHrYiYxwHUB4DV8u5ahNEVtMMDm3sNSRdTg */
           result: string;
           /** @enum {string} */
           type: "won";
@@ -295,8 +321,11 @@ export interface components {
           /** @enum {string} */
           type: "bid_status_update";
         };
-    /** BidResponse */
-    SimulatedBid: {
+    SimulatedBid:
+      | components["schemas"]["SimulatedBidEvm"]
+      | components["schemas"]["SimulatedBidSvm"];
+    /** BidResponseEvm */
+    SimulatedBidEvm: {
       /**
        * @description Amount of bid in wei.
        * @example 10
@@ -307,11 +336,6 @@ export interface components {
        * @example op_sepolia
        */
       chain_id: string;
-      /**
-       * @description The gas limit for the contract call.
-       * @example 2000000
-       */
-      gas_limit: string;
       /**
        * @description The unique id for bid.
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
@@ -333,6 +357,12 @@ export interface components {
        */
       profile_id: string;
       status: components["schemas"]["BidStatus"];
+    } & {
+      /**
+       * @description The gas limit for the contract call.
+       * @example 2000000
+       */
+      gas_limit: string;
       /**
        * @description Calldata for the contract call.
        * @example 0xdeadbeef
@@ -343,6 +373,46 @@ export interface components {
        * @example 0xcA11bde05977b3631167028862bE2a173976CA11
        */
       target_contract: string;
+    };
+    /** BidResponseSvm */
+    SimulatedBidSvm: {
+      /**
+       * @description Amount of bid in wei.
+       * @example 10
+       */
+      bid_amount: string;
+      /**
+       * @description The chain id for bid.
+       * @example op_sepolia
+       */
+      chain_id: string;
+      /**
+       * @description The unique id for bid.
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
+       */
+      id: string;
+      /**
+       * @description The time server received the bid formatted in rfc3339.
+       * @example 2024-05-23T21:26:57.329954Z
+       */
+      initiation_time: string;
+      /**
+       * @description The permission key for bid.
+       * @example 0xdeadbeef
+       */
+      permission_key: string;
+      /**
+       * @description The profile id for the bid owner.
+       * @example
+       */
+      profile_id: string;
+      status: components["schemas"]["BidStatus"];
+    } & {
+      /**
+       * @description The transaction of the bid.
+       * @example SGVsbG8sIFdvcmxkIQ==
+       */
+      transaction: string;
     };
     /** BidsResponse */
     SimulatedBids: {

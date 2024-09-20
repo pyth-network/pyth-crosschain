@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest src/ --passWithNoTests",
-    "simple-searcher": "pnpm run build && node lib/examples/simpleSearcher.js",
+    "simple-searcher-evm": "pnpm run build && node lib/examples/simpleSearcherEvm.js",
     "simple-searcher-svm": "pnpm run build && node lib/examples/simpleSearcherSvm.js",
     "simple-searcher-limo": "pnpm run build && node lib/examples/simpleSearcherLimo.js",
     "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/serverTypes.d.ts",
