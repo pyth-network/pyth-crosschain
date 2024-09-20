@@ -68,7 +68,7 @@ export class PythStakingClient {
 
   constructor(config: PythStakingClientConfig) {
     const { connection, wallet = DummyWallet } = config;
-    
+
     this.connection = connection;
     this.wallet = wallet;
 

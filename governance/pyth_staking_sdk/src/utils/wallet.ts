@@ -1,6 +1,5 @@
-import type { AnchorWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 
 export const DummyWallet: AnchorWallet = {
   publicKey: PublicKey.default,
