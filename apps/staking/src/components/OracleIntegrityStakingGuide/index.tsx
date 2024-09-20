@@ -409,12 +409,12 @@ export const OracleIntegrityStakingGuide = (
                 </p>
                 <p>
                   The Pyth DAO sets a maximum reward rate for stake pools,
-                  currently set at 9%. This rate is achieved for a pool when the
+                  currently set at 10%. This rate is achieved for a pool when the
                   total stake is below the stake cap. If the stake cap is
                   exceeded, the reward rate for stakers is reduced.
                 </p>
                 <p>
-                  Publishers charge a fixed percentage (5%) of the rewards from
+                  Publishers charge a fixed percentage (20%) of the rewards from
                   stakers in their stake pool as a delegation fee (net of any
                   slashed amount). The Pyth DAO can vote to adjust this fee
                   structure. Learn more about staking rewards in the
