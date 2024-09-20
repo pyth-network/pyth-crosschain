@@ -715,15 +715,11 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     governanceAuthority: PublicKey,
   ): Promise<TransactionInstruction> {
-    const stakeAccountPositionsData = await this.getStakeAccountPositions(
-      stakeAccountPositions,
-    );
     return this.stakingProgram.methods
       .recoverAccount()
       .accountsPartial({
         stakeAccountPositions,
         governanceAuthority,
-        owner: stakeAccountPositionsData.data.owner,
       })
       .instruction();
   }
