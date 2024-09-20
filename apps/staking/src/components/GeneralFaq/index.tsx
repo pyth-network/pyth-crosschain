@@ -105,7 +105,7 @@ export const GeneralFaq = (
         {
           question: "Does participating in OIS affect my participation in PG?",
           answer:
-            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIs does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
+            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIS does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
         },
         {
           question: "Does slashing reduce voting weights?",
