@@ -409,8 +409,8 @@ export const OracleIntegrityStakingGuide = (
                 </p>
                 <p>
                   The Pyth DAO sets a maximum reward rate for stake pools,
-                  currently set at 10%. This rate is achieved for a pool when the
-                  total stake is below the stake cap. If the stake cap is
+                  currently set at 10%. This rate is achieved for a pool when
+                  the total stake is below the stake cap. If the stake cap is
                   exceeded, the reward rate for stakers is reduced.
                 </p>
                 <p>
@@ -436,7 +436,7 @@ export const OracleIntegrityStakingGuide = (
                   penalized.
                 </p>
                 <p>
-                  The current slashing rate is capped at 10% of publisher and
+                  The current slashing rate is capped at 5% of publisher and
                   delegated stakes, and this rate can be adjusted by the Pyth
                   DAO. The slashed amounts are sent to the DAO wallet. The Pyth
                   DAO can choose to vote on future decisions for these slashed
@@ -508,7 +508,7 @@ export const OracleIntegrityStakingGuide = (
               answer: (
                 <>
                   <p>
-                    In the first phase of the <strong>Cooldown Period</strong>
+                    In the first phase of the <strong>Cooldown Period</strong>{" "}
                     an on-chain protocol consuming Pyth data can choose to raise
                     a report for a plausible data misprint. The Pythian Council
                     of the Pyth DAO will then review the reference data provided
