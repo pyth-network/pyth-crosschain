@@ -37,8 +37,7 @@ export const WALLETCONNECT_PROJECT_ID = demandInProduction(
 export const RPC = process.env.RPC;
 export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
 export const HERMES_URL =
-  process.env.HERMES_URL ??
-  "https://hermes.pyth.network";
+  process.env.HERMES_URL ?? "https://hermes.pyth.network";
 export const BLOCKED_REGIONS =
   process.env.BLOCKED_REGIONS === undefined ||
   process.env.BLOCKED_REGIONS === ""
