@@ -171,8 +171,10 @@ export const GeneralFaq = (
               <p>
                 The Cooldown Period has two phases: from the time you click{" "}
                 <strong>Unstake</strong> until the end of the current epoch,
-                followed by a full epoch. Tokens in the first phase are subject
-                to rewards and slashing. Tokens in the second phase are not.
+                followed by a full epoch. Tokens in the first phase are eligible
+                for rewards. Tokens in both phases are subject to slashing if an
+                issue is identified in an epoch in which they were eligible for
+                rewards.
               </p>
             </>
           ),

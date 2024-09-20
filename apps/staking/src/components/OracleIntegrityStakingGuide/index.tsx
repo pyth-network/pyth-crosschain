@@ -516,8 +516,8 @@ export const OracleIntegrityStakingGuide = (
                     occur. The council will have until the end of the epoch
                     after the epoch of the reported incident to review the
                     report. The tokens subject to slashing are the tokens
-                    eligible for rewards during the epoch of the misprint
-                    incident.
+                    eligible for rewards{" "}
+                    <i>during the epoch of the misprint incident</i>.
                   </p>
                   <p>
                     In the unlikely event that a published aggregate has been
@@ -525,8 +525,8 @@ export const OracleIntegrityStakingGuide = (
                     triggered. The stakes of the subset of publishers who
                     contributed to this incorrect aggregate are programmatically
                     slashed, along with the stakes of anyone who delegated
-                    tokens towards them. Such slashing event occurs during this
-                    same epoch.
+                    tokens towards them. Such slashing event occurs during the
+                    epoch after the epoch of the reported incident.
                   </p>
                   <p>
                     The slashed amounts are sent to the Pyth DAO’s wallet. The
