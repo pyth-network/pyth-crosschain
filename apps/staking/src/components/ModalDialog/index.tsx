@@ -40,7 +40,7 @@ export const ModalDialog = ({
     {...props}
   >
     <Modal className="pointer-events-none grid min-h-full place-content-center data-[entering]:duration-500 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:zoom-in-90 data-[exiting]:zoom-out-110">
-      <Dialog className="pointer-events-auto relative max-w-full border border-neutral-600/50 bg-[#100E21] px-4 pb-6 pt-12 focus:outline-none sm:px-10 sm:pb-12">
+      <Dialog className="pointer-events-auto relative max-w-full border border-neutral-600/50 bg-[#100E21] px-4 py-6 pt-12 focus:outline-none sm:px-10 sm:pb-12">
         {(options) => (
           <>
             <Button
