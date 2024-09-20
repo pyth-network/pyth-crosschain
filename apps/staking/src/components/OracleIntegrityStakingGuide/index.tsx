@@ -238,22 +238,17 @@ export const OracleIntegrityStakingGuide = (
         description: (
           <>
             <p>
-              Navigate to the Oracle Integrity Staking tab to begin staking your
-              tokens to publishers to help secure Pyth Price Feeds.
+              Once you confirm your choice to stake to a publisher, your tokens
+              will first enter a Warmup Period, which lasts until the end of the
+              current epoch. An epoch is a one-week period starting every
+              Thursday at 00:00 UTC.
             </p>
 
             <p>
-              Each publisher is assigned a stake pool that typically includes
-              the publisher’s self-stake and delegated stakes from other
-              participants. The rewards distribution protocol programmatically
-              shares rewards first to publishers, and then to stakers supporting
-              them.
-            </p>
-
-            <p>
-              You can sort publishers by their stake pool details, quality
-              ranking, and more. Once you have chosen a publisher, click Stake
-              and specify the number of tokens you wish to stake to their pool.
+              Tokens in the Warmup Period do not contribute to oracle security
+              and are not eligible for sharing in publisher rewards or
+              penalties. Once the Warmup Period ends, these tokens become staked
+              and will play an active role in strengthening oracle integrity.
             </p>
           </>
         ),
