@@ -127,6 +127,11 @@ export const OracleIntegrityStakingGuide = (
           title: "Adding Tokens FAQ",
           questions: [
             {
+              question: "Why do I need to add my tokens?",
+              answer:
+                "Adding tokens to the Pyth Staking Dashboard transfers them to your SPL wallet’s staking account. Your tokens will remain under your control on-chain through the Pyth Staking Dashboard.",
+            },
+            {
               question: "Where are my added tokens stored?",
               answer:
                 "Added tokens are stored on the Pyth Staking contract, which resides on-chain. The contract code is open source and the upgrade authority is governed by the Pyth DAO. No centralized party holds your tokens or controls the smart contract code.",
