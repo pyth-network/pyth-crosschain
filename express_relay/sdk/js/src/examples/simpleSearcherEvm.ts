@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { checkHex, Client } from "../index";
+import { BidStatusUpdateEvm, checkHex, Client } from "../index";
 import { privateKeyToAccount } from "viem/accounts";
 import { isHex } from "viem";
 import { BidStatusUpdate, Opportunity } from "../types";
@@ -8,7 +8,7 @@ import { OPPORTUNITY_ADAPTER_CONFIGS } from "../const";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
-class SimpleSearcher {
+class SimpleSearcherEvm {
   private client: Client;
   constructor(
     public endpoint: string,
@@ -27,7 +27,8 @@ class SimpleSearcher {
     );
   }
 
-  async bidStatusHandler(bidStatus: BidStatusUpdate) {
+  async bidStatusHandler(_bidStatus: BidStatusUpdate) {
+    const bidStatus = _bidStatus as BidStatusUpdateEvm;
     let resultDetails = "";
     if (bidStatus.type == "submitted" || bidStatus.type == "won") {
       resultDetails = `, transaction ${bidStatus.result}, index ${bidStatus.index} of multicall`;
@@ -40,10 +41,7 @@ class SimpleSearcher {
       }
     }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.type.replaceAll(
-        "_",
-        " "
-      )}${resultDetails}`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
     );
   }
 
@@ -127,7 +125,7 @@ async function run() {
   } else {
     throw new Error(`Invalid private key: ${argv.privateKey}`);
   }
-  const searcher = new SimpleSearcher(
+  const searcher = new SimpleSearcherEvm(
     argv.endpoint,
     argv.chainId,
     argv.privateKey,
