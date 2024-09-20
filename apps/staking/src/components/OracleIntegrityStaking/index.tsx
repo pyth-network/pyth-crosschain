@@ -4,6 +4,8 @@ import {
   MagnifyingGlassIcon,
   Bars3Icon,
   ChevronDownIcon,
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
 } from "@heroicons/react/24/outline";
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
@@ -12,6 +14,7 @@ import {
   useMemo,
   useCallback,
   useState,
+  useRef,
   type ComponentProps,
   type Dispatch,
   type SetStateAction,
@@ -29,6 +32,10 @@ import {
   Form,
   Switch,
   MenuTrigger,
+  Select,
+  Popover,
+  ListBox,
+  ListBoxItem,
 } from "react-aria-components";
 
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
@@ -183,10 +190,14 @@ const SelfStaking = ({
     <>
       <div className="relative -mx-4 mt-6 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 sm:mt-10">
         <div className="relative w-full overflow-x-auto">
-          <div className="sticky left-0 mb-4 flex flex-row items-center justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6">
+          <div className="sticky left-0 mb-4 flex flex-row items-start justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6 lg:items-center">
             <div>
               <h3 className="text-2xl font-light">Self Staking</h3>
-              <PublisherName fullKey className="opacity-60">
+              <PublisherName
+                truncatedClassName="2xl:hidden"
+                fullClassName="hidden 2xl:inline"
+                className="opacity-60"
+              >
                 {self}
               </PublisherName>
             </div>
@@ -257,7 +268,20 @@ const SelfStaking = ({
             </div>
           </div>
 
-          <table className="mx-auto border border-neutral-600/50 text-sm">
+          <div className="border-neutral-600/50 bg-pythpurple-400/10 sm:mx-12 sm:mb-4 sm:border sm:border-t-0 md:mx-20 xl:hidden">
+            <Publisher
+              api={api}
+              currentEpoch={currentEpoch}
+              availableToStake={availableToStake}
+              publisher={self}
+              totalStaked={self.positions?.staked ?? 0n}
+              yieldRate={yieldRate}
+              isSelf
+              compact
+            />
+          </div>
+
+          <table className="mx-auto hidden border border-neutral-600/50 text-sm xl:table">
             <thead className="bg-pythpurple-400/30 font-light">
               <tr>
                 <PublisherTableHeader>Pool</PublisherTableHeader>
@@ -555,6 +579,7 @@ const PublisherList = ({
   totalStaked,
   yieldRate,
 }: PublisherListProps) => {
+  const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
   const [sort, setSort] = useState({
@@ -605,35 +630,57 @@ const PublisherList = ({
     [filteredSortedPublishers, currentPage],
   );
 
+  const updatePage = useCallback<typeof setPage>(
+    (newPage) => {
+      if (scrollTarget.current) {
+        scrollTarget.current.scrollIntoView({ behavior: "smooth" });
+      }
+      setPage(newPage);
+    },
+    [setPage],
+  );
+
   const updateSearch = useCallback<typeof setSearch>(
     (newSearch) => {
       setSearch(newSearch);
-      setPage(0);
+      updatePage(0);
     },
-    [setSearch, setPage],
+    [setSearch, updatePage],
   );
 
   const updateSort = useCallback<typeof setSort>(
     (newSort) => {
       setSort(newSort);
-      setPage(0);
+      updatePage(0);
     },
-    [setSort, setPage],
+    [setSort, updatePage],
+  );
+
+  const updateYoursFirst = useCallback<typeof setYoursFirst>(
+    (newYoursFirst) => {
+      setYoursFirst(newYoursFirst);
+      updatePage(0);
+    },
+    [setYoursFirst, updatePage],
+  );
+
+  const numPages = useMemo(
+    () => Math.floor(filteredSortedPublishers.length / PAGE_SIZE),
+    [filteredSortedPublishers],
   );
 
   return (
     <div className="relative w-full overflow-x-auto">
-      <div className="sticky left-0 mb-4 flex flex-col gap-4 px-4 sm:px-10 sm:pb-4 sm:pt-6 md:flex-row md:justify-between md:gap-12 lg:items-center">
-        <h3 className="flex-none text-2xl font-light md:mt-1 lg:mt-0">
-          {title}
-        </h3>
+      <div ref={scrollTarget} />
+      <div className="sticky left-0 mb-4 flex flex-col gap-4 px-4 sm:px-10 sm:pb-4 sm:pt-6 md:flex-row md:justify-between md:gap-12 lg:items-start">
+        <h3 className="flex-none text-2xl font-light md:mt-1">{title}</h3>
 
-        <div className="flex flex-none grow flex-col items-end gap-2 lg:flex-row-reverse lg:items-center lg:justify-start lg:gap-10 xl:gap-16">
+        <div className="flex flex-none grow flex-col items-end gap-2 xl:flex-row-reverse xl:items-center xl:justify-start xl:gap-8 2xl:gap-16">
           <SearchField
             value={search}
             onChange={updateSearch}
             aria-label="Search"
-            className="group relative w-full md:max-w-96"
+            className="group relative w-full md:max-w-96 xl:max-w-64 2xl:max-w-96"
           >
             <Input
               className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
@@ -648,9 +695,50 @@ const PublisherList = ({
               </BaseButton>
             </div>
           </SearchField>
+          <Select
+            className="flex flex-row items-center gap-2 2xl:hidden"
+            selectedKey={sort.field}
+            onSelectionChange={(field) => {
+              updateSort({
+                field: field as SortField,
+                descending:
+                  field === SortField.NumberOfFeeds ||
+                  field === SortField.APY ||
+                  field === SortField.SelfStake,
+              });
+            }}
+          >
+            <Label className="whitespace-nowrap opacity-80">Sort by</Label>
+            <Button className="group flex flex-row items-center gap-2 text-xs transition">
+              {SORT_FIELD_TO_NAME[sort.field]}
+              <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
+            </Button>
+            <Popover
+              placement="bottom end"
+              className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
+            >
+              <ListBox
+                className="flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none"
+                items={[
+                  { id: SortField.PublisherName },
+                  { id: SortField.PoolUtilization },
+                  { id: SortField.APY },
+                  { id: SortField.SelfStake },
+                  { id: SortField.NumberOfFeeds },
+                  { id: SortField.QualityRanking },
+                ]}
+              >
+                {({ id }) => (
+                  <ListBoxItem className="flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none">
+                    {SORT_FIELD_TO_NAME[id]}
+                  </ListBoxItem>
+                )}
+              </ListBox>
+            </Popover>
+          </Select>
           <Switch
             isSelected={yoursFirst}
-            onChange={setYoursFirst}
+            onChange={updateYoursFirst}
             className="group flex cursor-pointer flex-row items-center gap-2"
           >
             <div className="whitespace-nowrap opacity-80">
@@ -664,106 +752,184 @@ const PublisherList = ({
       </div>
 
       {filteredSortedPublishers.length > 0 ? (
-        <table className="min-w-full text-sm">
-          <thead className="bg-pythpurple-100/30 font-light">
-            <tr>
-              <SortablePublisherTableHeader
-                field={SortField.PublisherName}
-                sort={sort}
-                setSort={updateSort}
-                alignment="left"
-                className="pl-4 sm:pl-10"
-              >
-                Publisher
-              </SortablePublisherTableHeader>
-              <SortablePublisherTableHeader
-                field={SortField.SelfStake}
-                sort={sort}
-                setSort={updateSort}
-              >
-                {"Publisher's stake"}
-              </SortablePublisherTableHeader>
-              <SortablePublisherTableHeader
-                field={SortField.PoolUtilization}
-                sort={sort}
-                setSort={updateSort}
-              >
-                Pool
-              </SortablePublisherTableHeader>
-              <SortablePublisherTableHeader
-                field={SortField.APY}
-                sort={sort}
-                setSort={updateSort}
-              >
-                Estimated next APY
-              </SortablePublisherTableHeader>
-              <PublisherTableHeader>Historical APY</PublisherTableHeader>
-              <SortablePublisherTableHeader
-                field={SortField.NumberOfFeeds}
-                sort={sort}
-                setSort={updateSort}
-              >
-                Number of feeds
-              </SortablePublisherTableHeader>
-              <SortablePublisherTableHeader
-                field={SortField.QualityRanking}
-                sort={sort}
-                setSort={updateSort}
-              >
-                Quality ranking
-              </SortablePublisherTableHeader>
-              <PublisherTableHeader className="pr-4 sm:pr-10" />
-            </tr>
-          </thead>
-
-          <tbody className="bg-white/5">
+        <>
+          <ul className="bg-white/5 2xl:hidden">
             {paginatedPublishers.map((publisher) => (
-              <Publisher
-                api={api}
-                currentEpoch={currentEpoch}
-                key={publisher.publicKey.toBase58()}
-                availableToStake={availableToStake}
-                publisher={publisher}
-                totalStaked={totalStaked}
-                yieldRate={yieldRate}
-              />
+              <li key={publisher.publicKey.toBase58()}>
+                <Publisher
+                  api={api}
+                  currentEpoch={currentEpoch}
+                  availableToStake={availableToStake}
+                  publisher={publisher}
+                  totalStaked={totalStaked}
+                  yieldRate={yieldRate}
+                  compact
+                />
+              </li>
             ))}
-          </tbody>
-        </table>
+          </ul>
+          <table className="hidden min-w-full text-sm 2xl:table">
+            <thead className="bg-pythpurple-100/30 font-light">
+              <tr>
+                <SortablePublisherTableHeader
+                  field={SortField.PublisherName}
+                  sort={sort}
+                  setSort={updateSort}
+                  alignment="left"
+                  className="pl-4 sm:pl-10"
+                >
+                  Publisher
+                </SortablePublisherTableHeader>
+                <SortablePublisherTableHeader
+                  field={SortField.SelfStake}
+                  sort={sort}
+                  setSort={updateSort}
+                >
+                  {"Publisher's stake"}
+                </SortablePublisherTableHeader>
+                <SortablePublisherTableHeader
+                  field={SortField.PoolUtilization}
+                  sort={sort}
+                  setSort={updateSort}
+                >
+                  Pool
+                </SortablePublisherTableHeader>
+                <SortablePublisherTableHeader
+                  field={SortField.APY}
+                  sort={sort}
+                  setSort={updateSort}
+                >
+                  Estimated next APY
+                </SortablePublisherTableHeader>
+                <PublisherTableHeader>Historical APY</PublisherTableHeader>
+                <SortablePublisherTableHeader
+                  field={SortField.NumberOfFeeds}
+                  sort={sort}
+                  setSort={updateSort}
+                >
+                  Number of feeds
+                </SortablePublisherTableHeader>
+                <SortablePublisherTableHeader
+                  field={SortField.QualityRanking}
+                  sort={sort}
+                  setSort={updateSort}
+                >
+                  Quality ranking
+                </SortablePublisherTableHeader>
+                <PublisherTableHeader className="pr-4 sm:pr-10" />
+              </tr>
+            </thead>
+
+            <tbody className="bg-white/5">
+              {paginatedPublishers.map((publisher) => (
+                <Publisher
+                  api={api}
+                  currentEpoch={currentEpoch}
+                  key={publisher.publicKey.toBase58()}
+                  availableToStake={availableToStake}
+                  publisher={publisher}
+                  totalStaked={totalStaked}
+                  yieldRate={yieldRate}
+                />
+              ))}
+            </tbody>
+          </table>
+        </>
       ) : (
         <p className="my-20 text-center text-lg opacity-80">
           No results match your query
         </p>
       )}
 
-      {filteredSortedPublishers.length > PAGE_SIZE && (
-        <div className="sticky inset-x-0 flex flex-row items-center justify-end gap-2 border-t border-neutral-600/50 p-4">
-          {range(Math.ceil(filteredSortedPublishers.length / PAGE_SIZE)).map(
-            (page) =>
-              page === currentPage ? (
-                <span
-                  key={page}
-                  className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600"
-                >
-                  {page + 1}
-                </span>
-              ) : (
-                <Button
-                  key={page}
-                  onPress={() => {
-                    setPage(page);
-                  }}
-                  size="nopad"
-                  className="grid size-8 place-content-center"
-                >
-                  {page + 1}
-                </Button>
-              ),
-          )}
-        </div>
+      {numPages > 1 && (
+        <Paginator
+          currentPage={currentPage}
+          numPages={numPages}
+          onPageChange={updatePage}
+        />
       )}
     </div>
   );
+};
+
+type PaginatorProps = {
+  currentPage: number;
+  numPages: number;
+  onPageChange: (newPage: number) => void;
+};
+
+const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
+  const { first, count } = getPageRange(currentPage, numPages);
+  const pages = Array.from({ length: count })
+    .fill(undefined)
+    .map((_, i) => i + first);
+
+  return (
+    <ul className="sticky inset-x-0 flex flex-row items-center justify-end gap-2 border-t border-neutral-600/50 p-4">
+      {currentPage > 1 && (
+        <li>
+          <Button
+            onPress={() => {
+              onPageChange(1);
+            }}
+            size="nopad"
+            variant="secondary"
+            className="grid size-8 place-content-center"
+          >
+            <ChevronDoubleLeftIcon className="size-4" />
+          </Button>
+        </li>
+      )}
+      {pages.map((page) =>
+        page === currentPage ? (
+          <li
+            key={page}
+            className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600"
+          >
+            {page}
+          </li>
+        ) : (
+          <li key={page}>
+            <Button
+              key={page}
+              onPress={() => {
+                onPageChange(page);
+              }}
+              size="nopad"
+              className="grid size-8 place-content-center"
+            >
+              {page}
+            </Button>
+          </li>
+        ),
+      )}
+      {currentPage < numPages && (
+        <li>
+          <Button
+            onPress={() => {
+              onPageChange(numPages);
+            }}
+            size="nopad"
+            variant="secondary"
+            className="grid size-8 place-content-center"
+          >
+            <ChevronDoubleRightIcon className="size-4" />
+          </Button>
+        </li>
+      )}
+    </ul>
+  );
+};
+
+const getPageRange = (
+  page: number,
+  numPages: number,
+): { first: number; count: number } => {
+  const first =
+    page <= 3 || numPages <= 5
+      ? 1
+      : page - 2 - Math.max(2 - (numPages - page), 0);
+  return { first, count: Math.min(numPages - first + 1, 5) };
 };
 
 const doSort = (
@@ -823,8 +989,6 @@ const doSort = (
   }
 };
 
-const range = (length: number) => [...Array.from({ length }).keys()];
-
 type SortablePublisherTableHeaderProps = Omit<
   ComponentProps<typeof BaseButton>,
   "children"
@@ -875,7 +1039,7 @@ const SortablePublisherTableHeader = ({
 
 const PublisherTableHeader = Styled(
   "th",
-  "py-2 font-normal px-5 whitespace-nowrap",
+  "py-2 font-normal px-5 h-full whitespace-nowrap",
 );
 
 type PublisherProps = {
@@ -906,6 +1070,7 @@ type PublisherProps = {
       | undefined;
   };
   yieldRate: bigint;
+  compact?: boolean | undefined;
 };
 
 const Publisher = ({
@@ -916,6 +1081,7 @@ const Publisher = ({
   totalStaked,
   isSelf,
   yieldRate,
+  compact,
 }: PublisherProps) => {
   const warmup = useMemo(
     () =>
@@ -944,29 +1110,115 @@ const Publisher = ({
     api.type === ApiStateType.Loaded ? api.unstakeIntegrityStaking : undefined,
     publisher.publicKey,
   );
-  const utilizationPercent = useMemo(
+
+  const estimatedNextApy = useMemo(
     () =>
-      publisher.poolCapacity > 0n
-        ? Number(
-            (100n *
-              (publisher.poolUtilization + publisher.poolUtilizationDelta)) /
-              publisher.poolCapacity,
-          )
-        : Number.NaN,
+      calculateApy({
+        isSelf: isSelf ?? false,
+        selfStake: publisher.selfStake + publisher.selfStakeDelta,
+        poolCapacity: publisher.poolCapacity,
+        poolUtilization:
+          publisher.poolUtilization + publisher.poolUtilizationDelta,
+        yieldRate,
+      }).toFixed(2),
     [
+      isSelf,
+      publisher.selfStake,
+      publisher.selfStakeDelta,
+      publisher.poolCapacity,
       publisher.poolUtilization,
       publisher.poolUtilizationDelta,
-      publisher.poolCapacity,
+      yieldRate,
     ],
   );
 
-  return (
+  return compact ? (
+    <div className="border-t border-neutral-600/50 p-4 sm:px-10">
+      {!isSelf && (
+        <div className="flex flex-row items-center justify-between">
+          <PublisherName
+            className="font-semibold"
+            truncatedClassName="sm:hidden"
+            fullClassName="hidden sm:inline"
+          >
+            {publisher}
+          </PublisherName>
+          <StakeToPublisherButton
+            api={api}
+            currentEpoch={currentEpoch}
+            availableToStake={availableToStake}
+            publisher={publisher}
+            yieldRate={yieldRate}
+            isSelf={isSelf ?? false}
+          />
+        </div>
+      )}
+      <div className="gap-8 xs:flex xs:flex-row-reverse xs:items-center xs:justify-between">
+        <div className="flex grow flex-col gap-2 xs:items-end">
+          {isSelf && (
+            <StakeToPublisherButton
+              api={api}
+              currentEpoch={currentEpoch}
+              availableToStake={availableToStake}
+              publisher={publisher}
+              yieldRate={yieldRate}
+              isSelf
+            />
+          )}
+          <UtilizationMeter
+            publisher={publisher}
+            className="mx-auto my-4 w-full grow xs:mx-0 sm:w-auto sm:flex-none"
+          />
+        </div>
+        <dl className="flex-none text-xs">
+          {!isSelf && (
+            <div className="flex flex-row items-center gap-2">
+              <dt className="font-semibold">{"Publisher's Stake:"}</dt>
+              <dd>
+                <Tokens>{publisher.selfStake}</Tokens>
+              </dd>
+            </div>
+          )}
+          <div className="flex flex-row items-center gap-2">
+            <dt className="font-semibold">Estimated Next APY:</dt>
+            <dd>{estimatedNextApy}%</dd>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <dt className="font-semibold">Number of feeds:</dt>
+            <dd>{publisher.numFeeds}</dd>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <dt className="font-semibold">Quality ranking:</dt>
+            <dd>
+              {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
+            </dd>
+          </div>
+        </dl>
+      </div>
+      {(warmup !== undefined || staked !== undefined) && (
+        <YourPositionsTable
+          publisher={publisher}
+          warmup={warmup}
+          cancelWarmup={cancelWarmup}
+          staked={staked}
+          totalStaked={totalStaked}
+          unstake={unstake}
+          currentEpoch={currentEpoch}
+        />
+      )}
+    </div>
+  ) : (
     <>
       <tr className="border-t border-neutral-600/50 first:border-0">
         {!isSelf && (
           <>
             <PublisherTableCell className="truncate py-4 pl-4 font-medium sm:pl-10">
-              <PublisherName fullKey>{publisher}</PublisherName>
+              <PublisherName
+                truncatedClassName="3xl:hidden"
+                fullClassName="hidden 3xl:inline"
+              >
+                {publisher}
+              </PublisherName>
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
               <Tokens>{publisher.selfStake}</Tokens>
@@ -974,57 +1226,10 @@ const Publisher = ({
           </>
         )}
         <PublisherTableCell className="text-center">
-          <Meter value={utilizationPercent}>
-            {({ percentage }) => (
-              <>
-                <div className="relative mx-auto grid h-5 w-52 place-content-center border border-black bg-pythpurple-600/50">
-                  <div
-                    style={{
-                      width: `${percentage.toString()}%`,
-                    }}
-                    className={clsx(
-                      "absolute inset-0 max-w-full",
-                      percentage < 100 ? "bg-pythpurple-400" : "bg-fuchsia-900",
-                    )}
-                  />
-                  <div
-                    className={clsx("isolate text-sm font-medium", {
-                      "mix-blend-difference": percentage < 100,
-                    })}
-                  >
-                    {Number.isNaN(utilizationPercent)
-                      ? "Empty Pool"
-                      : `${utilizationPercent.toString()}%`}
-                  </div>
-                </div>
-                <Label className="mt-1 flex flex-row items-center justify-center gap-1 text-sm">
-                  <span>
-                    <Tokens>
-                      {publisher.poolUtilization +
-                        publisher.poolUtilizationDelta}
-                    </Tokens>
-                  </span>
-                  <span>/</span>
-                  <span>
-                    <Tokens>{publisher.poolCapacity}</Tokens>
-                  </span>
-                </Label>
-              </>
-            )}
-          </Meter>
+          <UtilizationMeter publisher={publisher} />
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
-          <div>
-            {calculateApy({
-              isSelf: isSelf ?? false,
-              selfStake: publisher.selfStake + publisher.selfStakeDelta,
-              poolCapacity: publisher.poolCapacity,
-              poolUtilization:
-                publisher.poolUtilization + publisher.poolUtilizationDelta,
-              yieldRate,
-            }).toFixed(2)}
-            %
-          </div>
+          {estimatedNextApy}%
         </PublisherTableCell>
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">
@@ -1058,94 +1263,183 @@ const Publisher = ({
       {(warmup !== undefined || staked !== undefined) && (
         <tr>
           <td colSpan={8} className="border-separate border-spacing-8">
-            <div className="mx-auto mb-8 mt-4 w-[30rem] border border-neutral-600/50 bg-pythpurple-800 px-8 py-6">
-              <table className="w-full">
-                <caption className="mb-2 text-left text-lg font-light">
-                  Your Positions
-                </caption>
-                <tbody>
-                  {warmup !== undefined && (
-                    <tr>
-                      <td className="opacity-80">Warmup</td>
-                      <td className="px-4">
-                        <Tokens>{warmup}</Tokens>
-                      </td>
-                      <td
-                        className={clsx("text-right", {
-                          "pb-2": staked !== undefined,
-                        })}
-                      >
-                        <TransferButton
-                          size="small"
-                          variant="secondary"
-                          className="w-28"
-                          actionDescription={
-                            <>
-                              <span className="mr-3 align-middle">
-                                Cancel tokens that are in warmup for staking to
-                              </span>
-                              <PublisherName className="font-semibold">
-                                {publisher}
-                              </PublisherName>
-                            </>
-                          }
-                          actionName="Cancel"
-                          submitButtonText="Cancel Warmup"
-                          title="Cancel Warmup"
-                          max={warmup}
-                          transfer={cancelWarmup}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                  {staked !== undefined && (
-                    <tr>
-                      <td className="opacity-80">Staked</td>
-                      <td className="px-4">
-                        <div className="flex items-center gap-2">
-                          <Tokens>{staked}</Tokens>
-                          <div className="text-xs opacity-60">
-                            ({Number((100n * staked) / totalStaked)}% of your
-                            staked tokens)
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-0.5 text-right">
-                        <TransferButton
-                          size="small"
-                          variant="secondary"
-                          className="w-28"
-                          actionDescription={
-                            <>
-                              <span className="mr-3 align-middle">
-                                Unstake tokens from
-                              </span>
-                              <PublisherName className="font-semibold">
-                                {publisher}
-                              </PublisherName>
-                            </>
-                          }
-                          actionName="Unstake"
-                          max={staked}
-                          transfer={unstake}
-                        >
-                          <StakingTimeline
-                            cooldownOnly
-                            currentEpoch={currentEpoch}
-                          />
-                        </TransferButton>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <YourPositionsTable
+              publisher={publisher}
+              warmup={warmup}
+              cancelWarmup={cancelWarmup}
+              staked={staked}
+              totalStaked={totalStaked}
+              unstake={unstake}
+              currentEpoch={currentEpoch}
+            />
           </td>
         </tr>
       )}
     </>
   );
 };
+
+type UtilizationMeterProps = Omit<ComponentProps<typeof Meter>, "children"> & {
+  publisher: PublisherProps["publisher"];
+};
+
+const UtilizationMeter = ({ publisher, ...props }: UtilizationMeterProps) => {
+  const utilizationPercent = useMemo(
+    () =>
+      publisher.poolCapacity > 0n
+        ? Number(
+            (100n *
+              (publisher.poolUtilization + publisher.poolUtilizationDelta)) /
+              publisher.poolCapacity,
+          )
+        : Number.NaN,
+    [
+      publisher.poolUtilization,
+      publisher.poolUtilizationDelta,
+      publisher.poolCapacity,
+    ],
+  );
+
+  return (
+    <Meter value={utilizationPercent} {...props}>
+      {({ percentage }) => (
+        <>
+          <div className="relative mx-auto grid h-5 w-full place-content-center border border-black bg-pythpurple-600/20 sm:w-52">
+            <div
+              style={{
+                width: `${percentage.toString()}%`,
+              }}
+              className={clsx(
+                "absolute inset-0 max-w-full",
+                percentage < 100 ? "bg-pythpurple-400" : "bg-fuchsia-900",
+              )}
+            />
+            <div
+              className={clsx("isolate text-sm font-medium", {
+                "mix-blend-difference": percentage < 100,
+              })}
+            >
+              {Number.isNaN(utilizationPercent)
+                ? "Empty Pool"
+                : `${utilizationPercent.toString()}%`}
+            </div>
+          </div>
+          <Label className="mt-1 flex flex-row items-center justify-center gap-1 text-sm">
+            <span>
+              <Tokens>
+                {publisher.poolUtilization + publisher.poolUtilizationDelta}
+              </Tokens>
+            </span>
+            <span>/</span>
+            <span>
+              <Tokens>{publisher.poolCapacity}</Tokens>
+            </span>
+          </Label>
+        </>
+      )}
+    </Meter>
+  );
+};
+
+type YourPositionsTableProps = {
+  publisher: PublisherProps["publisher"];
+  warmup: bigint | undefined;
+  cancelWarmup: ((amount: bigint) => Promise<void>) | undefined;
+  staked: bigint | undefined;
+  totalStaked: bigint;
+  unstake: ((amount: bigint) => Promise<void>) | undefined;
+  currentEpoch: bigint;
+};
+
+const YourPositionsTable = ({
+  warmup,
+  cancelWarmup,
+  staked,
+  totalStaked,
+  unstake,
+  currentEpoch,
+  publisher,
+}: YourPositionsTableProps) => (
+  <div className="mx-auto mb-0 mt-4 border border-neutral-600/50 bg-pythpurple-800 p-4 text-xs sm:mb-4 sm:px-8 sm:py-6 md:mb-8 md:w-[30rem]">
+    <table className="w-full text-sm md:text-base">
+      <caption className="mb-2 text-left font-light md:text-lg">
+        Your Positions
+      </caption>
+      <tbody>
+        {warmup !== undefined && (
+          <tr>
+            <td className="opacity-80">Warmup</td>
+            <td className="px-4">
+              <Tokens>{warmup}</Tokens>
+            </td>
+            <td
+              className={clsx("text-right", {
+                "pb-2": staked !== undefined,
+              })}
+            >
+              <TransferButton
+                size="small"
+                variant="secondary"
+                className="w-28"
+                actionDescription={
+                  <>
+                    <span className="mr-3 align-middle">
+                      Cancel tokens that are in warmup for staking to
+                    </span>
+                    <PublisherName className="font-semibold">
+                      {publisher}
+                    </PublisherName>
+                  </>
+                }
+                actionName="Cancel"
+                submitButtonText="Cancel Warmup"
+                title="Cancel Warmup"
+                max={warmup}
+                transfer={cancelWarmup}
+              />
+            </td>
+          </tr>
+        )}
+        {staked !== undefined && (
+          <tr>
+            <td className="opacity-80">Staked</td>
+            <td className="px-4">
+              <div className="flex items-center gap-2">
+                <Tokens>{staked}</Tokens>
+                <div className="hidden text-xs opacity-60 xs:block">
+                  ({Number((100n * staked) / totalStaked)}% of your staked
+                  tokens)
+                </div>
+              </div>
+            </td>
+            <td className="py-0.5 text-right">
+              <TransferButton
+                size="small"
+                variant="secondary"
+                className="md:w-28"
+                actionDescription={
+                  <>
+                    <span className="mr-3 align-middle">
+                      Unstake tokens from
+                    </span>
+                    <PublisherName className="font-semibold">
+                      {publisher}
+                    </PublisherName>
+                  </>
+                }
+                actionName="Unstake"
+                max={staked}
+                transfer={unstake}
+              >
+                <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
+              </TransferButton>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+);
 
 const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
 
@@ -1259,10 +1553,16 @@ const NewApy = ({
 type PublisherNameProps = {
   className?: string | undefined;
   children: PublisherProps["publisher"];
-  fullKey?: boolean | undefined;
+  fullClassName?: string;
+  truncatedClassName?: string;
 };
 
-const PublisherName = ({ children, fullKey, className }: PublisherNameProps) =>
+const PublisherName = ({
+  children,
+  fullClassName,
+  truncatedClassName,
+  className,
+}: PublisherNameProps) =>
   children.name ? (
     <span className={className}>{children.name}</span>
   ) : (
@@ -1270,12 +1570,10 @@ const PublisherName = ({ children, fullKey, className }: PublisherNameProps) =>
       text={children.publicKey.toBase58()}
       {...(className && { className })}
     >
-      {fullKey === true && (
-        <code className="hidden 2xl:inline">
-          {children.publicKey.toBase58()}
-        </code>
+      {fullClassName && (
+        <code className={fullClassName}>{children.publicKey.toBase58()}</code>
       )}
-      <TruncatedKey className={clsx({ "2xl:hidden": fullKey })}>
+      <TruncatedKey className={truncatedClassName}>
         {children.publicKey}
       </TruncatedKey>
     </CopyButton>
@@ -1310,6 +1608,15 @@ enum SortField {
   NumberOfFeeds,
   QualityRanking,
 }
+
+const SORT_FIELD_TO_NAME: Record<SortField, string> = {
+  [SortField.PublisherName]: "Publisher Name",
+  [SortField.PoolUtilization]: "Pool Utilization",
+  [SortField.APY]: "Estimated Next APY",
+  [SortField.SelfStake]: "Publisher's Stake",
+  [SortField.NumberOfFeeds]: "Number of Feeds",
+  [SortField.QualityRanking]: "Quality Ranking",
+} as const;
 
 class InvalidKeyError extends Error {
   constructor() {

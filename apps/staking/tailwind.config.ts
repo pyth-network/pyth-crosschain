@@ -43,6 +43,7 @@ const tailwindConfig = {
       },
       screens: {
         xs: "412px",
+        "3xl": "2560px",
       },
     },
   },
