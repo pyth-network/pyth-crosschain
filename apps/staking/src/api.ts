@@ -33,12 +33,7 @@ type Data = {
         date: Date;
       }
     | undefined;
-  expiringRewards:
-    | {
-        amount: bigint;
-        expiry: Date;
-      }
-    | undefined;
+  expiringRewards: Date | undefined;
   unlockSchedule: {
     date: Date;
     amount: bigint;
@@ -56,8 +51,10 @@ type Data = {
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
+    selfStakeDelta: bigint;
     poolCapacity: bigint;
     poolUtilization: bigint;
+    poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
@@ -151,15 +148,20 @@ export type AccountHistory = {
   locked: bigint;
 }[];
 
-export const getStakeAccounts = async (
+export const getAllStakeAccountAddresses = async (
   client: PythStakingClient,
-): Promise<StakeAccountPositions[]> =>
-  client.getAllStakeAccountPositions(client.wallet.publicKey);
+): Promise<PublicKey[]> => client.getAllStakeAccountPositions();
+
+export const getStakeAccount = async (
+  client: PythStakingClient,
+  stakeAccountAddress: PublicKey,
+): Promise<StakeAccountPositions> =>
+  client.getStakeAccountPositions(stakeAccountAddress);
 
 export const loadData = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
-  stakeAccount?: StakeAccountPositions | undefined,
+  stakeAccount?: PublicKey | undefined,
 ): Promise<Data> =>
   stakeAccount === undefined
     ? loadDataNoStakeAccount(client, hermesClient)
@@ -191,23 +193,25 @@ const loadDataNoStakeAccount = async (
 const loadDataForStakeAccount = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
-  stakeAccount: StakeAccountPositions,
+  stakeAccount: PublicKey,
 ) => {
   const [
     { publishers, ...baseInfo },
     stakeAccountCustody,
     unlockSchedule,
     claimableRewards,
+    stakeAccountPositions,
   ] = await Promise.all([
     loadBaseInfo(client, hermesClient),
-    client.getStakeAccountCustody(stakeAccount.address),
-    client.getUnlockSchedule(stakeAccount.address),
-    client.getClaimableRewards(stakeAccount.address),
+    client.getStakeAccountCustody(stakeAccount),
+    client.getUnlockSchedule(stakeAccount),
+    client.getClaimableRewards(stakeAccount),
+    client.getStakeAccountPositions(stakeAccount),
   ]);
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
-      stakeAccountPositions: stakeAccount,
+      stakeAccountPositions,
       targetWithParameters: { voting: {} },
       positionState,
       epoch: baseInfo.currentEpoch,
@@ -218,7 +222,7 @@ const loadDataForStakeAccount = async (
     positionState: PositionState,
   ) =>
     getAmountByTargetAndState({
-      stakeAccountPositions: stakeAccount,
+      stakeAccountPositions,
       targetWithParameters: { integrityPool: { publisher } },
       positionState,
       epoch: baseInfo.currentEpoch,
@@ -227,14 +231,14 @@ const loadDataForStakeAccount = async (
   return {
     ...baseInfo,
     lastSlash: undefined, // TODO
-    availableRewards: claimableRewards,
-    expiringRewards: undefined, // TODO
+    availableRewards: claimableRewards.totalRewards,
+    expiringRewards: claimableRewards.expiry,
     total: stakeAccountCustody.amount,
     governance: {
       warmup: filterGovernancePositions(PositionState.LOCKING),
       staked: filterGovernancePositions(PositionState.LOCKED),
       cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
-      cooldown2: filterGovernancePositions(PositionState.UNLOCKED),
+      cooldown2: filterGovernancePositions(PositionState.UNLOCKING),
     },
     unlockSchedule,
     integrityStakingPublishers: publishers.map((publisher) => ({
@@ -248,7 +252,7 @@ const loadDataForStakeAccount = async (
         ),
         cooldown2: filterOISPositions(
           publisher.publicKey,
-          PositionState.UNLOCKED,
+          PositionState.UNLOCKING,
         ),
       },
     })),
@@ -289,7 +293,7 @@ const loadPublisherData = async (
     );
     const apyHistory = publisher.apyHistory.map(({ epoch, apy }) => ({
       date: epochToDate(epoch + 1n),
-      apy: Number(apy),
+      apy,
     }));
 
     return {
@@ -298,9 +302,11 @@ const loadPublisherData = async (
       numFeeds: publisherRanking?.numSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
+      poolUtilizationDelta: publisher.totalDelegationDelta,
       publicKey: publisher.pubkey,
       qualityRanking: publisherRanking?.rank ?? 0,
       selfStake: publisher.selfDelegation,
+      selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
     };
   });
@@ -328,11 +334,10 @@ export const loadAccountHistory = async (
 };
 
 export const createStakeAccountAndDeposit = async (
-  _client: PythStakingClient,
-  _amount: bigint,
-): Promise<StakeAccountPositions> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  client: PythStakingClient,
+  amount: bigint,
+): Promise<PublicKey> => {
+  return client.createStakeAccountAndDeposit(amount);
 };
 
 export const deposit = async (
@@ -428,20 +433,24 @@ export const unstakeIntegrityStaking = async (
 };
 
 export const reassignPublisherAccount = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-  _targetAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  targetAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  return client.reassignPublisherStakeAccount(
+    publisherKey,
+    stakeAccount,
+    targetAccount,
+  );
 };
 
 export const optPublisherOut = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+  publisherKey: PublicKey,
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  throw new NotImplementedError();
+  await client.removePublisherStakeAccount(stakeAccount, publisherKey);
 };
 
 const MOCK_DELAY = 500;
@@ -484,10 +493,3 @@ const mkMockHistory = (): AccountHistory => [
     locked: 0n,
   },
 ];
-
-class NotImplementedError extends Error {
-  constructor() {
-    super("Not yet implemented!");
-    this.name = "NotImplementedError";
-  }
-}

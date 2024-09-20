@@ -170,6 +170,7 @@ fn main() -> Result<()> {
             fee,
             emitter,
             chain,
+            governance_authority,
         } => {
             let rpc_client = RpcClient::new(url);
             let payer =
@@ -179,7 +180,7 @@ fn main() -> Result<()> {
                 pyth_solana_receiver::instruction::Initialize::populate(
                     &payer.pubkey(),
                     pyth_solana_receiver_sdk::config::Config {
-                        governance_authority: payer.pubkey(),
+                        governance_authority,
                         target_governance_authority: None,
                         wormhole,
                         valid_data_sources: vec![DataSource { chain, emitter }],
@@ -480,7 +481,7 @@ pub fn process_transaction(
     let transaction_signature_res = rpc_client
         .send_and_confirm_transaction_with_spinner_and_config(
             &transaction,
-            CommitmentConfig::finalized(),
+            CommitmentConfig::confirmed(),
             RpcSendTransactionConfig {
                 skip_preflight: true,
                 ..Default::default()

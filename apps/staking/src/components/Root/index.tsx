@@ -2,7 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import clsx from "clsx";
 import { Red_Hat_Text, Red_Hat_Mono } from "next/font/google";
-import type { ReactNode } from "react";
+import type { ReactNode, CSSProperties } from "react";
 
 import {
   IS_PRODUCTION_SERVER,
@@ -10,6 +10,7 @@ import {
   AMPLITUDE_API_KEY,
   WALLETCONNECT_PROJECT_ID,
   RPC,
+  HERMES_URL,
   IS_MAINNET,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
@@ -48,15 +49,26 @@ export const Root = ({ children }: Props) => (
             : WalletAdapterNetwork.Devnet
         }
       >
-        <ApiProvider isMainnet={IS_MAINNET}>
+        <ApiProvider hermesUrl={HERMES_URL}>
           <html
             lang="en"
             dir="ltr"
-            className={clsx(redHatText.variable, redHatMono.variable)}
+            style={
+              {
+                "--header-height": "4rem",
+              } as CSSProperties
+            }
+            className={clsx(
+              "scroll-pt-header-height",
+              redHatText.variable,
+              redHatMono.variable,
+            )}
           >
             <body className="grid min-h-dvh grid-rows-[auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60">
               <Header className="z-10" />
-              <MaxWidth className="my-4">{children}</MaxWidth>
+              <MaxWidth className="z-0 min-h-[calc(100dvh_-_var(--header-height))] py-8 sm:min-h-0">
+                {children}
+              </MaxWidth>
               <Footer className="z-10" />
             </body>
             {GOOGLE_ANALYTICS_ID && (

@@ -1,0 +1,7 @@
+{
+  "endpoint": "https://testnet.fuel.network/v1/graphql",
+  "pyth-contract-address": "0xe31e04946c67fb41923f93d50ee7fc1c6c99d6e07c02860c6bea5f4a13919277",
+  "price-service-endpoint": "https://hermes.pyth.network",
+  "private-key-file": "./mnemonic",
+  "price-config-file": "./price-config.stable.sample.yaml"
+}

@@ -10,8 +10,10 @@ import axios from 'axios'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  createDetermisticPriceStoreInitializePublisherInstruction,
   getMaximumNumberOfPublishers,
   getMultisigCluster,
+  isPriceStorePublisherInitialized,
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
@@ -53,7 +55,7 @@ const PermissionDepermissionKey = ({
   const [isSubmitButtonLoading, setIsSubmitButtonLoading] = useState(false)
   const [priceAccounts, setPriceAccounts] = useState<PublicKey[]>([])
   const { cluster } = useContext(ClusterContext)
-  const { rawConfig, dataIsLoading } = usePythContext()
+  const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
 
   // get current input value
@@ -86,11 +88,12 @@ const PermissionDepermissionKey = ({
         ? mapKey(multisigAuthority)
         : multisigAuthority
 
+      const publisherPublicKey = new PublicKey(publisherKey)
       for (const priceAccount of priceAccounts) {
         if (isPermission) {
           instructions.push(
             await pythProgramClient.methods
-              .addPublisher(new PublicKey(publisherKey))
+              .addPublisher(publisherPublicKey)
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
@@ -100,12 +103,28 @@ const PermissionDepermissionKey = ({
         } else {
           instructions.push(
             await pythProgramClient.methods
-              .delPublisher(new PublicKey(publisherKey))
+              .delPublisher(publisherPublicKey)
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
               .instruction()
+          )
+        }
+      }
+      if (isPermission) {
+        if (
+          !connection ||
+          !(await isPriceStorePublisherInitialized(
+            connection,
+            publisherPublicKey
+          ))
+        ) {
+          instructions.push(
+            await createDetermisticPriceStoreInitializePublisherInstruction(
+              fundingAccount,
+              publisherPublicKey
+            )
           )
         }
       }

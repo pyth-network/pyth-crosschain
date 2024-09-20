@@ -1,14 +1,8 @@
 import { useCallback } from "react";
-import useSWR from "swr";
+import useSWR, { type KeyedMutator } from "swr";
 
-const ONE_SECOND_IN_MS = 1000;
-const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
-const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
-
-export const useData = <T>(cacheKey: string, loadData: () => Promise<T>) => {
-  const { data, isLoading, mutate, ...rest } = useSWR(cacheKey, loadData, {
-    refreshInterval: REFRESH_INTERVAL,
-  });
+export const useData = <T>(...args: Parameters<typeof useSWR<T>>) => {
+  const { data, isLoading, mutate, ...rest } = useSWR(...args);
 
   const error = rest.error as unknown;
 
@@ -23,7 +17,7 @@ export const useData = <T>(cacheKey: string, loadData: () => Promise<T>) => {
   } else if (isLoading) {
     return State.Loading();
   } else if (data) {
-    return State.Loaded(data);
+    return State.Loaded(data, mutate);
   } else {
     return State.NotLoaded();
   }
@@ -39,8 +33,9 @@ export enum StateType {
 const State = {
   NotLoaded: () => ({ type: StateType.NotLoaded as const }),
   Loading: () => ({ type: StateType.Loading as const }),
-  Loaded: <T>(data: T) => ({
+  Loaded: <T>(data: T, mutate: KeyedMutator<T>) => ({
     type: StateType.Loaded as const,
+    mutate,
     data,
   }),
   ErrorState: (error: LoadDashboardDataError, reset: () => void) => ({

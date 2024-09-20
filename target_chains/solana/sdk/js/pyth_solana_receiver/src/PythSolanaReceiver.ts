@@ -795,7 +795,7 @@ export class PythSolanaReceiver {
  * @param pushOracleProgramId The program ID of the Pyth Push Oracle program. If not provided, the default deployment will be used.
  * @returns The address of the price feed account
  */
-function getPriceFeedAccountForProgram(
+export function getPriceFeedAccountForProgram(
   shardId: number,
   priceFeedId: Buffer | string,
   pushOracleProgramId?: PublicKey

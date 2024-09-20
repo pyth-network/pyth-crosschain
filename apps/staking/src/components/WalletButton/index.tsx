@@ -5,31 +5,27 @@ import {
   ArrowsRightLeftIcon,
   XCircleIcon,
   ChevronDownIcon,
-  TableCellsIcon,
   BanknotesIcon,
   ChevronRightIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import type { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
 import {
   type ComponentProps,
-  type ComponentType,
-  type SVGAttributes,
   type ReactNode,
   useCallback,
-  useState,
+  useMemo,
+  type ReactElement,
 } from "react";
 import {
-  Menu,
-  MenuItem,
   MenuTrigger,
-  Popover,
-  Separator,
-  Section,
   SubmenuTrigger,
+  Header,
+  Collection,
 } from "react-aria-components";
 
 import {
@@ -41,12 +37,16 @@ import {
   type States,
   useApi,
 } from "../../hooks/use-api";
+import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { useLogger } from "../../hooks/use-logger";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
-import { AccountHistory } from "../AccountHistory";
 import { Button } from "../Button";
-import { ModalDialog } from "../ModalDialog";
+import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { TruncatedKey } from "../TruncatedKey";
+
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
@@ -63,6 +63,15 @@ const WalletButtonImpl = (props: Props) => {
   const api = useApi();
 
   switch (api.type) {
+    case ApiStateType.WalletDisconnecting:
+    case ApiStateType.WalletConnecting: {
+      return (
+        <ButtonComponent isLoading={true} {...props}>
+          Loading...
+        </ButtonComponent>
+      );
+    }
+
     case ApiStateType.NotLoaded:
     case ApiStateType.NoWallet: {
       return <DisconnectedButton {...props} />;
@@ -90,10 +99,6 @@ const ConnectedButton = ({
   api,
   ...props
 }: ConnectedButtonProps) => {
-  const [accountHistoryOpen, setAccountHistoryOpen] = useState(false);
-  const openAccountHistory = useCallback(() => {
-    setAccountHistoryOpen(true);
-  }, [setAccountHistoryOpen]);
   const modal = useWalletModal();
   const showModal = useCallback(() => {
     modal.setVisible(true);
@@ -107,105 +112,135 @@ const ConnectedButton = ({
   }, [wallet, logger]);
 
   return (
+    <MenuTrigger>
+      <ButtonComponent
+        className={clsx("group data-[pressed]:bg-pythpurple-600/60", className)}
+        {...props}
+      >
+        <span className="truncate">
+          <ButtonContent />
+        </span>
+        <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
+      </ButtonComponent>
+      <Menu className="min-w-[var(--trigger-width)]">
+        {api.type === ApiStateType.Loaded && (
+          <>
+            <Section>
+              <StakeAccountSelector api={api}>
+                <MenuItem icon={BanknotesIcon} textValue="Select stake account">
+                  <span>Select stake account</span>
+                  <ChevronRightIcon className="size-4" />
+                </MenuItem>
+              </StakeAccountSelector>
+            </Section>
+          </>
+        )}
+        <Section>
+          <MenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>
+            Change wallet
+          </MenuItem>
+          <MenuItem onAction={disconnectWallet} icon={XCircleIcon}>
+            Disconnect
+          </MenuItem>
+        </Section>
+      </Menu>
+    </MenuTrigger>
+  );
+};
+
+type StakeAccountSelectorProps = {
+  api: States[ApiStateType.Loaded];
+  children: ReactElement;
+};
+
+const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
+  const data = useData(api.dashboardDataCacheKey, api.loadData, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
+  const accounts = useMemo(() => {
+    if (data.type === DataStateType.Loaded) {
+      const main = api.allAccounts.find((account) =>
+        data.data.integrityStakingPublishers.some((publisher) =>
+          publisher.stakeAccount?.equals(account),
+        ),
+      );
+      const other = api.allAccounts
+        .filter((account) => account !== main)
+        .map((account) => ({
+          account,
+          id: account.toBase58(),
+        }));
+      return { main, other };
+    } else {
+      return;
+    }
+  }, [data, api]);
+
+  return accounts === undefined ||
+    // eslint-disable-next-line unicorn/no-null
+    (accounts.main === undefined && accounts.other.length === 1) ? null : (
     <>
-      <MenuTrigger>
-        <ButtonComponent
-          className={clsx(
-            "group data-[pressed]:bg-pythpurple-600/60",
-            className,
-          )}
-          {...props}
-        >
-          <span className="truncate">
-            <ButtonContent />
-          </span>
-          <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
-        </ButtonComponent>
-        <StyledMenu className="min-w-[var(--trigger-width)]">
-          {api.type === ApiStateType.Loaded && (
-            <>
-              <Section className="flex w-full flex-col">
-                <SubmenuTrigger>
-                  <WalletMenuItem
-                    icon={BanknotesIcon}
-                    textValue="Select stake account"
-                  >
-                    <span>Select stake account</span>
-                    <ChevronRightIcon className="size-4" />
-                  </WalletMenuItem>
-                  <StyledMenu
-                    items={api.allAccounts.map((account) => ({
-                      account,
-                      id: account.address.toBase58(),
-                    }))}
-                  >
-                    {(item) => (
-                      <WalletMenuItem
-                        onAction={() => {
-                          api.selectAccount(item.account);
-                        }}
-                        className={clsx({
-                          "font-semibold": item.account === api.account,
-                        })}
-                        isDisabled={item.account === api.account}
-                      >
-                        <CheckIcon
-                          className={clsx("size-4 text-pythpurple-600", {
-                            invisible: item.account !== api.account,
-                          })}
-                        />
-                        <TruncatedKey>{item.account.address}</TruncatedKey>
-                      </WalletMenuItem>
-                    )}
-                  </StyledMenu>
-                </SubmenuTrigger>
-                <WalletMenuItem
-                  onAction={openAccountHistory}
-                  icon={TableCellsIcon}
-                >
-                  Account history
-                </WalletMenuItem>
-              </Section>
-              <Separator className="mx-2 my-1 h-px bg-black/20" />
-            </>
-          )}
-          <Section className="flex w-full flex-col">
-            <WalletMenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>
-              Change wallet
-            </WalletMenuItem>
-            <WalletMenuItem onAction={disconnectWallet} icon={XCircleIcon}>
-              Disconnect
-            </WalletMenuItem>
-          </Section>
-        </StyledMenu>
-      </MenuTrigger>
-      {api.type === ApiStateType.Loaded && (
-        <ModalDialog
-          isOpen={accountHistoryOpen}
-          onOpenChange={setAccountHistoryOpen}
-          title="Account history"
-          description="A history of events that have affected your account balances"
-        >
-          <AccountHistory api={api} />
-        </ModalDialog>
-      )}
+      <Section>
+        <SubmenuTrigger>
+          {children}
+          <Menu items={accounts.other} className="-mr-20 xs:mr-0">
+            {accounts.main === undefined ? (
+              ({ account }) => <AccountMenuItem account={account} api={api} />
+            ) : (
+              <>
+                <Section>
+                  <Header className="mx-4 text-sm font-semibold">
+                    Main Account
+                  </Header>
+                  <AccountMenuItem account={accounts.main} api={api} />
+                </Section>
+                {accounts.other.length > 0 && (
+                  <>
+                    <Separator />
+                    <Section>
+                      <Header className="mx-4 text-sm font-semibold">
+                        Other Accounts
+                      </Header>
+                      <Collection items={accounts.other}>
+                        {({ account }) => (
+                          <AccountMenuItem account={account} api={api} />
+                        )}
+                      </Collection>
+                    </Section>
+                  </>
+                )}
+              </>
+            )}
+          </Menu>
+        </SubmenuTrigger>
+      </Section>
+      <Separator />
     </>
   );
 };
 
-const StyledMenu = <T extends object>({
-  className,
-  ...props
-}: ComponentProps<typeof Menu<T>>) => (
-  <Popover className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out focus:outline-none focus-visible:outline-none focus-visible:ring-0">
-    <Menu
-      className={clsx(
-        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
-        className,
-      )}
-      {...props}
+type AccountMenuItemProps = {
+  api: States[ApiStateType.Loaded];
+  account: PublicKey;
+};
+
+const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
+  <MenuItem
+    onAction={() => {
+      api.selectAccount(account);
+    }}
+    className={clsx({
+      "pr-8 font-semibold": account === api.account,
+    })}
+    isDisabled={account === api.account}
+  >
+    <CheckIcon
+      className={clsx("size-4 text-pythpurple-600", {
+        invisible: account !== api.account,
+      })}
     />
-  </Popover>
+    <TruncatedKey>{account}</TruncatedKey>
+  </MenuItem>
 );
 
 const ButtonContent = () => {
@@ -222,31 +257,6 @@ const ButtonContent = () => {
     return "Connect";
   }
 };
-
-type WalletMenuItemProps = Omit<ComponentProps<typeof MenuItem>, "children"> & {
-  icon?: ComponentType<SVGAttributes<SVGSVGElement>>;
-  children: ReactNode;
-};
-
-const WalletMenuItem = ({
-  children,
-  icon: Icon,
-  className,
-  textValue,
-  ...props
-}: WalletMenuItemProps) => (
-  <MenuItem
-    textValue={textValue ?? (typeof children === "string" ? children : "")}
-    className={clsx(
-      "flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none",
-      className,
-    )}
-    {...props}
-  >
-    {Icon && <Icon className="size-4 text-pythpurple-600" />}
-    {children}
-  </MenuItem>
-);
 
 const DisconnectedButton = (props: Props) => {
   const modal = useWalletModal();

@@ -31,9 +31,19 @@ const tailwindConfig = {
           400: "#BB86FC",
           600: "#6200EE",
           800: "#100E21",
-          900: "#121212",
+          900: "#131223",
           950: "#0C0B1A",
         },
+      },
+      height: {
+        header: "var(--header-height)",
+      },
+      spacing: {
+        "header-height": "var(--header-height)",
+      },
+      screens: {
+        xs: "412px",
+        "3xl": "2560px",
       },
     },
   },

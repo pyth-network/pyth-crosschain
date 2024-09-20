@@ -57,7 +57,6 @@ use sway_libs::ownership::*;
 use standards::src5::{SRC5, State};
 
 const GUARDIAN_SET_EXPIRATION_TIME_SECONDS: u64 = 86400; // 24 hours in seconds
-
 configurable {
     DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
 }
@@ -848,57 +847,62 @@ impl PythGovernance for Contract {
 
     #[storage(read, write)]
     fn execute_governance_instruction(encoded_vm: Bytes) {
-        let vm = verify_governance_vm(encoded_vm);
-        // Log so that the WormholeVM struct will show up in the ABI and can be used in the tests
-        log(vm);
+        execute_governance_instruction(encoded_vm)
+    }
+}
 
-        let gi = GovernanceInstruction::parse_governance_instruction(vm.payload);
-        // Log so that the GovernanceInstruction struct will show up in the ABI and can be used in the tests
-        log(gi);
+#[storage(read, write)]
+fn execute_governance_instruction(encoded_vm: Bytes) {
+    let vm = verify_governance_vm(encoded_vm);
+    // Log so that the WormholeVM struct will show up in the ABI and can be used in the tests
+    log(vm);
 
-        require(
-            gi.target_chain_id == chain_id() || gi.target_chain_id == 0,
-            PythError::InvalidGovernanceTarget,
-        );
+    let gi = GovernanceInstruction::parse_governance_instruction(vm.payload);
+    // Log so that the GovernanceInstruction struct will show up in the ABI and can be used in the tests
+    log(gi);
 
-        match gi.action {
-            GovernanceAction::UpgradeContract => {
-                require(gi.target_chain_id != 0, PythError::InvalidGovernanceTarget);
-                // TODO: implement upgrade_upgradeable_contract(uc) when Fuel releases the upgrade standard library;
-                log("Upgrade functionality not implemented");
-                revert(0u64);
-            },
-            GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
-                let agdst = GovernanceInstruction::parse_authorize_governance_data_source_transfer_payload(gi.payload);
-                log(agdst);
-                authorize_governance_data_source_transfer(agdst);
-            },
-            GovernanceAction::SetDataSources => {
-                let sdsp = GovernanceInstruction::parse_set_data_sources_payload(gi.payload);
-                log(sdsp);
-                set_data_sources(sdsp);
-            },
-            GovernanceAction::SetFee => {
-                let sf = GovernanceInstruction::parse_set_fee_payload(gi.payload);
-                log(sf);
-                set_fee(sf);
-            },
-            GovernanceAction::SetValidPeriod => {
-                let svp = GovernanceInstruction::parse_set_valid_period_payload(gi.payload);
-                log(svp);
-                set_valid_period(svp);
-            },
-            GovernanceAction::RequestGovernanceDataSourceTransfer => {
-                // RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message
-                // The `revert` function only accepts u64, so as
-                // a workaround we use require.
-                require(false, PythError::InvalidGovernanceMessage);
-            },
-            _ => {
-                // The `revert` function only accepts u64, so as
-                // a workaround we use require.
-                require(false, PythError::InvalidGovernanceMessage);
-            }
+    require(
+        gi.target_chain_id == chain_id() || gi.target_chain_id == 0,
+        PythError::InvalidGovernanceTarget,
+    );
+
+    match gi.action {
+        GovernanceAction::UpgradeContract => {
+            require(gi.target_chain_id != 0, PythError::InvalidGovernanceTarget);
+            // TODO: implement upgrade_upgradeable_contract(uc) when Fuel releases the upgrade standard library;
+            log("Upgrade functionality not implemented");
+            revert(0u64);
+        },
+        GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
+            let agdst = GovernanceInstruction::parse_authorize_governance_data_source_transfer_payload(gi.payload);
+            log(agdst);
+            authorize_governance_data_source_transfer(agdst);
+        },
+        GovernanceAction::SetDataSources => {
+            let sdsp = GovernanceInstruction::parse_set_data_sources_payload(gi.payload);
+            log(sdsp);
+            set_data_sources(sdsp);
+        },
+        GovernanceAction::SetFee => {
+            let sf = GovernanceInstruction::parse_set_fee_payload(gi.payload);
+            log(sf);
+            set_fee(sf);
+        },
+        GovernanceAction::SetValidPeriod => {
+            let svp = GovernanceInstruction::parse_set_valid_period_payload(gi.payload);
+            log(svp);
+            set_valid_period(svp);
+        },
+        GovernanceAction::RequestGovernanceDataSourceTransfer => {
+            // RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message
+            // The `revert` function only accepts u64, so as
+            // a workaround we use require.
+            require(false, PythError::InvalidGovernanceMessage);
+        },
+        _ => {
+            // The `revert` function only accepts u64, so as
+            // a workaround we use require.
+            require(false, PythError::InvalidGovernanceMessage);
         }
     }
 }

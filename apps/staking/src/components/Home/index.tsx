@@ -1,7 +1,5 @@
 "use client";
 
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { useCallback } from "react";
 import { useIsSSR } from "react-aria";
 
 import {
@@ -13,10 +11,14 @@ import {
   StateType as DashboardDataStateType,
   useData,
 } from "../../hooks/use-data";
-import { Button } from "../Button";
 import { Dashboard } from "../Dashboard";
 import { Error as ErrorPage } from "../Error";
 import { Loading } from "../Loading";
+import { NoWalletHome } from "../NoWalletHome";
+
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
 export const Home = () => {
   const isSSR = useIsSSR();
@@ -32,6 +34,8 @@ const MountedHome = () => {
     case ApiStateType.LoadingStakeAccounts: {
       return <Loading />;
     }
+    case ApiStateType.WalletDisconnecting:
+    case ApiStateType.WalletConnecting:
     case ApiStateType.NoWallet: {
       return <NoWalletHome />;
     }
@@ -45,35 +49,14 @@ const MountedHome = () => {
   }
 };
 
-const NoWalletHome = () => {
-  const modal = useWalletModal();
-  const showModal = useCallback(() => {
-    modal.setVisible(true);
-  }, [modal]);
-
-  return (
-    <main className="my-20">
-      <h1 className="mb-8 mt-16 text-center text-4xl font-semibold text-pythpurple-400">
-        Staking & Delegating
-      </h1>
-      <p className="mx-auto mb-8 max-w-prose text-center">
-        The Pyth staking program allows you to stake tokens to participate in
-        governance, or to earn yield and protect DeFi by delegating to
-        publishers.
-      </p>
-      <div className="grid w-full place-content-center">
-        <Button onPress={showModal}>Connect your wallet to participate</Button>
-      </div>
-    </main>
-  );
-};
-
 type StakeAccountLoadedHomeProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
 };
 
 const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
-  const data = useData(api.dashboardDataCacheKey, api.loadData);
+  const data = useData(api.dashboardDataCacheKey, api.loadData, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
 
   switch (data.type) {
     case DashboardDataStateType.NotLoaded:
@@ -86,11 +69,7 @@ const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
     }
 
     case DashboardDataStateType.Loaded: {
-      return (
-        <main className="mx-4 my-6">
-          <Dashboard {...data.data} api={api} />
-        </main>
-      );
+      return <Dashboard {...data.data} api={api} />;
     }
   }
 };

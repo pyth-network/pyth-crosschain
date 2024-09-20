@@ -7,6 +7,7 @@ import aptos from "./aptos/command";
 import sui from "./sui/command";
 import near from "./near/command";
 import solana from "./solana/command";
+import fuel from "./fuel/command";
 
 yargs(hideBin(process.argv))
   .parserConfiguration({
@@ -15,6 +16,7 @@ yargs(hideBin(process.argv))
   .config("config")
   .global("config")
   .command(evm)
+  .command(fuel)
   .command(injective)
   .command(aptos)
   .command(sui)

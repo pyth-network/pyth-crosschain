@@ -1,4 +1,11 @@
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import * as crypto from "crypto";
+
+import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
+import {
+  getTokenOwnerRecordAddress,
+  PROGRAM_VERSION_V2,
+  withCreateTokenOwnerRecord,
+} from "@solana/spl-governance";
 import {
   type Account,
   createTransferInstruction,
@@ -8,13 +15,17 @@ import {
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 
+import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
 import {
   getConfigAddress,
+  getDelegationRecordAddress,
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
@@ -27,7 +38,7 @@ import {
   type StakeAccountPositions,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
-import { getCurrentEpoch } from "./utils/clock";
+import { epochToDate, getCurrentEpoch } from "./utils/clock";
 import { extractPublisherData } from "./utils/pool";
 import {
   deserializeStakeAccountPositions,
@@ -44,7 +55,7 @@ import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet: AnchorWallet;
+  wallet: AnchorWallet | undefined;
 };
 
 export class PythStakingClient {
@@ -57,7 +68,8 @@ export class PythStakingClient {
 
   constructor(config: PythStakingClientConfig) {
     this.connection = config.connection;
-    this.wallet = config.wallet;
+    this.wallet = config.wallet ?? new Wallet(Keypair.generate());
+
     this.provider = new AnchorProvider(this.connection, this.wallet, {
       skipPreflight: true,
     });
@@ -90,9 +102,7 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getAllStakeAccountPositions(
-    user: PublicKey,
-  ): Promise<StakeAccountPositions[]> {
+  public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -111,19 +121,13 @@ export class PythStakingClient {
             {
               memcmp: {
                 offset: 8,
-                bytes: user.toBase58(),
+                bytes: this.wallet.publicKey.toBase58(),
               },
             },
           ],
         },
       );
-    return res.map((account) =>
-      deserializeStakeAccountPositions(
-        account.pubkey,
-        account.account.data,
-        this.stakingProgram.idl,
-      ),
-    );
+    return res.map((account) => account.pubkey);
   }
 
   public async getStakeAccountPositions(
@@ -143,6 +147,15 @@ export class PythStakingClient {
       account.data,
       this.stakingProgram.idl,
     );
+  }
+
+  public async getDelegationRecord(
+    stakeAccountPositions: PublicKey,
+    publisher: PublicKey,
+  ) {
+    return this.integrityPoolProgram.account.delegationRecord
+      .fetch(getDelegationRecordAddress(stakeAccountPositions, publisher))
+      .then((record) => convertBNToBigInt(record));
   }
 
   public async getStakeAccountCustody(
@@ -168,6 +181,7 @@ export class PythStakingClient {
       .initializePool(rewardProgramAuthority, yAnchor)
       .accounts({
         poolData,
+        slashCustody: getStakeAccountCustodyAddress(poolData),
       })
       .instruction();
 
@@ -340,6 +354,99 @@ export class PythStakingClient {
     return sendTransaction(instructions, this.connection, this.wallet);
   }
 
+  public async hasGovernanceRecord(config: GlobalConfig): Promise<boolean> {
+    const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
+      GOVERNANCE_ADDRESS,
+      config.pythGovernanceRealm,
+      config.pythTokenMint,
+      this.wallet.publicKey,
+    );
+    const voterAccountInfo =
+      await this.stakingProgram.provider.connection.getAccountInfo(
+        tokenOwnerRecordAddress,
+      );
+
+    return Boolean(voterAccountInfo);
+  }
+
+  public async createStakeAccountAndDeposit(amount: bigint) {
+    const globalConfig = await this.getGlobalConfig();
+
+    const senderTokenAccount = await getAssociatedTokenAddress(
+      globalConfig.pythTokenMint,
+      this.wallet.publicKey,
+    );
+
+    const nonce = crypto.randomBytes(16).toString("hex");
+    const stakeAccountPositions = await PublicKey.createWithSeed(
+      this.wallet.publicKey,
+      nonce,
+      this.stakingProgram.programId,
+    );
+
+    const minimumBalance =
+      await this.stakingProgram.provider.connection.getMinimumBalanceForRentExemption(
+        POSITIONS_ACCOUNT_SIZE,
+      );
+
+    const instructions = [];
+
+    instructions.push(
+      SystemProgram.createAccountWithSeed({
+        fromPubkey: this.wallet.publicKey,
+        newAccountPubkey: stakeAccountPositions,
+        basePubkey: this.wallet.publicKey,
+        seed: nonce,
+        lamports: minimumBalance,
+        space: POSITIONS_ACCOUNT_SIZE,
+        programId: this.stakingProgram.programId,
+      }),
+      await this.stakingProgram.methods
+        .createStakeAccount(this.wallet.publicKey, { fullyVested: {} })
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+      await this.stakingProgram.methods
+        .createVoterRecord()
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
+
+    if (!(await this.hasGovernanceRecord(globalConfig))) {
+      await withCreateTokenOwnerRecord(
+        instructions,
+        GOVERNANCE_ADDRESS,
+        PROGRAM_VERSION_V2,
+        globalConfig.pythGovernanceRealm,
+        this.wallet.publicKey,
+        globalConfig.pythTokenMint,
+        this.wallet.publicKey,
+      );
+    }
+
+    instructions.push(
+      await this.stakingProgram.methods
+        .joinDaoLlc(globalConfig.agreementHash)
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+      createTransferInstruction(
+        senderTokenAccount,
+        getStakeAccountCustodyAddress(stakeAccountPositions),
+        this.wallet.publicKey,
+        amount,
+      ),
+    );
+
+    await sendTransaction(instructions, this.connection, this.wallet);
+
+    return stakeAccountPositions;
+  }
+
   public async depositTokensToStakeAccountCustody(
     stakeAccountPositions: PublicKey,
     amount: bigint,
@@ -441,7 +548,7 @@ export class PythStakingClient {
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
-    return Promise.all(
+    const advanceDelegationRecordInstructions = await Promise.all(
       publishers.map(({ pubkey, stakeAccount }) =>
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
@@ -460,6 +567,25 @@ export class PythStakingClient {
           .instruction(),
       ),
     );
+
+    const mergePositionsInstruction = await Promise.all(
+      publishers.map(({ pubkey }) =>
+        this.integrityPoolProgram.methods
+          .mergeDelegationPositions()
+          .accounts({
+            owner: this.wallet.publicKey,
+            publisher: pubkey,
+            stakeAccountPositions,
+          })
+          .instruction(),
+      ),
+    );
+
+    return {
+      advanceDelegationRecordInstructions,
+      mergePositionsInstruction,
+      publishers,
+    };
   }
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
@@ -467,7 +593,14 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
 
-    return sendTransaction(instructions, this.connection, this.wallet);
+    return sendTransaction(
+      [
+        ...instructions.advanceDelegationRecordInstructions,
+        ...instructions.mergePositionsInstruction,
+      ],
+      this.connection,
+      this.wallet,
+    );
   }
 
   public async getClaimableRewards(stakeAccountPositions: PublicKey) {
@@ -477,18 +610,79 @@ export class PythStakingClient {
 
     let totalRewards = 0n;
 
-    for (const instruction of instructions) {
+    for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
-      tx.feePayer = this.wallet.publicKey;
+      tx.feePayer = PublicKey.default;
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {
         continue;
       }
-      const buffer = Buffer.from(val, "base64");
+      const buffer = Buffer.from(val, "base64").reverse();
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
-    return totalRewards;
+    const delegationRecords = await Promise.allSettled(
+      instructions.publishers.map(({ pubkey }) =>
+        this.getDelegationRecord(stakeAccountPositions, pubkey),
+      ),
+    );
+
+    let lowestEpoch: bigint | undefined;
+    for (const record of delegationRecords) {
+      if (record.status === "fulfilled") {
+        const { lastEpoch } = record.value;
+        if (lowestEpoch === undefined || lastEpoch < lowestEpoch) {
+          lowestEpoch = lastEpoch;
+        }
+      }
+    }
+
+    return {
+      totalRewards,
+      expiry:
+        lowestEpoch === undefined ? undefined : epochToDate(lowestEpoch + 52n),
+    };
+  }
+
+  async setPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey | undefined,
+  ) {
+    const instruction = await this.integrityPoolProgram.methods
+      .setPublisherStakeAccount()
+      .accounts({
+        currentStakeAccountPositionsOption: stakeAccountPositions,
+        newStakeAccountPositionsOption: newStakeAccountPositions ?? null,
+        publisher,
+      })
+      .instruction();
+
+    await sendTransaction([instruction], this.connection, this.wallet);
+    return;
+  }
+
+  public async reassignPublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+    newStakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      newStakeAccountPositions,
+    );
+  }
+
+  public async removePublisherStakeAccount(
+    publisher: PublicKey,
+    stakeAccountPositions: PublicKey,
+  ) {
+    return this.setPublisherStakeAccount(
+      publisher,
+      stakeAccountPositions,
+      undefined,
+    );
   }
 }

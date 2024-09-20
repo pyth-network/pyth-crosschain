@@ -10,10 +10,16 @@ import type { States, StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useData } from "../../hooks/use-data";
 import { Tokens } from "../Tokens";
 
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
+
 type Props = { api: States[ApiStateType.Loaded] };
 
 export const AccountHistory = ({ api }: Props) => {
-  const history = useData(api.accountHisoryCacheKey, api.loadAccountHistory);
+  const history = useData(api.accountHistoryCacheKey, api.loadAccountHistory, {
+    refreshInterval: REFRESH_INTERVAL,
+  });
 
   switch (history.type) {
     case StateType.NotLoaded:

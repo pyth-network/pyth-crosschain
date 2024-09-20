@@ -24,7 +24,15 @@ import { AnchorProvider } from "@project-serum/anchor";
 import {
   TransactionBuilder,
   PriorityFeeConfig,
+  sendTransactions,
 } from "@pythnetwork/solana-utils";
+import {
+  findDetermisticPublisherBufferAddress,
+  PRICE_STORE_BUFFER_SPACE,
+  PRICE_STORE_PROGRAM_ID,
+  PriceStoreMultisigInstruction,
+} from "./price_store";
+import { Wallet } from "@coral-xyz/anchor";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -134,6 +142,27 @@ export async function executeProposal(
       } else {
         throw Error("Product account not found");
       }
+    } else if (
+      parsedInstruction instanceof PriceStoreMultisigInstruction &&
+      parsedInstruction.name == "InitializePublisher"
+    ) {
+      const [bufferKey, bufferSeed] =
+        await findDetermisticPublisherBufferAddress(
+          parsedInstruction.args.publisherKey
+        );
+      transaction.add(
+        SystemProgram.createAccountWithSeed({
+          fromPubkey: squad.wallet.publicKey,
+          basePubkey: squad.wallet.publicKey,
+          newAccountPubkey: bufferKey,
+          seed: bufferSeed,
+          space: PRICE_STORE_BUFFER_SPACE,
+          lamports: await squad.connection.getMinimumBalanceForRentExemption(
+            PRICE_STORE_BUFFER_SPACE
+          ),
+          programId: PRICE_STORE_PROGRAM_ID,
+        })
+      );
     }
 
     TransactionBuilder.addPriorityFee(transaction, priorityFeeConfig);
@@ -146,10 +175,11 @@ export async function executeProposal(
     );
 
     signatures.push(
-      await new AnchorProvider(squad.connection, squad.wallet, {
-        commitment: commitment,
-        preflightCommitment: commitment,
-      }).sendAndConfirm(transaction, [], { skipPreflight: true })
+      ...(await sendTransactions(
+        [{ tx: transaction, signers: [] }],
+        squad.connection,
+        squad.wallet as Wallet
+      ))
     );
   }
   return signatures;

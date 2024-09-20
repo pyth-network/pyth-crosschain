@@ -23,6 +23,10 @@ import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
 import { AnchorAccounts } from "./anchor";
 import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
 import { DEFAULT_RECEIVER_PROGRAM_ID } from "@pythnetwork/pyth-solana-receiver";
+import {
+  PRICE_STORE_PROGRAM_ID,
+  PriceStoreMultisigInstruction,
+} from "../price_store";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -36,6 +40,7 @@ export enum MultisigInstructionProgram {
   SolanaStakingProgram,
   SolanaReceiver,
   UnrecognizedProgram,
+  PythPriceStore,
 }
 
 export function getProgramName(program: MultisigInstructionProgram) {
@@ -58,6 +63,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Pyth Staking Program";
     case MultisigInstructionProgram.SolanaReceiver:
       return "Pyth Solana Receiver";
+    case MultisigInstructionProgram.PythPriceStore:
+      return "Pyth Price Store";
     case MultisigInstructionProgram.UnrecognizedProgram:
       return "Unknown";
   }
@@ -99,18 +106,22 @@ export class UnrecognizedProgram implements MultisigInstruction {
 export class MultisigParser {
   readonly pythOracleAddress: PublicKey;
   readonly wormholeBridgeAddress: PublicKey | undefined;
+  readonly pythPriceStoreAddress: PublicKey | undefined;
 
   constructor(
     pythOracleAddress: PublicKey,
-    wormholeBridgeAddress: PublicKey | undefined
+    wormholeBridgeAddress: PublicKey | undefined,
+    pythPriceStoreAddress: PublicKey | undefined
   ) {
     this.pythOracleAddress = pythOracleAddress;
     this.wormholeBridgeAddress = wormholeBridgeAddress;
+    this.pythPriceStoreAddress = pythPriceStoreAddress;
   }
   static fromCluster(cluster: PythCluster): MultisigParser {
     return new MultisigParser(
       getPythProgramKeyForCluster(cluster),
-      WORMHOLE_ADDRESS[cluster]
+      WORMHOLE_ADDRESS[cluster],
+      PRICE_STORE_PROGRAM_ID
     );
   }
 
@@ -124,6 +135,13 @@ export class MultisigParser {
       );
     } else if (instruction.programId.equals(this.pythOracleAddress)) {
       return PythMultisigInstruction.fromTransactionInstruction(instruction);
+    } else if (
+      this.pythPriceStoreAddress &&
+      instruction.programId.equals(this.pythPriceStoreAddress)
+    ) {
+      return PriceStoreMultisigInstruction.fromTransactionInstruction(
+        instruction
+      );
     } else if (
       instruction.programId.equals(MESSAGE_BUFFER_PROGRAM_ID) ||
       instruction.programId.equals(MESH_PROGRAM_ID) ||
@@ -149,6 +167,7 @@ export class MultisigParser {
   }
 }
 
+export { idlSetBuffer } from "./anchor";
 export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { AnchorMultisigInstruction } from "./MessageBufferMultisigInstruction";

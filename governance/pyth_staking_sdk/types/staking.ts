@@ -8,7 +8,7 @@ export type Staking = {
   address: "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ";
   metadata: {
     name: "staking";
-    version: "1.2.0";
+    version: "2.0.0";
     spec: "0.1.0";
     description: "Created with Anchor";
   };
@@ -2184,7 +2184,7 @@ export type Staking = {
             type: "u8";
           },
           {
-            name: "transferEpoch";
+            name: "deprecated";
             type: {
               option: "u64";
             };

@@ -6,8 +6,11 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/update-package-json.js",
     "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
@@ -34,6 +37,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
     "@pythnetwork/solana-utils": "workspace:*",
+    "@solana/spl-governance": "^0.3.28",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.95.3"
   }

@@ -9,7 +9,7 @@ type Props = {
 export const StakingTimeline = ({ cooldownOnly, currentEpoch }: Props) => (
   <div className="mb-2 flex flex-col gap-1">
     <div className="text-sm">Timeline</div>
-    <div className="grid grid-cols-[max-content_1fr_max-content] items-center gap-x-4 gap-y-3 border border-neutral-600/50 bg-pythpurple-100/10 px-8 py-6 text-sm font-light">
+    <div className="grid grid-cols-[max-content_1fr_max-content] items-center gap-x-4 gap-y-3 border border-neutral-600/50 bg-pythpurple-100/10 px-4 py-2 text-xs font-light sm:px-8 sm:py-6 sm:text-sm">
       {!cooldownOnly && (
         <>
           <div className="size-4 rounded-full border border-dashed border-pythpurple-100" />
