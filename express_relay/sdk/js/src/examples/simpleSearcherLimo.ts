@@ -56,10 +56,7 @@ class SimpleSearcherLimo {
       }
     }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.type.replaceAll(
-        "_",
-        " "
-      )}${resultDetails}`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
     );
   }
 
@@ -74,6 +71,10 @@ class SimpleSearcherLimo {
       order.state.remainingInputAmount.toNumber()
     ).div(new Decimal(10).pow(inputMintDecimals));
 
+    const outputAmount = new Decimal(
+      order.state.expectedOutputAmount.toNumber()
+    ).div(new Decimal(10).pow(outputMintDecimals));
+
     console.log("Order address", order.address.toBase58());
     console.log(
       "Sell token",
@@ -85,10 +86,7 @@ class SimpleSearcherLimo {
       "Buy token",
       order.state.outputMint.toBase58(),
       "amount:",
-      (
-        order.state.expectedOutputAmount.toNumber() /
-        10 ** outputMintDecimals
-      ).toString()
+      outputAmount.toString()
     );
 
     const ixsTakeOrder = await this.clientLimo.takeOrderIx(
@@ -195,7 +193,7 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parseSync();
 async function run() {
-  if (SVM_CONSTANTS[argv.chainId] === undefined) {
+  if (!SVM_CONSTANTS[argv.chainId]) {
     throw new Error(`SVM constants not found for chain ${argv.chainId}`);
   }
   const searcherSvm = Keypair.fromSecretKey(

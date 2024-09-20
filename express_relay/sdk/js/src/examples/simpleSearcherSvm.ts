@@ -52,10 +52,7 @@ class SimpleSearcherSvm {
       }
     }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.type.replaceAll(
-        "_",
-        " "
-      )}${resultDetails}`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
     );
   }
 
