@@ -49,6 +49,7 @@ import { extractPublisherData } from "./utils/pool";
 import {
   deserializeStakeAccountPositions,
   getPositionState,
+  getVotingTokenAmount,
 } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
@@ -763,27 +764,33 @@ export class PythStakingClient {
 
   public async getMainStakeAccount() {
     const stakeAccountPositions = await this.getAllStakeAccountPositions();
-    const stakeAccountBalances = await Promise.all(
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    const stakeAccountVotingTokens = await Promise.all(
       stakeAccountPositions.map(async (position) => {
-        const stakeAccountCustody = await this.getStakeAccountCustody(position);
+        const stakeAccountPositionsData =
+          await this.getStakeAccountPositions(position);
         return {
           stakeAccountPosition: position,
-          balance: stakeAccountCustody.amount,
+          votingTokens: getVotingTokenAmount(
+            stakeAccountPositionsData,
+            currentEpoch,
+          ),
         };
       }),
     );
 
-    let mainAccount = stakeAccountBalances[0];
+    let mainAccount = stakeAccountVotingTokens[0];
 
     if (mainAccount === undefined) {
       return;
     }
 
-    for (let i = 1; i < stakeAccountBalances.length; i++) {
-      const currentAccount = stakeAccountBalances[i];
+    for (let i = 1; i < stakeAccountVotingTokens.length; i++) {
+      const currentAccount = stakeAccountVotingTokens[i];
       if (
         currentAccount !== undefined &&
-        currentAccount.balance > mainAccount.balance
+        currentAccount.votingTokens > mainAccount.votingTokens
       ) {
         mainAccount = currentAccount;
       }
@@ -800,6 +807,6 @@ export class PythStakingClient {
     }
 
     const scalingFactor = await this.getScalingFactor();
-    return Number(mainAccount.balance) / scalingFactor;
+    return Number(mainAccount.votingTokens) / scalingFactor;
   }
 }
