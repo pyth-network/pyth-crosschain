@@ -488,16 +488,17 @@ export const OracleIntegrityStakingGuide = (
                     tokens will first undergo a first phase of the Cooldown
                     Period from the time of clicking Unstake to the end of the
                     current epoch. These tokens still actively contribute to
-                    oracle integrity and remain subject to programmatic rewards
-                    and slashing.
+                    oracle integrity and remain eligible to programmatic
+                    rewards.
                   </p>
                   <p>
-                    After this first phase, these tokens will undergo second
+                    After this first phase, these tokens will undergo a second
                     phase in the Cooldown Period lasting one full epoch, during
-                    which the tokens are no longer subject to programmatic
-                    rewards or slashing. Once this phase concludes, your tokens
-                    will become unstaked and can be restaked or withdrawn to
-                    your wallet.
+                    which the tokens are no longer eligible to programmatic
+                    rewards. These tokens are subject to slashing if a misprint
+                    in the previous epoch is identified. Once this phase
+                    concludes, your tokens will become unstaked and can be
+                    restaked or withdrawn to your wallet.
                   </p>
                 </>
               ),
@@ -513,11 +514,15 @@ export const OracleIntegrityStakingGuide = (
               answer: (
                 <>
                   <p>
-                    In the first phase of the <strong>Cooldown Period</strong>{" "}
-                    an on-chain protocol consuming Pyth data can choose to raise
-                    a report for a plausible data misprint. The Pythian Council
-                    of the Pyth DAO will then review the reference data provided
-                    and compare against the Pyth data.
+                    Anyone can choose to raise a report for a plausible data
+                    misprint. The Pythian Council of the Pyth DAO will then
+                    review the reference data provided and compare against the
+                    Pyth data to determine whether a slashing event should
+                    occur. The council will have until the end of the epoch
+                    after the epoch of the reported incident to review the
+                    report. The tokens subject to slashing are the tokens
+                    eligible for rewards during the epoch of the misprint
+                    incident.
                   </p>
                   <p>
                     In the unlikely event that a published aggregate has been

@@ -351,7 +351,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://forum.pyth.network/t/about-the-pyth-dao/14"
+                    href="https://ipfs.io/ipfs/QmP2GmL1n2WbHd7AtHqyXVWFyyHH36aZLfVZbNoqhommJi"
                   >
                     Pyth DAO LLC Operating Agreement
                   </Link>{" "}
@@ -359,7 +359,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://forum.pyth.network/t/about-the-pyth-dao/14"
+                    href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   >
                     Pyth DAO Constitution
                   </Link>
