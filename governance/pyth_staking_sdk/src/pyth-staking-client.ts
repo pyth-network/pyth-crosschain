@@ -41,6 +41,7 @@ import {
   type PoolDataAccount,
   type StakeAccountPositions,
   type TargetAccount,
+  type VoterWeightAction,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -734,5 +735,71 @@ export class PythStakingClient {
         governanceAuthority,
       })
       .instruction();
+  }
+
+  public async getUpdateVoterWeightInstruction(
+    stakeAccountPositions: PublicKey,
+    action: VoterWeightAction,
+    remainingAccount?: PublicKey,
+  ) {
+    return this.stakingProgram.methods
+      .updateVoterWeight(action)
+      .accounts({
+        stakeAccountPositions,
+      })
+      .remainingAccounts(
+        remainingAccount
+          ? [
+              {
+                pubkey: remainingAccount,
+                isWritable: false,
+                isSigner: false,
+              },
+            ]
+          : [],
+      )
+      .instruction();
+  }
+
+  public async getMainStakeAccount() {
+    const stakeAccountPositions = await this.getAllStakeAccountPositions();
+    const stakeAccountBalances = await Promise.all(
+      stakeAccountPositions.map(async (position) => {
+        const stakeAccountCustody = await this.getStakeAccountCustody(position);
+        return {
+          stakeAccountPosition: position,
+          balance: stakeAccountCustody.amount,
+        };
+      }),
+    );
+
+    let mainAccount = stakeAccountBalances[0];
+
+    if (mainAccount === undefined) {
+      return;
+    }
+
+    for (let i = 1; i < stakeAccountBalances.length; i++) {
+      const currentAccount = stakeAccountBalances[i];
+      if (
+        currentAccount !== undefined &&
+        currentAccount.balance > mainAccount.balance
+      ) {
+        mainAccount = currentAccount;
+      }
+    }
+
+    return mainAccount;
+  }
+
+  public async getVoterWeight() {
+    const mainAccount = await this.getMainStakeAccount();
+
+    if (mainAccount === undefined) {
+      return 0;
+    }
+
+    const scalingFactor = await this.getScalingFactor();
+    return Number(mainAccount.balance) / scalingFactor;
   }
 }

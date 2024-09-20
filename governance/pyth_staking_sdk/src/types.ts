@@ -38,6 +38,8 @@ export type VestingSchedule = ConvertBNToBigInt<VestingScheduleAnchor>;
 export type TargetAccountAnchor = IdlAccounts<Staking>["targetMetadata"];
 export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
 
+export type VoterWeightAction = IdlTypes<Staking>["voterWeightAction"];
+
 export type UnlockSchedule = {
   date: Date;
   amount: bigint;
