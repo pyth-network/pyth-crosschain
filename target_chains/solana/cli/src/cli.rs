@@ -57,10 +57,12 @@ pub enum Action {
     InitializeWormholeReceiver {},
     InitializePythReceiver {
         #[clap(short = 'f', long, help = "Fee in lmaports")]
-        fee:     u64,
+        fee:                  u64,
         #[clap(short = 'e', long, parse(try_from_str = Pubkey::from_str), help = "Source emitter")]
-        emitter: Pubkey,
+        emitter:              Pubkey,
         #[clap(short = 'c', long, help = "Source chain")]
-        chain:   u16,
+        chain:                u16,
+        #[clap(short = 'a', long, parse(try_from_str = Pubkey::from_str), help = "Governance authority")]
+        governance_authority: Pubkey,
     },
 }

@@ -44,6 +44,7 @@ import {
   findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
+  idlSetBuffer,
   isPriceStorePublisherInitialized,
 } from "@pythnetwork/xc-admin-common";
 
@@ -284,6 +285,30 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
     );
   });
 
+multisigCommand("upgrade-idl", "Upgrade an Anchor Idl from a bufffer")
+  .requiredOption(
+    "-p, --program-id <pubkey>",
+    "program whose idl you want to upgrade"
+  )
+  .requiredOption("-b, --buffer <pubkey>", "buffer account")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const programId: PublicKey = new PublicKey(options.programId);
+    const buffer: PublicKey = new PublicKey(options.buffer);
+
+    const proposalInstruction: TransactionInstruction = await idlSetBuffer(
+      programId,
+      buffer,
+      await vault.getVaultAuthorityPDA(cluster)
+    );
+
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
 async function closeProgramOrBuffer(
   vault: MultisigVault,
   cluster: PythCluster,

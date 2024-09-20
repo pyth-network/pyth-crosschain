@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
   PROGRAM_VERSION_V2,
@@ -15,6 +15,7 @@ import {
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
+  Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -65,7 +66,7 @@ export type PythStakingClientConfig = {
 
 export class PythStakingClient {
   connection: Connection;
-  wallet: AnchorWallet | undefined;
+  wallet: AnchorWallet;
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
   integrityPoolProgram: Program<IntegrityPool>;
@@ -73,16 +74,11 @@ export class PythStakingClient {
 
   constructor(config: PythStakingClientConfig) {
     this.connection = config.connection;
-    this.wallet = config.wallet;
+    this.wallet = config.wallet ?? new Wallet(Keypair.generate());
 
-    // {} as AnchorWallet is a workaround for AnchorProvider requiring a wallet
-    this.provider = new AnchorProvider(
-      this.connection,
-      this.wallet ?? ({} as AnchorWallet),
-      {
-        skipPreflight: true,
-      },
-    );
+    this.provider = new AnchorProvider(this.connection, this.wallet, {
+      skipPreflight: true,
+    });
     this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
     this.integrityPoolProgram = new Program(
       IntegrityPoolIdl as IntegrityPool,
@@ -94,14 +90,7 @@ export class PythStakingClient {
     );
   }
 
-  private assertWallet(): asserts this is { wallet: AnchorWallet } {
-    if (this.wallet === undefined) {
-      throw new Error("Wallet not set");
-    }
-  }
-
   async initGlobalConfig(config: GlobalConfig) {
-    this.assertWallet();
     const globalConfigAnchor = convertBigIntToBN(config);
     const instruction = await this.stakingProgram.methods
       .initConfig(globalConfigAnchor)
@@ -120,7 +109,6 @@ export class PythStakingClient {
 
   /** Gets a users stake accounts */
   public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
-    this.assertWallet();
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -194,7 +182,6 @@ export class PythStakingClient {
     poolData: PublicKey;
     y: bigint;
   }) {
-    this.assertWallet();
     const yAnchor = convertBigIntToBN(y);
     const instruction = await this.integrityPoolProgram.methods
       .initializePool(rewardProgramAuthority, yAnchor)
@@ -208,7 +195,6 @@ export class PythStakingClient {
   }
 
   public async getOwnerPythAtaAccount(): Promise<Account> {
-    this.assertWallet();
     const globalConfig = await this.getGlobalConfig();
     return getAccount(
       this.connection,
@@ -248,7 +234,6 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     amount: bigint,
   ) {
-    this.assertWallet();
     const instruction = await this.stakingProgram.methods
       .createPosition(
         {
@@ -269,7 +254,6 @@ export class PythStakingClient {
     positionState: PositionState.LOCKED | PositionState.LOCKING,
     amount: bigint,
   ) {
-    this.assertWallet();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
       stakeAccountPositions,
     );
@@ -325,7 +309,6 @@ export class PythStakingClient {
     positionState: PositionState.LOCKED | PositionState.LOCKING,
     amount: bigint,
   ) {
-    this.assertWallet();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
       stakeAccountPositions,
     );
@@ -378,7 +361,6 @@ export class PythStakingClient {
   }
 
   public async hasGovernanceRecord(config: GlobalConfig): Promise<boolean> {
-    this.assertWallet();
     const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
       GOVERNANCE_ADDRESS,
       config.pythGovernanceRealm,
@@ -394,7 +376,6 @@ export class PythStakingClient {
   }
 
   public async createStakeAccountAndDeposit(amount: bigint) {
-    this.assertWallet();
     const globalConfig = await this.getGlobalConfig();
 
     const senderTokenAccount = await getAssociatedTokenAddress(
@@ -476,7 +457,6 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     amount: bigint,
   ) {
-    this.assertWallet();
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
 
@@ -499,7 +479,6 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     amount: bigint,
   ) {
-    this.assertWallet();
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
 
@@ -524,7 +503,6 @@ export class PythStakingClient {
     publisher: PublicKey,
     amount: bigint,
   ) {
-    this.assertWallet();
     const instruction = await this.integrityPoolProgram.methods
       .delegate(convertBigIntToBN(amount))
       .accounts({
@@ -562,7 +540,6 @@ export class PythStakingClient {
   async getAdvanceDelegationRecordInstructions(
     stakeAccountPositions: PublicKey,
   ) {
-    this.assertWallet();
     const poolData = await this.getPoolDataAccount();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
       stakeAccountPositions,
@@ -618,7 +595,6 @@ export class PythStakingClient {
   }
 
   public async advanceDelegationRecord(stakeAccountPositions: PublicKey) {
-    this.assertWallet();
     const instructions = await this.getAdvanceDelegationRecordInstructions(
       stakeAccountPositions,
     );
@@ -680,7 +656,6 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     newStakeAccountPositions: PublicKey | undefined,
   ) {
-    this.assertWallet();
     const instruction = await this.integrityPoolProgram.methods
       .setPublisherStakeAccount()
       .accounts({
