@@ -210,13 +210,13 @@ const TokenOverview = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 1n).toLocaleString()}
+              {epochToDate(currentEpoch + 2n).toLocaleString()}
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 2n).toLocaleString()}
+              {epochToDate(currentEpoch + 1n).toLocaleString()}
             </div>
           )}
         </>
