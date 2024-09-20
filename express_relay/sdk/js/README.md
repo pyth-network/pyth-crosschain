@@ -91,8 +91,8 @@ The SimpleSearcherSvm example submits a dummy SVM transaction to the auction ser
 
 ```bash
 npm run simple-searcher-svm -- \
-  --endpoint-express-relay http://per-staging.dourolabs.app/ \
-  --chain-id solana \
+  --endpoint-express-relay https://per-staging.dourolabs.app/ \
+  --chain-id development-solana \
   --private-key <YOUR-PRIVATE-KEY> \
   --endpoint-svm "https://api.mainnet-beta.solana.com"
 ```

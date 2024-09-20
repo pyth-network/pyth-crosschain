@@ -26,13 +26,13 @@ export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
 export const SVM_CONSTANTS: Record<string, SvmConstantsConfig> = {
   "development-solana": {
     relayerSigner: new PublicKey(
-      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
+      "GEeEguHhepHtPVo3E9RA1wvnxgxJ61iSc9dJfd433w3K"
     ),
     feeReceiverRelayer: new PublicKey(
-      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
+      "feesJcX9zwLiEZs9iQGXeBd65b9m2Zc1LjjyHngQF29"
     ),
     expressRelayProgram: new PublicKey(
-      "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM"
+      "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou"
     ),
   },
 };

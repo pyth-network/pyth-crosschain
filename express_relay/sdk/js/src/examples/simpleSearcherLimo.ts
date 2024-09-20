@@ -5,13 +5,14 @@ import { BidStatusUpdate } from "../types";
 import { SVM_CONSTANTS } from "../const";
 
 import * as anchor from "@coral-xyz/anchor";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
-import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svmPda";
 
 import * as limo from "@kamino-finance/limo-sdk";
 import { Decimal } from "decimal.js";
-import { OrderStateAndAddress } from "@kamino-finance/limo-sdk/dist/utils";
+import {
+  getPdaAuthority,
+  OrderStateAndAddress,
+} from "@kamino-finance/limo-sdk/dist/utils";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -19,14 +20,13 @@ class SimpleSearcherLimo {
   private client: Client;
   private connectionSvm: Connection;
   private clientLimo: limo.LimoClient;
+  private searcher: Keypair;
   constructor(
     public endpointExpressRelay: string,
     public chainId: string,
-    public privateKey: string,
+    privateKey: string,
     public endpointSvm: string,
     public globalConfig: PublicKey,
-    public mintSell: PublicKey,
-    public mintBuy: PublicKey,
     public apiKey?: string
   ) {
     this.client = new Client(
@@ -42,6 +42,8 @@ class SimpleSearcherLimo {
     );
     this.connectionSvm = new Connection(endpointSvm, "confirmed");
     this.clientLimo = new limo.LimoClient(this.connectionSvm, globalConfig);
+    const secretKey = anchor.utils.bytes.bs58.decode(privateKey);
+    this.searcher = Keypair.fromSecretKey(secretKey);
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -62,29 +64,54 @@ class SimpleSearcherLimo {
   }
 
   async evaluateOrder(order: OrderStateAndAddress) {
-    const secretKey = anchor.utils.bytes.bs58.decode(this.privateKey);
-    const searcher = Keypair.fromSecretKey(secretKey);
-
+    const inputMintDecimals = await this.clientLimo.getOrderInputMintDecimals(
+      order
+    );
+    const outputMintDecimals = await this.clientLimo.getOrderOutputMintDecimals(
+      order
+    );
     const inputAmount = new Decimal(
       order.state.remainingInputAmount.toNumber()
+    ).div(new Decimal(10).pow(inputMintDecimals));
+
+    console.log("Order address", order.address.toBase58());
+    console.log(
+      "Sell token",
+      order.state.inputMint.toBase58(),
+      "amount:",
+      inputAmount.toString()
     );
-    let ixsTakeOrder = await this.clientLimo.takeOrderIx(
-      searcher.publicKey,
+    console.log(
+      "Buy token",
+      order.state.outputMint.toBase58(),
+      "amount:",
+      (
+        order.state.expectedOutputAmount.toNumber() /
+        10 ** outputMintDecimals
+      ).toString()
+    );
+
+    const ixsTakeOrder = await this.clientLimo.takeOrderIx(
+      this.searcher.publicKey,
       order,
       inputAmount,
-      new Decimal(argv.bid)
+      SVM_CONSTANTS[this.chainId].expressRelayProgram,
+      inputMintDecimals,
+      outputMintDecimals
     );
     const txRaw = new anchor.web3.Transaction().add(...ixsTakeOrder);
 
-    const router = Keypair.generate().publicKey;
-    const permission = PublicKey.default;
+    const router = getPdaAuthority(
+      this.clientLimo.getProgramID(),
+      this.globalConfig
+    );
     const bidAmount = new anchor.BN(argv.bid);
 
     const bid = await this.client.constructSvmBid(
       txRaw,
-      searcher.publicKey,
+      this.searcher.publicKey,
       router,
-      permission,
+      order.address,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
       this.chainId
@@ -93,7 +120,7 @@ class SimpleSearcherLimo {
     try {
       const { blockhash } = await this.connectionSvm.getLatestBlockhash();
       bid.transaction.recentBlockhash = blockhash;
-      bid.transaction.sign(Keypair.fromSecretKey(secretKey));
+      bid.transaction.sign(this.searcher);
       const bidId = await this.client.submitBid(bid);
       console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {
@@ -101,20 +128,26 @@ class SimpleSearcherLimo {
     }
   }
 
-  async limoBid() {
-    const allOrders =
-      await this.clientLimo.getAllOrdersStateAndAddressForInputAndOutputMints(
-        new PublicKey(this.mintBuy),
-        new PublicKey(this.mintSell)
-      );
-    allOrders.forEach(async (order) => {
+  async bidOnNewOrders() {
+    let allOrders =
+      await this.clientLimo.getAllOrdersStateAndAddressWithFilters([]);
+    allOrders = allOrders.filter(
+      (order) => !order.state.remainingInputAmount.isZero()
+    );
+    if (allOrders.length === 0) {
+      console.log("No orders to bid on");
+      return;
+    }
+    for (const order of allOrders) {
       await this.evaluateOrder(order);
-    });
+    }
+    // Note: You need to parallelize this in production with something like:
+    // await Promise.all(allOrders.map((order) => this.evaluateOrder(order)));
   }
 
   async start() {
     for (;;) {
-      await this.limoBid();
+      await this.bidOnNewOrders();
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -134,16 +167,6 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("global-config", {
     description: "Global config address",
-    type: "string",
-    demandOption: true,
-  })
-  .option("mint-sell", {
-    description: "Sell token mint address",
-    type: "string",
-    demandOption: true,
-  })
-  .option("mint-buy", {
-    description: "Buy token mint address",
     type: "string",
     demandOption: true,
   })
@@ -186,8 +209,6 @@ async function run() {
     argv.privateKey,
     argv.endpointSvm,
     new PublicKey(argv.globalConfig),
-    new PublicKey(argv.mintSell),
-    new PublicKey(argv.mintBuy),
     argv.apiKey
   );
   await simpleSearcher.start();
