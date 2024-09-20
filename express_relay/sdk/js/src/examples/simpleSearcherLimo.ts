@@ -5,27 +5,28 @@ import { BidStatusUpdate } from "../types";
 import { SVM_CONSTANTS } from "../const";
 
 import * as anchor from "@coral-xyz/anchor";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
-import dummyIdl from "./idl/idlDummy.json";
-import { Dummy } from "./dummyTypes";
-import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svmPda";
+
+import * as limo from "@kamino-finance/limo-sdk";
+import { Decimal } from "decimal.js";
+import {
+  getPdaAuthority,
+  OrderStateAndAddress,
+} from "@kamino-finance/limo-sdk/dist/utils";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
-const DUMMY_PIDS: Record<string, PublicKey> = {
-  "development-solana": new PublicKey(
-    "HYCgALnu6CM2gkQVopa1HGaNf8Vzbs9bomWRiKP267P3"
-  ),
-};
 
-class SimpleSearcherSvm {
+class SimpleSearcherLimo {
   private client: Client;
   private connectionSvm: Connection;
+  private clientLimo: limo.LimoClient;
+  private searcher: Keypair;
   constructor(
     public endpointExpressRelay: string,
     public chainId: string,
-    public privateKey: string,
+    privateKey: string,
     public endpointSvm: string,
+    public globalConfig: PublicKey,
     public apiKey?: string
   ) {
     this.client = new Client(
@@ -40,6 +41,9 @@ class SimpleSearcherSvm {
       this.bidStatusHandler.bind(this)
     );
     this.connectionSvm = new Connection(endpointSvm, "confirmed");
+    this.clientLimo = new limo.LimoClient(this.connectionSvm, globalConfig);
+    const secretKey = anchor.utils.bytes.bs58.decode(privateKey);
+    this.searcher = Keypair.fromSecretKey(secretKey);
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -56,58 +60,56 @@ class SimpleSearcherSvm {
     );
   }
 
-  async dummyBid() {
-    const secretKey = anchor.utils.bytes.bs58.decode(this.privateKey);
-    const searcher = Keypair.fromSecretKey(secretKey);
-
-    const provider = new AnchorProvider(
-      this.connectionSvm,
-      new anchor.Wallet(searcher),
-      {}
+  async evaluateOrder(order: OrderStateAndAddress) {
+    const inputMintDecimals = await this.clientLimo.getOrderInputMintDecimals(
+      order
     );
-    const dummy = new Program<Dummy>(dummyIdl as Dummy, provider);
+    const outputMintDecimals = await this.clientLimo.getOrderOutputMintDecimals(
+      order
+    );
+    const inputAmount = new Decimal(
+      order.state.remainingInputAmount.toNumber()
+    ).div(new Decimal(10).pow(inputMintDecimals));
 
-    const permission = PublicKey.default;
-    const router = Keypair.generate().publicKey;
+    const outputAmount = new Decimal(
+      order.state.expectedOutputAmount.toNumber()
+    ).div(new Decimal(10).pow(outputMintDecimals));
 
-    const svmConstants = SVM_CONSTANTS[this.chainId];
-    if (!(this.chainId in DUMMY_PIDS)) {
-      throw new Error(`Dummy program id not found for chain ${this.chainId}`);
-    }
-    const dummyPid = DUMMY_PIDS[this.chainId];
+    console.log("Order address", order.address.toBase58());
+    console.log(
+      "Sell token",
+      order.state.inputMint.toBase58(),
+      "amount:",
+      inputAmount.toString()
+    );
+    console.log(
+      "Buy token",
+      order.state.outputMint.toBase58(),
+      "amount:",
+      outputAmount.toString()
+    );
 
-    const configRouter = getConfigRouterPda(this.chainId, router);
-    const expressRelayMetadata = getExpressRelayMetadataPda(this.chainId);
-    const accounting = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("accounting")],
-      dummyPid
-    )[0];
+    const ixsTakeOrder = await this.clientLimo.takeOrderIx(
+      this.searcher.publicKey,
+      order,
+      inputAmount,
+      SVM_CONSTANTS[this.chainId].expressRelayProgram,
+      inputMintDecimals,
+      outputMintDecimals
+    );
+    const txRaw = new anchor.web3.Transaction().add(...ixsTakeOrder);
 
+    const router = getPdaAuthority(
+      this.clientLimo.getProgramID(),
+      this.globalConfig
+    );
     const bidAmount = new anchor.BN(argv.bid);
-
-    const ixDummy = await dummy.methods
-      .doNothing()
-      .accountsStrict({
-        payer: searcher.publicKey,
-        expressRelay: svmConstants.expressRelayProgram,
-        expressRelayMetadata,
-        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        permission,
-        router,
-        configRouter,
-        accounting,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .instruction();
-    ixDummy.programId = dummyPid;
-
-    const txRaw = new anchor.web3.Transaction().add(ixDummy);
 
     const bid = await this.client.constructSvmBid(
       txRaw,
-      searcher.publicKey,
+      this.searcher.publicKey,
       router,
-      permission,
+      order.address,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
       this.chainId
@@ -116,7 +118,7 @@ class SimpleSearcherSvm {
     try {
       const { blockhash } = await this.connectionSvm.getLatestBlockhash();
       bid.transaction.recentBlockhash = blockhash;
-      bid.transaction.sign(Keypair.fromSecretKey(secretKey));
+      bid.transaction.sign(this.searcher);
       const bidId = await this.client.submitBid(bid);
       console.log(`Successful bid. Bid id ${bidId}`);
     } catch (error) {
@@ -124,9 +126,26 @@ class SimpleSearcherSvm {
     }
   }
 
+  async bidOnNewOrders() {
+    let allOrders =
+      await this.clientLimo.getAllOrdersStateAndAddressWithFilters([]);
+    allOrders = allOrders.filter(
+      (order) => !order.state.remainingInputAmount.isZero()
+    );
+    if (allOrders.length === 0) {
+      console.log("No orders to bid on");
+      return;
+    }
+    for (const order of allOrders) {
+      await this.evaluateOrder(order);
+    }
+    // Note: You need to parallelize this in production with something like:
+    // await Promise.all(allOrders.map((order) => this.evaluateOrder(order)));
+  }
+
   async start() {
     for (;;) {
-      await this.dummyBid();
+      await this.bidOnNewOrders();
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -140,7 +159,12 @@ const argv = yargs(hideBin(process.argv))
     demandOption: true,
   })
   .option("chain-id", {
-    description: "Chain id to fetch opportunities for. e.g: solana",
+    description: "Chain id to bid on Limo opportunities for. e.g: solana",
+    type: "string",
+    demandOption: true,
+  })
+  .option("global-config", {
+    description: "Global config address",
     type: "string",
     demandOption: true,
   })
@@ -169,7 +193,7 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parseSync();
 async function run() {
-  if (SVM_CONSTANTS[argv.chainId] === undefined) {
+  if (!SVM_CONSTANTS[argv.chainId]) {
     throw new Error(`SVM constants not found for chain ${argv.chainId}`);
   }
   const searcherSvm = Keypair.fromSecretKey(
@@ -177,11 +201,12 @@ async function run() {
   );
   console.log(`Using searcher pubkey: ${searcherSvm.publicKey.toBase58()}`);
 
-  const simpleSearcher = new SimpleSearcherSvm(
+  const simpleSearcher = new SimpleSearcherLimo(
     argv.endpointExpressRelay,
     argv.chainId,
     argv.privateKey,
     argv.endpointSvm,
+    new PublicKey(argv.globalConfig),
     argv.apiKey
   );
   await simpleSearcher.start();
