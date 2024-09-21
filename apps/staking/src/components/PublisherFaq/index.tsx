@@ -503,6 +503,12 @@ export const PublisherFaq = (
                 determine whether a slashing event should occur.
               </p>
               <p>
+                The council will have until the end of the epoch after the epoch
+                of the reported incident to review the report. The tokens
+                subject to slashing are the tokens eligible for rewards{" "}
+                <em>during the epoch of the misprint incident</em>.
+              </p>
+              <p>
                 If a discrepancy is confirmed, a slashing event is triggered. In
                 this event, the stakes of publishers who contributed to the
                 incorrect aggregate will be programmatically slashed, along with
@@ -510,16 +516,8 @@ export const PublisherFaq = (
                 pools.
               </p>
               <p>
-                The council will have until the end of the epoch after the epoch
-                of the reported incident to review the report. The tokens
-                subject to slashing are the tokens eligible for rewards{" "}
-                <em>during the epoch of the misprint incident</em>.
-              </p>
-              <p>
-                During the same epoch, the stakes of the subset of publishers
-                involved in the error and their stakers are slashed. Slashed
-                amounts are sent to the DAO wallet. The Pyth DAO can choose to
-                vote on future decisions for these slashed amounts.
+                Slashed amounts are sent to the DAO wallet. The Pyth DAO can
+                choose to vote on future decisions for these slashed amounts.
               </p>
               <p>
                 Please refer to the{" "}
