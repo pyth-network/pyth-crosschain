@@ -38,33 +38,61 @@ export const Footer = ({
 }: Omit<HTMLAttributes<HTMLElement>, "children">) => (
   <footer
     className={clsx(
-      "text-xs font-light sm:sticky sm:bottom-0 lg:px-4",
+      "text-xs font-light lg:sticky lg:bottom-0 lg:px-4",
       className,
     )}
     {...props}
   >
     <div className="border-t border-neutral-600/50 bg-pythpurple-800 lg:border-x">
-      <MaxWidth className="flex h-48 flex-col items-center justify-between overflow-hidden py-8 sm:h-16 sm:flex-row sm:gap-10 lg:-mx-4">
-        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4 md:gap-8">
-          <Link href="https://www.pyth.network" target="_blank">
-            <Logo className="h-10 sm:h-8" />
+      <MaxWidth className="flex h-48 flex-col items-center justify-between overflow-hidden pb-4 pt-8 text-center lg:-mx-4 lg:h-16 lg:flex-row lg:gap-10 lg:py-0">
+        <div className="flex flex-col items-center gap-2 lg:flex-row lg:gap-8">
+          <Link
+            href="https://www.pyth.network"
+            target="_blank"
+            className="focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+          >
+            <Logo className="h-10 lg:h-8" />
             <span className="sr-only">Pyth homepage</span>
           </Link>
           <div>© 2024 Pyth Data Association</div>
         </div>
-        <div className="relative flex h-full items-center sm:-right-3">
-          {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
+        <div className="flex flex-col items-center gap-6 lg:flex-row-reverse lg:gap-8 xl:gap-16">
+          <div className="relative flex h-full items-center lg:-right-3">
+            {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
+              <Link
+                target="_blank"
+                href={href}
+                key={name}
+                className="grid h-full place-content-center px-3 transition hover:text-pythpurple-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+                rel="noreferrer"
+              >
+                <Icon className="size-4" />
+                <span className="sr-only">{name}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="flex flex-row gap-1 xl:gap-4">
             <Link
+              className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
               target="_blank"
-              href={href}
-              key={name}
-              className="grid h-full place-content-center px-3 hover:text-pythpurple-400"
-              rel="noreferrer"
+              href="https://pythdataassociation.com/privacy-policy"
             >
-              <Icon className="size-4" />
-              <span className="sr-only">{name}</span>
+              Privacy Policy
             </Link>
-          ))}
+            <Link
+              className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+              target="_blank"
+              href="https://pythdataassociation.com/terms-of-use"
+            >
+              Terms of Use
+            </Link>
+            <Link
+              className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+              href="/terms-of-service"
+            >
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </MaxWidth>
     </div>
