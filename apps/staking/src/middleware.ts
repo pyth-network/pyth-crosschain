@@ -7,31 +7,31 @@ import {
 } from "./config/isomorphic";
 import { BLOCKED_REGIONS, PROXYCHECK_API_KEY } from "./config/server";
 
+const PROXY_BLOCK_PATH = `/${REGION_BLOCKED_SEGMENT}`;
+const VPN_BLOCK_PATH = `/${VPN_BLOCKED_SEGMENT}`;
+
 const proxyCheckClient = PROXYCHECK_API_KEY
   ? new ProxyCheck({ api_key: PROXYCHECK_API_KEY })
   : undefined;
 
 export const middleware = async (request: NextRequest) => {
   if (isRegionBlocked(request)) {
-    return NextResponse.rewrite(
-      new URL(`/${REGION_BLOCKED_SEGMENT}`, request.url),
-    );
+    return rewrite(request, PROXY_BLOCK_PATH);
   } else if (await isProxyBlocked(request)) {
-    return NextResponse.rewrite(
-      new URL(`/${VPN_BLOCKED_SEGMENT}`, request.url),
-    );
+    return rewrite(request, VPN_BLOCK_PATH);
+  } else if (isBlockedSegment(request)) {
+    return rewrite(request, "/not-found");
   } else {
-    const { pathname } = request.nextUrl;
-    return pathname.startsWith(`/${REGION_BLOCKED_SEGMENT}`) ||
-      pathname.startsWith(`/${VPN_BLOCKED_SEGMENT}`)
-      ? NextResponse.rewrite(new URL("/not-found", request.url))
-      : undefined;
+    return;
   }
 };
 
-const isRegionBlocked = (request: NextRequest) =>
-  request.geo?.country !== undefined &&
-  BLOCKED_REGIONS.includes(request.geo.country.toLowerCase());
+const rewrite = (request: NextRequest, path: string) =>
+  NextResponse.rewrite(new URL(path, request.url));
+
+const isRegionBlocked = ({ geo }: NextRequest) =>
+  geo?.country !== undefined &&
+  BLOCKED_REGIONS.includes(geo.country.toLowerCase());
 
 const isProxyBlocked = async ({ ip }: NextRequest) => {
   if (proxyCheckClient === undefined || ip === undefined) {
@@ -42,8 +42,10 @@ const isProxyBlocked = async ({ ip }: NextRequest) => {
   }
 };
 
+const isBlockedSegment = ({ nextUrl: { pathname } }: NextRequest) =>
+  pathname.startsWith(`/${REGION_BLOCKED_SEGMENT}`) ||
+  pathname.startsWith(`/${VPN_BLOCKED_SEGMENT}`);
+
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
-  ],
+  matcher: [String.raw`/((?!_next/static|_next/image|.*\.).*)`],
 };

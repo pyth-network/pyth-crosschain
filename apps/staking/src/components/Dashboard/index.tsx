@@ -144,10 +144,10 @@ export const Dashboard = ({
         className="group border-neutral-600/50 data-[empty]:my-[5dvh] data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 sm:p-4 data-[empty]:sm:my-0 data-[empty]:sm:border-0 data-[empty]:sm:bg-transparent data-[empty]:sm:p-0"
         {...(tab === TabIds.Empty && { "data-empty": true })}
       >
-        <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:block sm:mb-6 sm:text-3xl lg:my-14 lg:text-5xl">
+        <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:mb-10 group-data-[empty]:block sm:mb-6 sm:text-3xl group-data-[empty]:sm:mb-6 lg:my-14 lg:text-5xl">
           Choose Your Journey
         </h1>
-        <TabList className="sticky top-header-height z-10 flex flex-row items-stretch justify-center group-data-[empty]:mx-auto group-data-[empty]:max-w-7xl group-data-[empty]:flex-col group-data-[empty]:gap-2 group-data-[empty]:sm:flex-row">
+        <TabList className="sticky top-header-height z-10 flex flex-row items-stretch justify-center group-data-[empty]:mx-auto group-data-[empty]:max-w-7xl group-data-[empty]:flex-col group-data-[empty]:gap-8 group-data-[empty]:sm:flex-row group-data-[empty]:sm:gap-2">
           <Tab id={TabIds.Empty} className="hidden" />
           <Journey
             longText="Oracle Integrity Staking (OIS)"
@@ -241,13 +241,13 @@ const Journey = ({
     )}
     {...props}
   >
-    <div className="grid size-full flex-none basis-0 place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-hover/tab:bg-pythpurple-600/30 group-selected/tab:border-pythpurple-400/60 group-selected/tab:bg-pythpurple-600/60 group-hover/tab:group-selected/tab:bg-pythpurple-600/60 sm:py-4 sm:text-lg">
+    <div className="grid size-full flex-none basis-0 place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-data-[empty]:py-8 group-hover/tab:bg-pythpurple-600/30 group-selected/tab:border-pythpurple-400/60 group-selected/tab:bg-pythpurple-600/60 group-hover/tab:group-selected/tab:bg-pythpurple-600/60 sm:py-4 sm:text-lg group-data-[empty]:sm:py-2">
       <span className="hidden group-data-[empty]:inline sm:inline">
         {longText}
       </span>
       <span className="group-data-[empty]:hidden sm:hidden">{shortText}</span>
     </div>
-    <div className="relative hidden max-h-[40dvh] w-4/5 flex-none overflow-hidden opacity-30 transition group-hover/tab:opacity-100 group-data-[empty]:sm:block">
+    <div className="relative hidden w-4/5 flex-none overflow-hidden opacity-30 transition group-hover/tab:opacity-100 group-data-[empty]:sm:block">
       <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
       <Image src={image} alt="" className="size-full object-cover object-top" />
       <div className="absolute inset-0 top-16 text-center text-xl text-pythpurple-800 md:text-2xl lg:text-3xl">
