@@ -5,3 +5,4 @@ export * from "./utils/apy";
 export * from "./utils/clock";
 export * from "./utils/pool";
 export * from "./utils/position";
+export * from "./utils/vesting";

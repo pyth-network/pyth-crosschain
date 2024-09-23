@@ -23,14 +23,17 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
+import {
+  GOVERNANCE_ADDRESS,
+  ONE_YEAR_IN_SECONDS,
+  POSITIONS_ACCOUNT_SIZE,
+} from "./constants";
 import {
   getConfigAddress,
   getDelegationRecordAddress,
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
-  getTargetAccountAddress,
 } from "./pdas";
 import {
   PositionState,
@@ -38,7 +41,7 @@ import {
   type PoolConfig,
   type PoolDataAccount,
   type StakeAccountPositions,
-  type TargetAccount,
+  type VestingSchedule,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -543,6 +546,36 @@ export class PythStakingClient {
     });
   }
 
+  public async getCirculatingSupply() {
+    let circulatingSupply = 8_500_000_000n;
+
+    const vestingSchedule: VestingSchedule = {
+      periodicVestingAfterListing: {
+        initialBalance: circulatingSupply,
+        numPeriods: 4n,
+        periodDuration: ONE_YEAR_IN_SECONDS,
+      },
+    };
+
+    const config = await this.getGlobalConfig();
+
+    if (config.pythTokenListTime === null) {
+      throw new Error("Pyth token list time not set in global config");
+    }
+
+    const unlockSchedule = getUnlockSchedule({
+      vestingSchedule,
+      pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods: false,
+    });
+
+    for (const unlock of unlockSchedule.schedule) {
+      circulatingSupply -= unlock.amount;
+    }
+
+    return circulatingSupply;
+  }
+
   async getAdvanceDelegationRecordInstructions(
     stakeAccountPositions: PublicKey,
   ) {
@@ -696,14 +729,6 @@ export class PythStakingClient {
       stakeAccountPositions,
       undefined,
     );
-  }
-
-  public async getTargetAccount(): Promise<TargetAccount> {
-    const targetAccount =
-      await this.stakingProgram.account.targetMetadata.fetch(
-        getTargetAccountAddress(),
-      );
-    return convertBNToBigInt(targetAccount);
   }
 
   public async getPythTokenMint(): Promise<Mint> {

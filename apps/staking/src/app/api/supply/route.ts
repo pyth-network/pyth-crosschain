@@ -5,7 +5,7 @@ import { type NextRequest } from "next/server";
 import { RPC } from "../../../config/server";
 
 const stakingClient = new PythStakingClient({
-  connection: new Connection(RPC ?? "https://api.mainnet-beta.solana.com"),
+  connection: new Connection(RPC ?? "https://api.devnet.solana.com"),
 });
 
 function validateQ(q: string | null): q is "totalSupply" | "circulatingSupply" {
@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
   }
 
   if (q === "circulatingSupply") {
-    const targetAccount = await stakingClient.getTargetAccount();
-    return getResponse(Number(targetAccount.locked));
+    const circulatingSupply = await stakingClient.getCirculatingSupply();
+    return getResponse(Number(circulatingSupply));
   } else {
     const pythMint = await stakingClient.getPythTokenMint();
     return getResponse(Number(pythMint.supply));
