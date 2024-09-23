@@ -55,7 +55,7 @@ import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet: AnchorWallet | undefined;
+  wallet?: AnchorWallet;
 };
 
 export class PythStakingClient {
@@ -104,7 +104,9 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
+  public async getAllStakeAccountPositions(
+    owner?: PublicKey,
+  ): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -123,7 +125,7 @@ export class PythStakingClient {
             {
               memcmp: {
                 offset: 8,
-                bytes: this.wallet.publicKey.toBase58(),
+                bytes: owner?.toBase58() ?? this.wallet.publicKey.toBase58(),
               },
             },
           ],
@@ -511,7 +513,10 @@ export class PythStakingClient {
     return sendTransaction([instruction], this.connection, this.wallet);
   }
 
-  public async getUnlockSchedule(stakeAccountPositions: PublicKey) {
+  public async getUnlockSchedule(
+    stakeAccountPositions: PublicKey,
+    includePastPeriods = false,
+  ) {
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
     );
@@ -530,6 +535,7 @@ export class PythStakingClient {
     return getUnlockSchedule({
       vestingSchedule,
       pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods,
     });
   }
 

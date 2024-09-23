@@ -194,7 +194,7 @@ const loadDataForStakeAccount = async (
   client: PythStakingClient,
   hermesClient: HermesClient,
   stakeAccount: PublicKey,
-) => {
+): Promise<Data> => {
   const [
     { publishers, ...baseInfo },
     stakeAccountCustody,
@@ -240,7 +240,7 @@ const loadDataForStakeAccount = async (
       cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
       cooldown2: filterGovernancePositions(PositionState.UNLOCKING),
     },
-    unlockSchedule,
+    unlockSchedule: unlockSchedule.schedule,
     integrityStakingPublishers: publishers.map((publisher) => ({
       ...publisher,
       positions: {

@@ -36,9 +36,12 @@ export type VestingScheduleAnchor = IdlTypes<Staking>["vestingSchedule"];
 export type VestingSchedule = ConvertBNToBigInt<VestingScheduleAnchor>;
 
 export type UnlockSchedule = {
-  date: Date;
-  amount: bigint;
-}[];
+  type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";
+  schedule: {
+    date: Date;
+    amount: bigint;
+  }[];
+};
 
 export type StakeAccountPositions = {
   address: PublicKey;
