@@ -35,6 +35,9 @@ export type TargetWithParameters = IdlTypes<Staking>["targetWithParameters"];
 export type VestingScheduleAnchor = IdlTypes<Staking>["vestingSchedule"];
 export type VestingSchedule = ConvertBNToBigInt<VestingScheduleAnchor>;
 
+export type TargetAccountAnchor = IdlAccounts<Staking>["targetMetadata"];
+export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
+
 export type UnlockSchedule = {
   type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";
   schedule: {

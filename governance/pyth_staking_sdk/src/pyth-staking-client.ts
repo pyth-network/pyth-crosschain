@@ -11,6 +11,8 @@ import {
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
+  getMint,
+  type Mint,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
@@ -28,6 +30,7 @@ import {
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
+  getTargetAccountAddress,
 } from "./pdas";
 import {
   PositionState,
@@ -35,6 +38,7 @@ import {
   type PoolConfig,
   type PoolDataAccount,
   type StakeAccountPositions,
+  type TargetAccount,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -692,5 +696,18 @@ export class PythStakingClient {
       stakeAccountPositions,
       undefined,
     );
+  }
+
+  public async getTargetAccount(): Promise<TargetAccount> {
+    const targetAccount =
+      await this.stakingProgram.account.targetMetadata.fetch(
+        getTargetAccountAddress(),
+      );
+    return convertBNToBigInt(targetAccount);
+  }
+
+  public async getPythTokenMint(): Promise<Mint> {
+    const globalConfig = await this.getGlobalConfig();
+    return getMint(this.connection, globalConfig.pythTokenMint);
   }
 }

@@ -50,3 +50,10 @@ export const getDelegationRecordAddress = (
     INTEGRITY_POOL_PROGRAM_ADDRESS,
   )[0];
 };
+
+export const getTargetAccountAddress = () => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("target"), Buffer.from("voting")],
+    STAKING_PROGRAM_ADDRESS,
+  )[0];
+};

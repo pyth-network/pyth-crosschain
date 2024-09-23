@@ -17,9 +17,7 @@ type ResponseType = {
 }[];
 
 const stakingClient = new PythStakingClient({
-  connection: new Connection(
-    RPC ?? 'https://api.devnet.solana.com',
-  ),
+  connection: new Connection(RPC ?? "https://api.devnet.solana.com"),
 });
 
 export async function GET(req: NextRequest) {
