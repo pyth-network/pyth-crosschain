@@ -40,6 +40,9 @@ export const BTC_PRICE_FEED_ID =
 export const TEST_GUARDIAN_ADDRESS1 =
   "0x686b9ea8e3237110eaaba1f1b7467559a3273819";
 
+export const TEST_GUARDIAN_ADDRESS2 =
+  "0xbefa429d57cd18b7f8a4d91a2da9ab4af05d0fbe";
+
 // A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.
 // From: target_chains/starknet/contracts/tests/data.cairo::pyth_auth_transfer()
 export const PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER =

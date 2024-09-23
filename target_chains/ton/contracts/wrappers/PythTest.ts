@@ -156,8 +156,9 @@ export class PythTest implements Contract {
               .endCell()
           : beginCell().endCell()
       ) // governance_data_source
-      .storeUint(0, 64) // last_executed_governance_sequence
-      .storeUint(0, 32) // governance_data_source_index
+      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
+      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
+      .storeUint(0, 256) // upgrade_code_hash, set to 0 for initial state
       .endCell();
 
     // Create the main cell with references to grouped data
@@ -350,6 +351,23 @@ export class PythTest implements Contract {
     });
   }
 
+  async sendUpgradeContract(
+    provider: ContractProvider,
+    via: Sender,
+    newCode: Cell
+  ) {
+    const messageBody = beginCell()
+      .storeUint(4, 32) // OP_UPGRADE_CONTRACT
+      .storeRef(newCode)
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
+  }
+
   async getIsValidDataSource(
     provider: ContractProvider,
     dataSource: DataSource
@@ -364,5 +382,10 @@ export class PythTest implements Contract {
       },
     ]);
     return result.stack.readBoolean();
+  }
+
+  async getNewFunction(provider: ContractProvider) {
+    const result = await provider.get("test_new_function", []);
+    return result.stack.readNumber();
   }
 }
