@@ -1,5 +1,5 @@
 [package]
-name = "contracts"
+name = "pyth-sdk"
 authors.workspace = true
 license.workspace = true
 keywords.workspace = true
