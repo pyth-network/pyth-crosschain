@@ -83,6 +83,7 @@ export const RECEIVER_CHAINS = {
   cronos_zkevm_mainnet: 60059,
   idex_xchain_mainnet: 60060,
   apechain_mainnet: 60061,
+  flow_mainnet: 60062,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

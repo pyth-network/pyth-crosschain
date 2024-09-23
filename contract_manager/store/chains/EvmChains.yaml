@@ -491,7 +491,7 @@
   type: EvmChain
 - id: fantom_sonic_testnet
   mainnet: false
-  rpcUrl: https://rpc.sonic.fantom.network/
+  rpcUrl: https://rpc.testnet.soniclabs.com
   networkId: 64165
   type: EvmChain
 - id: dela_deperp_testnet
@@ -713,4 +713,9 @@
   mainnet: true
   rpcUrl: https://apechain.calderachain.xyz/http
   networkId: 33139
+  type: EvmChain
+- id: flow_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet.evm.nodes.onflow.org
+  networkId: 747
   type: EvmChain

@@ -202,9 +202,6 @@
 - chain: lightlink_pegasus_testnet
   address: "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb"
   type: EvmWormholeContract
-- chain: fantom_sonic_testnet
-  address: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E"
-  type: EvmWormholeContract
 - chain: dela_deperp_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
@@ -384,4 +381,10 @@
   type: EvmWormholeContract
 - chain: apechain_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: flow_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: fantom_sonic_testnet
+  address: "0xb700C2f6D14e2cfbD0845Bb102701dBDFf5d1bC4"
   type: EvmWormholeContract
