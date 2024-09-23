@@ -582,12 +582,9 @@ const PublisherList = ({
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
-  const [sort, setSort] = useState({
-    field: SortField.PoolUtilization,
-    descending: true,
-  });
+  const [sort, setSort] = useState(SortOption.RemainingPoolDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const [currentPage, setPage] = useState(0);
+  const [currentPage, setPage] = useState(1);
   const filteredSortedPublishers = useMemo(
     () =>
       publishers
@@ -607,25 +604,16 @@ const PublisherList = ({
               return 1;
             }
           }
-          const sortResult = doSort(a, b, yieldRate, sort.field);
-          return sort.descending ? sortResult * -1 : sortResult;
+          return doSort(a, b, yieldRate, sort);
         }),
-    [
-      publishers,
-      search,
-      sort.field,
-      sort.descending,
-      filter,
-      yieldRate,
-      yoursFirst,
-    ],
+    [publishers, search, sort, filter, yieldRate, yoursFirst],
   );
 
   const paginatedPublishers = useMemo(
     () =>
       filteredSortedPublishers.slice(
+        (currentPage - 1) * PAGE_SIZE,
         currentPage * PAGE_SIZE,
-        (currentPage + 1) * PAGE_SIZE,
       ),
     [filteredSortedPublishers, currentPage],
   );
@@ -643,7 +631,7 @@ const PublisherList = ({
   const updateSearch = useCallback<typeof setSearch>(
     (newSearch) => {
       setSearch(newSearch);
-      updatePage(0);
+      updatePage(1);
     },
     [setSearch, updatePage],
   );
@@ -651,7 +639,7 @@ const PublisherList = ({
   const updateSort = useCallback<typeof setSort>(
     (newSort) => {
       setSort(newSort);
-      updatePage(0);
+      updatePage(1);
     },
     [setSort, updatePage],
   );
@@ -659,7 +647,7 @@ const PublisherList = ({
   const updateYoursFirst = useCallback<typeof setYoursFirst>(
     (newYoursFirst) => {
       setYoursFirst(newYoursFirst);
-      updatePage(0);
+      updatePage(1);
     },
     [setYoursFirst, updatePage],
   );
@@ -697,20 +685,13 @@ const PublisherList = ({
           </SearchField>
           <Select
             className="flex flex-row items-center gap-2 2xl:hidden"
-            selectedKey={sort.field}
-            onSelectionChange={(field) => {
-              updateSort({
-                field: field as SortField,
-                descending:
-                  field === SortField.NumberOfFeeds ||
-                  field === SortField.APY ||
-                  field === SortField.SelfStake,
-              });
-            }}
+            selectedKey={sort}
+            // @ts-expect-error react-aria coerces everything to Key for some reason...
+            onSelectionChange={updateSort}
           >
             <Label className="whitespace-nowrap opacity-80">Sort by</Label>
             <Button className="group flex flex-row items-center gap-2 text-xs transition">
-              {SORT_FIELD_TO_NAME[sort.field]}
+              {getSortName(sort)}
               <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
             </Button>
             <Popover
@@ -720,17 +701,23 @@ const PublisherList = ({
               <ListBox
                 className="flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none"
                 items={[
-                  { id: SortField.PublisherName },
-                  { id: SortField.PoolUtilization },
-                  { id: SortField.APY },
-                  { id: SortField.SelfStake },
-                  { id: SortField.NumberOfFeeds },
-                  { id: SortField.QualityRanking },
-                ]}
+                  SortOption.PublisherNameDescending,
+                  SortOption.PublisherNameAscending,
+                  SortOption.RemainingPoolDescending,
+                  SortOption.RemainingPoolAscending,
+                  SortOption.ApyDescending,
+                  SortOption.ApyAscending,
+                  SortOption.SelfStakeDescending,
+                  SortOption.SelfStakeAscending,
+                  SortOption.NumberOfFeedsDescending,
+                  SortOption.NumberOfFeedsAscending,
+                  SortOption.QualityRankingDescending,
+                  SortOption.QualityRankingAscending,
+                ].map((id) => ({ id }))}
               >
                 {({ id }) => (
                   <ListBoxItem className="flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none">
-                    {SORT_FIELD_TO_NAME[id]}
+                    {getSortName(id)}
                   </ListBoxItem>
                 )}
               </ListBox>
@@ -772,7 +759,8 @@ const PublisherList = ({
             <thead className="bg-pythpurple-100/30 font-light">
               <tr>
                 <SortablePublisherTableHeader
-                  field={SortField.PublisherName}
+                  asc={SortOption.PublisherNameAscending}
+                  desc={SortOption.PublisherNameDescending}
                   sort={sort}
                   setSort={updateSort}
                   alignment="left"
@@ -781,21 +769,24 @@ const PublisherList = ({
                   Publisher
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
-                  field={SortField.SelfStake}
+                  asc={SortOption.SelfStakeAscending}
+                  desc={SortOption.SelfStakeDescending}
                   sort={sort}
                   setSort={updateSort}
                 >
                   {"Publisher's stake"}
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
-                  field={SortField.PoolUtilization}
+                  asc={SortOption.RemainingPoolAscending}
+                  desc={SortOption.RemainingPoolDescending}
                   sort={sort}
                   setSort={updateSort}
                 >
                   Pool
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
-                  field={SortField.APY}
+                  asc={SortOption.ApyAscending}
+                  desc={SortOption.ApyDescending}
                   sort={sort}
                   setSort={updateSort}
                 >
@@ -803,14 +794,16 @@ const PublisherList = ({
                 </SortablePublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
                 <SortablePublisherTableHeader
-                  field={SortField.NumberOfFeeds}
+                  asc={SortOption.NumberOfFeedsAscending}
+                  desc={SortOption.NumberOfFeedsDescending}
                   sort={sort}
                   setSort={updateSort}
                 >
                   Number of feeds
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
-                  field={SortField.QualityRanking}
+                  asc={SortOption.QualityRankingAscending}
+                  desc={SortOption.QualityRankingDescending}
                   sort={sort}
                   setSort={updateSort}
                 >
@@ -896,6 +889,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
                 onPageChange(page);
               }}
               size="nopad"
+              variant="secondary"
               className="grid size-8 place-content-center"
             >
               {page}
@@ -936,16 +930,19 @@ const doSort = (
   a: PublisherProps["publisher"],
   b: PublisherProps["publisher"],
   yieldRate: bigint,
-  sortField: SortField,
+  sort: SortOption,
 ): number => {
-  switch (sortField) {
-    case SortField.PublisherName: {
-      return (a.name ?? a.publicKey.toBase58()).localeCompare(
+  switch (sort) {
+    case SortOption.PublisherNameAscending:
+    case SortOption.PublisherNameDescending: {
+      const value = (a.name ?? a.publicKey.toBase58()).localeCompare(
         b.name ?? b.publicKey.toBase58(),
       );
+      return sort === SortOption.PublisherNameAscending ? -1 * value : value;
     }
-    case SortField.APY: {
-      return (
+    case SortOption.ApyAscending:
+    case SortOption.ApyDescending: {
+      const value =
         calculateApy({
           isSelf: false,
           selfStake: a.selfStake + a.selfStakeDelta,
@@ -959,20 +956,34 @@ const doSort = (
           poolCapacity: b.poolCapacity,
           poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
           yieldRate,
-        })
-      );
+        });
+      return sort === SortOption.ApyDescending ? -1 * value : value;
     }
-    case SortField.NumberOfFeeds: {
+    case SortOption.NumberOfFeedsAscending: {
       return Number(a.numFeeds - b.numFeeds);
     }
-    case SortField.PoolUtilization: {
-      const value = Number(
-        (a.poolUtilization + a.poolUtilizationDelta) * b.poolCapacity -
-          (b.poolUtilization + b.poolUtilizationDelta) * a.poolCapacity,
-      );
-      return value === 0 ? Number(a.poolCapacity - b.poolCapacity) : value;
+    case SortOption.NumberOfFeedsDescending: {
+      return Number(b.numFeeds - a.numFeeds);
     }
-    case SortField.QualityRanking: {
+    case SortOption.RemainingPoolAscending:
+    case SortOption.RemainingPoolDescending: {
+      if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
+        return 0;
+      } else if (a.poolCapacity === 0n) {
+        return 1;
+      } else if (b.poolCapacity === 0n) {
+        return -1;
+      } else {
+        const remainingPoolA =
+          a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
+        const remainingPoolB =
+          b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
+        const value = Number(remainingPoolA - remainingPoolB);
+        return sort === SortOption.RemainingPoolDescending ? -1 * value : value;
+      }
+    }
+    case SortOption.QualityRankingDescending:
+    case SortOption.QualityRankingAscending: {
       if (a.qualityRanking === 0 && b.qualityRanking === 0) {
         return 0;
       } else if (a.qualityRanking === 0) {
@@ -980,11 +991,15 @@ const doSort = (
       } else if (b.qualityRanking === 0) {
         return -1;
       } else {
-        return Number(a.qualityRanking - b.qualityRanking);
+        const value = Number(a.qualityRanking - b.qualityRanking);
+        return sort === SortOption.QualityRankingAscending ? -1 * value : value;
       }
     }
-    case SortField.SelfStake: {
+    case SortOption.SelfStakeAscending: {
       return Number(a.selfStake - b.selfStake);
+    }
+    case SortOption.SelfStakeDescending: {
+      return Number(b.selfStake - a.selfStake);
     }
   }
 };
@@ -994,14 +1009,16 @@ type SortablePublisherTableHeaderProps = Omit<
   "children"
 > & {
   children: string;
-  field: SortField;
-  sort: { field: SortField; descending: boolean };
-  setSort: Dispatch<SetStateAction<{ field: SortField; descending: boolean }>>;
+  asc: SortOption;
+  desc: SortOption;
+  sort: SortOption;
+  setSort: Dispatch<SetStateAction<SortOption>>;
   alignment?: "left" | "right";
 };
 
 const SortablePublisherTableHeader = ({
-  field,
+  asc,
+  desc,
   sort,
   setSort,
   children,
@@ -1010,11 +1027,8 @@ const SortablePublisherTableHeader = ({
   ...props
 }: SortablePublisherTableHeaderProps) => {
   const updateSort = useCallback(() => {
-    setSort((cur) => ({
-      field,
-      descending: cur.field === field ? !cur.descending : false,
-    }));
-  }, [setSort, field]);
+    setSort((cur) => (cur === desc ? asc : desc));
+  }, [setSort, asc, desc]);
 
   return (
     <th>
@@ -1025,8 +1039,8 @@ const SortablePublisherTableHeader = ({
           className,
         )}
         onPress={updateSort}
-        {...(sort.field === field && { "data-sorted": true })}
-        {...(sort.descending && { "data-descending": true })}
+        {...((sort === asc || sort === desc) && { "data-sorted": true })}
+        {...(sort === desc && { "data-descending": true })}
         data-alignment={alignment ?? "center"}
         {...props}
       >
@@ -1133,13 +1147,13 @@ const Publisher = ({
   );
 
   return compact ? (
-    <div className="border-t border-neutral-600/50 p-4 sm:px-10">
+    <div className="border-t border-neutral-600/50 p-4 sm:px-10 md:pt-8">
       {!isSelf && (
         <div className="flex flex-row items-center justify-between">
           <PublisherName
             className="font-semibold"
-            truncatedClassName="sm:hidden"
-            fullClassName="hidden sm:inline"
+            truncatedClassName="md:hidden"
+            fullClassName="hidden md:inline"
           >
             {publisher}
           </PublisherName>
@@ -1153,24 +1167,40 @@ const Publisher = ({
           />
         </div>
       )}
-      <div className="gap-8 xs:flex xs:flex-row-reverse xs:items-center xs:justify-between">
-        <div className="flex grow flex-col gap-2 xs:items-end">
-          {isSelf && (
-            <StakeToPublisherButton
-              api={api}
-              currentEpoch={currentEpoch}
-              availableToStake={availableToStake}
+      <div
+        className={clsx(
+          "gap-8",
+          isSelf
+            ? "flex flex-row-reverse items-center justify-between"
+            : "xs:flex xs:flex-row-reverse xs:items-center xs:justify-between",
+        )}
+      >
+        {!isSelf && (
+          <div className="flex grow flex-col gap-2 xs:items-end">
+            <UtilizationMeter
               publisher={publisher}
-              yieldRate={yieldRate}
-              isSelf
+              className="mx-auto my-4 w-full grow xs:mx-0 sm:w-auto sm:flex-none"
             />
-          )}
-          <UtilizationMeter
+          </div>
+        )}
+        {isSelf && (
+          <StakeToPublisherButton
+            api={api}
+            currentEpoch={currentEpoch}
+            availableToStake={availableToStake}
             publisher={publisher}
-            className="mx-auto my-4 w-full grow xs:mx-0 sm:w-auto sm:flex-none"
+            yieldRate={yieldRate}
+            isSelf
           />
-        </div>
-        <dl className="flex-none text-xs">
+        )}
+        <dl
+          className={clsx(
+            "flex-none text-xs",
+            isSelf
+              ? "lg:flex lg:flex-row lg:gap-6"
+              : "md:grid md:grid-cols-2 lg:gap-x-10 xl:flex xl:flex-row xl:gap-8",
+          )}
+        >
           {!isSelf && (
             <div className="flex flex-row items-center gap-2">
               <dt className="font-semibold">{"Publisher's Stake:"}</dt>
@@ -1195,6 +1225,12 @@ const Publisher = ({
           </div>
         </dl>
       </div>
+      {isSelf && (
+        <UtilizationMeter
+          publisher={publisher}
+          className="mx-auto my-4 w-full grow xs:mx-0"
+        />
+      )}
       {(warmup !== undefined || staked !== undefined) && (
         <YourPositionsTable
           publisher={publisher}
@@ -1311,7 +1347,7 @@ const UtilizationMeter = ({ publisher, ...props }: UtilizationMeterProps) => {
               }}
               className={clsx(
                 "absolute inset-0 max-w-full",
-                percentage < 100 ? "bg-pythpurple-400" : "bg-fuchsia-900",
+                percentage < 100 ? "bg-pythpurple-400" : "bg-red-800",
               )}
             />
             <div
@@ -1600,23 +1636,61 @@ const hasAnyPositions = ({ positions }: PublisherProps["publisher"]) =>
     positions.cooldown2,
   ].some((value) => value !== undefined && value > 0n);
 
-enum SortField {
-  PublisherName,
-  PoolUtilization,
-  APY,
-  SelfStake,
-  NumberOfFeeds,
-  QualityRanking,
+enum SortOption {
+  PublisherNameDescending,
+  PublisherNameAscending,
+  RemainingPoolDescending,
+  RemainingPoolAscending,
+  ApyDescending,
+  ApyAscending,
+  SelfStakeDescending,
+  SelfStakeAscending,
+  NumberOfFeedsDescending,
+  NumberOfFeedsAscending,
+  QualityRankingDescending,
+  QualityRankingAscending,
 }
 
-const SORT_FIELD_TO_NAME: Record<SortField, string> = {
-  [SortField.PublisherName]: "Publisher Name",
-  [SortField.PoolUtilization]: "Pool Utilization",
-  [SortField.APY]: "Estimated Next APY",
-  [SortField.SelfStake]: "Publisher's Stake",
-  [SortField.NumberOfFeeds]: "Number of Feeds",
-  [SortField.QualityRanking]: "Quality Ranking",
-} as const;
+const getSortName = (sortOption: SortOption) => {
+  switch (sortOption) {
+    case SortOption.PublisherNameDescending: {
+      return "Publisher Name (A-Z)";
+    }
+    case SortOption.PublisherNameAscending: {
+      return "Publisher Name (Z-A)";
+    }
+    case SortOption.RemainingPoolDescending: {
+      return "Most remaining pool";
+    }
+    case SortOption.RemainingPoolAscending: {
+      return "Least remaining pool";
+    }
+    case SortOption.ApyDescending: {
+      return "Highest estimated next APY";
+    }
+    case SortOption.ApyAscending: {
+      return "Lowest estimated next APY";
+    }
+    case SortOption.SelfStakeDescending: {
+      return "Highest publisher's stake";
+    }
+    case SortOption.SelfStakeAscending: {
+      return "Lowest publisher's stake";
+    }
+    case SortOption.NumberOfFeedsDescending: {
+      return "Most feeds";
+    }
+    case SortOption.NumberOfFeedsAscending: {
+      return "Least feeds";
+    }
+    case SortOption.QualityRankingDescending: {
+      return "Best quality ranking";
+    }
+    case SortOption.QualityRankingAscending: {
+      return "Worst quality ranking";
+    }
+  }
+};
 
 class InvalidKeyError extends Error {
   constructor() {
