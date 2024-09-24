@@ -1,11 +1,9 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Pyth staking SDK",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "main": "src/index.ts",
+  "types": "src/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
