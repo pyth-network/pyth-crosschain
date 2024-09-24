@@ -1,11 +1,12 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
-import { Connection } from "@solana/web3.js";
-import { type NextRequest } from "next/server";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { clusterApiUrl, Connection } from "@solana/web3.js";
+import type { NextRequest } from "next/server";
 
-import { RPC } from "../../../config/server";
+import { IS_MAINNET, RPC } from "../../../config/server";
 
 const stakingClient = new PythStakingClient({
-  connection: new Connection(RPC ?? "https://api.devnet.solana.com"),
+  connection: new Connection(RPC ?? clusterApiUrl(IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet)),
 });
 
 function validateQ(q: string | null): q is "totalSupply" | "circulatingSupply" {

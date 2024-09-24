@@ -1,23 +1,31 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { type NextRequest } from "next/server";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
 
-import { RPC } from "../../../config/server";
+import { IS_MAINNET, RPC } from "../../../config/server";
 
-type ResponseType = {
-  custodyAccount: string;
-  actualAmount: number;
-  lock: {
-    type: string;
-    schedule: {
-      date: Date;
-      amount: number;
-    }[];
-  };
-}[];
+const UnlockScheduleSchema = z.object({
+  date: z.date(),
+  amount: z.number(),
+});
+
+const LockSchema = z.object({
+  type: z.string(),
+  schedule: z.array(UnlockScheduleSchema),
+});
+
+const ResponseSchema = z.array(
+  z.object({
+    custodyAccount: z.string(),
+    actualAmount: z.number(),
+    lock: LockSchema,
+  })
+);
 
 const stakingClient = new PythStakingClient({
-  connection: new Connection(RPC ?? "https://api.devnet.solana.com"),
+  connection: new Connection(RPC ?? clusterApiUrl(IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet)),
 });
 
 export async function GET(req: NextRequest) {
@@ -38,7 +46,7 @@ export async function GET(req: NextRequest) {
     new PublicKey(owner),
   );
 
-  const response: ResponseType = await Promise.all(
+  const responseRaw = await Promise.all(
     positions.map(async (position) => {
       const custodyAccount =
         await stakingClient.getStakeAccountCustody(position);
@@ -57,5 +65,17 @@ export async function GET(req: NextRequest) {
     }),
   );
 
-  return Response.json(response);
+  try {
+    const response = ResponseSchema.parse(responseRaw);
+    return Response.json(response);
+  } catch {
+    return Response.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }
