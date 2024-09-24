@@ -12,6 +12,8 @@ import {
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
+  getMint,
+  type Mint,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
@@ -22,7 +24,12 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-import { GOVERNANCE_ADDRESS, POSITIONS_ACCOUNT_SIZE } from "./constants";
+import {
+  FRACTION_PRECISION_N,
+  GOVERNANCE_ADDRESS,
+  ONE_YEAR_IN_SECONDS,
+  POSITIONS_ACCOUNT_SIZE,
+} from "./constants";
 import {
   getConfigAddress,
   getDelegationRecordAddress,
@@ -36,6 +43,7 @@ import {
   type PoolConfig,
   type PoolDataAccount,
   type StakeAccountPositions,
+  type VestingSchedule,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -56,7 +64,7 @@ import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet: AnchorWallet | undefined;
+  wallet?: AnchorWallet;
 };
 
 export class PythStakingClient {
@@ -105,7 +113,9 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
+  public async getAllStakeAccountPositions(
+    owner?: PublicKey,
+  ): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -124,7 +134,7 @@ export class PythStakingClient {
             {
               memcmp: {
                 offset: 8,
-                bytes: this.wallet.publicKey.toBase58(),
+                bytes: owner?.toBase58() ?? this.wallet.publicKey.toBase58(),
               },
             },
           ],
@@ -529,7 +539,10 @@ export class PythStakingClient {
     return sendTransaction([instruction], this.connection, this.wallet);
   }
 
-  public async getUnlockSchedule(stakeAccountPositions: PublicKey) {
+  public async getUnlockSchedule(
+    stakeAccountPositions: PublicKey,
+    includePastPeriods = false,
+  ) {
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
     );
@@ -548,7 +561,38 @@ export class PythStakingClient {
     return getUnlockSchedule({
       vestingSchedule,
       pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods,
     });
+  }
+
+  public async getCirculatingSupply() {
+    const vestingSchedule: VestingSchedule = {
+      periodicVestingAfterListing: {
+        initialBalance: 8_500_000_000n * FRACTION_PRECISION_N,
+        numPeriods: 4n,
+        periodDuration: ONE_YEAR_IN_SECONDS,
+      },
+    };
+
+    const config = await this.getGlobalConfig();
+
+    if (config.pythTokenListTime === null) {
+      throw new Error("Pyth token list time not set in global config");
+    }
+
+    const unlockSchedule = getUnlockSchedule({
+      vestingSchedule,
+      pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods: false,
+    });
+
+    const totalLocked = unlockSchedule.schedule.reduce(
+      (total, unlock) => total + unlock.amount,
+      0n,
+    );
+
+    const mint = await this.getPythTokenMint();
+    return mint.supply - totalLocked;
   }
 
   async getAdvanceDelegationRecordInstructions(
@@ -704,5 +748,10 @@ export class PythStakingClient {
       stakeAccountPositions,
       undefined,
     );
+  }
+
+  public async getPythTokenMint(): Promise<Mint> {
+    const globalConfig = await this.getGlobalConfig();
+    return getMint(this.connection, globalConfig.pythTokenMint);
   }
 }

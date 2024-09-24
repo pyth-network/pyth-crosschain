@@ -3,26 +3,38 @@ import type { UnlockSchedule, VestingSchedule } from "../types";
 export const getUnlockSchedule = (options: {
   pythTokenListTime: bigint;
   vestingSchedule: VestingSchedule;
+  includePastPeriods: boolean;
 }): UnlockSchedule => {
-  const { vestingSchedule, pythTokenListTime } = options;
+  const { vestingSchedule, pythTokenListTime, includePastPeriods } = options;
 
   if (vestingSchedule.fullyVested) {
-    return [];
+    return {
+      type: "fullyUnlocked",
+      schedule: [],
+    };
   } else if (vestingSchedule.periodicVestingAfterListing) {
-    return getPeriodicUnlockSchedule({
-      balance: vestingSchedule.periodicVestingAfterListing.initialBalance,
-      numPeriods: vestingSchedule.periodicVestingAfterListing.numPeriods,
-      periodDuration:
-        vestingSchedule.periodicVestingAfterListing.periodDuration,
-      startDate: pythTokenListTime,
-    });
+    return {
+      type: "periodicUnlockingAfterListing",
+      schedule: getPeriodicUnlockSchedule({
+        balance: vestingSchedule.periodicVestingAfterListing.initialBalance,
+        numPeriods: vestingSchedule.periodicVestingAfterListing.numPeriods,
+        periodDuration:
+          vestingSchedule.periodicVestingAfterListing.periodDuration,
+        startDate: pythTokenListTime,
+        includePastPeriods,
+      }),
+    };
   } else {
-    return getPeriodicUnlockSchedule({
-      balance: vestingSchedule.periodicVesting.initialBalance,
-      numPeriods: vestingSchedule.periodicVesting.numPeriods,
-      periodDuration: vestingSchedule.periodicVesting.periodDuration,
-      startDate: vestingSchedule.periodicVesting.startDate,
-    });
+    return {
+      type: "periodicUnlocking",
+      schedule: getPeriodicUnlockSchedule({
+        balance: vestingSchedule.periodicVesting.initialBalance,
+        numPeriods: vestingSchedule.periodicVesting.numPeriods,
+        periodDuration: vestingSchedule.periodicVesting.periodDuration,
+        startDate: vestingSchedule.periodicVesting.startDate,
+        includePastPeriods,
+      }),
+    };
   }
 };
 
@@ -31,16 +43,18 @@ export const getPeriodicUnlockSchedule = (options: {
   startDate: bigint;
   periodDuration: bigint;
   numPeriods: bigint;
-}): UnlockSchedule => {
-  const { balance, startDate, periodDuration, numPeriods } = options;
+  includePastPeriods: boolean;
+}): UnlockSchedule["schedule"] => {
+  const { balance, startDate, periodDuration, numPeriods, includePastPeriods } =
+    options;
 
-  const unlockSchedule: UnlockSchedule = [];
+  const unlockSchedule: UnlockSchedule["schedule"] = [];
   const currentTimeStamp = Date.now() / 1000;
 
   for (let i = 0; i < numPeriods; i++) {
     const unlockTimeStamp =
       Number(startDate) + Number(periodDuration) * (i + 1);
-    if (currentTimeStamp < unlockTimeStamp) {
+    if (currentTimeStamp < unlockTimeStamp || includePastPeriods) {
       unlockSchedule.push({
         date: new Date(unlockTimeStamp * 1000),
         amount: balance / numPeriods,
