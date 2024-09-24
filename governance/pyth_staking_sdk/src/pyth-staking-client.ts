@@ -24,6 +24,7 @@ import {
 } from "@solana/web3.js";
 
 import {
+  FRACTION_PRECISION_N,
   GOVERNANCE_ADDRESS,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
@@ -547,11 +548,9 @@ export class PythStakingClient {
   }
 
   public async getCirculatingSupply() {
-    const circulatingSupply = 8_500_000_000n;
-
     const vestingSchedule: VestingSchedule = {
       periodicVestingAfterListing: {
-        initialBalance: circulatingSupply,
+        initialBalance: 8_500_000_000n * FRACTION_PRECISION_N,
         numPeriods: 4n,
         periodDuration: ONE_YEAR_IN_SECONDS,
       },
@@ -569,12 +568,13 @@ export class PythStakingClient {
       includePastPeriods: false,
     });
 
-    const totalUnlock = unlockSchedule.schedule.reduce(
+    const totalLocked = unlockSchedule.schedule.reduce(
       (total, unlock) => total + unlock.amount,
       0n,
     );
 
-    return circulatingSupply - totalUnlock;
+    const mint = await this.getPythTokenMint();
+    return mint.supply - totalLocked;
   }
 
   async getAdvanceDelegationRecordInstructions(
