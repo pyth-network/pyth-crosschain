@@ -1,16 +1,17 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Pyth staking SDK",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
-    "build": "tsc && node scripts/update-package-json.js",
+    "build": "tsc && node scripts/update-package-json.mjs",
     "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",

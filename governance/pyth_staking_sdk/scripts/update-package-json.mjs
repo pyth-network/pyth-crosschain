@@ -15,8 +15,6 @@ const distPackageJsonPath = path.join(__dirname, "..", "dist", "package.json");
 
 const packageJson = JSON.parse(fs.readFileSync(distPackageJsonPath, "utf8"));
 
-packageJson.exports = {
-  ".": "./src/index.js",
-};
+packageJson.main = "src/index.js";
 
 fs.writeFileSync(distPackageJsonPath, JSON.stringify(packageJson, null, 2));
