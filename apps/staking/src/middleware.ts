@@ -47,5 +47,8 @@ const isBlockedSegment = ({ nextUrl: { pathname } }: NextRequest) =>
   pathname.startsWith(`/${VPN_BLOCKED_SEGMENT}`);
 
 export const config = {
-  matcher: [String.raw`/((?!_next/static|_next/image|.*\.).*)`],
+  // Next.js requires that this is a static string and fails to read it if it's
+  // a String.raw, so let's disable this rule
+  // eslint-disable-next-line unicorn/prefer-string-raw
+  matcher: ["/((?!_next/static|_next/image|.*\\.).*)"],
 };
