@@ -92,3 +92,22 @@ export const deserializeStakeAccountPositions = (
     },
   };
 };
+
+export const getVotingTokenAmount = (
+  stakeAccountPositions: StakeAccountPositions,
+  epoch: bigint,
+) => {
+  const positions = stakeAccountPositions.data.positions;
+  const votingPositions = positions
+    .filter((p) => p.targetWithParameters.voting)
+    .filter((p) =>
+      [PositionState.LOCKED, PositionState.PREUNLOCKING].includes(
+        getPositionState(p, epoch),
+      ),
+    );
+  const totalVotingTokenAmount = votingPositions.reduce(
+    (sum, p) => sum + p.amount,
+    0n,
+  );
+  return totalVotingTokenAmount;
+};

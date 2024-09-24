@@ -25,8 +25,9 @@ import {
 } from "@solana/web3.js";
 
 import {
-  FRACTION_PRECISION_N,
   GOVERNANCE_ADDRESS,
+  MAX_VOTER_WEIGHT,
+  FRACTION_PRECISION_N,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
 } from "./constants";
@@ -36,6 +37,7 @@ import {
   getPoolConfigAddress,
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
+  getTargetAccountAddress,
 } from "./pdas";
 import {
   PositionState,
@@ -43,6 +45,8 @@ import {
   type PoolConfig,
   type PoolDataAccount,
   type StakeAccountPositions,
+  type TargetAccount,
+  type VoterWeightAction,
   type VestingSchedule,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
@@ -51,6 +55,7 @@ import { extractPublisherData } from "./utils/pool";
 import {
   deserializeStakeAccountPositions,
   getPositionState,
+  getVotingTokenAmount,
 } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
@@ -748,6 +753,121 @@ export class PythStakingClient {
       stakeAccountPositions,
       undefined,
     );
+  }
+
+  public async getTargetAccount(): Promise<TargetAccount> {
+    const targetAccount =
+      await this.stakingProgram.account.targetMetadata.fetch(
+        getTargetAccountAddress(),
+      );
+    return convertBNToBigInt(targetAccount);
+  }
+
+  /**
+   * This returns the current scaling factor between staked tokens and realms voter weight.
+   * The formula is n_staked_tokens = scaling_factor * n_voter_weight
+   */
+  public async getScalingFactor(): Promise<number> {
+    const targetAccount = await this.getTargetAccount();
+    return Number(targetAccount.locked) / Number(MAX_VOTER_WEIGHT);
+  }
+
+  public async getRecoverAccountInstruction(
+    stakeAccountPositions: PublicKey,
+    governanceAuthority: PublicKey,
+  ): Promise<TransactionInstruction> {
+    return this.stakingProgram.methods
+      .recoverAccount()
+      .accountsPartial({
+        stakeAccountPositions,
+        governanceAuthority,
+      })
+      .instruction();
+  }
+
+  public async getUpdatePoolAuthorityInstruction(
+    governanceAuthority: PublicKey,
+    poolAuthority: PublicKey,
+  ): Promise<TransactionInstruction> {
+    return this.stakingProgram.methods
+      .updatePoolAuthority(poolAuthority)
+      .accounts({
+        governanceAuthority,
+      })
+      .instruction();
+  }
+
+  public async getUpdateVoterWeightInstruction(
+    stakeAccountPositions: PublicKey,
+    action: VoterWeightAction,
+    remainingAccount?: PublicKey,
+  ) {
+    return this.stakingProgram.methods
+      .updateVoterWeight(action)
+      .accounts({
+        stakeAccountPositions,
+      })
+      .remainingAccounts(
+        remainingAccount
+          ? [
+              {
+                pubkey: remainingAccount,
+                isWritable: false,
+                isSigner: false,
+              },
+            ]
+          : [],
+      )
+      .instruction();
+  }
+
+  public async getMainStakeAccount(owner?: PublicKey) {
+    const stakeAccountPositions = await this.getAllStakeAccountPositions(owner);
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    const stakeAccountVotingTokens = await Promise.all(
+      stakeAccountPositions.map(async (position) => {
+        const stakeAccountPositionsData =
+          await this.getStakeAccountPositions(position);
+        return {
+          stakeAccountPosition: position,
+          votingTokens: getVotingTokenAmount(
+            stakeAccountPositionsData,
+            currentEpoch,
+          ),
+        };
+      }),
+    );
+
+    let mainAccount = stakeAccountVotingTokens[0];
+
+    if (mainAccount === undefined) {
+      return;
+    }
+
+    for (let i = 1; i < stakeAccountVotingTokens.length; i++) {
+      const currentAccount = stakeAccountVotingTokens[i];
+      if (
+        currentAccount !== undefined &&
+        currentAccount.votingTokens > mainAccount.votingTokens
+      ) {
+        mainAccount = currentAccount;
+      }
+    }
+
+    return mainAccount;
+  }
+
+  public async getVoterWeight(owner?: PublicKey) {
+    const mainAccount = await this.getMainStakeAccount(owner);
+
+    if (mainAccount === undefined) {
+      return 0;
+    }
+
+    const targetAccount = await this.getTargetAccount();
+
+    return (mainAccount.votingTokens * MAX_VOTER_WEIGHT) / targetAccount.locked;
   }
 
   public async getPythTokenMint(): Promise<Mint> {
