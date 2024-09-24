@@ -41,9 +41,12 @@ export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
 export type VoterWeightAction = IdlTypes<Staking>["voterWeightAction"];
 
 export type UnlockSchedule = {
-  date: Date;
-  amount: bigint;
-}[];
+  type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";
+  schedule: {
+    date: Date;
+    amount: bigint;
+  }[];
+};
 
 export type StakeAccountPositions = {
   address: PublicKey;

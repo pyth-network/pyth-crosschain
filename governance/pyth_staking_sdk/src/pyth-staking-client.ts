@@ -8,9 +8,12 @@ import {
 } from "@solana/spl-governance";
 import {
   type Account,
+  createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
+  getMint,
+  type Mint,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
@@ -24,6 +27,8 @@ import {
 import {
   GOVERNANCE_ADDRESS,
   MAX_VOTER_WEIGHT,
+  FRACTION_PRECISION_N,
+  ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
 } from "./constants";
 import {
@@ -42,6 +47,7 @@ import {
   type StakeAccountPositions,
   type TargetAccount,
   type VoterWeightAction,
+  type VestingSchedule,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -63,7 +69,7 @@ import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet: AnchorWallet | undefined;
+  wallet?: AnchorWallet;
 };
 
 export class PythStakingClient {
@@ -112,7 +118,9 @@ export class PythStakingClient {
   }
 
   /** Gets a users stake accounts */
-  public async getAllStakeAccountPositions(): Promise<PublicKey[]> {
+  public async getAllStakeAccountPositions(
+    owner?: PublicKey,
+  ): Promise<PublicKey[]> {
     const positionDataMemcmp = this.stakingProgram.coder.accounts.memcmp(
       "positionData",
     ) as {
@@ -131,7 +139,7 @@ export class PythStakingClient {
             {
               memcmp: {
                 offset: 8,
-                bytes: this.wallet.publicKey.toBase58(),
+                bytes: owner?.toBase58() ?? this.wallet.publicKey.toBase58(),
               },
             },
           ],
@@ -485,21 +493,38 @@ export class PythStakingClient {
   ) {
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
+    const instructions = [];
 
     const receiverTokenAccount = await getAssociatedTokenAddress(
       mint,
       this.wallet.publicKey,
     );
 
-    const instruction = await this.stakingProgram.methods
-      .withdrawStake(new BN(amount.toString()))
-      .accounts({
-        destination: receiverTokenAccount,
-        stakeAccountPositions,
-      })
-      .instruction();
+    // Edge case: if the user doesn't have an ATA, create one
+    try {
+      await this.getOwnerPythAtaAccount();
+    } catch {
+      instructions.push(
+        createAssociatedTokenAccountInstruction(
+          this.wallet.publicKey,
+          receiverTokenAccount,
+          this.wallet.publicKey,
+          mint,
+        ),
+      );
+    }
 
-    return sendTransaction([instruction], this.connection, this.wallet);
+    instructions.push(
+      await this.stakingProgram.methods
+        .withdrawStake(new BN(amount.toString()))
+        .accounts({
+          destination: receiverTokenAccount,
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
+
+    return sendTransaction(instructions, this.connection, this.wallet);
   }
 
   public async stakeToPublisher(
@@ -519,7 +544,10 @@ export class PythStakingClient {
     return sendTransaction([instruction], this.connection, this.wallet);
   }
 
-  public async getUnlockSchedule(stakeAccountPositions: PublicKey) {
+  public async getUnlockSchedule(
+    stakeAccountPositions: PublicKey,
+    includePastPeriods = false,
+  ) {
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
     );
@@ -538,7 +566,38 @@ export class PythStakingClient {
     return getUnlockSchedule({
       vestingSchedule,
       pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods,
     });
+  }
+
+  public async getCirculatingSupply() {
+    const vestingSchedule: VestingSchedule = {
+      periodicVestingAfterListing: {
+        initialBalance: 8_500_000_000n * FRACTION_PRECISION_N,
+        numPeriods: 4n,
+        periodDuration: ONE_YEAR_IN_SECONDS,
+      },
+    };
+
+    const config = await this.getGlobalConfig();
+
+    if (config.pythTokenListTime === null) {
+      throw new Error("Pyth token list time not set in global config");
+    }
+
+    const unlockSchedule = getUnlockSchedule({
+      vestingSchedule,
+      pythTokenListTime: config.pythTokenListTime,
+      includePastPeriods: false,
+    });
+
+    const totalLocked = unlockSchedule.schedule.reduce(
+      (total, unlock) => total + unlock.amount,
+      0n,
+    );
+
+    const mint = await this.getPythTokenMint();
+    return mint.supply - totalLocked;
   }
 
   async getAdvanceDelegationRecordInstructions(
@@ -808,5 +867,10 @@ export class PythStakingClient {
 
     const scalingFactor = await this.getScalingFactor();
     return Number(mainAccount.votingTokens) / scalingFactor;
+  }
+  
+  public async getPythTokenMint(): Promise<Mint> {
+    const globalConfig = await this.getGlobalConfig();
+    return getMint(this.connection, globalConfig.pythTokenMint);
   }
 }

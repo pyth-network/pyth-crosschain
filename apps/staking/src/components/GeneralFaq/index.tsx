@@ -105,7 +105,7 @@ export const GeneralFaq = (
         {
           question: "Does participating in OIS affect my participation in PG?",
           answer:
-            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIs does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
+            "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIS does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
         },
         {
           question: "Does slashing reduce voting weights?",
@@ -171,8 +171,10 @@ export const GeneralFaq = (
               <p>
                 The Cooldown Period has two phases: from the time you click{" "}
                 <strong>Unstake</strong> until the end of the current epoch,
-                followed by a full epoch. Tokens in the first phase are subject
-                to rewards and slashing. Tokens in the second phase are not.
+                followed by a full epoch. Tokens in the first phase are eligible
+                for rewards. Tokens in both phases are subject to slashing if an
+                issue is identified in an epoch in which they were eligible for
+                rewards.
               </p>
             </>
           ),

@@ -20,7 +20,7 @@ export const PublisherFaq = (
                 For a comprehensive walkthrough of the OIS program, publishers
                 can refer to the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -72,8 +72,9 @@ export const PublisherFaq = (
             <>
               <p>
                 Publishers that have locked tokens are{" "}
-                <strong>automatically opted-in</strong> with their existing
-                stake account with the most funds as their main stake account.
+                <strong>automatically opted-in</strong> with their main stake
+                account, which is the stake account in which they last received
+                locked tokens.
               </p>
               <p>
                 Publishers that have never received locked tokens will be
@@ -83,7 +84,7 @@ export const PublisherFaq = (
               <p>
                 If you wish to opt out of rewards, please follow the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -108,7 +109,7 @@ export const PublisherFaq = (
               <p>
                 Please follow the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -131,12 +132,16 @@ export const PublisherFaq = (
           answer: (
             <>
               <p>
-                Yes. Opting in makes you subject to OIS’ decentralized staking
-                rewards and slashing mechanisms. Programmatic rewards for
-                staking for publishers are determined by a number of stake pool
-                parameters. Programmatic slashing is capped at a 5% percentage
-                amount of the total stake within a publisher’s stake pool. The
-                Pyth DAO can vote to adjust these parameters.
+                Opting-in makes you subject to staking rewards from delegate
+                stakers but does not make you subject to slashing unless you
+                stake to your own stake pool.
+              </p>
+              <p>
+                Programmatic rewards for staking for publishers are determined
+                by a number of stake pool parameters. Programmatic slashing is
+                capped at a 5% percentage amount of the total stake within a
+                publisher’s stake pool. The Pyth DAO can vote to adjust these
+                parameters.
               </p>
               <p>
                 Please refer to the{" "}
@@ -176,7 +181,7 @@ export const PublisherFaq = (
                 It is important to understand the requirements,
                 responsibilities, and implications of participating in OIS. The{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -311,7 +316,7 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -336,7 +341,7 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -369,7 +374,7 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -387,7 +392,7 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://www.notion.so/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=21"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
                   target="_blank"
                 >
@@ -492,15 +497,27 @@ export const PublisherFaq = (
           answer: (
             <>
               <p>
-                An on-chain protocol can report a potential data error for the
-                previous epoch. If a report is raised, the Pythian Council
-                reviews it by comparing it with the reference data. If a
-                discrepancy is confirmed, a slashing event is triggered.
+                Anyone can choose to raise a report for a plausible data
+                misprint. The Pythian Council of the Pyth DAO will then review
+                the reference data provided and compare against the Pyth data to
+                determine whether a slashing event should occur.
               </p>
               <p>
-                During the same epoch, the stakes of the subset of publishers
-                involved in the error and their stakers are slashed. Slashed
-                amounts are sent to the DAO wallet for future decisions.
+                The council will have until the end of the epoch after the epoch
+                of the reported incident to review the report. The tokens
+                subject to slashing are the tokens eligible for rewards{" "}
+                <em>during the epoch of the misprint incident</em>.
+              </p>
+              <p>
+                If a discrepancy is confirmed, a slashing event is triggered. In
+                this event, the stakes of publishers who contributed to the
+                incorrect aggregate will be programmatically slashed, along with
+                the stakes of anyone who delegated tokens towards their stake
+                pools.
+              </p>
+              <p>
+                Slashed amounts are sent to the DAO wallet. The Pyth DAO can
+                choose to vote on future decisions for these slashed amounts.
               </p>
               <p>
                 Please refer to the{" "}

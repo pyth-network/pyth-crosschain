@@ -12,10 +12,17 @@ import {
   TEST_GUARDIAN_ADDRESS1,
   PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER,
   PYTH_REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER,
+  TEST_GUARDIAN_ADDRESS2,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { parseDataSource } from "./utils";
+import { parseDataSource, createAuthorizeUpgradePayload } from "./utils";
+import {
+  UniversalAddress,
+  createVAA,
+  serialize,
+} from "@wormhole-foundation/sdk-definitions";
+import { mocks } from "@wormhole-foundation/sdk-definitions/testing";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -48,6 +55,11 @@ const TEST_GOVERNANCE_DATA_SOURCES: DataSource[] = [
     emitterChain: 2,
     emitterAddress:
       "000000000000000000000000000000000000000000000000000000000000002b",
+  },
+  {
+    emitterChain: 1,
+    emitterAddress:
+      "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
 
@@ -343,7 +355,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1037, // ERROR_INSUFFICIENT_GAS
+      exitCode: 1038, // ERROR_INSUFFICIENT_GAS
     });
   });
 
@@ -718,5 +730,145 @@ describe("PythTest", () => {
       success: false,
       exitCode: 1033, // ERROR_OLD_GOVERNANCE_MESSAGE
     });
+  });
+
+  it("should successfully upgrade the contract", async () => {
+    // Compile the upgraded contract
+    const upgradedCode = await compile("PythTestUpgraded");
+    const upgradedCodeHash = upgradedCode.hash();
+
+    // Create the authorize upgrade payload
+    const authorizeUpgradePayload =
+      createAuthorizeUpgradePayload(upgradedCodeHash);
+
+    const authorizeUpgradeVaa = createVAA("Uint8Array", {
+      guardianSet: 0,
+      timestamp: 0,
+      nonce: 0,
+      emitterChain: "Solana",
+      emitterAddress: new UniversalAddress(new Uint8Array(32)),
+      sequence: 1n,
+      consistencyLevel: 0,
+      signatures: [],
+      payload: authorizeUpgradePayload,
+    });
+
+    const guardianSet = mocks.devnetGuardianSet();
+    guardianSet.setSignatures(authorizeUpgradeVaa);
+
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS2],
+      1,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      TEST_GOVERNANCE_DATA_SOURCES[2]
+    );
+
+    // Execute the upgrade
+    const sendExecuteGovernanceActionResult =
+      await pythTest.sendExecuteGovernanceAction(
+        deployer.getSender(),
+        Buffer.from(serialize(authorizeUpgradeVaa))
+      );
+
+    expect(sendExecuteGovernanceActionResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Execute the upgrade
+    const sendUpgradeContractResult = await pythTest.sendUpgradeContract(
+      deployer.getSender(),
+      upgradedCode
+    );
+
+    expect(sendUpgradeContractResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Verify that the contract has been upgraded by calling a new method
+    const newMethodResult = await pythTest.getNewFunction();
+    expect(newMethodResult).toBe(1);
+  });
+
+  it("should fail to upgrade the contract with modified code", async () => {
+    // Compile the upgraded contract
+    const upgradedCode = await compile("PythTestUpgraded");
+    const upgradedCodeHash = upgradedCode.hash();
+
+    // Create the authorize upgrade payload
+    const authorizeUpgradePayload =
+      createAuthorizeUpgradePayload(upgradedCodeHash);
+
+    const authorizeUpgradeVaa = createVAA("Uint8Array", {
+      guardianSet: 0,
+      timestamp: 0,
+      nonce: 0,
+      emitterChain: "Solana",
+      emitterAddress: new UniversalAddress(new Uint8Array(32)),
+      sequence: 1n,
+      consistencyLevel: 0,
+      signatures: [],
+      payload: authorizeUpgradePayload,
+    });
+
+    const guardianSet = mocks.devnetGuardianSet();
+    guardianSet.setSignatures(authorizeUpgradeVaa);
+
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS2],
+      1,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      TEST_GOVERNANCE_DATA_SOURCES[2]
+    );
+
+    // Execute the upgrade authorization
+    const sendExecuteGovernanceActionResult =
+      await pythTest.sendExecuteGovernanceAction(
+        deployer.getSender(),
+        Buffer.from(serialize(authorizeUpgradeVaa))
+      );
+
+    expect(sendExecuteGovernanceActionResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Attempt to execute the upgrade with a different code
+    const wormholeTestCode = await compile("WormholeTest");
+    const sendUpgradeContractResult = await pythTest.sendUpgradeContract(
+      deployer.getSender(),
+      wormholeTestCode
+    );
+
+    // Expect the transaction to fail
+    expect(sendUpgradeContractResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1037, // ERROR_INVALID_CODE_HASH
+    });
+
+    // Verify that the contract has not been upgraded by attempting to call the new method
+    await expect(pythTest.getNewFunction()).rejects.toThrow();
   });
 });

@@ -127,6 +127,11 @@ export const OracleIntegrityStakingGuide = (
           title: "Adding Tokens FAQ",
           questions: [
             {
+              question: "Why do I need to add my tokens?",
+              answer:
+                "Adding tokens to the Pyth Staking Dashboard transfers them to your SPL wallet’s staking account. Your tokens will remain under your control on-chain through the Pyth Staking Dashboard.",
+            },
+            {
               question: "Where are my added tokens stored?",
               answer:
                 "Added tokens are stored on the Pyth Staking contract, which resides on-chain. The contract code is open source and the upgrade authority is governed by the Pyth DAO. No centralized party holds your tokens or controls the smart contract code.",
@@ -233,22 +238,17 @@ export const OracleIntegrityStakingGuide = (
         description: (
           <>
             <p>
-              Navigate to the Oracle Integrity Staking tab to begin staking your
-              tokens to publishers to help secure Pyth Price Feeds.
+              Once you confirm your choice to stake to a publisher, your tokens
+              will first enter a Warmup Period, which lasts until the end of the
+              current epoch. An epoch is a one-week period starting every
+              Thursday at 00:00 UTC.
             </p>
 
             <p>
-              Each publisher is assigned a stake pool that typically includes
-              the publisher’s self-stake and delegated stakes from other
-              participants. The rewards distribution protocol programmatically
-              shares rewards first to publishers, and then to stakers supporting
-              them.
-            </p>
-
-            <p>
-              You can sort publishers by their stake pool details, quality
-              ranking, and more. Once you have chosen a publisher, click Stake
-              and specify the number of tokens you wish to stake to their pool.
+              Tokens in the Warmup Period do not contribute to oracle security
+              and are not eligible for sharing in publisher rewards or
+              penalties. Once the Warmup Period ends, these tokens become staked
+              and will play an active role in strengthening oracle integrity.
             </p>
           </>
         ),
@@ -409,12 +409,12 @@ export const OracleIntegrityStakingGuide = (
                 </p>
                 <p>
                   The Pyth DAO sets a maximum reward rate for stake pools,
-                  currently set at 9%. This rate is achieved for a pool when the
-                  total stake is below the stake cap. If the stake cap is
+                  currently set at 10%. This rate is achieved for a pool when
+                  the total stake is below the stake cap. If the stake cap is
                   exceeded, the reward rate for stakers is reduced.
                 </p>
                 <p>
-                  Publishers charge a fixed percentage (5%) of the rewards from
+                  Publishers charge a fixed percentage (20%) of the rewards from
                   stakers in their stake pool as a delegation fee (net of any
                   slashed amount). The Pyth DAO can vote to adjust this fee
                   structure. Learn more about staking rewards in the
@@ -436,7 +436,7 @@ export const OracleIntegrityStakingGuide = (
                   penalized.
                 </p>
                 <p>
-                  The current slashing rate is capped at 10% of publisher and
+                  The current slashing rate is capped at 5% of publisher and
                   delegated stakes, and this rate can be adjusted by the Pyth
                   DAO. The slashed amounts are sent to the DAO wallet. The Pyth
                   DAO can choose to vote on future decisions for these slashed
@@ -483,16 +483,17 @@ export const OracleIntegrityStakingGuide = (
                     tokens will first undergo a first phase of the Cooldown
                     Period from the time of clicking Unstake to the end of the
                     current epoch. These tokens still actively contribute to
-                    oracle integrity and remain subject to programmatic rewards
-                    and slashing.
+                    oracle integrity and remain eligible to programmatic
+                    rewards.
                   </p>
                   <p>
-                    After this first phase, these tokens will undergo second
+                    After this first phase, these tokens will undergo a second
                     phase in the Cooldown Period lasting one full epoch, during
-                    which the tokens are no longer subject to programmatic
-                    rewards or slashing. Once this phase concludes, your tokens
-                    will become unstaked and can be restaked or withdrawn to
-                    your wallet.
+                    which the tokens are no longer eligible to programmatic
+                    rewards. These tokens are subject to slashing if a misprint
+                    in the previous epoch is identified. Once this phase
+                    concludes, your tokens will become unstaked and can be
+                    restaked or withdrawn to your wallet.
                   </p>
                 </>
               ),
@@ -508,11 +509,15 @@ export const OracleIntegrityStakingGuide = (
               answer: (
                 <>
                   <p>
-                    In the first phase of the <strong>Cooldown Period</strong>
-                    an on-chain protocol consuming Pyth data can choose to raise
-                    a report for a plausible data misprint. The Pythian Council
-                    of the Pyth DAO will then review the reference data provided
-                    and compare against the Pyth data.
+                    Anyone can choose to raise a report for a plausible data
+                    misprint. The Pythian Council of the Pyth DAO will then
+                    review the reference data provided and compare against the
+                    Pyth data to determine whether a slashing event should
+                    occur. The council will have until the end of the epoch
+                    after the epoch of the reported incident to review the
+                    report. The tokens subject to slashing are the tokens
+                    eligible for rewards{" "}
+                    <i>during the epoch of the misprint incident</i>.
                   </p>
                   <p>
                     In the unlikely event that a published aggregate has been
@@ -520,8 +525,8 @@ export const OracleIntegrityStakingGuide = (
                     triggered. The stakes of the subset of publishers who
                     contributed to this incorrect aggregate are programmatically
                     slashed, along with the stakes of anyone who delegated
-                    tokens towards them. Such slashing event occurs during this
-                    same epoch.
+                    tokens towards them. Such slashing event occurs during the
+                    epoch after the epoch of the reported incident.
                   </p>
                   <p>
                     The slashed amounts are sent to the Pyth DAO’s wallet. The

@@ -254,8 +254,25 @@ int apply_decimal_expo(int value, int expo) {
     return result;
 }
 
-() execute_upgrade_contract(slice payload) impure {
-    ;; TODO: Implement
+() execute_upgrade_contract(cell new_code) impure {
+    load_data();
+    int hash_code = cell_hash(new_code);
+    throw_unless(ERROR_INVALID_CODE_HASH, upgrade_code_hash == hash_code);
+
+    ;; Set the new code
+    set_code(new_code);
+
+    ;; Set the code continuation to the new code
+    set_c3(new_code.begin_parse().bless());
+
+    ;; Throw an exception to end the current execution
+    ;; The contract will be restarted with the new code
+    throw(0);
+}
+
+() execute_authorize_upgrade_contract(slice payload) impure {
+    int code_hash = payload~load_uint(256);
+    upgrade_code_hash = code_hash;
 }
 
 () execute_authorize_governance_data_source_transfer(slice payload) impure {
@@ -317,8 +334,8 @@ int apply_decimal_expo(int value, int expo) {
 }
 
 () execute_governance_payload(int action, slice payload) impure {
-    if (action == UPGRADE_CONTRACT) {
-        execute_upgrade_contract(payload);
+    if (action == AUTHORIZE_UPGRADE_CONTRACT) {
+        execute_authorize_upgrade_contract(payload);
     } elseif (action == AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER) {
         execute_authorize_governance_data_source_transfer(payload);
     } elseif (action == SET_DATA_SOURCES) {
