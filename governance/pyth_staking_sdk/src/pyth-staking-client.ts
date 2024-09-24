@@ -8,6 +8,7 @@ import {
 } from "@solana/spl-governance";
 import {
   type Account,
+  createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
@@ -477,21 +478,38 @@ export class PythStakingClient {
   ) {
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
+    const instructions = [];
 
     const receiverTokenAccount = await getAssociatedTokenAddress(
       mint,
       this.wallet.publicKey,
     );
 
-    const instruction = await this.stakingProgram.methods
-      .withdrawStake(new BN(amount.toString()))
-      .accounts({
-        destination: receiverTokenAccount,
-        stakeAccountPositions,
-      })
-      .instruction();
+    // Edge case: if the user doesn't have an ATA, create one
+    try {
+      await this.getOwnerPythAtaAccount();
+    } catch {
+      instructions.push(
+        createAssociatedTokenAccountInstruction(
+          this.wallet.publicKey,
+          receiverTokenAccount,
+          this.wallet.publicKey,
+          mint,
+        ),
+      );
+    }
 
-    return sendTransaction([instruction], this.connection, this.wallet);
+    instructions.push(
+      await this.stakingProgram.methods
+        .withdrawStake(new BN(amount.toString()))
+        .accounts({
+          destination: receiverTokenAccount,
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
+
+    return sendTransaction(instructions, this.connection, this.wallet);
   }
 
   public async stakeToPublisher(
