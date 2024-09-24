@@ -19,7 +19,7 @@ const Blocked = ({ reason }: Props) => (
     </h1>
     <p className="mb-20 text-lg">{reason}</p>
     <LinkButton
-      className="place-self-center px-24 py-3"
+      className="w-full max-w-96 place-self-center px-8 py-3"
       href="https://www.pyth.network"
       target="_blank"
     >
