@@ -18,17 +18,8 @@ const stakingClient = new PythStakingClient({
 const querySchema = z.enum(["totalSupply", "circulatingSupply"]);
 
 export async function GET(req: NextRequest) {
-  try {
-    const q = querySchema.parse(req.nextUrl.searchParams.get("q"));
-
-    if (q === "circulatingSupply") {
-      const circulatingSupply = await stakingClient.getCirculatingSupply();
-      return Response.json(Number(circulatingSupply));
-    } else {
-      const pythMint = await stakingClient.getPythTokenMint();
-      return Response.json(Number(pythMint.supply));
-    }
-  } catch {
+  const query = querySchema.safeParse(req.nextUrl.searchParams.get("q"));
+  if (!query.success) {
     return Response.json(
       {
         error:
@@ -38,5 +29,14 @@ export async function GET(req: NextRequest) {
         status: 400,
       },
     );
+  }
+  const q = query.data;
+
+  if (q === "circulatingSupply") {
+    const circulatingSupply = await stakingClient.getCirculatingSupply();
+    return Response.json(Number(circulatingSupply));
+  } else {
+    const pythMint = await stakingClient.getPythTokenMint();
+    return Response.json(Number(pythMint.supply));
   }
 }

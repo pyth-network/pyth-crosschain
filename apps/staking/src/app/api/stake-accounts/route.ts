@@ -80,17 +80,16 @@ export async function GET(req: NextRequest) {
     }),
   );
 
-  try {
-    const response = ResponseSchema.parse(responseRaw);
-    return Response.json(response);
-  } catch {
-    return Response.json(
-      {
-        error: "Internal server error",
-      },
-      {
-        status: 500,
-      },
-    );
-  }
+  const response = ResponseSchema.safeParse(responseRaw);
+
+  return response.success
+    ? Response.json(response.data)
+    : Response.json(
+        {
+          error: "Internal server error",
+        },
+        {
+          status: 500,
+        },
+      );
 }
