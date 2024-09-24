@@ -769,7 +769,7 @@ export class PythStakingClient {
    */
   public async getScalingFactor(): Promise<number> {
     const targetAccount = await this.getTargetAccount();
-    return Number(targetAccount.locked) / MAX_VOTER_WEIGHT;
+    return Number(targetAccount.locked) / Number(MAX_VOTER_WEIGHT);
   }
 
   public async getRecoverAccountInstruction(
@@ -821,8 +821,8 @@ export class PythStakingClient {
       .instruction();
   }
 
-  public async getMainStakeAccount() {
-    const stakeAccountPositions = await this.getAllStakeAccountPositions();
+  public async getMainStakeAccount(owner?: PublicKey) {
+    const stakeAccountPositions = await this.getAllStakeAccountPositions(owner);
     const currentEpoch = await getCurrentEpoch(this.connection);
 
     const stakeAccountVotingTokens = await Promise.all(
@@ -858,17 +858,18 @@ export class PythStakingClient {
     return mainAccount;
   }
 
-  public async getVoterWeight() {
-    const mainAccount = await this.getMainStakeAccount();
+  public async getVoterWeight(owner?: PublicKey) {
+    const mainAccount = await this.getMainStakeAccount(owner);
 
     if (mainAccount === undefined) {
       return 0;
     }
 
-    const scalingFactor = await this.getScalingFactor();
-    return Number(mainAccount.votingTokens) / scalingFactor;
+    const targetAccount = await this.getTargetAccount();
+
+    return (mainAccount.votingTokens * MAX_VOTER_WEIGHT) / targetAccount.locked;
   }
-  
+
   public async getPythTokenMint(): Promise<Mint> {
     const globalConfig = await this.getGlobalConfig();
     return getMint(this.connection, globalConfig.pythTokenMint);

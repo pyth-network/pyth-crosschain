@@ -64,14 +64,12 @@ export const getVoterWeightRecordAddress = (
   return PublicKey.findProgramAddressSync(
     [Buffer.from("voter_weight"), stakeAccountPositions.toBuffer()],
     STAKING_PROGRAM_ADDRESS,
-  )[0];
+  );
 };
 
-export const getMaxVoterWeightRecordAddress = (
-  stakeAccountPositions: PublicKey,
-) => {
+export const getMaxVoterWeightRecordAddress = () => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("max_voter"), stakeAccountPositions.toBuffer()],
+    [Buffer.from("max_voter")],
     STAKING_PROGRAM_ADDRESS,
-  )[0];
+  );
 };
