@@ -21,20 +21,35 @@ const ResponseSchema = z.array(
     custodyAccount: z.string(),
     actualAmount: z.number(),
     lock: LockSchema,
-  })
+  }),
 );
 
 const stakingClient = new PythStakingClient({
-  connection: new Connection(RPC ?? clusterApiUrl(IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet)),
+  connection: new Connection(
+    RPC ??
+      clusterApiUrl(
+        IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
+      ),
+  ),
 });
+
+const isValidPublicKey = (publicKey: string) => {
+  try {
+    new PublicKey(publicKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export async function GET(req: NextRequest) {
   const owner = req.nextUrl.searchParams.get("owner");
 
-  if (owner === null) {
+  if (owner === null || !isValidPublicKey(owner)) {
     return Response.json(
       {
-        error: "Must provide the 'owner' query parameters",
+        error:
+          "Must provide the 'owner' query parameters as a valid base58 public key",
       },
       {
         status: 400,

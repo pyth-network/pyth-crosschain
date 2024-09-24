@@ -547,7 +547,7 @@ export class PythStakingClient {
   }
 
   public async getCirculatingSupply() {
-    let circulatingSupply = 8_500_000_000n;
+    const circulatingSupply = 8_500_000_000n;
 
     const vestingSchedule: VestingSchedule = {
       periodicVestingAfterListing: {
@@ -569,11 +569,12 @@ export class PythStakingClient {
       includePastPeriods: false,
     });
 
-    for (const unlock of unlockSchedule.schedule) {
-      circulatingSupply -= unlock.amount;
-    }
+    const totalUnlock = unlockSchedule.schedule.reduce(
+      (total, unlock) => total + unlock.amount,
+      0n,
+    );
 
-    return circulatingSupply;
+    return circulatingSupply - totalUnlock;
   }
 
   async getAdvanceDelegationRecordInstructions(
