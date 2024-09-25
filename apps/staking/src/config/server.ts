@@ -9,12 +9,29 @@ import "server-only";
  */
 const demand = (key: string): string => {
   const value = process.env[key];
-  if (value && value !== "") {
-    return value;
-  } else {
+  if (value === undefined || value === "") {
     throw new MissingEnvironmentError(key);
+  } else {
+    return value;
   }
 };
+
+const fromCsv = (value: string): string[] =>
+  value.split(",").map((entry) => entry.toLowerCase().trim());
+
+const transform = <T>(key: string, fn: (value: string | undefined) => T): T => {
+  const value = process.env[key];
+  return fn(value === "" ? undefined : value);
+};
+
+const transformOr = <T>(
+  key: string,
+  fn: (value: string) => T,
+  defaultValue: T,
+): T => transform(key, (value) => (value ? fn(value) : defaultValue));
+
+const getOr = (key: string, defaultValue: string): string =>
+  transform(key, (value) => value ?? defaultValue);
 
 /**
  * Indicates that this server is the live customer-facing production server.
@@ -36,15 +53,8 @@ export const WALLETCONNECT_PROJECT_ID = demandInProduction(
 );
 export const RPC = process.env.RPC;
 export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
-export const HERMES_URL =
-  process.env.HERMES_URL ?? "https://hermes.pyth.network";
-export const BLOCKED_REGIONS =
-  process.env.BLOCKED_REGIONS === undefined ||
-  process.env.BLOCKED_REGIONS === ""
-    ? []
-    : process.env.BLOCKED_REGIONS.split(",").map((region) =>
-        region.toLowerCase().trim(),
-      );
+export const HERMES_URL = getOr("HERMES_URL", "https://hermes.pyth.network");
+export const BLOCKED_REGIONS = transformOr("BLOCKED_REGIONS", fromCsv, []);
 export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 
 class MissingEnvironmentError extends Error {

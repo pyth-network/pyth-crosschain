@@ -42,6 +42,7 @@ type Props = {
   availableRewards: bigint;
   expiringRewards: Date | undefined;
   availableToWithdraw: bigint;
+  restrictedMode?: boolean | undefined;
 };
 
 export const AccountSummary = ({
@@ -54,6 +55,7 @@ export const AccountSummary = ({
   availableToWithdraw,
   availableRewards,
   expiringRewards,
+  restrictedMode,
 }: Props) => (
   <section className="relative w-full overflow-hidden sm:border sm:border-neutral-600/50 sm:bg-pythpurple-800">
     <Image
@@ -118,7 +120,9 @@ export const AccountSummary = ({
           </>
         )}
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
-          <AddTokensButton walletAmount={walletAmount} api={api} />
+          {!restrictedMode && (
+            <AddTokensButton walletAmount={walletAmount} api={api} />
+          )}
           {availableToWithdraw === 0n ? (
             <DialogTrigger>
               <Button variant="secondary" className="xl:hidden">
@@ -145,23 +149,25 @@ export const AccountSummary = ({
               className="xl:hidden"
             />
           )}
-          <DialogTrigger>
-            <Button variant="secondary" className="xl:hidden">
-              Claim
-            </Button>
-            {availableRewards === 0n ||
-            api.type === ApiStateType.LoadedNoStakeAccount ? (
-              <ModalDialog title="No Rewards" closeButtonText="Ok">
-                <p>You have no rewards available to be claimed</p>
-              </ModalDialog>
-            ) : (
-              <ClaimDialog
-                expiringRewards={expiringRewards}
-                availableRewards={availableRewards}
-                api={api}
-              />
-            )}
-          </DialogTrigger>
+          {!restrictedMode && (
+            <DialogTrigger>
+              <Button variant="secondary" className="xl:hidden">
+                Claim
+              </Button>
+              {availableRewards === 0n ||
+              api.type === ApiStateType.LoadedNoStakeAccount ? (
+                <ModalDialog title="No Rewards" closeButtonText="Ok">
+                  <p>You have no rewards available to be claimed</p>
+                </ModalDialog>
+              ) : (
+                <ClaimDialog
+                  expiringRewards={expiringRewards}
+                  availableRewards={availableRewards}
+                  api={api}
+                />
+              )}
+            </DialogTrigger>
+          )}
         </div>
       </div>
       <div className="hidden w-auto items-stretch gap-4 xl:flex">
@@ -173,35 +179,37 @@ export const AccountSummary = ({
             <WithdrawButton api={api} max={availableToWithdraw} size="small" />
           }
         />
-        <BalanceCategory
-          name="Available Rewards"
-          amount={availableRewards}
-          description="Rewards you have earned from OIS"
-          action={
-            api.type === ApiStateType.Loaded ? (
-              <ClaimButton
-                size="small"
-                variant="secondary"
-                isDisabled={availableRewards === 0n}
-                api={api}
-              />
-            ) : (
-              <Button size="small" variant="secondary" isDisabled={true}>
-                Claim
-              </Button>
-            )
-          }
-          {...(expiringRewards !== undefined &&
-            availableRewards > 0n && {
-              warning: (
-                <>
-                  Rewards expire one year from the epoch in which they were
-                  earned. You have rewards expiring on{" "}
-                  {expiringRewards.toLocaleDateString()}.
-                </>
-              ),
-            })}
-        />
+        {!restrictedMode && (
+          <BalanceCategory
+            name="Available Rewards"
+            amount={availableRewards}
+            description="Rewards you have earned from OIS"
+            action={
+              api.type === ApiStateType.Loaded ? (
+                <ClaimButton
+                  size="small"
+                  variant="secondary"
+                  isDisabled={availableRewards === 0n}
+                  api={api}
+                />
+              ) : (
+                <Button size="small" variant="secondary" isDisabled={true}>
+                  Claim
+                </Button>
+              )
+            }
+            {...(expiringRewards !== undefined &&
+              availableRewards > 0n && {
+                warning: (
+                  <>
+                    Rewards expire one year from the epoch in which they were
+                    earned. You have rewards expiring on{" "}
+                    {expiringRewards.toLocaleDateString()}.
+                  </>
+                ),
+              })}
+          />
+        )}
       </div>
     </div>
   </section>

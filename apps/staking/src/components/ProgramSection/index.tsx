@@ -32,7 +32,7 @@ export const ProgramSection = ({
 }: Props) => (
   <section
     className={clsx(
-      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
+      "border-x border-b border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
       className,
     )}
     {...props}

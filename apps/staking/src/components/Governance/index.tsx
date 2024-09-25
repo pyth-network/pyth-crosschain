@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { ProgramSection } from "../ProgramSection";
@@ -10,6 +12,7 @@ type Props = {
   staked: bigint;
   cooldown: bigint;
   cooldown2: bigint;
+  restrictedMode?: boolean | undefined;
 };
 
 export const Governance = ({
@@ -20,8 +23,10 @@ export const Governance = ({
   staked,
   cooldown,
   cooldown2,
+  restrictedMode,
 }: Props) => (
   <ProgramSection
+    className={clsx({ "border-t sm:border-t-0": restrictedMode })}
     name="Pyth Governance"
     helpDialog={<GovernanceGuide />}
     tagline="Vote and Influence the Network"
@@ -33,8 +38,6 @@ export const Governance = ({
       staked,
       cooldown,
       cooldown2,
-      stake: api.type === ApiStateType.Loaded ? api.stakeGovernance : undefined,
-      stakeDescription: "Stake funds to participate in governance votes",
       cancelWarmup:
         api.type === ApiStateType.Loaded
           ? api.cancelWarmupGovernance
@@ -44,6 +47,11 @@ export const Governance = ({
       unstake:
         api.type === ApiStateType.Loaded ? api.unstakeGovernance : undefined,
       unstakeDescription: "Unstake tokens from the Governance program",
+      ...(!restrictedMode && {
+        stake:
+          api.type === ApiStateType.Loaded ? api.stakeGovernance : undefined,
+        stakeDescription: "Stake funds to participate in governance votes",
+      }),
     }}
   />
 );
