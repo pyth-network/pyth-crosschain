@@ -289,7 +289,7 @@ const SelfStaking = ({
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
                 <PublisherTableHeader>Number of feeds</PublisherTableHeader>
                 <PublisherTableHeader>Quality ranking</PublisherTableHeader>
-                {availableToStake > 0n && <PublisherTableHeader />}
+                <PublisherTableHeader />
               </tr>
             </thead>
             <tbody className="bg-pythpurple-400/10">
@@ -690,7 +690,10 @@ const PublisherList = ({
             onSelectionChange={updateSort}
           >
             <Label className="whitespace-nowrap opacity-80">Sort by</Label>
-            <Button className="group flex flex-row items-center gap-2 text-xs transition">
+            <Button
+              className="group flex flex-row items-center gap-2 px-2 py-3 text-xs transition sm:px-4"
+              size="nopad"
+            >
               {getSortName(sort)}
               <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
             </Button>
@@ -1396,7 +1399,7 @@ const YourPositionsTable = ({
   currentEpoch,
   publisher,
 }: YourPositionsTableProps) => (
-  <div className="mx-auto mb-0 mt-4 border border-neutral-600/50 bg-pythpurple-800 p-4 text-xs sm:mb-4 sm:px-8 sm:py-6 md:mb-8 md:w-[30rem]">
+  <div className="mx-auto mb-0 mt-4 border border-neutral-600/50 bg-pythpurple-800 p-4 text-xs sm:mb-4 sm:px-8 sm:py-6 md:mb-8 md:w-[25rem] lg:w-[35rem]">
     <table className="w-full text-sm md:text-base">
       <caption className="mb-2 text-left font-light md:text-lg">
         Your Positions

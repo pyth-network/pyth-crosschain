@@ -20,13 +20,24 @@ const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const Home = () => {
-  const isSSR = useIsSSR();
+export const Home = () => <HomeImpl />;
+export const RestrictedMode = () => <HomeImpl restrictedMode />;
 
-  return isSSR ? <Loading /> : <MountedHome />;
+type HomeImplProps = {
+  restrictedMode?: boolean | undefined;
 };
 
-const MountedHome = () => {
+export const HomeImpl = ({ restrictedMode }: HomeImplProps) => {
+  const isSSR = useIsSSR();
+
+  return isSSR ? <Loading /> : <MountedHome restrictedMode={restrictedMode} />;
+};
+
+type MountedHomeProps = {
+  restrictedMode?: boolean | undefined;
+};
+
+const MountedHome = ({ restrictedMode }: MountedHomeProps) => {
   const api = useApi();
 
   switch (api.type) {
@@ -44,16 +55,22 @@ const MountedHome = () => {
     }
     case ApiStateType.LoadedNoStakeAccount:
     case ApiStateType.Loaded: {
-      return <StakeAccountLoadedHome api={api} />;
+      return (
+        <StakeAccountLoadedHome restrictedMode={restrictedMode} api={api} />
+      );
     }
   }
 };
 
 type StakeAccountLoadedHomeProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  restrictedMode?: boolean | undefined;
 };
 
-const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
+const StakeAccountLoadedHome = ({
+  api,
+  restrictedMode,
+}: StakeAccountLoadedHomeProps) => {
   const data = useData(api.dashboardDataCacheKey, api.loadData, {
     refreshInterval: REFRESH_INTERVAL,
   });
@@ -69,7 +86,9 @@ const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
     }
 
     case DashboardDataStateType.Loaded: {
-      return <Dashboard {...data.data} api={api} />;
+      return (
+        <Dashboard {...data.data} api={api} restrictedMode={restrictedMode} />
+      );
     }
   }
 };

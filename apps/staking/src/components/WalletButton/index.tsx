@@ -28,10 +28,7 @@ import {
   Collection,
 } from "react-aria-components";
 
-import {
-  REGION_BLOCKED_SEGMENT,
-  VPN_BLOCKED_SEGMENT,
-} from "../../config/isomorphic";
+import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
 import {
   StateType as ApiStateType,
   type States,
@@ -52,8 +49,7 @@ type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
 export const WalletButton = (props: Props) => {
   const segment = useSelectedLayoutSegment();
-  const isBlocked =
-    segment === REGION_BLOCKED_SEGMENT || segment === VPN_BLOCKED_SEGMENT;
+  const isBlocked = segment === VPN_BLOCKED_SEGMENT;
 
   // eslint-disable-next-line unicorn/no-null
   return isBlocked ? null : <WalletButtonImpl {...props} />;
