@@ -6,18 +6,26 @@ import { z } from "zod";
 
 import { IS_MAINNET, RPC } from "../../../config/server";
 
-const stakingClient = new PythStakingClient({
-  connection: new Connection(
-    RPC ??
-      clusterApiUrl(
-        IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
-      ),
-  ),
-});
-
 const querySchema = z.enum(["totalSupply", "circulatingSupply"]);
 
 export async function GET(req: NextRequest) {
+  const stakingClient = new PythStakingClient({
+    connection: new Connection(
+      RPC ??
+        clusterApiUrl(
+          IS_MAINNET
+            ? WalletAdapterNetwork.Mainnet
+            : WalletAdapterNetwork.Devnet,
+        ),
+      {
+        httpHeaders: {
+          Origin: req.nextUrl.origin,
+          "User-Agent": req.headers.get("User-Agent") ?? "",
+        },
+      },
+    ),
+  });
+
   const query = querySchema.safeParse(req.nextUrl.searchParams.get("q"));
   if (!query.success) {
     return Response.json(
