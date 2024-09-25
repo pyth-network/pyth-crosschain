@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Sequence, List, TypedDict, Tuple
 
 from solana.constants import SYSTEM_PROGRAM_ID
@@ -188,7 +189,7 @@ class LimoClient:
         self,
         taker: Pubkey,
         order: OrderStateAndAddress,
-        input_amount_decimals: int,
+        input_amount_decimals: Decimal,
         input_mint_decimals: int,
         express_relay_program_id: Pubkey,
     ) -> List[Instruction]:
@@ -258,7 +259,9 @@ class LimoClient:
         ixs.append(
             take_order(
                 TakeOrderArgs(
-                    input_amount=input_amount_decimals * (10**input_mint_decimals)
+                    input_amount=int(
+                        input_amount_decimals * (10**input_mint_decimals)
+                    )
                 ),
                 {
                     "taker": taker,

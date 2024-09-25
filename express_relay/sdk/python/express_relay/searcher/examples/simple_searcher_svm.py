@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+from decimal import Decimal
 
 from solana.rpc.async_api import AsyncClient
 from solders.keypair import Keypair
@@ -89,12 +90,12 @@ class SimpleSearcherSvm:
         output_mint_decimals = await self.limo_client.get_mint_decimals(
             order["state"].output_mint
         )
-        input_amount_decimals = (
-            order["state"].remaining_input_amount // 10**input_mint_decimals
-        )
-        output_amount_decimals = (
-            order["state"].expected_output_amount // 10**output_mint_decimals
-        )
+        input_amount_decimals = Decimal(
+            order["state"].remaining_input_amount
+        ) / Decimal(10**input_mint_decimals)
+        output_amount_decimals = Decimal(
+            order["state"].expected_output_amount
+        ) / Decimal(10**output_mint_decimals)
         logger.info(
             f"Order address {order['address']}\n"
             f"Sell token {order['state'].input_mint} amount: {input_amount_decimals}\n"

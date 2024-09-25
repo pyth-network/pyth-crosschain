@@ -474,12 +474,12 @@ class PostBidMessageParamsSvm(BaseModel):
 
 def get_discriminator_value(v: Any) -> str:
     if isinstance(v, dict):
-        if "target_calldata" in v:
-            return "evm"
-        return "svm"
-    if getattr(v, "target_calldata", None):
+        if "transaction" in v:
+            return "svm"
         return "evm"
-    return "svm"
+    if getattr(v, "transaction", None):
+        return "svm"
+    return "evm"
 
 
 PostBidMessageParams = Annotated[
