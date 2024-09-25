@@ -400,3 +400,6 @@
 - chain: fantom_sonic_testnet
   address: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376"
   type: EvmPriceFeedContract
+- chain: blackbird
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract

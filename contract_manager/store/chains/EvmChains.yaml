@@ -719,3 +719,13 @@
   rpcUrl: https://mainnet.evm.nodes.onflow.org
   networkId: 747
   type: EvmChain
+- id: nighthawk
+  mainnet: false
+  rpcUrl: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+  networkId: 9999
+  type: EvmChain
+- id: blackbird
+  mainnet: false
+  rpcUrl: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+  networkId: 0000
+  type: EvmChain

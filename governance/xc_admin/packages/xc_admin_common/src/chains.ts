@@ -188,6 +188,8 @@ export const RECEIVER_CHAINS = {
   flow_testnet: 50094,
   apechain_testnet: 50095,
   soneium_minato_testnet: 50096,
+  nighthawk: 50097,
+  blackbird: 50099,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
