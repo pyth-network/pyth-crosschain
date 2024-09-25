@@ -1,12 +1,23 @@
+import base64
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, model_validator
+from pydantic import (
+    BaseModel,
+    model_validator,
+    GetCoreSchemaHandler,
+    GetJsonSchemaHandler,
+    Tag,
+    Discriminator,
+)
 from pydantic.functional_validators import AfterValidator
 from pydantic.functional_serializers import PlainSerializer
 from uuid import UUID
 import web3
-from typing import Union, ClassVar
+from typing import Union, ClassVar, Any
 from pydantic import Field
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import core_schema
+from solders.transaction import Transaction as _SvmTransaction
 from typing_extensions import Literal, Annotated
 import warnings
 import string
@@ -85,7 +96,7 @@ class TokenAmount(BaseModel):
     amount: IntString
 
 
-class Bid(BaseModel):
+class BidEvm(BaseModel):
     """
     Attributes:
         amount: The amount of the bid in wei.
@@ -100,6 +111,62 @@ class Bid(BaseModel):
     chain_id: str
     target_contract: Address
     permission_key: HexString
+
+
+class _TransactionPydanticAnnotation:
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: Any,
+        _handler: GetCoreSchemaHandler,
+    ) -> core_schema.CoreSchema:
+        def validate_from_str(value: str) -> _SvmTransaction:
+            return _SvmTransaction.from_bytes(base64.b64decode(value))
+
+        from_str_schema = core_schema.chain_schema(
+            [
+                core_schema.str_schema(),
+                core_schema.no_info_plain_validator_function(validate_from_str),
+            ]
+        )
+
+        return core_schema.json_or_python_schema(
+            json_schema=from_str_schema,
+            python_schema=core_schema.union_schema(
+                [
+                    # check if it's an instance first before doing any further work
+                    core_schema.is_instance_schema(_SvmTransaction),
+                    from_str_schema,
+                ]
+            ),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda instance: base64.b64encode(bytes(instance)).decode("utf-8")
+            ),
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, _core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        # Use the same schema that would be used for `str`
+        return handler(core_schema.str_schema())
+
+
+SvmTransaction = Annotated[_SvmTransaction, _TransactionPydanticAnnotation]
+
+
+class BidSvm(BaseModel):
+    """
+    Attributes:
+        transaction: The transaction including the bid
+        chain_id: The chain ID to bid on.
+    """
+
+    transaction: SvmTransaction
+    chain_id: str
+
+
+Bid = Union[BidEvm, BidSvm]
 
 
 class BidStatus(Enum):
@@ -373,7 +440,7 @@ class UnsubscribeMessageParams(BaseModel):
     chain_ids: list[str]
 
 
-class PostBidMessageParams(BaseModel):
+class PostBidMessageParamsEvm(BaseModel):
     """
     Attributes:
         method: A string literal "post_bid".
@@ -390,6 +457,38 @@ class PostBidMessageParams(BaseModel):
     chain_id: str
     target_contract: Address
     permission_key: HexString
+
+
+class PostBidMessageParamsSvm(BaseModel):
+    """
+    Attributes:
+        method: A string literal "post_bid".
+        chain_id: The chain ID to bid on.
+        transaction: The transaction including the bid.
+    """
+
+    method: Literal["post_bid"]
+    chain_id: str
+    transaction: SvmTransaction
+
+
+def get_discriminator_value(v: Any) -> str:
+    if isinstance(v, dict):
+        if "transaction" in v:
+            return "svm"
+        return "evm"
+    if getattr(v, "transaction", None):
+        return "svm"
+    return "evm"
+
+
+PostBidMessageParams = Annotated[
+    Union[
+        Annotated[PostBidMessageParamsEvm, Tag("evm")],
+        Annotated[PostBidMessageParamsSvm, Tag("svm")],
+    ],
+    Discriminator(get_discriminator_value),
+]
 
 
 class PostOpportunityBidMessageParams(BaseModel):

@@ -667,7 +667,7 @@ export class Client {
 
   /**
    * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
-   * @param txRaw The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param tx The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
    * @param searcher The address of the searcher that is submitting the bid
    * @param router The identifying address of the router that the permission key is for
    * @param permissionKey The 32-byte permission key as an SVM PublicKey

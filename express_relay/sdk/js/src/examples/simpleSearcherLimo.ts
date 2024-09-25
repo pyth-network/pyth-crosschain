@@ -67,11 +67,11 @@ class SimpleSearcherLimo {
     const outputMintDecimals = await this.clientLimo.getOrderOutputMintDecimals(
       order
     );
-    const inputAmount = new Decimal(
+    const inputAmountDecimals = new Decimal(
       order.state.remainingInputAmount.toNumber()
     ).div(new Decimal(10).pow(inputMintDecimals));
 
-    const outputAmount = new Decimal(
+    const outputAmountDecimals = new Decimal(
       order.state.expectedOutputAmount.toNumber()
     ).div(new Decimal(10).pow(outputMintDecimals));
 
@@ -80,19 +80,19 @@ class SimpleSearcherLimo {
       "Sell token",
       order.state.inputMint.toBase58(),
       "amount:",
-      inputAmount.toString()
+      inputAmountDecimals.toString()
     );
     console.log(
       "Buy token",
       order.state.outputMint.toBase58(),
       "amount:",
-      outputAmount.toString()
+      outputAmountDecimals.toString()
     );
 
     const ixsTakeOrder = await this.clientLimo.takeOrderIx(
       this.searcher.publicKey,
       order,
-      inputAmount,
+      inputAmountDecimals,
       SVM_CONSTANTS[this.chainId].expressRelayProgram,
       inputMintDecimals,
       outputMintDecimals
@@ -101,7 +101,7 @@ class SimpleSearcherLimo {
 
     const router = getPdaAuthority(
       this.clientLimo.getProgramID(),
-      this.globalConfig
+      order.state.globalConfig
     );
     const bidAmount = new anchor.BN(argv.bid);
 
