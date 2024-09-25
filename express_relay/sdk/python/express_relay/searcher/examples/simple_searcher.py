@@ -11,7 +11,7 @@ from express_relay.client import (
 from express_relay.constants import OPPORTUNITY_ADAPTER_CONFIGS
 from express_relay.express_relay_types import (
     Opportunity,
-    Bid,
+    BidEvm,
     OpportunityBidParams,
     Bytes32,
     BidStatus,
@@ -41,7 +41,7 @@ class SimpleSearcher:
     def assess_opportunity(
         self,
         opp: Opportunity,
-    ) -> Bid | None:
+    ) -> BidEvm | None:
         """
         Assesses whether an opportunity is worth executing; if so, returns a Bid object.
         Otherwise, returns None.
