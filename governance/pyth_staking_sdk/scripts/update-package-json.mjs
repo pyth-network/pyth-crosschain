@@ -11,10 +11,11 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const distPackageJsonPath = path.join(__dirname, "..", "dist", "package.json");
+const distPackageJsonPath = path.join(__dirname, "..", "package.json");
 
 const packageJson = JSON.parse(fs.readFileSync(distPackageJsonPath, "utf8"));
 
-packageJson.main = "src/index.js";
+packageJson.main = "dist/src/index.js";
+packageJson.types = "dist/src/index.d.ts";
 
 fs.writeFileSync(distPackageJsonPath, JSON.stringify(packageJson, null, 2));
