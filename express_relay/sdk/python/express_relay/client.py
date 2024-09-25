@@ -41,7 +41,7 @@ from express_relay.express_relay_types import (
 )
 from express_relay.svm.generated.express_relay.instructions import submit_bid
 from express_relay.svm.generated.express_relay.program_id import (
-    PROGRAM_ID as EXPRESS_RELAY_PROGRAM_ID,
+    PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
 )
 from express_relay.svm.generated.express_relay.types import SubmitBidArgs
 from express_relay.svm.limo_client import LimoClient
@@ -436,10 +436,10 @@ class ExpressRelayClient:
             raise ValueError(f"Chain ID {chain_id} not supported")
         svm_config = SVM_CONFIGS[chain_id]
         config_router = LimoClient.get_express_relay_config_router_pda(
-            EXPRESS_RELAY_PROGRAM_ID, router
+            SVM_EXPRESS_RELAY_PROGRAM_ID, router
         )
         express_relay_metadata = LimoClient.get_express_relay_metadata_pda(
-            EXPRESS_RELAY_PROGRAM_ID
+            SVM_EXPRESS_RELAY_PROGRAM_ID
         )
         submit_bid_ix = submit_bid(
             {"data": SubmitBidArgs(deadline=deadline, bid_amount=bid_amount)},
