@@ -120,15 +120,6 @@ class _TransactionPydanticAnnotation:
         _source_type: Any,
         _handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
-        """
-        We return a pydantic_core.CoreSchema that behaves in the following ways:
-
-        * ints will be parsed as `ThirdPartyType` instances with the int as the x attribute
-        * `ThirdPartyType` instances will be parsed as `ThirdPartyType` instances without any changes
-        * Nothing else will pass validation
-        * Serialization will always return just an int
-        """
-
         def validate_from_str(value: str) -> _SvmTransaction:
             return _SvmTransaction.from_bytes(base64.b64decode(value))
 

@@ -19,12 +19,7 @@ from express_relay.express_relay_types import (
 from express_relay.svm.limo_client import LimoClient, OrderStateAndAddress
 
 DEADLINE = 2**62
-
 logger = logging.getLogger(__name__)
-
-NAIVE_BID = int(1e16)
-# Set deadline (naively) to max uint256
-DEADLINE_MAX = 2**256 - 1
 
 
 class SimpleSearcherSvm:

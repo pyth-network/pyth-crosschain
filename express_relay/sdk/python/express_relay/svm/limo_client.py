@@ -140,9 +140,8 @@ class LimoClient:
         """
         ata = self.get_ata(owner, WRAPPED_SOL_MINT, TOKEN_PROGRAM_ID)
         ata_info = await self._connection.get_account_info(ata)
-        current_balance = 0
+
         create_ixs = []
-        fill_ixs = []
         close_ixs = []
         if ata_info.value is None:
             create_ixs = [
@@ -150,9 +149,23 @@ class LimoClient:
                     payer, owner, WRAPPED_SOL_MINT, TOKEN_PROGRAM_ID
                 )
             ]
-        else:
-            decoded_data = TOKEN_ACCOUNT_LAYOUT.parse(ata_info.value.data)
-            current_balance = decoded_data.amount
+            close_ixs = [
+                spl_token.close_account(
+                    spl_token.CloseAccountParams(
+                        program_id=TOKEN_PROGRAM_ID,
+                        account=ata,
+                        dest=owner,
+                        owner=owner,
+                    )
+                )
+            ]
+
+        fill_ixs = []
+        current_balance = (
+            TOKEN_ACCOUNT_LAYOUT.parse(ata_info.value.data).amount
+            if ata_info.value
+            else 0
+        )
         if current_balance < amount_to_deposit_lamports:
             fill_ixs = [
                 system_program.transfer(
@@ -165,17 +178,6 @@ class LimoClient:
                 spl_token.sync_native(
                     spl_token.SyncNativeParams(TOKEN_PROGRAM_ID, ata)
                 ),
-            ]
-        if create_ixs:
-            close_ixs = [
-                spl_token.close_account(
-                    spl_token.CloseAccountParams(
-                        program_id=TOKEN_PROGRAM_ID,
-                        account=ata,
-                        dest=owner,
-                        owner=owner,
-                    )
-                )
             ]
 
         return WSOLInstructions(
@@ -209,7 +211,7 @@ class LimoClient:
         taker_input_ata: Pubkey
         if order["state"].input_mint == WRAPPED_SOL_MINT:
             instructions = await self.get_init_if_needed_wsol_create_and_close_ixs(
-                taker, taker, 0
+                owner=taker, payer=taker, amount_to_deposit_lamports=0
             )
             ixs.extend(instructions["create_ixs"])
             close_wsol_ixns.extend(instructions["close_ixs"])
