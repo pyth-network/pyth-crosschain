@@ -4,11 +4,11 @@ import { clusterApiUrl, Connection } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { IS_MAINNET, RPC } from "../../../config/server";
+import { IS_MAINNET, BACKEND_RPC } from "../../../config/server";
 
 const stakingClient = new PythStakingClient({
   connection: new Connection(
-    RPC ??
+    BACKEND_RPC ??
       clusterApiUrl(
         IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
       ),
