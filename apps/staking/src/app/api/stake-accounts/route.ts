@@ -24,15 +24,6 @@ const ResponseSchema = z.array(
   }),
 );
 
-const stakingClient = new PythStakingClient({
-  connection: new Connection(
-    RPC ??
-      clusterApiUrl(
-        IS_MAINNET ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
-      ),
-  ),
-});
-
 const isValidPublicKey = (publicKey: string) => {
   try {
     new PublicKey(publicKey);
@@ -43,6 +34,23 @@ const isValidPublicKey = (publicKey: string) => {
 };
 
 export async function GET(req: NextRequest) {
+  const stakingClient = new PythStakingClient({
+    connection: new Connection(
+      RPC ??
+        clusterApiUrl(
+          IS_MAINNET
+            ? WalletAdapterNetwork.Mainnet
+            : WalletAdapterNetwork.Devnet,
+        ),
+      {
+        httpHeaders: {
+          Origin: req.nextUrl.origin,
+          "User-Agent": req.headers.get("User-Agent") ?? "",
+        },
+      },
+    ),
+  });
+
   const owner = req.nextUrl.searchParams.get("owner");
 
   if (owner === null || !isValidPublicKey(owner)) {
