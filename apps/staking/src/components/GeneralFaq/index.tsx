@@ -207,26 +207,6 @@ export const GeneralFaq = (
           ),
         },
         {
-          question: "How are publisher quality rankings calculated?",
-          answer: (
-            <>
-              <p>
-                Quality rankings are calculated based on a publisher’s price
-                deviation, uptime, and price staleness. You can learn more about
-                quality ranking calculations{" "}
-                <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-                  className="underline"
-                  target="_blank"
-                >
-                  here
-                </Link>
-                .
-              </p>
-            </>
-          ),
-        },
-        {
           question: "Can the Pyth DAO change the parameters of OIS?",
           answer:
             "Yes. Changes to important parameters such as stake cap inputs, delegation fees, slashing amounts, and more are subject to Operational Pyth Improvement Proposals that any PYTH token holder can raise for the consideration of the Pyth DAO.",

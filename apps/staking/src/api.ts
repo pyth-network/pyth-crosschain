@@ -56,7 +56,6 @@ type Data = {
     poolUtilization: bigint;
     poolUtilizationDelta: bigint;
     numFeeds: number;
-    qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -304,7 +303,6 @@ const loadPublisherData = async (
       poolUtilization: publisher.totalDelegation,
       poolUtilizationDelta: publisher.totalDelegationDelta,
       publicKey: publisher.pubkey,
-      qualityRanking: publisherRanking?.rank ?? 0,
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,

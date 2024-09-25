@@ -183,8 +183,8 @@ export const OracleIntegrityStakingGuide = (
               <>
                 <p>
                   You can sort and evaluate publishers based on metrics such as
-                  their stake pool composition, number of feeds supported,
-                  quality ranking, and more.
+                  their stake pool composition, number of feeds supported, and
+                  more.
                 </p>
 
                 <p>
@@ -201,10 +201,9 @@ export const OracleIntegrityStakingGuide = (
             description: (
               <p>
                 Oracle Integrity Staking incentivizes publishers to deliver
-                high-quality data, which is measured by a quality ranking
-                system. This ranking is based on three key factors: Uptime,
-                Price Deviation, and Price Staleness. Stakers can use these
-                rankings to help ensure the security of the price oracle.
+                high-quality data. Stakers can use the information on the
+                staking dashboard to help ensure the security of the price
+                oracle.
               </p>
             ),
             image: publisherQuality,

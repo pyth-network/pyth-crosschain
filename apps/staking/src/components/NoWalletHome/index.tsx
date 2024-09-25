@@ -135,7 +135,7 @@ export const NoWalletHome = () => {
             },
             {
               title: "Select Publishers",
-              body: "Choose which data publishers to support by staking your tokens towards them to help secure the oracle. You can sort publishers by their stake pool details, quality ranking, and more.",
+              body: "Choose which data publishers to support by staking your tokens towards them to help secure the oracle. You can sort publishers by their stake pool details, number of feeds, and more.",
               icon: SelectPublishers,
             },
             {

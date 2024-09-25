@@ -288,7 +288,6 @@ const SelfStaking = ({
                 <PublisherTableHeader>Estimated next APY</PublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
                 <PublisherTableHeader>Number of feeds</PublisherTableHeader>
-                <PublisherTableHeader>Quality ranking</PublisherTableHeader>
                 <PublisherTableHeader />
               </tr>
             </thead>
@@ -714,8 +713,6 @@ const PublisherList = ({
                   SortOption.SelfStakeAscending,
                   SortOption.NumberOfFeedsDescending,
                   SortOption.NumberOfFeedsAscending,
-                  SortOption.QualityRankingDescending,
-                  SortOption.QualityRankingAscending,
                 ].map((id) => ({ id }))}
               >
                 {({ id }) => (
@@ -803,14 +800,6 @@ const PublisherList = ({
                   setSort={updateSort}
                 >
                   Number of feeds
-                </SortablePublisherTableHeader>
-                <SortablePublisherTableHeader
-                  asc={SortOption.QualityRankingAscending}
-                  desc={SortOption.QualityRankingDescending}
-                  sort={sort}
-                  setSort={updateSort}
-                >
-                  Quality ranking
                 </SortablePublisherTableHeader>
                 <PublisherTableHeader className="pr-4 sm:pr-10" />
               </tr>
@@ -985,19 +974,6 @@ const doSort = (
         return sort === SortOption.RemainingPoolDescending ? -1 * value : value;
       }
     }
-    case SortOption.QualityRankingDescending:
-    case SortOption.QualityRankingAscending: {
-      if (a.qualityRanking === 0 && b.qualityRanking === 0) {
-        return 0;
-      } else if (a.qualityRanking === 0) {
-        return 1;
-      } else if (b.qualityRanking === 0) {
-        return -1;
-      } else {
-        const value = Number(a.qualityRanking - b.qualityRanking);
-        return sort === SortOption.QualityRankingAscending ? -1 * value : value;
-      }
-    }
     case SortOption.SelfStakeAscending: {
       return Number(a.selfStake - b.selfStake);
     }
@@ -1075,7 +1051,6 @@ type PublisherProps = {
     poolUtilization: bigint;
     poolUtilizationDelta: bigint;
     numFeeds: number;
-    qualityRanking: number;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -1220,12 +1195,6 @@ const Publisher = ({
             <dt className="font-semibold">Number of feeds:</dt>
             <dd>{publisher.numFeeds}</dd>
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <dt className="font-semibold">Quality ranking:</dt>
-            <dd>
-              {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
-            </dd>
-          </div>
         </dl>
       </div>
       {isSelf && (
@@ -1282,9 +1251,6 @@ const Publisher = ({
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
           {publisher.numFeeds}
-        </PublisherTableCell>
-        <PublisherTableCell className="text-center">
-          {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
         </PublisherTableCell>
         <PublisherTableCell
           className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
@@ -1650,8 +1616,6 @@ enum SortOption {
   SelfStakeAscending,
   NumberOfFeedsDescending,
   NumberOfFeedsAscending,
-  QualityRankingDescending,
-  QualityRankingAscending,
 }
 
 const getSortName = (sortOption: SortOption) => {
@@ -1685,12 +1649,6 @@ const getSortName = (sortOption: SortOption) => {
     }
     case SortOption.NumberOfFeedsAscending: {
       return "Least feeds";
-    }
-    case SortOption.QualityRankingDescending: {
-      return "Best quality ranking";
-    }
-    case SortOption.QualityRankingAscending: {
-      return "Worst quality ranking";
     }
   }
 };
