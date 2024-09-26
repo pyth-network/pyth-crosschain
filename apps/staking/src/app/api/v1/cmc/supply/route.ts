@@ -4,7 +4,7 @@ import { clusterApiUrl, Connection } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { IS_MAINNET, RPC } from "../../../config/server";
+import { IS_MAINNET, RPC } from "../../../../../config/server";
 
 const querySchema = z.enum(["totalSupply", "circulatingSupply"]);
 
