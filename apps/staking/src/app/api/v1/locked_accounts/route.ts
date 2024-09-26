@@ -1,15 +1,15 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
-import { FRACTION_PRECISION } from "@pythnetwork/staking-sdk/src/constants";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { IS_MAINNET, RPC } from "../../../../config/server";
+import { tokensToString } from "../../../../tokens";
 
 const UnlockScheduleSchema = z.object({
   date: z.date(),
-  amount: z.number(),
+  amount: z.string(),
 });
 
 const LockSchema = z.object({
@@ -20,7 +20,7 @@ const LockSchema = z.object({
 const ResponseSchema = z.array(
   z.object({
     custodyAccount: z.string(),
-    actualAmount: z.number(),
+    actualAmount: z.string(),
     lock: LockSchema,
   }),
 );
@@ -77,12 +77,12 @@ export async function GET(req: NextRequest) {
       const lock = await stakingClient.getUnlockSchedule(position, true);
       return {
         custodyAccount: custodyAccount.address.toBase58(),
-        actualAmount: Number(custodyAccount.amount) / FRACTION_PRECISION,
+        actualAmount: tokensToString(custodyAccount.amount),
         lock: {
           type: lock.type,
           schedule: lock.schedule.map((unlock) => ({
             date: unlock.date,
-            amount: Number(unlock.amount) / FRACTION_PRECISION,
+            amount: tokensToString(unlock.amount),
           })),
         },
       };
