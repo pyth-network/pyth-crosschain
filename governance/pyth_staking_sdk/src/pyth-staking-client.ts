@@ -681,7 +681,7 @@ export class PythStakingClient {
 
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
-      tx.feePayer = PublicKey.default;
+      tx.feePayer = this.wallet.publicKey;
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {
