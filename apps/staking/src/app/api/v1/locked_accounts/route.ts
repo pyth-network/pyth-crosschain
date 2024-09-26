@@ -5,10 +5,11 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { IS_MAINNET, RPC } from "../../../../config/server";
+import { tokensToString } from "../../../../tokens";
 
 const UnlockScheduleSchema = z.object({
   date: z.date(),
-  amount: z.number(),
+  amount: z.string(),
 });
 
 const LockSchema = z.object({
@@ -19,7 +20,7 @@ const LockSchema = z.object({
 const ResponseSchema = z.array(
   z.object({
     custodyAccount: z.string(),
-    actualAmount: z.number(),
+    actualAmount: z.string(),
     lock: LockSchema,
   }),
 );
@@ -76,12 +77,12 @@ export async function GET(req: NextRequest) {
       const lock = await stakingClient.getUnlockSchedule(position, true);
       return {
         custodyAccount: custodyAccount.address.toBase58(),
-        actualAmount: Number(custodyAccount.amount),
+        actualAmount: tokensToString(custodyAccount.amount),
         lock: {
           type: lock.type,
           schedule: lock.schedule.map((unlock) => ({
             date: unlock.date,
-            amount: Number(unlock.amount),
+            amount: tokensToString(unlock.amount),
           })),
         },
       };
