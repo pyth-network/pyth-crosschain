@@ -388,6 +388,3 @@
 - chain: fantom_sonic_testnet
   address: "0xb700C2f6D14e2cfbD0845Bb102701dBDFf5d1bC4"
   type: EvmWormholeContract
-- chain: blackbird
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
