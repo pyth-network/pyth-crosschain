@@ -1,6 +1,13 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { epochToDate } from "@pythnetwork/staking-sdk";
+import clsx from "clsx";
 import Image from "next/image";
-import { type ComponentProps, type ReactNode, useCallback } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   DialogTrigger,
   Button as ReactAriaButton,
@@ -33,6 +40,11 @@ type Props = {
   expiringRewards: Date | undefined;
   availableToWithdraw: bigint;
   restrictedMode?: boolean | undefined;
+  integrityStakingWarmup: bigint;
+  integrityStakingStaked: bigint;
+  integrityStakingCooldown: bigint;
+  integrityStakingCooldown2: bigint;
+  currentEpoch: bigint;
 };
 
 export const AccountSummary = ({
@@ -46,6 +58,11 @@ export const AccountSummary = ({
   availableRewards,
   expiringRewards,
   restrictedMode,
+  integrityStakingWarmup,
+  integrityStakingStaked,
+  integrityStakingCooldown,
+  integrityStakingCooldown2,
+  currentEpoch,
 }: Props) => (
   <section className="relative w-full overflow-hidden sm:border sm:border-neutral-600/50 sm:bg-pythpurple-800">
     <Image
@@ -53,7 +70,7 @@ export const AccountSummary = ({
       alt=""
       className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
     />
-    <div className="relative flex flex-row items-center justify-between gap-8 sm:px-6 sm:py-10 md:gap-16 lg:px-12 lg:py-20">
+    <div className="relative flex flex-col items-start justify-between gap-8 sm:px-6 sm:py-10 md:flex-row md:items-center md:gap-16 lg:px-12 lg:py-20">
       <div>
         <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400 sm:mb-4">
           Total Balance
@@ -166,6 +183,17 @@ export const AccountSummary = ({
           )}
         </div>
       </div>
+      {restrictedMode && api.type === ApiStateType.Loaded && (
+        <OisUnstake
+          api={api}
+          className="max-w-sm xl:hidden"
+          warmup={integrityStakingWarmup}
+          staked={integrityStakingStaked}
+          cooldown={integrityStakingCooldown}
+          cooldown2={integrityStakingCooldown2}
+          currentEpoch={currentEpoch}
+        />
+      )}
       <div className="hidden w-auto items-stretch gap-4 xl:flex">
         <BalanceCategory
           name="Unlocked & Unstaked"
@@ -175,6 +203,16 @@ export const AccountSummary = ({
             <WithdrawButton api={api} max={availableToWithdraw} size="small" />
           }
         />
+        {restrictedMode && api.type === ApiStateType.Loaded && (
+          <OisUnstake
+            api={api}
+            warmup={integrityStakingWarmup}
+            staked={integrityStakingStaked}
+            cooldown={integrityStakingCooldown}
+            cooldown2={integrityStakingCooldown2}
+            currentEpoch={currentEpoch}
+          />
+        )}
         {!restrictedMode && (
           <BalanceCategory
             name="Available Rewards"
@@ -211,6 +249,98 @@ export const AccountSummary = ({
   </section>
 );
 
+type OisUnstakeProps = {
+  api: States[ApiStateType.Loaded];
+  warmup: bigint;
+  staked: bigint;
+  cooldown: bigint;
+  cooldown2: bigint;
+  currentEpoch: bigint;
+  className?: string | undefined;
+};
+
+const OisUnstake = ({
+  api,
+  warmup,
+  staked,
+  cooldown,
+  cooldown2,
+  currentEpoch,
+  className,
+}: OisUnstakeProps) => {
+  const stakedPlusWarmup = useMemo(() => staked + warmup, [staked, warmup]);
+  const totalCooldown = useMemo(
+    () => cooldown + cooldown2,
+    [cooldown, cooldown2],
+  );
+  const total = useMemo(
+    () => staked + warmup + cooldown + cooldown2,
+    [staked, warmup, cooldown, cooldown2],
+  );
+  const { state, execute } = useAsync(api.unstakeAllIntegrityStaking);
+
+  const doUnstakeAll = useCallback(() => {
+    execute().catch(() => {
+      /* TODO figure out a better UI treatment for when claim fails */
+    });
+  }, [execute]);
+
+  // eslint-disable-next-line unicorn/no-null
+  return total === 0n ? null : (
+    <BalanceCategory
+      className={className}
+      name={stakedPlusWarmup === 0n ? "OIS Cooldown" : "OIS Unstake"}
+      amount={stakedPlusWarmup === 0n ? totalCooldown : stakedPlusWarmup}
+      description={
+        <>
+          <p>
+            {stakedPlusWarmup > 0n ? (
+              <>
+                You have tokens that are staked or in warmup to OIS. You are not
+                eligible to participate in OIS because you are in a restricted
+                region. Please unstake your tokens here and wait for the
+                cooldown.
+              </>
+            ) : (
+              <>You have OIS tokens in cooldown.</>
+            )}
+          </p>
+          {stakedPlusWarmup > 0n && totalCooldown > 0n && (
+            <p className="mt-4 font-semibold">Cooldown Summary</p>
+          )}
+          {cooldown > 0n && (
+            <div className="mt-2 text-xs text-neutral-500">
+              <Tokens>{cooldown}</Tokens> end{" "}
+              {epochToDate(currentEpoch + 2n).toLocaleString()}
+            </div>
+          )}
+          {cooldown2 > 0n && (
+            <div className="mt-2 text-xs text-neutral-500">
+              <Tokens>{cooldown2}</Tokens> end{" "}
+              {epochToDate(currentEpoch + 1n).toLocaleString()}
+            </div>
+          )}
+        </>
+      }
+      action={
+        <>
+          {stakedPlusWarmup > 0n && (
+            <Button
+              size="small"
+              variant="secondary"
+              onPress={doUnstakeAll}
+              isDisabled={state.type === StateType.Complete}
+              isLoading={state.type === StateType.Running}
+            >
+              Unstake All
+            </Button>
+          )}
+        </>
+      }
+    />
+  );
+};
+
 type WithdrawButtonProps = Omit<
   ComponentProps<typeof TransferButton>,
   "variant" | "actionDescription" | "actionName" | "transfer"
@@ -241,19 +371,26 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
 type BalanceCategoryProps = {
   name: string;
   amount: bigint;
-  description: string;
+  description: ReactNode;
   action: ReactNode;
   warning?: ReactNode | undefined;
+  className?: string | undefined;
 };
 
 const BalanceCategory = ({
+  className,
   name,
   amount,
   description,
   action,
   warning,
 }: BalanceCategoryProps) => (
-  <div className="flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:p-6 xl:w-80 2xl:w-96">
+  <div
+    className={clsx(
+      "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:p-6 xl:w-80 2xl:w-96",
+      className,
+    )}
+  >
     <div>
       <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}
@@ -261,11 +398,11 @@ const BalanceCategory = ({
       <div>
         <Tokens className="text-xl font-light">{amount}</Tokens>
       </div>
-      <p className="mt-4 text-sm text-neutral-500">{description}</p>
+      <div className="mt-4 text-sm text-neutral-500">{description}</div>
     </div>
     <div className="mt-4 flex flex-row items-center gap-4">
       {action}
-      {warning && <p className="text-xs text-red-600">{warning}</p>}
+      {warning && <div className="text-xs text-red-600">{warning}</div>}
     </div>
   </div>
 );
@@ -323,6 +460,7 @@ const ClaimDialog = ({
             <Button
               className="w-full sm:w-auto"
               size="noshrink"
+              isDisabled={state.type === StateType.Complete}
               isLoading={state.type === StateType.Running}
               onPress={doClaim}
             >
@@ -354,7 +492,7 @@ const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
   return (
     <Button
       onPress={doClaim}
-      isDisabled={state.type !== StateType.Base}
+      isDisabled={state.type === StateType.Complete}
       isLoading={state.type === StateType.Running}
       {...props}
     >

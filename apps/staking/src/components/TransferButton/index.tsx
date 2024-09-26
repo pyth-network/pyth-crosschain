@@ -229,7 +229,9 @@ const DialogContents = ({
         className="mt-6 w-full"
         type="submit"
         isLoading={state.type === StateType.Running}
-        isDisabled={amount.type !== AmountType.Valid}
+        isDisabled={
+          amount.type !== AmountType.Valid || state.type === StateType.Complete
+        }
       >
         {validationError ?? submitButtonText}
       </Button>
