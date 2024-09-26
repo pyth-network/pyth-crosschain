@@ -1,4 +1,5 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
+import { FRACTION_PRECISION } from "@pythnetwork/staking-sdk/src/constants";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
@@ -76,12 +77,12 @@ export async function GET(req: NextRequest) {
       const lock = await stakingClient.getUnlockSchedule(position, true);
       return {
         custodyAccount: custodyAccount.address.toBase58(),
-        actualAmount: Number(custodyAccount.amount),
+        actualAmount: Number(custodyAccount.amount) / FRACTION_PRECISION,
         lock: {
           type: lock.type,
           schedule: lock.schedule.map((unlock) => ({
             date: unlock.date,
-            amount: Number(unlock.amount),
+            amount: Number(unlock.amount) / FRACTION_PRECISION,
           })),
         },
       };
