@@ -12,7 +12,6 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 stylus-sdk.workspace = true
 mini-alloc.workspace = true
-stylus-proc.workspace = true
 
 
 [features]

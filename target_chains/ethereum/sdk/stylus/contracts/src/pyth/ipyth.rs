@@ -1,10 +1,10 @@
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, FixedBytes,U64, U8};
-use crate::pyth::structs::{Price, PriceFeed};
+use crate::pyth::solidity::{Price, PriceFeed};
 
 pub trait IPyth {
     type Error: Into<alloc::vec::Vec<u8>>;
-    fn get_price_unsafe(id:FixedBytes<32>)->Result<Price, Self::Error>;
+    fn get_price_unsafe(self, id:FixedBytes<32>)->Result<Price, Self::Error>;
     fn get_price_no_older_than(id:FixedBytes<32>, age:U8) -> Result<Price, Self::Error>;
     fn get_ema_price_unsafe(id:FixedBytes<32>) -> Result<Price, Self::Error>;
     fn update_price_feeds(&mut self, update_data: Vec<Bytes>) -> Result<(), Self::Error> ;
