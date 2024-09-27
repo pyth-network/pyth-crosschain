@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 
-import { AnchorProvider, BN, Instruction, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
   PROGRAM_VERSION_V2,
