@@ -152,6 +152,11 @@ export const Dashboard = ({
           availableRewards={availableRewards}
           expiringRewards={expiringRewards}
           restrictedMode={restrictedMode}
+          integrityStakingWarmup={integrityStakingWarmup}
+          integrityStakingStaked={integrityStakingStaked}
+          integrityStakingCooldown={integrityStakingCooldown}
+          integrityStakingCooldown2={integrityStakingCooldown2}
+          currentEpoch={currentEpoch}
         />
         {restrictedMode ? (
           <Governance

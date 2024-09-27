@@ -106,6 +106,7 @@ const State = {
       cancelWarmupIntegrityStaking: bindApi(api.cancelWarmupIntegrityStaking),
       reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
       optPublisherOut: bindApi(api.optPublisherOut),
+      unstakeAllIntegrityStaking: bindApi(api.unstakeAllIntegrityStaking),
     };
   },
 

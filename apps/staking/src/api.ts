@@ -432,6 +432,16 @@ export const unstakeIntegrityStaking = async (
   );
 };
 
+export const unstakeAllIntegrityStaking = async (
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+): Promise<void> => {
+  await client.unstakeFromAllPublishers(stakeAccount, [
+    PositionState.LOCKED,
+    PositionState.LOCKING,
+  ]);
+};
+
 export const reassignPublisherAccount = async (
   client: PythStakingClient,
   stakeAccount: PublicKey,

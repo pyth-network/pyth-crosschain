@@ -372,6 +372,46 @@ export class PythStakingClient {
     return sendTransaction(instructions, this.connection, this.wallet);
   }
 
+  public async unstakeFromAllPublishers(
+    stakeAccountPositions: PublicKey,
+    positionStates: (PositionState.LOCKED | PositionState.LOCKING)[],
+  ) {
+    const [stakeAccountPositionsData, currentEpoch] = await Promise.all([
+      this.getStakeAccountPositions(stakeAccountPositions),
+      getCurrentEpoch(this.connection),
+    ]);
+
+    const instructions = await Promise.all(
+      stakeAccountPositionsData.data.positions
+        .map((position, index) => {
+          const publisher =
+            position.targetWithParameters.integrityPool?.publisher;
+          return publisher === undefined
+            ? undefined
+            : { position, index, publisher };
+        })
+        // By separating this filter from the next, typescript can narrow the
+        // type and automatically infer that there will be no `undefined` values
+        // in the array after this line.  If we combine those filters,
+        // typescript won't narrow properly.
+        .filter((positionInfo) => positionInfo !== undefined)
+        .filter(({ position }) =>
+          (positionStates as PositionState[]).includes(
+            getPositionState(position, currentEpoch),
+          ),
+        )
+        .reverse()
+        .map(({ position, index, publisher }) =>
+          this.integrityPoolProgram.methods
+            .undelegate(index, convertBigIntToBN(position.amount))
+            .accounts({ stakeAccountPositions, publisher })
+            .instruction(),
+        ),
+    );
+
+    return sendTransaction(instructions, this.connection, this.wallet);
+  }
+
   public async hasGovernanceRecord(config: GlobalConfig): Promise<boolean> {
     const tokenOwnerRecordAddress = await getTokenOwnerRecordAddress(
       GOVERNANCE_ADDRESS,

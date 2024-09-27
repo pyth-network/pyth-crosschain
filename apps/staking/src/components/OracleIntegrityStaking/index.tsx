@@ -460,7 +460,9 @@ const ReassignStakeAccountForm = ({
         className="mt-6 w-full"
         type="submit"
         isLoading={state.type === UseAsyncStateType.Running}
-        isDisabled={key === undefined}
+        isDisabled={
+          key === undefined || state.type === UseAsyncStateType.Complete
+        }
       >
         <ReassignStakeAccountButtonContents value={value} publicKey={key} />
       </Button>
@@ -549,6 +551,7 @@ const OptOut = ({ api, self, ...props }: OptOut) => {
               variant="secondary"
               size="noshrink"
               isLoading={state.type === UseAsyncStateType.Running}
+              isDisabled={state.type === UseAsyncStateType.Complete}
               onPress={doOptOut}
             >
               Yes, opt me out
