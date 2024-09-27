@@ -1,6 +1,5 @@
 use alloy_sol_types::sol;
-use stylus_proc::SolidityError;
-use stylus_sdk::call::MethodError;
+use stylus_sdk::{call::MethodError, prelude::*};
 
 sol! {
   // Function arguments are invalid (e.g., the arguments lengths mismatch)
@@ -88,9 +87,8 @@ sol! {
     error InvalidWormholeAddressToSet();
 }
 
-
 /// A Pausable error.
-#[derive(SolidityError, Debug)]
+#[derive(SolidityError ,Debug)]
 pub enum IPythError {
     InvalidArgument(InvalidArgument),
     InvalidUpdateDataSource(InvalidUpdateDataSource),
