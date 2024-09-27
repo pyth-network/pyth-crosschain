@@ -249,9 +249,9 @@ export class PythStakingClient {
     const instructions = [];
 
     if (!(await this.hasJoinedDaoLlc(stakeAccountPositions))) {
-      instructions.push(await this.getJoinDaoLlcInstruction(
-        stakeAccountPositions,
-      ));
+      instructions.push(
+        await this.getJoinDaoLlcInstruction(stakeAccountPositions),
+      );
     }
 
     instructions.push(
@@ -545,9 +545,9 @@ export class PythStakingClient {
     const instructions = [];
 
     if (!(await this.hasJoinedDaoLlc(stakeAccountPositions))) {
-      instructions.push(await this.getJoinDaoLlcInstruction(
-        stakeAccountPositions,
-      ));
+      instructions.push(
+        await this.getJoinDaoLlcInstruction(stakeAccountPositions),
+      );
     }
 
     instructions.push(
@@ -841,7 +841,9 @@ export class PythStakingClient {
       .instruction();
   }
 
-  public async hasJoinedDaoLlc(stakeAccountPositions: PublicKey) : Promise<boolean> {
+  public async hasJoinedDaoLlc(
+    stakeAccountPositions: PublicKey,
+  ): Promise<boolean> {
     const config = await this.getGlobalConfig();
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
@@ -851,20 +853,22 @@ export class PythStakingClient {
         stakeAccountMetadataAddress,
       );
 
-    return JSON.stringify(stakeAccountMetadata.signedAgreementHash) ===
+    return (
+      JSON.stringify(stakeAccountMetadata.signedAgreementHash) ===
       JSON.stringify(config.agreementHash)
+    );
   }
 
   public async getJoinDaoLlcInstruction(
     stakeAccountPositions: PublicKey,
   ): Promise<TransactionInstruction> {
     const config = await this.getGlobalConfig();
-      return this.stakingProgram.methods
-        .joinDaoLlc(config.agreementHash)
-        .accounts({
-          stakeAccountPositions,
-        })
-        .instruction();
+    return this.stakingProgram.methods
+      .joinDaoLlc(config.agreementHash)
+      .accounts({
+        stakeAccountPositions,
+      })
+      .instruction();
   }
 
   public async getMainStakeAccount(owner?: PublicKey) {
