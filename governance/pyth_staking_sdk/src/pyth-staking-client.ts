@@ -254,17 +254,19 @@ export class PythStakingClient {
       instructions.push(joinDaoLlcInstruction);
     }
 
-    instructions.push(await this.stakingProgram.methods
-      .createPosition(
-        {
-          voting: {},
-        },
-        new BN(amount.toString()),
-      )
-      .accounts({
-        stakeAccountPositions,
-      })
-      .instruction());
+    instructions.push(
+      await this.stakingProgram.methods
+        .createPosition(
+          {
+            voting: {},
+          },
+          new BN(amount.toString()),
+        )
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
 
     return sendTransaction(instructions, this.connection, this.wallet);
   }
@@ -343,7 +345,7 @@ export class PythStakingClient {
       .filter(
         ({ position }) =>
           position.targetWithParameters.integrityPool?.publisher !==
-          undefined &&
+            undefined &&
           position.targetWithParameters.integrityPool.publisher.equals(
             publisher,
           ) &&
@@ -548,14 +550,16 @@ export class PythStakingClient {
       instructions.push(joinDaoLlcInstruction);
     }
 
-    instructions.push(await this.integrityPoolProgram.methods
-      .delegate(convertBigIntToBN(amount))
-      .accounts({
-        owner: this.wallet.publicKey,
-        publisher,
-        stakeAccountPositions,
-      })
-      .instruction());
+    instructions.push(
+      await this.integrityPoolProgram.methods
+        .delegate(convertBigIntToBN(amount))
+        .accounts({
+          owner: this.wallet.publicKey,
+          publisher,
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
 
     return sendTransaction(instructions, this.connection, this.wallet);
   }
@@ -826,21 +830,20 @@ export class PythStakingClient {
       .remainingAccounts(
         remainingAccount
           ? [
-            {
-              pubkey: remainingAccount,
-              isWritable: false,
-              isSigner: false,
-            },
-          ]
+              {
+                pubkey: remainingAccount,
+                isWritable: false,
+                isSigner: false,
+              },
+            ]
           : [],
       )
       .instruction();
   }
 
   public async getJoinDaoLlcInstructionIfNeeded(
-    stakeAccountPositions: PublicKey
+    stakeAccountPositions: PublicKey,
   ): Promise<TransactionInstruction | undefined> {
-
     const config = await this.getGlobalConfig();
     const stakeAccountMetadataAddress = getStakeAccountMetadataAddress(
       stakeAccountPositions,
@@ -850,15 +853,17 @@ export class PythStakingClient {
         stakeAccountMetadataAddress,
       );
 
-    if (JSON.stringify(stakeAccountMetadata.signedAgreementHash) !== JSON.stringify(config.agreementHash)) {
+    if (
+      JSON.stringify(stakeAccountMetadata.signedAgreementHash) !==
+      JSON.stringify(config.agreementHash)
+    ) {
       return this.stakingProgram.methods
         .joinDaoLlc(config.agreementHash)
         .accounts({
           stakeAccountPositions,
         })
         .instruction();
-    }
-    else {
+    } else {
       return undefined;
     }
   }
