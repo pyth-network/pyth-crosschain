@@ -1,12 +1,53 @@
-//! Various Solidity definitions, including ABI-compatible interfaces, events, functions, etc.
+use core::fmt::Binary;
 
+use alloy_primitives::I64;
 use alloy_sol_types::sol;
-use stylus_proc::sol_storage;
-use crate::pyth::structs::{Price, PriceFeed};
+use stylus_sdk::prelude::sol_storage;
+
+sol_storage! {
+    pub struct StoragePrice {
+      // Price
+        int64 price;
+        // Confidence interval around the price
+        uint64 conf;
+        // Price exponent
+        int32 expo;
+        // Unix timestamp describing when the price was published
+        uint publish_time;
+    }
+
+    pub struct StoragePriceFeed {
+        bytes32 id;
+        StoragePrice price;
+        StoragePrice ema_price;
+    }
+}
 
 
 sol! {
-    
+
+    struct Price {
+        // Price
+        int64 price;
+        // Confidence interval around the price
+        uint64 conf;
+        // Price exponent
+        int32 expo;
+        // Unix timestamp describing when the price was published
+        uint publishTime;
+    }
+
+    // PriceFeed represents a current aggregate price from pyth publisher feeds.
+
+    struct PriceFeed {
+        // The price ID.
+        bytes32 id;
+        // Latest available price
+        Price price;
+        // Latest available exponentially-weighted moving average price
+        Price emaPrice;
+    }
+
         /// @notice Returns the price of a price feed without any sanity checks.
         /// @dev This function returns the most recent price update in this contract without any recency checks.
         /// This function is unsafe as the returned price update may be arbitrarily far in the past.
@@ -14,21 +55,20 @@ sol! {
         /// Users of this function should check the `publishTime` in the price to ensure that the returned price is
         /// sufficiently recent for their application. If you are considering using this function, it may be
         /// safer / easier to use `getPriceNoOlderThan`.
-        /// @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
-        
+        /// @return price - please read the documentation of Price to understand how to use this safely.
         function getPriceUnsafe(
             bytes32 id
-        ) external ; 
+        ) external view returns (Price memory price);
 
         /// @notice Returns the price that is no older than `age` seconds of the current time.
         /// @dev This function is a sanity-checked version of `getPriceUnsafe` which is useful in
         /// applications that require a sufficiently-recent price. Reverts if the price wasn't updated sufficiently
         /// recently.
-        /// @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
+        /// @return price - please read the documentation of Price to understand how to use this safely.
         function getPriceNoOlderThan(
             bytes32 id,
             uint age
-        ) external ;
+        ) external view returns (Price memory price);
 
         /// @notice Returns the exponentially-weighted moving average price of a price feed without any sanity checks.
         /// @dev This function returns the same price as `getEmaPrice` in the case where the price is available.
@@ -40,21 +80,21 @@ sol! {
         /// Users of this function should check the `publishTime` in the price to ensure that the returned price is
         /// sufficiently recent for their application. If you are considering using this function, it may be
         /// safer / easier to use either `getEmaPrice` or `getEmaPriceNoOlderThan`.
-        /// @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
+        /// @return price - please read the documentation of Price to understand how to use this safely.
         function getEmaPriceUnsafe(
             bytes32 id
-        ) external ;
+        ) external view returns (Price memory price);
 
         /// @notice Returns the exponentially-weighted moving average price that is no older than `age` seconds
         /// of the current time.
         /// @dev This function is a sanity-checked version of `getEmaPriceUnsafe` which is useful in
         /// applications that require a sufficiently-recent price. Reverts if the price wasn't updated sufficiently
         /// recently.
-        /// @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
+        /// @return price - please read the documentation of Price to understand how to use this safely.
         function getEmaPriceNoOlderThan(
             bytes32 id,
             uint age
-        ) external ;
+        ) external view returns (Price memory price);
 
         /// @notice Update price feeds with given update messages.
         /// This method requires the caller to pay a fee in wei; the required fee can be computed by calling
@@ -117,7 +157,7 @@ sol! {
             bytes32[] calldata priceIds,
             uint64 minPublishTime,
             uint64 maxPublishTime
-        ) external ;
+        ) external payable returns (PriceFeed[] memory priceFeeds);
 
         /// @notice Similar to `parsePriceFeedUpdates` but ensures the updates returned are
         /// the first updates published in minPublishTime. That is, if there are multiple updates for a given timestamp,
@@ -137,6 +177,46 @@ sol! {
             bytes32[] calldata priceIds,
             uint64 minPublishTime,
             uint64 maxPublishTime
-        ) external payable;
-        
+        ) external payable returns (PriceFeed[] memory priceFeeds);
+
+
+        function queryPriceFeed(
+            bytes32 id
+        ) public view virtual returns (PriceFeed memory priceFeed);
+
+        function priceFeedExists(
+           bytes32 id
+        ) public view virtual returns (bool exists);
+
+
+    /// @notice This function is deprecated and is only kept for backward compatibility.
+      function getValidTimePeriod()
+        public
+        view
+        virtual
+        returns (uint validTimePeriod);
+
+    }
+
+impl  StoragePrice  {
+    pub fn to_price(&self) ->Price {
+      Price {
+            price:self.price.get().as_i64(),
+            conf: self.conf.get().to(),
+            expo: self.expo.get().as_i32(),
+            publishTime: self.publish_time.get()
+        }
+    }
 }
+
+impl StoragePriceFeed {
+    pub  fn to_price_feed(&self)-> PriceFeed {
+        PriceFeed {
+            id: self.id.get(),
+            price: self.price.to_price(),
+            emaPrice: self.ema_price.to_price()
+        }
+    }
+}
+
+    
