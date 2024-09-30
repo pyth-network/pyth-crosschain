@@ -32,10 +32,6 @@ import {
   Form,
   Switch,
   MenuTrigger,
-  Select,
-  Popover,
-  ListBox,
-  ListBoxItem,
 } from "react-aria-components";
 
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
@@ -50,14 +46,13 @@ import { ModalDialog } from "../ModalDialog";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { ProgramSection } from "../ProgramSection";
 import { PublisherFaq } from "../PublisherFaq";
+import { Select } from "../Select";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
 import { Styled } from "../Styled";
 import { Tokens } from "../Tokens";
 import { AmountType, TransferButton } from "../TransferButton";
 import { TruncatedKey } from "../TruncatedKey";
-
-const PAGE_SIZE = 10;
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
@@ -582,6 +577,9 @@ const PublisherList = ({
   totalStaked,
   yieldRate,
 }: PublisherListProps) => {
+  const [pageSize, setPageSize] = useState<(typeof PageSize)[number]>(
+    PageSize[2],
+  );
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
@@ -615,10 +613,10 @@ const PublisherList = ({
   const paginatedPublishers = useMemo(
     () =>
       filteredSortedPublishers.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE,
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
       ),
-    [filteredSortedPublishers, currentPage],
+    [filteredSortedPublishers, currentPage, pageSize],
   );
 
   const updatePage = useCallback<typeof setPage>(
@@ -656,8 +654,8 @@ const PublisherList = ({
   );
 
   const numPages = useMemo(
-    () => Math.floor(filteredSortedPublishers.length / PAGE_SIZE),
-    [filteredSortedPublishers],
+    () => Math.floor(filteredSortedPublishers.length / pageSize),
+    [filteredSortedPublishers, pageSize],
   );
 
   return (
@@ -687,48 +685,26 @@ const PublisherList = ({
             </div>
           </SearchField>
           <Select
-            className="flex flex-row items-center gap-2 2xl:hidden"
+            className="2xl:hidden"
+            label="Sort by"
+            options={[
+              SortOption.PublisherNameDescending,
+              SortOption.PublisherNameAscending,
+              SortOption.RemainingPoolDescending,
+              SortOption.RemainingPoolAscending,
+              SortOption.ApyDescending,
+              SortOption.ApyAscending,
+              SortOption.SelfStakeDescending,
+              SortOption.SelfStakeAscending,
+              SortOption.NumberOfFeedsDescending,
+              SortOption.NumberOfFeedsAscending,
+              SortOption.QualityRankingDescending,
+              SortOption.QualityRankingAscending,
+            ]}
             selectedKey={sort}
-            // @ts-expect-error react-aria coerces everything to Key for some reason...
             onSelectionChange={updateSort}
-          >
-            <Label className="whitespace-nowrap opacity-80">Sort by</Label>
-            <Button
-              className="group flex flex-row items-center gap-2 px-2 py-3 text-xs transition sm:px-4"
-              size="nopad"
-            >
-              {getSortName(sort)}
-              <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
-            </Button>
-            <Popover
-              placement="bottom end"
-              className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
-            >
-              <ListBox
-                className="flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none"
-                items={[
-                  SortOption.PublisherNameDescending,
-                  SortOption.PublisherNameAscending,
-                  SortOption.RemainingPoolDescending,
-                  SortOption.RemainingPoolAscending,
-                  SortOption.ApyDescending,
-                  SortOption.ApyAscending,
-                  SortOption.SelfStakeDescending,
-                  SortOption.SelfStakeAscending,
-                  SortOption.NumberOfFeedsDescending,
-                  SortOption.NumberOfFeedsAscending,
-                  SortOption.QualityRankingDescending,
-                  SortOption.QualityRankingAscending,
-                ].map((id) => ({ id }))}
-              >
-                {({ id }) => (
-                  <ListBoxItem className="flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none">
-                    {getSortName(id)}
-                  </ListBoxItem>
-                )}
-              </ListBox>
-            </Popover>
-          </Select>
+            show={getSortName}
+          />
           <Switch
             isSelected={yoursFirst}
             onChange={updateYoursFirst}
@@ -841,11 +817,19 @@ const PublisherList = ({
       )}
 
       {numPages > 1 && (
-        <Paginator
-          currentPage={currentPage}
-          numPages={numPages}
-          onPageChange={updatePage}
-        />
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-neutral-600/50 p-4 sm:flex-row">
+          <Select
+            label="Page size"
+            options={PageSize}
+            selectedKey={pageSize}
+            onSelectionChange={setPageSize}
+          />
+          <Paginator
+            currentPage={currentPage}
+            numPages={numPages}
+            onPageChange={updatePage}
+          />
+        </div>
       )}
     </div>
   );
@@ -864,7 +848,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
     .map((_, i) => i + first);
 
   return (
-    <ul className="sticky inset-x-0 flex flex-row items-center justify-end gap-2 border-t border-neutral-600/50 p-4">
+    <ul className="sticky inset-x-0 flex flex-row gap-2">
       {currentPage > 1 && (
         <li>
           <Button
@@ -1697,6 +1681,8 @@ const getSortName = (sortOption: SortOption) => {
     }
   }
 };
+
+const PageSize = [10, 20, 30, 40, 50] as const;
 
 class InvalidKeyError extends Error {
   constructor() {
