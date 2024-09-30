@@ -81,7 +81,73 @@ export const TermsOfService = () => (
           >
             Privacy Policy
           </Link>
-          , the terms of these Terms shall control.
+          , the terms of these Terms shall prevail.
+        </Paragraph>
+      </Section>
+      <Section title="Summary">
+        <div>
+          <Paragraph>
+            Among other things, these Terms provide that you must:
+          </Paragraph>
+          <UnorderedList>
+            <li>
+              be at least 18 years of age, of sound mental capacity and have all
+              technical knowledge necessary or advisable to understand and
+              evaluate the risks of the Services, cryptographic systems,
+              blockchain-based networks and staking of digital assets (including
+              the occurrence of Slashing Penalties);
+            </li>
+            <li>
+              agree that the Site is provided for informational purposes only
+              and is not directly or indirectly in control of or capable of
+              interacting with Pyth Network or performing or effecting any
+              transactions on your behalf;
+            </li>
+            <li>
+              agree that the Site is only being provided as an aid to your own
+              independent research and that no representation or warranty is
+              being made as to the accuracy, completeness, timeliness or
+              usefulness of information on the Site;
+            </li>
+            <li>
+              agree that the ability of the Site to connect your third-party
+              digital wallet holding digital assets to smart contract systems
+              offered by third parties that communicate with the Services is not
+              an endorsement or recommendation thereof by or on behalf of the
+              Association, and you must assume all responsibility for selecting
+              and evaluating and incurring the risks of any bugs, defects,
+              malfunctions or interruptions of any third-party smart contract
+              systems you directly or indirectly use or connect to in connection
+              with the Site;
+            </li>
+            <li>comply with all applicable laws, rules and regulations;</li>
+            <li>
+              not be person who is subject to national or international
+              sanctions or located or ordinarily resident in the Crimea and
+              Sevastopol Regions, Cuba, Iran, Democratic People’s Republic of
+              Korea (North Korea), Syria, Myanmar (Burma), Donetsk and Luhansk
+              Regions, or any other country to which the United States, the
+              United Kingdom, the European Union, Switzerland or any other
+              jurisdictions embargoes goods or imposes similar sanctions. This
+              list is not exhaustive—please refer to section H. for further
+              details on applicable restrictions;
+            </li>
+            <li>
+              not hold the Association or any of its representatives or
+              affiliates liable for any damages you suffer in connection with
+              your use of the Services;
+            </li>
+            <li>
+              waive your right to initiate or participate in class actions
+              relating to the Services.
+            </li>
+          </UnorderedList>
+        </div>
+        <Paragraph>
+          The foregoing is a partial summary. You must read these Terms in their
+          entirety. In the event of any conflict or consistency on between this
+          Summary and any other part of these Terms, any other part of these
+          Terms shall prevail.
         </Paragraph>
       </Section>
       <Section title="External Content">
@@ -160,12 +226,21 @@ export const TermsOfService = () => (
       </Section>
       <Section title="Personal Restrictions">
         <Paragraph>
-          The Services are only accessible to Users who are at least 18 years
-          old. The Services are not meant for individuals under 18. By accessing
-          or using the Services, you confirm and guarantee that you (i) are 18
-          years old or older, (ii) are not prohibited from accessing or using
-          the Services by any relevant laws. If you do not fulfill these
-          criteria, you are not permitted to access or use the Services.
+          The Services are only accessible to Users who meet the following
+          criteria: (i) you are at least 18 years of age; (ii) you are of sound
+          mental capacity; (iii) you possess the technical knowledge necessary
+          or advisable to understand and evaluate the risks associated with the
+          Services, including cryptographic systems, blockchain-based networks,
+          and the staking of digital assets (such as the occurrence of Slashing
+          Penalties); and (iv) you are not prohibited from accessing or using
+          the Services by any relevant laws; and additionally (v) if you are a
+          legal entity, you are duly organized, validly existing, and in good
+          standing under the laws of the jurisdiction in which you are
+          organized, and you have all requisite power and authority to carry on
+          your business as now conducted. By accessing or using the Services,
+          you confirm and guarantee that you fulfil all of these criteria. If
+          you do not meet these requirements, you are not permitted to access or
+          use the Services.
         </Paragraph>
       </Section>
       <Section title="Local Restrictions">
@@ -178,21 +253,22 @@ export const TermsOfService = () => (
           and are responsible for complying with local laws.
         </Paragraph>
         <Paragraph>
-          EXCEPT EXPLICTLY PROVIDED IN THESE TERMS, THE SERVICES ARE NOT
-          DEVELOPED FOR, AND ARE NOT AVAILABLE TO PERSONS OR ENTITIES WHO RESIDE
-          IN, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE
-          OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED STATES OF AMERICA OR THE
-          UNITED KINGDOM (COLLECTIVELY, “<strong>BLOCKED PERSONS</strong>”).
-          MOREOVER, THE SERVICES ARE NOT OFFERED TO PERSONS OR ENTITIES WHO
-          RESIDE IN, ARE CITIZENS OF, ARE LOCATED IN, ARE INCORPORATED IN, OR
-          HAVE A REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN ANY
-          RESTRICTED JURISDICTION OR COUNTRY SUBJECT TO ANY SANCTIONS OR
-          RESTRICTIONS PURSUANT TO ANY APPLICABLE LAW, INCLUDING THE CRIMEA
-          REGION, CUBA, IRAN, NORTH KOREA, SYRIA, MYANMAR (BURMA, DONETSK,
-          LUHANSK, OR ANY OTHER COUNTRY TO WHICH THE UNITED STATES, THE UNITED
-          KINGDOM, THE EUROPEAN UNION, SWITZERLAND OR ANY OTHER JURISDICTIONS
-          EMBARGOES GOODS OR IMPOSES SIMILAR SANCTIONS, INCLUDING THOSE LISTED
-          ON OUR SERVICES (COLLECTIVELY, THE “
+          EXCEPT EXPLICTLY PROVIDED IN THESE TERMS, CERTAIN TOOLS AND/OR
+          SERVICES ARE NOT DEVELOPED FOR, AND ARE NOT AVAILABLE TO PERSONS OR
+          ENTITIES WHO RESIDE IN, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A
+          REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED STATES
+          OF AMERICA, OR THE UNITED KINGDOM, OR CANADA (COLLECTIVELY, “
+          <strong>BLOCKED PERSONS</strong>”). MOREOVER, THE SERVICES ARE NOT
+          OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE CITIZENS OF, ARE
+          LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR
+          PRINCIPAL PLACE OF BUSINESS IN ANY RESTRICTED JURISDICTION OR COUNTRY
+          SUBJECT TO ANY SANCTIONS OR RESTRICTIONS PURSUANT TO ANY APPLICABLE
+          LAW, INCLUDING THE CRIMEA AND SEVASTOPOL REGIONS, CUBA, IRAN,
+          DEMOCRATIC PEOPLE’S REPUBLIC OF KOREA (NORTH KOREA), SYRIA, MYANMAR
+          (BURMA), DONETSK AND LUHANSK REGIONS, OR ANY OTHER COUNTRY TO WHICH
+          THE UNITED STATES, THE UNITED KINGDOM, THE EUROPEAN UNION, SWITZERLAND
+          OR ANY OTHER JURISDICTIONS EMBARGOES GOODS OR IMPOSES SIMILAR
+          SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES (COLLECTIVELY, THE “
           <strong>RESTRICTED JURISDICTIONS</strong>” AND EACH A “
           <strong>RESTRICTED JURISDICTION</strong>”) OR ANY PERSON OWNED,
           CONTROLLED, LOCATED IN OR ORGANIZED UNDER THE LAWS OF ANY JURISDICTION
@@ -210,29 +286,40 @@ export const TermsOfService = () => (
       </Section>
       <Section title="Services">
         <Paragraph>
-          You access the Services by connecting a digital wallet holding digital
-          assets to smart contract systems offered by third parties that
-          communicate with the Services. You understand that we do not hold your
-          digital assets, have no power of disposal over your digital assets, or
-          take any custody of them. We have no access to your digital assets or
-          funds.
+          You access the Services by connecting a third-party digital wallet
+          holding digital assets to smart contract systems offered by third
+          parties that communicate with the Services. You understand that we do
+          not hold your digital assets, have no power of disposal over your
+          digital assets, or take any custody of them. We have no access to your
+          digital assets or funds.
         </Paragraph>
         <Paragraph>
           The Services allow you to participate in different non-custodial
-          staking mechanisms on the Pyth Network (“<strong>Pyth Staking</strong>
-          ”), an open-source oracle network (“<strong>Pyth Network</strong>”)
+          staking mechanisms on Pyth Network (“<strong>Pyth Staking</strong>”),
+          an open-source oracle network (“<strong>Pyth Network</strong>”)
           governed by the Pyth DAO that provides financial market data to
-          blockchain-based applications to provide high fidelity financial
-          market data to the blockchain industry powered by a blockchain
-          protocol on the Solana network (“<strong>Pyth Protocol</strong>”).
+          blockchain-based applications powered by a blockchain protocol (“
+          <strong>Pyth Protocol</strong>”). PLEASE NOTE THAT THE PYTH DAO IS AN
+          INDEPENDENT THIRD-PARTY ENTITY, NOT CONTROLLED BY, NOR UNDER THE
+          CONTROL OF THE ASSOCIATION.
         </Paragraph>
         <Paragraph>
-          For the avoidance of doubt, the Association does not control the Pyth
-          Network and cannot control activity on the Pyth Network, including
-          Pyth Staking, the activities of persons who develop and use
-          applications on the Pyth Network, the production of data on the Pyth
-          Network, or use of the Pyth Network. The Pyth Network is an
-          open-source protocol that is governed by the Pyth DAO.
+          THE PARTICIPATION IN PYTH STAKING MAY BE SUBJECT TO SLASHING PENALTIES
+          ON STAKED DIGITAL ASSETS ASSESSED BY PYTH NETWORK PURSUANT TO THE PYTH
+          PROTOCOL (“<strong>SLASHING PENALTIES</strong>”). WE ARE NOT
+          RESPONSIBLE FOR THE OCCURRENCE OF ANY SLASHING PENALTIES, YOU ARE
+          STRONGLY ENCOURAGED TO INDEPENDENTLY RESEARCH AND FULLY UNDERSTAND THE
+          CONDITIONS UNDER WHICH SLASHING PENALTIES MAY OCCUR, INCLUDING WHEN
+          AND HOW THEY ARE TRIGGERED, AS WELL AS THE ASSOCIATED RISKS AND
+          CONSEQUENCES.
+        </Paragraph>
+        <Paragraph>
+          FOR THE AVOIDANCE OF DOUBT, THE ASSOCIATION DOES NOT CONTROL PYTH
+          NETWORK AND CANNOT CONTROL ANY ACTIVITY ON PYTH NETWORK, INCLUDING
+          PYTH STAKING, THE ACTIVITIES OF PERSONS WHO DEVELOP AND USE
+          APPLICATIONS ON PYTH NETWORK, THE PRODUCTION OF DATA ON PYTH NETWORK,
+          OR USE OF PYTH NETWORK. PYTH NETWORK IS AN OPEN-SOURCE PROTOCOL THAT
+          IS GOVERNED BY THE PYTH DAO.
         </Paragraph>
         <Paragraph>
           We are not responsible for the keys to any digital assets or your seed
@@ -240,35 +327,37 @@ export const TermsOfService = () => (
           not maintain your keys or your seed phrase, and is not responsible for
           their safe keeping. It is your responsibility at all times to ensure
           you have such credentials and maintain them securely. ANY LOSSES YOU
-          SUFFER RELATING TO YOUR DIGITAL ASSET TRANSACTIONS, DIGITAL KEYS AND
-          WALLETS, AND EXCHANGES ARE YOUR SOLE RESPONSIBILITY, AND YOU HEREBY
-          INDEMNIFY US, AGREE TO DEFEND US, AND HOLD US HARMLESS AGAINST ANY
-          CLAIMS OR LOSSES THAT YOU OR ANYONE ELSE SUFFERS AS A RESULT OF YOUR
-          DIGITAL ASSET TRANSACTIONS, EVEN IF YOU INITIATED YOUR TRANSACTION BY
-          ACCESSING OUR SERVICES. If, once you use the Services and participate
-          in Pyth Staking, and your digital assets are somehow transferred to a
-          third party you didn’t intend to have them, it is your responsibility
-          to get them back. PLEASE KEEP YOUR SEED PHRASE AND DIGITAL KEYS SAFE,
-          AS THE ASSOCIATION DOES NOT HAVE THEM AND DOES NOT KNOW THEM. IF YOU
-          LOSE THE KEYS OR SEED PHRASE, YOU MAY LOSE ACCESS TO YOUR DIGITAL
-          ASSETS.
+          SUFFER RELATING TO YOUR DIGITAL ASSET TRANSACTIONS, SLASHING
+          PENALTIES, DIGITAL KEYS AND WALLETS, AND EXCHANGES ARE YOUR SOLE
+          RESPONSIBILITY, AND YOU HEREBY INDEMNIFY US, AGREE TO DEFEND US, AND
+          HOLD US HARMLESS AGAINST ANY CLAIMS OR LOSSES THAT YOU OR ANYONE ELSE
+          SUFFERS AS A RESULT OF YOUR DIGITAL ASSET TRANSACTIONS, OR YOUR
+          PARTICIPATION IN PYTH STAKING, EVEN IF YOU INITIATED YOUR TRANSACTION
+          BY ACCESSING OUR SERVICES. If, once you use the Services and
+          participate in Pyth Staking, and your digital assets are somehow
+          transferred to a third party you didn’t intend to have them, it is
+          your responsibility to get them back. PLEASE KEEP YOUR SEED PHRASE AND
+          DIGITAL KEYS SAFE, AS THE ASSOCIATION DOES NOT HAVE THEM AND DOES NOT
+          KNOW THEM. IF YOU LOSE THE KEYS OR SEED PHRASE, YOU MAY LOSE ACCESS TO
+          YOUR DIGITAL ASSETS.
         </Paragraph>
         <Paragraph>
-          You also understand that we do not act as your transaction brokers,
-          financial intermediary, or financial advisors or give you any advice
-          of any kind with respect to what digital assets you choose to hold in
-          your wallet or any staking thereof. As with Pyth Staking you can
-          participate in via the Services, it is your responsibility and you are
-          solely responsible for the contents of your digital wallet, your
-          staking decisions, how and when you stake digital assets and with
-          whom. It is also your responsibility to ensure you understand digital
-          assets, how they work, what their value is, and about staking such
-          digital assets, as there are significant risks in doing so, all of
-          which you solely assume.
+          You also understand that we do not act as your agent, transaction
+          broker, financial intermediary, or financial advisors or give you any
+          advice of any kind with respect to what digital assets you choose to
+          hold in your wallet or any staking thereof. As with Pyth Staking you
+          can participate in via the Services, it is your responsibility and you
+          are solely responsible for the contents of your third-party digital
+          wallet, your staking decisions, how,when you stake digital assets and
+          with whom and any occurrence of Slashing Penalties. It is also your
+          responsibility to ensure you understand digital assets, how they work,
+          what their value is, about staking such digital assets and the
+          possibility of the occurrence of Slashing Penalties, as there are
+          significant risks in doing so, all of which you solely assume.
         </Paragraph>
         <Paragraph>
           Also note that the digital wallet you use for the Services may not
-          connect or stake of all digital assets. It is your responsibility to
+          connect or stake all digital assets. It is your responsibility to
           ensure compatibility with the Pyth Network.
         </Paragraph>
         <Paragraph>
@@ -280,11 +369,11 @@ export const TermsOfService = () => (
           obligation to do so. We may change the functionality of the Services
           at any time, which means some features could no longer be supported
           after a time. You acknowledge that this is the case, and accept this
-          risk. Given that the digital wallets are non-custodial, we do not
-          perform any activities to vet Users prior to allowing them to create
-          their digital wallets or stake digital assets. You acknowledge that
-          this is a risk you accept when you interact with the wallet or other
-          users of the Services.
+          risk. Given that the third-party digital wallets are non-custodial, we
+          do not perform any activities to vet Users prior to allowing them to
+          create their third-party digital wallets or stake digital assets. You
+          acknowledge that this is a risk you accept when you interact with the
+          wallet or other users of the Services.
         </Paragraph>
         <Paragraph>
           Our Services may at times make mistakes. You accept the risk that your
@@ -293,6 +382,32 @@ export const TermsOfService = () => (
           from any such event. We offer no guarantees and shall not provide any
           refunds for any services you paid for staking digital assets, even if
           you lose such digital assets.
+        </Paragraph>
+      </Section>
+      <Section title="Relationship to Pyth Network">
+        <Paragraph>
+          We do not own, operate or control Pyth Network, its products and
+          services (including Pyth Staking) or any parts thereof.{" "}
+          <strong>
+            Accessing, using or interacting with Pyth Network does not require
+            the use of the Services.
+          </strong>{" "}
+          The Services aggregate and publish already publicly available
+          information about Pyth Network in a user-friendly and convenient
+          format. Such information might also be independently available from
+          other sources.
+        </Paragraph>
+        <Paragraph>
+          The Association and the Services are not agents or intermediaries of
+          the User, do not store or have access to or control over any digital
+          assets, private keys, passwords, accounts or other property of the
+          User, and are not capable of performing transactions or sending
+          transaction messages on behalf of the User. The Services do not hold
+          and cannot stake, purchase, sell or trade any digital assets. All
+          transactions relating to the Pyth Network smart contract system are
+          effected and recorded solely through the interactions of the User with
+          the Solana network validators, who are not under the control of or
+          affiliated with the Association or the Services.
         </Paragraph>
       </Section>
       <Section title="General Prohibitions">
@@ -650,7 +765,7 @@ export const TermsOfService = () => (
           proceeding as soon as we become aware of it.
         </Paragraph>
         <Paragraph>
-          Your indemnification obligations under this section M. survive the
+          Your indemnification obligations under this section O. survive the
           termination of these Terms.
         </Paragraph>
       </Section>
@@ -683,14 +798,14 @@ export const TermsOfService = () => (
           any liability you may have incurred. All provisions of these Terms,
           which by their nature should survive termination, shall survive,
           including but not limited to intellectual property and trademarks
-          (section J.), warranty disclaimers (section O.) indemnity (section
-          M.), and limitations of liability (sections Q.) and sections R., S.,
-          T., U., V., W, X.
+          (section L.), warranty disclaimers (section Q.) indemnity (section
+          O.), and limitations of liability (sections S.) and sections T., U.,
+          V., W., X., Y, Z.
         </Paragraph>
         <Paragraph>
           The Association shall not be liable to you or any third party for any
           termination of your access to or use of the Services. Any termination
-          under this section N. shall be at the Association’s sole discretion.
+          under this section P. shall be at the Association’s sole discretion.
         </Paragraph>
         <Paragraph>
           Without limiting the foregoing, we have the right to fully cooperate
@@ -819,11 +934,12 @@ export const TermsOfService = () => (
         </Paragraph>
         <Paragraph>
           By accessing or using the Services, you represent that you understand
-          the inherent risks associated with cryptographic systems and
-          blockchain-based networks; and warrant that you have an understanding
-          of the usage and intricacies of digital assets, smart contract-based
-          cryptographic tokens, decentralized networks, and systems that
-          interact with blockchain-based networks.
+          the inherent risks associated with cryptographic
+          systems,blockchain-based networks, staking of digital assets
+          (including the occurrence of Slashing Penalties); and warrant that you
+          have an understanding of the usage and intricacies of digital assets,
+          smart contract-based cryptographic tokens, decentralized networks, and
+          systems that interact with blockchain-based networks.
         </Paragraph>
         <Paragraph>
           You acknowledge and agree that digital assets are volatile and risky,
@@ -845,17 +961,18 @@ export const TermsOfService = () => (
           unfavorable to you or affect your digital assets, or lead to your
           inability to complete a transaction. You hold us harmless from and
           against any losses you suffer as a result of your use of such
-          third-party services, networks and protocols, even if you access them
-          from our Services. There are no guarantees that a transfer initiated
-          via your digital wallet on the Services will successfully transfer
-          title of or right in any digital assets. You acknowledge that, while
-          the Services and the underlying software have been tested, it is still
-          relatively new and could have bugs or security vulnerabilities. You
-          further acknowledge that the Services and the underlying software are
-          still under development and may undergo significant changes over time
-          that may not meet Users’ expectations. You acknowledge that your use
-          of certain technologies (e.g., jailbreaking tech) on the device with
-          which you access the Services, may cause the Services not to work. You
+          third-party services, networks and protocols, including Slashing
+          Penalties, even if you access them from our Services. There are no
+          guarantees that a transfer initiated via your third-party digital
+          wallet on the Services will successfully transfer title of or right in
+          any digital assets. You acknowledge that, while the Services and the
+          underlying software have been tested, it is still relatively new and
+          could have bugs or security vulnerabilities. You further acknowledge
+          that the Services and the underlying software are still under
+          development and may undergo significant changes over time that may not
+          meet Users’ expectations. You acknowledge that your use of certain
+          technologies (e.g., jailbreaking tech) on the device with which you
+          access the Services, may cause the Services not to work. You
           acknowledge that you accept all risk associated with your use of such
           advanced technologies, and any errors they may cause. You hereby hold
           us harmless from any losses you suffer as a result of your use of such
@@ -871,42 +988,42 @@ export const TermsOfService = () => (
           underlying our code that may contain intentional or unintentional bugs
           or weaknesses which may negatively affect the Services, or result in
           the loss of your digital assets, or your ability to control your
-          digital wallet. You hold us harmless from and against any losses you
-          suffer as a result of such issues. You agree that your use of the
-          Services is subject to, and you will comply with any, applicable
-          open-source licenses governing any such open-source components. The
-          information on our Services may not always be entirely accurate,
-          complete or current. Information on the Services may be changed or
-          updated from time to time without notice, including information
-          regarding our policies, products and services. Accordingly, you should
-          verify all information before relying on it. All decisions you make
-          based on information provided through the Services are your sole
-          responsibility and you hold us harmless from and against any losses
-          you suffer as a result of such decisions. The Services may contain
-          materials offered by or created by third parties. All such materials,
-          and links to third party websites are provided as a convenience only.
-          We do not control such materials, and provide no guarantee as to their
-          accuracy, completeness, legality or usefulness. You acknowledge and
-          agree that we are not responsible for any aspect of the information,
-          content, or services contained in any such third-party materials
-          accessible or linked to from the Services. You agree and understand
-          that all staking decisions and transactions are made solely by you.
-          You agree and understand that under no circumstances will the
-          operation of the Services and your use of it be deemed to create a
-          relationship that includes the provision of or tendering of investment
-          advice. NO FINANCIAL, INVESTMENT, TAX, LEGAL OR SECURITIES ADVICE IS
-          GIVEN THROUGH OR IN CONNECTION WITH OUR SERVICES. No content found on
-          the Services, whether created by us or another User is or should be
-          considered as investment advice. You agree and understand that we
-          accept no responsibility whatsoever for, and shall in no circumstances
-          be liable in connection with, your decisions to use the Services.
-          Nothing contained on the Services constitutes a solicitation,
-          recommendation, endorsement, or offer by us or any third party to
-          stake, buy or sell any digital assets, securities, or other financial
-          instruments. Neither us nor any of our affiliates has: (1) evaluated
-          the merit of any non-custody staking mechanisms available through the
-          Services; or (2) has endorsed or sponsored any digital assets made
-          available.
+          third-party digital wallet. You hold us harmless from and against any
+          losses you suffer as a result of such issues. You agree that your use
+          of the Services is subject to, and you will comply with any,
+          applicable open-source licenses governing any such open-source
+          components. The information on our Services may not always be entirely
+          accurate, complete or current. Information on the Services may be
+          changed or updated from time to time without notice, including
+          information regarding our policies, products and services.
+          Accordingly, you should verify all information before relying on it.
+          All decisions you make based on information provided through the
+          Services are your sole responsibility and you hold us harmless from
+          and against any losses you suffer as a result of such decisions. The
+          Services may contain materials offered by or created by third parties.
+          All such materials, and links to third party websites are provided as
+          a convenience only. We do not control such materials, and provide no
+          guarantee as to their accuracy, completeness, legality or usefulness.
+          You acknowledge and agree that we are not responsible for any aspect
+          of the information, content, or services contained in any such
+          third-party materials accessible or linked to from the Services. You
+          agree and understand that all staking decisions and transactions are
+          made solely by you. You agree and understand that under no
+          circumstances will the operation of the Services and your use of it be
+          deemed to create a relationship that includes the provision of or
+          tendering of investment advice. NO FINANCIAL, INVESTMENT, TAX, LEGAL
+          OR SECURITIES ADVICE IS GIVEN THROUGH OR IN CONNECTION WITH OUR
+          SERVICES. No content found on the Services, whether created by us or
+          another User is or should be considered as investment advice. You
+          agree and understand that we accept no responsibility whatsoever for,
+          and shall in no circumstances be liable in connection with, your
+          decisions to use the Services. Nothing contained on the Services
+          constitutes a solicitation, recommendation, endorsement, or offer by
+          us or any third party to stake, buy or sell any digital assets,
+          securities, or other financial instruments. Neither us nor any of our
+          affiliates has: (1) evaluated the merit of any non-custody staking
+          mechanisms available through the Services; or (2) has endorsed or
+          sponsored any digital assets made available.
         </Paragraph>
         <Paragraph>
           IF YOU ARE DISSATISFIED WITH THE USE OF THE SERVICES, OR WITH THESE
@@ -930,7 +1047,11 @@ export const TermsOfService = () => (
           LIMITED TO, PERSONAL INJURY, PAIN AND SUFFERING, EMOTIONAL DISTRESS,
           LOSS OF REVENUE, PROFITS, BUSINESS OR ANTICIPATED SAVINGS, LOSS OF
           USE, GOODWILL, OR DATA, CAUSED BY TORT (INCLUDING NEGLIGENCE), BREACH
-          OF CONTRACT, OR OTHERWISE, EVEN IF FORESEEABLE.
+          OF CONTRACT, OR OTHERWISE, EVEN IF FORESEEABLE. SPECIFICALLY, THE
+          ASSOCIATION, ITS AFFILIATES, LICENSORS, AGENTS, SERVICE PROVIDERS, AND
+          THEIR RESPECTIVE BOARD MEMBERS, DIRECTORS, REPRESENTATIVES, AND
+          EMPLOYEES WILL NOT BE LIABLE FOR USER’S LOSSES ARISING FROM SLASHING
+          PENALTIES.
         </Paragraph>
         <Paragraph>
           THE LIMITATION OR EXCLUSION OF LIABILITY FOR INCIDENTAL,
@@ -948,7 +1069,7 @@ export const TermsOfService = () => (
           ANY LOSSES OR FAILS OF ITS ESSENTIAL PURPOSE.
         </Paragraph>
         <Paragraph>
-          IF ANY PROVISION OF THIS SECTION Q. IS OR BECOMES INVALID, THE
+          IF ANY PROVISION OF THIS SECTION S. IS OR BECOMES INVALID, THE
           REMAINING PROVISIONS SHALL REMAIN UNAFFECTED AND WILL BE REPLACED BY A
           VALID PROVISION THAT CLOSELY MATCHES THE ECONOMIC INTENT OF THE
           INVALID PROVISION.
@@ -1049,14 +1170,11 @@ type SectionProps = HTMLProps<HTMLElement> & {
 
 const Section = ({ title, children, className, ...props }: SectionProps) => (
   <section
-    className={clsx(
-      "list-item flex-col gap-4 marker:text-xl marker:font-bold",
-      className,
-    )}
+    className={clsx("list-item marker:text-xl marker:font-bold", className)}
     {...props}
   >
     <dd className="ml-2 inline text-xl font-bold">{title}</dd>
-    <dt className="flex flex-col gap-4">{children}</dt>
+    <dt className="mt-4 flex flex-col gap-4">{children}</dt>
   </section>
 );
 
@@ -1071,7 +1189,7 @@ const UnorderedList = ({
   className,
   ...props
 }: HTMLProps<HTMLUListElement>) => (
-  <ul className={clsx("mx-4 list-inside list-disc", className)} {...props} />
+  <ul className={clsx("ml-10 list-disc", className)} {...props} />
 );
 
 const Link = ({ className, ...props }: ComponentProps<typeof BaseLink>) => (
