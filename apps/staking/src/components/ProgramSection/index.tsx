@@ -5,6 +5,7 @@ import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 import { Button } from "../Button";
+import { Date } from "../Date";
 import { ModalDialog } from "../ModalDialog";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
@@ -159,7 +160,7 @@ const TokenOverview = ({
       {...(warmup > 0n && {
         details: (
           <div className="mt-2 text-xs text-neutral-500">
-            Staking {epochToDate(currentEpoch + 1n).toLocaleString()}
+            Staking <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
           </div>
         ),
       })}
@@ -210,13 +211,13 @@ const TokenOverview = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 2n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 1n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
             </div>
           )}
         </>

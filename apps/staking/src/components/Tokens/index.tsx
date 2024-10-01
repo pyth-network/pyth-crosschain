@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import * as dnum from "dnum";
 import { type ComponentProps, useMemo } from "react";
-import { Button, TooltipTrigger } from "react-aria-components";
+import { Button, TooltipTrigger, useLocale } from "react-aria-components";
 
 import Pyth from "./pyth.svg";
 import { DECIMALS } from "../../tokens";
@@ -12,13 +12,14 @@ type Props = Omit<ComponentProps<typeof Button>, "children"> & {
 };
 
 export const Tokens = ({ children, ...props }: Props) => {
+  const { locale } = useLocale();
   const compactValue = useMemo(
-    () => dnum.format([children, DECIMALS], { compact: true }),
-    [children],
+    () => dnum.format([children, DECIMALS], { compact: true, locale }),
+    [children, locale],
   );
   const fullValue = useMemo(
-    () => dnum.format([children, DECIMALS]),
-    [children],
+    () => dnum.format([children, DECIMALS], { locale }),
+    [children, locale],
   );
 
   return compactValue === fullValue ? (

@@ -17,6 +17,7 @@ import background from "./background.png";
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
 import { Button } from "../Button";
+import { Date } from "../Date";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
@@ -82,7 +83,7 @@ export const AccountSummary = ({
           {lastSlash && (
             <p className="max-w-48 text-sm text-red-600">
               <Tokens>{lastSlash.amount}</Tokens> were slashed on{" "}
-              {lastSlash.date.toLocaleString()}
+              <Date options="time">{lastSlash.date}</Date>
             </p>
           )}
         </div>
@@ -112,7 +113,7 @@ export const AccountSummary = ({
                       {unlockSchedule.map((unlock, i) => (
                         <tr key={i}>
                           <td className="pr-12 text-xs opacity-80 sm:text-sm">
-                            {unlock.date.toLocaleString()}
+                            <Date options="time">{unlock.date}</Date>
                           </td>
                           <td>
                             <Tokens>{unlock.amount}</Tokens>
@@ -238,7 +239,7 @@ export const AccountSummary = ({
                   <>
                     Rewards expire one year from the epoch in which they were
                     earned. You have rewards expiring on{" "}
-                    {expiringRewards.toLocaleDateString()}.
+                    <Date>{expiringRewards}</Date>.
                   </>
                 ),
               })}
@@ -311,13 +312,13 @@ const OisUnstake = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 2n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 1n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
             </div>
           )}
         </>
@@ -439,7 +440,7 @@ const ClaimDialog = ({
               <div className="text-sm">
                 Rewards expire one year from the epoch in which they were
                 earned. You have rewards expiring on{" "}
-                {expiringRewards.toLocaleDateString()}.
+                <Date>{expiringRewards}</Date>.
               </div>
             </div>
           )}

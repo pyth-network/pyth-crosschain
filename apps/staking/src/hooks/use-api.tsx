@@ -93,7 +93,6 @@ const State = {
       accountHistoryCacheKey,
 
       loadData: () => api.loadData(client, hermesClient, account),
-      loadAccountHistory: () => api.loadAccountHistory(client, account),
 
       claim: bindApi(api.claim),
       deposit: bindApi(api.deposit),

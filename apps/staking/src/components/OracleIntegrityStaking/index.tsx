@@ -21,7 +21,7 @@ import {
   type HTMLAttributes,
   type FormEvent,
 } from "react";
-import { useFilter } from "react-aria";
+import { useFilter, useCollator } from "react-aria";
 import {
   SearchField,
   Input,
@@ -586,6 +586,7 @@ const PublisherList = ({
   const [sort, setSort] = useState(SortOption.RemainingPoolDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
+  const collator = useCollator();
   const filteredSortedPublishers = useMemo(
     () =>
       publishers
@@ -605,9 +606,9 @@ const PublisherList = ({
               return 1;
             }
           }
-          return doSort(a, b, yieldRate, sort);
+          return doSort(collator, a, b, yieldRate, sort);
         }),
-    [publishers, search, sort, filter, yieldRate, yoursFirst],
+    [publishers, search, sort, filter, yieldRate, yoursFirst, collator],
   );
 
   const paginatedPublishers = useMemo(
@@ -917,6 +918,7 @@ const getPageRange = (
 };
 
 const doSort = (
+  collator: Intl.Collator,
   a: PublisherProps["publisher"],
   b: PublisherProps["publisher"],
   yieldRate: bigint,
@@ -925,7 +927,8 @@ const doSort = (
   switch (sort) {
     case SortOption.PublisherNameAscending:
     case SortOption.PublisherNameDescending: {
-      const value = (a.name ?? a.publicKey.toBase58()).localeCompare(
+      const value = collator.compare(
+        a.name ?? a.publicKey.toBase58(),
         b.name ?? b.publicKey.toBase58(),
       );
       return sort === SortOption.PublisherNameAscending ? -1 * value : value;
