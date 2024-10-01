@@ -986,10 +986,10 @@ const doSort = (
       }
     }
     case SortOption.SelfStakeAscending: {
-      return Number(a.selfStake - b.selfStake);
+      return Number(a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta);
     }
     case SortOption.SelfStakeDescending: {
-      return Number(b.selfStake - a.selfStake);
+      return Number(b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta);
     }
   }
 };
@@ -1195,7 +1195,7 @@ const Publisher = ({
             <div className="flex flex-row items-center gap-2">
               <dt className="font-semibold">{"Publisher's Stake:"}</dt>
               <dd>
-                <Tokens>{publisher.selfStake}</Tokens>
+                <Tokens>{publisher.selfStake + publisher.selfStakeDelta}</Tokens>
               </dd>
             </div>
           )}
@@ -1247,7 +1247,7 @@ const Publisher = ({
               </PublisherName>
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
-              <Tokens>{publisher.selfStake}</Tokens>
+              <Tokens>{publisher.selfStake + publisher.selfStakeDelta}</Tokens>
             </PublisherTableCell>
           </>
         )}
@@ -1554,7 +1554,7 @@ const NewApy = ({
             }
           : {
               isSelf: false,
-              selfStake: publisher.selfStake,
+              selfStake: publisher.selfStake + publisher.selfStakeDelta,
               poolUtilization:
                 publisher.poolUtilization +
                 publisher.poolUtilizationDelta +
