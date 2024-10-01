@@ -15,7 +15,7 @@ module.exports = {
       },
     },
   },
-  defaultNetwork: "cronosZkEvmMainnet",
+  defaultNetwork: "abstractTestnet",
   networks: {
     // [process.env.MIGRATIONS_NETWORK!]: {
     //   url: process.env.RPC_URL,
@@ -52,6 +52,13 @@ module.exports = {
       zksync: true,
       verifyURL:
         "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=",
+    },
+    abstractTestnet: {
+      url: "https://api.testnet.abs.xyz",
+      ethNetwork: "sepolia",
+      zksync: true,
+      verifyURL:
+        "https://api-explorer-verify.testnet.abs.xyz/contract_verification",
     },
   },
   etherscan: {

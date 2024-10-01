@@ -190,6 +190,7 @@ export const RECEIVER_CHAINS = {
   soneium_minato_testnet: 50096,
   nighthawk: 50097,
   blackbird: 50099,
+  abstract_testnet: 50100,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

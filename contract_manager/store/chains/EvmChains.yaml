@@ -714,3 +714,8 @@
   rpcUrl: https://mainnet.evm.nodes.onflow.org
   networkId: 747
   type: EvmChain
+- id: abstract_testnet
+  mainnet: false
+  rpcUrl: https://api.testnet.abs.xyz
+  networkId: 11124
+  type: EvmChain
