@@ -986,10 +986,14 @@ const doSort = (
       }
     }
     case SortOption.SelfStakeAscending: {
-      return Number(a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta);
+      return Number(
+        a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta,
+      );
     }
     case SortOption.SelfStakeDescending: {
-      return Number(b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta);
+      return Number(
+        b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta,
+      );
     }
   }
 };
@@ -1195,7 +1199,9 @@ const Publisher = ({
             <div className="flex flex-row items-center gap-2">
               <dt className="font-semibold">{"Publisher's Stake:"}</dt>
               <dd>
-                <Tokens>{publisher.selfStake + publisher.selfStakeDelta}</Tokens>
+                <Tokens>
+                  {publisher.selfStake + publisher.selfStakeDelta}
+                </Tokens>
               </dd>
             </div>
           )}
