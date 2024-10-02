@@ -1,6 +1,3 @@
-// TODO remove these disables when moving off the mock APIs
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import {
   epochToDate,
@@ -85,68 +82,6 @@ const StakeDetails = {
 export type StakeDetails = ReturnType<
   (typeof StakeDetails)[keyof typeof StakeDetails]
 >;
-
-export enum AccountHistoryItemType {
-  AddTokens,
-  LockedDeposit,
-  Withdrawal,
-  RewardsCredited,
-  Claim,
-  Slash,
-  Unlock,
-  StakeCreated,
-  StakeFinishedWarmup,
-  UnstakeCreated,
-  UnstakeExitedCooldown,
-}
-
-const AccountHistoryAction = {
-  AddTokens: () => ({ type: AccountHistoryItemType.AddTokens as const }),
-  LockedDeposit: (unlockDate: Date) => ({
-    type: AccountHistoryItemType.LockedDeposit as const,
-    unlockDate,
-  }),
-  Withdrawal: () => ({ type: AccountHistoryItemType.Withdrawal as const }),
-  RewardsCredited: () => ({
-    type: AccountHistoryItemType.RewardsCredited as const,
-  }),
-  Claim: () => ({ type: AccountHistoryItemType.Claim as const }),
-  Slash: (publisherName: string) => ({
-    type: AccountHistoryItemType.Slash as const,
-    publisherName,
-  }),
-  Unlock: () => ({ type: AccountHistoryItemType.Unlock as const }),
-  StakeCreated: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.StakeCreated as const,
-    details,
-  }),
-  StakeFinishedWarmup: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.StakeFinishedWarmup as const,
-    details,
-  }),
-  UnstakeCreated: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.UnstakeCreated as const,
-    details,
-  }),
-  UnstakeExitedCooldown: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.UnstakeExitedCooldown as const,
-    details,
-  }),
-};
-
-export type AccountHistoryAction = ReturnType<
-  (typeof AccountHistoryAction)[keyof typeof AccountHistoryAction]
->;
-
-export type AccountHistory = {
-  timestamp: Date;
-  action: AccountHistoryAction;
-  amount: bigint;
-  accountTotal: bigint;
-  availableToWithdraw: bigint;
-  availableRewards: bigint;
-  locked: bigint;
-}[];
 
 export const getAllStakeAccountAddresses = async (
   client: PythStakingClient,
@@ -325,14 +260,6 @@ const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
     )?.cap ?? 0,
   );
 
-export const loadAccountHistory = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-): Promise<AccountHistory> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  return mkMockHistory();
-};
-
 export const createStakeAccountAndDeposit = async (
   client: PythStakingClient,
   amount: bigint,
@@ -462,44 +389,3 @@ export const optPublisherOut = async (
 ): Promise<void> => {
   await client.removePublisherStakeAccount(stakeAccount, publisherKey);
 };
-
-const MOCK_DELAY = 500;
-
-const mkMockHistory = (): AccountHistory => [
-  {
-    timestamp: new Date("2024-06-10T00:00:00Z"),
-    action: AccountHistoryAction.AddTokens(),
-    amount: 2_000_000n,
-    accountTotal: 2_000_000n,
-    availableRewards: 0n,
-    availableToWithdraw: 2_000_000n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-14T02:00:00Z"),
-    action: AccountHistoryAction.RewardsCredited(),
-    amount: 200n,
-    accountTotal: 2_000_000n,
-    availableRewards: 200n,
-    availableToWithdraw: 2_000_000n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-16T08:00:00Z"),
-    action: AccountHistoryAction.Claim(),
-    amount: 200n,
-    accountTotal: 2_000_200n,
-    availableRewards: 0n,
-    availableToWithdraw: 2_000_200n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-16T08:00:00Z"),
-    action: AccountHistoryAction.Slash("Cboe"),
-    amount: 1000n,
-    accountTotal: 1_999_200n,
-    availableRewards: 0n,
-    availableToWithdraw: 1_999_200n,
-    locked: 0n,
-  },
-];
