@@ -26,6 +26,7 @@ import {
   SubmenuTrigger,
   Header,
   Collection,
+  MenuItem as BaseMenuItem,
 } from "react-aria-components";
 
 import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
@@ -36,9 +37,11 @@ import {
 } from "../../hooks/use-api";
 import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { useLogger } from "../../hooks/use-logger";
+import { useNetwork } from "../../hooks/use-network";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
 import { Button } from "../Button";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
+import { Switch } from "../Switch";
 import { TruncatedKey } from "../TruncatedKey";
 
 const ONE_SECOND_IN_MS = 1000;
@@ -106,6 +109,7 @@ const ConnectedButton = ({
       logger.error(error);
     });
   }, [wallet, logger]);
+  const { isMainnet, toggleMainnet } = useNetwork();
 
   return (
     <MenuTrigger>
@@ -138,6 +142,20 @@ const ConnectedButton = ({
           <MenuItem onAction={disconnectWallet} icon={XCircleIcon}>
             Disconnect
           </MenuItem>
+        </Section>
+        <Separator />
+        <Section>
+          <BaseMenuItem
+            className="outline-none data-[focused]:bg-pythpurple-800/20"
+            onAction={toggleMainnet}
+          >
+            <Switch
+              isSelected={isMainnet}
+              postLabel="Mainnet"
+              className="px-4 py-1"
+              size="small"
+            />
+          </BaseMenuItem>
         </Section>
       </Menu>
     </MenuTrigger>
