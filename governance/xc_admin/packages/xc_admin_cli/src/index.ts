@@ -386,7 +386,7 @@ multisigCommand(
   "Deactivate the delegated stake from the account"
 )
   .requiredOption(
-    "-s, --stake-accounts <comma_separated_voter_pubkeys>",
+    "-s, --stake-accounts <comma_separated_stake_account>",
     "stake accounts to be deactivated"
   )
   .action(async (options: any) => {
