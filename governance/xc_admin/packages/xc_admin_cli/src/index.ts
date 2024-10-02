@@ -386,7 +386,7 @@ multisigCommand(
   "Deactivate the delegated stake from the account"
 )
   .requiredOption(
-    "-s, --stake-accounts <accounts...>",
+    "-s, --stake-accounts <comma_separated_voter_pubkeys>",
     "stake accounts to be deactivated"
   )
   .action(async (options: any) => {
@@ -395,10 +395,15 @@ multisigCommand(
     const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
       cluster
     );
-    const instructions = options.stakeAccounts.reduce(
-      (instructions: TransactionInstruction[], stakeAccount: string) => {
+
+    const stakeAccounts = options.stakeAccounts
+      ? options.stakeAccounts.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    const instructions = stakeAccounts.reduce(
+      (instructions: TransactionInstruction[], stakeAccount: PublicKey) => {
         const transaction = StakeProgram.deactivate({
-          stakePubkey: new PublicKey(stakeAccount),
+          stakePubkey: stakeAccount,
           authorizedPubkey,
         });
 
