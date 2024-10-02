@@ -397,3 +397,6 @@
 - chain: fantom_sonic_testnet
   address: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376"
   type: EvmPriceFeedContract
+- chain: abstract_testnet
+  address: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486"
+  type: EvmPriceFeedContract

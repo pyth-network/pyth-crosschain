@@ -388,3 +388,6 @@
 - chain: fantom_sonic_testnet
   address: "0xb700C2f6D14e2cfbD0845Bb102701dBDFf5d1bC4"
   type: EvmWormholeContract
+- chain: abstract_testnet
+  address: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6"
+  type: EvmWormholeContract

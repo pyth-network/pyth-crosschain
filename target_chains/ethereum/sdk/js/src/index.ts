@@ -69,6 +69,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   zkfair: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   zksync_era: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
   // Testnets (Stable sources)
+  abstract_testnet: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486",
   apechain_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   arbitrum_blueberry: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   arbitrum_sepolia: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
