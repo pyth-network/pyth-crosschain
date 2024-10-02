@@ -13,7 +13,7 @@ export const PublisherFaq = (
       questions={[
         {
           question:
-            "Is there an Market Data Publisher (MDP) specific guide or tutorial?",
+            "Is there a Market Data Publisher (MDP) specific guide or tutorial?",
           answer: (
             <>
               <p>
@@ -56,16 +56,28 @@ export const PublisherFaq = (
           ),
         },
         {
+          question: "Is participation in OIS mandatory?",
+          answer:
+            "Participation in OIS as a publisher is optional and voluntary. If you choose not to participate in OIS, you do not need to perform any actions in addition to your regular publisher activities. There are no penalties for choosing not to participate in OIS.",
+        },
+        {
+          question:
+            "Are there penalties for data publishers for choosing not to participate in OIS?",
+          answer:
+            "No. There are no penalties imposed on data publishers for choosing not to participate in OIS.",
+        },
+        {
+          question:
+            "Does participating in OIS affect my participation in other Pyth Network publisher programs?",
+          answer:
+            "No, participating in Oracle Integrity Staking (OIS) does not affect your involvement in any other Pyth Network publisher incentive programs. Your performance and earnings in these programs are completely separate from the OIS program. Likewise, participating in other publisher programs does not impact your participation or potential rewards you would earn in the OIS program.",
+        },
+        {
           question: "Which MDPs can participate in OIS?",
           answer:
             "All publishers can choose to participate in OIS. All publishers are already assigned a stake pool for OIS.",
         },
 
-        {
-          question: "Is participation in OIS mandatory?",
-          answer:
-            "Participation in OIS as a publisher is optional and voluntary. If you choose not to participate in OIS, you do not need to perform any actions in addition to your regular publisher activities. There are no penalties for choosing not to participate in OIS.",
-        },
         {
           question: "How do I opt in to receive OIS rewards as an MDP?",
           answer: (
