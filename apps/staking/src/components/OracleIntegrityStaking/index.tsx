@@ -30,7 +30,6 @@ import {
   Label,
   TextField,
   Form,
-  Switch,
   MenuTrigger,
 } from "react-aria-components";
 
@@ -50,6 +49,7 @@ import { Select } from "../Select";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
 import { Styled } from "../Styled";
+import { Switch } from "../Switch";
 import { Tokens } from "../Tokens";
 import { AmountType, TransferButton } from "../TransferButton";
 import { TruncatedKey } from "../TruncatedKey";
@@ -709,15 +709,8 @@ const PublisherList = ({
           <Switch
             isSelected={yoursFirst}
             onChange={updateYoursFirst}
-            className="group flex cursor-pointer flex-row items-center gap-2"
-          >
-            <div className="whitespace-nowrap opacity-80">
-              Show your positions first
-            </div>
-            <div className="h-8 w-16 flex-none rounded-full border border-neutral-400/50 bg-neutral-800/50 p-1 transition group-data-[selected]:border-pythpurple-600 group-data-[selected]:bg-pythpurple-600/10">
-              <div className="aspect-square h-full rounded-full bg-neutral-400/50 transition group-data-[selected]:translate-x-8 group-data-[selected]:bg-pythpurple-600" />
-            </div>
-          </Switch>
+            preLabel="Show your positions first"
+          />
         </div>
       </div>
 

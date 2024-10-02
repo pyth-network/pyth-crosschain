@@ -9,6 +9,7 @@ import { type ComponentProps, createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
 import { StateType as DataStateType, useData } from "./use-data";
+import { useNetwork } from "./use-network";
 import * as api from "../api";
 
 export enum StateType {
@@ -40,12 +41,16 @@ const State = {
   }),
 
   [StateType.LoadedNoStakeAccount]: (
+    isMainnet: boolean,
     client: PythStakingClient,
     hermesClient: HermesClient,
     onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
     type: StateType.LoadedNoStakeAccount as const,
-    dashboardDataCacheKey: client.wallet.publicKey.toBase58(),
+    dashboardDataCacheKey: [
+      isMainnet ? "mainnet" : "devnet",
+      client.wallet.publicKey.toBase58(),
+    ],
     loadData: () => api.loadData(client, hermesClient),
     deposit: async (amount: bigint) => {
       const account = await api.createStakeAccountAndDeposit(client, amount);
@@ -54,6 +59,7 @@ const State = {
   }),
 
   [StateType.Loaded]: (
+    isMainnet: boolean,
     client: PythStakingClient,
     hermesClient: HermesClient,
     account: PublicKey,
@@ -61,15 +67,10 @@ const State = {
     selectAccount: (account: PublicKey) => void,
     mutate: ReturnType<typeof useSWRConfig>["mutate"],
   ) => {
-    const dashboardDataCacheKey = account.toBase58();
-    const accountHistoryCacheKey = `${account.toBase58()}/history`;
-
-    const reload = async () => {
-      await Promise.all([
-        mutate(dashboardDataCacheKey),
-        mutate(accountHistoryCacheKey),
-      ]);
-    };
+    const dashboardDataCacheKey = [
+      isMainnet ? "mainnet" : "devnet",
+      account.toBase58(),
+    ];
 
     const bindApi =
       <T extends unknown[]>(
@@ -81,7 +82,7 @@ const State = {
       ) =>
       async (...args: T) => {
         await fn(client, account, ...args);
-        await reload();
+        await mutate(dashboardDataCacheKey);
       };
 
     return {
@@ -90,7 +91,6 @@ const State = {
       allAccounts,
       selectAccount,
       dashboardDataCacheKey,
-      accountHistoryCacheKey,
 
       loadData: () => api.loadData(client, hermesClient, account),
 
@@ -138,6 +138,7 @@ export const ApiProvider = ({ hermesUrl, ...props }: ApiProviderProps) => {
 const useApiContext = (hermesUrl: string) => {
   const wallet = useWallet();
   const { connection } = useConnection();
+  const { isMainnet } = useNetwork();
   const { mutate } = useSWRConfig();
   const hermesClient = useMemo(() => new HermesClient(hermesUrl), [hermesUrl]);
   const pythStakingClient = useMemo(
@@ -160,7 +161,10 @@ const useApiContext = (hermesUrl: string) => {
     ],
   );
   const stakeAccounts = useData(
-    () => (pythStakingClient ? ["stakeAccounts", wallet.publicKey] : undefined),
+    () =>
+      pythStakingClient
+        ? [isMainnet ? "mainnet" : "devnet", "stakeAccounts", wallet.publicKey]
+        : undefined,
     () =>
       pythStakingClient
         ? api.getAllStakeAccountAddresses(pythStakingClient)
@@ -203,6 +207,7 @@ const useApiContext = (hermesUrl: string) => {
                   )
                 : undefined;
               return State[StateType.Loaded](
+                isMainnet,
                 pythStakingClient,
                 hermesClient,
                 selectedAccount ?? firstAccount,
@@ -214,6 +219,7 @@ const useApiContext = (hermesUrl: string) => {
               );
             } else {
               return State[StateType.LoadedNoStakeAccount](
+                isMainnet,
                 pythStakingClient,
                 hermesClient,
                 async (newAccount) => {
@@ -228,6 +234,7 @@ const useApiContext = (hermesUrl: string) => {
       return State[StateType.NoWallet]();
     }
   }, [
+    isMainnet,
     wallet.connecting,
     wallet.disconnecting,
     wallet.connected,

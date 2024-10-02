@@ -20,22 +20,35 @@ import {
 import { clusterApiUrl } from "@solana/web3.js";
 import { type ReactNode, useMemo } from "react";
 
+import { useNetwork } from "../../hooks/use-network";
 import { metadata } from "../../metadata";
 
 type Props = {
-  network: WalletAdapterNetwork.Devnet | WalletAdapterNetwork.Mainnet;
   children?: ReactNode | ReactNode[] | undefined;
   walletConnectProjectId?: string | undefined;
-  rpc?: string | undefined;
+  mainnetRpc?: string | undefined;
 };
 
 export const WalletProvider = ({
-  network,
   children,
   walletConnectProjectId,
-  rpc,
+  mainnetRpc,
 }: Props) => {
-  const endpoint = useMemo(() => rpc ?? clusterApiUrl(network), [rpc, network]);
+  const { isMainnet } = useNetwork();
+
+  const network = useMemo(
+    () =>
+      isMainnet ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
+    [isMainnet],
+  );
+
+  const endpoint = useMemo(
+    () =>
+      network === WalletAdapterNetwork.Mainnet && mainnetRpc !== undefined
+        ? mainnetRpc
+        : clusterApiUrl(network),
+    [mainnetRpc, network],
+  );
 
   const wallets = useMemo(
     () => [
