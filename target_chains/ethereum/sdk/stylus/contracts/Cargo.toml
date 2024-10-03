@@ -1,5 +1,5 @@
 [package]
-name = "pyth-sdk"
+name = "pyth-stylus"
 authors.workspace = true
 license.workspace = true
 keywords.workspace = true
@@ -25,3 +25,5 @@ crate-type = ["lib", "cdylib"]
 
 [lints]
 workspace = true
+
+

@@ -1,5 +1,8 @@
+use stylus_sdk::{
+    call::MethodError,
+    prelude::*,
+};
 use alloy_sol_types::sol;
-use stylus_sdk::{call::MethodError, prelude::*};
 
 sol! {
   // Function arguments are invalid (e.g., the arguments lengths mismatch)
@@ -88,7 +91,7 @@ sol! {
 }
 
 /// A Pausable error.
-#[derive(SolidityError ,Debug)]
+#[derive(SolidityError, Debug)]
 pub enum IPythError {
     InvalidArgument(InvalidArgument),
     InvalidUpdateDataSource(InvalidUpdateDataSource),
@@ -103,8 +106,7 @@ pub enum IPythError {
     InvalidGovernanceTarget(InvalidGovernanceTarget),
     InvalidGovernanceDataSource(InvalidGovernanceDataSource),
     OldGovernanceMessage(OldGovernanceMessage),
-    InvalidWormholeAddressToSet(InvalidWormholeAddressToSet)
-    
+    InvalidWormholeAddressToSet(InvalidWormholeAddressToSet),
 }
 
 impl MethodError for IPythError {
@@ -112,4 +114,3 @@ impl MethodError for IPythError {
         self.into()
     }
 }
-

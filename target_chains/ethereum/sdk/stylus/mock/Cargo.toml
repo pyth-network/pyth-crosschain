@@ -8,6 +8,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+pyth-stylus.workspace = true
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 stylus-sdk.workspace = true
@@ -15,6 +16,13 @@ mini-alloc.workspace = true
 stylus-proc.workspace = true
 
 
+[lib]
+crate-type = ["lib", "cdylib"]
 
-[lints]
-workspace = true
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[[bin]]
+name = "mock"
+path = "src/main.rs"
