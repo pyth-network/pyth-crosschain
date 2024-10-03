@@ -266,13 +266,13 @@ export class PythStakingClient {
           stakeAccountPositions,
         })
         .instruction(),
-    await this.stakingProgram.methods
-    .mergeTargetPositions({ voting: {} })
-    .accounts({
-      stakeAccountPositions,
-    })
-    .instruction(),
-);
+      await this.stakingProgram.methods
+        .mergeTargetPositions({ voting: {} })
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
 
     return sendTransaction(instructions, this.connection, this.wallet);
   }
