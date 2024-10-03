@@ -4,7 +4,7 @@ export const convertEpochYieldToApy = (epochYield: bigint) => {
   return (Number(epochYield) * 52 * 100) / FRACTION_PRECISION;
 };
 
-export const computeDelegatorPercentage = (
+export const computeDelegatorRewardPercentage = (
   delegationFee : bigint,
 ) => {
   return 1 - Number(delegationFee) / FRACTION_PRECISION;
@@ -31,7 +31,7 @@ export const calculateApy = (
   }
 
   const { poolUtilization } = options;
-  const delegatorPercentage = computeDelegatorPercentage(options.delegationFee);
+  const delegatorPercentage = computeDelegatorRewardPercentage(options.delegationFee);
 
   const delegatorPoolUtilization = poolUtilization - selfStake;
   const delegatorPoolCapacity = poolCapacity - eligibleSelfStake;

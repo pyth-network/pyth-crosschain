@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 
-import { computeDelegatorPercentage, convertEpochYieldToApy } from "./apy";
+import { computeDelegatorRewardPercentage, convertEpochYieldToApy } from "./apy";
 import { FRACTION_PRECISION_N } from "../constants";
 import type { PoolDataAccount, PublisherData } from "../types";
 
@@ -32,7 +32,7 @@ export const extractPublisherData = (
           apy: convertEpochYieldToApy(
             (event.y * (event.eventData[index]?.otherRewardRatio ?? 0n)) /
               FRACTION_PRECISION_N,
-          ) * computeDelegatorPercentage(poolData.delegationFees[index] ?? 0n),
+          ) * computeDelegatorRewardPercentage(poolData.delegationFees[index] ?? 0n),
           selfApy: convertEpochYieldToApy(
             (event.y * (event.eventData[index]?.selfRewardRatio ?? 0n)) /
               FRACTION_PRECISION_N,
