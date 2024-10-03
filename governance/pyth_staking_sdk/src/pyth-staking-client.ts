@@ -256,6 +256,15 @@ export class PythStakingClient {
 
     instructions.push(
       await this.stakingProgram.methods
+        .mergeTargetPositions({ voting: {} })
+        .accounts({
+          stakeAccountPositions,
+        })
+        .instruction(),
+    );
+
+    instructions.push(
+      await this.stakingProgram.methods
         .createPosition(
           {
             voting: {},
@@ -668,12 +677,22 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
     const allPublishers = extractPublisherData(poolData);
+
     const publishers = allPublishers.filter(({ pubkey }) =>
       stakeAccountPositionsData.data.positions.some(
         ({ targetWithParameters }) =>
           targetWithParameters.integrityPool?.publisher.equals(pubkey),
       ),
     );
+
+    console.log(stakeAccountPositionsData.data.positions);
+    console.log(
+      stakeAccountPositionsData.data.positions.map(({ targetWithParameters }) =>
+        targetWithParameters.integrityPool?.publisher.toBase58(),
+      ),
+    );
+
+    console.log(publishers.map(({ pubkey }) => pubkey.toBase58()));
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
