@@ -685,15 +685,6 @@ export class PythStakingClient {
       ),
     );
 
-    console.log(stakeAccountPositionsData.data.positions);
-    console.log(
-      stakeAccountPositionsData.data.positions.map(({ targetWithParameters }) =>
-        targetWithParameters.integrityPool?.publisher.toBase58(),
-      ),
-    );
-
-    console.log(publishers.map(({ pubkey }) => pubkey.toBase58()));
-
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
     const advanceDelegationRecordInstructions = await Promise.all(
