@@ -9,7 +9,7 @@ use {
         validate::{
             validate_buffer,
             validate_publisher,
-            validate_publisher_config,
+            validate_publisher_config_for_access,
         },
     },
     solana_program::{
@@ -39,17 +39,22 @@ pub fn submit_prices(
 ) -> ProgramResult {
     let mut accounts = accounts.iter();
     let publisher = validate_publisher(accounts.next())?;
-    let publisher_config = validate_publisher_config(
+    let publisher_config = validate_publisher_config_for_access(
         accounts.next(),
         args.publisher_config_bump,
         publisher.key,
         program_id,
-        false,
     )?;
     let buffer = validate_buffer(accounts.next(), program_id)?;
 
     let publisher_config_data = publisher_config.data.borrow();
     let publisher_config = publisher_config::read(*publisher_config_data)?;
+    // Required to ensure that `find_program_address` returned the same account as
+    // `create_program_address` in `initialize_publisher`.
+    ensure!(
+        ProgramError::InvalidArgument,
+        sol_memcmp(&publisher.key.to_bytes(), &publisher_config.publisher, 32) == 0
+    );
     ensure!(
         ProgramError::InvalidArgument,
         sol_memcmp(&buffer.key.to_bytes(), &publisher_config.buffer_account, 32) == 0

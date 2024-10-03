@@ -57,8 +57,9 @@ pub fn validate_config<'a, 'b>(
     require_writable: bool,
 ) -> Result<&'b AccountInfo<'a>, ProgramError> {
     let config = account.ok_or(ProgramError::NotEnoughAccountKeys)?;
-    let config_pda = Pubkey::create_program_address(&[CONFIG_SEED.as_bytes(), &[bump]], program_id)
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+    let (config_pda, expected_bump) =
+        Pubkey::find_program_address(&[CONFIG_SEED.as_bytes()], program_id);
+    ensure!(ProgramError::InvalidInstructionData, bump == expected_bump);
     ensure!(
         ProgramError::InvalidArgument,
         pubkey_eq(config.key, &config_pda)
@@ -85,14 +86,17 @@ pub fn validate_authority<'a, 'b>(
     Ok(authority)
 }
 
-pub fn validate_publisher_config<'a, 'b>(
+pub fn validate_publisher_config_for_access<'a, 'b>(
     account: Option<&'b AccountInfo<'a>>,
     bump: u8,
     publisher: &Pubkey,
     program_id: &Pubkey,
-    require_writable: bool,
 ) -> Result<&'b AccountInfo<'a>, ProgramError> {
     let publisher_config = account.ok_or(ProgramError::NotEnoughAccountKeys)?;
+    // We use `create_program_address` to make the `submit_prices` instruction cheaper.
+    // `find_program_address` is used in `initialize_publisher`, so we'll always have
+    // only one publisher config per publisher. As long as we check the publisher key
+    // stored in the account in `submit_prices`, it should be safe.
     let publisher_config_pda = Pubkey::create_program_address(
         &[
             PUBLISHER_CONFIG_SEED.as_bytes(),
@@ -102,9 +106,28 @@ pub fn validate_publisher_config<'a, 'b>(
         program_id,
     )
     .map_err(|_| ProgramError::InvalidInstructionData)?;
-    if require_writable {
-        ensure!(ProgramError::InvalidArgument, publisher_config.is_writable);
-    }
+    ensure!(
+        ProgramError::MissingRequiredSignature,
+        pubkey_eq(publisher_config.key, &publisher_config_pda)
+    );
+    Ok(publisher_config)
+}
+
+pub fn validate_publisher_config_for_init<'a, 'b>(
+    account: Option<&'b AccountInfo<'a>>,
+    bump: u8,
+    publisher: &Pubkey,
+    program_id: &Pubkey,
+) -> Result<&'b AccountInfo<'a>, ProgramError> {
+    let publisher_config = account.ok_or(ProgramError::NotEnoughAccountKeys)?;
+    // We use `find_program_address` to guarantee that only one publisher_config
+    // is created per publisher.
+    let (publisher_config_pda, expected_bump) = Pubkey::find_program_address(
+        &[PUBLISHER_CONFIG_SEED.as_bytes(), &publisher.to_bytes()],
+        program_id,
+    );
+    ensure!(ProgramError::InvalidInstructionData, bump == expected_bump);
+    ensure!(ProgramError::InvalidArgument, publisher_config.is_writable);
     ensure!(
         ProgramError::MissingRequiredSignature,
         pubkey_eq(publisher_config.key, &publisher_config_pda)

@@ -13,7 +13,7 @@ use {
             validate_authority,
             validate_buffer,
             validate_config,
-            validate_publisher_config,
+            validate_publisher_config_for_init,
             validate_system,
         },
     },
@@ -51,12 +51,11 @@ pub fn initialize_publisher(
     let first_account = accounts.next();
     let config = validate_config(accounts.next(), args.config_bump, program_id, false)?;
     let authority = validate_authority(first_account, config)?;
-    let publisher_config = validate_publisher_config(
+    let publisher_config = validate_publisher_config_for_init(
         accounts.next(),
         args.publisher_config_bump,
         &args.publisher.into(),
         program_id,
-        true,
     )?;
     let buffer = validate_buffer(accounts.next(), program_id)?;
     let system = validate_system(accounts.next())?;
