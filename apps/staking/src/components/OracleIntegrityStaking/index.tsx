@@ -935,6 +935,7 @@ const doSort = (
           poolCapacity: a.poolCapacity,
           poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
           yieldRate,
+          delegationFee : a.delegationFee,
         }) -
         calculateApy({
           isSelf: false,
@@ -942,6 +943,7 @@ const doSort = (
           poolCapacity: b.poolCapacity,
           poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
           yieldRate,
+          delegationFee : b.delegationFee,
         });
       return sort === SortOption.ApyDescending ? -1 * value : value;
     }
@@ -1063,6 +1065,7 @@ type PublisherProps = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
+    delegationFee: bigint;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -1124,6 +1127,7 @@ const Publisher = ({
         poolUtilization:
           publisher.poolUtilization + publisher.poolUtilizationDelta,
         yieldRate,
+        delegationFee : publisher.delegationFee,
       }).toFixed(2),
     [
       isSelf,
@@ -1548,6 +1552,7 @@ const NewApy = ({
       calculateApy({
         poolCapacity: publisher.poolCapacity,
         yieldRate,
+        delegationFee : publisher.delegationFee,
         ...(isSelf
           ? {
               isSelf: true,
