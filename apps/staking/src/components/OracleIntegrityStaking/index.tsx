@@ -1066,7 +1066,7 @@ type PublisherProps = {
     numFeeds: number;
     qualityRanking: number;
     delegationFee: bigint;
-    apyHistory: { date: Date; apy: number, selfApy: number }[];
+    apyHistory: { date: Date; apy: number; selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
