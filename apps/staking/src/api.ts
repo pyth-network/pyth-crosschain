@@ -54,6 +54,7 @@ type Data = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
+    delegationFee: bigint;
     apyHistory: { date: Date; apy: number }[];
     positions?:
       | {
@@ -243,6 +244,7 @@ const loadPublisherData = async (
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
+      delegationFee: publisher.delegationFee,
     };
   });
 };
