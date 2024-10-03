@@ -55,7 +55,7 @@ type Data = {
     numFeeds: number;
     qualityRanking: number;
     delegationFee: bigint;
-    apyHistory: { date: Date; apy: number }[];
+    apyHistory: { date: Date; apy: number, selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -227,9 +227,10 @@ const loadPublisherData = async (
     const publisherRanking = publisherRankings.find(
       (ranking) => ranking.publisher === publisherPubkeyString,
     );
-    const apyHistory = publisher.apyHistory.map(({ epoch, apy }) => ({
+    const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
       date: epochToDate(epoch + 1n),
       apy,
+      selfApy
     }));
 
     return {
