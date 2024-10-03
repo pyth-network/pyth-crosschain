@@ -677,7 +677,6 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
     const allPublishers = extractPublisherData(poolData);
-
     const publishers = allPublishers.filter(({ pubkey }) =>
       stakeAccountPositionsData.data.positions.some(
         ({ targetWithParameters }) =>
