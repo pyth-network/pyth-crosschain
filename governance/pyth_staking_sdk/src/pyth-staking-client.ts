@@ -256,15 +256,6 @@ export class PythStakingClient {
 
     instructions.push(
       await this.stakingProgram.methods
-        .mergeTargetPositions({ voting: {} })
-        .accounts({
-          stakeAccountPositions,
-        })
-        .instruction(),
-    );
-
-    instructions.push(
-      await this.stakingProgram.methods
         .createPosition(
           {
             voting: {},
@@ -275,7 +266,13 @@ export class PythStakingClient {
           stakeAccountPositions,
         })
         .instruction(),
-    );
+    await this.stakingProgram.methods
+    .mergeTargetPositions({ voting: {} })
+    .accounts({
+      stakeAccountPositions,
+    })
+    .instruction(),
+);
 
     return sendTransaction(instructions, this.connection, this.wallet);
   }
