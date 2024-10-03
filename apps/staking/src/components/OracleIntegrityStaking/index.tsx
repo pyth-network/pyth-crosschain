@@ -1066,7 +1066,7 @@ type PublisherProps = {
     numFeeds: number;
     qualityRanking: number;
     delegationFee: bigint;
-    apyHistory: { date: Date; apy: number }[];
+    apyHistory: { date: Date; apy: number, selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -1266,9 +1266,9 @@ const Publisher = ({
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">
             <SparkChart
-              data={publisher.apyHistory.map(({ date, apy }) => ({
+              data={publisher.apyHistory.map(({ date, apy, selfApy }) => ({
                 date,
-                value: apy,
+                value: isSelf ? selfApy : apy,
               }))}
             />
           </div>
