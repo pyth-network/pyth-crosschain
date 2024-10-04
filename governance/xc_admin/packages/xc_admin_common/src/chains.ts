@@ -84,6 +84,7 @@ export const RECEIVER_CHAINS = {
   idex_xchain_mainnet: 60060,
   apechain_mainnet: 60061,
   flow_mainnet: 60062,
+  sanko: 60063,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -191,6 +192,7 @@ export const RECEIVER_CHAINS = {
   nighthawk: 50097,
   blackbird: 50099,
   abstract_testnet: 50100,
+  sanko_testnet: 50101,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
