@@ -391,3 +391,9 @@
 - chain: abstract_testnet
   address: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6"
   type: EvmWormholeContract
+- chain: sanko
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: sanko_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
