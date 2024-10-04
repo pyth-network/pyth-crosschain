@@ -583,7 +583,7 @@ const PublisherList = ({
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
-  const [sort, setSort] = useState(SortOption.RemainingPoolDescending);
+  const [sort, setSort] = useState(SortOption.SelfStakeDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
@@ -606,7 +606,7 @@ const PublisherList = ({
               return 1;
             }
           }
-          return doSort(collator, a, b, yieldRate, sort);
+          return compare(collator, a, b, yieldRate, sort);
         }),
     [publishers, search, sort, filter, yieldRate, yoursFirst, collator],
   );
@@ -654,8 +654,16 @@ const PublisherList = ({
     [setYoursFirst, updatePage],
   );
 
+  const updatePageSize = useCallback<typeof setPageSize>(
+    (newPageSize) => {
+      setPageSize(newPageSize);
+      updatePage(1);
+    },
+    [setPageSize, updatePage],
+  );
+
   const numPages = useMemo(
-    () => Math.floor(filteredSortedPublishers.length / pageSize),
+    () => Math.ceil(filteredSortedPublishers.length / pageSize),
     [filteredSortedPublishers, pageSize],
   );
 
@@ -816,7 +824,7 @@ const PublisherList = ({
             label="Page size"
             options={PageSize}
             selectedKey={pageSize}
-            onSelectionChange={setPageSize}
+            onSelectionChange={updatePageSize}
           />
           <Paginator
             currentPage={currentPage}
@@ -910,7 +918,7 @@ const getPageRange = (
   return { first, count: Math.min(numPages - first + 1, 5) };
 };
 
-const doSort = (
+const compare = (
   collator: Intl.Collator,
   a: PublisherProps["publisher"],
   b: PublisherProps["publisher"],
@@ -920,79 +928,162 @@ const doSort = (
   switch (sort) {
     case SortOption.PublisherNameAscending:
     case SortOption.PublisherNameDescending: {
-      const value = collator.compare(
-        a.name ?? a.publicKey.toBase58(),
-        b.name ?? b.publicKey.toBase58(),
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareName(
+        collator,
+        a,
+        b,
+        sort === SortOption.PublisherNameAscending,
       );
-      return sort === SortOption.PublisherNameAscending ? -1 * value : value;
     }
     case SortOption.ApyAscending:
     case SortOption.ApyDescending: {
-      const value =
-        calculateApy({
-          isSelf: false,
-          selfStake: a.selfStake + a.selfStakeDelta,
-          poolCapacity: a.poolCapacity,
-          poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
-          yieldRate,
-        }) -
-        calculateApy({
-          isSelf: false,
-          selfStake: b.selfStake + b.selfStakeDelta,
-          poolCapacity: b.poolCapacity,
-          poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
-          yieldRate,
-        });
-      return sort === SortOption.ApyDescending ? -1 * value : value;
+      const ascending = sort === SortOption.ApyAscending;
+      return compareInOrder([
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
-    case SortOption.NumberOfFeedsAscending: {
-      return Number(a.numFeeds - b.numFeeds);
-    }
+    case SortOption.NumberOfFeedsAscending:
     case SortOption.NumberOfFeedsDescending: {
-      return Number(b.numFeeds - a.numFeeds);
+      const ascending = sort === SortOption.NumberOfFeedsAscending;
+      return compareInOrder([
+        () => (ascending ? -1 : 1) * Number(b.numFeeds - a.numFeeds),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.RemainingPoolAscending:
     case SortOption.RemainingPoolDescending: {
-      if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
-        return 0;
-      } else if (a.poolCapacity === 0n) {
-        return 1;
-      } else if (b.poolCapacity === 0n) {
-        return -1;
-      } else {
-        const remainingPoolA =
-          a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
-        const remainingPoolB =
-          b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
-        const value = Number(remainingPoolA - remainingPoolB);
-        return sort === SortOption.RemainingPoolDescending ? -1 * value : value;
-      }
+      const ascending = sort === SortOption.RemainingPoolAscending;
+      return compareInOrder([
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.QualityRankingDescending:
     case SortOption.QualityRankingAscending: {
-      if (a.qualityRanking === 0 && b.qualityRanking === 0) {
-        return 0;
-      } else if (a.qualityRanking === 0) {
-        return 1;
-      } else if (b.qualityRanking === 0) {
-        return -1;
-      } else {
-        const value = Number(a.qualityRanking - b.qualityRanking);
-        return sort === SortOption.QualityRankingAscending ? -1 * value : value;
-      }
-    }
-    case SortOption.SelfStakeAscending: {
-      return Number(
-        a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta,
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareQualityRanking(
+        a,
+        b,
+        sort === SortOption.QualityRankingAscending,
       );
     }
+    case SortOption.SelfStakeAscending:
     case SortOption.SelfStakeDescending: {
-      return Number(
-        b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta,
-      );
+      const ascending = sort === SortOption.SelfStakeAscending;
+      return compareInOrder([
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
   }
 };
+
+const compareInOrder = (comparisons: (() => number)[]): number => {
+  for (const compare of comparisons) {
+    const value = compare();
+    if (value !== 0) {
+      return value;
+    }
+  }
+  return 0;
+};
+
+const compareName = (
+  collator: Intl.Collator,
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  collator.compare(
+    a.name ?? a.publicKey.toBase58(),
+    b.name ?? b.publicKey.toBase58(),
+  );
+
+const compareApy = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  yieldRate: bigint,
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  (calculateApy({
+    isSelf: false,
+    selfStake: b.selfStake + b.selfStakeDelta,
+    poolCapacity: b.poolCapacity,
+    poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
+    yieldRate,
+  }) -
+    calculateApy({
+      isSelf: false,
+      selfStake: a.selfStake + a.selfStakeDelta,
+      poolCapacity: a.poolCapacity,
+      poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
+      yieldRate,
+    }));
+
+const comparePoolCapacity = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
+    return 0;
+  } else if (a.poolCapacity === 0n) {
+    return 1;
+  } else if (b.poolCapacity === 0n) {
+    return -1;
+  } else {
+    const remainingPoolA =
+      a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
+    const remainingPoolB =
+      b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
+    if (remainingPoolA <= 0n && remainingPoolB <= 0n) {
+      return 0;
+    } else if (remainingPoolA <= 0n && remainingPoolB > 0n) {
+      return 1;
+    } else if (remainingPoolB <= 0n && remainingPoolA > 0n) {
+      return -1;
+    } else {
+      return (reverse ? -1 : 1) * Number(remainingPoolB - remainingPoolA);
+    }
+  }
+};
+
+const compareQualityRanking = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.qualityRanking === 0 && b.qualityRanking === 0) {
+    return 0;
+  } else if (a.qualityRanking === 0) {
+    return 1;
+  } else if (b.qualityRanking === 0) {
+    return -1;
+  } else {
+    return (reverse ? -1 : 1) * Number(a.qualityRanking - b.qualityRanking);
+  }
+};
+
+const compareSelfStake = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  Number(b.selfStake + b.selfStakeDelta - (a.selfStake + a.selfStakeDelta));
 
 type SortablePublisherTableHeaderProps = Omit<
   ComponentProps<typeof BaseButton>,
