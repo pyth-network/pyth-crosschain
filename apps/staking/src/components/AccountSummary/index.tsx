@@ -40,7 +40,8 @@ type Props = {
   availableRewards: bigint;
   expiringRewards: Date | undefined;
   availableToWithdraw: bigint;
-  restrictedMode?: boolean | undefined;
+  enableGovernance: boolean;
+  enableOis: boolean;
   integrityStakingWarmup: bigint;
   integrityStakingStaked: bigint;
   integrityStakingCooldown: bigint;
@@ -58,7 +59,8 @@ export const AccountSummary = ({
   availableToWithdraw,
   availableRewards,
   expiringRewards,
-  restrictedMode,
+  enableGovernance,
+  enableOis,
   integrityStakingWarmup,
   integrityStakingStaked,
   integrityStakingCooldown,
@@ -128,7 +130,7 @@ export const AccountSummary = ({
           </>
         )}
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
-          {!restrictedMode && (
+          {(enableGovernance || enableOis) && (
             <TransferButton
               actionName="Add tokens"
               actionDescription="Add funds to your balance"
@@ -163,7 +165,7 @@ export const AccountSummary = ({
               className="xl:hidden"
             />
           )}
-          {!restrictedMode && (
+          {enableOis && (
             <DialogTrigger>
               <Button variant="secondary" className="xl:hidden">
                 Claim
@@ -184,7 +186,7 @@ export const AccountSummary = ({
           )}
         </div>
       </div>
-      {restrictedMode && api.type === ApiStateType.Loaded && (
+      {!enableOis && api.type === ApiStateType.Loaded && (
         <OisUnstake
           api={api}
           className="max-w-sm xl:hidden"
@@ -204,7 +206,7 @@ export const AccountSummary = ({
             <WithdrawButton api={api} max={availableToWithdraw} size="small" />
           }
         />
-        {restrictedMode && api.type === ApiStateType.Loaded && (
+        {!enableOis && api.type === ApiStateType.Loaded && (
           <OisUnstake
             api={api}
             warmup={integrityStakingWarmup}
@@ -214,7 +216,7 @@ export const AccountSummary = ({
             currentEpoch={currentEpoch}
           />
         )}
-        {!restrictedMode && (
+        {enableOis && (
           <BalanceCategory
             name="Available Rewards"
             amount={availableRewards}
