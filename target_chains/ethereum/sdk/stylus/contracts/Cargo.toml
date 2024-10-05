@@ -12,6 +12,7 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 stylus-sdk.workspace = true
 mini-alloc.workspace = true
+motsu = "=0.1.0-rc"
 
 
 [features]

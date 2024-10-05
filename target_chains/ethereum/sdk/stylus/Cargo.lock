@@ -45,9 +45,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-sol-macro"
-version = "0.7.7"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b40397ddcdcc266f59f959770f601ce1280e699a91fc1862f29cef91707cd09"
+checksum = "4bad41a7c19498e3f6079f7744656328699f8ea3e783bdd10d85788cd439f572"
 dependencies = [
  "alloy-sol-macro-expander",
  "alloy-sol-macro-input",
@@ -59,9 +59,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-sol-macro-expander"
-version = "0.7.7"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "867a5469d61480fea08c7333ffeca52d5b621f5ca2e44f271b117ec1fc9a0525"
+checksum = "fd9899da7d011b4fe4c406a524ed3e3f963797dbc93b45479d60341d3a27b252"
 dependencies = [
  "alloy-sol-macro-input",
  "const-hex",
@@ -77,9 +77,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-sol-macro-input"
-version = "0.7.7"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e482dc33a32b6fadbc0f599adea520bd3aaa585c141a80b404d0a3e3fa72528"
+checksum = "d32d595768fdc61331a132b6f65db41afae41b9b97d36c21eb1b955c422a7e60"
 dependencies = [
  "const-hex",
  "dunce",
@@ -801,6 +801,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "motsu"
+version = "0.1.0-rc"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cff6390ad19dea5f6bf7011af9560c3dc5f9162fa4b1b33c0d24df18a2c7fcb"
+dependencies = [
+ "const-hex",
+ "motsu-proc",
+ "once_cell",
+ "stylus-sdk",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "motsu-proc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0785317ee15f9a1bc5d761da9d0d1dadd92225cd5a88eed0ec37c54a277fac44"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.79",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -986,6 +1010,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "mini-alloc 0.4.2",
+ "motsu",
  "stylus-sdk",
 ]
 

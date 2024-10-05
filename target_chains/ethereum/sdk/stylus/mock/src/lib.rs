@@ -1,12 +1,10 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-use core::borrow;
-use std::fmt::Result;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{ prelude::*, stylus_proc::entrypoint, alloy_sol_types::sol};
-use pyth_stylus::pyth::{PythContract, get_ema_price_unsafe};
+use pyth_stylus::pyth::get_ema_price_unsafe;
 use alloy_primitives::{ FixedBytes, Address };
 
 // Define some persistent storage using the Solidity ABI.

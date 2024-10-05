@@ -1,0 +1,23 @@
+[package]
+name = "openzeppelin-crypto"
+categories = ["cryptography", "algorithms", "no-std", "wasm"]
+description = "Cryptography Utilities"
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+version = "0.1.0-rc"
+
+[dependencies]
+mini-alloc.workspace = true
+tiny-keccak.workspace = true
+
+[dev-dependencies]
+hex-literal = "0.4.1"
+rand.workspace = true
+
+[features]
+std = []
+
+[lints]
+workspace = true

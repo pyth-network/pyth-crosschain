@@ -15,7 +15,6 @@ stylus-sdk.workspace = true
 mini-alloc.workspace = true
 stylus-proc.workspace = true
 
-
 [lib]
 crate-type = ["lib", "cdylib"]
 
@@ -23,6 +22,3 @@ crate-type = ["lib", "cdylib"]
 export-abi = ["stylus-sdk/export-abi"]
 debug = ["stylus-sdk/debug"]
 
-[[bin]]
-name = "mock"
-path = "src/main.rs"

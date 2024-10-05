@@ -1,14 +1,13 @@
 use crate::pyth::errors::{IPythError, PriceFeedNotFound, StalePrice};
 use crate::pyth::solidity::{
     getEmaPriceUnsafeCall,
-    getPriceUnsafeCall,
-    updatePriceFeedsCall,
+    // getPriceUnsafeCall,
+    // updatePriceFeedsCall,
     StoragePriceFeed,
     StoragePrice
 };
 use crate::utils::helpers::{call_helper,delegate_call_helper, CALL_RETDATA_DECODING_ERROR_MESSAGE};
 use alloc::vec::Vec;
-use core::borrow::BorrowMut; 
 use stylus_sdk::{console,prelude::*,storage::{TopLevelStorage, StorageAddress, StorageMap},alloy_sol_types::sol};
 use alloy_primitives::{ FixedBytes,U256, Bytes, Address };
 
@@ -18,32 +17,32 @@ pub mod events;
 pub mod solidity;
 pub mod mock;
 
-#[storage]
-pub struct PythContract {
-    _ipyth:StorageAddress,
-    price_feeds:StorageMap<FixedBytes<32>,StoragePriceFeed>,
+
+sol_storage! {
+    #[entrypoint]
+    pub struct PythContract {
+         address _ipyth;
+    }
 }
 
 type  Price = StoragePrice;
 type  PriceFeed = StoragePriceFeed;
 
- pub fn get_ema_price_unsafe(
-        storage: &mut impl TopLevelStorage,
-        pyth_address: Address,
-        id: FixedBytes<32>,
-    ) -> Result<(), Vec<u8>> {
-        let get_call = call_helper::<getEmaPriceUnsafeCall>(storage, pyth_address, (id,))?;
-        console!("{:?}",get_call);
+pub fn get_ema_price_unsafe(storage: &mut impl TopLevelStorage,pyth_address: Address,id: FixedBytes<32>) -> Result<(), Vec<u8>> {
+        let _get_call = call_helper::<getEmaPriceUnsafeCall>(storage, pyth_address, (id,))?;
+        console!("{:?}",_get_call);
         // Ok(());
        // let price =  Price::abi_decode(&get_call, false).map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec());
         // Ok(price)
 
         Ok(())
-    }
+}
 
-
-
+#[public]
 impl PythContract {
+    pub fn initialize(&mut self, ipth_address: Address) {
+        self._ipyth.set(ipth_address);
+    }
     // pub fn price_feed_exists(self, id: FixedBytes<32>) -> bool {
     //     self.price_feeds.getter(id).id.is_empty()
     // }
@@ -79,16 +78,12 @@ impl PythContract {
     //     Ok(price)
     // }
 
-    pub fn get_ema_price_unsafe<S: TopLevelStorage + BorrowMut<Self>>(
-        self,
-        storage: &mut S,
+    pub fn get_ema_price_unsafe_test(
+        &mut self,
         id: FixedBytes<32>,
     ) -> Result<(), Vec<u8>> {
-        let get_call = call_helper::<getEmaPriceUnsafeCall>(storage, self._ipyth.get(), (id,))?;
-        console!("{:?}",get_call);
-       // let price =  Price::abi_decode(&get_call, false).map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec());
-        // Ok(price)
-
+        let data =  get_ema_price_unsafe(self, self._ipyth.get(), id);
+        console!("{:?}",data);
         Ok(())
     }
 
@@ -148,29 +143,48 @@ impl PythContract {
 }
 
 impl PythContract {
-      fn _diff(x: U256, y: U256) -> U256 {
-        if x > y {
-            return x - y;
-        }
-        y - x
-    }
+    // fn _diff(x: U256, y: U256) -> U256 {
+    //     if x > y {
+    //         return x - y;
+    //     }
+    //     y - x
+    // }
 
-    fn _check_valid_query(
-        self,   
-        price_id: FixedBytes<32>,
-        publish_time: u64
-    ) -> bool {
-        true
-       // return Self::query_price_feed(self,price_id).unwrap().price.publish_time < U256::from(publish_time);
-    }
+    // fn _check_valid_query(
+    //     self,   
+    //     price_id: FixedBytes<32>,
+    //     publish_time: u64
+    // ) -> bool {
+    //     true
+    //    // return Self::query_price_feed(self,price_id).unwrap().price.publish_time < U256::from(publish_time);
+    // }
 
-    fn _check_valid_price_feed(
-        self,   
-        price_id: FixedBytes<32>,
-    ) -> bool {
-        return  self.price_feeds.getter(price_id).id.is_empty()
-    }
+    // fn _check_valid_price_feed(
+    //     self,   
+    //     price_id: FixedBytes<32>,
+    // ) -> bool {
+    //     return  self.price_feeds.getter(price_id).id.is_empty()
+    // }
 }
 
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloy_primitives::{address, uint, Address, U256};
+    use stylus_sdk::msg;
+    use crate::pyth::PythContract;
+
+    #[motsu::test]
+    fn check_invalid_ipyth_address(contract:  PythContract) {
+        let unsafe_call = contract.get_ema_price_unsafe(Address::ZERO);
+        // assert_eq!(U256::ZERO, balance);
+
+        // let owner = msg::sender();
+        // let one = uint!(1_U256);
+        // contract._balances.setter(owner).set(one);
+        // let balance = contract.balance_of(owner);
+        // assert_eq!(one, balance);
+    }
+
+}
 
