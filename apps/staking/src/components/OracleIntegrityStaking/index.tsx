@@ -38,8 +38,10 @@ import {
   StateType as UseAsyncStateType,
   useAsync,
 } from "../../hooks/use-async";
+import { useToast } from "../../hooks/use-toast";
 import { Button, LinkButton } from "../Button";
 import { CopyButton } from "../CopyButton";
+import { ErrorMessage } from "../ErrorMessage";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { ModalDialog } from "../ModalDialog";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
@@ -198,10 +200,7 @@ const SelfStaking = ({
             </div>
             <div className="flex flex-row items-center gap-4">
               <MenuTrigger>
-                <Button
-                  variant="secondary"
-                  className="group flex flex-row items-center gap-2 lg:hidden"
-                >
+                <Button variant="secondary" className="group lg:hidden">
                   <Bars3Icon className="size-6 flex-none" />
                   <span className="sr-only">Publisher Menu</span>
                   <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
@@ -407,6 +406,8 @@ const ReassignStakeAccountForm = ({
 
   const { state, execute } = useAsync(doReassign);
 
+  const toast = useToast();
+
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -414,15 +415,16 @@ const ReassignStakeAccountForm = ({
       execute()
         .then(() => {
           close();
+          toast.success("You have reassigned your main account");
         })
         .catch(() => {
-          /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
+          /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
         })
         .finally(() => {
           setCloseDisabled(false);
         });
     },
-    [execute, close, setCloseDisabled],
+    [execute, close, setCloseDisabled, toast],
   );
 
   return (
@@ -446,9 +448,9 @@ const ReassignStakeAccountForm = ({
           placeholder={PublicKey.default.toBase58()}
         />
         {state.type === UseAsyncStateType.Error && (
-          <p className="mt-1 text-red-600">
-            Uh oh, an error occurred! Please try again
-          </p>
+          <div className="mt-4 max-w-sm">
+            <ErrorMessage error={state.error} />
+          </div>
         )}
       </TextField>
       <Button
@@ -492,16 +494,6 @@ type OptOut = Omit<
 };
 
 const OptOut = ({ api, self, ...props }: OptOut) => {
-  const { state, execute } = useAsync(() =>
-    api.optPublisherOut(self.publicKey),
-  );
-
-  const doOptOut = useCallback(() => {
-    execute().catch(() => {
-      /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
-    });
-  }, [execute]);
-
   return hasAnyPositions(self) ? (
     <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
       <div className="flex max-w-prose flex-col gap-4">
@@ -517,44 +509,72 @@ const OptOut = ({ api, self, ...props }: OptOut) => {
   ) : (
     <ModalDialog title="Are you sure?" {...props}>
       {({ close }) => (
-        <>
-          <div className="flex max-w-prose flex-col gap-4">
-            <p className="font-semibold">
-              Are you sure you want to opt out of rewards?
-            </p>
-            <p className="opacity-90">
-              Opting out of rewards will prevent you from earning the publisher
-              yield rate and delegation fees from your delegators. You will
-              still be able to participate in OIS after opting out of rewards.
-            </p>
-          </div>
-          {state.type === UseAsyncStateType.Error && (
-            <p className="mt-8 text-red-600">
-              Uh oh, an error occurred! Please try again
-            </p>
-          )}
-          <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-            <Button
-              className="w-full sm:w-auto"
-              size="noshrink"
-              onPress={close}
-            >
-              No, I want rewards!
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              variant="secondary"
-              size="noshrink"
-              isLoading={state.type === UseAsyncStateType.Running}
-              isDisabled={state.type === UseAsyncStateType.Complete}
-              onPress={doOptOut}
-            >
-              Yes, opt me out
-            </Button>
-          </div>
-        </>
+        <OptOutModalContents api={api} self={self} close={close} />
       )}
     </ModalDialog>
+  );
+};
+
+type OptOutModalContentsProps = {
+  api: States[ApiStateType.Loaded];
+  self: PublisherProps["publisher"];
+  close: () => void;
+};
+
+const OptOutModalContents = ({
+  api,
+  self,
+  close,
+}: OptOutModalContentsProps) => {
+  const { state, execute } = useAsync(() =>
+    api.optPublisherOut(self.publicKey),
+  );
+
+  const toast = useToast();
+
+  const doOptOut = useCallback(() => {
+    execute()
+      .then(() => {
+        toast.success("You have opted out of rewards");
+      })
+      .catch(() => {
+        /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
+      });
+  }, [execute, toast]);
+
+  return (
+    <>
+      <div className="flex max-w-prose flex-col gap-4">
+        <p className="font-semibold">
+          Are you sure you want to opt out of rewards?
+        </p>
+        <p className="opacity-90">
+          Opting out of rewards will prevent you from earning the publisher
+          yield rate and delegation fees from your delegators. You will still be
+          able to participate in OIS after opting out of rewards.
+        </p>
+      </div>
+      {state.type === UseAsyncStateType.Error && (
+        <div className="mt-4 max-w-prose">
+          <ErrorMessage error={state.error} />
+        </div>
+      )}
+      <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+        <Button className="w-full sm:w-auto" size="noshrink" onPress={close}>
+          No, I want rewards!
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          variant="secondary"
+          size="noshrink"
+          isLoading={state.type === UseAsyncStateType.Running}
+          isDisabled={state.type === UseAsyncStateType.Complete}
+          onPress={doOptOut}
+        >
+          Yes, opt me out
+        </Button>
+      </div>
+    </>
   );
 };
 
@@ -851,7 +871,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="grid size-8 place-content-center"
+            className="size-8"
           >
             <ChevronDoubleLeftIcon className="size-4" />
           </Button>
@@ -874,7 +894,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
               }}
               size="nopad"
               variant="secondary"
-              className="grid size-8 place-content-center"
+              className="size-8"
             >
               {page}
             </Button>
@@ -889,7 +909,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="grid size-8 place-content-center"
+            className="size-8"
           >
             <ChevronDoubleRightIcon className="size-4" />
           </Button>
@@ -1422,6 +1442,7 @@ const YourPositionsTable = ({
                 actionName="Cancel"
                 submitButtonText="Cancel Warmup"
                 title="Cancel Warmup"
+                successMessage="Your tokens are no longer in warmup for staking"
                 max={warmup}
                 transfer={cancelWarmup}
               />
@@ -1456,6 +1477,7 @@ const YourPositionsTable = ({
                   </>
                 }
                 actionName="Unstake"
+                successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
                 max={staked}
                 transfer={unstake}
               >
@@ -1505,6 +1527,7 @@ const StakeToPublisherButton = ({
       actionName="Stake"
       max={availableToStake}
       transfer={delegate}
+      successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
     >
       {(amount) => (
         <>

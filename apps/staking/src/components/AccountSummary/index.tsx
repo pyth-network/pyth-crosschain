@@ -6,6 +6,7 @@ import {
   type ComponentProps,
   type ReactNode,
   useCallback,
+  useState,
   useMemo,
 } from "react";
 import {
@@ -16,8 +17,10 @@ import {
 import background from "./background.png";
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
+import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
 import { Date } from "../Date";
+import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
@@ -135,6 +138,7 @@ export const AccountSummary = ({
               max={walletAmount}
               transfer={api.deposit}
               submitButtonText="Add tokens"
+              successMessage="Your tokens have been added to your stake account"
             />
           )}
           {availableToWithdraw === 0n ? (
@@ -278,13 +282,20 @@ const OisUnstake = ({
     () => staked + warmup + cooldown + cooldown2,
     [staked, warmup, cooldown, cooldown2],
   );
+  const toast = useToast();
   const { state, execute } = useAsync(api.unstakeAllIntegrityStaking);
 
   const doUnstakeAll = useCallback(() => {
-    execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
-    });
-  }, [execute]);
+    execute()
+      .then(() => {
+        toast.success(
+          "Your tokens are now cooling down and will be available to withdraw at the end of the next epoch",
+        );
+      })
+      .catch((error: unknown) => {
+        toast.error(error);
+      });
+  }, [execute, toast]);
 
   // eslint-disable-next-line unicorn/no-null
   return total === 0n ? null : (
@@ -344,7 +355,7 @@ const OisUnstake = ({
 
 type WithdrawButtonProps = Omit<
   ComponentProps<typeof TransferButton>,
-  "variant" | "actionDescription" | "actionName" | "transfer"
+  "variant" | "actionDescription" | "actionName" | "transfer" | "successMessage"
 > & {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
 };
@@ -354,6 +365,7 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
     variant="secondary"
     actionDescription="Move funds from your account back to your wallet"
     actionName="Withdraw"
+    successMessage="You have withdrawn tokens from your stake account to your wallet"
     {...(api.type === ApiStateType.Loaded && {
       transfer: api.withdraw,
     })}
@@ -419,58 +431,96 @@ const ClaimDialog = ({
   expiringRewards,
   availableRewards,
 }: ClaimDialogProps) => {
-  const { state, execute } = useAsync(api.claim);
-
-  const doClaim = useCallback(() => {
-    execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
-    });
-  }, [execute]);
+  const [closeDisabled, setCloseDisabled] = useState(false);
 
   return (
-    <ModalDialog title="Claim">
+    <ModalDialog title="Claim" closeDisabled={closeDisabled}>
       {({ close }) => (
-        <>
-          <p className="mb-4">
-            Claim your <Tokens>{availableRewards}</Tokens> rewards
-          </p>
-          {expiringRewards && (
-            <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
-              <InformationCircleIcon className="size-8 flex-none" />
-              <div className="text-sm">
-                Rewards expire one year from the epoch in which they were
-                earned. You have rewards expiring on{" "}
-                <Date>{expiringRewards}</Date>.
-              </div>
-            </div>
-          )}
-          {state.type === StateType.Error && (
-            <p className="mt-8 text-red-600">
-              Uh oh, an error occurred! Please try again
-            </p>
-          )}
-          <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-            <Button
-              variant="secondary"
-              className="w-full sm:w-auto"
-              size="noshrink"
-              onPress={close}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              size="noshrink"
-              isDisabled={state.type === StateType.Complete}
-              isLoading={state.type === StateType.Running}
-              onPress={doClaim}
-            >
-              Claim
-            </Button>
-          </div>
-        </>
+        <ClaimDialogContents
+          expiringRewards={expiringRewards}
+          availableRewards={availableRewards}
+          api={api}
+          close={close}
+          setCloseDisabled={setCloseDisabled}
+        />
       )}
     </ModalDialog>
+  );
+};
+
+type ClaimDialogContentsProps = {
+  availableRewards: bigint;
+  expiringRewards: Date | undefined;
+  api: States[ApiStateType.Loaded];
+  close: () => void;
+  setCloseDisabled: (value: boolean) => void;
+};
+
+const ClaimDialogContents = ({
+  api,
+  expiringRewards,
+  availableRewards,
+  close,
+  setCloseDisabled,
+}: ClaimDialogContentsProps) => {
+  const { state, execute } = useAsync(api.claim);
+
+  const toast = useToast();
+
+  const doClaim = useCallback(() => {
+    setCloseDisabled(true);
+    execute()
+      .then(() => {
+        close();
+        toast.success("You have claimed your rewards");
+      })
+      .catch(() => {
+        /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
+      })
+      .finally(() => {
+        setCloseDisabled(false);
+      });
+  }, [execute, toast]);
+
+  return (
+    <>
+      <p className="mb-4">
+        Claim your <Tokens>{availableRewards}</Tokens> rewards
+      </p>
+      {expiringRewards && (
+        <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
+          <InformationCircleIcon className="size-8 flex-none" />
+          <div className="text-sm">
+            Rewards expire one year from the epoch in which they were earned.
+            You have rewards expiring on <Date>{expiringRewards}</Date>.
+          </div>
+        </div>
+      )}
+      {state.type === StateType.Error && (
+        <div className="mt-4 max-w-sm">
+          <ErrorMessage error={state.error} />
+        </div>
+      )}
+      <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+        <Button
+          variant="secondary"
+          className="w-full sm:w-auto"
+          size="noshrink"
+          onPress={close}
+        >
+          Cancel
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          size="noshrink"
+          isDisabled={state.type === StateType.Complete}
+          isLoading={state.type === StateType.Running}
+          onPress={doClaim}
+        >
+          Claim
+        </Button>
+      </div>
+    </>
   );
 };
 
@@ -484,11 +534,17 @@ type ClaimButtonProps = Omit<
 const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
   const { state, execute } = useAsync(api.claim);
 
+  const toast = useToast();
+
   const doClaim = useCallback(() => {
-    execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
-    });
-  }, [execute]);
+    execute()
+      .then(() => {
+        toast.success("You have claimed your rewards");
+      })
+      .catch((error: unknown) => {
+        toast.error(error);
+      });
+  }, [execute, toast]);
 
   return (
     <Button
