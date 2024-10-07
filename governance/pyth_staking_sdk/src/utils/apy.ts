@@ -19,6 +19,10 @@ export const calculateApy = (
   const { selfStake, poolCapacity, yieldRate, isSelf } = options;
   const eligibleSelfStake = selfStake > poolCapacity ? poolCapacity : selfStake;
 
+  if (poolCapacity === 0n) {
+    return 0;
+  }
+
   const apyPercentage = convertEpochYieldToApy(yieldRate);
 
   if (isSelf) {
