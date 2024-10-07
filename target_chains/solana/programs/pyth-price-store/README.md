@@ -1,6 +1,6 @@
 # Pyth Price Store
 
-This program is designed to store Publisher's prices in a specific buffer per each publisher. Later, the prices from each publisher is retrieved in the
+This program is designed to store Publisher's prices in a specific buffer per each publisher. Later, the prices from each publisher are retrieved in the
 Pythnet validator to calculate the aggregate price.
 
 ## Build
