@@ -8,11 +8,11 @@ import {
 import { Connection } from "@solana/web3.js";
 
 import { getStakeCapsParametersAddress } from "./pdas";
-import type { Parameters, StakeCapParametersAccount } from "./types";
+import type { StakeCapParametersAccount } from "./types";
 import { convertBNToBigInt } from "./utils/bn";
 import { DummyWallet } from "./utils/wallet";
-import * as StakeCapsParametersIdl from "../idl/stake_caps_parameters.json";
-import type { StakeCapsParameters } from "../types/stake_caps_parameters";
+import * as StakeCapsParametersIdl from "../idl/stake-caps-parameters.json";
+import type { StakeCapsParameters } from "../types/stake-caps-parameters";
 export class PythnetClient {
   connection: Connection;
   provider: AnchorProvider;
@@ -37,11 +37,9 @@ export class PythnetClient {
       if (base?.type === AccountType.Price) {
         const parsed = parsePriceData(account.account.data);
         for (const priceComponent of parsed.priceComponents) {
-          if (publisherNumberOfSymbols[priceComponent.publisher.toBase58()]) {
-            publisherNumberOfSymbols[priceComponent.publisher.toBase58()]! += 1;
-          } else {
-            publisherNumberOfSymbols[priceComponent.publisher.toBase58()] = 1;
-          }
+          publisherNumberOfSymbols[priceComponent.publisher.toBase58()] =
+            (publisherNumberOfSymbols[priceComponent.publisher.toBase58()] ??
+              0) + 1;
         }
       }
     }
@@ -53,6 +51,6 @@ export class PythnetClient {
       await this.stakeCapParametersProgram.account.parameters.fetch(
         getStakeCapsParametersAddress()[0],
       );
-    return convertBNToBigInt<Parameters>(parameters);
+    return convertBNToBigInt(parameters);
   }
 }

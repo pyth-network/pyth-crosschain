@@ -2,7 +2,6 @@ import { PublicKey } from "@solana/web3.js";
 
 import {
   INTEGRITY_POOL_PROGRAM_ADDRESS,
-  STAKE_CAPS_PARAMETERS,
   STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS,
   STAKING_PROGRAM_ADDRESS,
 } from "./constants";
