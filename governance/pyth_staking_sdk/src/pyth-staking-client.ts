@@ -11,7 +11,7 @@ import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
-  getAssociatedTokenAddress,
+  getAssociatedTokenAddressSync,
   getMint,
   type Mint,
 } from "@solana/spl-token";
@@ -210,9 +210,10 @@ export class PythStakingClient {
     const globalConfig = await this.getGlobalConfig();
     return getAccount(
       this.connection,
-      await getAssociatedTokenAddress(
+      getAssociatedTokenAddressSync(
         globalConfig.pythTokenMint,
         this.wallet.publicKey,
+        true,
       ),
     );
   }
@@ -446,9 +447,10 @@ export class PythStakingClient {
   public async createStakeAccountAndDeposit(amount: bigint) {
     const globalConfig = await this.getGlobalConfig();
 
-    const senderTokenAccount = await getAssociatedTokenAddress(
+    const senderTokenAccount = getAssociatedTokenAddressSync(
       globalConfig.pythTokenMint,
       this.wallet.publicKey,
+      true,
     );
 
     const nonce = crypto.randomBytes(16).toString("hex");
@@ -528,9 +530,10 @@ export class PythStakingClient {
     const globalConfig = await this.getGlobalConfig();
     const mint = globalConfig.pythTokenMint;
 
-    const senderTokenAccount = await getAssociatedTokenAddress(
+    const senderTokenAccount = getAssociatedTokenAddressSync(
       mint,
       this.wallet.publicKey,
+      true,
     );
 
     const instruction = createTransferInstruction(
@@ -551,9 +554,10 @@ export class PythStakingClient {
     const mint = globalConfig.pythTokenMint;
     const instructions = [];
 
-    const receiverTokenAccount = await getAssociatedTokenAddress(
+    const receiverTokenAccount = getAssociatedTokenAddressSync(
       mint,
       this.wallet.publicKey,
+      true,
     );
 
     // Edge case: if the user doesn't have an ATA, create one
