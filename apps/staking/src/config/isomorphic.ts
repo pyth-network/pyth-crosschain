@@ -13,19 +13,26 @@
 export const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
 
 /**
- * Region or VPN-blocked requests will be redirected here if they are eligible
- * for "restricted mode" (aka only allowing withdrawals).  This is used in the
+ * Region blocked requests will be rewritten here.  This is used in the
  * middleware to implement the block, and also consumed in any components that
  * are part of the page layout but need to know if the request is blocked from
  * accessing the app, such as the WalletButton in the app header.
  *
  * Don't change unless you also change the relevant app route path to match.
  */
-export const RESTRICTED_MODE_SEGMENT = "restricted-mode";
+export const GEO_BLOCKED_SEGMENT = "geo-blocked";
 
 /**
- * Similar to `RESTRICTED_MODE_SEGMENT`; this is where vpn-blocked traffic will
- * be rewritten to if it isn't eligible for restricted mode.
+ * Similar to `GEO_BLOCKED_SEGMENT`; this is where governance-only region
+ * requests are rewritten to.
+ *
+ * Don't change unless you also change the relevant app route path to match.
+ */
+export const GOVERNANCE_ONLY_SEGMENT = "governance-only";
+
+/**
+ * Similar to `GEO_BLOCKED_SEGMENT`; this is where vpn-blocked traffic will be
+ * rewritten to.
  *
  * Don't change unless you also change the relevant app route path to match.
  */

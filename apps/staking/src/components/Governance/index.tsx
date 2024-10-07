@@ -12,7 +12,7 @@ type Props = {
   staked: bigint;
   cooldown: bigint;
   cooldown2: bigint;
-  restrictedMode?: boolean | undefined;
+  allowStaking?: boolean | undefined;
 };
 
 export const Governance = ({
@@ -23,10 +23,10 @@ export const Governance = ({
   staked,
   cooldown,
   cooldown2,
-  restrictedMode,
+  allowStaking,
 }: Props) => (
   <ProgramSection
-    className={clsx({ "border-t sm:border-t-0": restrictedMode })}
+    className={clsx({ "border-t sm:border-t-0": !allowStaking })}
     name="Pyth Governance"
     helpDialog={<GovernanceGuide />}
     tagline="Vote and Influence the Network"
@@ -47,7 +47,7 @@ export const Governance = ({
       unstake:
         api.type === ApiStateType.Loaded ? api.unstakeGovernance : undefined,
       unstakeDescription: "Unstake tokens from the Governance program",
-      ...(!restrictedMode && {
+      ...(allowStaking && {
         stake:
           api.type === ApiStateType.Loaded ? api.stakeGovernance : undefined,
         stakeDescription: "Stake funds to participate in governance votes",

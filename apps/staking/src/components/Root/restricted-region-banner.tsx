@@ -2,12 +2,16 @@
 
 import { useSelectedLayoutSegment } from "next/navigation";
 
-import { RESTRICTED_MODE_SEGMENT } from "../../config/isomorphic";
+import {
+  GEO_BLOCKED_SEGMENT,
+  GOVERNANCE_ONLY_SEGMENT,
+} from "../../config/isomorphic";
 import { Link } from "../Link";
 
 export const RestrictedRegionBanner = () => {
   const segment = useSelectedLayoutSegment();
-  const isRestrictedMode = segment === RESTRICTED_MODE_SEGMENT;
+  const isRestrictedMode =
+    segment === GEO_BLOCKED_SEGMENT || segment === GOVERNANCE_ONLY_SEGMENT;
 
   return isRestrictedMode ? (
     <div className="mx-auto mt-8 flex max-w-3xl flex-col gap-2 bg-red-900 px-8 py-6">

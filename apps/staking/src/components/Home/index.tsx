@@ -20,24 +20,34 @@ const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const Home = () => <HomeImpl />;
-export const RestrictedMode = () => <HomeImpl restrictedMode />;
+export const Home = () => <HomeImpl enableGovernance enableOis />;
+export const GeoBlockedHome = () => <HomeImpl />;
+export const GovernanceOnlyHome = () => <HomeImpl enableGovernance />;
 
 type HomeImplProps = {
-  restrictedMode?: boolean | undefined;
+  enableGovernance?: boolean | undefined;
+  enableOis?: boolean | undefined;
 };
 
-export const HomeImpl = ({ restrictedMode }: HomeImplProps) => {
+export const HomeImpl = ({ enableGovernance, enableOis }: HomeImplProps) => {
   const isSSR = useIsSSR();
 
-  return isSSR ? <Loading /> : <MountedHome restrictedMode={restrictedMode} />;
+  return isSSR ? (
+    <Loading />
+  ) : (
+    <MountedHome
+      enableGovernance={enableGovernance ?? false}
+      enableOis={enableOis ?? false}
+    />
+  );
 };
 
 type MountedHomeProps = {
-  restrictedMode?: boolean | undefined;
+  enableGovernance: boolean;
+  enableOis: boolean;
 };
 
-const MountedHome = ({ restrictedMode }: MountedHomeProps) => {
+const MountedHome = ({ enableGovernance, enableOis }: MountedHomeProps) => {
   const api = useApi();
 
   switch (api.type) {
@@ -56,7 +66,11 @@ const MountedHome = ({ restrictedMode }: MountedHomeProps) => {
     case ApiStateType.LoadedNoStakeAccount:
     case ApiStateType.Loaded: {
       return (
-        <StakeAccountLoadedHome restrictedMode={restrictedMode} api={api} />
+        <StakeAccountLoadedHome
+          enableGovernance={enableGovernance}
+          enableOis={enableOis}
+          api={api}
+        />
       );
     }
   }
@@ -64,12 +78,14 @@ const MountedHome = ({ restrictedMode }: MountedHomeProps) => {
 
 type StakeAccountLoadedHomeProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
-  restrictedMode?: boolean | undefined;
+  enableGovernance: boolean;
+  enableOis: boolean;
 };
 
 const StakeAccountLoadedHome = ({
   api,
-  restrictedMode,
+  enableGovernance,
+  enableOis,
 }: StakeAccountLoadedHomeProps) => {
   const data = useData(api.dashboardDataCacheKey, api.loadData, {
     refreshInterval: REFRESH_INTERVAL,
@@ -87,7 +103,12 @@ const StakeAccountLoadedHome = ({
 
     case DashboardDataStateType.Loaded: {
       return (
-        <Dashboard {...data.data} api={api} restrictedMode={restrictedMode} />
+        <Dashboard
+          {...data.data}
+          api={api}
+          enableGovernance={enableGovernance}
+          enableOis={enableOis}
+        />
       );
     }
   }

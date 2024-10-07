@@ -54,6 +54,11 @@ export const WALLETCONNECT_PROJECT_ID = demandInProduction(
 export const MAINNET_RPC = process.env.MAINNET_RPC;
 export const HERMES_URL = getOr("HERMES_URL", "https://hermes.pyth.network");
 export const BLOCKED_REGIONS = transformOr("BLOCKED_REGIONS", fromCsv, []);
+export const GOVERNANCE_ONLY_REGIONS = transformOr(
+  "GOVERNANCE_ONLY_REGIONS",
+  fromCsv,
+  [],
+);
 export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 
 class MissingEnvironmentError extends Error {
