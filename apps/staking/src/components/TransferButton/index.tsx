@@ -187,7 +187,7 @@ const DialogContents = ({
           setCloseDisabled(false);
         });
     },
-    [execute, close, setCloseDisabled, toast],
+    [execute, close, setCloseDisabled, toast, successMessage],
   );
 
   return (
