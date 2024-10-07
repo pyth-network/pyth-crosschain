@@ -1,5 +1,6 @@
 import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { StakeCapsParameters } from "types/stake_caps_parameters";
 
 import type { IntegrityPool } from "../types/integrity-pool";
 import type { Staking } from "../types/staking";
@@ -39,6 +40,9 @@ export type TargetAccountAnchor = IdlAccounts<Staking>["targetMetadata"];
 export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
 
 export type VoterWeightAction = IdlTypes<Staking>["voterWeightAction"];
+
+export type Parameters = IdlTypes<StakeCapsParameters>["parameters"];
+export type StakeCapParametersAccount = ConvertBNToBigInt<Parameters>;
 
 export type UnlockSchedule = {
   type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";

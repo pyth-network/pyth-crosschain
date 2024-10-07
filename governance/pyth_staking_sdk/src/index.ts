@@ -1,5 +1,6 @@
 export * from "./pdas";
 export * from "./pyth-staking-client";
+export * from "./pythnet-client";
 export * from "./types";
 export * from "./utils/apy";
 export * from "./utils/clock";

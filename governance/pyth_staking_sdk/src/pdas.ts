@@ -2,6 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 
 import {
   INTEGRITY_POOL_PROGRAM_ADDRESS,
+  STAKE_CAPS_PARAMETERS,
+  STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS,
   STAKING_PROGRAM_ADDRESS,
 } from "./constants";
 
@@ -71,5 +73,12 @@ export const getMaxVoterWeightRecordAddress = () => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("max_voter")],
     STAKING_PROGRAM_ADDRESS,
+  );
+};
+
+export const getStakeCapsParametersAddress = () => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("parameters")],
+    STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS,
   );
 };
