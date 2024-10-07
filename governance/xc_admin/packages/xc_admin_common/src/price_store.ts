@@ -149,7 +149,7 @@ export function createPriceStoreInstruction(
 export function parsePriceStoreInstruction(
   instruction: TransactionInstruction
 ): PriceStoreInstruction {
-  if (instruction.programId != PRICE_STORE_PROGRAM_ID) {
+  if (!instruction.programId.equals(PRICE_STORE_PROGRAM_ID)) {
     throw new Error("program ID mismatch");
   }
   if (instruction.data.length < 1) {

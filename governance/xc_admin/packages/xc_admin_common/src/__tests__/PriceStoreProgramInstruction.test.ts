@@ -35,6 +35,10 @@ test("Price store instruction parse: roundtrip", (done) => {
     const instruction = createPriceStoreInstruction(data);
     const parsed = parsePriceStoreInstruction(instruction);
     expect(parsed).toStrictEqual(data);
+
+    instruction.programId = new PublicKey(instruction.programId.toBuffer());
+    const parsed2 = parsePriceStoreInstruction(instruction);
+    expect(parsed2).toStrictEqual(data);
   }
   done();
 });
