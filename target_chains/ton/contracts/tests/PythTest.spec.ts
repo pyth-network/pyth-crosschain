@@ -339,6 +339,21 @@ describe("PythTest", () => {
     });
   });
 
+  it("should correctly handle stale prices", async () => {
+    const staleTime = Math.floor(Date.now() / 1000) - TIME_PERIOD - 10; // 10 seconds past the allowed period
+    const stalePrice = new Price({
+      price: "1",
+      conf: "2",
+      expo: 3,
+      publishTime: staleTime,
+    });
+    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, stalePrice, EMA_PRICE);
+
+    await expect(
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+  });
+
   it("should fail to update price feeds with insufficient gas", async () => {
     await deployContract();
     await updateGuardianSets(pythTest, deployer);
@@ -566,9 +581,8 @@ describe("PythTest", () => {
 
     // Verify that the old data source is no longer valid
     const oldDataSource = DATA_SOURCES[0];
-    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
-      oldDataSource
-    );
+    const oldDataSourceIsValid =
+      await pythTest.getIsValidDataSource(oldDataSource);
     expect(oldDataSourceIsValid).toBe(false);
   });
 
