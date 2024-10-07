@@ -213,7 +213,7 @@ export class PythStakingClient {
       getAssociatedTokenAddressSync(
         globalConfig.pythTokenMint,
         this.wallet.publicKey,
-        true
+        true,
       ),
     );
   }
@@ -450,7 +450,7 @@ export class PythStakingClient {
     const senderTokenAccount = getAssociatedTokenAddressSync(
       globalConfig.pythTokenMint,
       this.wallet.publicKey,
-      true
+      true,
     );
 
     const nonce = crypto.randomBytes(16).toString("hex");
@@ -533,7 +533,7 @@ export class PythStakingClient {
     const senderTokenAccount = getAssociatedTokenAddressSync(
       mint,
       this.wallet.publicKey,
-      true
+      true,
     );
 
     const instruction = createTransferInstruction(
@@ -557,7 +557,7 @@ export class PythStakingClient {
     const receiverTokenAccount = getAssociatedTokenAddressSync(
       mint,
       this.wallet.publicKey,
-      true
+      true,
     );
 
     // Edge case: if the user doesn't have an ATA, create one
