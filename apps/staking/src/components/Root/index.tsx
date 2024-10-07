@@ -5,6 +5,7 @@ import type { ReactNode, CSSProperties, HTMLProps } from "react";
 
 import { I18nProvider } from "./i18n-provider";
 import { RestrictedRegionBanner } from "./restricted-region-banner";
+import { ToastRegion } from "./toast-region";
 import {
   IS_PRODUCTION_SERVER,
   GOOGLE_ANALYTICS_ID,
@@ -16,6 +17,7 @@ import {
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
 import { NetworkProvider } from "../../hooks/use-network";
+import { ToastProvider } from "../../hooks/use-toast";
 import { Amplitude } from "../Amplitude";
 import { Footer } from "../Footer";
 import { Header } from "../Header";
@@ -60,6 +62,7 @@ export const Root = ({ children }: Props) => (
         {children}
       </MaxWidth>
       <Footer className="z-10" />
+      <ToastRegion />
     </body>
     {GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />}
     {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
@@ -77,7 +80,9 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             mainnetRpc={MAINNET_RPC}
           >
             <ApiProvider hermesUrl={HERMES_URL}>
-              <html lang={lang} {...props} />
+              <ToastProvider>
+                <html lang={lang} {...props} />
+              </ToastProvider>
             </ApiProvider>
           </WalletProvider>
         </NetworkProvider>

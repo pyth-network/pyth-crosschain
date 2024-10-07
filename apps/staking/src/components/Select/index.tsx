@@ -40,10 +40,7 @@ export const Select = <T extends string | number>({
     {...props}
   >
     <Label className="whitespace-nowrap opacity-80">{label}</Label>
-    <Button
-      className="group flex flex-row items-center gap-2 px-2 py-3 text-xs transition sm:px-4"
-      size="nopad"
-    >
+    <Button className="group px-2 py-3 text-xs transition sm:px-4" size="nopad">
       <SelectValue />
       <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
     </Button>
