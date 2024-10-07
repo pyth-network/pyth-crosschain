@@ -248,6 +248,7 @@ const useApiContext = (hermesUrl: string) => {
     wallet.disconnecting,
     wallet.connected,
     pythStakingClient,
+    pythnetClient,
     stakeAccounts,
     hermesClient,
     lastStakeAccount,
