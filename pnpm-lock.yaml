@@ -381,6 +381,9 @@ importers:
       framer-motion:
         specifier: ^11.3.8
         version: 11.3.8(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      ip-range-check:
+        specifier: ^0.2.0
+        version: 0.2.0
       next:
         specifier: ^14.2.5
         version: 14.2.6(@babel/core@7.24.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -13852,6 +13855,9 @@ packages:
     resolution: {integrity: sha512-zz2Z69v9ZIC3mMLYWIeoUcwWD6f+O7yP92FMVVaXEOSZH1jnVBmET/urd/uoarD1WGBY4rCj8TAyMPzsGNzMFQ==}
     peerDependencies:
       fp-ts: ^2.5.0
+
+  ip-range-check@0.2.0:
+    resolution: {integrity: sha512-oaM3l/3gHbLlt/tCWLvt0mj1qUaI+STuRFnUvARGCujK9vvU61+2JsDpmkMzR4VsJhuFXWWgeKKVnwwoFfzCqw==}
 
   ip@2.0.0:
     resolution: {integrity: sha512-WKa+XuLG1A1R0UWhl2+1XQSi+fZWMsYKffMZTTYsiZaUD8k2yDAj5atimTUD2TZkyCkNEeYE5NhFZmupOGtjYQ==}
@@ -42720,6 +42726,10 @@ snapshots:
   io-ts@2.2.21(fp-ts@2.16.9):
     dependencies:
       fp-ts: 2.16.9
+
+  ip-range-check@0.2.0:
+    dependencies:
+      ipaddr.js: 1.9.1
 
   ip@2.0.0: {}
 

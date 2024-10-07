@@ -1,3 +1,4 @@
+import ipRangeCheck from "ip-range-check";
 import { type NextRequest, NextResponse } from "next/server";
 import ProxyCheck from "proxycheck-ts";
 
@@ -10,6 +11,7 @@ import {
   BLOCKED_REGIONS,
   GOVERNANCE_ONLY_REGIONS,
   PROXYCHECK_API_KEY,
+  IP_ALLOWLIST,
 } from "./config/server";
 
 const GEO_BLOCKED_PATH = `/${GEO_BLOCKED_SEGMENT}`;
@@ -21,21 +23,31 @@ const proxyCheckClient = PROXYCHECK_API_KEY
   : undefined;
 
 export const middleware = async (request: NextRequest) => {
-  if (await isProxyBlocked(request)) {
-    return rewrite(request, VPN_BLOCKED_PATH);
-  } else if (isGovernanceOnlyRegion(request)) {
-    return rewrite(request, GOVERNANCE_ONLY_PATH);
-  } else if (isRegionBlocked(request)) {
-    return rewrite(request, GEO_BLOCKED_PATH);
-  } else if (isBlockedSegment(request)) {
-    return rewrite(request, "/not-found");
+  if (isIpAllowlisted(request)) {
+    return isBlockedSegment(request)
+      ? rewrite(request, "/not-found")
+      : undefined;
   } else {
-    return;
+    if (await isProxyBlocked(request)) {
+      return rewrite(request, VPN_BLOCKED_PATH);
+    } else if (isGovernanceOnlyRegion(request)) {
+      return rewrite(request, GOVERNANCE_ONLY_PATH);
+    } else if (isRegionBlocked(request)) {
+      return rewrite(request, GEO_BLOCKED_PATH);
+    } else if (isBlockedSegment(request)) {
+      return rewrite(request, "/not-found");
+    } else {
+      return;
+    }
   }
 };
 
 const rewrite = (request: NextRequest, path: string) =>
   NextResponse.rewrite(new URL(path, request.url));
+
+const isIpAllowlisted = ({ ip }: NextRequest) =>
+  ip !== undefined &&
+  IP_ALLOWLIST.some((allowedRange) => ipRangeCheck(ip, allowedRange));
 
 const isGovernanceOnlyRegion = ({ geo }: NextRequest) =>
   geo?.country !== undefined &&
