@@ -13,6 +13,7 @@ import {
   WALLETCONNECT_PROJECT_ID,
   MAINNET_RPC,
   HERMES_URL,
+  PYTHNET_RPC,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
@@ -79,7 +80,7 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
             mainnetRpc={MAINNET_RPC}
           >
-            <ApiProvider hermesUrl={HERMES_URL}>
+            <ApiProvider hermesUrl={HERMES_URL} pythnetRpcUrl={PYTHNET_RPC}>
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>

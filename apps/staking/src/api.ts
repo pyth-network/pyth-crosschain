@@ -5,6 +5,7 @@ import {
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
+  PythnetClient,
   PythStakingClient,
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
@@ -43,6 +44,8 @@ type Data = {
     cooldown2: bigint;
   };
   yieldRate: bigint;
+  m: bigint;
+  z: bigint;
   integrityStakingPublishers: {
     name: string | undefined;
     publicKey: PublicKey;
@@ -96,18 +99,29 @@ export const getStakeAccount = async (
 
 export const loadData = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount?: PublicKey | undefined,
 ): Promise<Data> =>
   stakeAccount === undefined
-    ? loadDataNoStakeAccount(client, hermesClient)
-    : loadDataForStakeAccount(client, hermesClient, stakeAccount);
+    ? loadDataNoStakeAccount(client, pythnetClient, hermesClient)
+    : loadDataForStakeAccount(
+        client,
+        pythnetClient,
+        hermesClient,
+        stakeAccount,
+      );
 
 const loadDataNoStakeAccount = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ): Promise<Data> => {
-  const { publishers, ...baseInfo } = await loadBaseInfo(client, hermesClient);
+  const { publishers, ...baseInfo } = await loadBaseInfo(
+    client,
+    pythnetClient,
+    hermesClient,
+  );
 
   return {
     ...baseInfo,
@@ -128,6 +142,7 @@ const loadDataNoStakeAccount = async (
 
 const loadDataForStakeAccount = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount: PublicKey,
 ): Promise<Data> => {
@@ -138,7 +153,7 @@ const loadDataForStakeAccount = async (
     claimableRewards,
     stakeAccountPositions,
   ] = await Promise.all([
-    loadBaseInfo(client, hermesClient),
+    loadBaseInfo(client, pythnetClient, hermesClient),
     client.getStakeAccountCustody(stakeAccount),
     client.getUnlockSchedule(stakeAccount),
     client.getClaimableRewards(stakeAccount),
@@ -197,36 +212,49 @@ const loadDataForStakeAccount = async (
 
 const loadBaseInfo = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ) => {
-  const [publishers, walletAmount, poolConfig, currentEpoch] =
+  const [publishers, walletAmount, poolConfig, currentEpoch, parameters] =
     await Promise.all([
-      loadPublisherData(client, hermesClient),
+      loadPublisherData(client, pythnetClient, hermesClient),
       client.getOwnerPythBalance(),
       client.getPoolConfigAccount(),
       getCurrentEpoch(client.connection),
+      pythnetClient.getStakeCapParameters(),
     ]);
 
-  return { yieldRate: poolConfig.y, walletAmount, publishers, currentEpoch };
+  return {
+    yieldRate: poolConfig.y,
+    walletAmount,
+    publishers,
+    currentEpoch,
+    m: parameters.m,
+    z: parameters.z,
+  };
 };
 
 const loadPublisherData = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ) => {
-  const [poolData, publisherRankings, publisherCaps] = await Promise.all([
-    client.getPoolDataAccount(),
-    getPublisherRankings(),
-    hermesClient.getLatestPublisherCaps({
-      parsed: true,
-    }),
-  ]);
+  const [poolData, publisherRankings, publisherCaps, publisherNumberOfSymbols] =
+    await Promise.all([
+      client.getPoolDataAccount(),
+      getPublisherRankings(),
+      hermesClient.getLatestPublisherCaps({
+        parsed: true,
+      }),
+      pythnetClient.getPublisherNumberOfSymbols(),
+    ]);
 
   return extractPublisherData(poolData).map((publisher) => {
     const publisherPubkeyString = publisher.pubkey.toBase58();
     const publisherRanking = publisherRankings.find(
       (ranking) => ranking.publisher === publisherPubkeyString,
     );
+    const numberOfSymbols = publisherNumberOfSymbols[publisherPubkeyString];
     const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
       date: epochToDate(epoch + 1n),
       apy,
@@ -236,7 +264,7 @@ const loadPublisherData = async (
     return {
       apyHistory,
       name: undefined, // TODO
-      numFeeds: publisherRanking?.numSymbols ?? 0,
+      numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
       poolUtilizationDelta: publisher.totalDelegationDelta,

@@ -33,3 +33,7 @@ export const PUBLISHER_CAPS_PROGRAM_ADDRESS = new PublicKey(
 export const GOVERNANCE_ADDRESS = new PublicKey(
   "pytGY6tWRgGinSCvRLnSv4fHfBTMoiDGiCsesmHWM6U",
 );
+
+export const STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS = new PublicKey(
+  "ujSFv8q8woXW5PUnby52PQyxYGUudxkrvgN6A631Qmm",
+);
