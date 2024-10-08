@@ -19,8 +19,8 @@ from express_relay.express_relay_types import (
     BidSvm,
     Opportunity,
     OpportunityEvm,
-    OpportunitySvm,
 )
+from express_relay.express_relay_svm_types import OpportunitySvm
 from express_relay.svm.generated.express_relay.accounts import ExpressRelayMetadata
 from express_relay.svm.generated.express_relay.program_id import (
     PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
