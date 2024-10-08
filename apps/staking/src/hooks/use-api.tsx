@@ -129,24 +129,29 @@ type ApiProviderProps = Omit<
   ComponentProps<typeof ApiContext.Provider>,
   "value"
 > & {
+  pythnetRpcUrl: string;
   hermesUrl: string;
 };
 
-export const ApiProvider = ({ hermesUrl, ...props }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl);
+export const ApiProvider = ({
+  hermesUrl,
+  pythnetRpcUrl,
+  ...props
+}: ApiProviderProps) => {
+  const state = useApiContext(hermesUrl, pythnetRpcUrl);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (hermesUrl: string) => {
+const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const { isMainnet } = useNetwork();
   const { mutate } = useSWRConfig();
   const hermesClient = useMemo(() => new HermesClient(hermesUrl), [hermesUrl]);
   const pythnetClient = useMemo(
-    () => new PythnetClient(new Connection("https://pythnet.rpcpool.com")),
-    [],
+    () => new PythnetClient(new Connection(pythnetRpcUrl)),
+    [pythnetRpcUrl],
   );
   const pythStakingClient = useMemo(
     () =>
