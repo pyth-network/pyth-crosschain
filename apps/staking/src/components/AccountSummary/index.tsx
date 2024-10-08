@@ -482,7 +482,7 @@ const ClaimDialogContents = ({
       .finally(() => {
         setCloseDisabled(false);
       });
-  }, [execute, toast]);
+  }, [execute, toast, close, setCloseDisabled]);
 
   return (
     <>
