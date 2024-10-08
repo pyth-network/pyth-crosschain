@@ -63,6 +63,7 @@ export type PublisherData = {
   totalDelegationDelta: bigint;
   selfDelegation: bigint;
   selfDelegationDelta: bigint;
+  delegationFee: bigint;
   apyHistory: { epoch: bigint; apy: number; selfApy: number }[];
 }[];
 
