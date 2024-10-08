@@ -12,6 +12,7 @@ import {
   GOVERNANCE_ONLY_REGIONS,
   PROXYCHECK_API_KEY,
   IP_ALLOWLIST,
+  VPN_ORGANIZATION_ALLOWLIST,
 } from "./config/server";
 
 const GEO_BLOCKED_PATH = `/${GEO_BLOCKED_SEGMENT}`;
@@ -61,8 +62,13 @@ const isProxyBlocked = async ({ ip }: NextRequest) => {
   if (proxyCheckClient === undefined || ip === undefined) {
     return false;
   } else {
-    const result = await proxyCheckClient.checkIP(ip, { vpn: 2 });
-    return result[ip]?.proxy === "yes";
+    const response = await proxyCheckClient.checkIP(ip, { vpn: 2 });
+    const result = response[ip];
+    return (
+      result &&
+      result.proxy === "yes" &&
+      !VPN_ORGANIZATION_ALLOWLIST.includes(result.organisation)
+    );
   }
 };
 
