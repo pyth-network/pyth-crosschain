@@ -7,6 +7,8 @@ import {
 import { useState, useCallback } from "react";
 import { MenuTrigger, Button } from "react-aria-components";
 
+import { ProgramParameters } from "./program-pramaeters";
+import { StateType, useApi } from "../../hooks/use-api";
 import { GeneralFaq } from "../GeneralFaq";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
@@ -14,6 +16,7 @@ import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { PublisherFaq } from "../PublisherFaq";
 
 export const HelpMenu = () => {
+  const api = useApi();
   const [faqOpen, setFaqOpen] = useState(false);
   const openFaq = useCallback(() => {
     setFaqOpen(true);
@@ -33,6 +36,11 @@ export const HelpMenu = () => {
   const openPublisherFaq = useCallback(() => {
     setPublisherFaqOpen(true);
   }, [setPublisherFaqOpen]);
+
+  const [parametersOpen, setParametersOpen] = useState(false);
+  const openParameters = useCallback(() => {
+    setParametersOpen(true);
+  }, [setParametersOpen]);
 
   return (
     <>
@@ -65,6 +73,17 @@ export const HelpMenu = () => {
               Data Publisher Guide
             </MenuItem>
           </Section>
+          {(api.type === StateType.Loaded ||
+            api.type === StateType.LoadedNoStakeAccount) && (
+            <>
+              <Separator />
+              <Section>
+                <MenuItem onAction={openParameters}>
+                  Current Program Parameters
+                </MenuItem>
+              </Section>
+            </>
+          )}
         </Menu>
       </MenuTrigger>
       <GeneralFaq isOpen={faqOpen} onOpenChange={setFaqOpen} />
@@ -80,6 +99,14 @@ export const HelpMenu = () => {
         isOpen={publisherFaqOpen}
         onOpenChange={setPublisherFaqOpen}
       />
+      {(api.type === StateType.Loaded ||
+        api.type === StateType.LoadedNoStakeAccount) && (
+        <ProgramParameters
+          api={api}
+          isOpen={parametersOpen}
+          onOpenChange={setParametersOpen}
+        />
+      )}
     </>
   );
 };
