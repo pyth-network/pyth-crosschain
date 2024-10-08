@@ -8,7 +8,6 @@ import {
 import { Connection } from "@solana/web3.js";
 
 import { getStakeCapsParametersAddress } from "./pdas";
-import type { StakeCapParametersAccount } from "./types";
 import { convertBNToBigInt } from "./utils/bn";
 import { DummyWallet } from "./utils/wallet";
 import * as StakeCapsParametersIdl from "../idl/stake-caps-parameters.json";
@@ -46,7 +45,7 @@ export class PythnetClient {
     return publisherNumberOfSymbols;
   }
 
-  async getStakeCapParameters(): Promise<StakeCapParametersAccount> {
+  async getStakeCapParameters() {
     const parameters =
       await this.stakeCapParametersProgram.account.parameters.fetch(
         getStakeCapsParametersAddress()[0],

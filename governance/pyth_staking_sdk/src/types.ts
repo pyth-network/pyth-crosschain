@@ -41,9 +41,6 @@ export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
 
 export type VoterWeightAction = IdlTypes<Staking>["voterWeightAction"];
 
-export type Parameters = IdlTypes<StakeCapsParameters>["parameters"];
-export type StakeCapParametersAccount = ConvertBNToBigInt<Parameters>;
-
 export type UnlockSchedule = {
   type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";
   schedule: {
