@@ -295,7 +295,8 @@ const ButtonComponent = ({
   ...props
 }: ButtonComponentProps) => (
   <Button
-    className={clsx("w-36 text-sm sm:w-52 sm:text-base", className)}
+    className={clsx("w-36 text-sm lg:w-52 lg:text-base", className)}
+    size="nopad"
     {...props}
   >
     <WalletIcon className="size-4 flex-none opacity-60" />

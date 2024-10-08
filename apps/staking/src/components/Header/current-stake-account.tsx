@@ -20,7 +20,7 @@ export const CurrentStakeAccount = ({
   return api.type === ApiStateType.Loaded && !isBlocked ? (
     <div
       className={clsx(
-        "hidden flex-col items-end justify-center text-xs xs:flex md:flex-row md:items-center md:text-sm",
+        "hidden flex-col items-end justify-center text-xs xs:flex xl:flex-row xl:items-center xl:text-sm",
         className,
       )}
       {...props}
