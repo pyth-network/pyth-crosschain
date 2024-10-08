@@ -13,6 +13,11 @@ import {
   PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER,
   PYTH_REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER,
   TEST_GUARDIAN_ADDRESS2,
+  ETH_PRICE_FEED_ID,
+  HERMES_BTC_PRICE,
+  HERMES_ETH_PRICE,
+  HERMES_ETH_PUBLISH_TIME,
+  HERMES_BTC_PUBLISH_TIME,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
@@ -235,6 +240,14 @@ describe("PythTest", () => {
 
     await updateGuardianSets(pythTest, deployer);
 
+    // Check initial prices
+    const initialBtcPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
+    expect(initialBtcPrice.price).not.toBe(HERMES_BTC_PRICE);
+    // Expect an error for ETH price feed as it doesn't exist initially
+    await expect(pythTest.getPriceUnsafe(ETH_PRICE_FEED_ID)).rejects.toThrow(
+      "Unable to execute get method. Got exit_code: 1019"
+    ); // ERROR_PRICE_FEED_NOT_FOUND = 1019
+
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
 
@@ -250,10 +263,14 @@ describe("PythTest", () => {
       success: true,
     });
 
-    // Check if the price has been updated correctly
-    const updatedPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
-    expect(updatedPrice.price).not.toBe(Number(PRICE.price)); // Since we updated the price, it should not be the same as the initial price
-    expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
+    // Check if both BTC and ETH prices have been updated
+    const updatedBtcPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
+    expect(updatedBtcPrice.price).toBe(HERMES_BTC_PRICE);
+    expect(updatedBtcPrice.publishTime).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    const updatedEthPrice = await pythTest.getPriceUnsafe(ETH_PRICE_FEED_ID);
+    expect(updatedEthPrice.price).toBe(HERMES_ETH_PRICE);
+    expect(updatedEthPrice.publishTime).toBe(HERMES_ETH_PUBLISH_TIME);
   });
 
   it("should fail to get update fee with invalid data", async () => {
@@ -400,7 +417,7 @@ describe("PythTest", () => {
     });
   });
 
-  it("should fail to get price for non-existent price feed", async () => {
+  it("should fail to get prices for non-existent price feed", async () => {
     await deployContract();
 
     const nonExistentPriceFeedId =
@@ -409,6 +426,14 @@ describe("PythTest", () => {
     await expect(
       pythTest.getPriceUnsafe(nonExistentPriceFeedId)
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND = 1019
+
+    await expect(
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, nonExistentPriceFeedId)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND
+
+    await expect(
+      pythTest.getEmaPriceUnsafe(nonExistentPriceFeedId)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND
   });
 
   it("should correctly get chain ID", async () => {
@@ -533,7 +558,7 @@ describe("PythTest", () => {
     expect(result).toBe(SINGLE_UPDATE_FEE);
   });
 
-  it("should execute set fee governance instruction", async () => {
+  it("should execute set data sources governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
       TIME_PERIOD,
@@ -584,6 +609,47 @@ describe("PythTest", () => {
     const oldDataSourceIsValid =
       await pythTest.getIsValidDataSource(oldDataSource);
     expect(oldDataSourceIsValid).toBe(false);
+  });
+
+  it("should execute set fee governance instruction", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    // Get the initial fee
+    const initialFee = await pythTest.getSingleUpdateFee();
+    expect(initialFee).toBe(SINGLE_UPDATE_FEE);
+
+    // Execute the governance action
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Get the new fee
+    const newFee = await pythTest.getSingleUpdateFee();
+    expect(newFee).toBe(4200); // The new fee value is 4200 in the PYTH_SET_FEE payload
+
+    // Verify that the new fee is used for updates
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+    expect(updateFee).toBe(8400); // There are two price updates in HERMES_BTC_ETH_UPDATE
   });
 
   it("should execute authorize governance data source transfer", async () => {
