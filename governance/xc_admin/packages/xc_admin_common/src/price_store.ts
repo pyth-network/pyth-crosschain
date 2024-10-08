@@ -46,6 +46,9 @@ enum InstructionId {
   InitializePublisher = 2,
 }
 
+// Recommended buffer size, enough to hold 5000 prices.
+export const PRICE_STORE_BUFFER_SPACE = 100048;
+
 export function findPriceStoreConfigAddress(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("CONFIG")],
@@ -281,6 +284,27 @@ export async function findDetermisticPublisherBufferAddress(
   return [address, seed];
 }
 
+export async function createDeterministicPublisherBufferAccountInstruction(
+  connection: Connection,
+  base: PublicKey,
+  publisher: PublicKey
+): Promise<TransactionInstruction> {
+  const [bufferKey, seed] = await findDetermisticPublisherBufferAddress(
+    publisher
+  );
+  return SystemProgram.createAccountWithSeed({
+    fromPubkey: base,
+    basePubkey: base,
+    newAccountPubkey: bufferKey,
+    seed,
+    space: PRICE_STORE_BUFFER_SPACE,
+    lamports: await connection.getMinimumBalanceForRentExemption(
+      PRICE_STORE_BUFFER_SPACE
+    ),
+    programId: PRICE_STORE_PROGRAM_ID,
+  });
+}
+
 export async function createDetermisticPriceStoreInitializePublisherInstruction(
   authorityKey: PublicKey,
   publisherKey: PublicKey
@@ -307,6 +331,3 @@ export async function isPriceStorePublisherInitialized(
   const response = await connection.getAccountInfo(publisherConfigKey);
   return response !== null;
 }
-
-// Recommended buffer size, enough to hold 5000 prices.
-export const PRICE_STORE_BUFFER_SPACE = 100048;
