@@ -19,6 +19,7 @@ from express_relay.express_relay_types import (
     BidSvm,
     Opportunity,
     OpportunityEvm,
+    OpportunitySvm,
 )
 from express_relay.svm.generated.express_relay.accounts import ExpressRelayMetadata
 from express_relay.svm.generated.express_relay.program_id import (
@@ -71,6 +72,9 @@ class SimpleSearcherSvm:
             opp: An object representing a single opportunity.
         """
 
+        if isinstance(opp, OpportunityEvm):
+            raise ValueError("Opportunity is not an SVM opportunity")
+
         bid = await self.assess_opportunity(opp)
 
         if bid:
@@ -101,10 +105,7 @@ class SimpleSearcherSvm:
                 result_details = f", transaction {result}"
         logger.info(f"Bid status for bid {id}: {bid_status.value}{result_details}")
 
-    async def assess_opportunity(self, opp: Opportunity) -> BidSvm:
-        if isinstance(opp, OpportunityEvm):
-            raise ValueError("Opportunity is not an SVM opportunity")
-
+    async def assess_opportunity(self, opp: OpportunitySvm) -> BidSvm:
         order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
         input_mint_decimals = await self.limo_client.get_mint_decimals(
             order["state"].input_mint

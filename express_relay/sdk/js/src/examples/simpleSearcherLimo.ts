@@ -111,6 +111,12 @@ class SimpleSearcherLimo {
       order.state.globalConfig
     );
     const bidAmount = new anchor.BN(argv.bid);
+    if (!this.expressRelayConfig) {
+      this.expressRelayConfig = await this.client.getExpressRelaySvmConfig(
+        this.chainId,
+        this.connectionSvm
+      );
+    }
 
     const bid = await this.client.constructSvmBid(
       txRaw,
@@ -120,8 +126,8 @@ class SimpleSearcherLimo {
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
       this.chainId,
-      this.expressRelayConfig!.relayerSigner,
-      this.expressRelayConfig!.feeReceiverRelayer
+      this.expressRelayConfig.relayerSigner,
+      this.expressRelayConfig.feeReceiverRelayer
     );
 
     bid.transaction.recentBlockhash = opportunity.blockHash;
@@ -145,15 +151,7 @@ class SimpleSearcherLimo {
     }
   }
 
-  async fetchConfig() {
-    this.expressRelayConfig = await this.client.getExpressRelaySvmConfig(
-      this.chainId,
-      this.connectionSvm
-    );
-  }
-
   async start() {
-    await this.fetchConfig();
     try {
       await this.client.subscribeChains([argv.chainId]);
       console.log(

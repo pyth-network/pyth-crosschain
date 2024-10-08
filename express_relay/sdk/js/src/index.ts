@@ -702,7 +702,7 @@ export class Client {
   }
 
   private toServerBid(bid: Bid): components["schemas"]["Bid"] {
-    if (bid.env == "evm") {
+    if (bid.env === "evm") {
       return {
         amount: bid.amount.toString(),
         target_calldata: bid.targetCalldata,
@@ -729,7 +729,7 @@ export class Client {
   private convertOpportunity(
     opportunity: components["schemas"]["Opportunity"]
   ): Opportunity | undefined {
-    if (opportunity.version != "v1") {
+    if (opportunity.version !== "v1") {
       console.warn(
         `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
       );
