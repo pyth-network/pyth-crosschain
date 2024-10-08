@@ -4,11 +4,11 @@ import createClient, {
 } from "openapi-fetch";
 import {
   Address,
+  encodeFunctionData,
+  getContractAddress,
   Hex,
   isAddress,
   isHex,
-  getContractAddress,
-  encodeFunctionData,
 } from "viem";
 import { privateKeyToAccount, signTypedData } from "viem/accounts";
 import WebSocket from "isomorphic-ws";
@@ -16,18 +16,22 @@ import {
   Bid,
   BidId,
   BidParams,
+  BidsResponse,
   BidStatusUpdate,
   BidSvm,
+  ExpressRelaySvmConfig,
   Opportunity,
+  OpportunityBid,
+  OpportunityEvm,
   OpportunityParams,
   TokenAmount,
-  BidsResponse,
   TokenPermissions,
-  OpportunityBid,
 } from "./types";
 import { executeOpportunityAbi } from "./abi";
 import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
 import {
+  Connection,
+  Keypair,
   PublicKey,
   Transaction,
   TransactionInstruction,
@@ -37,6 +41,9 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import expressRelayIdl from "./idl/idlExpressRelay.json";
 import { ExpressRelay } from "./expressRelayTypes";
 import { getConfigRouterPda, getExpressRelayMetadataPda } from "./svmPda";
+import { limoId, Order } from "@kamino-finance/limo-sdk";
+import { getPdaAuthority } from "@kamino-finance/limo-sdk/dist/utils";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 export * from "./types";
 
@@ -209,30 +216,84 @@ export class Client {
   }
 
   /**
-   * Converts an opportunity from the server to the client format
-   * Returns undefined if the opportunity version is not supported
-   * @param opportunity
-   * @returns Opportunity in the converted client format
+   * Creates a signature for the bid and opportunity
+   * @param opportunity Opportunity to bid on
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signature for the bid and opportunity
    */
-  private convertOpportunity(
-    opportunity: components["schemas"]["OpportunityParamsWithMetadata"]
-  ): Opportunity | undefined {
-    if (opportunity.version != "v1") {
-      console.warn(
-        `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
-      );
-      return undefined;
-    }
-    return {
-      chainId: opportunity.chain_id,
-      opportunityId: opportunity.opportunity_id,
-      permissionKey: checkHex(opportunity.permission_key),
-      targetContract: checkAddress(opportunity.target_contract),
-      targetCalldata: checkHex(opportunity.target_calldata),
-      targetCallValue: BigInt(opportunity.target_call_value),
-      sellTokens: opportunity.sell_tokens.map(checkTokenQty),
-      buyTokens: opportunity.buy_tokens.map(checkTokenQty),
+  async getSignature(
+    opportunity: OpportunityEvm,
+    bidParams: BidParams,
+    privateKey: Hex
+  ): Promise<`0x${string}`> {
+    const types = {
+      PermitBatchWitnessTransferFrom: [
+        { name: "permitted", type: "TokenPermissions[]" },
+        { name: "spender", type: "address" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "witness", type: "OpportunityWitness" },
+      ],
+      OpportunityWitness: [
+        { name: "buyTokens", type: "TokenAmount[]" },
+        { name: "executor", type: "address" },
+        { name: "targetContract", type: "address" },
+        { name: "targetCalldata", type: "bytes" },
+        { name: "targetCallValue", type: "uint256" },
+        { name: "bidAmount", type: "uint256" },
+      ],
+      TokenAmount: [
+        { name: "token", type: "address" },
+        { name: "amount", type: "uint256" },
+      ],
+      TokenPermissions: [
+        { name: "token", type: "address" },
+        { name: "amount", type: "uint256" },
+      ],
     };
+
+    const account = privateKeyToAccount(privateKey);
+    const executor = account.address;
+    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
+    const permitted = getPermittedTokens(
+      opportunity.sellTokens,
+      bidParams.amount,
+      opportunity.targetCallValue,
+      checkAddress(opportunityAdapterConfig.weth)
+    );
+    const create2Address = getContractAddress({
+      bytecodeHash:
+        opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
+      from: opportunityAdapterConfig.opportunity_adapter_factory,
+      opcode: "CREATE2",
+      salt: `0x${executor.replace("0x", "").padStart(64, "0")}`,
+    });
+
+    return signTypedData({
+      privateKey,
+      domain: {
+        name: "Permit2",
+        verifyingContract: checkAddress(opportunityAdapterConfig.permit2),
+        chainId: opportunityAdapterConfig.chain_id,
+      },
+      types,
+      primaryType: "PermitBatchWitnessTransferFrom",
+      message: {
+        permitted,
+        spender: create2Address,
+        nonce: bidParams.nonce,
+        deadline: bidParams.deadline,
+        witness: {
+          buyTokens: opportunity.buyTokens,
+          executor,
+          targetContract: opportunity.targetContract,
+          targetCalldata: opportunity.targetCalldata,
+          targetCallValue: opportunity.targetCallValue,
+          bidAmount: bidParams.amount,
+        },
+      },
+    });
   }
 
   /**
@@ -333,10 +394,48 @@ export class Client {
    */
   async submitOpportunity(opportunity: OpportunityParams) {
     const client = createClient<paths>(this.clientOptions);
-    const response = await client.POST("/v1/opportunities", {
-      body: {
+    let body;
+    if ("order" in opportunity) {
+      const encoded_order = Buffer.alloc(
+        Order.discriminator.length + Order.layout.span
+      );
+      Order.discriminator.copy(encoded_order);
+      Order.layout.encode(
+        opportunity.order.state,
+        encoded_order,
+        Order.discriminator.length
+      );
+      body = {
         chain_id: opportunity.chainId,
-        version: "v1",
+        version: "v1" as const,
+        program: opportunity.program,
+
+        order: encoded_order.toString("base64"),
+        slot: opportunity.slot,
+        block_hash: opportunity.blockHash,
+        order_address: opportunity.order.address.toBase58(),
+        buy_tokens: [
+          {
+            token: opportunity.order.state.inputMint.toBase58(),
+            amount: opportunity.order.state.remainingInputAmount.toNumber(),
+          },
+        ],
+        sell_tokens: [
+          {
+            token: opportunity.order.state.outputMint.toBase58(),
+            amount: opportunity.order.state.expectedOutputAmount.toNumber(),
+          },
+        ],
+        permission_account: opportunity.order.address.toBase58(),
+        router: getPdaAuthority(
+          limoId,
+          opportunity.order.state.globalConfig
+        ).toBase58(),
+      };
+    } else {
+      body = {
+        chain_id: opportunity.chainId,
+        version: "v1" as const,
         permission_key: opportunity.permissionKey,
         target_contract: opportunity.targetContract,
         target_calldata: opportunity.targetCalldata,
@@ -349,127 +448,14 @@ export class Client {
           token,
           amount: amount.toString(),
         })),
-      },
+      };
+    }
+    const response = await client.POST("/v1/opportunities", {
+      body: body,
     });
     if (response.error) {
       throw new ClientError(response.error.error);
     }
-  }
-
-  /**
-   * Constructs the calldata for the opportunity adapter contract.
-   * @param opportunity Opportunity to bid on
-   * @param permitted Permitted tokens
-   * @param executor Address of the searcher's wallet
-   * @param bidParams Bid amount, nonce, and deadline timestamp
-   * @param signature Searcher's signature for opportunity params and bidParams
-   * @returns Calldata for the opportunity adapter contract
-   */
-  private makeAdapterCalldata(
-    opportunity: Opportunity,
-    permitted: TokenPermissions[],
-    executor: Address,
-    bidParams: BidParams,
-    signature: Hex
-  ): Hex {
-    return encodeFunctionData({
-      abi: [executeOpportunityAbi],
-      args: [
-        [
-          [permitted, bidParams.nonce, bidParams.deadline],
-          [
-            opportunity.buyTokens,
-            executor,
-            opportunity.targetContract,
-            opportunity.targetCalldata,
-            opportunity.targetCallValue,
-            bidParams.amount,
-          ],
-        ],
-        signature,
-      ],
-    });
-  }
-
-  /**
-   * Creates a signature for the bid and opportunity
-   * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount, nonce, and deadline timestamp
-   * @param privateKey Private key to sign the bid with
-   * @returns Signature for the bid and opportunity
-   */
-  async getSignature(
-    opportunity: Opportunity,
-    bidParams: BidParams,
-    privateKey: Hex
-  ): Promise<`0x${string}`> {
-    const types = {
-      PermitBatchWitnessTransferFrom: [
-        { name: "permitted", type: "TokenPermissions[]" },
-        { name: "spender", type: "address" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "witness", type: "OpportunityWitness" },
-      ],
-      OpportunityWitness: [
-        { name: "buyTokens", type: "TokenAmount[]" },
-        { name: "executor", type: "address" },
-        { name: "targetContract", type: "address" },
-        { name: "targetCalldata", type: "bytes" },
-        { name: "targetCallValue", type: "uint256" },
-        { name: "bidAmount", type: "uint256" },
-      ],
-      TokenAmount: [
-        { name: "token", type: "address" },
-        { name: "amount", type: "uint256" },
-      ],
-      TokenPermissions: [
-        { name: "token", type: "address" },
-        { name: "amount", type: "uint256" },
-      ],
-    };
-
-    const account = privateKeyToAccount(privateKey);
-    const executor = account.address;
-    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
-    const permitted = getPermittedTokens(
-      opportunity.sellTokens,
-      bidParams.amount,
-      opportunity.targetCallValue,
-      checkAddress(opportunityAdapterConfig.weth)
-    );
-    const create2Address = getContractAddress({
-      bytecodeHash:
-        opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
-      from: opportunityAdapterConfig.opportunity_adapter_factory,
-      opcode: "CREATE2",
-      salt: `0x${executor.replace("0x", "").padStart(64, "0")}`,
-    });
-
-    return signTypedData({
-      privateKey,
-      domain: {
-        name: "Permit2",
-        verifyingContract: checkAddress(opportunityAdapterConfig.permit2),
-        chainId: opportunityAdapterConfig.chain_id,
-      },
-      types,
-      primaryType: "PermitBatchWitnessTransferFrom",
-      message: {
-        permitted,
-        spender: create2Address,
-        nonce: bidParams.nonce,
-        deadline: bidParams.deadline,
-        witness: {
-          buyTokens: opportunity.buyTokens,
-          executor,
-          targetContract: opportunity.targetContract,
-          targetCalldata: opportunity.targetCalldata,
-          targetCallValue: opportunity.targetCallValue,
-          bidAmount: bidParams.amount,
-        },
-      },
-    });
   }
 
   /**
@@ -480,7 +466,7 @@ export class Client {
    * @returns Signed opportunity bid
    */
   async signOpportunityBid(
-    opportunity: Opportunity,
+    opportunity: Opportunity & OpportunityEvm,
     bidParams: BidParams,
     privateKey: Hex
   ): Promise<OpportunityBid> {
@@ -508,7 +494,7 @@ export class Client {
    * @returns Signed bid
    */
   async signBid(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     bidParams: BidParams,
     privateKey: Hex
   ): Promise<Bid> {
@@ -544,22 +530,121 @@ export class Client {
     };
   }
 
-  private toServerBid(bid: Bid): components["schemas"]["Bid"] {
-    if (bid.env == "evm") {
-      return {
-        amount: bid.amount.toString(),
-        target_calldata: bid.targetCalldata,
-        chain_id: bid.chainId,
-        target_contract: bid.targetContract,
-        permission_key: bid.permissionKey,
-      };
-    }
+  async getExpressRelaySvmConfig(
+    chainId: string,
+    connection: Connection
+  ): Promise<ExpressRelaySvmConfig> {
+    const provider = new AnchorProvider(
+      connection,
+      new NodeWallet(new Keypair())
+    );
+    const expressRelay = new Program<ExpressRelay>(
+      expressRelayIdl as ExpressRelay,
+      provider
+    );
+    const metadata = await expressRelay.account.expressRelayMetadata.fetch(
+      getExpressRelayMetadataPda(chainId)
+    );
+    return {
+      feeReceiverRelayer: metadata.feeReceiverRelayer,
+      relayerSigner: metadata.relayerSigner,
+    };
+  }
+
+  /**
+   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @param relayerSigner The address of the relayer that is submitting the bid
+   * @param feeReceiverRelayer The fee collection address of the relayer
+   * @returns The SubmitBid instruction
+   */
+  async constructSubmitBidInstruction(
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string,
+    relayerSigner: PublicKey,
+    feeReceiverRelayer: PublicKey
+  ): Promise<TransactionInstruction> {
+    const expressRelay = new Program<ExpressRelay>(
+      expressRelayIdl as ExpressRelay,
+      {} as AnchorProvider
+    );
+
+    const configRouter = getConfigRouterPda(chainId, router);
+    const expressRelayMetadata = getExpressRelayMetadataPda(chainId);
+    const svmConstants = SVM_CONSTANTS[chainId];
+
+    const ixSubmitBid = await expressRelay.methods
+      .submitBid({
+        deadline,
+        bidAmount,
+      })
+      .accountsStrict({
+        searcher,
+        relayerSigner,
+        permission: permissionKey,
+        router,
+        configRouter,
+        expressRelayMetadata,
+        feeReceiverRelayer,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+      })
+      .instruction();
+    ixSubmitBid.programId = svmConstants.expressRelayProgram;
+
+    return ixSubmitBid;
+  }
+
+  /**
+   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
+   * @param tx The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @param relayerSigner The address of the relayer that is submitting the bid
+   * @param feeReceiverRelayer The fee collection address of the relayer
+   * @returns The constructed SVM bid
+   */
+  async constructSvmBid(
+    tx: Transaction,
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string,
+    relayerSigner: PublicKey,
+    feeReceiverRelayer: PublicKey
+  ): Promise<BidSvm> {
+    const ixSubmitBid = await this.constructSubmitBidInstruction(
+      searcher,
+      router,
+      permissionKey,
+      bidAmount,
+      deadline,
+      chainId,
+      relayerSigner,
+      feeReceiverRelayer
+    );
+
+    tx.instructions.unshift(ixSubmitBid);
 
     return {
-      chain_id: bid.chainId,
-      transaction: bid.transaction
-        .serialize({ requireAllSignatures: false })
-        .toString("base64"),
+      transaction: tx,
+      chainId: chainId,
+      env: "svm",
     };
   }
 
@@ -616,90 +701,98 @@ export class Client {
     }
   }
 
-  /**
-   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
-   * @param searcher The address of the searcher that is submitting the bid
-   * @param router The identifying address of the router that the permission key is for
-   * @param permissionKey The 32-byte permission key as an SVM PublicKey
-   * @param bidAmount The amount of the bid in lamports
-   * @param deadline The deadline for the bid in seconds since Unix epoch
-   * @param chainId The chain ID as a string, e.g. "solana"
-   * @returns The SubmitBid instruction
-   */
-  async constructSubmitBidInstruction(
-    searcher: PublicKey,
-    router: PublicKey,
-    permissionKey: PublicKey,
-    bidAmount: anchor.BN,
-    deadline: anchor.BN,
-    chainId: string
-  ): Promise<TransactionInstruction> {
-    const expressRelay = new Program<ExpressRelay>(
-      expressRelayIdl as ExpressRelay,
-      {} as AnchorProvider
-    );
+  private toServerBid(bid: Bid): components["schemas"]["Bid"] {
+    if (bid.env == "evm") {
+      return {
+        amount: bid.amount.toString(),
+        target_calldata: bid.targetCalldata,
+        chain_id: bid.chainId,
+        target_contract: bid.targetContract,
+        permission_key: bid.permissionKey,
+      };
+    }
 
-    const configRouter = getConfigRouterPda(chainId, router);
-    const expressRelayMetadata = getExpressRelayMetadataPda(chainId);
-    const svmConstants = SVM_CONSTANTS[chainId];
-
-    const ixSubmitBid = await expressRelay.methods
-      .submitBid({
-        deadline,
-        bidAmount,
-      })
-      .accountsStrict({
-        searcher,
-        relayerSigner: svmConstants.relayerSigner,
-        permission: permissionKey,
-        router,
-        configRouter,
-        expressRelayMetadata,
-        feeReceiverRelayer: svmConstants.feeReceiverRelayer,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-      })
-      .instruction();
-    ixSubmitBid.programId = svmConstants.expressRelayProgram;
-
-    return ixSubmitBid;
+    return {
+      chain_id: bid.chainId,
+      transaction: bid.transaction
+        .serialize({ requireAllSignatures: false })
+        .toString("base64"),
+    };
   }
 
   /**
-   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
-   * @param tx The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
-   * @param searcher The address of the searcher that is submitting the bid
-   * @param router The identifying address of the router that the permission key is for
-   * @param permissionKey The 32-byte permission key as an SVM PublicKey
-   * @param bidAmount The amount of the bid in lamports
-   * @param deadline The deadline for the bid in seconds since Unix epoch
-   * @param chainId The chain ID as a string, e.g. "solana"
-   * @returns The constructed SVM bid
+   * Converts an opportunity from the server to the client format
+   * Returns undefined if the opportunity version is not supported
+   * @param opportunity
+   * @returns Opportunity in the converted client format
    */
-  async constructSvmBid(
-    tx: Transaction,
-    searcher: PublicKey,
-    router: PublicKey,
-    permissionKey: PublicKey,
-    bidAmount: anchor.BN,
-    deadline: anchor.BN,
-    chainId: string
-  ): Promise<BidSvm> {
-    const ixSubmitBid = await this.constructSubmitBidInstruction(
-      searcher,
-      router,
-      permissionKey,
-      bidAmount,
-      deadline,
-      chainId
-    );
-
-    tx.instructions.unshift(ixSubmitBid);
-
+  private convertOpportunity(
+    opportunity: components["schemas"]["Opportunity"]
+  ): Opportunity | undefined {
+    if (opportunity.version != "v1") {
+      console.warn(
+        `Can not handle opportunity version: ${opportunity.version}. Please upgrade your client.`
+      );
+      return undefined;
+    }
+    if ("target_calldata" in opportunity) {
+      return {
+        chainId: opportunity.chain_id,
+        opportunityId: opportunity.opportunity_id,
+        permissionKey: checkHex(opportunity.permission_key),
+        targetContract: checkAddress(opportunity.target_contract),
+        targetCalldata: checkHex(opportunity.target_calldata),
+        targetCallValue: BigInt(opportunity.target_call_value),
+        sellTokens: opportunity.sell_tokens.map(checkTokenQty),
+        buyTokens: opportunity.buy_tokens.map(checkTokenQty),
+      };
+    }
+    const order = Order.decode(Buffer.from(opportunity.order, "base64"));
     return {
-      transaction: tx,
-      chainId: chainId,
-      env: "svm",
+      chainId: opportunity.chain_id,
+      slot: opportunity.slot,
+      blockHash: opportunity.block_hash,
+      opportunityId: opportunity.opportunity_id,
+      order: {
+        state: order,
+        address: new PublicKey(opportunity.order_address),
+      },
+      program: "limo",
     };
+  }
+
+  /**
+   * Constructs the calldata for the opportunity adapter contract.
+   * @param opportunity Opportunity to bid on
+   * @param permitted Permitted tokens
+   * @param executor Address of the searcher's wallet
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param signature Searcher's signature for opportunity params and bidParams
+   * @returns Calldata for the opportunity adapter contract
+   */
+  private makeAdapterCalldata(
+    opportunity: OpportunityEvm,
+    permitted: TokenPermissions[],
+    executor: Address,
+    bidParams: BidParams,
+    signature: Hex
+  ): Hex {
+    return encodeFunctionData({
+      abi: [executeOpportunityAbi],
+      args: [
+        [
+          [permitted, bidParams.nonce, bidParams.deadline],
+          [
+            opportunity.buyTokens,
+            executor,
+            opportunity.targetContract,
+            opportunity.targetCalldata,
+            opportunity.targetCallValue,
+            bidParams.amount,
+          ],
+        ],
+        signature,
+      ],
+    });
   }
 }

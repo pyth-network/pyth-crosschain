@@ -38,6 +38,8 @@ from express_relay.express_relay_types import (
     TokenAmount,
     OpportunityBidParams,
     BidEvm,
+    OpportunityRoot,
+    OpportunityEvm,
 )
 from express_relay.svm.generated.express_relay.instructions import submit_bid
 from express_relay.svm.generated.express_relay.program_id import (
@@ -324,11 +326,11 @@ class ExpressRelayClient:
             if msg_json.get("type"):
                 if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
-                        opportunity = Opportunity.process_opportunity_dict(
+                        opportunity = OpportunityRoot.model_validate(
                             msg_json["opportunity"]
                         )
                         if opportunity:
-                            asyncio.create_task(opportunity_callback(opportunity))
+                            asyncio.create_task(opportunity_callback(opportunity.root))
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
@@ -365,11 +367,11 @@ class ExpressRelayClient:
 
         resp.raise_for_status()
 
-        opportunities = []
+        opportunities: list[Opportunity] = []
         for opportunity in resp.json():
-            opportunity_processed = Opportunity.process_opportunity_dict(opportunity)
+            opportunity_processed = OpportunityRoot.model_validate(opportunity)
             if opportunity_processed:
-                opportunities.append(opportunity_processed)
+                opportunities.append(opportunity_processed.root)
 
         return opportunities
 
@@ -431,6 +433,8 @@ class ExpressRelayClient:
         bid_amount: int,
         deadline: int,
         chain_id: str,
+        fee_receiver_relayer: Pubkey,
+        relayer_signer: Pubkey,
     ) -> Instruction:
         if chain_id not in SVM_CONFIGS:
             raise ValueError(f"Chain ID {chain_id} not supported")
@@ -445,12 +449,12 @@ class ExpressRelayClient:
             {"data": SubmitBidArgs(deadline=deadline, bid_amount=bid_amount)},
             {
                 "searcher": searcher,
-                "relayer_signer": svm_config["relayer_signer"],
+                "relayer_signer": relayer_signer,
                 "permission": permission_key,
                 "router": router,
                 "config_router": config_router,
                 "express_relay_metadata": express_relay_metadata,
-                "fee_receiver_relayer": svm_config["fee_receiver_relayer"],
+                "fee_receiver_relayer": fee_receiver_relayer,
                 "sysvar_instructions": INSTRUCTIONS,
             },
             svm_config["express_relay_program"],
@@ -487,7 +491,7 @@ def compute_create2_address(
 
 
 def make_adapter_calldata(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     permitted: list[dict[str, Union[str, int]]],
     executor: Address,
     bid_params: OpportunityBidParams,
@@ -541,7 +545,7 @@ def get_opportunity_adapter_config(chain_id: str):
 
 
 def get_signature(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     bid_params: OpportunityBidParams,
     private_key: str,
 ) -> SignedMessage:
@@ -632,7 +636,7 @@ def get_signature(
 
 
 def sign_opportunity_bid(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     bid_params: OpportunityBidParams,
     private_key: str,
 ) -> OpportunityBid:
@@ -661,7 +665,7 @@ def sign_opportunity_bid(
 
 
 def sign_bid(
-    opportunity: Opportunity, bid_params: OpportunityBidParams, private_key: str
+    opportunity: OpportunityEvm, bid_params: OpportunityBidParams, private_key: str
 ) -> BidEvm:
     """
     Constructs a signature for a searcher's bid and returns the Bid object to be submitted to the server.
