@@ -813,6 +813,36 @@ describe("PythTest", () => {
     });
   });
 
+  it("should fail to execute governance action with invalid chain ID", async () => {
+    const invalidChainId = 999;
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      TIME_PERIOD,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      invalidChainId,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 1034, // ERROR_INVALID_GOVERNANCE_TARGET
+    });
+  });
+
   it("should successfully upgrade the contract", async () => {
     // Compile the upgraded contract
     const upgradedCode = await compile("PythTestUpgraded");
