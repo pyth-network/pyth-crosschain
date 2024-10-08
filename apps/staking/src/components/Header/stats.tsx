@@ -52,28 +52,19 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
 };
 
 const Loading = () => (
-  <div className="mb-1 h-5 w-10 animate-pulse rounded-md bg-white/30" />
+  <div className="inline-block h-[1em] w-10 animate-pulse rounded-md bg-white/30" />
 );
 
 const fetchStats = async (connection: Connection) => {
   const client = new PythStakingClient({ connection });
-  const poolData = await client.getPoolDataAccount();
-  const rewardCustodyAccount = await client.getRewardCustodyAccount();
-  const totalDelegated = sum(
-    poolData.delState.map(
-      ({ totalDelegation, deltaDelegation }) =>
-        totalDelegation + deltaDelegation,
-    ),
-  );
-  const totalSelfStaked = sum(
-    poolData.selfDelState.map(
-      ({ totalDelegation, deltaDelegation }) =>
-        totalDelegation + deltaDelegation,
-    ),
-  );
+  const [poolData, rewardCustodyAccount] = await Promise.all([
+    client.getPoolDataAccount(),
+    client.getRewardCustodyAccount(),
+  ]);
 
   return {
-    totalStaked: totalDelegated + totalSelfStaked,
+    totalStaked:
+      sumDelegations(poolData.delState) + sumDelegations(poolData.selfDelState),
     rewardsDistributed:
       poolData.claimableRewards +
       INITIAL_REWARD_POOL_SIZE -
@@ -81,5 +72,10 @@ const fetchStats = async (connection: Connection) => {
   };
 };
 
-const sum = (values: bigint[]): bigint =>
-  values.reduce((acc, value) => acc + value, 0n);
+const sumDelegations = (
+  values: { totalDelegation: bigint; deltaDelegation: bigint }[],
+) =>
+  values.reduce(
+    (acc, value) => acc + value.totalDelegation + value.deltaDelegation,
+    0n,
+  );
