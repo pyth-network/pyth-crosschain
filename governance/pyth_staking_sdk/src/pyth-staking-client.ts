@@ -974,4 +974,17 @@ export class PythStakingClient {
     const globalConfig = await this.getGlobalConfig();
     return getMint(this.connection, globalConfig.pythTokenMint);
   }
+
+  public async getRewardCustodyAccount(): Promise<Account> {
+    const poolConfigAddress = getPoolConfigAddress();
+    const config = await this.getGlobalConfig();
+
+    const rewardCustodyAccountAddress = getAssociatedTokenAddressSync(
+      config.pythTokenMint,
+      poolConfigAddress,
+      true,
+    );
+
+    return getAccount(this.connection, rewardCustodyAccountAddress);
+  }
 }

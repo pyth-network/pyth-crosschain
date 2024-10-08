@@ -58,6 +58,7 @@ const Loading = () => (
 const fetchStats = async (connection: Connection) => {
   const client = new PythStakingClient({ connection });
   const poolData = await client.getPoolDataAccount();
+  const rewardCustodyAccount = await client.getRewardCustodyAccount();
   const totalDelegated = sum(
     poolData.delState.map(
       ({ totalDelegation, deltaDelegation }) =>
@@ -73,7 +74,10 @@ const fetchStats = async (connection: Connection) => {
 
   return {
     totalStaked: totalDelegated + totalSelfStaked,
-    rewardsDistributed: poolData.claimableRewards + INITIAL_REWARD_POOL_SIZE,
+    rewardsDistributed:
+      poolData.claimableRewards +
+      INITIAL_REWARD_POOL_SIZE -
+      rewardCustodyAccount.amount,
   };
 };
 
