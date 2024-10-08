@@ -109,3 +109,9 @@
 - chain: fantom_sonic_testnet
   address: "0x5124FAE0890dE83B3bb2cc30Bb3EDAfFc07Da744"
   type: EvmEntropyContract
+- chain: sanko
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
+- chain: sanko_testnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract

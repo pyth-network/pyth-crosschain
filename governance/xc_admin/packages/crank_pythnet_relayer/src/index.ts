@@ -15,6 +15,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
@@ -30,6 +31,11 @@ import {
   mapKey,
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
+  PriceStoreMultisigInstruction,
+  findDetermisticPublisherBufferAddress,
+  PRICE_STORE_BUFFER_SPACE,
+  PRICE_STORE_PROGRAM_ID,
+  createDeterministicPublisherBufferAccountInstruction,
 } from "@pythnetwork/xc-admin-common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
@@ -163,6 +169,17 @@ async function run() {
             } else {
               throw Error("Product account not found");
             }
+          } else if (
+            parsedInstruction instanceof PriceStoreMultisigInstruction &&
+            parsedInstruction.name == "InitializePublisher"
+          ) {
+            preInstructions.push(
+              await createDeterministicPublisherBufferAccountInstruction(
+                provider.connection,
+                provider.wallet.publicKey,
+                parsedInstruction.args.publisherKey
+              )
+            );
           }
         }
 

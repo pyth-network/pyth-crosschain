@@ -46,14 +46,16 @@ export const ModalDialog = ({
         {(options) => (
           <>
             {!noClose && (
-              <Button
-                onPress={options.close}
-                className="absolute right-3 top-3 grid size-10 place-content-center"
-                size="nopad"
-                isDisabled={closeDisabled ?? false}
-              >
-                <XMarkIcon className="size-6" />
-              </Button>
+              <div className="absolute right-3 top-3">
+                <Button
+                  onPress={options.close}
+                  className="size-10"
+                  size="nopad"
+                  isDisabled={closeDisabled ?? false}
+                >
+                  <XMarkIcon className="size-6" />
+                </Button>
+              </div>
             )}
             <Heading
               className={clsx("mr-10 text-3xl font-light", {

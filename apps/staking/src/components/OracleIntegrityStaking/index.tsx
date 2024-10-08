@@ -38,8 +38,10 @@ import {
   StateType as UseAsyncStateType,
   useAsync,
 } from "../../hooks/use-async";
+import { useToast } from "../../hooks/use-toast";
 import { Button, LinkButton } from "../Button";
 import { CopyButton } from "../CopyButton";
+import { ErrorMessage } from "../ErrorMessage";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { ModalDialog } from "../ModalDialog";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
@@ -198,10 +200,7 @@ const SelfStaking = ({
             </div>
             <div className="flex flex-row items-center gap-4">
               <MenuTrigger>
-                <Button
-                  variant="secondary"
-                  className="group flex flex-row items-center gap-2 lg:hidden"
-                >
+                <Button variant="secondary" className="group lg:hidden">
                   <Bars3Icon className="size-6 flex-none" />
                   <span className="sr-only">Publisher Menu</span>
                   <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
@@ -407,6 +406,8 @@ const ReassignStakeAccountForm = ({
 
   const { state, execute } = useAsync(doReassign);
 
+  const toast = useToast();
+
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -414,15 +415,16 @@ const ReassignStakeAccountForm = ({
       execute()
         .then(() => {
           close();
+          toast.success("You have reassigned your main account");
         })
         .catch(() => {
-          /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
+          /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
         })
         .finally(() => {
           setCloseDisabled(false);
         });
     },
-    [execute, close, setCloseDisabled],
+    [execute, close, setCloseDisabled, toast],
   );
 
   return (
@@ -446,9 +448,9 @@ const ReassignStakeAccountForm = ({
           placeholder={PublicKey.default.toBase58()}
         />
         {state.type === UseAsyncStateType.Error && (
-          <p className="mt-1 text-red-600">
-            Uh oh, an error occurred! Please try again
-          </p>
+          <div className="mt-4 max-w-sm">
+            <ErrorMessage error={state.error} />
+          </div>
         )}
       </TextField>
       <Button
@@ -492,16 +494,6 @@ type OptOut = Omit<
 };
 
 const OptOut = ({ api, self, ...props }: OptOut) => {
-  const { state, execute } = useAsync(() =>
-    api.optPublisherOut(self.publicKey),
-  );
-
-  const doOptOut = useCallback(() => {
-    execute().catch(() => {
-      /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
-    });
-  }, [execute]);
-
   return hasAnyPositions(self) ? (
     <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
       <div className="flex max-w-prose flex-col gap-4">
@@ -517,44 +509,72 @@ const OptOut = ({ api, self, ...props }: OptOut) => {
   ) : (
     <ModalDialog title="Are you sure?" {...props}>
       {({ close }) => (
-        <>
-          <div className="flex max-w-prose flex-col gap-4">
-            <p className="font-semibold">
-              Are you sure you want to opt out of rewards?
-            </p>
-            <p className="opacity-90">
-              Opting out of rewards will prevent you from earning the publisher
-              yield rate and delegation fees from your delegators. You will
-              still be able to participate in OIS after opting out of rewards.
-            </p>
-          </div>
-          {state.type === UseAsyncStateType.Error && (
-            <p className="mt-8 text-red-600">
-              Uh oh, an error occurred! Please try again
-            </p>
-          )}
-          <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-            <Button
-              className="w-full sm:w-auto"
-              size="noshrink"
-              onPress={close}
-            >
-              No, I want rewards!
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              variant="secondary"
-              size="noshrink"
-              isLoading={state.type === UseAsyncStateType.Running}
-              isDisabled={state.type === UseAsyncStateType.Complete}
-              onPress={doOptOut}
-            >
-              Yes, opt me out
-            </Button>
-          </div>
-        </>
+        <OptOutModalContents api={api} self={self} close={close} />
       )}
     </ModalDialog>
+  );
+};
+
+type OptOutModalContentsProps = {
+  api: States[ApiStateType.Loaded];
+  self: PublisherProps["publisher"];
+  close: () => void;
+};
+
+const OptOutModalContents = ({
+  api,
+  self,
+  close,
+}: OptOutModalContentsProps) => {
+  const { state, execute } = useAsync(() =>
+    api.optPublisherOut(self.publicKey),
+  );
+
+  const toast = useToast();
+
+  const doOptOut = useCallback(() => {
+    execute()
+      .then(() => {
+        toast.success("You have opted out of rewards");
+      })
+      .catch(() => {
+        /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
+      });
+  }, [execute, toast]);
+
+  return (
+    <>
+      <div className="flex max-w-prose flex-col gap-4">
+        <p className="font-semibold">
+          Are you sure you want to opt out of rewards?
+        </p>
+        <p className="opacity-90">
+          Opting out of rewards will prevent you from earning the publisher
+          yield rate and delegation fees from your delegators. You will still be
+          able to participate in OIS after opting out of rewards.
+        </p>
+      </div>
+      {state.type === UseAsyncStateType.Error && (
+        <div className="mt-4 max-w-prose">
+          <ErrorMessage error={state.error} />
+        </div>
+      )}
+      <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+        <Button className="w-full sm:w-auto" size="noshrink" onPress={close}>
+          No, I want rewards!
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          variant="secondary"
+          size="noshrink"
+          isLoading={state.type === UseAsyncStateType.Running}
+          isDisabled={state.type === UseAsyncStateType.Complete}
+          onPress={doOptOut}
+        >
+          Yes, opt me out
+        </Button>
+      </div>
+    </>
   );
 };
 
@@ -583,7 +603,7 @@ const PublisherList = ({
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
-  const [sort, setSort] = useState(SortOption.RemainingPoolDescending);
+  const [sort, setSort] = useState(SortOption.SelfStakeDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
@@ -606,7 +626,7 @@ const PublisherList = ({
               return 1;
             }
           }
-          return doSort(collator, a, b, yieldRate, sort);
+          return compare(collator, a, b, yieldRate, sort);
         }),
     [publishers, search, sort, filter, yieldRate, yoursFirst, collator],
   );
@@ -654,8 +674,16 @@ const PublisherList = ({
     [setYoursFirst, updatePage],
   );
 
+  const updatePageSize = useCallback<typeof setPageSize>(
+    (newPageSize) => {
+      setPageSize(newPageSize);
+      updatePage(1);
+    },
+    [setPageSize, updatePage],
+  );
+
   const numPages = useMemo(
-    () => Math.floor(filteredSortedPublishers.length / pageSize),
+    () => Math.ceil(filteredSortedPublishers.length / pageSize),
     [filteredSortedPublishers, pageSize],
   );
 
@@ -816,7 +844,7 @@ const PublisherList = ({
             label="Page size"
             options={PageSize}
             selectedKey={pageSize}
-            onSelectionChange={setPageSize}
+            onSelectionChange={updatePageSize}
           />
           <Paginator
             currentPage={currentPage}
@@ -851,7 +879,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="grid size-8 place-content-center"
+            className="size-8"
           >
             <ChevronDoubleLeftIcon className="size-4" />
           </Button>
@@ -874,7 +902,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
               }}
               size="nopad"
               variant="secondary"
-              className="grid size-8 place-content-center"
+              className="size-8"
             >
               {page}
             </Button>
@@ -889,7 +917,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="grid size-8 place-content-center"
+            className="size-8"
           >
             <ChevronDoubleRightIcon className="size-4" />
           </Button>
@@ -910,7 +938,7 @@ const getPageRange = (
   return { first, count: Math.min(numPages - first + 1, 5) };
 };
 
-const doSort = (
+const compare = (
   collator: Intl.Collator,
   a: PublisherProps["publisher"],
   b: PublisherProps["publisher"],
@@ -920,81 +948,164 @@ const doSort = (
   switch (sort) {
     case SortOption.PublisherNameAscending:
     case SortOption.PublisherNameDescending: {
-      const value = collator.compare(
-        a.name ?? a.publicKey.toBase58(),
-        b.name ?? b.publicKey.toBase58(),
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareName(
+        collator,
+        a,
+        b,
+        sort === SortOption.PublisherNameAscending,
       );
-      return sort === SortOption.PublisherNameAscending ? -1 * value : value;
     }
     case SortOption.ApyAscending:
     case SortOption.ApyDescending: {
-      const value =
-        calculateApy({
-          isSelf: false,
-          selfStake: a.selfStake + a.selfStakeDelta,
-          poolCapacity: a.poolCapacity,
-          poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
-          yieldRate,
-          delegationFee: a.delegationFee,
-        }) -
-        calculateApy({
-          isSelf: false,
-          selfStake: b.selfStake + b.selfStakeDelta,
-          poolCapacity: b.poolCapacity,
-          poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
-          yieldRate,
-          delegationFee: b.delegationFee,
-        });
-      return sort === SortOption.ApyDescending ? -1 * value : value;
+      const ascending = sort === SortOption.ApyAscending;
+      return compareInOrder([
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
-    case SortOption.NumberOfFeedsAscending: {
-      return Number(a.numFeeds - b.numFeeds);
-    }
+    case SortOption.NumberOfFeedsAscending:
     case SortOption.NumberOfFeedsDescending: {
-      return Number(b.numFeeds - a.numFeeds);
+      const ascending = sort === SortOption.NumberOfFeedsAscending;
+      return compareInOrder([
+        () => (ascending ? -1 : 1) * Number(b.numFeeds - a.numFeeds),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.RemainingPoolAscending:
     case SortOption.RemainingPoolDescending: {
-      if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
-        return 0;
-      } else if (a.poolCapacity === 0n) {
-        return 1;
-      } else if (b.poolCapacity === 0n) {
-        return -1;
-      } else {
-        const remainingPoolA =
-          a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
-        const remainingPoolB =
-          b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
-        const value = Number(remainingPoolA - remainingPoolB);
-        return sort === SortOption.RemainingPoolDescending ? -1 * value : value;
-      }
+      const ascending = sort === SortOption.RemainingPoolAscending;
+      return compareInOrder([
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.QualityRankingDescending:
     case SortOption.QualityRankingAscending: {
-      if (a.qualityRanking === 0 && b.qualityRanking === 0) {
-        return 0;
-      } else if (a.qualityRanking === 0) {
-        return 1;
-      } else if (b.qualityRanking === 0) {
-        return -1;
-      } else {
-        const value = Number(a.qualityRanking - b.qualityRanking);
-        return sort === SortOption.QualityRankingAscending ? -1 * value : value;
-      }
-    }
-    case SortOption.SelfStakeAscending: {
-      return Number(
-        a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta,
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareQualityRanking(
+        a,
+        b,
+        sort === SortOption.QualityRankingAscending,
       );
     }
+    case SortOption.SelfStakeAscending:
     case SortOption.SelfStakeDescending: {
-      return Number(
-        b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta,
-      );
+      const ascending = sort === SortOption.SelfStakeAscending;
+      return compareInOrder([
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
   }
 };
+
+const compareInOrder = (comparisons: (() => number)[]): number => {
+  for (const compare of comparisons) {
+    const value = compare();
+    if (value !== 0) {
+      return value;
+    }
+  }
+  return 0;
+};
+
+const compareName = (
+  collator: Intl.Collator,
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  collator.compare(
+    a.name ?? a.publicKey.toBase58(),
+    b.name ?? b.publicKey.toBase58(),
+  );
+
+const compareApy = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  yieldRate: bigint,
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  (calculateApy({
+    isSelf: false,
+    selfStake: b.selfStake + b.selfStakeDelta,
+    poolCapacity: b.poolCapacity,
+    poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
+    yieldRate,
+    delegationFee: b.delegationFee,
+  }) -
+    calculateApy({
+      isSelf: false,
+      selfStake: a.selfStake + a.selfStakeDelta,
+      poolCapacity: a.poolCapacity,
+      poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
+      yieldRate,
+      delegationFee: a.delegationFee,
+    }));
+
+const comparePoolCapacity = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
+    return 0;
+  } else if (a.poolCapacity === 0n) {
+    return 1;
+  } else if (b.poolCapacity === 0n) {
+    return -1;
+  } else {
+    const remainingPoolA =
+      a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
+    const remainingPoolB =
+      b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
+    if (remainingPoolA <= 0n && remainingPoolB <= 0n) {
+      return 0;
+    } else if (remainingPoolA <= 0n && remainingPoolB > 0n) {
+      return 1;
+    } else if (remainingPoolB <= 0n && remainingPoolA > 0n) {
+      return -1;
+    } else {
+      return (reverse ? -1 : 1) * Number(remainingPoolB - remainingPoolA);
+    }
+  }
+};
+
+const compareQualityRanking = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.qualityRanking === 0 && b.qualityRanking === 0) {
+    return 0;
+  } else if (a.qualityRanking === 0) {
+    return 1;
+  } else if (b.qualityRanking === 0) {
+    return -1;
+  } else {
+    return (reverse ? -1 : 1) * Number(a.qualityRanking - b.qualityRanking);
+  }
+};
+
+const compareSelfStake = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  Number(b.selfStake + b.selfStakeDelta - (a.selfStake + a.selfStakeDelta));
 
 type SortablePublisherTableHeaderProps = Omit<
   ComponentProps<typeof BaseButton>,
@@ -1426,6 +1537,7 @@ const YourPositionsTable = ({
                 actionName="Cancel"
                 submitButtonText="Cancel Warmup"
                 title="Cancel Warmup"
+                successMessage="Your tokens are no longer in warmup for staking"
                 max={warmup}
                 transfer={cancelWarmup}
               />
@@ -1460,6 +1572,7 @@ const YourPositionsTable = ({
                   </>
                 }
                 actionName="Unstake"
+                successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
                 max={staked}
                 transfer={unstake}
               >
@@ -1509,6 +1622,7 @@ const StakeToPublisherButton = ({
       actionName="Stake"
       max={availableToStake}
       transfer={delegate}
+      successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
     >
       {(amount) => (
         <>

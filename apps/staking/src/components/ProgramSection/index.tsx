@@ -145,6 +145,7 @@ const TokenOverview = ({
             actionName="Stake"
             max={available}
             transfer={stake}
+            successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
           >
             <StakingTimeline currentEpoch={currentEpoch} />
           </TransferButton>
@@ -175,6 +176,7 @@ const TokenOverview = ({
             title="Cancel Warmup"
             max={warmup}
             transfer={cancelWarmup}
+            successMessage="Your tokens are no longer in warmup for staking"
           />
         ),
       })}
@@ -194,6 +196,7 @@ const TokenOverview = ({
             actionName="Unstake"
             max={staked}
             transfer={unstake}
+            successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
           >
             <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
           </TransferButton>

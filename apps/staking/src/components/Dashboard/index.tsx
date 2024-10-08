@@ -50,7 +50,8 @@ type Props = {
   integrityStakingPublishers: ComponentProps<
     typeof OracleIntegrityStaking
   >["publishers"];
-  restrictedMode?: boolean | undefined;
+  enableGovernance: boolean;
+  enableOis: boolean;
 };
 
 export const Dashboard = ({
@@ -65,7 +66,8 @@ export const Dashboard = ({
   integrityStakingPublishers,
   unlockSchedule,
   yieldRate,
-  restrictedMode,
+  enableGovernance,
+  enableOis,
 }: Props) => {
   const [tab, setTab] = useState<TabId>(TabIds.Empty);
 
@@ -138,7 +140,7 @@ export const Dashboard = ({
     <>
       <main
         className={clsx("flex w-full flex-col gap-8 xl:px-4 xl:py-6", {
-          "sm:gap-0": restrictedMode,
+          "sm:gap-0": !enableOis,
         })}
       >
         <AccountSummary
@@ -151,25 +153,15 @@ export const Dashboard = ({
           availableToWithdraw={availableToWithdraw}
           availableRewards={availableRewards}
           expiringRewards={expiringRewards}
-          restrictedMode={restrictedMode}
+          enableGovernance={enableGovernance}
+          enableOis={enableOis}
           integrityStakingWarmup={integrityStakingWarmup}
           integrityStakingStaked={integrityStakingStaked}
           integrityStakingCooldown={integrityStakingCooldown}
           integrityStakingCooldown2={integrityStakingCooldown2}
           currentEpoch={currentEpoch}
         />
-        {restrictedMode ? (
-          <Governance
-            api={api}
-            currentEpoch={currentEpoch}
-            availableToStake={availableToStakeGovernance}
-            warmup={governance.warmup}
-            staked={governance.staked}
-            cooldown={governance.cooldown}
-            cooldown2={governance.cooldown2}
-            restrictedMode
-          />
-        ) : (
+        {enableOis ? (
           <Tabs
             selectedKey={tab}
             onSelectionChange={setTab}
@@ -229,6 +221,17 @@ export const Dashboard = ({
               />
             </TabPanel>
           </Tabs>
+        ) : (
+          <Governance
+            api={api}
+            currentEpoch={currentEpoch}
+            availableToStake={availableToStakeGovernance}
+            warmup={governance.warmup}
+            staked={governance.staked}
+            cooldown={governance.cooldown}
+            cooldown2={governance.cooldown2}
+            allowStaking={enableGovernance}
+          />
         )}
       </main>
       <Disclosure />

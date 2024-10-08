@@ -719,3 +719,13 @@
   rpcUrl: https://api.testnet.abs.xyz
   networkId: 11124
   type: EvmChain
+- id: sanko
+  mainnet: true
+  rpcUrl: https://mainnet.sanko.xyz
+  networkId: 1996
+  type: EvmChain
+- id: sanko_testnet
+  mainnet: false
+  rpcUrl: https://sanko-arb-sepolia.rpc.caldera.xyz
+  networkId: 1992
+  type: EvmChain
