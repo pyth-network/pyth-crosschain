@@ -218,6 +218,7 @@ export const Dashboard = ({
                 staked={governance.staked}
                 cooldown={governance.cooldown}
                 cooldown2={governance.cooldown2}
+                allowStaking={enableGovernance}
               />
             </TabPanel>
           </Tabs>
