@@ -57,7 +57,8 @@ type Data = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
-    apyHistory: { date: Date; apy: number }[];
+    delegationFee: bigint;
+    apyHistory: { date: Date; apy: number; selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -254,9 +255,10 @@ const loadPublisherData = async (
       (ranking) => ranking.publisher === publisherPubkeyString,
     );
     const numberOfSymbols = publisherNumberOfSymbols[publisherPubkeyString];
-    const apyHistory = publisher.apyHistory.map(({ epoch, apy }) => ({
+    const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
       date: epochToDate(epoch + 1n),
       apy,
+      selfApy,
     }));
 
     return {
@@ -271,6 +273,7 @@ const loadPublisherData = async (
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
+      delegationFee: publisher.delegationFee,
     };
   });
 };

@@ -1044,6 +1044,7 @@ const compareApy = (
     poolCapacity: b.poolCapacity,
     poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
     yieldRate,
+    delegationFee: b.delegationFee,
   }) -
     calculateApy({
       isSelf: false,
@@ -1051,6 +1052,7 @@ const compareApy = (
       poolCapacity: a.poolCapacity,
       poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
       yieldRate,
+      delegationFee: a.delegationFee,
     }));
 
 const comparePoolCapacity = (
@@ -1174,7 +1176,8 @@ type PublisherProps = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
-    apyHistory: { date: Date; apy: number }[];
+    delegationFee: bigint;
+    apyHistory: { date: Date; apy: number; selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -1235,6 +1238,7 @@ const Publisher = ({
         poolUtilization:
           publisher.poolUtilization + publisher.poolUtilizationDelta,
         yieldRate,
+        delegationFee: publisher.delegationFee,
       }).toFixed(2),
     [
       isSelf,
@@ -1373,9 +1377,9 @@ const Publisher = ({
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">
             <SparkChart
-              data={publisher.apyHistory.map(({ date, apy }) => ({
+              data={publisher.apyHistory.map(({ date, apy, selfApy }) => ({
                 date,
-                value: apy,
+                value: isSelf ? selfApy : apy,
               }))}
             />
           </div>
@@ -1662,6 +1666,7 @@ const NewApy = ({
       calculateApy({
         poolCapacity: publisher.poolCapacity,
         yieldRate,
+        delegationFee: publisher.delegationFee,
         ...(isSelf
           ? {
               isSelf: true,
