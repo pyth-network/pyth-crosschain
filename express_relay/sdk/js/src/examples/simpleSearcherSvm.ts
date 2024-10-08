@@ -102,7 +102,10 @@ class SimpleSearcherSvm {
     ixDummy.programId = dummyPid;
 
     const txRaw = new anchor.web3.Transaction().add(ixDummy);
-
+    const expressRelayConfig = await this.client.getExpressRelaySvmConfig(
+      this.chainId,
+      this.connectionSvm
+    );
     const bid = await this.client.constructSvmBid(
       txRaw,
       searcher.publicKey,
@@ -110,7 +113,9 @@ class SimpleSearcherSvm {
       permission,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
-      this.chainId
+      this.chainId,
+      expressRelayConfig.relayerSigner,
+      expressRelayConfig.feeReceiverRelayer
     );
 
     try {
