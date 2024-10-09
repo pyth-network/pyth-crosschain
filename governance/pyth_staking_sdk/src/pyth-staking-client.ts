@@ -48,7 +48,6 @@ import {
   type TargetAccount,
   type VoterWeightAction,
   type VestingSchedule,
-  Position,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -687,7 +686,7 @@ export class PythStakingClient {
           targetWithParameters.integrityPool?.publisher.equals(publisher.pubkey),
       )
 
-      const lowestEpoch = positionsWithPublisher.reduce((min, position)  => (min === undefined || position.activationEpoch < min) ? position.activationEpoch : min, <bigint| undefined>undefined);
+      const lowestEpoch = positionsWithPublisher.reduce<bigint| undefined>((min, position)  => (min === undefined || position.activationEpoch < min) ? position.activationEpoch : min, undefined);
       return {
         ...publisher,
         lowestEpoch
@@ -713,10 +712,10 @@ export class PythStakingClient {
       return a > b ? a : b;
     }
 
-    const lowestEpoch = publishers.reduce((min, publisher, index) => {
+    const lowestEpoch = publishers.reduce<bigint| undefined>((min, publisher, index) => {
       const maximum = max(publisher.lowestEpoch, delegationRecords[index]?.lastEpoch);
-      return (min === undefined || (maximum !== undefined && maximum < min)) ? publisher.lowestEpoch : min, <bigint| undefined>undefined
-    }, <bigint| undefined>undefined);
+      return (min === undefined || (maximum !== undefined && maximum < min)) ? publisher.lowestEpoch : min, undefined as bigint| undefined
+    }, undefined);
 
     const currentEpoch = await getCurrentEpoch(this.connection);
 
