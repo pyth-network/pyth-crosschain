@@ -816,7 +816,7 @@ export class PythStakingClient {
       expiry:
         instructions.lowestEpoch === undefined
           ? undefined
-          : epochToDate(instructions.lowestEpoch + 52n),
+          : epochToDate(instructions.lowestEpoch + 53n),
     };
   }
 
