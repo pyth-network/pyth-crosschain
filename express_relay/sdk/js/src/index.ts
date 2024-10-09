@@ -2,15 +2,7 @@ import type { components, paths } from "./serverTypes";
 import createClient, {
   ClientOptions as FetchClientOptions,
 } from "openapi-fetch";
-import {
-  Address,
-  encodeFunctionData,
-  getContractAddress,
-  Hex,
-  isAddress,
-  isHex,
-} from "viem";
-import { privateKeyToAccount, signTypedData } from "viem/accounts";
+import { Address, Hex, isAddress, isHex } from "viem";
 import WebSocket from "isomorphic-ws";
 import {
   Bid,
@@ -25,25 +17,18 @@ import {
   OpportunityEvm,
   OpportunityParams,
   TokenAmount,
-  TokenPermissions,
 } from "./types";
-import { executeOpportunityAbi } from "./abi";
-import { OPPORTUNITY_ADAPTER_CONFIGS, SVM_CONSTANTS } from "./const";
 import {
   Connection,
-  Keypair,
   PublicKey,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import expressRelayIdl from "./idl/idlExpressRelay.json";
-import { ExpressRelay } from "./expressRelayTypes";
-import { getConfigRouterPda, getExpressRelayMetadataPda } from "./svmPda";
 import { limoId, Order } from "@kamino-finance/limo-sdk";
 import { getPdaAuthority } from "@kamino-finance/limo-sdk/dist/utils";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import * as evm from "./evm";
+import * as svm from "./svm";
 
 export * from "./types";
 
@@ -87,46 +72,6 @@ export function checkTokenQty(token: {
     token: checkAddress(token.token),
     amount: BigInt(token.amount),
   };
-}
-
-function getOpportunityConfig(chainId: string) {
-  const opportunityAdapterConfig = OPPORTUNITY_ADAPTER_CONFIGS[chainId];
-  if (!opportunityAdapterConfig) {
-    throw new ClientError(
-      `Opportunity adapter config not found for chain id: ${chainId}`
-    );
-  }
-  return opportunityAdapterConfig;
-}
-
-/**
- * Converts sellTokens, bidAmount, and callValue to permitted tokens
- * @param tokens List of sellTokens
- * @param bidAmount
- * @param callValue
- * @param weth
- * @returns List of permitted tokens
- */
-function getPermittedTokens(
-  tokens: TokenAmount[],
-  bidAmount: bigint,
-  callValue: bigint,
-  weth: Address
-): TokenPermissions[] {
-  const permitted: TokenPermissions[] = tokens.map(({ token, amount }) => ({
-    token,
-    amount,
-  }));
-  const wethIndex = permitted.findIndex(({ token }) => token === weth);
-  const extraWethNeeded = bidAmount + callValue;
-  if (wethIndex !== -1) {
-    permitted[wethIndex].amount += extraWethNeeded;
-    return permitted;
-  }
-  if (extraWethNeeded > 0) {
-    permitted.push({ token: weth, amount: extraWethNeeded });
-  }
-  return permitted;
 }
 
 export class Client {
@@ -212,87 +157,6 @@ export class Client {
         // Can not route error messages to the callback router as they don't have an id
         console.error(message.error);
       }
-    });
-  }
-
-  /**
-   * Creates a signature for the bid and opportunity
-   * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount, nonce, and deadline timestamp
-   * @param privateKey Private key to sign the bid with
-   * @returns Signature for the bid and opportunity
-   */
-  async getSignature(
-    opportunity: OpportunityEvm,
-    bidParams: BidParams,
-    privateKey: Hex
-  ): Promise<`0x${string}`> {
-    const types = {
-      PermitBatchWitnessTransferFrom: [
-        { name: "permitted", type: "TokenPermissions[]" },
-        { name: "spender", type: "address" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "witness", type: "OpportunityWitness" },
-      ],
-      OpportunityWitness: [
-        { name: "buyTokens", type: "TokenAmount[]" },
-        { name: "executor", type: "address" },
-        { name: "targetContract", type: "address" },
-        { name: "targetCalldata", type: "bytes" },
-        { name: "targetCallValue", type: "uint256" },
-        { name: "bidAmount", type: "uint256" },
-      ],
-      TokenAmount: [
-        { name: "token", type: "address" },
-        { name: "amount", type: "uint256" },
-      ],
-      TokenPermissions: [
-        { name: "token", type: "address" },
-        { name: "amount", type: "uint256" },
-      ],
-    };
-
-    const account = privateKeyToAccount(privateKey);
-    const executor = account.address;
-    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
-    const permitted = getPermittedTokens(
-      opportunity.sellTokens,
-      bidParams.amount,
-      opportunity.targetCallValue,
-      checkAddress(opportunityAdapterConfig.weth)
-    );
-    const create2Address = getContractAddress({
-      bytecodeHash:
-        opportunityAdapterConfig.opportunity_adapter_init_bytecode_hash,
-      from: opportunityAdapterConfig.opportunity_adapter_factory,
-      opcode: "CREATE2",
-      salt: `0x${executor.replace("0x", "").padStart(64, "0")}`,
-    });
-
-    return signTypedData({
-      privateKey,
-      domain: {
-        name: "Permit2",
-        verifyingContract: checkAddress(opportunityAdapterConfig.permit2),
-        chainId: opportunityAdapterConfig.chain_id,
-      },
-      types,
-      primaryType: "PermitBatchWitnessTransferFrom",
-      message: {
-        permitted,
-        spender: create2Address,
-        nonce: bidParams.nonce,
-        deadline: bidParams.deadline,
-        witness: {
-          buyTokens: opportunity.buyTokens,
-          executor,
-          targetContract: opportunity.targetContract,
-          targetCalldata: opportunity.targetCalldata,
-          targetCallValue: opportunity.targetCallValue,
-          bidAmount: bidParams.amount,
-        },
-      },
     });
   }
 
@@ -459,196 +323,6 @@ export class Client {
   }
 
   /**
-   * Creates a signed opportunity bid for an opportunity
-   * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount and valid until timestamp
-   * @param privateKey Private key to sign the bid with
-   * @returns Signed opportunity bid
-   */
-  async signOpportunityBid(
-    opportunity: Opportunity & OpportunityEvm,
-    bidParams: BidParams,
-    privateKey: Hex
-  ): Promise<OpportunityBid> {
-    const account = privateKeyToAccount(privateKey);
-    const signature = await this.getSignature(
-      opportunity,
-      bidParams,
-      privateKey
-    );
-
-    return {
-      permissionKey: opportunity.permissionKey,
-      bid: bidParams,
-      executor: account.address,
-      signature,
-      opportunityId: opportunity.opportunityId,
-    };
-  }
-
-  /**
-   * Creates a signed bid for an opportunity
-   * @param opportunity Opportunity to bid on
-   * @param bidParams Bid amount, nonce, and deadline timestamp
-   * @param privateKey Private key to sign the bid with
-   * @returns Signed bid
-   */
-  async signBid(
-    opportunity: OpportunityEvm,
-    bidParams: BidParams,
-    privateKey: Hex
-  ): Promise<Bid> {
-    const opportunityAdapterConfig = getOpportunityConfig(opportunity.chainId);
-    const executor = privateKeyToAccount(privateKey).address;
-    const permitted = getPermittedTokens(
-      opportunity.sellTokens,
-      bidParams.amount,
-      opportunity.targetCallValue,
-      checkAddress(opportunityAdapterConfig.weth)
-    );
-    const signature = await this.getSignature(
-      opportunity,
-      bidParams,
-      privateKey
-    );
-
-    const calldata = this.makeAdapterCalldata(
-      opportunity,
-      permitted,
-      executor,
-      bidParams,
-      signature
-    );
-
-    return {
-      amount: bidParams.amount,
-      targetCalldata: calldata,
-      chainId: opportunity.chainId,
-      targetContract: opportunityAdapterConfig.opportunity_adapter_factory,
-      permissionKey: opportunity.permissionKey,
-      env: "evm",
-    };
-  }
-
-  async getExpressRelaySvmConfig(
-    chainId: string,
-    connection: Connection
-  ): Promise<ExpressRelaySvmConfig> {
-    const provider = new AnchorProvider(
-      connection,
-      new NodeWallet(new Keypair())
-    );
-    const expressRelay = new Program<ExpressRelay>(
-      expressRelayIdl as ExpressRelay,
-      provider
-    );
-    const metadata = await expressRelay.account.expressRelayMetadata.fetch(
-      getExpressRelayMetadataPda(chainId)
-    );
-    return {
-      feeReceiverRelayer: metadata.feeReceiverRelayer,
-      relayerSigner: metadata.relayerSigner,
-    };
-  }
-
-  /**
-   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
-   * @param searcher The address of the searcher that is submitting the bid
-   * @param router The identifying address of the router that the permission key is for
-   * @param permissionKey The 32-byte permission key as an SVM PublicKey
-   * @param bidAmount The amount of the bid in lamports
-   * @param deadline The deadline for the bid in seconds since Unix epoch
-   * @param chainId The chain ID as a string, e.g. "solana"
-   * @param relayerSigner The address of the relayer that is submitting the bid
-   * @param feeReceiverRelayer The fee collection address of the relayer
-   * @returns The SubmitBid instruction
-   */
-  async constructSubmitBidInstruction(
-    searcher: PublicKey,
-    router: PublicKey,
-    permissionKey: PublicKey,
-    bidAmount: anchor.BN,
-    deadline: anchor.BN,
-    chainId: string,
-    relayerSigner: PublicKey,
-    feeReceiverRelayer: PublicKey
-  ): Promise<TransactionInstruction> {
-    const expressRelay = new Program<ExpressRelay>(
-      expressRelayIdl as ExpressRelay,
-      {} as AnchorProvider
-    );
-
-    const configRouter = getConfigRouterPda(chainId, router);
-    const expressRelayMetadata = getExpressRelayMetadataPda(chainId);
-    const svmConstants = SVM_CONSTANTS[chainId];
-
-    const ixSubmitBid = await expressRelay.methods
-      .submitBid({
-        deadline,
-        bidAmount,
-      })
-      .accountsStrict({
-        searcher,
-        relayerSigner,
-        permission: permissionKey,
-        router,
-        configRouter,
-        expressRelayMetadata,
-        feeReceiverRelayer,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-      })
-      .instruction();
-    ixSubmitBid.programId = svmConstants.expressRelayProgram;
-
-    return ixSubmitBid;
-  }
-
-  /**
-   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
-   * @param tx The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
-   * @param searcher The address of the searcher that is submitting the bid
-   * @param router The identifying address of the router that the permission key is for
-   * @param permissionKey The 32-byte permission key as an SVM PublicKey
-   * @param bidAmount The amount of the bid in lamports
-   * @param deadline The deadline for the bid in seconds since Unix epoch
-   * @param chainId The chain ID as a string, e.g. "solana"
-   * @param relayerSigner The address of the relayer that is submitting the bid
-   * @param feeReceiverRelayer The fee collection address of the relayer
-   * @returns The constructed SVM bid
-   */
-  async constructSvmBid(
-    tx: Transaction,
-    searcher: PublicKey,
-    router: PublicKey,
-    permissionKey: PublicKey,
-    bidAmount: anchor.BN,
-    deadline: anchor.BN,
-    chainId: string,
-    relayerSigner: PublicKey,
-    feeReceiverRelayer: PublicKey
-  ): Promise<BidSvm> {
-    const ixSubmitBid = await this.constructSubmitBidInstruction(
-      searcher,
-      router,
-      permissionKey,
-      bidAmount,
-      deadline,
-      chainId,
-      relayerSigner,
-      feeReceiverRelayer
-    );
-
-    tx.instructions.unshift(ixSubmitBid);
-
-    return {
-      transaction: tx,
-      chainId: chainId,
-      env: "svm",
-    };
-  }
-
-  /**
    * Submits a raw bid for a permission key
    * @param bid
    * @param subscribeToUpdates If true, the client will subscribe to bid status updates via websocket and will call the bid status callback if set
@@ -761,38 +435,135 @@ export class Client {
     };
   }
 
+  // EVM specific functions
+
   /**
-   * Constructs the calldata for the opportunity adapter contract.
+   * Creates a signed opportunity bid for an opportunity
    * @param opportunity Opportunity to bid on
-   * @param permitted Permitted tokens
-   * @param executor Address of the searcher's wallet
-   * @param bidParams Bid amount, nonce, and deadline timestamp
-   * @param signature Searcher's signature for opportunity params and bidParams
-   * @returns Calldata for the opportunity adapter contract
+   * @param bidParams Bid amount and valid until timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signed opportunity bid
    */
-  private makeAdapterCalldata(
-    opportunity: OpportunityEvm,
-    permitted: TokenPermissions[],
-    executor: Address,
+  async signOpportunityBid(
+    opportunity: Opportunity & OpportunityEvm,
     bidParams: BidParams,
-    signature: Hex
-  ): Hex {
-    return encodeFunctionData({
-      abi: [executeOpportunityAbi],
-      args: [
-        [
-          [permitted, bidParams.nonce, bidParams.deadline],
-          [
-            opportunity.buyTokens,
-            executor,
-            opportunity.targetContract,
-            opportunity.targetCalldata,
-            opportunity.targetCallValue,
-            bidParams.amount,
-          ],
-        ],
-        signature,
-      ],
-    });
+    privateKey: Hex
+  ): Promise<OpportunityBid> {
+    return evm.signOpportunityBid(opportunity, bidParams, privateKey);
+  }
+
+  /**
+   * Creates a signed bid for an opportunity
+   * @param opportunity Opportunity to bid on
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signed bid
+   */
+  async signBid(
+    opportunity: OpportunityEvm,
+    bidParams: BidParams,
+    privateKey: Hex
+  ): Promise<Bid> {
+    return evm.signBid(opportunity, bidParams, privateKey);
+  }
+
+  /**
+   * Creates a signature for the bid and opportunity
+   * @param opportunity Opportunity to bid on
+   * @param bidParams Bid amount, nonce, and deadline timestamp
+   * @param privateKey Private key to sign the bid with
+   * @returns Signature for the bid and opportunity
+   */
+  async getSignature(
+    opportunity: OpportunityEvm,
+    bidParams: BidParams,
+    privateKey: Hex
+  ): Promise<`0x${string}`> {
+    return evm.getSignature(opportunity, bidParams, privateKey);
+  }
+
+  // SVM specific functions
+
+  /**
+   * Fetches the Express Relay SVM config necessary for bidding
+   * @param chainId The id for the chain you want to fetch the config for
+   * @param connection The connection to use for fetching the config
+   */
+  async getExpressRelaySvmConfig(
+    chainId: string,
+    connection: Connection
+  ): Promise<ExpressRelaySvmConfig> {
+    return svm.getExpressRelaySvmConfig(chainId, connection);
+  }
+
+  /**
+   * Constructs a SubmitBid instruction, which can be added to a transaction to permission it on the given permission key
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @param relayerSigner The address of the relayer that is submitting the bid
+   * @param feeReceiverRelayer The fee collection address of the relayer
+   * @returns The SubmitBid instruction
+   */
+  async constructSubmitBidInstruction(
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string,
+    relayerSigner: PublicKey,
+    feeReceiverRelayer: PublicKey
+  ): Promise<TransactionInstruction> {
+    return svm.constructSubmitBidInstruction(
+      searcher,
+      router,
+      permissionKey,
+      bidAmount,
+      deadline,
+      chainId,
+      relayerSigner,
+      feeReceiverRelayer
+    );
+  }
+
+  /**
+   * Constructs an SVM bid, by adding a SubmitBid instruction to a transaction
+   * @param tx The transaction to add a SubmitBid instruction to. This transaction should already check for the appropriate permissions.
+   * @param searcher The address of the searcher that is submitting the bid
+   * @param router The identifying address of the router that the permission key is for
+   * @param permissionKey The 32-byte permission key as an SVM PublicKey
+   * @param bidAmount The amount of the bid in lamports
+   * @param deadline The deadline for the bid in seconds since Unix epoch
+   * @param chainId The chain ID as a string, e.g. "solana"
+   * @param relayerSigner The address of the relayer that is submitting the bid
+   * @param feeReceiverRelayer The fee collection address of the relayer
+   * @returns The constructed SVM bid
+   */
+  async constructSvmBid(
+    tx: Transaction,
+    searcher: PublicKey,
+    router: PublicKey,
+    permissionKey: PublicKey,
+    bidAmount: anchor.BN,
+    deadline: anchor.BN,
+    chainId: string,
+    relayerSigner: PublicKey,
+    feeReceiverRelayer: PublicKey
+  ): Promise<BidSvm> {
+    return svm.constructSvmBid(
+      tx,
+      searcher,
+      router,
+      permissionKey,
+      bidAmount,
+      deadline,
+      chainId,
+      relayerSigner,
+      feeReceiverRelayer
+    );
   }
 }
