@@ -186,7 +186,12 @@ const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
       revalidateOnReconnect: false,
     },
   );
-  const lastStakeAccount = useLocalStorageValue<string>("last-stake-account");
+  const lastStakeAccountMainnet = useLocalStorageValue<string>(
+    `last-stake-account.mainnet`,
+  );
+  const lastStakeAccountDevnet = useLocalStorageValue<string>(
+    `last-stake-account.devnet`,
+  );
 
   return useMemo(() => {
     if (wallet.connecting) {
@@ -213,11 +218,17 @@ const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
           } else {
             const [firstAccount, ...otherAccounts] = stakeAccounts.data;
             if (firstAccount) {
-              const selectedAccount = lastStakeAccount.value
+              const localStorageValue = isMainnet
+                ? lastStakeAccountMainnet
+                : lastStakeAccountDevnet;
+              const selectedAccount = localStorageValue.value
                 ? stakeAccounts.data.find(
-                    (account) => account.toBase58() === lastStakeAccount.value,
+                    (account) => account.toBase58() === localStorageValue.value,
                   )
                 : undefined;
+              if (!selectedAccount) {
+                localStorageValue.set(firstAccount.toBase58());
+              }
               return State[StateType.Loaded](
                 isMainnet,
                 pythStakingClient,
@@ -226,7 +237,7 @@ const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
                 selectedAccount ?? firstAccount,
                 [firstAccount, ...otherAccounts],
                 (account: PublicKey) => {
-                  lastStakeAccount.set(account.toBase58());
+                  localStorageValue.set(account.toBase58());
                 },
                 mutate,
               );
@@ -256,7 +267,8 @@ const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
     pythnetClient,
     stakeAccounts,
     hermesClient,
-    lastStakeAccount,
+    lastStakeAccountMainnet,
+    lastStakeAccountDevnet,
     mutate,
   ]);
 };
