@@ -1,6 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { Client } from "../index";
+import {
+  Client,
+  ExpressRelaySvmConfig,
+  Opportunity,
+  OpportunitySvm,
+} from "../index";
 import { BidStatusUpdate } from "../types";
 import { SVM_CONSTANTS } from "../const";
 
@@ -9,10 +14,7 @@ import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 
 import * as limo from "@kamino-finance/limo-sdk";
 import { Decimal } from "decimal.js";
-import {
-  getPdaAuthority,
-  OrderStateAndAddress,
-} from "@kamino-finance/limo-sdk/dist/utils";
+import { getPdaAuthority } from "@kamino-finance/limo-sdk/dist/utils";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -20,13 +22,14 @@ class SimpleSearcherLimo {
   private client: Client;
   private connectionSvm: Connection;
   private clientLimo: limo.LimoClient;
-  private searcher: Keypair;
+  private expressRelayConfig: ExpressRelaySvmConfig | undefined;
   constructor(
     public endpointExpressRelay: string,
     public chainId: string,
-    privateKey: string,
+    private searcher: Keypair,
     public endpointSvm: string,
     public globalConfig: PublicKey,
+    public fillRate: number,
     public apiKey?: string
   ) {
     this.client = new Client(
@@ -35,15 +38,11 @@ class SimpleSearcherLimo {
         apiKey,
       },
       undefined,
-      () => {
-        return Promise.resolve();
-      },
+      this.opportunityHandler.bind(this),
       this.bidStatusHandler.bind(this)
     );
     this.connectionSvm = new Connection(endpointSvm, "confirmed");
     this.clientLimo = new limo.LimoClient(this.connectionSvm, globalConfig);
-    const secretKey = anchor.utils.bytes.bs58.decode(privateKey);
-    this.searcher = Keypair.fromSecretKey(secretKey);
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -60,7 +59,8 @@ class SimpleSearcherLimo {
     );
   }
 
-  async evaluateOrder(order: OrderStateAndAddress) {
+  async generateBid(opportunity: OpportunitySvm) {
+    const order = opportunity.order;
     const inputMintDecimals = await this.clientLimo.getOrderInputMintDecimals(
       order
     );
@@ -69,13 +69,20 @@ class SimpleSearcherLimo {
     );
     const inputAmountDecimals = new Decimal(
       order.state.remainingInputAmount.toNumber()
-    ).div(new Decimal(10).pow(inputMintDecimals));
+    )
+      .div(new Decimal(10).pow(inputMintDecimals))
+      .mul(this.fillRate)
+      .div(100);
 
     const outputAmountDecimals = new Decimal(
       order.state.expectedOutputAmount.toNumber()
-    ).div(new Decimal(10).pow(outputMintDecimals));
+    )
+      .div(new Decimal(10).pow(outputMintDecimals))
+      .mul(this.fillRate)
+      .div(100);
 
     console.log("Order address", order.address.toBase58());
+    console.log("Fill rate", this.fillRate);
     console.log(
       "Sell token",
       order.state.inputMint.toBase58(),
@@ -104,6 +111,12 @@ class SimpleSearcherLimo {
       order.state.globalConfig
     );
     const bidAmount = new anchor.BN(argv.bid);
+    if (!this.expressRelayConfig) {
+      this.expressRelayConfig = await this.client.getExpressRelaySvmConfig(
+        this.chainId,
+        this.connectionSvm
+      );
+    }
 
     const bid = await this.client.constructSvmBid(
       txRaw,
@@ -112,41 +125,39 @@ class SimpleSearcherLimo {
       order.address,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
-      this.chainId
+      this.chainId,
+      this.expressRelayConfig.relayerSigner,
+      this.expressRelayConfig.feeReceiverRelayer
     );
 
-    try {
-      const { blockhash } = await this.connectionSvm.getLatestBlockhash();
-      bid.transaction.recentBlockhash = blockhash;
-      bid.transaction.sign(this.searcher);
-      const bidId = await this.client.submitBid(bid);
-      console.log(`Successful bid. Bid id ${bidId}`);
-    } catch (error) {
-      console.error(`Failed to bid: ${error}`);
-    }
+    bid.transaction.recentBlockhash = opportunity.blockHash;
+    bid.transaction.sign(this.searcher);
+    return bid;
   }
 
-  async bidOnNewOrders() {
-    let allOrders =
-      await this.clientLimo.getAllOrdersStateAndAddressWithFilters([]);
-    allOrders = allOrders.filter(
-      (order) => !order.state.remainingInputAmount.isZero()
-    );
-    if (allOrders.length === 0) {
-      console.log("No orders to bid on");
-      return;
+  async opportunityHandler(opportunity: Opportunity) {
+    const bid = await this.generateBid(opportunity as OpportunitySvm);
+    try {
+      const bidId = await this.client.submitBid(bid);
+      console.log(
+        `Successful bid. Opportunity id ${opportunity.opportunityId} Bid id ${bidId}`
+      );
+    } catch (error) {
+      console.error(
+        `Failed to bid on opportunity ${opportunity.opportunityId}: ${error}`
+      );
     }
-    for (const order of allOrders) {
-      await this.evaluateOrder(order);
-    }
-    // Note: You need to parallelize this in production with something like:
-    // await Promise.all(allOrders.map((order) => this.evaluateOrder(order)));
   }
 
   async start() {
-    for (;;) {
-      await this.bidOnNewOrders();
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      await this.client.subscribeChains([argv.chainId]);
+      console.log(
+        `Subscribed to chain ${argv.chainId}. Waiting for opportunities...`
+      );
+    } catch (error) {
+      console.error(error);
+      this.client.websocket?.close();
     }
   }
 }
@@ -174,9 +185,15 @@ const argv = yargs(hideBin(process.argv))
     default: "100",
   })
   .option("private-key", {
-    description: "Private key to sign the bid with. In 64-byte base58 format",
+    description: "Private key of the searcher in base58 format",
     type: "string",
-    demandOption: true,
+    conflicts: "private-key-json-file",
+  })
+  .option("private-key-json-file", {
+    description:
+      "Path to a json file containing the private key of the searcher in array of bytes format",
+    type: "string",
+    conflicts: "private-key",
   })
   .option("api-key", {
     description:
@@ -189,6 +206,11 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: true,
   })
+  .option("fill-rate", {
+    description: "How much of the order to fill in percentage. Default is 100%",
+    type: "number",
+    default: 100,
+  })
   .help()
   .alias("help", "h")
   .parseSync();
@@ -196,17 +218,32 @@ async function run() {
   if (!SVM_CONSTANTS[argv.chainId]) {
     throw new Error(`SVM constants not found for chain ${argv.chainId}`);
   }
-  const searcherSvm = Keypair.fromSecretKey(
-    anchor.utils.bytes.bs58.decode(argv.privateKey)
-  );
-  console.log(`Using searcher pubkey: ${searcherSvm.publicKey.toBase58()}`);
+  let searcherKeyPair;
+
+  if (argv.privateKey) {
+    const secretKey = anchor.utils.bytes.bs58.decode(argv.privateKey);
+    searcherKeyPair = Keypair.fromSecretKey(secretKey);
+  } else if (argv.privateKeyJsonFile) {
+    searcherKeyPair = Keypair.fromSecretKey(
+      Buffer.from(
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        JSON.parse(require("fs").readFileSync(argv.privateKeyJsonFile))
+      )
+    );
+  } else {
+    throw new Error(
+      "Either private-key or private-key-json-file must be provided"
+    );
+  }
+  console.log(`Using searcher pubkey: ${searcherKeyPair.publicKey.toBase58()}`);
 
   const simpleSearcher = new SimpleSearcherLimo(
     argv.endpointExpressRelay,
     argv.chainId,
-    argv.privateKey,
+    searcherKeyPair,
     argv.endpointSvm,
     new PublicKey(argv.globalConfig),
+    argv.fillRate,
     argv.apiKey
   );
   await simpleSearcher.start();

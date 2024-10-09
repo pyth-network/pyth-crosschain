@@ -1,13 +1,11 @@
-import base64
 from datetime import datetime
 from enum import Enum
 from pydantic import (
     BaseModel,
     model_validator,
-    GetCoreSchemaHandler,
-    GetJsonSchemaHandler,
     Tag,
     Discriminator,
+    RootModel,
 )
 from pydantic.functional_validators import AfterValidator
 from pydantic.functional_serializers import PlainSerializer
@@ -15,13 +13,16 @@ from uuid import UUID
 import web3
 from typing import Union, ClassVar, Any
 from pydantic import Field
-from pydantic.json_schema import JsonSchemaValue
-from pydantic_core import core_schema
-from solders.transaction import Transaction as _SvmTransaction
 from typing_extensions import Literal, Annotated
 import warnings
 import string
 from eth_account.datastructures import SignedMessage
+
+from express_relay.express_relay_svm_types import (
+    SvmTransaction,
+    SvmSignature,
+    OpportunitySvm,
+)
 
 
 class UnsupportedOpportunityVersionException(Exception):
@@ -113,48 +114,6 @@ class BidEvm(BaseModel):
     permission_key: HexString
 
 
-class _TransactionPydanticAnnotation:
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: Any,
-        _handler: GetCoreSchemaHandler,
-    ) -> core_schema.CoreSchema:
-        def validate_from_str(value: str) -> _SvmTransaction:
-            return _SvmTransaction.from_bytes(base64.b64decode(value))
-
-        from_str_schema = core_schema.chain_schema(
-            [
-                core_schema.str_schema(),
-                core_schema.no_info_plain_validator_function(validate_from_str),
-            ]
-        )
-
-        return core_schema.json_or_python_schema(
-            json_schema=from_str_schema,
-            python_schema=core_schema.union_schema(
-                [
-                    # check if it's an instance first before doing any further work
-                    core_schema.is_instance_schema(_SvmTransaction),
-                    from_str_schema,
-                ]
-            ),
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda instance: base64.b64encode(bytes(instance)).decode("utf-8")
-            ),
-        )
-
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, _core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler
-    ) -> JsonSchemaValue:
-        # Use the same schema that would be used for `str`
-        return handler(core_schema.str_schema())
-
-
-SvmTransaction = Annotated[_SvmTransaction, _TransactionPydanticAnnotation]
-
-
 class BidSvm(BaseModel):
     """
     Attributes:
@@ -187,7 +146,7 @@ class BidStatusUpdate(BaseModel):
 
     id: UUIDString
     bid_status: BidStatus
-    result: Bytes32 | None = Field(default=None)
+    result: Bytes32 | SvmSignature | None = Field(default=None)
     index: int | None = Field(default=None)
 
     @model_validator(mode="after")
@@ -202,6 +161,8 @@ class BidStatusUpdate(BaseModel):
 
     @model_validator(mode="after")
     def check_index(self):
+        if isinstance(self.result, SvmSignature):
+            return self
         if self.bid_status == BidStatus("submitted") or self.bid_status == BidStatus(
             "won"
         ):
@@ -363,7 +324,7 @@ class OpportunityParams(BaseModel):
     params: Union[OpportunityParamsV1] = Field(..., discriminator="version")
 
 
-class Opportunity(BaseModel):
+class OpportunityEvm(BaseModel):
     """
     Attributes:
         target_calldata: The calldata for the contract call.
@@ -400,22 +361,9 @@ class Opportunity(BaseModel):
             )
         return data
 
-    @classmethod
-    def process_opportunity_dict(cls, opportunity_dict: dict):
-        """
-        Processes an opportunity dictionary and converts to a class object.
 
-        Args:
-            opportunity_dict: The opportunity dictionary to convert.
-
-        Returns:
-            The opportunity as a class object.
-        """
-        try:
-            return cls.model_validate(opportunity_dict)
-        except UnsupportedOpportunityVersionException as e:
-            warnings.warn(str(e))
-            return None
+Opportunity = Union[OpportunityEvm, OpportunitySvm]
+OpportunityRoot = RootModel[Opportunity]
 
 
 class SubscribeMessageParams(BaseModel):

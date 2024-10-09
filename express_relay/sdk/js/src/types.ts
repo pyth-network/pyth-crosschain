@@ -1,6 +1,7 @@
 import { Address, Hex } from "viem";
 import type { components } from "./serverTypes";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { Blockhash, PublicKey, Transaction } from "@solana/web3.js";
+import { OrderStateAndAddress } from "@kamino-finance/limo-sdk/dist/utils";
 
 /**
  * ERC20 token with contract address and amount
@@ -62,16 +63,12 @@ export type OpportunityAdapterConfig = {
 /**
  * Represents a valid opportunity ready to be executed
  */
-export type Opportunity = {
+export type OpportunityEvm = {
   /**
    * The chain id where the opportunity will be executed.
    */
   chainId: ChainId;
 
-  /**
-   * Unique identifier for the opportunity
-   */
-  opportunityId: string;
   /**
    * Permission key required for successful execution of the opportunity.
    */
@@ -89,14 +86,45 @@ export type Opportunity = {
    */
   targetCallValue: bigint;
   /**
-   * Tokens required to repay the debt
+   * Tokens required to execute the opportunity
    */
   sellTokens: TokenAmount[];
   /**
    * Tokens to receive after the opportunity is executed
    */
   buyTokens: TokenAmount[];
+  /**
+   * Unique identifier for the opportunity
+   */
+  opportunityId: string;
 };
+
+export type OpportunitySvm = {
+  order: OrderStateAndAddress;
+  program: "limo";
+  /**
+   * The chain id where the opportunity will be executed.
+   */
+  chainId: ChainId;
+  /**
+   * Slot where the opportunity was found
+   */
+  slot: number;
+  /**
+   * Blockhash that can be used to sign transactions for this opportunity
+   */
+  blockHash: Blockhash;
+  /**
+   * Unique identifier for the opportunity
+   */
+  opportunityId: string;
+};
+
+export type OpportunityCreate =
+  | Omit<OpportunityEvm, "opportunityId">
+  | Omit<OpportunitySvm, "opportunityId">;
+
+export type Opportunity = OpportunityEvm | OpportunitySvm;
 /**
  * Represents a bid for an opportunity
  */
@@ -123,7 +151,6 @@ export type OpportunityBid = {
 /**
  * All the parameters necessary to represent an opportunity
  */
-export type OpportunityParams = Omit<Opportunity, "opportunityId">;
 
 export type Bid = BidEvm | BidSvm;
 /**
@@ -161,6 +188,21 @@ export type BidEvm = {
    */
   env: "evm";
 };
+
+/**
+ * Necessary accounts for submitting a SVM bid. These can be fetched from on-chain program data.
+ */
+export type ExpressRelaySvmConfig = {
+  /**
+   * @description The relayer signer account. All submitted transactions will be signed by this account.
+   */
+  relayerSigner: PublicKey;
+  /**
+   * @description The fee collection account for the relayer.
+   */
+  feeReceiverRelayer: PublicKey;
+};
+
 /**
  * Represents a raw SVM bid on acquiring a permission key
  */
@@ -201,7 +243,5 @@ export type BidsResponse = {
 };
 
 export type SvmConstantsConfig = {
-  relayerSigner: PublicKey;
-  feeReceiverRelayer: PublicKey;
   expressRelayProgram: PublicKey;
 };

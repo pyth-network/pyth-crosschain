@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import {
   checkAddress,
   Client,
-  OpportunityParams,
+  OpportunityCreate,
 } from "@pythnetwork/express-relay-js";
 import type { ContractFunctionReturnType } from "viem";
 import {
@@ -133,7 +133,7 @@ class ProtocolMonitor {
         { token: this.wethContract, amount: targetCallValue },
       ];
     }
-    const opportunity: OpportunityParams = {
+    const opportunity: OpportunityCreate = {
       chainId: this.chainId,
       targetContract: this.vaultContract,
       targetCalldata: calldata,
