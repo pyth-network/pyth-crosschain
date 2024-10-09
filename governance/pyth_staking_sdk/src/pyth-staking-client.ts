@@ -146,7 +146,9 @@ export class PythStakingClient {
         },
       );
     let accounts = res.map((account) => account.pubkey);
-    accounts.push(new PublicKey("GmJg5NHSSnixPWBYa3gs3oX41vRewXPTLxcDcykajBM1"))
+    accounts.push(
+      new PublicKey("GmJg5NHSSnixPWBYa3gs3oX41vRewXPTLxcDcykajBM1"),
+    );
     return accounts;
   }
 
@@ -174,7 +176,9 @@ export class PythStakingClient {
     publisher: PublicKey,
   ) {
     return this.integrityPoolProgram.account.delegationRecord
-      .fetchNullable(getDelegationRecordAddress(stakeAccountPositions, publisher))
+      .fetchNullable(
+        getDelegationRecordAddress(stakeAccountPositions, publisher),
+      )
       .then((record) => convertBNToBigInt(record));
   }
 
@@ -696,9 +700,9 @@ export class PythStakingClient {
     const currentEpoch = await getCurrentEpoch(this.connection);
 
     // Filter out delegationRecord that are up to date
-    const filteredPublishers = publishers.filter((_,index) => {
+    const filteredPublishers = publishers.filter((_, index) => {
       !(delegationRecords[index]?.lastEpoch === currentEpoch);
-    })
+    });
 
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
