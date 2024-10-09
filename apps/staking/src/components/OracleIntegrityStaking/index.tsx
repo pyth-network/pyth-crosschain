@@ -10,6 +10,7 @@ import {
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
+import Image from "next/image";
 import {
   useMemo,
   useCallback,
@@ -190,13 +191,13 @@ const SelfStaking = ({
           <div className="sticky left-0 mb-4 flex flex-row items-start justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6 lg:items-center">
             <div>
               <h3 className="text-2xl font-light">Self Staking</h3>
-              <PublisherName
+              <PublisherIdentity
                 truncatedClassName="2xl:hidden"
                 fullClassName="hidden 2xl:inline"
                 className="opacity-60"
               >
                 {self}
-              </PublisherName>
+              </PublisherIdentity>
             </div>
             <div className="flex flex-row items-center gap-4">
               <MenuTrigger>
@@ -353,10 +354,12 @@ const ReassignStakeAccount = ({
       closeDisabled={closeDisabled}
       description={
         <>
-          <span className="mr-3 align-middle">
+          <span className="mr-[0.5em]">
             Designate a different stake account as the self-staking account for
           </span>
-          <PublisherName className="font-semibold">{self}</PublisherName>
+          <PublisherIdentity className="font-semibold">
+            {self}
+          </PublisherIdentity>
         </>
       }
       {...props}
@@ -613,8 +616,8 @@ const PublisherList = ({
         .filter(
           (publisher) =>
             filter.contains(publisher.publicKey.toBase58(), search) ||
-            (publisher.name !== undefined &&
-              filter.contains(publisher.name, search)),
+            (publisher.identity !== undefined &&
+              filter.contains(publisher.identity.name, search)),
         )
         .sort((a, b) => {
           if (yoursFirst) {
@@ -1027,8 +1030,8 @@ const compareName = (
 ) =>
   (reverse ? -1 : 1) *
   collator.compare(
-    a.name ?? a.publicKey.toBase58(),
-    b.name ?? b.publicKey.toBase58(),
+    a.identity?.name ?? a.publicKey.toBase58(),
+    b.identity?.name ?? b.publicKey.toBase58(),
   );
 
 const compareApy = (
@@ -1166,7 +1169,12 @@ type PublisherProps = {
   totalStaked: bigint;
   isSelf?: boolean | undefined;
   publisher: {
-    name: string | undefined;
+    identity:
+      | {
+          name: string;
+          icon: string;
+        }
+      | undefined;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -1247,6 +1255,7 @@ const Publisher = ({
       publisher.poolCapacity,
       publisher.poolUtilization,
       publisher.poolUtilizationDelta,
+      publisher.delegationFee,
       yieldRate,
     ],
   );
@@ -1255,13 +1264,14 @@ const Publisher = ({
     <div className="border-t border-neutral-600/50 p-4 sm:px-10 md:pt-8">
       {!isSelf && (
         <div className="flex flex-row items-center justify-between">
-          <PublisherName
+          <PublisherIdentity
             className="font-semibold"
             truncatedClassName="md:hidden"
             fullClassName="hidden md:inline"
+            withNameClassName="flex flex-col items-start"
           >
             {publisher}
-          </PublisherName>
+          </PublisherIdentity>
           <StakeToPublisherButton
             api={api}
             currentEpoch={currentEpoch}
@@ -1356,12 +1366,13 @@ const Publisher = ({
         {!isSelf && (
           <>
             <PublisherTableCell className="truncate py-4 pl-4 font-medium sm:pl-10">
-              <PublisherName
+              <PublisherIdentity
                 truncatedClassName="3xl:hidden"
                 fullClassName="hidden 3xl:inline"
+                withNameClassName="flex flex-col items-start"
               >
                 {publisher}
-              </PublisherName>
+              </PublisherIdentity>
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
               <Tokens>{publisher.selfStake + publisher.selfStakeDelta}</Tokens>
@@ -1526,12 +1537,12 @@ const YourPositionsTable = ({
                 className="w-28"
                 actionDescription={
                   <>
-                    <span className="mr-3 align-middle">
+                    <span className="mr-[0.5em]">
                       Cancel tokens that are in warmup for staking to
                     </span>
-                    <PublisherName className="font-semibold">
+                    <PublisherIdentity className="font-semibold">
                       {publisher}
-                    </PublisherName>
+                    </PublisherIdentity>
                   </>
                 }
                 actionName="Cancel"
@@ -1563,12 +1574,10 @@ const YourPositionsTable = ({
                 className="md:w-28"
                 actionDescription={
                   <>
-                    <span className="mr-3 align-middle">
-                      Unstake tokens from
-                    </span>
-                    <PublisherName className="font-semibold">
+                    <span className="mr-[0.5em]">Unstake tokens from</span>
+                    <PublisherIdentity className="font-semibold">
                       {publisher}
-                    </PublisherName>
+                    </PublisherIdentity>
                   </>
                 }
                 actionName="Unstake"
@@ -1615,8 +1624,10 @@ const StakeToPublisherButton = ({
       size="small"
       actionDescription={
         <>
-          <span className="mr-3 align-middle">Stake to</span>
-          <PublisherName className="font-semibold">{publisher}</PublisherName>
+          <span className="mr-[0.5em]">Stake to</span>
+          <PublisherIdentity className="font-semibold">
+            {publisher}
+          </PublisherIdentity>
         </>
       }
       actionName="Stake"
@@ -1690,6 +1701,7 @@ const NewApy = ({
       publisher.selfStakeDelta,
       publisher.poolUtilization,
       publisher.poolUtilizationDelta,
+      publisher.delegationFee,
       children,
     ],
   );
@@ -1697,34 +1709,58 @@ const NewApy = ({
   return <div {...props}>{apy}%</div>;
 };
 
-type PublisherNameProps = {
+type PublisherIdentityProps = PublisherKeyProps & {
+  withNameClassName?: string | undefined;
+};
+
+const PublisherIdentity = ({
+  className,
+  withNameClassName,
+  ...props
+}: PublisherIdentityProps) =>
+  props.children.identity ? (
+    <span className={clsx(className, withNameClassName)}>
+      <span>
+        <Image
+          alt={`${props.children.identity.name} icon`}
+          src={props.children.identity.icon}
+          className="mr-2 inline-block size-[20px] align-sub"
+          width={20}
+          height={20}
+        />
+        <span className="mr-[0.5em]">{props.children.identity.name}</span>
+      </span>
+      <PublisherKey className="text-sm opacity-50" {...props} />
+    </span>
+  ) : (
+    <PublisherKey className={className} {...props} />
+  );
+
+type PublisherKeyProps = {
   className?: string | undefined;
   children: PublisherProps["publisher"];
   fullClassName?: string;
   truncatedClassName?: string;
 };
 
-const PublisherName = ({
+const PublisherKey = ({
   children,
   fullClassName,
   truncatedClassName,
   className,
-}: PublisherNameProps) =>
-  children.name ? (
-    <span className={className}>{children.name}</span>
-  ) : (
-    <CopyButton
-      text={children.publicKey.toBase58()}
-      {...(className && { className })}
-    >
-      {fullClassName && (
-        <code className={fullClassName}>{children.publicKey.toBase58()}</code>
-      )}
-      <TruncatedKey className={truncatedClassName}>
-        {children.publicKey}
-      </TruncatedKey>
-    </CopyButton>
-  );
+}: PublisherKeyProps) => (
+  <CopyButton
+    text={children.publicKey.toBase58()}
+    {...(className && { className })}
+  >
+    {fullClassName && (
+      <code className={fullClassName}>{children.publicKey.toBase58()}</code>
+    )}
+    <TruncatedKey className={truncatedClassName}>
+      {children.publicKey}
+    </TruncatedKey>
+  </CopyButton>
+);
 
 const useTransferActionForPublisher = (
   action: ((publisher: PublicKey, amount: bigint) => Promise<void>) | undefined,
