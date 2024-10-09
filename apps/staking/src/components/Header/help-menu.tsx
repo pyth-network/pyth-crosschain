@@ -9,6 +9,7 @@ import { MenuTrigger, Button } from "react-aria-components";
 
 import { ProgramParameters } from "./program-parameters";
 import { StateType, useApi } from "../../hooks/use-api";
+import { useChangelog } from "../../hooks/use-changelog";
 import { GeneralFaq } from "../GeneralFaq";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
@@ -41,6 +42,7 @@ export const HelpMenu = () => {
   const openParameters = useCallback(() => {
     setParametersOpen(true);
   }, [setParametersOpen]);
+  const { open: openChangelog } = useChangelog();
 
   return (
     <>
@@ -73,17 +75,16 @@ export const HelpMenu = () => {
               Data Publisher Guide
             </MenuItem>
           </Section>
-          {(api.type === StateType.Loaded ||
-            api.type === StateType.LoadedNoStakeAccount) && (
-            <>
-              <Separator />
-              <Section>
-                <MenuItem onAction={openParameters}>
-                  Current Program Parameters
-                </MenuItem>
-              </Section>
-            </>
-          )}
+          <Separator />
+          <Section>
+            {(api.type === StateType.Loaded ||
+              api.type === StateType.LoadedNoStakeAccount) && (
+              <MenuItem onAction={openParameters}>
+                Current Program Parameters
+              </MenuItem>
+            )}
+            <MenuItem onAction={openChangelog}>Changelog</MenuItem>
+          </Section>
         </Menu>
       </MenuTrigger>
       <GeneralFaq isOpen={faqOpen} onOpenChange={setFaqOpen} />

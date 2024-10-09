@@ -20,6 +20,7 @@ import { LoggerProvider } from "../../hooks/use-logger";
 import { NetworkProvider } from "../../hooks/use-network";
 import { ToastProvider } from "../../hooks/use-toast";
 import { Amplitude } from "../Amplitude";
+import { Changelog } from "../Changelog";
 import { Footer } from "../Footer";
 import { Header } from "../Header";
 import { MaxWidth } from "../MaxWidth";
@@ -64,6 +65,7 @@ export const Root = ({ children }: Props) => (
       </MaxWidth>
       <Footer className="z-10" />
       <ToastRegion />
+      <Changelog />
     </body>
     {GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />}
     {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
