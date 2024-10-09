@@ -48,6 +48,7 @@ import {
   type TargetAccount,
   type VoterWeightAction,
   type VestingSchedule,
+  Position,
 } from "./types";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -680,11 +681,20 @@ export class PythStakingClient {
       stakeAccountPositions,
     );
     const allPublishers = extractPublisherData(poolData);
-    const publishers = allPublishers.filter(({ pubkey }) =>
-      stakeAccountPositionsData.data.positions.some(
+    const publishers = allPublishers.map((publisher) => {
+      const positionsWithPublisher = stakeAccountPositionsData.data.positions.filter(
         ({ targetWithParameters }) =>
-          targetWithParameters.integrityPool?.publisher.equals(pubkey),
-      ),
+          targetWithParameters.integrityPool?.publisher.equals(publisher.pubkey),
+      )
+
+      const lowestEpoch = positionsWithPublisher.reduce((min, position)  => (min === undefined || position.activationEpoch < min) ? position.activationEpoch : min, <bigint| undefined>undefined);
+      return {
+        ...publisher,
+        lowestEpoch
+      }
+
+    }).filter(
+      ({ lowestEpoch }) => lowestEpoch !== undefined
     );
 
     const delegationRecords = await Promise.all(
@@ -692,6 +702,21 @@ export class PythStakingClient {
         this.getDelegationRecord(stakeAccountPositions, pubkey),
       ),
     );
+
+    const max = (a : bigint | undefined, b: bigint | undefined) => {
+      if (a === undefined) {
+        return b;
+      }
+      if (b === undefined) {
+        return a;
+      }
+      return a > b ? a : b;
+    }
+
+    const lowestEpoch = publishers.reduce((min, publisher, index) => {
+      const maximum = max(publisher.lowestEpoch, delegationRecords[index]?.lastEpoch);
+      return (min === undefined || (maximum !== undefined && maximum < min)) ? publisher.lowestEpoch : min, <bigint| undefined>undefined
+    }, <bigint| undefined>undefined);
 
     const currentEpoch = await getCurrentEpoch(this.connection);
 
@@ -738,7 +763,7 @@ export class PythStakingClient {
     return {
       advanceDelegationRecordInstructions,
       mergePositionsInstruction,
-      publishers,
+      lowestEpoch,
     };
   }
 
@@ -776,26 +801,10 @@ export class PythStakingClient {
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
-    const delegationRecords = await Promise.all(
-      instructions.publishers.map(({ pubkey }) =>
-        this.getDelegationRecord(stakeAccountPositions, pubkey),
-      ),
-    );
-
-    let lowestEpoch: bigint | undefined;
-    for (const record of delegationRecords) {
-      if (
-        record !== null &&
-        (lowestEpoch === undefined || record.lastEpoch < lowestEpoch)
-      ) {
-        lowestEpoch = record.lastEpoch;
-      }
-    }
-
     return {
       totalRewards,
       expiry:
-        lowestEpoch === undefined ? undefined : epochToDate(lowestEpoch + 52n),
+        instructions.lowestEpoch === undefined ? undefined : epochToDate(instructions.lowestEpoch + 52n),
     };
   }
 
