@@ -26,6 +26,7 @@ export interface paths {
      * Fetch opportunities ready for execution or historical opportunities
      * @description depending on the mode. You need to provide `chain_id` for historical mode.
      * Opportunities are sorted by creation time in ascending order in historical mode.
+     * Total number of opportunities returned is limited by 20.
      */
     get: operations["get_opportunities"];
     /**
@@ -195,7 +196,7 @@ export interface components {
           /** @enum {string} */
           method: "post_opportunity_bid";
           params: {
-            opportunity_bid: components["schemas"]["OpportunityBid"];
+            opportunity_bid: components["schemas"]["OpportunityBidEvm"];
             opportunity_id: string;
           };
         };
@@ -205,7 +206,10 @@ export interface components {
     ErrorBodyResponse: {
       error: string;
     };
-    OpportunityBid: {
+    Opportunity:
+      | components["schemas"]["OpportunityEvm"]
+      | components["schemas"]["OpportunitySvm"];
+    OpportunityBidEvm: {
       /**
        * @description The bid amount in wei.
        * @example 1000000000000000000
@@ -234,9 +238,39 @@ export interface components {
       /** @example 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12 */
       signature: string;
     };
-    /** @enum {string} */
-    OpportunityMode: "live" | "historical";
-    OpportunityParams: components["schemas"]["OpportunityParamsV1"] & {
+    OpportunityBidResult: {
+      /**
+       * @description The unique id created to identify the bid. This id can be used to query the status of the bid.
+       * @example beedbeed-58cc-4372-a567-0e02b2c3d479
+       */
+      id: string;
+      /** @example OK */
+      status: string;
+    };
+    /** @description The input type for creating a new opportunity */
+    OpportunityCreate:
+      | components["schemas"]["OpportunityCreateEvm"]
+      | components["schemas"]["OpportunityCreateSvm"];
+    OpportunityCreateEvm: components["schemas"]["OpportunityCreateV1Evm"] & {
+      /** @enum {string} */
+      version: "v1";
+    };
+    /** @description Program specific parameters for the opportunity */
+    OpportunityCreateProgramParamsV1Svm: {
+      /**
+       * @description The Limo order to be executed, encoded in base64
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order: string;
+      /**
+       * @description Address of the order account
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order_address: string;
+      /** @enum {string} */
+      program: "limo";
+    };
+    OpportunityCreateSvm: components["schemas"]["OpportunityCreateV1Svm"] & {
       /** @enum {string} */
       version: "v1";
     };
@@ -246,8 +280,8 @@ export interface components {
      * by calling this target contract with the given target calldata and structures, they will
      * send the tokens specified in the sell_tokens field and receive the tokens specified in the buy_tokens field.
      */
-    OpportunityParamsV1: {
-      buy_tokens: components["schemas"]["TokenAmount"][];
+    OpportunityCreateV1Evm: {
+      buy_tokens: components["schemas"]["TokenAmountEvm"][];
       /**
        * @description The chain id where the opportunity will be executed.
        * @example op_sepolia
@@ -258,7 +292,7 @@ export interface components {
        * @example 0xdeadbeefcafe
        */
       permission_key: string;
-      sell_tokens: components["schemas"]["TokenAmount"][];
+      sell_tokens: components["schemas"]["TokenAmountEvm"][];
       /**
        * @description The value to send with the contract call.
        * @example 1
@@ -275,8 +309,54 @@ export interface components {
        */
       target_contract: string;
     };
-    /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithMetadata: (components["schemas"]["OpportunityParamsV1"] & {
+    /**
+     * @description Opportunity parameters needed for on-chain execution.
+     * Parameters may differ for each program
+     */
+    OpportunityCreateV1Svm: {
+      /**
+       * @description The Limo order to be executed, encoded in base64
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order: string;
+      /**
+       * @description Address of the order account
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order_address: string;
+      /** @enum {string} */
+      program: "limo";
+    } & {
+      /**
+       * @description The block hash to be used for the opportunity execution
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      block_hash: string;
+      buy_tokens: components["schemas"]["TokenAmountSvm"][];
+      /**
+       * @description The chain id where the opportunity will be executed.
+       * @example solana
+       */
+      chain_id: string;
+      /**
+       * @description The permission account to be permitted by the ER contract for the opportunity execution of the protocol
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      permission_account: string;
+      /**
+       * @description The router account to be used for the opportunity execution of the protocol
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      router: string;
+      sell_tokens: components["schemas"]["TokenAmountSvm"][];
+      /**
+       * Format: int64
+       * @description The slot where the program params were fetched from using the RPC
+       * @example 293106477
+       */
+      slot: number;
+    };
+    OpportunityEvm: (components["schemas"]["OpportunityParamsV1Evm"] & {
       /** @enum {string} */
       version: "v1";
     }) & {
@@ -290,6 +370,64 @@ export interface components {
        * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       opportunity_id: string;
+    };
+    /** @enum {string} */
+    OpportunityMode: "live" | "historical";
+    OpportunityParamsEvm: components["schemas"]["OpportunityParamsV1Evm"] & {
+      /** @enum {string} */
+      version: "v1";
+    };
+    OpportunityParamsSvm: components["schemas"]["OpportunityParamsV1Svm"] & {
+      /** @enum {string} */
+      version: "v1";
+    };
+    OpportunityParamsV1Evm: components["schemas"]["OpportunityCreateV1Evm"];
+    /**
+     * @description Opportunity parameters needed for on-chain execution.
+     * Parameters may differ for each program
+     */
+    OpportunityParamsV1Svm: {
+      /**
+       * @description The Limo order to be executed, encoded in base64
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order: string;
+      /**
+       * @description Address of the order account
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      order_address: string;
+      /** @enum {string} */
+      program: "limo";
+    } & {
+      /** @example solana */
+      chain_id: string;
+    };
+    OpportunitySvm: (components["schemas"]["OpportunityParamsV1Svm"] & {
+      /** @enum {string} */
+      version: "v1";
+    }) & {
+      /**
+       * @description The block hash to be used for the opportunity execution
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      block_hash: string;
+      /**
+       * @description Creation time of the opportunity (in microseconds since the Unix epoch)
+       * @example 1700000000000000
+       */
+      creation_time: number;
+      /**
+       * @description The opportunity unique id
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
+       */
+      opportunity_id: string;
+      /**
+       * Format: int64
+       * @description The slot where the program params were fetched from using the RPC
+       * @example 293106477
+       */
+      slot: number;
     };
     ServerResultMessage:
       | {
@@ -312,7 +450,7 @@ export interface components {
     /** @description This enum is used to send an update to the client for any subscriptions made */
     ServerUpdateResponse:
       | {
-          opportunity: components["schemas"]["OpportunityParamsWithMetadata"];
+          opportunity: components["schemas"]["Opportunity"];
           /** @enum {string} */
           type: "new_opportunity";
         }
@@ -418,7 +556,7 @@ export interface components {
     SimulatedBids: {
       items: components["schemas"]["SimulatedBid"][];
     };
-    TokenAmount: {
+    TokenAmountEvm: {
       /**
        * @description Token amount
        * @example 1000
@@ -427,6 +565,19 @@ export interface components {
       /**
        * @description Token contract address
        * @example 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+       */
+      token: string;
+    };
+    TokenAmountSvm: {
+      /**
+       * Format: int64
+       * @description Token amount in lamports
+       * @example 1000
+       */
+      amount: number;
+      /**
+       * @description Token contract address
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
        */
       token: string;
     };
@@ -452,24 +603,11 @@ export interface components {
         };
       };
     };
-    /** @description Similar to OpportunityParams, but with the opportunity id included. */
-    OpportunityParamsWithMetadata: {
+    Opportunity: {
       content: {
-        "application/json": (components["schemas"]["OpportunityParamsV1"] & {
-          /** @enum {string} */
-          version: "v1";
-        }) & {
-          /**
-           * @description Creation time of the opportunity (in microseconds since the Unix epoch)
-           * @example 1700000000000000
-           */
-          creation_time: number;
-          /**
-           * @description The opportunity unique id
-           * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
-           */
-          opportunity_id: string;
-        };
+        "application/json":
+          | components["schemas"]["OpportunityEvm"]
+          | components["schemas"]["OpportunitySvm"];
       };
     };
     SimulatedBids: {
@@ -567,6 +705,7 @@ export interface operations {
    * Fetch opportunities ready for execution or historical opportunities
    * @description depending on the mode. You need to provide `chain_id` for historical mode.
    * Opportunities are sorted by creation time in ascending order in historical mode.
+   * Total number of opportunities returned is limited by 20.
    */
   get_opportunities: {
     parameters: {
@@ -591,7 +730,7 @@ export interface operations {
       /** @description Array of opportunities ready for bidding */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithMetadata"][];
+          "application/json": components["schemas"]["Opportunity"][];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];
@@ -611,14 +750,14 @@ export interface operations {
   post_opportunity: {
     requestBody: {
       content: {
-        "application/json": components["schemas"]["OpportunityParams"];
+        "application/json": components["schemas"]["OpportunityCreate"];
       };
     };
     responses: {
       /** @description The created opportunity */
       200: {
         content: {
-          "application/json": components["schemas"]["OpportunityParamsWithMetadata"];
+          "application/json": components["schemas"]["Opportunity"];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];
@@ -640,14 +779,14 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["OpportunityBid"];
+        "application/json": components["schemas"]["OpportunityBidEvm"];
       };
     };
     responses: {
       /** @description Bid Result */
       200: {
         content: {
-          "application/json": components["schemas"]["BidResult"];
+          "application/json": components["schemas"]["OpportunityBidResult"];
         };
       };
       400: components["responses"]["ErrorBodyResponse"];

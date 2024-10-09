@@ -32,20 +32,12 @@ EXECUTION_PARAMS_TYPESTRING = (
 
 class SvmProgramConfig(TypedDict):
     express_relay_program: Pubkey
-    relayer_signer: Pubkey
-    fee_receiver_relayer: Pubkey
 
 
 SVM_CONFIGS: Dict[str, SvmProgramConfig] = {
     "development-solana": {
         "express_relay_program": Pubkey.from_string(
             "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou"
-        ),
-        "relayer_signer": Pubkey.from_string(
-            "GEeEguHhepHtPVo3E9RA1wvnxgxJ61iSc9dJfd433w3K"
-        ),
-        "fee_receiver_relayer": Pubkey.from_string(
-            "feesJcX9zwLiEZs9iQGXeBd65b9m2Zc1LjjyHngQF29"
         ),
     }
 }

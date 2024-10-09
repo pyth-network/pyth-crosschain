@@ -56,6 +56,11 @@ export const PYTHNET_RPC = getOr("PYTHNET_RPC", "https://pythnet.rpcpool.com");
 export const HERMES_URL = getOr("HERMES_URL", "https://hermes.pyth.network");
 export const BLOCKED_REGIONS = transformOr("BLOCKED_REGIONS", fromCsv, []);
 export const IP_ALLOWLIST = transformOr("IP_ALLOWLIST", fromCsv, []);
+export const VPN_ORGANIZATION_ALLOWLIST = transformOr(
+  "VPN_ORGANIZATION_ALLOWLIST",
+  fromCsv,
+  ["iCloud Private Relay"],
+);
 export const GOVERNANCE_ONLY_REGIONS = transformOr(
   "GOVERNANCE_ONLY_REGIONS",
   fromCsv,

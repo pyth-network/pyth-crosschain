@@ -1,9 +1,11 @@
 import argparse
 import asyncio
 import logging
+import typing
 from decimal import Decimal
 
 from solana.rpc.async_api import AsyncClient
+from solana.rpc.commitment import Finalized
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solders.transaction import Transaction
@@ -16,6 +18,12 @@ from express_relay.express_relay_types import (
     BidStatus,
     BidStatusUpdate,
     BidSvm,
+    Opportunity,
+)
+from express_relay.express_relay_svm_types import OpportunitySvm
+from express_relay.svm.generated.express_relay.accounts import ExpressRelayMetadata
+from express_relay.svm.generated.express_relay.program_id import (
+    PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
 )
 from express_relay.svm.limo_client import LimoClient, OrderStateAndAddress
 
@@ -24,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleSearcherSvm:
+    express_relay_metadata: ExpressRelayMetadata | None
+
     def __init__(
         self,
         server_url: str,
@@ -32,12 +42,13 @@ class SimpleSearcherSvm:
         chain_id: str,
         svm_rpc_endpoint: str,
         limo_global_config: str,
+        fill_rate: int,
         api_key: str | None = None,
     ):
         self.client = ExpressRelayClient(
             server_url,
             api_key,
-            None,
+            self.opportunity_callback,
             self.bid_status_callback,
         )
         self.private_key = private_key
@@ -50,6 +61,26 @@ class SimpleSearcherSvm:
         self.limo_client = LimoClient(
             self.rpc_client, global_config=Pubkey.from_string(limo_global_config)
         )
+        self.fill_rate = fill_rate
+        self.express_relay_metadata = None
+
+    async def opportunity_callback(self, opp: Opportunity):
+        """
+        Callback function to run when a new opportunity is found.
+
+        Args:
+            opp: An object representing a single opportunity.
+        """
+        bid = await self.assess_opportunity(typing.cast(OpportunitySvm, opp))
+
+        if bid:
+            try:
+                await self.client.submit_bid(bid)
+                logger.info(f"Submitted bid for opportunity {str(opp.opportunity_id)}")
+            except Exception as e:
+                logger.error(
+                    f"Error submitting bid for opportunity {str(opp.opportunity_id)}: {e}"
+                )
 
     async def bid_status_callback(self, bid_status_update: BidStatusUpdate):
         """
@@ -70,20 +101,8 @@ class SimpleSearcherSvm:
                 result_details = f", transaction {result}"
         logger.info(f"Bid status for bid {id}: {bid_status.value}{result_details}")
 
-    async def bid_on_new_orders(self):
-        orders = await self.limo_client.get_all_orders_state_and_address_with_filters(
-            []
-        )
-        orders = [
-            order for order in orders if order["state"].remaining_input_amount > 0
-        ]
-        if len(orders) == 0:
-            logger.info("No orders to bid on")
-            return
-        for order in orders:
-            await self.evaluate_order(order)
-
-    async def evaluate_order(self, order: OrderStateAndAddress):
+    async def assess_opportunity(self, opp: OpportunitySvm) -> BidSvm:
+        order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
         input_mint_decimals = await self.limo_client.get_mint_decimals(
             order["state"].input_mint
         )
@@ -93,6 +112,9 @@ class SimpleSearcherSvm:
         input_amount_decimals = Decimal(
             order["state"].remaining_input_amount
         ) / Decimal(10**input_mint_decimals)
+        input_amount_decimals = (
+            input_amount_decimals * Decimal(self.fill_rate) / Decimal(100)
+        )
         output_amount_decimals = Decimal(
             order["state"].expected_output_amount
         ) / Decimal(10**output_mint_decimals)
@@ -111,6 +133,18 @@ class SimpleSearcherSvm:
         router = self.limo_client.get_pda_authority(
             self.limo_client.get_program_id(), order["state"].global_config
         )
+
+        if self.express_relay_metadata is None:
+            self.express_relay_metadata = await ExpressRelayMetadata.fetch(
+                self.rpc_client,
+                self.limo_client.get_express_relay_metadata_pda(
+                    SVM_EXPRESS_RELAY_PROGRAM_ID
+                ),
+                commitment=Finalized,
+            )
+            if self.express_relay_metadata is None:
+                raise ValueError("Express relay metadata account not found")
+
         submit_bid_ix = self.client.get_svm_submit_bid_instruction(
             searcher=self.private_key.pubkey(),
             router=router,
@@ -118,6 +152,8 @@ class SimpleSearcherSvm:
             bid_amount=self.bid_amount,
             deadline=DEADLINE,
             chain_id=self.chain_id,
+            fee_receiver_relayer=self.express_relay_metadata.fee_receiver_relayer,
+            relayer_signer=self.express_relay_metadata.relayer_signer,
         )
         transaction = Transaction.new_with_payer(
             [submit_bid_ix] + ixs_take_order, self.private_key.pubkey()
@@ -128,18 +164,22 @@ class SimpleSearcherSvm:
             [self.private_key], recent_blockhash=blockhash.blockhash
         )
         bid = BidSvm(transaction=transaction, chain_id=self.chain_id)
-        bid_id = await self.client.submit_bid(bid, False)
-        print(f"Submitted bid {bid_id} for order {order['address']}")
+        return bid
 
 
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="count", default=0)
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--private-key",
         type=str,
-        required=True,
         help="Private key of the searcher in base58 format",
+    )
+    group.add_argument(
+        "--private-key-json-file",
+        type=str,
+        help="Path to a json file containing the private key of the searcher in array of bytes format",
     )
     parser.add_argument(
         "--chain-id",
@@ -178,6 +218,14 @@ async def main():
         required=True,
         help="The amount of bid to submit for each opportunity",
     )
+    parser.add_argument(
+        "--fill-rate",
+        type=int,
+        default=100,
+        required=True,
+        help="How much of the order to fill in percentage. Default is 100%",
+    )
+
     args = parser.parse_args()
 
     logger.setLevel(logging.INFO if args.verbose == 0 else logging.DEBUG)
@@ -189,17 +237,28 @@ async def main():
     log_handler.setFormatter(formatter)
     logger.addHandler(log_handler)
 
+    if args.private_key:
+        searcher_keypair = Keypair.from_base58_string(args.private_key)
+    else:
+        with open(args.private_key_json_file, "r") as f:
+            searcher_keypair = Keypair.from_json(f.read())
+
+    print("Using Keypair with pubkey:", searcher_keypair.pubkey())
     searcher = SimpleSearcherSvm(
         args.endpoint_express_relay,
-        Keypair.from_base58_string(args.private_key),
+        searcher_keypair,
         args.bid,
         args.chain_id,
         args.endpoint_svm,
         args.global_config,
+        args.fill_rate,
         args.api_key,
     )
 
-    await searcher.bid_on_new_orders()
+    await searcher.client.subscribe_chains([args.chain_id])
+
+    task = await searcher.client.get_ws_loop()
+    await task
 
 
 if __name__ == "__main__":

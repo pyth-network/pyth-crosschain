@@ -172,7 +172,9 @@ export class PythStakingClient {
     publisher: PublicKey,
   ) {
     return this.integrityPoolProgram.account.delegationRecord
-      .fetch(getDelegationRecordAddress(stakeAccountPositions, publisher))
+      .fetchNullable(
+        getDelegationRecordAddress(stakeAccountPositions, publisher),
+      )
       .then((record) => convertBNToBigInt(record));
   }
 
@@ -685,10 +687,23 @@ export class PythStakingClient {
       ),
     );
 
+    const delegationRecords = await Promise.all(
+      publishers.map(({ pubkey }) =>
+        this.getDelegationRecord(stakeAccountPositions, pubkey),
+      ),
+    );
+
+    const currentEpoch = await getCurrentEpoch(this.connection);
+
+    // Filter out delegationRecord that are up to date
+    const filteredPublishers = publishers.filter((_, index) => {
+      return !(delegationRecords[index]?.lastEpoch === currentEpoch);
+    });
+
     // anchor does not calculate the correct pda for other programs
     // therefore we need to manually calculate the pdas
     const advanceDelegationRecordInstructions = await Promise.all(
-      publishers.map(({ pubkey, stakeAccount }) =>
+      filteredPublishers.map(({ pubkey, stakeAccount }) =>
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
           .accountsPartial({
@@ -761,7 +776,7 @@ export class PythStakingClient {
       totalRewards += BigInt("0x" + buffer.toString("hex"));
     }
 
-    const delegationRecords = await Promise.allSettled(
+    const delegationRecords = await Promise.all(
       instructions.publishers.map(({ pubkey }) =>
         this.getDelegationRecord(stakeAccountPositions, pubkey),
       ),
@@ -769,11 +784,11 @@ export class PythStakingClient {
 
     let lowestEpoch: bigint | undefined;
     for (const record of delegationRecords) {
-      if (record.status === "fulfilled") {
-        const { lastEpoch } = record.value;
-        if (lowestEpoch === undefined || lastEpoch < lowestEpoch) {
-          lowestEpoch = lastEpoch;
-        }
+      if (
+        record !== null &&
+        (lowestEpoch === undefined || record.lastEpoch < lowestEpoch)
+      ) {
+        lowestEpoch = record.lastEpoch;
       }
     }
 
