@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import typing
 from decimal import Decimal
 
 from solana.rpc.async_api import AsyncClient
@@ -18,7 +19,6 @@ from express_relay.express_relay_types import (
     BidStatusUpdate,
     BidSvm,
     Opportunity,
-    OpportunityEvm,
 )
 from express_relay.express_relay_svm_types import OpportunitySvm
 from express_relay.svm.generated.express_relay.accounts import ExpressRelayMetadata
@@ -71,11 +71,7 @@ class SimpleSearcherSvm:
         Args:
             opp: An object representing a single opportunity.
         """
-
-        if isinstance(opp, OpportunityEvm):
-            raise ValueError("Opportunity is not an SVM opportunity")
-
-        bid = await self.assess_opportunity(opp)
+        bid = await self.assess_opportunity(typing.cast(OpportunitySvm, opp))
 
         if bid:
             try:

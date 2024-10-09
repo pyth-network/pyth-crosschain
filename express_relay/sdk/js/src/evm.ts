@@ -196,7 +196,7 @@ export async function getSignature(
 }
 
 export async function signOpportunityBid(
-  opportunity: Opportunity & OpportunityEvm,
+  opportunity: OpportunityEvm,
   bidParams: BidParams,
   privateKey: Hex
 ): Promise<OpportunityBid> {

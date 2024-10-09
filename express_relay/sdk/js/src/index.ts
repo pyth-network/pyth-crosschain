@@ -15,7 +15,7 @@ import {
   Opportunity,
   OpportunityBid,
   OpportunityEvm,
-  OpportunityParams,
+  OpportunityCreate,
   TokenAmount,
 } from "./types";
 import {
@@ -256,7 +256,7 @@ export class Client {
    * Submits an opportunity to be exposed to searchers
    * @param opportunity Opportunity to submit
    */
-  async submitOpportunity(opportunity: OpportunityParams) {
+  async submitOpportunity(opportunity: OpportunityCreate) {
     const client = createClient<paths>(this.clientOptions);
     let body;
     if ("order" in opportunity) {
@@ -439,13 +439,13 @@ export class Client {
 
   /**
    * Creates a signed opportunity bid for an opportunity
-   * @param opportunity Opportunity to bid on
+   * @param opportunity EVM Opportunity to bid on
    * @param bidParams Bid amount and valid until timestamp
    * @param privateKey Private key to sign the bid with
    * @returns Signed opportunity bid
    */
   async signOpportunityBid(
-    opportunity: Opportunity & OpportunityEvm,
+    opportunity: OpportunityEvm,
     bidParams: BidParams,
     privateKey: Hex
   ): Promise<OpportunityBid> {
@@ -453,8 +453,8 @@ export class Client {
   }
 
   /**
-   * Creates a signed bid for an opportunity
-   * @param opportunity Opportunity to bid on
+   * Creates a signed bid for an EVM opportunity
+   * @param opportunity EVM Opportunity to bid on
    * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
    * @returns Signed bid
@@ -469,7 +469,7 @@ export class Client {
 
   /**
    * Creates a signature for the bid and opportunity
-   * @param opportunity Opportunity to bid on
+   * @param opportunity EVM Opportunity to bid on
    * @param bidParams Bid amount, nonce, and deadline timestamp
    * @param privateKey Private key to sign the bid with
    * @returns Signature for the bid and opportunity

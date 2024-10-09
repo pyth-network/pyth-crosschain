@@ -136,9 +136,7 @@ class SimpleSearcherLimo {
   }
 
   async opportunityHandler(opportunity: Opportunity) {
-    if (!("order" in opportunity))
-      throw new Error("Not a valid SVM opportunity");
-    const bid = await this.generateBid(opportunity);
+    const bid = await this.generateBid(opportunity as OpportunitySvm);
     try {
       const bidId = await this.client.submitBid(bid);
       console.log(

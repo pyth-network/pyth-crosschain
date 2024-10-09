@@ -93,6 +93,10 @@ export type OpportunityEvm = {
    * Tokens to receive after the opportunity is executed
    */
   buyTokens: TokenAmount[];
+  /**
+   * Unique identifier for the opportunity
+   */
+  opportunityId: string;
 };
 
 export type OpportunitySvm = {
@@ -102,18 +106,25 @@ export type OpportunitySvm = {
    * The chain id where the opportunity will be executed.
    */
   chainId: ChainId;
+  /**
+   * Slot where the opportunity was found
+   */
   slot: number;
+  /**
+   * Blockhash that can be used to sign transactions for this opportunity
+   */
   blockHash: Blockhash;
-};
-
-export type OpportunityParams = OpportunityEvm | OpportunitySvm;
-
-export type Opportunity = OpportunityParams & {
   /**
    * Unique identifier for the opportunity
    */
   opportunityId: string;
 };
+
+export type OpportunityCreate =
+  | Omit<OpportunityEvm, "opportunity_id">
+  | Omit<OpportunitySvm, "opportunity_id">;
+
+export type Opportunity = OpportunityEvm | OpportunitySvm;
 /**
  * Represents a bid for an opportunity
  */

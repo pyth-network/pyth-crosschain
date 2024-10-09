@@ -9,7 +9,7 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import dummyIdl from "./idl/idlDummy.json";
 import { Dummy } from "./dummyTypes";
-import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svmPda";
+import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svm";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const DUMMY_PIDS: Record<string, PublicKey> = {
