@@ -121,8 +121,8 @@ export type OpportunitySvm = {
 };
 
 export type OpportunityCreate =
-  | Omit<OpportunityEvm, "opportunity_id">
-  | Omit<OpportunitySvm, "opportunity_id">;
+  | Omit<OpportunityEvm, "opportunityId">
+  | Omit<OpportunitySvm, "opportunityId">;
 
 export type Opportunity = OpportunityEvm | OpportunitySvm;
 /**
