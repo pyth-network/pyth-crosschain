@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 import logging
+import typing
+
 from eth_account.account import Account
 from secrets import randbits
 
@@ -16,6 +18,7 @@ from express_relay.express_relay_types import (
     Bytes32,
     BidStatus,
     BidStatusUpdate,
+    OpportunityEvm,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +43,7 @@ class SimpleSearcher:
 
     def assess_opportunity(
         self,
-        opp: Opportunity,
+        opp: OpportunityEvm,
     ) -> BidEvm | None:
         """
         Assesses whether an opportunity is worth executing; if so, returns a Bid object.
@@ -72,7 +75,7 @@ class SimpleSearcher:
         Args:
             opp: An object representing a single opportunity.
         """
-        bid = self.assess_opportunity(opp)
+        bid = self.assess_opportunity(typing.cast(OpportunityEvm, opp))
         if bid:
             try:
                 await self.client.submit_bid(bid)
