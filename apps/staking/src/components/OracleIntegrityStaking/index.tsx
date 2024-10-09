@@ -674,8 +674,16 @@ const PublisherList = ({
     [setYoursFirst, updatePage],
   );
 
+  const updatePageSize = useCallback<typeof setPageSize>(
+    (newPageSize) => {
+      setPageSize(newPageSize);
+      updatePage(1);
+    },
+    [setPageSize, updatePage],
+  );
+
   const numPages = useMemo(
-    () => Math.floor(filteredSortedPublishers.length / pageSize),
+    () => Math.ceil(filteredSortedPublishers.length / pageSize),
     [filteredSortedPublishers, pageSize],
   );
 
@@ -836,7 +844,7 @@ const PublisherList = ({
             label="Page size"
             options={PageSize}
             selectedKey={pageSize}
-            onSelectionChange={setPageSize}
+            onSelectionChange={updatePageSize}
           />
           <Paginator
             currentPage={currentPage}
