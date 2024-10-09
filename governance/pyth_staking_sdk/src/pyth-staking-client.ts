@@ -145,11 +145,7 @@ export class PythStakingClient {
           ],
         },
       );
-    let accounts = res.map((account) => account.pubkey);
-    accounts.push(
-      new PublicKey("GmJg5NHSSnixPWBYa3gs3oX41vRewXPTLxcDcykajBM1"),
-    );
-    return accounts;
+    return res.map((account) => account.pubkey);
   }
 
   public async getStakeAccountPositions(
