@@ -784,10 +784,11 @@ export class PythStakingClient {
 
     let lowestEpoch: bigint | undefined;
     for (const record of delegationRecords) {
-      if (record !== null) {
-        if (lowestEpoch === undefined || record.lastEpoch < lowestEpoch) {
-          lowestEpoch = record.lastEpoch;
-        }
+      if (
+        record !== null &&
+        (lowestEpoch === undefined || record.lastEpoch < lowestEpoch)
+      ) {
+        lowestEpoch = record.lastEpoch;
       }
     }
 
