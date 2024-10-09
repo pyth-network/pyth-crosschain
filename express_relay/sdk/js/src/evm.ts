@@ -1,7 +1,6 @@
 import {
   Bid,
   BidParams,
-  Opportunity,
   OpportunityBid,
   OpportunityEvm,
   TokenAmount,
