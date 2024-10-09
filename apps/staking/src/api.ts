@@ -12,6 +12,8 @@ import {
 import { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
+import { KNOWN_PUBLISHERS } from "./known-publishers";
+
 const publishersRankingSchema = z
   .object({
     publisher: z.string(),
@@ -47,7 +49,12 @@ type Data = {
   m: bigint;
   z: bigint;
   integrityStakingPublishers: {
-    name: string | undefined;
+    identity:
+      | {
+          name: string;
+          icon: string;
+        }
+      | undefined;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -263,7 +270,9 @@ const loadPublisherData = async (
 
     return {
       apyHistory,
-      name: undefined, // TODO
+      identity: (
+        KNOWN_PUBLISHERS as Record<string, { name: string; icon: string }>
+      )[publisher.pubkey.toBase58()],
       numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
