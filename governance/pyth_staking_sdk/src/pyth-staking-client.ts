@@ -702,7 +702,7 @@ export class PythStakingClient {
       ),
     );
 
-    const max = (a : bigint | undefined, b: bigint | undefined) => {
+    const bigintMax = (a : bigint | undefined, b: bigint | undefined) => {
       if (a === undefined) {
         return b;
       }
@@ -713,8 +713,8 @@ export class PythStakingClient {
     }
 
     const lowestEpoch = publishers.reduce<bigint| undefined>((min, publisher, index) => {
-      const maximum = max(publisher.lowestEpoch, delegationRecords[index]?.lastEpoch);
-      return (min === undefined || (maximum !== undefined && maximum < min)) ? publisher.lowestEpoch : min, undefined as bigint| undefined
+      const maximum = bigintMax(publisher.lowestEpoch, delegationRecords[index]?.lastEpoch);
+      return (min === undefined || (maximum !== undefined && maximum < min)) ? maximum : min;
     }, undefined);
 
     const currentEpoch = await getCurrentEpoch(this.connection);
