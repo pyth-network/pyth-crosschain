@@ -701,7 +701,7 @@ export class PythStakingClient {
 
     // Filter out delegationRecord that are up to date
     const filteredPublishers = publishers.filter((_, index) => {
-      !(delegationRecords[index]?.lastEpoch === currentEpoch);
+      return !(delegationRecords[index]?.lastEpoch === currentEpoch);
     });
 
     // anchor does not calculate the correct pda for other programs
