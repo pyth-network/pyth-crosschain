@@ -152,7 +152,7 @@ async function send(
         buffer
       );
       if (response.length !== 2)
-        throw TransportStatusError(StatusCodes.INCORRECT_DATA);
+        throw new TransportStatusError(StatusCodes.INCORRECT_DATA);
 
       p2 |= P2_EXTEND;
       offset += MAX_PAYLOAD;
