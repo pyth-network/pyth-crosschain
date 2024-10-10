@@ -1,10 +1,13 @@
 import { useCallback } from "react";
 import useSWR, { type KeyedMutator } from "swr";
 
+import { useLogger } from "./use-logger";
+
 export const useData = <T>(...args: Parameters<typeof useSWR<T>>) => {
   const { data, isLoading, mutate, ...rest } = useSWR(...args);
 
   const error = rest.error as unknown;
+  const logger = useLogger();
 
   const reset = useCallback(() => {
     mutate(undefined).catch(() => {
@@ -13,7 +16,8 @@ export const useData = <T>(...args: Parameters<typeof useSWR<T>>) => {
   }, [mutate]);
 
   if (error) {
-    return State.ErrorState(new LoadDashboardDataError(error), reset);
+    logger.error(error);
+    return State.ErrorState(new UseDataError(error), reset);
   } else if (isLoading) {
     return State.Loading();
   } else if (data) {
@@ -38,17 +42,17 @@ const State = {
     mutate,
     data,
   }),
-  ErrorState: (error: LoadDashboardDataError, reset: () => void) => ({
+  ErrorState: (error: UseDataError, reset: () => void) => ({
     type: StateType.Error as const,
     error,
     reset,
   }),
 };
 
-class LoadDashboardDataError extends Error {
+class UseDataError extends Error {
   constructor(cause: unknown) {
     super(cause instanceof Error ? cause.message : "");
-    this.name = "LoadDashboardDataError";
+    this.name = "UseDataError";
     this.cause = cause;
   }
 }
