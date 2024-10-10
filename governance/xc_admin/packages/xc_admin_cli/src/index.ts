@@ -55,7 +55,10 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 
 import { LedgerNodeWallet } from "./ledger";
-import { DEFAULT_PRIORITY_FEE_CONFIG } from "@pythnetwork/solana-utils";
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -623,7 +626,10 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
     const allPythAccounts = await connection.getProgramAccounts(
       oracleProgramId
     );
-    const allPublishers: Set<PublicKey> = new Set();
+
+    // Storing them as string to make sure equal comparison works (for the Set)
+    const allPublishers: Set<string> = new Set();
+
     for (const account of allPythAccounts) {
       const data = account.account.data;
       const base = parseBaseData(data);
@@ -633,13 +639,14 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
           0,
           parsed.numComponentPrices
         )) {
-          allPublishers.add(component.publisher);
+          allPublishers.add(component.publisher.toBase58());
         }
       }
     }
 
     let instructions = [];
-    for (const publisherKey of allPublishers) {
+    for (const publisherKeyBase58 of allPublishers) {
+      const publisherKey = new PublicKey(publisherKeyBase58);
       if (await isPriceStorePublisherInitialized(connection, publisherKey)) {
         // Already configured.
         continue;
@@ -703,7 +710,14 @@ multisigCommand("approve", "Approve a transaction sitting in the multisig")
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    await vault.squad.approveTransaction(transaction);
+    const instruction = await vault.approveProposalIx(transaction);
+
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      [instruction],
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+
+    await vault.sendAllTransactions(txToSend);
   });
 
 multisigCommand("propose-token-transfer", "Propose token transfer")
@@ -801,7 +815,14 @@ multisigCommand("activate", "Activate a transaction sitting in the multisig")
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    await vault.squad.activateTransaction(transaction);
+    const instruction = await vault.activateProposalIx(transaction);
+
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      [instruction],
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+
+    await vault.sendAllTransactions(txToSend);
   });
 
 multisigCommand("add-and-delete", "Change the roster of the multisig")
