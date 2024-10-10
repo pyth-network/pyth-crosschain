@@ -49,7 +49,7 @@ import {
   type VoterWeightAction,
   type VestingSchedule,
 } from "./types";
-import { bigintMax } from "./utils/bigint";
+import { bigintMax, bigintMin } from "./utils/bigint";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
 import { extractPublisherData } from "./utils/pool";
@@ -693,12 +693,7 @@ export class PythStakingClient {
 
         let lowestEpoch;
         for (const position of positionsWithPublisher) {
-          if (
-            lowestEpoch === undefined ||
-            position.activationEpoch < lowestEpoch
-          ) {
-            lowestEpoch = position.activationEpoch;
-          }
+          lowestEpoch = bigintMin(position.activationEpoch, lowestEpoch);
         }
 
         return {
@@ -720,12 +715,7 @@ export class PythStakingClient {
         publisher.lowestEpoch,
         delegationRecords[index]?.lastEpoch,
       );
-      if (
-        lowestEpoch === undefined ||
-        (maximum !== undefined && maximum < lowestEpoch)
-      ) {
-        lowestEpoch = maximum;
-      }
+      lowestEpoch = bigintMin(lowestEpoch, maximum);
     }
 
     const currentEpoch = await getCurrentEpoch(this.connection);
