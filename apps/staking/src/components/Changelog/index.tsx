@@ -72,9 +72,9 @@ export const messages = [
               milestones:
             </p>
             <ul className="list-disc pl-8">
-              <li>143M PYTH staked and securing DeFi.</li>
-              <li>9.6K unique stakers participating.</li>
-              <li>237K in PYTH programmatically distributed.</li>
+              <li>145M PYTH staked and securing DeFi.</li>
+              <li>10K unique stakers participating.</li>
+              <li>492K in PYTH programmatically distributed.</li>
             </ul>
           </div>
           <p>We’re thrilled to see so many community participants.</p>
