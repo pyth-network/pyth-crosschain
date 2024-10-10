@@ -10,17 +10,19 @@ import {
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
-import Image from "next/image";
 import {
   useMemo,
   useCallback,
   useState,
   useRef,
+  createElement,
   type ComponentProps,
   type Dispatch,
   type SetStateAction,
   type HTMLAttributes,
   type FormEvent,
+  type ComponentType,
+  type SVGProps,
 } from "react";
 import { useFilter, useCollator } from "react-aria";
 import {
@@ -1172,7 +1174,7 @@ type PublisherProps = {
     identity:
       | {
           name: string;
-          icon: string;
+          icon: ComponentType<SVGProps<SVGSVGElement>>;
         }
       | undefined;
     publicKey: PublicKey;
@@ -1721,13 +1723,9 @@ const PublisherIdentity = ({
   props.children.identity ? (
     <span className={clsx(className, withNameClassName)}>
       <span>
-        <Image
-          alt={`${props.children.identity.name} icon`}
-          src={props.children.identity.icon}
-          className="mr-2 inline-block size-[20px] align-sub"
-          width={20}
-          height={20}
-        />
+        {createElement(props.children.identity.icon, {
+          className: "mr-2 inline-block size-[20px] align-sub",
+        })}
         <span className="mr-[0.5em]">{props.children.identity.name}</span>
       </span>
       <PublisherKey className="text-sm opacity-50" {...props} />
