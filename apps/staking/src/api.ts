@@ -50,10 +50,7 @@ type Data = {
   z: bigint;
   integrityStakingPublishers: {
     identity:
-      | {
-          name: string;
-          icon: string;
-        }
+      | (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
       | undefined;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
@@ -271,7 +268,10 @@ const loadPublisherData = async (
     return {
       apyHistory,
       identity: (
-        KNOWN_PUBLISHERS as Record<string, { name: string; icon: string }>
+        KNOWN_PUBLISHERS as Record<
+          string,
+          (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
+        >
       )[publisher.pubkey.toBase58()],
       numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
