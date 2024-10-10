@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import * as dnum from "dnum";
 import { type ComponentProps, useMemo } from "react";

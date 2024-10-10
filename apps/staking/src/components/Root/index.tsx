@@ -13,12 +13,14 @@ import {
   WALLETCONNECT_PROJECT_ID,
   MAINNET_RPC,
   HERMES_URL,
+  PYTHNET_RPC,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
 import { NetworkProvider } from "../../hooks/use-network";
 import { ToastProvider } from "../../hooks/use-toast";
 import { Amplitude } from "../Amplitude";
+import { Changelog } from "../Changelog";
 import { Footer } from "../Footer";
 import { Header } from "../Header";
 import { MaxWidth } from "../MaxWidth";
@@ -63,6 +65,7 @@ export const Root = ({ children }: Props) => (
       </MaxWidth>
       <Footer className="z-10" />
       <ToastRegion />
+      <Changelog />
     </body>
     {GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={GOOGLE_ANALYTICS_ID} />}
     {AMPLITUDE_API_KEY && <Amplitude apiKey={AMPLITUDE_API_KEY} />}
@@ -79,7 +82,7 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
             mainnetRpc={MAINNET_RPC}
           >
-            <ApiProvider hermesUrl={HERMES_URL}>
+            <ApiProvider hermesUrl={HERMES_URL} pythnetRpcUrl={PYTHNET_RPC}>
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>

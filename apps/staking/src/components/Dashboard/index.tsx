@@ -249,8 +249,7 @@ const useIntegrityStakingSum = (
       publishers
         .map((publisher) => publisher.positions?.[field] ?? 0n)
         .reduce((acc, cur) => acc + cur, 0n),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    publishers.map((publisher) => publisher.positions?.[field]),
+    [publishers, field],
   );
 
 // eslint-disable-next-line unicorn/no-array-reduce

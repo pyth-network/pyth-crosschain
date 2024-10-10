@@ -7,6 +7,9 @@ import {
 import { useState, useCallback } from "react";
 import { MenuTrigger, Button } from "react-aria-components";
 
+import { ProgramParameters } from "./program-parameters";
+import { StateType, useApi } from "../../hooks/use-api";
+import { useChangelog } from "../../hooks/use-changelog";
 import { GeneralFaq } from "../GeneralFaq";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
@@ -14,6 +17,7 @@ import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { PublisherFaq } from "../PublisherFaq";
 
 export const HelpMenu = () => {
+  const api = useApi();
   const [faqOpen, setFaqOpen] = useState(false);
   const openFaq = useCallback(() => {
     setFaqOpen(true);
@@ -34,12 +38,18 @@ export const HelpMenu = () => {
     setPublisherFaqOpen(true);
   }, [setPublisherFaqOpen]);
 
+  const [parametersOpen, setParametersOpen] = useState(false);
+  const openParameters = useCallback(() => {
+    setParametersOpen(true);
+  }, [setParametersOpen]);
+  const { open: openChangelog } = useChangelog();
+
   return (
     <>
       <MenuTrigger>
-        <Button className="group -mx-2 flex flex-row items-center gap-2 rounded-sm p-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 pressed:bg-white/10 sm:-mx-4 sm:px-4">
+        <Button className="group -mx-2 flex flex-row items-center gap-2 rounded-sm p-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 pressed:bg-white/10 md:-mx-4 md:px-4">
           <QuestionMarkCircleIcon className="size-6 flex-none" />
-          <span className="sr-only xs:not-sr-only">Help</span>
+          <span className="sr-only md:not-sr-only">Help</span>
           <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
         </Button>
         <Menu placement="bottom end">
@@ -65,6 +75,16 @@ export const HelpMenu = () => {
               Data Publisher Guide
             </MenuItem>
           </Section>
+          <Separator />
+          <Section>
+            {(api.type === StateType.Loaded ||
+              api.type === StateType.LoadedNoStakeAccount) && (
+              <MenuItem onAction={openParameters}>
+                Current Program Parameters
+              </MenuItem>
+            )}
+            <MenuItem onAction={openChangelog}>Changelog</MenuItem>
+          </Section>
         </Menu>
       </MenuTrigger>
       <GeneralFaq isOpen={faqOpen} onOpenChange={setFaqOpen} />
@@ -80,6 +100,14 @@ export const HelpMenu = () => {
         isOpen={publisherFaqOpen}
         onOpenChange={setPublisherFaqOpen}
       />
+      {(api.type === StateType.Loaded ||
+        api.type === StateType.LoadedNoStakeAccount) && (
+        <ProgramParameters
+          api={api}
+          isOpen={parametersOpen}
+          onOpenChange={setParametersOpen}
+        />
+      )}
     </>
   );
 };

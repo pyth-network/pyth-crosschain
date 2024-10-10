@@ -10,6 +10,7 @@ import {
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
+import Image from "next/image";
 import {
   useMemo,
   useCallback,
@@ -190,13 +191,13 @@ const SelfStaking = ({
           <div className="sticky left-0 mb-4 flex flex-row items-start justify-between px-4 sm:px-10 sm:pb-4 sm:pt-6 lg:items-center">
             <div>
               <h3 className="text-2xl font-light">Self Staking</h3>
-              <PublisherName
+              <PublisherIdentity
                 truncatedClassName="2xl:hidden"
                 fullClassName="hidden 2xl:inline"
                 className="opacity-60"
               >
                 {self}
-              </PublisherName>
+              </PublisherIdentity>
             </div>
             <div className="flex flex-row items-center gap-4">
               <MenuTrigger>
@@ -353,10 +354,12 @@ const ReassignStakeAccount = ({
       closeDisabled={closeDisabled}
       description={
         <>
-          <span className="mr-3 align-middle">
+          <span className="mr-[0.5em]">
             Designate a different stake account as the self-staking account for
           </span>
-          <PublisherName className="font-semibold">{self}</PublisherName>
+          <PublisherIdentity className="font-semibold">
+            {self}
+          </PublisherIdentity>
         </>
       }
       {...props}
@@ -603,7 +606,7 @@ const PublisherList = ({
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [yoursFirst, setYoursFirst] = useState(true);
-  const [sort, setSort] = useState(SortOption.RemainingPoolDescending);
+  const [sort, setSort] = useState(SortOption.SelfStakeDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
@@ -613,8 +616,8 @@ const PublisherList = ({
         .filter(
           (publisher) =>
             filter.contains(publisher.publicKey.toBase58(), search) ||
-            (publisher.name !== undefined &&
-              filter.contains(publisher.name, search)),
+            (publisher.identity !== undefined &&
+              filter.contains(publisher.identity.name, search)),
         )
         .sort((a, b) => {
           if (yoursFirst) {
@@ -626,7 +629,7 @@ const PublisherList = ({
               return 1;
             }
           }
-          return doSort(collator, a, b, yieldRate, sort);
+          return compare(collator, a, b, yieldRate, sort);
         }),
     [publishers, search, sort, filter, yieldRate, yoursFirst, collator],
   );
@@ -938,7 +941,7 @@ const getPageRange = (
   return { first, count: Math.min(numPages - first + 1, 5) };
 };
 
-const doSort = (
+const compare = (
   collator: Intl.Collator,
   a: PublisherProps["publisher"],
   b: PublisherProps["publisher"],
@@ -948,79 +951,164 @@ const doSort = (
   switch (sort) {
     case SortOption.PublisherNameAscending:
     case SortOption.PublisherNameDescending: {
-      const value = collator.compare(
-        a.name ?? a.publicKey.toBase58(),
-        b.name ?? b.publicKey.toBase58(),
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareName(
+        collator,
+        a,
+        b,
+        sort === SortOption.PublisherNameAscending,
       );
-      return sort === SortOption.PublisherNameAscending ? -1 * value : value;
     }
     case SortOption.ApyAscending:
     case SortOption.ApyDescending: {
-      const value =
-        calculateApy({
-          isSelf: false,
-          selfStake: a.selfStake + a.selfStakeDelta,
-          poolCapacity: a.poolCapacity,
-          poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
-          yieldRate,
-        }) -
-        calculateApy({
-          isSelf: false,
-          selfStake: b.selfStake + b.selfStakeDelta,
-          poolCapacity: b.poolCapacity,
-          poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
-          yieldRate,
-        });
-      return sort === SortOption.ApyDescending ? -1 * value : value;
+      const ascending = sort === SortOption.ApyAscending;
+      return compareInOrder([
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
-    case SortOption.NumberOfFeedsAscending: {
-      return Number(a.numFeeds - b.numFeeds);
-    }
+    case SortOption.NumberOfFeedsAscending:
     case SortOption.NumberOfFeedsDescending: {
-      return Number(b.numFeeds - a.numFeeds);
+      const ascending = sort === SortOption.NumberOfFeedsAscending;
+      return compareInOrder([
+        () => (ascending ? -1 : 1) * Number(b.numFeeds - a.numFeeds),
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.RemainingPoolAscending:
     case SortOption.RemainingPoolDescending: {
-      if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
-        return 0;
-      } else if (a.poolCapacity === 0n) {
-        return 1;
-      } else if (b.poolCapacity === 0n) {
-        return -1;
-      } else {
-        const remainingPoolA =
-          a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
-        const remainingPoolB =
-          b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
-        const value = Number(remainingPoolA - remainingPoolB);
-        return sort === SortOption.RemainingPoolDescending ? -1 * value : value;
-      }
+      const ascending = sort === SortOption.RemainingPoolAscending;
+      return compareInOrder([
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareSelfStake(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
     case SortOption.QualityRankingDescending:
     case SortOption.QualityRankingAscending: {
-      if (a.qualityRanking === 0 && b.qualityRanking === 0) {
-        return 0;
-      } else if (a.qualityRanking === 0) {
-        return 1;
-      } else if (b.qualityRanking === 0) {
-        return -1;
-      } else {
-        const value = Number(a.qualityRanking - b.qualityRanking);
-        return sort === SortOption.QualityRankingAscending ? -1 * value : value;
-      }
-    }
-    case SortOption.SelfStakeAscending: {
-      return Number(
-        a.selfStake + a.selfStakeDelta - b.selfStake - b.selfStakeDelta,
+      // No need for a fallback sort since each publisher has a unique value.
+      return compareQualityRanking(
+        a,
+        b,
+        sort === SortOption.QualityRankingAscending,
       );
     }
+    case SortOption.SelfStakeAscending:
     case SortOption.SelfStakeDescending: {
-      return Number(
-        b.selfStake + b.selfStakeDelta - a.selfStake - a.selfStakeDelta,
-      );
+      const ascending = sort === SortOption.SelfStakeAscending;
+      return compareInOrder([
+        () => compareSelfStake(a, b, ascending),
+        () => comparePoolCapacity(a, b, ascending),
+        () => compareApy(a, b, yieldRate, ascending),
+        () => compareName(collator, a, b, ascending),
+      ]);
     }
   }
 };
+
+const compareInOrder = (comparisons: (() => number)[]): number => {
+  for (const compare of comparisons) {
+    const value = compare();
+    if (value !== 0) {
+      return value;
+    }
+  }
+  return 0;
+};
+
+const compareName = (
+  collator: Intl.Collator,
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  collator.compare(
+    a.identity?.name ?? a.publicKey.toBase58(),
+    b.identity?.name ?? b.publicKey.toBase58(),
+  );
+
+const compareApy = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  yieldRate: bigint,
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  (calculateApy({
+    isSelf: false,
+    selfStake: b.selfStake + b.selfStakeDelta,
+    poolCapacity: b.poolCapacity,
+    poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
+    yieldRate,
+    delegationFee: b.delegationFee,
+  }) -
+    calculateApy({
+      isSelf: false,
+      selfStake: a.selfStake + a.selfStakeDelta,
+      poolCapacity: a.poolCapacity,
+      poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
+      yieldRate,
+      delegationFee: a.delegationFee,
+    }));
+
+const comparePoolCapacity = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.poolCapacity === 0n && b.poolCapacity === 0n) {
+    return 0;
+  } else if (a.poolCapacity === 0n) {
+    return 1;
+  } else if (b.poolCapacity === 0n) {
+    return -1;
+  } else {
+    const remainingPoolA =
+      a.poolCapacity - a.poolUtilization - a.poolUtilizationDelta;
+    const remainingPoolB =
+      b.poolCapacity - b.poolUtilization - b.poolUtilizationDelta;
+    if (remainingPoolA <= 0n && remainingPoolB <= 0n) {
+      return 0;
+    } else if (remainingPoolA <= 0n && remainingPoolB > 0n) {
+      return 1;
+    } else if (remainingPoolB <= 0n && remainingPoolA > 0n) {
+      return -1;
+    } else {
+      return (reverse ? -1 : 1) * Number(remainingPoolB - remainingPoolA);
+    }
+  }
+};
+
+const compareQualityRanking = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) => {
+  if (a.qualityRanking === 0 && b.qualityRanking === 0) {
+    return 0;
+  } else if (a.qualityRanking === 0) {
+    return 1;
+  } else if (b.qualityRanking === 0) {
+    return -1;
+  } else {
+    return (reverse ? -1 : 1) * Number(a.qualityRanking - b.qualityRanking);
+  }
+};
+
+const compareSelfStake = (
+  a: PublisherProps["publisher"],
+  b: PublisherProps["publisher"],
+  reverse?: boolean,
+) =>
+  (reverse ? -1 : 1) *
+  Number(b.selfStake + b.selfStakeDelta - (a.selfStake + a.selfStakeDelta));
 
 type SortablePublisherTableHeaderProps = Omit<
   ComponentProps<typeof BaseButton>,
@@ -1081,7 +1169,12 @@ type PublisherProps = {
   totalStaked: bigint;
   isSelf?: boolean | undefined;
   publisher: {
-    name: string | undefined;
+    identity:
+      | {
+          name: string;
+          icon: string;
+        }
+      | undefined;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -1091,7 +1184,8 @@ type PublisherProps = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
-    apyHistory: { date: Date; apy: number }[];
+    delegationFee: bigint;
+    apyHistory: { date: Date; apy: number; selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -1152,6 +1246,7 @@ const Publisher = ({
         poolUtilization:
           publisher.poolUtilization + publisher.poolUtilizationDelta,
         yieldRate,
+        delegationFee: publisher.delegationFee,
       }).toFixed(2),
     [
       isSelf,
@@ -1160,6 +1255,7 @@ const Publisher = ({
       publisher.poolCapacity,
       publisher.poolUtilization,
       publisher.poolUtilizationDelta,
+      publisher.delegationFee,
       yieldRate,
     ],
   );
@@ -1168,13 +1264,14 @@ const Publisher = ({
     <div className="border-t border-neutral-600/50 p-4 sm:px-10 md:pt-8">
       {!isSelf && (
         <div className="flex flex-row items-center justify-between">
-          <PublisherName
+          <PublisherIdentity
             className="font-semibold"
             truncatedClassName="md:hidden"
             fullClassName="hidden md:inline"
+            withNameClassName="flex flex-col items-start"
           >
             {publisher}
-          </PublisherName>
+          </PublisherIdentity>
           <StakeToPublisherButton
             api={api}
             currentEpoch={currentEpoch}
@@ -1269,12 +1366,13 @@ const Publisher = ({
         {!isSelf && (
           <>
             <PublisherTableCell className="truncate py-4 pl-4 font-medium sm:pl-10">
-              <PublisherName
+              <PublisherIdentity
                 truncatedClassName="3xl:hidden"
                 fullClassName="hidden 3xl:inline"
+                withNameClassName="flex flex-col items-start"
               >
                 {publisher}
-              </PublisherName>
+              </PublisherIdentity>
             </PublisherTableCell>
             <PublisherTableCell className="text-center">
               <Tokens>{publisher.selfStake + publisher.selfStakeDelta}</Tokens>
@@ -1290,9 +1388,9 @@ const Publisher = ({
         <PublisherTableCell>
           <div className="mx-auto h-14 w-28">
             <SparkChart
-              data={publisher.apyHistory.map(({ date, apy }) => ({
+              data={publisher.apyHistory.map(({ date, apy, selfApy }) => ({
                 date,
-                value: apy,
+                value: isSelf ? selfApy : apy,
               }))}
             />
           </div>
@@ -1439,12 +1537,12 @@ const YourPositionsTable = ({
                 className="w-28"
                 actionDescription={
                   <>
-                    <span className="mr-3 align-middle">
+                    <span className="mr-[0.5em]">
                       Cancel tokens that are in warmup for staking to
                     </span>
-                    <PublisherName className="font-semibold">
+                    <PublisherIdentity className="font-semibold">
                       {publisher}
-                    </PublisherName>
+                    </PublisherIdentity>
                   </>
                 }
                 actionName="Cancel"
@@ -1476,12 +1574,10 @@ const YourPositionsTable = ({
                 className="md:w-28"
                 actionDescription={
                   <>
-                    <span className="mr-3 align-middle">
-                      Unstake tokens from
-                    </span>
-                    <PublisherName className="font-semibold">
+                    <span className="mr-[0.5em]">Unstake tokens from</span>
+                    <PublisherIdentity className="font-semibold">
                       {publisher}
-                    </PublisherName>
+                    </PublisherIdentity>
                   </>
                 }
                 actionName="Unstake"
@@ -1528,8 +1624,10 @@ const StakeToPublisherButton = ({
       size="small"
       actionDescription={
         <>
-          <span className="mr-3 align-middle">Stake to</span>
-          <PublisherName className="font-semibold">{publisher}</PublisherName>
+          <span className="mr-[0.5em]">Stake to</span>
+          <PublisherIdentity className="font-semibold">
+            {publisher}
+          </PublisherIdentity>
         </>
       }
       actionName="Stake"
@@ -1579,6 +1677,7 @@ const NewApy = ({
       calculateApy({
         poolCapacity: publisher.poolCapacity,
         yieldRate,
+        delegationFee: publisher.delegationFee,
         ...(isSelf
           ? {
               isSelf: true,
@@ -1602,6 +1701,7 @@ const NewApy = ({
       publisher.selfStakeDelta,
       publisher.poolUtilization,
       publisher.poolUtilizationDelta,
+      publisher.delegationFee,
       children,
     ],
   );
@@ -1609,34 +1709,58 @@ const NewApy = ({
   return <div {...props}>{apy}%</div>;
 };
 
-type PublisherNameProps = {
+type PublisherIdentityProps = PublisherKeyProps & {
+  withNameClassName?: string | undefined;
+};
+
+const PublisherIdentity = ({
+  className,
+  withNameClassName,
+  ...props
+}: PublisherIdentityProps) =>
+  props.children.identity ? (
+    <span className={clsx(className, withNameClassName)}>
+      <span>
+        <Image
+          alt={`${props.children.identity.name} icon`}
+          src={props.children.identity.icon}
+          className="mr-2 inline-block size-[20px] align-sub"
+          width={20}
+          height={20}
+        />
+        <span className="mr-[0.5em]">{props.children.identity.name}</span>
+      </span>
+      <PublisherKey className="text-sm opacity-50" {...props} />
+    </span>
+  ) : (
+    <PublisherKey className={className} {...props} />
+  );
+
+type PublisherKeyProps = {
   className?: string | undefined;
   children: PublisherProps["publisher"];
   fullClassName?: string;
   truncatedClassName?: string;
 };
 
-const PublisherName = ({
+const PublisherKey = ({
   children,
   fullClassName,
   truncatedClassName,
   className,
-}: PublisherNameProps) =>
-  children.name ? (
-    <span className={className}>{children.name}</span>
-  ) : (
-    <CopyButton
-      text={children.publicKey.toBase58()}
-      {...(className && { className })}
-    >
-      {fullClassName && (
-        <code className={fullClassName}>{children.publicKey.toBase58()}</code>
-      )}
-      <TruncatedKey className={truncatedClassName}>
-        {children.publicKey}
-      </TruncatedKey>
-    </CopyButton>
-  );
+}: PublisherKeyProps) => (
+  <CopyButton
+    text={children.publicKey.toBase58()}
+    {...(className && { className })}
+  >
+    {fullClassName && (
+      <code className={fullClassName}>{children.publicKey.toBase58()}</code>
+    )}
+    <TruncatedKey className={truncatedClassName}>
+      {children.publicKey}
+    </TruncatedKey>
+  </CopyButton>
+);
 
 const useTransferActionForPublisher = (
   action: ((publisher: PublicKey, amount: bigint) => Promise<void>) | undefined,
