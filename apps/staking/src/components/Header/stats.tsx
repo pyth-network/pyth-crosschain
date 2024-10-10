@@ -2,7 +2,7 @@
 
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
+import type { Connection } from "@solana/web3.js";
 import clsx from "clsx";
 import type { HTMLProps } from "react";
 

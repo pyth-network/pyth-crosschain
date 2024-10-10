@@ -5,7 +5,7 @@ import { CurrentStakeAccount } from "./current-stake-account";
 import { HelpMenu } from "./help-menu";
 import Logo from "./logo.svg";
 import Logomark from "./logomark.svg";
-// import { Stats } from "./stats";
+import { Stats } from "./stats";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 import { WalletButton } from "../WalletButton";
@@ -29,7 +29,7 @@ export const Header = ({
               <Logo className="hidden h-full lg:block" />
               <Logomark className="h-full lg:hidden" />
             </Link>
-            {/* <Stats className="hidden gap-4 sm:flex lg:gap-6" /> */}
+            <Stats className="hidden gap-4 sm:flex lg:gap-6" />
           </div>
           <div className="flex flex-none flex-row items-stretch gap-4 md:gap-8">
             <CurrentStakeAccount />
@@ -39,6 +39,6 @@ export const Header = ({
         </MaxWidth>
       </div>
     </header>
-    {/* <Stats className="border-b border-neutral-600/50 py-4 text-center sm:hidden" /> */}
+    <Stats className="border-b border-neutral-600/50 py-4 text-center sm:hidden" />
   </>
 );
