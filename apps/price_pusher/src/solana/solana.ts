@@ -31,7 +31,7 @@ export class SolanaPriceListener extends ChainPriceListener {
   // Checking the health of the Solana connection by checking the last block time
   // and ensuring it is not older than 30 seconds.
   private async checkHealth() {
-    const slot = await this.pythSolanaReceiver.connection.getSlot();
+    const slot = await this.pythSolanaReceiver.connection.getSlot("finalized");
     const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
       slot
     );
