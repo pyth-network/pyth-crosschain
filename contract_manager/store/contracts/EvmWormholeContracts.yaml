@@ -397,3 +397,6 @@
 - chain: sanko_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: unichain_sepolia
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract

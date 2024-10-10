@@ -400,3 +400,6 @@
 - chain: abstract_testnet
   address: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486"
   type: EvmPriceFeedContract
+- chain: unichain_sepolia
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract

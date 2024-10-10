@@ -729,3 +729,8 @@
   rpcUrl: https://sanko-arb-sepolia.rpc.caldera.xyz
   networkId: 1992
   type: EvmChain
+- id: unichain_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.unichain.org
+  networkId: 1301
+  type: EvmChain
