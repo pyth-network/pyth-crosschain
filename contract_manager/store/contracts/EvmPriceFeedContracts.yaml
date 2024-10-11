@@ -325,9 +325,6 @@
 - chain: dela_mithreum_deperp_testnet
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmPriceFeedContract
-- chain: kakarot_sepolia
-  address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
-  type: EvmPriceFeedContract
 - chain: berachain_testnet_v2
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
@@ -402,4 +399,7 @@
   type: EvmPriceFeedContract
 - chain: unichain_sepolia
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: kakarot_sepolia
+  address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmPriceFeedContract
