@@ -591,8 +591,8 @@
   type: EvmChain
 - id: kakarot_sepolia
   mainnet: false
-  rpcUrl: https://sepolia-rpc-priority.kakarot.org
-  networkId: 1802203764
+  rpcUrl: https://rpc-kakarot-sepolia.karnot.xyz/
+  networkId: 920637907288165
   type: EvmChain
 - id: berachain_testnet_v2
   mainnet: false

@@ -105,7 +105,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   hedera_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   idex_xchain_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   injective_inevm_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
-  kakarot_sepolia: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+  kakarot_sepolia: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
   kava_testnet: "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
   kcc_testnet: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
   kinto: "0x2880aB155794e7179c9eE2e38200202908C17B43",
