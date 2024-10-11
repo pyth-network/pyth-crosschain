@@ -41,6 +41,7 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   createDetermisticPriceStoreInitializePublisherInstruction,
   createPriceStoreInstruction,
+  fetchStakeAccounts,
   findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
@@ -59,6 +60,7 @@ import {
   DEFAULT_PRIORITY_FEE_CONFIG,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -389,8 +391,8 @@ multisigCommand(
   "Deactivate the delegated stake from the account"
 )
   .requiredOption(
-    "-s, --stake-accounts <comma_separated_stake_account>",
-    "stake accounts to be deactivated"
+    "-d, --vote-pubkeys <comma_separated_voter_pubkeys>",
+    "vote account unstake from"
   )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
@@ -399,20 +401,25 @@ multisigCommand(
       cluster
     );
 
-    const stakeAccounts = options.stakeAccounts
-      ? options.stakeAccounts.split(",").map((m: string) => new PublicKey(m))
+    const voteAccounts: PublicKey[] = options.votePubkeys
+      ? options.votePubkeys.split(",").map((m: string) => new PublicKey(m))
       : [];
 
-    const instructions = stakeAccounts.reduce(
-      (instructions: TransactionInstruction[], stakeAccount: PublicKey) => {
-        const transaction = StakeProgram.deactivate({
-          stakePubkey: stakeAccount,
-          authorizedPubkey,
-        });
+    const stakeAccounts = (
+      await Promise.all(
+        voteAccounts.map((voteAccount: PublicKey) =>
+          fetchStakeAccounts(
+            new Connection(getPythClusterApiUrl(cluster)),
+            voteAccount
+          )
+        )
+      )
+    ).flat();
 
-        return instructions.concat(transaction.instructions);
-      },
-      []
+    const instructions = stakeAccounts.flatMap(
+      (stakeAccount) =>
+        StakeProgram.deactivate({ stakePubkey: stakeAccount, authorizedPubkey })
+          .instructions
     );
 
     await vault.proposeInstructions(
