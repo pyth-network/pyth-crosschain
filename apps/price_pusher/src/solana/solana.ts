@@ -35,7 +35,7 @@ export class SolanaPriceListener extends ChainPriceListener {
     const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
       slot
     );
-    if (blockTime === null || blockTime < Date.now() / 1000 - 30) {
+    if (blockTime === null || blockTime < Date.now() / 1000 - 50) {
       throw new Error("Solana connection is unhealthy");
     }
   }
