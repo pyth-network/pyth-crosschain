@@ -250,7 +250,20 @@ export class PythStakingClient {
     stakeAccountPositions: PublicKey,
     amount: bigint,
   ) {
-    const instructions = [];
+    const globalConfig = await this.getGlobalConfig();
+    const instructions: TransactionInstruction[] = [];
+
+    if (!(await this.hasGovernanceRecord(globalConfig))) {
+      await withCreateTokenOwnerRecord(
+        instructions,
+        GOVERNANCE_ADDRESS,
+        PROGRAM_VERSION_V2,
+        globalConfig.pythGovernanceRealm,
+        this.wallet.publicKey,
+        globalConfig.pythTokenMint,
+        this.wallet.publicKey,
+      );
+    }
 
     if (!(await this.hasJoinedDaoLlc(stakeAccountPositions))) {
       instructions.push(
