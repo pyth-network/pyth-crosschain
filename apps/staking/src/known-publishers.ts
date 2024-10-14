@@ -1,4 +1,5 @@
 import blocksize from "./publisher-icons/blocksize.svg";
+import finazon from "./publisher-icons/finazon.svg";
 import sentio from "./publisher-icons/sentio.svg";
 
 export const KNOWN_PUBLISHERS = {
@@ -9,5 +10,9 @@ export const KNOWN_PUBLISHERS = {
   "89ijemG1TUL2kdV2RtCrhXzY5QhyKHsWqCmP5iobvLUF": {
     name: "Sentio",
     icon: sentio,
+  },
+  Fq5zaoF76WYshMEYUn1q8cB8MrG61swhaWHRUCWeP5Vo: {
+    name: "Finazon",
+    icon: finazon,
   },
 };
