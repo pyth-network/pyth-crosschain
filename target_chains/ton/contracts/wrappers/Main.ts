@@ -254,7 +254,6 @@ export class Main implements Contract {
     const result = await provider.get("get_update_fee", [
       { type: "slice", cell: createCellChain(vm) },
     ]);
-    console.log("Result:", result);
 
     return result.stack.readNumber();
   }

@@ -10,7 +10,6 @@ import {
   MAINNET_UPGRADE_VAAS,
 } from "../tests/utils/wormhole";
 import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
-import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
 
 export async function run(provider: NetworkProvider) {
   const SINGLE_UPDATE_FEE = 1;
@@ -56,9 +55,9 @@ export async function run(provider: NetworkProvider) {
       `Successfully updated guardian set ${i + 1} with VAA: ${vaa.slice(0, 20)}...`
     );
 
-    // Wait for 20 seconds before checking the guardian set index
-    console.log("Waiting for 20 seconds before checking guardian set index...");
-    await sleep(20000);
+    // Wait for 30 seconds before checking the guardian set index
+    console.log("Waiting for 30 seconds before checking guardian set index...");
+    await sleep(30000);
 
     // Verify the update
     const newIndex = await main.getCurrentGuardianSetIndex();
@@ -91,14 +90,19 @@ export async function run(provider: NetworkProvider) {
   const singleUpdateFee = await main.getSingleUpdateFee();
   console.log("Single update fee:", singleUpdateFee);
 
+  // NOTE: As of 2024/10/14 There's a bug with TON Access (https://ton.access.orbs.network) RPC service where if you provide an update data buffer with length of more than ~320 then the rpc returns error 404 and the function fails
   const updateFee = await main.getUpdateFee(updateData);
   console.log("Update fee:", updateFee);
 
-  await main.sendUpdatePriceFeeds(provider.sender(), updateData, toNano(1));
+  await main.sendUpdatePriceFeeds(
+    provider.sender(),
+    updateData,
+    toNano(updateFee)
+  );
   console.log("Price feeds updated successfully.");
 
-  console.log("Waiting for 20 seconds before checking price feeds...");
-  await sleep(20000);
+  console.log("Waiting for 30 seconds before checking price feeds...");
+  await sleep(30000);
 
   // Query updated price feeds
   const btcPrice = await main.getPriceUnsafe(BTC_PRICE_FEED_ID);
