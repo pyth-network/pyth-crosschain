@@ -1,47 +1,44 @@
-use alloc::vec::Vec;
-use alloy_primitives::{ Uint, U64};
-use stylus_sdk::{prelude::*,msg, abi::Bytes, alloy_primitives::{Address, FixedBytes, U256}};
-use crate::pyth::{ 
-    errors::{IPythError, PriceFeedNotFound, InsufficientFee},
-    solidity::{StoragePriceFeed},
-    //events::PriceFeedUpdate
-};
-use crate::pyth::PythContract;
+use core::borrow::BorrowMut;
 
+use alloc::vec::Vec;
+use alloy_primitives::{Uint, U64};
+use alloy_sol_types::{abi, sol_data::Uint as SolUInt, SolType, SolValue};
+use stylus_sdk::{abi::Bytes, alloy_primitives::{FixedBytes, U256}, evm, msg, prelude::*};
+use crate::{pyth::errors::{FalledDecodeData, InsufficientFee, InvalidArgument}, utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE};
+use crate::pyth::errors::{Error, PriceFeedNotFound};
+use crate::pyth::solidity::{ PriceFeed,Price, StoragePriceFeed};
+use crate::pyth::events::PriceFeedUpdate;
+use crate::pyth::ipyth::IPyth;
+
+//decode data type
+pub type DecodeDataType = (PriceFeed, SolUInt<64>);
 
 sol_storage! {
-    pub struct MockPythContract {
+    struct MockPythContract {
         uint single_update_fee_in_wei;
         uint valid_time_period;
         mapping(bytes32 => StoragePriceFeed) price_feeds;
-        #[borrow]
-        PythContract pyth;
     }
 }
 
-
-//#[public]
-//#[inherit(PythContract)]
+#[public]
 impl MockPythContract {
-    pub fn initalize(mut self, single_update_fee_in_wei: U256, valid_time_period: U256) {
-        self.single_update_fee_in_wei.set(single_update_fee_in_wei);
-        self.valid_time_period.set(valid_time_period);
-    }
     
-    // pub  fn guery_price_feed(self, id: FixedBytes<32>) -> Result<StoragePriceFeed, Vec<u8>> {
-    //     let price_feed = self.price_feeds.getter(id).load();
-    //     if price_feed.id.is_empty() {
-    //         return Err(IPythError::PriceFeedNotFound(PriceFeedNotFound {}).into());
-    //     }
-    //     Ok(price_feed.load())
-    // }
-    pub fn price_feed_exists(self, id:FixedBytes<32>) -> bool {
-         self.price_feeds.getter(id).id.is_empty() == false
+    fn query_price_feed(&self, id: FixedBytes<32>) -> Result<Vec<u8>, Vec<u8>> {
+        let price_feed  =  self.price_feeds.get(id).to_price_feed();
+        if price_feed.id.eq(&FixedBytes::<32>::ZERO) {
+            return Err(Error::PriceFeedNotFound(PriceFeedNotFound {}).into());
+        }
+        Ok(price_feed.abi_encode())
     }
 
-    pub fn get_valid_time_period(self) -> Uint<256, 4> {
+    fn price_feed_exists(&self, id:FixedBytes<32>) -> bool {
+         self.price_feeds.getter(id).id.is_empty()
+    }
+
+    fn get_valid_time_period(&self) -> Uint<256, 4> {
          self.valid_time_period.get()
-     }
+    }
 
     // Takes an array of encoded price feeds and stores them.
     // You can create this data either by calling createPriceFeedUpdateData or
@@ -58,147 +55,241 @@ impl MockPythContract {
     //         uint64 prevPublishTime
     //     )
     // ]
-    // pub fn update_price_feeds(self, 
-    //     update_data : Vec<Bytes>
-    // ) -> Result<(), Vec<u8>> {
-    //      let required_fee = self.get_update_fee(update_data);
-    //      if msg.value < required_fee {
-    //          return Err(IPythError::InsufficientFee(InsufficientFee {}).into());
-    //      }
-    //     if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
-    //     for (uint i = 0; i < updateData.length; i++) {
-    //         PythStructs.PriceFeed memory priceFeed = abi.decode(
-    //             updateData[i],
-    //             (PythStructs.PriceFeed)
-    //         );
+    #[payable]
+    fn update_price_feeds(&mut self, 
+        update_data : Vec<Bytes>
+    ) -> Result<(), Vec<u8>> {
+        let  required_fee = self.get_update_fee(update_data.clone());
+         if required_fee.lt(&U256::from(msg::value())) {
+             return Err(Error::InsufficientFee(InsufficientFee {}).into());
+        }
 
-    //         uint lastPublishTime = priceFeeds[priceFeed.id].price.publishTime;
-
-    //         if (lastPublishTime < priceFeed.price.publishTime) {
-    //             // Price information is more recent than the existing price information.
-    //             priceFeeds[priceFeed.id] = priceFeed;
-    //             emit PriceFeedUpdate(
-    //                 priceFeed.id,
-    //                 uint64(priceFeed.price.publishTime),
-    //                 priceFeed.price.price,
-    //                 priceFeed.price.conf
-    //             );
-    //         }
-    //     }
-    // }
-
-    pub fn get_update_fee(self, 
-       update_data: Vec<Bytes>
-    ) -> Uint<256, 4> {
-     self.single_update_fee_in_wei.get() * U256::from(update_data.len())
+        for i in 0..update_data.len() {
+          let price_feed_data =  <PriceFeed as SolType>::abi_decode(&update_data[i], false)
+            .map_err( |_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())?;
+          let last_publish_time = &self.price_feeds.get(price_feed_data.id).price.publish_time;
+          if  last_publish_time.lt(&price_feed_data.price.publish_time) {
+          self.price_feeds.setter(price_feed_data.id).set(price_feed_data);
+          evm::log(PriceFeedUpdate { 
+                id: price_feed_data.id, 
+                publishTime: price_feed_data.price.publish_time.to(), 
+                price: price_feed_data.price.price,
+                conf: price_feed_data.price.conf
+           });
+          }
+        }
+       Ok(())
     }
 
-    // pub fn parse_price_feed_updates_internal(
-    //     update_data: Vec<FixedBytes<32>>,
-    //     priceIds: Vec<FixedBytes<32>>,
-    //     min_publish_time:u64,
-    //     max_publish_time:u64,
-    //     unique:bool
-    // ) internal returns (PythStructs.PriceFeed[] memory feeds) {
-    //     uint requiredFee = getUpdateFee(updateData);
-    //     if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+    fn get_update_fee(&self, update_data: Vec<Bytes>) -> Uint<256, 4> {
+         self.single_update_fee_in_wei.get() * U256::from(update_data.len())
+    }
 
-    //     feeds = new PythStructs.PriceFeed[](priceIds.length);
+    fn parse_price_feed_updates(
+        &mut self,
+        update_data:Vec<Bytes>,
+        price_ids:Vec<FixedBytes<32>>,
+        min_publish_time:u64,
+        max_publish_time:u64
+    ) -> Result<Vec<u8>, Vec<u8>>{
+        self.parse_price_feed_updates_internal(update_data, price_ids, min_publish_time, max_publish_time, false)
+    }
 
-    //     for (uint i = 0; i < priceIds.length; i++) {
-    //         for (uint j = 0; j < updateData.length; j++) {
-    //             uint64 prevPublishTime;
-    //             (feeds[i], prevPublishTime) = abi.decode(
-    //                 updateData[j],
-    //                 (PythStructs.PriceFeed, uint64)
-    //             );
 
-    //             uint publishTime = feeds[i].price.publishTime;
-    //             if (priceFeeds[feeds[i].id].price.publishTime < publishTime) {
-    //                 priceFeeds[feeds[i].id] = feeds[i];
-    //                 emit PriceFeedUpdate(
-    //                     feeds[i].id,
-    //                     uint64(publishTime),
-    //                     feeds[i].price.price,
-    //                     feeds[i].price.conf
-    //                 );
-    //             }
+    fn parse_price_feed_updates_unique(
+        &mut self,
+        update_data:Vec<Bytes>,
+        price_ids:Vec<FixedBytes<32>>,
+        min_publish_time:u64,
+        max_publish_time:u64
+    ) ->  Result<Vec<u8>, Vec<u8>>{
+        self.parse_price_feed_updates_internal(update_data, price_ids, min_publish_time, max_publish_time, true)
+    }
 
-    //             if (feeds[i].id == priceIds[i]) {
-    //                 if (
-    //                     minPublishTime <= publishTime &&
-    //                     publishTime <= maxPublishTime &&
-    //                     (!unique || prevPublishTime < minPublishTime)
-    //                 ) {
-    //                     break;
-    //                 } else {
-    //                     feeds[i].id = 0;
-    //                 }
-    //             }
-    //         }
+    fn create_price_feed_update_data(&self,
+        id:FixedBytes<32>,
+        price:i64,
+        conf:u64,
+        expo:i32,
+        ema_price:i64,
+        ema_conf:u64,
+        publish_time:U256,
+        prev_publish_time:u64
+    ) -> Vec<u8> {
+        let price = Price { price: price, conf, expo, publish_time };
+        let ema_price = Price { price:ema_price, conf:ema_conf, expo:expo,publish_time};
+        
+        let price_feed_data = PriceFeed {
+          id,price,ema_price
+        };
+        
+        let price_feed_data_encoding = (price_feed_data, prev_publish_time);
+        return  DecodeDataType::abi_encode(&price_feed_data_encoding);
+    }
+}
 
-    //         if (feeds[i].id != priceIds[i])
-    //             revert PythErrors.PriceFeedNotFoundWithinRange();
-    //     }
-    // }
+impl  MockPythContract  {
 
-    // function parsePriceFeedUpdates(
-    //     bytes[] calldata updateData,
-    //     bytes32[] calldata priceIds,
-    //     uint64 minPublishTime,
-    //     uint64 maxPublishTime
-    // ) external payable override returns (PythStructs.PriceFeed[] memory feeds) {
-    //     return
-    //         parsePriceFeedUpdatesInternal(
-    //             updateData,
-    //             priceIds,
-    //             minPublishTime,
-    //             maxPublishTime,
-    //             false
-    //         );
-    // }
+     fn parse_price_feed_updates_internal(&mut self,
+        update_data: Vec<Bytes>,
+        price_ids: Vec<FixedBytes<32>>,
+        min_publish_time:u64,
+        max_publish_time:u64,
+        unique:bool
+    )  -> Result<Vec<u8>, Vec<u8>> {
+        let  required_fee = self.get_update_fee(update_data.clone());
+        if required_fee.lt(&U256::from(msg::value())) {
+             return Err(Error::InsufficientFee(InsufficientFee {}).into());
+        }
 
-    // function parsePriceFeedUpdatesUnique(
-    //     bytes[] calldata updateData,
-    //     bytes32[] calldata priceIds,
-    //     uint64 minPublishTime,
-    //     uint64 maxPublishTime
-    // ) external payable override returns (PythStructs.PriceFeed[] memory feeds) {
-    //     return
-    //         parsePriceFeedUpdatesInternal(
-    //             updateData,
-    //             priceIds,
-    //             minPublishTime,
-    //             maxPublishTime,
-    //             true
-    //         );
-    // }
+        let mut feeds = Vec::<PriceFeed>::with_capacity(price_ids.len());
+       
+        for i in 0..price_ids.len() {
+          for j in 0..update_data.len() {
+                let (price_feed, prev_publish_time) =  match DecodeDataType::abi_decode(&update_data[j], false) {
+                    Ok(res) =>{ res },
+                    Err(_) => {
+                        return  Err(Error::FalledDecodeData(FalledDecodeData {}).into())
+                    }
+                };
+                feeds[j] = price_feed.clone();
 
-    // function createPriceFeedUpdateData(
-    //     bytes32 id,
-    //     int64 price,
-    //     uint64 conf,
-    //     int32 expo,
-    //     int64 emaPrice,
-    //     uint64 emaConf,
-    //     uint64 publishTime,
-    //     uint64 prevPublishTime
-    // ) public pure returns (bytes memory priceFeedData) {
-    //     PythStructs.PriceFeed memory priceFeed;
+                let publish_time = price_feed.price.publish_time;
+                if self.price_feeds.get(feeds[i].id).price.publish_time.lt(&publish_time) {
+                   self.price_feeds.setter(feeds[i].id).set(feeds[i]);
+                    evm::log( 
+                        PriceFeedUpdate {
+                            id:feeds[i].id,
+                            publishTime: publish_time.to(), 
+                            price: feeds[i].price.price, 
+                            conf: feeds[i].price.conf
+                        });
+                }
+                
 
-    //     priceFeed.id = id;
+                if feeds[i].id == price_ids[i] {
+                     if  publish_time.gt(&U256::from(min_publish_time))  
+                         && publish_time.le(&U256::from(max_publish_time)) &&
+                         (!unique || prev_publish_time.lt(&min_publish_time))
+                     {
+                        break;
+                  } else {
+                       feeds[i].id = FixedBytes::<32>::ZERO;
+                   }
+                }
 
-    //     priceFeed.price.price = price;
-    //     priceFeed.price.conf = conf;
-    //     priceFeed.price.expo = expo;
-    //     priceFeed.price.publishTime = publishTime;
+            }
 
-    //     priceFeed.emaPrice.price = emaPrice;
-    //     priceFeed.emaPrice.conf = emaConf;
-    //     priceFeed.emaPrice.expo = expo;
-    //     priceFeed.emaPrice.publishTime = publishTime;
+            if feeds[i].id != price_ids[i] {
+                return  Err(Error::FalledDecodeData(FalledDecodeData {}).into())
+            }
+        }
+     Ok(feeds.abi_encode())
+    }  
+}
 
-    //     priceFeedData = abi.encode(priceFeed, prevPublishTime);
-    // }
+
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::vec;
+    use alloy_primitives::{address, uint, Address, U64, U256, FixedBytes, fixed_bytes};
+    use stylus_sdk::{abi::Bytes, contract, msg::{self, value}};
+    use crate::pyth::{
+        PythContract, mock::{MockPythContract, DecodeDataType}, 
+        errors::{Error, InvalidArgument}, solidity::{PriceFeed, Price, StoragePriceFeed}
+    };
+    use alloy_sol_types::SolType;
+
+    use std::{println as info, println as warn};
+
+    // Updated constants to use uppercase naming convention
+    const PRICE: i64 = 1000;
+    const CONF: u64 = 1000;
+    const EXPO: i32 = 1000;
+    const EMA_PRICE: i64 = 1000;
+    const EMA_CONF: u64 = 1000;
+    const PREV_PUBLISH_TIME: u64 = 1000;
+
+    fn generate_bytes() -> FixedBytes<32> {
+        FixedBytes::<32>::repeat_byte(30)
+    }
+
+    #[motsu::test]
+    fn can_initialize_mock_contract(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        assert_eq!(contract.single_update_fee_in_wei.get(), U256::from(1000));
+        assert_eq!(contract.valid_time_period.get(), U256::from(1000));
+    }
+
+    #[motsu::test]
+    fn error_initialize_mock_contract(contract: MockPythContract) {
+      let err = contract.initialize(U256::from(0), U256::from(0)).expect_err("should not initialize with invalid parameters");
+    }
+
+    #[motsu::test]
+    fn created_price_feed_data(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let id = generate_bytes();
+        let publish_time = U256::from(1000);
+        let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, publish_time, PREV_PUBLISH_TIME);    
+        let price_feed_decoded = DecodeDataType::abi_decode(&price_feed_created, true).unwrap();
+        assert_eq!(price_feed_decoded.0.id, id);
+        assert_eq!(price_feed_decoded.0.price.price, PRICE);
+        assert_eq!(price_feed_decoded.0.price.conf, CONF);
+        assert_eq!(price_feed_decoded.0.price.expo, EXPO);
+        assert_eq!(price_feed_decoded.0.ema_price.price, EMA_PRICE);
+        assert_eq!(price_feed_decoded.0.ema_price.conf, EMA_CONF);
+        assert_eq!(price_feed_decoded.1, PREV_PUBLISH_TIME);
+    }
+
+    #[motsu::test]
+    fn can_get_update_fee(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let publish_time = U256::from(1000);
+        let mut update_data: Vec<Bytes> = vec![];
+        let mut x = 0;
+        while x < 10 {
+            let id = generate_bytes();
+            let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, publish_time, PREV_PUBLISH_TIME);    
+            update_data.push(Bytes::from(price_feed_created));
+            x += 1;
+        }
+        let required_fee = contract.get_update_fee(update_data.clone());
+        assert_eq!(required_fee, U256::from(1000 * x));
+    }
+
+    #[motsu::test]
+    fn price_feed_does_not_exist(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let id = generate_bytes();
+        let price_feed_found = contract.price_feed_exists(id);
+        assert_eq!(price_feed_found, false);
+    }
+
+    #[motsu::test]
+    fn query_price_feed_failed(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let id = generate_bytes();
+        let _price_feed = contract.query_price_feed(id).expect_err("should not query if price feed does not exist");
+    }
+
+    #[motsu::test]
+    fn can_get_valid_time_period(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let valid_time_period = contract.get_valid_time_period();
+        assert_eq!(valid_time_period, U256::from(1000));
+    }
+
+    #[motsu::test]
+    fn can_update_price_feeds(contract: MockPythContract) {
+        let _ = contract.initialize(U256::from(1000), U256::from(1000));
+        let id = generate_bytes();
+        let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, U256::from(1000), PREV_PUBLISH_TIME);    
+        let mut update_data: Vec<Bytes> = vec![];
+        update_data.push(Bytes::from(price_feed_created));
+        //let balance = contrac;
+        info!("{:?} ", msg::sender());
+        //contract.update_price_feeds(update_data)
+    }
 }

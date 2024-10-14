@@ -1,8 +1,11 @@
-//! Various Solidity definitions, including ABI-compatible interfaces, events, functions, etc.
+use alloy_sol_types::sol;
 
-use stylus_sdk::alloy_sol_types::sol;
 
-// sol! {
-
-//     event PriceFeedUpdate();
-// }
+sol! { 
+  event PriceFeedUpdate(
+        bytes32 indexed id,
+        uint64 publishTime,
+        int64 price,
+        uint64 conf
+    );
+}

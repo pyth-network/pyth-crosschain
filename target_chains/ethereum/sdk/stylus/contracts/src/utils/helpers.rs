@@ -3,6 +3,7 @@ use {
     alloy_sol_types::{
         SolCall,
         SolType,
+
     },
     stylus_sdk::{
         alloy_primitives::Address,
@@ -38,14 +39,12 @@ pub fn delegate_call_helper<C: SolCall>(
     storage: &mut impl TopLevelStorage,
     address: Address,
     args: <C::Parameters<'_> as SolType>::RustType,
-) -> Result<Vec<u8>, Vec<u8>> {
+) -> Result<C::Return, Vec<u8>> {
     
     let calldata = C::new(args).abi_encode();
     let res = unsafe { delegate_call(storage, address, &calldata).map_err(map_call_error)? };
-    Ok(res)
-    //C//::abi_decode(data, validate)
-    // C::abi_decode_returns(&res, false /* validate */)
-    //     .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
+    C::abi_decode_returns(&res, false /* validate */)
+        .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
 }
 
 /// Performs a `staticcall` to the given address, calling the function defined as a `SolCall` with the given arguments
@@ -54,12 +53,11 @@ pub fn static_call_helper<C: SolCall>(
     storage: &impl TopLevelStorage,
     address: Address,
     args: <C::Parameters<'_> as SolType>::RustType,
-) -> Result<Vec<u8>, Vec<u8>> {
+) -> Result<C::Return, Vec<u8>> {
     let calldata = C::new(args).abi_encode();
     let res = static_call(storage, address, &calldata).map_err(map_call_error)?;
-    Ok(res)
-    // C::abi_decode_returns(&res, false /* validate */)
-    //     .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
+    C::abi_decode_returns(&res, false /* validate */)
+        .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
 }
 
 /// Performs a `call` to the given address, calling the function
@@ -68,10 +66,9 @@ pub fn call_helper<C: SolCall>(
     storage: &mut impl TopLevelStorage,
     address: Address,
     args: <C::Parameters<'_> as SolType>::RustType,
-) -> Result<Vec<u8>, Vec<u8>> {
+) -> Result<C::Return, Vec<u8>> {
     let calldata = C::new(args).abi_encode();
     let res = call(storage, address, &calldata).map_err(map_call_error)?;
-    Ok(res)
-    // C::abi_decode_returns(&res, false /* validate */)
-    //     .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
+    C::abi_decode_returns(&res, false /* validate */)
+        .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
 }

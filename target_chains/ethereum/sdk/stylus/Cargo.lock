@@ -530,10 +530,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "example"
-version = "0.0.1"
-
-[[package]]
 name = "fastrand"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -786,18 +782,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14eacc4bfcf10da9b6d5185ef51b2dc75434afac34b4d8aabe40f6b141ee071c"
 dependencies = [
  "cfg-if 1.0.0",
-]
-
-[[package]]
-name = "mock"
-version = "0.0.1"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "mini-alloc 0.4.2",
- "pyth-stylus",
- "stylus-proc",
- "stylus-sdk",
 ]
 
 [[package]]
@@ -1356,7 +1340,6 @@ dependencies = [
  "keccak-const",
  "lazy_static",
  "mini-alloc 0.6.0",
- "regex",
  "stylus-proc",
 ]
 
@@ -1418,10 +1401,6 @@ dependencies = [
  "rustix",
  "windows-sys 0.59.0",
 ]
-
-[[package]]
-name = "tests"
-version = "0.0.1"
 
 [[package]]
 name = "thiserror"

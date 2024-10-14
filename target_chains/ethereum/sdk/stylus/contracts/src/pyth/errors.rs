@@ -88,11 +88,17 @@ sol! {
     #[derive(Debug)]
     #[allow(missing_docs)]
     error InvalidWormholeAddressToSet();
+
+    #[derive(Debug)]
+    #[allow(missing_docs)]
+    error FalledDecodeData();
+    
+
 }
 
 /// A Pausable error.
 #[derive(SolidityError, Debug)]
-pub enum IPythError {
+pub enum Error {
     InvalidArgument(InvalidArgument),
     InvalidUpdateDataSource(InvalidUpdateDataSource),
     InvalidUpdateData(InvalidUpdateData),
@@ -107,9 +113,10 @@ pub enum IPythError {
     InvalidGovernanceDataSource(InvalidGovernanceDataSource),
     OldGovernanceMessage(OldGovernanceMessage),
     InvalidWormholeAddressToSet(InvalidWormholeAddressToSet),
+    FalledDecodeData(FalledDecodeData),
 }
 
-impl MethodError for IPythError {
+impl MethodError for Error {
     fn encode(self) -> alloc::vec::Vec<u8> {
         self.into()
     }

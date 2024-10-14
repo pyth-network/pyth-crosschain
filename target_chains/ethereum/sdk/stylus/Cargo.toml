@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "contracts", "example", "tests","mock"
+  "contracts"
 ]
 default-members = [
   "contracts",
