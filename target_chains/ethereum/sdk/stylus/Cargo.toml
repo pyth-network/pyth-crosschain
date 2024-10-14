@@ -1,7 +1,5 @@
 [workspace]
-members = [
-  "contracts"
-]
+members = ["contracts", "examples/external-call-contracts","examples/function-calls"]
 default-members = [
   "contracts",
 ]
@@ -46,6 +44,17 @@ regex = "1.10.4"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 tokio = { version = "1.12.0", features = ["full"] }
 
+alloy = { version = "0.1.4", features = [
+  "contract",
+  "network",
+  "providers",
+  "provider-http",
+  "rpc-client",
+  "rpc-types-eth",
+  "signer-local",
+  "getrandom",
+] }
+
 # motsu test
 motsu = "=0.1.0-rc"
 
@@ -53,6 +62,11 @@ motsu = "=0.1.0-rc"
 pyth-stylus = { path = "contracts" }
 e2e = { path = "lib/e2e" }
 e2e-proc = {path = "lib/e2e-proc"}
+
+# procedural macros
+syn = { version = "2.0.58", features = ["full"] }
+proc-macro2 = "1.0.79"
+quote = "1.0.35"
 
 [profile.release]
 codegen-units = 1
