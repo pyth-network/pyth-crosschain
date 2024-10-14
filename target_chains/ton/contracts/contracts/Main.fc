@@ -19,6 +19,8 @@
     ;; * The remainder of the message body is specific for each supported value of `op`.
     if (op == OP_UPDATE_GUARDIAN_SET) {
         update_guardian_set(data_slice);
+    } elseif (op == OP_UPDATE_PRICE_FEEDS) {
+        update_price_feeds(msg_value, data_slice);
     } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
         execute_governance_action(data_slice);
     } elseif (op == OP_UPGRADE_CONTRACT) {

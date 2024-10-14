@@ -250,6 +250,7 @@ describe("PythTest", () => {
 
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
+    console.log("Update fee:", updateFee);
 
     result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
