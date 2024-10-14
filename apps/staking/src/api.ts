@@ -427,5 +427,5 @@ export const optPublisherOut = async (
   stakeAccount: PublicKey,
   publisherKey: PublicKey,
 ): Promise<void> => {
-  await client.removePublisherStakeAccount(stakeAccount, publisherKey);
+  await client.removePublisherStakeAccount(publisherKey, stakeAccount);
 };
