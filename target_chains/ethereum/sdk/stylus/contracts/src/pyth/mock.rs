@@ -11,7 +11,7 @@ use crate::pyth::events::PriceFeedUpdate;
 use crate::pyth::ipyth::IPyth;
 
 //decode data type
-pub type DecodeDataType = (PriceFeed, SolUInt<64>);
+pub(crate) type DecodeDataType = (PriceFeed, SolUInt<64>);
 
 sol_storage! {
     struct MockPythContract {
@@ -23,7 +23,17 @@ sol_storage! {
 
 #[public]
 impl MockPythContract {
-    
+
+    fn initialize(&mut self, single_update_fee_in_wei: Uint<256, 4>, valid_time_period: Uint<256, 4>) -> Result<(), Vec<u8>> {
+        if single_update_fee_in_wei <= U256::from(0) || valid_time_period <= U256::from(0) {
+            return Err(Error::InvalidArgument(InvalidArgument {}).into());
+         }
+        self.single_update_fee_in_wei.set(single_update_fee_in_wei);
+        self.valid_time_period.set(valid_time_period);
+        Ok(())
+    }
+
+
     fn query_price_feed(&self, id: FixedBytes<32>) -> Result<Vec<u8>, Vec<u8>> {
         let price_feed  =  self.price_feeds.get(id).to_price_feed();
         if price_feed.id.eq(&FixedBytes::<32>::ZERO) {
