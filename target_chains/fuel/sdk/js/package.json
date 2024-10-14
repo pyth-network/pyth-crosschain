@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-fuel-js",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Pyth Network Fuel Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
@@ -45,6 +45,6 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "fuels": "^0.94.5"
+    "fuels": "^0.96.1"
   }
 }
