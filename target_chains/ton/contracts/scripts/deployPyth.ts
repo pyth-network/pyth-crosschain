@@ -52,7 +52,10 @@ export async function run(provider: NetworkProvider) {
     const vaaBuffer = Buffer.from(vaa, "hex");
     await main.sendUpdateGuardianSet(provider.sender(), vaaBuffer);
     console.log(
-      `Successfully updated guardian set ${i + 1} with VAA: ${vaa.slice(0, 20)}...`
+      `Successfully updated guardian set ${i + 1} with VAA: ${vaa.slice(
+        0,
+        20
+      )}...`
     );
 
     // Wait for 30 seconds before checking the guardian set index
@@ -63,7 +66,9 @@ export async function run(provider: NetworkProvider) {
     const newIndex = await main.getCurrentGuardianSetIndex();
     if (newIndex !== i + 1) {
       console.error(
-        `Failed to update guardian set. Expected index ${i + 1}, got ${newIndex}`
+        `Failed to update guardian set. Expected index ${
+          i + 1
+        }, got ${newIndex}`
       );
       break;
     }

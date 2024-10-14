@@ -606,8 +606,9 @@ describe("PythTest", () => {
 
     // Verify that the old data source is no longer valid
     const oldDataSource = DATA_SOURCES[0];
-    const oldDataSourceIsValid =
-      await pythTest.getIsValidDataSource(oldDataSource);
+    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
+      oldDataSource
+    );
     expect(oldDataSourceIsValid).toBe(false);
   });
 
