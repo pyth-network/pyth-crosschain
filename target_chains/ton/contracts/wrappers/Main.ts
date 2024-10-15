@@ -1,4 +1,3 @@
-import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   Address,
@@ -12,8 +11,9 @@ import {
   SendMode,
   toNano,
 } from "@ton/core";
+import { HexString } from "@pythnetwork/price-service-sdk";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
-import { createCellChain } from "../tests/utils";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 
 export type MainConfig = {
   singleUpdateFee: number;

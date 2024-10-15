@@ -10,7 +10,7 @@ import {
   SendMode,
   toNano,
 } from "@ton/core";
-import { createCellChain } from "../tests/utils";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import {
   createGuardianSetsDict,
   parseGuardianSetKeys,

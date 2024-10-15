@@ -11,7 +11,7 @@ import {
   toNano,
 } from "@ton/core";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
-import { createCellChain } from "../tests/utils";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 
