@@ -14,21 +14,23 @@ import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 
 import * as limo from "@kamino-finance/limo-sdk";
 import { Decimal } from "decimal.js";
-import { getPdaAuthority } from "@kamino-finance/limo-sdk/dist/utils";
+import {
+  getMintDecimals,
+  getPdaAuthority,
+} from "@kamino-finance/limo-sdk/dist/utils";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
 class SimpleSearcherLimo {
   private client: Client;
-  private connectionSvm: Connection;
-  private clientLimo: limo.LimoClient;
+  private readonly connectionSvm: Connection;
+  private mintDecimals: Record<string, number> = {};
   private expressRelayConfig: ExpressRelaySvmConfig | undefined;
   constructor(
     public endpointExpressRelay: string,
     public chainId: string,
     private searcher: Keypair,
     public endpointSvm: string,
-    public globalConfig: PublicKey,
     public fillRate: number,
     public apiKey?: string
   ) {
@@ -42,7 +44,6 @@ class SimpleSearcherLimo {
       this.bidStatusHandler.bind(this)
     );
     this.connectionSvm = new Connection(endpointSvm, "confirmed");
-    this.clientLimo = new limo.LimoClient(this.connectionSvm, globalConfig);
   }
 
   async bidStatusHandler(bidStatus: BidStatusUpdate) {
@@ -59,13 +60,24 @@ class SimpleSearcherLimo {
     );
   }
 
+  async getMintDecimals(mint: PublicKey): Promise<number> {
+    if (this.mintDecimals[mint.toBase58()]) {
+      return this.mintDecimals[mint.toBase58()];
+    }
+    const decimals = await getMintDecimals(this.connectionSvm, mint);
+    this.mintDecimals[mint.toBase58()] = decimals;
+    return decimals;
+  }
+
   async generateBid(opportunity: OpportunitySvm) {
     const order = opportunity.order;
-    const inputMintDecimals = await this.clientLimo.getOrderInputMintDecimals(
-      order
+    const limoClient = new limo.LimoClient(
+      this.connectionSvm,
+      order.state.globalConfig
     );
-    const outputMintDecimals = await this.clientLimo.getOrderOutputMintDecimals(
-      order
+    const inputMintDecimals = await this.getMintDecimals(order.state.inputMint);
+    const outputMintDecimals = await this.getMintDecimals(
+      order.state.outputMint
     );
     const inputAmountDecimals = new Decimal(
       order.state.remainingInputAmount.toNumber()
@@ -96,7 +108,7 @@ class SimpleSearcherLimo {
       outputAmountDecimals.toString()
     );
 
-    const ixsTakeOrder = await this.clientLimo.takeOrderIx(
+    const ixsTakeOrder = await limoClient.takeOrderIx(
       this.searcher.publicKey,
       order,
       inputAmountDecimals,
@@ -107,7 +119,7 @@ class SimpleSearcherLimo {
     const txRaw = new anchor.web3.Transaction().add(...ixsTakeOrder);
 
     const router = getPdaAuthority(
-      this.clientLimo.getProgramID(),
+      limoClient.getProgramID(),
       order.state.globalConfig
     );
     const bidAmount = new anchor.BN(argv.bid);
@@ -174,11 +186,6 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: true,
   })
-  .option("global-config", {
-    description: "Global config address",
-    type: "string",
-    demandOption: true,
-  })
   .option("bid", {
     description: "Bid amount in lamports",
     type: "string",
@@ -242,7 +249,6 @@ async function run() {
     argv.chainId,
     searcherKeyPair,
     argv.endpointSvm,
-    new PublicKey(argv.globalConfig),
     argv.fillRate,
     argv.apiKey
   );
