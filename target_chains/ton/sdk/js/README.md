@@ -76,6 +76,9 @@ async function main() {
     156000000n + BigInt(updateFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
   );
   console.log("Price feeds updated successfully.");
+
+  const updatedPrice = await contract.getPriceUnsafe(BTC_PRICE_FEED_ID);
+  console.log("Updated BTC Price from TON contract:", updatedPrice);
 }
 
 main().catch(console.error);
