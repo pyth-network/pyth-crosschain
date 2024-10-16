@@ -331,10 +331,13 @@ fn ema_price_unsafe(price_feed_id: PriceFeedId) -> Price {
 fn price_no_older_than(time_period: u64, price_feed_id: PriceFeedId) -> Price {
     let price = price_unsafe(price_feed_id);
     let current_time = timestamp();
-    require(
-        current_time - price.publish_time <= time_period,
-        PythError::OutdatedPrice,
-    );
+    // Mimicking saturating subtraction to avoid underflow
+    let time_difference = if current_time > price.publish_time {
+        current_time - price.publish_time
+    } else {
+        0
+    };
+    require(time_difference <= time_period, PythError::OutdatedPrice);
 
     price
 }
