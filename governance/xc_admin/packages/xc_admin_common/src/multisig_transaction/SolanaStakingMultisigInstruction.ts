@@ -1,4 +1,9 @@
-import { TransactionInstruction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  StakeProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
   MultisigInstruction,
   MultisigInstructionProgram,
@@ -6,6 +11,7 @@ import {
 } from ".";
 import { AnchorAccounts } from "./anchor";
 import { StakeInstruction } from "@solana/web3.js";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export class SolanaStakingMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.SolanaStakingProgram;
@@ -114,4 +120,32 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
       );
     }
   }
+}
+
+export async function fetchStakeAccounts(
+  connection: Connection,
+  voterAccount: PublicKey
+) {
+  const stakeAccounts = await connection.getProgramAccounts(
+    StakeProgram.programId,
+    {
+      encoding: "base64",
+      filters: [
+        {
+          memcmp: {
+            offset: 0,
+            bytes: bs58.encode(Buffer.from([2, 0, 0, 0])),
+          },
+        },
+        {
+          memcmp: {
+            offset: 124,
+            bytes: voterAccount.toBase58(),
+          },
+        },
+      ],
+    }
+  );
+
+  return stakeAccounts.map((account) => account.pubkey);
 }
