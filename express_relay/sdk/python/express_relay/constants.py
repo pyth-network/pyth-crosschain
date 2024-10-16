@@ -2,7 +2,7 @@ from typing import Dict, TypedDict
 
 from solders.pubkey import Pubkey
 
-from express_relay.express_relay_types import OpportunityAdapterConfig
+from express_relay.models import OpportunityAdapterConfig
 
 OPPORTUNITY_ADAPTER_CONFIGS = {
     "op_sepolia": OpportunityAdapterConfig(

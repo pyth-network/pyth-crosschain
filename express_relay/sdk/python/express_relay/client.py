@@ -1,6 +1,7 @@
 import asyncio
 import json
 import urllib.parse
+import warnings
 from asyncio import Task
 from collections.abc import Coroutine
 from datetime import datetime
@@ -10,7 +11,7 @@ from uuid import UUID
 import httpx
 import web3
 import websockets
-from eth_abi import encode
+from eth_abi.abi import encode
 from eth_account.account import Account
 from eth_account.datastructures import SignedMessage
 from eth_utils import to_checksum_address
@@ -25,27 +26,33 @@ from express_relay.constants import (
     EXECUTION_PARAMS_TYPESTRING,
     SVM_CONFIGS,
 )
-from express_relay.express_relay_types import (
-    BidResponse,
-    Opportunity,
-    BidStatusUpdate,
-    ClientMessage,
-    Bid,
-    OpportunityBid,
-    OpportunityParams,
+from express_relay.models.evm import (
     Address,
     Bytes32,
     TokenAmount,
-    OpportunityBidParams,
     BidEvm,
-    OpportunityRoot,
-    OpportunityEvm,
 )
-from express_relay.svm.generated.express_relay.instructions import submit_bid
+from express_relay.models import (
+    Bid,
+    BidStatusUpdate,
+    BidResponse,
+    OpportunityBidParams,
+    OpportunityBid,
+    OpportunityParams,
+    Opportunity,
+    OpportunityRoot,
+    ClientMessage,
+    BidResponseRoot,
+)
+from express_relay.models.base import UnsupportedOpportunityVersionException
+from express_relay.models.evm import OpportunityEvm
+from express_relay.svm.generated.express_relay.instructions.submit_bid import submit_bid
 from express_relay.svm.generated.express_relay.program_id import (
     PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
 )
-from express_relay.svm.generated.express_relay.types import SubmitBidArgs
+from express_relay.svm.generated.express_relay.types.submit_bid_args import (
+    SubmitBidArgs,
+)
 from express_relay.svm.limo_client import LimoClient
 
 
@@ -334,11 +341,10 @@ class ExpressRelayClient:
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        bid_status_update = BidStatusUpdate.process_bid_status_dict(
+                        bid_status_update = BidStatusUpdate.model_validate(
                             msg_json["status"]
                         )
-                        if bid_status_update:
-                            asyncio.create_task(bid_status_callback(bid_status_update))
+                        asyncio.create_task(bid_status_callback(bid_status_update))
 
             elif msg_json.get("id"):
                 future = self.ws_msg_futures.pop(msg_json["id"])
@@ -369,10 +375,11 @@ class ExpressRelayClient:
 
         opportunities: list[Opportunity] = []
         for opportunity in resp.json():
-            opportunity_processed = OpportunityRoot.model_validate(opportunity)
-            if opportunity_processed:
+            try:
+                opportunity_processed = OpportunityRoot.model_validate(opportunity)
                 opportunities.append(opportunity_processed.root)
-
+            except UnsupportedOpportunityVersionException as e:
+                warnings.warn(str(e))
         return opportunities
 
     async def submit_opportunity(self, opportunity: OpportunityParams) -> UUID:
@@ -419,9 +426,8 @@ class ExpressRelayClient:
 
         bids = []
         for bid in resp.json()["items"]:
-            bid_processed = BidResponse.process_bid_response_dict(bid)
-            if bid_processed:
-                bids.append(bid_processed)
+            bid_processed = BidResponseRoot.model_validate(bid)
+            bids.append(bid_processed.root)
 
         return bids
 

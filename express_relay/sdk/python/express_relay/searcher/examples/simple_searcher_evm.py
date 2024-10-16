@@ -11,15 +11,13 @@ from express_relay.client import (
     sign_bid,
 )
 from express_relay.constants import OPPORTUNITY_ADAPTER_CONFIGS
-from express_relay.express_relay_types import (
-    Opportunity,
+from express_relay.models.evm import (
     BidEvm,
-    OpportunityBidParams,
     Bytes32,
-    BidStatus,
-    BidStatusUpdate,
-    OpportunityEvm,
 )
+from express_relay.models import BidStatusUpdate, OpportunityBidParams, Opportunity
+from express_relay.models.evm import OpportunityEvm, BidStatusEvm
+from express_relay.models.base import BidStatus
 
 logger = logging.getLogger(__name__)
 
@@ -95,20 +93,21 @@ class SimpleSearcher:
             bid_status_update: An object representing an update to the status of a bid.
         """
         id = bid_status_update.id
-        bid_status = bid_status_update.bid_status
-        result = bid_status_update.result
-        index = bid_status_update.index
+        bid_status = typing.cast(BidStatusEvm, bid_status_update.bid_status)
+        status = bid_status.type
+        result = bid_status.result
+        index = bid_status.index
 
         result_details = ""
-        if bid_status == BidStatus("submitted") or bid_status == BidStatus("won"):
+        if status == BidStatus.SUBMITTED or status == BidStatus.WON:
             result_details = f", transaction {result}, index {index} of multicall"
-        elif bid_status == BidStatus("lost"):
+        elif status == BidStatus.LOST:
             if result:
                 result_details = f", transaction {result}"
             if index:
                 result_details += f", index {index} of multicall"
         logger.info(
-            f"Bid status for bid {id}: {bid_status.value.replace('_', ' ')}{result_details}"
+            f"Bid status for bid {id}: {status.value.replace('_', ' ')}{result_details}"
         )
 
 

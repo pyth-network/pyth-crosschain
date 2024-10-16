@@ -88,6 +88,10 @@ export interface components {
        * @example beedbeed-58cc-4372-a567-0e02b2c3d479
        */
       id: string;
+      /**
+       * @description The status of the request. If the bid was placed successfully, the status will be "OK".
+       * @example OK
+       */
       status: string;
     };
     BidStatus:
@@ -465,11 +469,6 @@ export interface components {
     /** BidResponseEvm */
     SimulatedBidEvm: {
       /**
-       * @description Amount of bid in wei.
-       * @example 10
-       */
-      bid_amount: string;
-      /**
        * @description The chain id for bid.
        * @example op_sepolia
        */
@@ -485,22 +484,27 @@ export interface components {
        */
       initiation_time: string;
       /**
-       * @description The permission key for bid.
-       * @example 0xdeadbeef
-       */
-      permission_key: string;
-      /**
        * @description The profile id for the bid owner.
-       * @example
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       profile_id: string;
-      status: components["schemas"]["BidStatus"];
     } & {
+      /**
+       * @description Amount of bid in wei.
+       * @example 10
+       */
+      bid_amount: string;
       /**
        * @description The gas limit for the contract call.
        * @example 2000000
        */
       gas_limit: string;
+      /**
+       * @description The permission key for bid.
+       * @example 0xdeadbeef
+       */
+      permission_key: string;
+      status: components["schemas"]["BidStatusEvm"];
       /**
        * @description Calldata for the contract call.
        * @example 0xdeadbeef
@@ -515,11 +519,6 @@ export interface components {
     /** BidResponseSvm */
     SimulatedBidSvm: {
       /**
-       * @description Amount of bid in wei.
-       * @example 10
-       */
-      bid_amount: string;
-      /**
        * @description The chain id for bid.
        * @example op_sepolia
        */
@@ -535,17 +534,24 @@ export interface components {
        */
       initiation_time: string;
       /**
-       * @description The permission key for bid.
-       * @example 0xdeadbeef
-       */
-      permission_key: string;
-      /**
        * @description The profile id for the bid owner.
-       * @example
+       * @example obo3ee3e-58cc-4372-a567-0e02b2c3d479
        */
       profile_id: string;
-      status: components["schemas"]["BidStatus"];
     } & {
+      /**
+       * Format: int64
+       * @description Amount of bid in lamports.
+       * @example 1000
+       */
+      bid_amount: number;
+      /**
+       * @description The permission key for bid in base64 format.
+       * This is the concatenation of the permission account and the router account.
+       * @example DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5
+       */
+      permission_key: string;
+      status: components["schemas"]["BidStatusSvm"];
       /**
        * @description The transaction of the bid.
        * @example SGVsbG8sIFdvcmxkIQ==
@@ -591,6 +597,10 @@ export interface components {
            * @example beedbeed-58cc-4372-a567-0e02b2c3d479
            */
           id: string;
+          /**
+           * @description The status of the request. If the bid was placed successfully, the status will be "OK".
+           * @example OK
+           */
           status: string;
         };
       };
@@ -686,7 +696,6 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Latest status of the bid */
       200: {
         content: {
           "application/json": components["schemas"]["BidStatus"];

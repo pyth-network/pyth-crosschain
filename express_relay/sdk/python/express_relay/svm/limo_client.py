@@ -44,14 +44,13 @@ class WSOLInstructions(TypedDict):
 
 
 class LimoClient:
-    def __init__(self, connection: AsyncClient, global_config: Pubkey):
+    def __init__(self, connection: AsyncClient):
         self._connection = connection
-        self._global_config = global_config
 
     async def get_all_orders_state_and_address_with_filters(
-        self, filters: List[MemcmpOpts]
+        self, filters: List[MemcmpOpts], global_config: Pubkey
     ) -> List[OrderStateAndAddress]:
-        filters.append(MemcmpOpts(offset=8, bytes=str(self._global_config)))
+        filters.append(MemcmpOpts(offset=8, bytes=str(global_config)))
         programs = await self._connection.get_program_accounts(
             PROGRAM_ID,
             commitment=None,

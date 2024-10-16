@@ -14,14 +14,12 @@ from express_relay.client import (
     ExpressRelayClient,
 )
 from express_relay.constants import SVM_CONFIGS
-from express_relay.express_relay_types import (
-    BidStatus,
-    BidStatusUpdate,
-    BidSvm,
-    Opportunity,
+from express_relay.models import BidStatusUpdate, Opportunity
+from express_relay.models.base import BidStatus
+from express_relay.models.svm import BidSvm, OpportunitySvm
+from express_relay.svm.generated.express_relay.accounts.express_relay_metadata import (
+    ExpressRelayMetadata,
 )
-from express_relay.express_relay_svm_types import OpportunitySvm
-from express_relay.svm.generated.express_relay.accounts import ExpressRelayMetadata
 from express_relay.svm.generated.express_relay.program_id import (
     PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
 )
@@ -33,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class SimpleSearcherSvm:
     express_relay_metadata: ExpressRelayMetadata | None
+    mint_decimals_cache: typing.Dict[str, int]
 
     def __init__(
         self,
@@ -41,7 +40,6 @@ class SimpleSearcherSvm:
         bid_amount: int,
         chain_id: str,
         svm_rpc_endpoint: str,
-        limo_global_config: str,
         fill_rate: int,
         api_key: str | None = None,
     ):
@@ -58,11 +56,10 @@ class SimpleSearcherSvm:
             raise ValueError(f"Chain ID {self.chain_id} not supported")
         self.svm_config = SVM_CONFIGS[self.chain_id]
         self.rpc_client = AsyncClient(svm_rpc_endpoint)
-        self.limo_client = LimoClient(
-            self.rpc_client, global_config=Pubkey.from_string(limo_global_config)
-        )
+        self.limo_client = LimoClient(self.rpc_client)
         self.fill_rate = fill_rate
         self.express_relay_metadata = None
+        self.mint_decimals_cache = {}
 
     async def opportunity_callback(self, opp: Opportunity):
         """
@@ -90,25 +87,28 @@ class SimpleSearcherSvm:
             bid_status_update: An object representing an update to the status of a bid.
         """
         id = bid_status_update.id
-        bid_status = bid_status_update.bid_status
-        result = bid_status_update.result
+        status = bid_status_update.bid_status.type
+        result = bid_status_update.bid_status.result
 
         result_details = ""
-        if bid_status == BidStatus("submitted") or bid_status == BidStatus("won"):
+        if status == BidStatus.SUBMITTED or status == BidStatus.WON:
             result_details = f", transaction {result}"
-        elif bid_status == BidStatus("lost"):
+        elif status == BidStatus.LOST:
             if result:
                 result_details = f", transaction {result}"
-        logger.info(f"Bid status for bid {id}: {bid_status.value}{result_details}")
+        logger.info(f"Bid status for bid {id}: {status.value}{result_details}")
+
+    async def get_mint_decimals(self, mint: Pubkey) -> int:
+        if str(mint) not in self.mint_decimals_cache:
+            self.mint_decimals_cache[
+                str(mint)
+            ] = await self.limo_client.get_mint_decimals(mint)
+        return self.mint_decimals_cache[str(mint)]
 
     async def assess_opportunity(self, opp: OpportunitySvm) -> BidSvm:
         order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
-        input_mint_decimals = await self.limo_client.get_mint_decimals(
-            order["state"].input_mint
-        )
-        output_mint_decimals = await self.limo_client.get_mint_decimals(
-            order["state"].output_mint
-        )
+        input_mint_decimals = await self.get_mint_decimals(order["state"].input_mint)
+        output_mint_decimals = await self.get_mint_decimals(order["state"].output_mint)
         input_amount_decimals = Decimal(
             order["state"].remaining_input_amount
         ) / Decimal(10**input_mint_decimals)
@@ -206,23 +206,15 @@ async def main():
         help="The API key of the searcher to authenticate with the server for fetching and submitting bids",
     )
     parser.add_argument(
-        "--global-config",
-        type=str,
-        required=True,
-        help="Limo program global config to use",
-    )
-    parser.add_argument(
         "--bid",
         type=int,
         default=100,
-        required=True,
         help="The amount of bid to submit for each opportunity",
     )
     parser.add_argument(
         "--fill-rate",
         type=int,
         default=100,
-        required=True,
         help="How much of the order to fill in percentage. Default is 100%",
     )
 
@@ -243,14 +235,13 @@ async def main():
         with open(args.private_key_json_file, "r") as f:
             searcher_keypair = Keypair.from_json(f.read())
 
-    print("Using Keypair with pubkey:", searcher_keypair.pubkey())
+    logger.info("Using Keypair with pubkey:", searcher_keypair.pubkey())
     searcher = SimpleSearcherSvm(
         args.endpoint_express_relay,
         searcher_keypair,
         args.bid,
         args.chain_id,
         args.endpoint_svm,
-        args.global_config,
         args.fill_rate,
         args.api_key,
     )
