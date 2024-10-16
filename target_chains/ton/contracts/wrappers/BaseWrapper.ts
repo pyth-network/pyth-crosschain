@@ -9,7 +9,7 @@ import {
   SendMode,
   toNano,
 } from "@ton/core";
-import { createCellChain } from "../tests/utils";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
 import { DataSource } from "@pythnetwork/xc-admin-common";
