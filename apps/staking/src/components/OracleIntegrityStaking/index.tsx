@@ -1724,7 +1724,7 @@ const PublisherIdentity = ({
     <span className={clsx(className, withNameClassName)}>
       <span>
         {createElement(props.children.identity.icon, {
-          className: "mr-2 inline-block size-[20px] align-sub",
+          className: "mr-2 inline-block h-[20px] align-sub",
         })}
         <span className="mr-[0.5em]">{props.children.identity.name}</span>
       </span>

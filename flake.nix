@@ -14,10 +14,6 @@
     flake-utils.lib.eachDefaultSystem
     (
       system: let
-        nodejs-overlay = _: prev: {
-          nodejs = prev.nodejs_18;
-        };
-
         cli-overlay = _: prev: {
           cli = let
             pnpm = "${prev.pnpm}/bin/pnpm i && ${prev.pnpm}/bin/pnpm";
@@ -48,7 +44,7 @@
 
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [mkCli.overlays.default cli-overlay nodejs-overlay];
+          overlays = [mkCli.overlays.default cli-overlay];
           config = {};
         };
       in {
@@ -63,6 +59,7 @@
             pkgs.pnpm
             pkgs.pre-commit
             pkgs.python3
+            pkgs.python3Packages.distutils
           ];
         };
       }

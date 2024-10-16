@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.94.5
+  Fuels version: 0.96.1
 */
 
 import { Contract, Interface } from "fuels";
@@ -78,7 +78,6 @@ export enum InitializationErrorOutput {
 }
 export enum PythErrorInput {
   FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
-  FuturePriceNotAllowed = "FuturePriceNotAllowed",
   GuardianSetNotFound = "GuardianSetNotFound",
   IncorrectMessageType = "IncorrectMessageType",
   InsufficientFee = "InsufficientFee",
@@ -115,7 +114,6 @@ export enum PythErrorInput {
 }
 export enum PythErrorOutput {
   FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
-  FuturePriceNotAllowed = "FuturePriceNotAllowed",
   GuardianSetNotFound = "GuardianSetNotFound",
   IncorrectMessageType = "IncorrectMessageType",
   InsufficientFee = "InsufficientFee",
@@ -670,11 +668,6 @@ const abi = {
       components: [
         {
           name: "FeesCanOnlyBePaidInTheBaseAsset",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-        {
-          name: "FuturePriceNotAllowed",
           typeId:
             "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
         },
@@ -2123,7 +2116,7 @@ const abi = {
       name: "DEPLOYER",
       concreteTypeId:
         "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
-      offset: 132984,
+      offset: 133088,
     },
   ],
 };

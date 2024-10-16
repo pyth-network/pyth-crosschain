@@ -1,4 +1,4 @@
-FROM node:18.19.1-slim@sha256:246bf34b0c7cf8d9ff7cbe0c1ff44b178051f06c432c8e7df1645f1bd20b0352 as builder-base
+FROM node:20.17.0-slim@sha256:2394e403d45a644e41ac2a15b6f843a7d4a99ad24be48c27982c5fdc61a1ef17 as builder-base
 WORKDIR /usr/src/pyth
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -7,7 +7,7 @@ COPY ./ .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 
-FROM node:18.19.1-alpine@sha256:c7620fdecfefb96813da62519897808775230386f4c8482e972e37b8b18cb460 as runner-base
+FROM node:20.17.0-alpine@sha256:2d07db07a2df6830718ae2a47db6fedce6745f5bcd174c398f2acdda90a11c03 as runner-base
 WORKDIR /srv
 ENV NODE_ENV production
 RUN addgroup --system --gid 1001 pyth && adduser --system --uid 1001 pyth -g pyth && chown pyth:pyth .
