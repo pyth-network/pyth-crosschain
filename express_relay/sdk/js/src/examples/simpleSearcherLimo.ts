@@ -60,12 +60,13 @@ class SimpleSearcherLimo {
     );
   }
 
-  async getMintDecimals(mint: PublicKey): Promise<number> {
-    if (this.mintDecimals[mint.toBase58()]) {
-      return this.mintDecimals[mint.toBase58()];
+  async getMintDecimalsCached(mint: PublicKey): Promise<number> {
+    const mintAddress = mint.toBase58();
+    if (this.mintDecimals[mintAddress]) {
+      return this.mintDecimals[mintAddress];
     }
     const decimals = await getMintDecimals(this.connectionSvm, mint);
-    this.mintDecimals[mint.toBase58()] = decimals;
+    this.mintDecimals[mintAddress] = decimals;
     return decimals;
   }
 
@@ -75,8 +76,10 @@ class SimpleSearcherLimo {
       this.connectionSvm,
       order.state.globalConfig
     );
-    const inputMintDecimals = await this.getMintDecimals(order.state.inputMint);
-    const outputMintDecimals = await this.getMintDecimals(
+    const inputMintDecimals = await this.getMintDecimalsCached(
+      order.state.inputMint
+    );
+    const outputMintDecimals = await this.getMintDecimalsCached(
       order.state.outputMint
     );
     const inputAmountDecimals = new Decimal(

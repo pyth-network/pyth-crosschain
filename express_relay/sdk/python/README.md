@@ -39,6 +39,5 @@ $ poetry run python3 -m express_relay.searcher.examples.simple_searcher_svm \
 --chain-id development-solana \
 --private-key-json-file <PATH_TO_JSON_FILE> \
 --endpoint-svm https://api.mainnet-beta.solana.com \
---global-config TeStcUQMmECYEtdeXo9cXpktQWaGe4bhJ7zxAUMzB2X \
---bid 10000000
+--bid 10000000 # Bid amount in lamports
 ```
