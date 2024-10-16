@@ -9,8 +9,8 @@ import {
 } from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { createCellChain } from "../tests/utils";
 
 export type PythTestConfig = {
   priceFeedId: HexString;

@@ -1,6 +1,6 @@
 import { Cell, contractAddress, ContractProvider, Sender } from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
-import { createCellChain } from "../tests/utils";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import { parseGuardianSetKeys } from "../tests/utils/wormhole";
 
 export type WormholeTestConfig = {
