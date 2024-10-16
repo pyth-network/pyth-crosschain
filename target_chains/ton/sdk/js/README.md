@@ -73,7 +73,7 @@ async function main() {
   await contract.sendUpdatePriceFeeds(
     provider.sender(key.secretKey),
     updateData,
-    toNano(updateFee)
+    156000000n + BigInt(updateFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
   );
   console.log("Price feeds updated successfully.");
 }
