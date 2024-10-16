@@ -31,6 +31,7 @@ import * as evm from "./evm";
 import * as svm from "./svm";
 
 export * from "./types";
+export * from "./const";
 
 export class ClientError extends Error {}
 
@@ -400,7 +401,7 @@ export class Client {
    * @param opportunity
    * @returns Opportunity in the converted client format
    */
-  private convertOpportunity(
+  public convertOpportunity(
     opportunity: components["schemas"]["Opportunity"]
   ): Opportunity | undefined {
     if (opportunity.version !== "v1") {
