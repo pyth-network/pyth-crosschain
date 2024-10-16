@@ -1,20 +1,7 @@
-import {
-  Address,
-  beginCell,
-  Cell,
-  Contract,
-  contractAddress,
-  ContractProvider,
-  Dictionary,
-  Sender,
-  SendMode,
-  toNano,
-} from "@ton/core";
+import { Cell, contractAddress, ContractProvider, Sender } from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 import { createCellChain } from "@pythnetwork/pyth-ton-js";
-import {
-  createGuardianSetsDict,
-  parseGuardianSetKeys,
-} from "../tests/utils/wormhole";
+import { parseGuardianSetKeys } from "../tests/utils/wormhole";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;
@@ -24,88 +11,31 @@ export type WormholeTestConfig = {
   governanceContract: string;
 };
 
-export class WormholeTest implements Contract {
-  constructor(
-    readonly address: Address,
-    readonly init?: { code: Cell; data: Cell }
-  ) {}
-
-  static createFromAddress(address: Address) {
-    return new WormholeTest(address);
-  }
-
+export class WormholeTest extends BaseWrapper {
   static createFromConfig(
     config: WormholeTestConfig,
     code: Cell,
     workchain = 0
   ) {
-    const data = WormholeTest.getWormholeInitData(
-      config.guardianSetIndex,
-      config.guardianSet,
-      config.chainId,
-      config.governanceChainId,
-      config.governanceContract
-    );
+    const data = WormholeTest.getWormholeInitData(config);
     const init = { code, data };
     return new WormholeTest(contractAddress(workchain, init), init);
   }
 
-  static getWormholeInitData(
-    guardianSetIndex: number,
-    guardianSet: string[],
-    chainId: number,
-    governanceChainId: number,
-    governanceContract: string
-  ): Cell {
-    // Group price feeds and update fee (empty for Wormhole)
-    const priceFeedsCell = beginCell()
-      .storeDict(Dictionary.empty()) // latest_price_feeds, empty for initial state
-      .storeUint(0, 256) // single_update_fee, set to 0 for testing
-      .endCell();
-
-    // Group data sources information (empty for initial state)
-    const dataSourcesCell = beginCell()
-      .storeDict(Dictionary.empty()) // data_sources, empty for initial state
-      .storeUint(0, 32) // num_data_sources, set to 0 for initial state
-      .storeDict(Dictionary.empty()) // is_valid_data_source, empty for initial state
-      .endCell();
-
-    // Group guardian set information
-    const guardianSetCell = beginCell()
-      .storeUint(guardianSetIndex, 32)
-      .storeDict(createGuardianSetsDict(guardianSet, guardianSetIndex))
-      .endCell();
-
-    // Group chain and governance information
-    const governanceCell = beginCell()
-      .storeUint(chainId, 16)
-      .storeUint(governanceChainId, 16)
-      .storeBuffer(Buffer.from(governanceContract, "hex"))
-      .storeDict(Dictionary.empty()) // consumed_governance_actions, empty for initial state
-      .storeRef(beginCell()) // governance_data_source, empty for initial state
-      .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
-      .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
-      .storeUint(0, 256) // upgrade_code_hash, set to 0 for initial state
-      .endCell();
-
-    // Create the main cell with references to grouped data
-    return beginCell()
-      .storeRef(priceFeedsCell)
-      .storeRef(dataSourcesCell)
-      .storeRef(guardianSetCell)
-      .storeRef(governanceCell)
-      .endCell();
-  }
-
-  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
-    await provider.internal(via, {
-      value,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
-      body: beginCell().endCell(),
+  static getWormholeInitData(config: WormholeTestConfig): Cell {
+    return BaseWrapper.createInitData({
+      guardianSetIndex: config.guardianSetIndex,
+      guardianSet: config.guardianSet,
+      chainId: config.chainId,
+      governanceChainId: config.governanceChainId,
+      governanceContract: config.governanceContract,
     });
   }
 
-  // NOTE: the function name has to start with "send" or "get" so that it automatically inserts `provider` as a first argument
+  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+    await super.sendDeploy(provider, via, value);
+  }
+
   async getParseEncodedUpgrade(
     provider: ContractProvider,
     currentGuardianSetIndex: number,
@@ -172,12 +102,10 @@ export class WormholeTest implements Contract {
   }
 
   async getCurrentGuardianSetIndex(provider: ContractProvider) {
-    const result = await provider.get(
-      "test_get_current_guardian_set_index",
-      []
+    return await super.getCurrentGuardianSetIndex(
+      provider,
+      "test_get_current_guardian_set_index"
     );
-
-    return result.stack.readNumber();
   }
 
   async getGuardianSet(provider: ContractProvider, index: number) {
@@ -202,8 +130,7 @@ export class WormholeTest implements Contract {
   }
 
   async getChainId(provider: ContractProvider) {
-    const result = await provider.get("test_get_chain_id", []);
-    return result.stack.readNumber();
+    return await super.getChainId(provider, "test_get_chain_id");
   }
 
   async getGovernanceContract(provider: ContractProvider) {
@@ -227,15 +154,6 @@ export class WormholeTest implements Contract {
     via: Sender,
     vm: Buffer
   ) {
-    const messageBody = beginCell()
-      .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
-      .storeRef(createCellChain(vm))
-      .endCell();
-
-    await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
-      body: messageBody,
-    });
+    await super.sendUpdateGuardianSet(provider, via, vm);
   }
 }
