@@ -1,6 +1,6 @@
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { Cell, toNano } from "@ton/core";
-import { Main } from "../wrappers/Main";
+import { Main, MainConfig } from "../wrappers/Main";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 
@@ -17,8 +17,23 @@ describe("Main", () => {
 
   beforeEach(async () => {
     blockchain = await Blockchain.create();
+    const config: MainConfig = {
+      singleUpdateFee: 0,
+      dataSources: [],
+      guardianSetIndex: 0,
+      guardianSet: [],
+      chainId: 0,
+      governanceChainId: 0,
+      governanceContract:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+      governanceDataSource: {
+        emitterChain: 0,
+        emitterAddress:
+          "0000000000000000000000000000000000000000000000000000000000000000",
+      },
+    };
 
-    main = blockchain.openContract(Main.createFromConfig({}, code));
+    main = blockchain.openContract(Main.createFromConfig(config, code));
 
     deployer = await blockchain.treasury("deployer");
 
