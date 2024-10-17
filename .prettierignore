@@ -19,3 +19,5 @@ patches/
 apps/api-reference
 apps/staking
 governance/pyth_staking_sdk
+packages/component-library
+packages/fonts

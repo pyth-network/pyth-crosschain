@@ -1,5 +1,6 @@
 packages:
   - "apps/*"
+  - "packages/*"
   - "apps/hermes/client/js"
   - "express_relay/examples/easy_lend"
   - "express_relay/sdk/js"
