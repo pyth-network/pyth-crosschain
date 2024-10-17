@@ -1,0 +1,22 @@
+[package]
+name = "e2e"
+description = "End-to-end Testing for Stylus"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+repository.workspace = true
+
+[dependencies]
+alloy.workspace = true
+tokio = { workspace = true, features = ["process"] }
+eyre.workspace = true
+regex.workspace = true
+once_cell.workspace = true
+koba.workspace = true
+e2e-proc = { path = "../e2e-proc" }
+toml = "0.8.13"
+
+[lints]
+workspace = true
