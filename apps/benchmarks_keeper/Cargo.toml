@@ -1,0 +1,16 @@
+[package]
+name = "benchmarks_keeper"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy = { version = "0.3", features = ["full"] }
+tokio = { version = "1.28", features = ["full"] }
+eyre = "0.6"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+config = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+futures = "0.3"
+futures-util = "0.3"
