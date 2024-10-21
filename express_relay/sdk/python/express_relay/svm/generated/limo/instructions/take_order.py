@@ -8,9 +8,10 @@ from ..program_id import PROGRAM_ID
 
 class TakeOrderArgs(typing.TypedDict):
     input_amount: int
+    output_amount: int
 
 
-layout = borsh.CStruct("input_amount" / borsh.U64)
+layout = borsh.CStruct("input_amount" / borsh.U64, "output_amount" / borsh.U64)
 
 
 class TakeOrderAccounts(typing.TypedDict):
@@ -90,6 +91,7 @@ def take_order(
     encoded_args = layout.build(
         {
             "input_amount": args["input_amount"],
+            "output_amount": args["output_amount"],
         }
     )
     data = identifier + encoded_args

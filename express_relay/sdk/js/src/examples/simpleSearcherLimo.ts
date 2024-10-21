@@ -82,22 +82,27 @@ class SimpleSearcherLimo {
     const outputMintDecimals = await this.getMintDecimalsCached(
       order.state.outputMint
     );
+    const effectiveFillRate = Math.min(
+      this.fillRate,
+      (100 * order.state.remainingInputAmount.toNumber()) /
+        order.state.initialInputAmount.toNumber()
+    );
     const inputAmountDecimals = new Decimal(
       order.state.initialInputAmount.toNumber()
     )
       .div(new Decimal(10).pow(inputMintDecimals))
-      .mul(this.fillRate)
+      .mul(effectiveFillRate)
       .div(100);
 
     const outputAmountDecimals = new Decimal(
       order.state.expectedOutputAmount.toNumber()
     )
       .div(new Decimal(10).pow(outputMintDecimals))
-      .mul(this.fillRate)
+      .mul(effectiveFillRate + 1)
       .div(100);
 
     console.log("Order address", order.address.toBase58());
-    console.log("Fill rate", this.fillRate);
+    console.log("Fill rate", effectiveFillRate);
     console.log(
       "Sell token",
       order.state.inputMint.toBase58(),
