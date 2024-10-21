@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct Config {
     pub rpc_url: String,
     pub contract_address: Address,
+    pub hermes_url: String,
 }
 
 impl Config {

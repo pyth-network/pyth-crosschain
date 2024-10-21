@@ -1,1 +1,2 @@
 rpc_url = "wss://base-rpc.publicnode.com"
+hermes_url = "https://hermes.pyth.network"

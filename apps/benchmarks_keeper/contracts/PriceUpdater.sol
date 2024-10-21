@@ -3,16 +3,16 @@ pragma solidity ^0.8.0;
 
 contract PriceUpdater {
     event PriceUpdate(
-        uint256 publish_time,
+        int64 publish_time,
         bytes32[] price_ids,
-        bytes metadata
+        bytes client_context
     );
 
     function emitPriceUpdate(
-        uint256 publish_time,
+        int64 publish_time,
         bytes32[] calldata price_ids,
-        bytes calldata metadata
+        bytes calldata client_context
     ) external {
-        emit PriceUpdate(publish_time, price_ids, metadata);
+        emit PriceUpdate(publish_time, price_ids, client_context);
     }
 }
