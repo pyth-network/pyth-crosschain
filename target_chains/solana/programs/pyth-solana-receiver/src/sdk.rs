@@ -302,6 +302,68 @@ impl instruction::ReclaimRent {
     }
 }
 
+impl instruction::InitializePriceUpdateV2 {
+    pub fn populate(
+        payer: &Pubkey,
+        price: i64,
+        conf: u64,
+        exponent: i32,
+        feed_id: [u8; 32],
+        publish_time: u64,
+        prev_publish_time: u64,
+    ) -> Instruction {
+        Instruction {
+            program_id: ID,
+            accounts: accounts::InitializePriceUpdateV2 {
+                price_update_account: Pubkey::new_unique(),
+                user: *payer,
+                system_program: system_program::ID,
+            }
+            .to_account_metas(None),
+            data: instruction::InitializePriceUpdateV2 {
+                price,
+                conf,
+                exponent,
+                feed_id,
+                publish_time,
+                prev_publish_time,
+            }
+            .data(),
+        }
+    }
+}
+
+impl instruction::UpdatePriceUpdateV2 {
+    pub fn populate(
+        payer: &Pubkey,
+        price_update_account: Pubkey,
+        price: i64,
+        conf: u64,
+        exponent: i32,
+        feed_id: [u8; 32],
+        publish_time: u64,
+        prev_publish_time: u64,
+    ) -> Instruction {
+        Instruction {
+            program_id: ID,
+            accounts: accounts::UpdatePriceUpdateV2 {
+                price_update_account,
+                user: *payer,
+            }
+            .to_account_metas(None),
+            data: instruction::UpdatePriceUpdateV2 {
+                price,
+                conf,
+                exponent,
+                feed_id,
+                publish_time,
+                prev_publish_time,
+            }
+            .data(),
+        }
+    }
+}
+
 pub fn get_guardian_set_address(wormhole_address: Pubkey, guardian_set_index: u32) -> Pubkey {
     Pubkey::find_program_address(
         &[
