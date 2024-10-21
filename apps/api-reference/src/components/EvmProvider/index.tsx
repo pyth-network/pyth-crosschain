@@ -17,17 +17,6 @@ const CHAINS = NETWORK_IDS.map((id) =>
   ...chains.Chain[],
 ];
 
-// const TRANSPORTS = Object.fromEntries(
-//   CHAINS.map((chain) => [chain.id, http()]),
-// );
-
-// TODO figure out if we should use the rpc urls from contract-manager, which
-// assume use of ronin & blast and require API keys, or the ones from viem which
-// require no keys.
-//
-// If we should use contract-manager's, uncomment this code and remove the prior
-// implementation of `TRANSPORTS`.
-//
 const TRANSPORTS = Object.fromEntries(
   CHAINS.map((chain) => {
     const url = getRpcUrl(chain.id);
