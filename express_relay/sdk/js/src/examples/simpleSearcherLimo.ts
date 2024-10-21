@@ -83,7 +83,7 @@ class SimpleSearcherLimo {
       order.state.outputMint
     );
     const inputAmountDecimals = new Decimal(
-      order.state.remainingInputAmount.toNumber()
+      order.state.initialInputAmount.toNumber()
     )
       .div(new Decimal(10).pow(inputMintDecimals))
       .mul(this.fillRate)
@@ -218,7 +218,8 @@ const argv = yargs(hideBin(process.argv))
     demandOption: true,
   })
   .option("fill-rate", {
-    description: "How much of the order to fill in percentage. Default is 100%",
+    description:
+      "How much of the initial order size to fill in percentage. Default is 100%",
     type: "number",
     default: 100,
   })
