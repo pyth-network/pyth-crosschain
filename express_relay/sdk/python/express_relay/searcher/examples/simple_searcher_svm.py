@@ -223,7 +223,7 @@ async def main():
         "--fill-rate",
         type=int,
         default=100,
-        help="How much of the order to fill in percentage. Default is 100%",
+        help="How much of the initial order size to fill in percentage. Default is 100%",
     )
 
     args = parser.parse_args()

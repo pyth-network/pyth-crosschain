@@ -98,7 +98,7 @@ class SimpleSearcherLimo {
       order.state.expectedOutputAmount.toNumber()
     )
       .div(new Decimal(10).pow(outputMintDecimals))
-      .mul(effectiveFillRate + 1)
+      .mul(effectiveFillRate)
       .div(100);
 
     console.log("Order address", order.address.toBase58());
