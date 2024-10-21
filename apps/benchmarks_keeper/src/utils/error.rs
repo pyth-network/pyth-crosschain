@@ -10,6 +10,9 @@ pub enum BenchmarksKeeperError {
     #[error("Failed to decode event log: {0}")]
     EventDecodeError(String),
 
+    #[error("Hermes API error: {0}")]
+    HermesApiError(String),
+
     #[error("Transport error: {0}")]
     TransportError(#[from] TransportError),
 

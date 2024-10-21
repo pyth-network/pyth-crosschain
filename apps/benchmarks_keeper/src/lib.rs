@@ -1,8 +1,11 @@
+pub mod api;
 pub mod config;
 pub mod price_update;
+pub mod types;
 pub mod utils;
 
 use alloy::providers::{Provider, ProviderBuilder, WsConnect};
+use api::fetch_price_data;
 use futures_util::StreamExt;
 use tracing::info;
 
@@ -27,6 +30,8 @@ pub async fn run(config: Config) -> Result<(), BenchmarksKeeperError> {
 
     println!("Awaiting PriceUpdate events...");
 
+    let client = reqwest::Client::new();
+
     // Process PriceUpdate events
     let mut stream = sub.into_stream();
     while let Some(log) = stream.next().await {
@@ -36,8 +41,29 @@ pub async fn run(config: Config) -> Result<(), BenchmarksKeeperError> {
                 println!("  Publish Time: {}", price_update.publish_time);
                 println!("  Number of Price IDs: {}", price_update.price_ids.len());
                 println!("  Price IDs: {:?}", price_update.price_ids);
-                println!("  Metadata length: {} bytes", price_update.metadata.len());
+                println!(
+                    "  Client Context length: {} bytes",
+                    price_update.client_context.len()
+                );
                 // TODO: Process the price update
+                // Call fetch_price_data
+                match fetch_price_data(
+                    &client,
+                    &config.hermes_url,
+                    price_update.publish_time,
+                    &price_update.price_ids,
+                    price_update.client_context,
+                )
+                .await
+                {
+                    Ok(price_data) => {
+                        println!("Fetched price data: {:?}", price_data);
+                        // TODO: Process the fetched price data
+                    }
+                    Err(e) => {
+                        eprintln!("Error fetching price data: {}", e);
+                    }
+                }
             }
             Err(e) => {
                 eprintln!(
