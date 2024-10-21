@@ -115,6 +115,7 @@ class SimpleSearcherLimo {
       this.searcher.publicKey,
       order,
       inputAmountDecimals,
+      outputAmountDecimals,
       SVM_CONSTANTS[this.chainId].expressRelayProgram,
       inputMintDecimals,
       outputMintDecimals
