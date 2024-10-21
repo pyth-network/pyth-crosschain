@@ -1,9 +1,11 @@
+use alloy::primitives::Address;
 use config::{Config as ConfigTrait, ConfigError, Environment, File};
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub rpc_url: String,
+    pub contract_address: Address,
 }
 
 impl Config {

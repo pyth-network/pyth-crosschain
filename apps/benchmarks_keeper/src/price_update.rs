@@ -1,4 +1,4 @@
-use alloy::primitives::{Address, Bytes, U256};
+use alloy::primitives::{Bytes, U256};
 use alloy::rpc::types::Filter;
 use alloy::rpc::types::Log;
 use eyre::Result;
@@ -12,9 +12,7 @@ pub struct PriceUpdate {
 
 impl PriceUpdate {
     pub fn filter() -> Filter {
-        Filter::new()
-            .event(&Self::event_signature_str())
-            .address(Address::ZERO) // TODO: Replace with the actual contract address
+        Filter::new().event(&Self::event_signature_str())
     }
 
     pub fn decode_log(log: &Log) -> Result<Self> {
