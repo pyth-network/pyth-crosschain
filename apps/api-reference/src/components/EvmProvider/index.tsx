@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import * as chains from "viem/chains";
 import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
-import { NETWORK_IDS , getRpcUrl } from "../../evm-networks";
+import { NETWORK_IDS, getRpcUrl } from "../../evm-networks";
 import { metadata } from "../../metadata";
 
 const CHAINS = NETWORK_IDS.map((id) =>
