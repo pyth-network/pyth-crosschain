@@ -6,7 +6,7 @@
     "pnpm": "^9.12.1"
   },
   "devDependencies": {
-    "lerna": "^6.4.1",
+    "lerna": "^6.6.2",
     "pre-commit": "^1.2.2",
     "prettier": "2.7.1"
   },
