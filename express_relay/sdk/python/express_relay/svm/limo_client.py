@@ -199,8 +199,8 @@ class LimoClient:
         Args:
             taker: The taker's public key
             order: The order to fulfill
-            input_amount_decimals: The amount of input tokens to take multiplied by 10 ** input_mint_decimals
-            output_amount_decimals: The amount of output tokens to take multiplied by 10 ** output_mint_decimals
+            input_amount_decimals: The amount of input tokens to take. Will be multiplied by 10 ** input_mint_decimals in this method.
+            output_amount_decimals: The amount of output tokens to provide. Will be multiplied by 10 ** output_mint_decimals in this method.
             input_mint_decimals: input mint decimals (can be fetched via get_mint_decimals)
             output_mint_decimals: output mint decimals (can be fetched via get_mint_decimals)
             express_relay_program_id: Express relay program id
