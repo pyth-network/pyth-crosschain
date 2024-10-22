@@ -1,0 +1,3 @@
+[submodule "apps/delayed-price-pusher/examples/evm/lib/forge-std"]
+	path = apps/delayed-price-pusher/examples/evm/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
