@@ -5,7 +5,7 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
-import { deployWormholeContract } from "./zkSyncDeployWormhole";
+import { deployWormholeContract, findWormholeContract } from "./zkSyncDeployWormhole";
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
@@ -51,7 +51,15 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
   const chainName = envOrErr("MIGRATIONS_NETWORK");
 
-  const wormholeReceiverContract = await deployWormholeContract(deployer, chainName, wormholeGovernanceChainId, wormholeGovernanceContract, wormholeInitialSigners);
+  const wormholeReceiverChainId = CHAINS[chainName];
+  assert(wormholeReceiverChainId !== undefined);
+  
+  let wormholeReceiverContractAddress = await findWormholeContract(chainName);
+  if (!wormholeReceiverContractAddress) {
+    console.log(`Wormhole contract not found for chain ${chainName}`);
+    console.log("Deploying Wormhole contract...");
+    wormholeReceiverContractAddress = await deployWormholeContract(deployer, chainName, wormholeReceiverChainId, wormholeGovernanceChainId, wormholeGovernanceContract, wormholeInitialSigners);
+  }
 
 
 
@@ -71,7 +79,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const pythInitData = pythImplContract.interface.encodeFunctionData(
     "initialize",
     [
-      wormholeReceiverContract.address,
+      wormholeReceiverContractAddress,
       emitterChainIds,
       emitterAddresses,
       governanceChainId,

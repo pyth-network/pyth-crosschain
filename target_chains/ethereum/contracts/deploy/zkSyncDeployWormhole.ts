@@ -3,21 +3,20 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 
-export function findWormholeContract(chainId: string): EvmWormholeContract | undefined {
+export function findWormholeContract(chainId: string): string | undefined {
     for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
       if (
         contract instanceof EvmWormholeContract &&
         contract.getChain().getId() === chainId
       ) {
-        return contract;
+        return contract.address;
       }
     }
   }
 
 
-export async function deployWormholeContract(deployer: Deployer, chainName: string, wormholeGovernanceChainId: string, wormholeGovernanceContract: string, wormholeInitialSigners: string[]): Promise<EvmWormholeContract> {
-  const wormholeReceiverChainId = CHAINS[chainName];
-  assert(wormholeReceiverChainId !== undefined);
+export async function deployWormholeContract(deployer: Deployer, chainName: string, wormholeGovernanceChainId: string, wormholeGovernanceContract: string, wormholeInitialSigners: string[], wormholeReceiverChainId: number): Promise<string> {
+
 
   const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
   const receiverImplArtifact = await deployer.loadArtifact(
@@ -61,5 +60,5 @@ export async function deployWormholeContract(deployer: Deployer, chainName: stri
     `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
   );
 
-  return wormholeReceiverContract as unknown as EvmWormholeContract;
+  return wormholeReceiverContract.address;
 }
