@@ -109,11 +109,17 @@ class SimpleSearcherSvm:
         order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
         input_mint_decimals = await self.get_mint_decimals(order["state"].input_mint)
         output_mint_decimals = await self.get_mint_decimals(order["state"].output_mint)
-        input_amount_decimals = Decimal(
-            order["state"].remaining_input_amount
-        ) / Decimal(10**input_mint_decimals)
+        effective_fill_rate = min(
+            self.fill_rate,
+            100
+            * order["state"].remaining_input_amount
+            / order["state"].initial_input_amount,
+        )
+        input_amount_decimals = Decimal(order["state"].initial_input_amount) / Decimal(
+            10**input_mint_decimals
+        )
         input_amount_decimals = (
-            input_amount_decimals * Decimal(self.fill_rate) / Decimal(100)
+            input_amount_decimals * Decimal(effective_fill_rate) / Decimal(100)
         )
         output_amount_decimals = Decimal(
             order["state"].expected_output_amount
@@ -127,7 +133,9 @@ class SimpleSearcherSvm:
             self.private_key.pubkey(),
             order,
             input_amount_decimals,
+            output_amount_decimals,
             input_mint_decimals,
+            output_mint_decimals,
             self.svm_config["express_relay_program"],
         )
         router = self.limo_client.get_pda_authority(
@@ -215,7 +223,7 @@ async def main():
         "--fill-rate",
         type=int,
         default=100,
-        help="How much of the order to fill in percentage. Default is 100%",
+        help="How much of the initial order size to fill in percentage. Default is 100%",
     )
 
     args = parser.parse_args()
