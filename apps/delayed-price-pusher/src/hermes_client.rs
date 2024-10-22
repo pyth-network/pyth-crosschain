@@ -1,7 +1,7 @@
 use anyhow::{bail, ensure, Context};
 use backoff::{future::retry, ExponentialBackoff};
 use futures::{Stream, StreamExt, TryFutureExt, TryStreamExt};
-use log::warn;
+use log::{info, warn};
 use reqwest::Client;
 use reqwest_eventsource::{Event, EventSource};
 use serde::Deserialize;
@@ -119,6 +119,7 @@ impl HermesClient {
 
         let mut url = self.config.endpoint.join("/v2/updates/price/stream")?;
         url.query_pairs_mut().append_pair("ids[]", price_feed_id);
+        info!("requesting hermes stream at {url}");
         // This never returns Err for now, but we may consider treating some error kinds
         // as permanent failures later.
         let event_source = retry(ExponentialBackoff::default(), || {
