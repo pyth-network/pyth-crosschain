@@ -5,6 +5,7 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
+import { deployWormholeContract } from "./zkSyncDeployWormhole";
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
@@ -49,50 +50,10 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     emitterChainIds,
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
   const chainName = envOrErr("MIGRATIONS_NETWORK");
-  const wormholeReceiverChainId = CHAINS[chainName];
-  assert(wormholeReceiverChainId !== undefined);
 
-  const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
-  const receiverImplArtifact = await deployer.loadArtifact(
-    "ReceiverImplementation"
-  );
-  const wormholeReceiverArtifact = await deployer.loadArtifact(
-    "WormholeReceiver"
-  );
+  const wormholeReceiverContract = await deployWormholeContract(deployer, chainName, wormholeGovernanceChainId, wormholeGovernanceContract, wormholeInitialSigners);
 
-  console.log("Deploying WormholeReceiver contract...");
-  const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
-  console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
 
-  console.log("Deploying ReceiverImplementation contract...");
-  // deploy implementation
-  const receiverImplContract = await deployer.deploy(receiverImplArtifact);
-  console.log(
-    "Deployed ReceiverImplementation on",
-    receiverImplContract.address
-  );
-
-  // encode initialisation data
-  const whInitData = receiverSetupContract.interface.encodeFunctionData(
-    "setup",
-    [
-      receiverImplContract.address,
-      wormholeInitialSigners,
-      wormholeReceiverChainId,
-      wormholeGovernanceChainId,
-      wormholeGovernanceContract,
-    ]
-  );
-
-  // deploy proxy
-  const wormholeReceiverContract = await deployer.deploy(
-    wormholeReceiverArtifact,
-    [receiverSetupContract.address, whInitData]
-  );
-
-  console.log(
-    `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
-  );
 
   // Hardcoding the initial sequence number for governance messages.
   const governanceInitialSequence = Number("0");
@@ -149,3 +110,53 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   //     )
   //   );
 }
+
+
+
+
+
+
+  // const wormholeReceiverChainId = CHAINS[chainName];
+  // assert(wormholeReceiverChainId !== undefined);
+
+  // const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
+  // const receiverImplArtifact = await deployer.loadArtifact(
+  //   "ReceiverImplementation"
+  // );
+  // const wormholeReceiverArtifact = await deployer.loadArtifact(
+  //   "WormholeReceiver"
+  // );
+
+  // console.log("Deploying WormholeReceiver contract...");
+  // const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
+  // console.log("Deployed ReceiverSetup on", receiverSetupContract.address);
+
+  // console.log("Deploying ReceiverImplementation contract...");
+  // // deploy implementation
+  // const receiverImplContract = await deployer.deploy(receiverImplArtifact);
+  // console.log(
+  //   "Deployed ReceiverImplementation on",
+  //   receiverImplContract.address
+  // );
+
+  // // encode initialisation data
+  // const whInitData = receiverSetupContract.interface.encodeFunctionData(
+  //   "setup",
+  //   [
+  //     receiverImplContract.address,
+  //     wormholeInitialSigners,
+  //     wormholeReceiverChainId,
+  //     wormholeGovernanceChainId,
+  //     wormholeGovernanceContract,
+  //   ]
+  // );
+
+  // // deploy proxy
+  // const wormholeReceiverContract = await deployer.deploy(
+  //   wormholeReceiverArtifact,
+  //   [receiverSetupContract.address, whInitData]
+  // );
+
+  // console.log(
+  //   `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
+  // );

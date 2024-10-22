@@ -91,7 +91,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   conflux_espace_testnet: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
   core_dao_testnet: "0x8D254a21b3C86D32F7179855531CE99164721933",
   cronos_testnet: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-  cronos_zkevm_testnet: "0x67DFF3D12dFDCeC9f85fd86f4cBDb0a111fF721A",
+  cronos_zkevm_testnet: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6",
   dela_deperp_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   dela_mithreum_deperp_testnet: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
   etherlink_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
