@@ -302,6 +302,18 @@ export const PublisherFaq = (
           ),
         },
         {
+          question:
+            "Where can I find my OIS rewards and accumulated delegation fees?",
+          answer: (
+            <p>
+              The rewards and delegation fees from other participants in the
+              stake pool assigned to you will accumulate in your
+              <strong>Unlocked & Unstaked</strong> balance. All rewards under
+              this balance can be withdrawn immediately.
+            </p>
+          ),
+        },
+        {
           question: "Does OIS affect other publisher reward programs?",
           answer:
             "No. OIS is a separate program and set of rewards from the other publisher reward programs.",
