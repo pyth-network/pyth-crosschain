@@ -1,14 +1,16 @@
+use alloy::sol_types::SolEvent;
 use alloy::{
     hex,
     network::EthereumWallet,
     node_bindings::Anvil,
-    primitives::{keccak256, Bytes, FixedBytes},
+    primitives::{Bytes, FixedBytes},
     providers::ProviderBuilder,
     signers::local::PrivateKeySigner,
     sol,
 };
-use benchmarks_keeper::{config::Config, run};
+use benchmarks_keeper::{config::Config, price_update_service::PriceUpdateService};
 use eyre::Result;
+use std::{sync::Arc, time::Duration};
 
 pub const HERMES_URL: &str = "https://hermes.pyth.network";
 const BTC_PRICE_ID: &str = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
@@ -27,7 +29,6 @@ async fn test_price_update_events() -> Result<()> {
     // Spin up a local Anvil node
     let anvil = Anvil::new().block_time(1).try_spawn()?;
     let ws_endpoint = anvil.ws_endpoint_url().to_string();
-    println!("ws_endpoint: {}", ws_endpoint);
 
     // sleep for 2 seconds to allow the keeper to start
     tokio::time::sleep(std::time::Duration::from_secs(2)).await;
@@ -55,17 +56,27 @@ async fn test_price_update_events() -> Result<()> {
     };
 
     // Create a config for the benchmarks keeper
-    let config = Config {
+    let config = Arc::new(Config {
         rpc_url: ws_endpoint,
         contract_address: *contract.address(),
         hermes_url: HERMES_URL.to_string(),
-    };
-
-    // Run the benchmarks keeper in a separate task
-    let keeper_handle = tokio::spawn({
-        let config = config.clone();
-        async move { run(config).await }
     });
+
+    // Create the PriceUpdateService
+    let price_update_service = PriceUpdateService::new(config.clone());
+
+    // Subscribe to price updates
+    let mut price_update_receiver = price_update_service.subscribe_to_price_updates();
+
+    // Run the price update service in a separate task
+    let service_handle = tokio::spawn(async move {
+        if let Err(e) = price_update_service.run().await {
+            eprintln!("Price Update Service error: {:?}", e);
+        }
+    });
+
+    // Give the service some time to start
+    tokio::time::sleep(Duration::from_secs(2)).await;
 
     // Emit a PriceUpdate event
     let publish_time = i64::from(1729513000);
@@ -79,40 +90,39 @@ async fn test_price_update_events() -> Result<()> {
         .collect();
     let client_context = Bytes::from(vec![1, 2, 3, 4, 5]);
     let tx = contract.emitPriceUpdate(publish_time, price_ids.clone(), client_context.clone());
-    match tx.send().await {
-        Ok(pending_tx) => {
-            let receipt = pending_tx.get_receipt().await?;
+    let pending_tx = tx.send().await?;
+    let receipt = pending_tx.get_receipt().await?;
 
-            // Check if the event was emitted
-            let event_signature = keccak256("PriceUpdate(int64,bytes32[],bytes)");
-            let event_emitted = receipt.inner.logs().iter().any(|log| {
-                log.topics()
-                    .get(0)
-                    .map_or(false, |topic| topic.as_slice() == event_signature)
-            });
+    // Check if the event was emitted
+    let event_signature = &PriceUpdater::PriceUpdate::SIGNATURE_HASH;
+    let event_emitted = receipt.inner.logs().iter().any(|log| {
+        log.topics()
+            .get(0)
+            .map_or(false, |topic| topic.as_slice() == event_signature)
+    });
 
-            if event_emitted {
-                println!("PriceUpdate event was successfully emitted");
-            } else {
-                eprintln!("PriceUpdate event was not found in the transaction logs");
-                return Err(eyre::eyre!("PriceUpdate event not emitted"));
+    assert!(event_emitted, "PriceUpdate event was not emitted");
+
+    // Wait for the price update to be received
+    let received_price_update = tokio::select! {
+        update = price_update_receiver.recv() => {
+            match update {
+                Ok(update) => update,
+                Err(e) => return Err(eyre::eyre!("Error receiving price update: {}", e)),
             }
+        },
+        _ = tokio::time::sleep(Duration::from_secs(10)) => {
+            return Err(eyre::eyre!("Timeout waiting for price update"));
         }
-        Err(e) => {
-            eprintln!("Failed to send transaction: {:?}", e);
-            return Err(e.into());
-        }
-    }
+    };
 
-    // Wait for the event to be processed
-    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    // Assert that the received price update matches the emitted event
+    assert_eq!(received_price_update.publish_time, publish_time);
+    assert_eq!(received_price_update.price_ids, price_ids);
+    assert_eq!(received_price_update.client_context, client_context);
 
-    // Stop the keeper
-    keeper_handle.abort();
-
-    assert!(false);
-
-    // TODO: Assert the events are correct
+    // Stop the service
+    service_handle.abort();
 
     Ok(())
 }
