@@ -1,10 +1,8 @@
-use crate::pyth::solidity::{Price,PriceFeed};
-use   alloc::vec::Vec;
+use alloc::vec::Vec;
 use alloy_primitives::U256;
 use stylus_sdk::{abi::Bytes, alloy_primitives::FixedBytes};
 
 pub trait IPyth {
-
     type Error: Into<alloc::vec::Vec<u8>>;
 
     fn get_price_unsafe(&mut self, id: FixedBytes<32>) -> Result<Vec<u8>, Self::Error>;

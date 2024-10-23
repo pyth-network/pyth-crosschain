@@ -1,10 +1,8 @@
 use alloy_sol_types::SolValue;
 use ipyth::IPyth;
-use solidity::Price;
-use stylus_sdk::{abi::Bytes as AbiBytes, block, prelude::*, storage::TopLevelStorage};
-use errors::{Error, FalledDecodeData, StalePrice};
+use stylus_sdk::{abi::Bytes as AbiBytes, prelude::*, storage::TopLevelStorage};
 use alloc::vec::Vec;
-use alloy_primitives::{ Address, FixedBytes, U256 , Bytes };
+use alloy_primitives::{ FixedBytes, U256 , Bytes };
 use functions::{
     get_price_unsafe,
     get_price_no_older_than,
@@ -21,8 +19,8 @@ mod errors;
 mod events;
 mod ipyth;
 mod solidity;
-mod mock;
-mod functions;
+pub mod mock;
+pub mod functions;
 
 
 sol_storage! {
@@ -62,11 +60,19 @@ impl IPyth for PythContract  {
         Ok(data)
     }
 
+    fn get_update_fee(&mut self, update_data: Vec<AbiBytes>) -> Result<U256, Self::Error> {
+       let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
+       let fee = get_update_fee(self, self._ipyth.get(), data)?;
+       Ok(fee)
+    }
+    
+    #[payable]
     fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
         update_price_feeds(self, self._ipyth.get(),data)
     }
-
+    
+    #[payable]
     fn update_price_feeds_if_necessary(
         &mut self,
         update_data: Vec<AbiBytes>,
@@ -77,12 +83,7 @@ impl IPyth for PythContract  {
         update_price_feeds_if_necessary(self, self._ipyth.get(),data,price_ids,publish_times)
     }
 
-    fn get_update_fee(&mut self, update_data: Vec<AbiBytes>) -> Result<U256, Self::Error> {
-       let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-       let fee = get_update_fee(self, self._ipyth.get(), data)?;
-       Ok(fee)
-    }
-
+    #[payable]
     fn parse_price_feed_updates(
         &mut self,
         update_data: Vec<AbiBytes>,
@@ -95,7 +96,7 @@ impl IPyth for PythContract  {
         Ok(encode_data)
     }
 
-
+    #[payable]
     fn parse_price_feed_updates_unique(
         &mut self,
         update_data: Vec<AbiBytes>,
@@ -104,7 +105,7 @@ impl IPyth for PythContract  {
         max_publish_time: u64,
     ) -> Result<Vec<u8>, Self::Error> {
        let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-       let encode_data=  parse_price_feed_updates(self, self._ipyth.get(), data, price_ids, min_publish_time, max_publish_time)?.abi_encode();
+       let encode_data=  parse_price_feed_updates_unique(self, self._ipyth.get(), data, price_ids, min_publish_time, max_publish_time)?.abi_encode();
        Ok(encode_data)
     }
 }
