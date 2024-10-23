@@ -1,4 +1,4 @@
-use crate::pyth::solidity::{
+use crate::pyth::types::{
     getEmaPriceUnsafeCall,
     getEmaPriceNoOlderThanCall,
     getPriceUnsafeCall,

@@ -1,14 +1,11 @@
-use core::borrow::BorrowMut;
-
 use alloc::vec::Vec;
-use alloy_primitives::{Uint, U64};
-use alloy_sol_types::{abi, sol_data::Uint as SolUInt, SolType, SolValue};
+use alloy_primitives::Uint;
+use alloy_sol_types::{ sol_data::Uint as SolUInt, SolType, SolValue};
 use stylus_sdk::{abi::Bytes, alloy_primitives::{FixedBytes, U256}, evm, msg, prelude::*};
 use crate::{pyth::errors::{FalledDecodeData, InsufficientFee, InvalidArgument}, utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE};
 use crate::pyth::errors::{Error, PriceFeedNotFound};
-use crate::pyth::solidity::{ PriceFeed,Price, StoragePriceFeed};
+use crate::pyth::types::{ PriceFeed,Price, StoragePriceFeed};
 use crate::pyth::events::PriceFeedUpdate;
-use crate::pyth::ipyth::IPyth;
 
 //decode data type
 pub(crate) type DecodeDataType = (PriceFeed, SolUInt<64>);
@@ -95,7 +92,7 @@ impl MockPythContract {
     fn get_update_fee(&self, update_data: Vec<Bytes>) -> Uint<256, 4> {
          self.single_update_fee_in_wei.get() * U256::from(update_data.len())
     }
-
+     #[payable]
     fn parse_price_feed_updates(
         &mut self,
         update_data:Vec<Bytes>,
@@ -106,7 +103,7 @@ impl MockPythContract {
         self.parse_price_feed_updates_internal(update_data, price_ids, min_publish_time, max_publish_time, false)
     }
 
-
+    #[payable]
     fn parse_price_feed_updates_unique(
         &mut self,
         update_data:Vec<Bytes>,
@@ -207,7 +204,7 @@ mod tests {
     use stylus_sdk::{abi::Bytes, contract, msg::{self, value}};
     use crate::pyth::{
         PythContract, mock::{MockPythContract, DecodeDataType}, 
-        errors::{Error, InvalidArgument}, solidity::{PriceFeed, Price, StoragePriceFeed}
+        errors::{Error, InvalidArgument}, types::{PriceFeed, Price, StoragePriceFeed}
     };
     use alloy_sol_types::SolType;
 
@@ -298,8 +295,5 @@ mod tests {
         let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, U256::from(1000), PREV_PUBLISH_TIME);    
         let mut update_data: Vec<Bytes> = vec![];
         update_data.push(Bytes::from(price_feed_created));
-        //let balance = contrac;
-        info!("{:?} ", msg::sender());
-        //contract.update_price_feeds(update_data)
     }
 }
