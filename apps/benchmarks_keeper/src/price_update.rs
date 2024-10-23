@@ -13,7 +13,7 @@ sol!(
     "abi/PriceUpdater.abi.json"
 );
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PriceUpdate {
     pub publish_time: UnixTimestamp,
     pub price_ids: Vec<[u8; 32]>,
@@ -31,7 +31,6 @@ impl PriceUpdate {
             price_ids,
             client_context,
         } = log.log_decode()?.inner.data;
-        println!("price_ids: {:?}", price_ids);
 
         Ok(Self {
             publish_time: UnixTimestamp::from(publish_time),

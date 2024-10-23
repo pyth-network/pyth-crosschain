@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::Arc;
 
 use benchmarks_keeper::{config::Config, run};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -14,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config_path = env::var("CONFIG_PATH").ok();
     let config = Config::new(config_path.as_deref())?;
-    run(config).await?;
+    run(Arc::new(config)).await?;
 
     Ok(())
 }
