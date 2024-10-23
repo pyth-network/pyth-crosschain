@@ -1,6 +1,8 @@
 use alloy::primitives::Address;
-use config::{Config as ConfigTrait, ConfigError, Environment, File};
 use serde::Deserialize;
+use std::fs;
+use std::path::Path;
+use toml;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -10,12 +12,10 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new() -> Result<Self, ConfigError> {
-        let config = ConfigTrait::builder()
-            .add_source(File::with_name("config/default"))
-            .add_source(Environment::with_prefix("APP"))
-            .build()?;
-
-        config.try_deserialize()
+    pub fn new(config_path: Option<&str>) -> Result<Self, Box<dyn std::error::Error>> {
+        let path = config_path.unwrap_or("config/default.toml");
+        let config_str = fs::read_to_string(Path::new(path))?;
+        let config: Config = toml::from_str(&config_str)?;
+        Ok(config)
     }
 }

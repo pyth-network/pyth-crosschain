@@ -1,0 +1,50 @@
+[
+  {
+    "type": "function",
+    "name": "emitPriceUpdate",
+    "inputs": [
+      {
+        "name": "publish_time",
+        "type": "int64",
+        "internalType": "int64"
+      },
+      {
+        "name": "price_ids",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "client_context",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "PriceUpdate",
+    "inputs": [
+      {
+        "name": "publish_time",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "price_ids",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "client_context",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  }
+]
