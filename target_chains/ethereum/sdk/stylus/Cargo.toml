@@ -1,7 +1,7 @@
 [workspace]
 members = ["contracts", "examples/external-call-contracts","examples/function-calls"]
 default-members = [
-  "contracts",
+  "contracts", "examples/external-call-contracts","examples/function-calls"
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages
@@ -27,24 +27,11 @@ pedantic = "warn"
 all = "warn"
 
 [workspace.dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
+# stylus-related
+stylus-sdk = { version = "=0.6.0", default-features = false }
 mini-alloc = "0.4.2"
-stylus-sdk = "0.6.0"
-stylus-proc = "0.6.0"
-hex = "0.4.3"
-dotenv = "0.15.0"
-const-hex = { version = "1.11.1", default-features = false }
-eyre = "0.6.8"
-keccak-const = "0.2.0"
-koba = "0.2.0"
-once_cell = "1.19.0"
-rand = "0.8.5"
-regex = "1.10.4"
-tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-tokio = { version = "1.12.0", features = ["full"] }
 
-alloy = { version = "0.1.4", features = [
+alloy = { version = "=0.1.4", features = [
   "contract",
   "network",
   "providers",
@@ -54,6 +41,30 @@ alloy = { version = "0.1.4", features = [
   "signer-local",
   "getrandom",
 ] }
+# Even though `alloy` includes `alloy-primitives` and `alloy-sol-types` we need
+# to keep both versions for compatibility with the Stylus SDK. Once they start
+# using `alloy` we can remove these.
+alloy-primitives = { version = "=0.7.6", default-features = false }
+alloy-sol-types = { version = "=0.7.6", default-features = false }
+alloy-sol-macro = { version = "=0.7.6", default-features = false }
+alloy-sol-macro-expander = { version = "=0.7.6", default-features = false }
+alloy-sol-macro-input = { version = "=0.7.6", default-features = false }
+
+const-hex = { version = "1.11.1", default-features = false }
+eyre = "0.6.8"
+keccak-const = "0.2.0"
+koba = "0.2.0"
+once_cell = "1.19.0"
+rand = "0.8.5"
+regex = "1.10.4"
+tiny-keccak = { version = "2.0.2", features = ["keccak"] }
+tokio = { version = "1.12.0", features = ["full"] }
+futures = "0.3.30"
+
+# procedural macros
+syn = { version = "2.0.58", features = ["full"] }
+proc-macro2 = "1.0.79"
+quote = "1.0.35"
 
 # motsu test
 motsu = "=0.1.0-rc"
@@ -63,10 +74,6 @@ pyth-stylus = { path = "contracts" }
 e2e = { path = "lib/e2e" }
 e2e-proc = {path = "lib/e2e-proc"}
 
-# procedural macros
-syn = { version = "2.0.58", features = ["full"] }
-proc-macro2 = "1.0.79"
-quote = "1.0.35"
 
 [profile.release]
 codegen-units = 1
