@@ -115,3 +115,6 @@
 - chain: sanko_testnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
   type: EvmEntropyContract
+- chain: abstract_testnet
+  address: "0x858687fD592112f7046E394A3Bf10D0C11fF9e63"
+  type: EvmEntropyContract
