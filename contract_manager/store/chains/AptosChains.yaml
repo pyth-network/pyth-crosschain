@@ -19,3 +19,8 @@
   mainnet: false
   rpcUrl: https://aptos.testnet.suzuka.movementlabs.xyz/v1
   type: AptosChain
+- id: movement_porto_testnet
+  wormholeChainName: movement_porto_testnet
+  mainnet: false
+  rpcUrl: https://aptos.testnet.porto.movementlabs.xyz/v1
+  type: AptosChain

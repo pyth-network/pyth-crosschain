@@ -198,6 +198,7 @@ export const RECEIVER_CHAINS = {
   abstract_testnet: 50100,
   sanko_testnet: 50101,
   skate_testnet: 50102,
+  movement_porto_testnet: 50103,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
