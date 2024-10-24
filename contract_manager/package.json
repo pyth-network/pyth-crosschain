@@ -31,6 +31,7 @@
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/cosmwasm-deploy-tools": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
+    "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
