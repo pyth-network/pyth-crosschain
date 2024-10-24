@@ -11,6 +11,3 @@
  * with the optimized React build, etc.
  */
 export const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
-
-export const BLAST_API_KEY = process.env.NEXT_PUBLIC_BLAST_API_KEY ?? "";
-export const RONIN_API_KEY = process.env.NEXT_PUBLIC_RONIN_API_KEY ?? "";

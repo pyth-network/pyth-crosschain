@@ -1,5 +1,3 @@
-import { BLAST_API_KEY, RONIN_API_KEY } from "./isomorphic-config";
-
 export const getContractAddress = (networkId: number) =>
   isSupportedNetwork(networkId)
     ? NETWORK_INFO[networkId].contractAddress
@@ -27,7 +25,7 @@ type NetworkInfo = {
 export const NETWORK_INFO = {
   [1]: {
     name: "ethereum",
-    rpcUrl: `https://eth-mainnet.blastapi.io/${BLAST_API_KEY}`,
+    rpcUrl: `https://eth.llamarpc.com	`,
     isMainnet: true,
     contractAddress: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
   },
@@ -297,13 +295,13 @@ export const NETWORK_INFO = {
   },
   [2020]: {
     name: "ronin",
-    rpcUrl: `https://api-gateway.skymavis.com/rpc?apikey=${RONIN_API_KEY}`,
+    rpcUrl: `https://api.roninchain.com/rpc`,
     isMainnet: true,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
   [2021]: {
     name: "saigon",
-    rpcUrl: `https://api-gateway.skymavis.com/rpc/testnet?apikey=${RONIN_API_KEY}`,
+    rpcUrl: `https://edgeware-evm0.jelliedowl.net`,
     isMainnet: false,
     contractAddress: "0xEbe57e8045F2F230872523bbff7374986E45C486",
   },
@@ -357,7 +355,7 @@ export const NETWORK_INFO = {
   },
   [4002]: {
     name: "fantom_testnet",
-    rpcUrl: `https://fantom-testnet.blastapi.io/${BLAST_API_KEY}`,
+    rpcUrl: `https://rpc.ankr.com/fantom_testnet`,
     isMainnet: false,
     contractAddress: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   },
@@ -537,7 +535,7 @@ export const NETWORK_INFO = {
   },
   [59_140]: {
     name: "linea_goerli",
-    rpcUrl: `https://linea-goerli.blastapi.io/${BLAST_API_KEY}`,
+    rpcUrl: `https://rpc.goerli.linea.build`,
     isMainnet: false,
     contractAddress: "0xdF21D137Aadc95588205586636710ca2890538d5",
   },
@@ -558,18 +556,6 @@ export const NETWORK_INFO = {
     rpcUrl: "https://xchain-testnet-rpc.idex.io",
     isMainnet: false,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
-  },
-  [64_165]: {
-    name: "fantom_sonic_testnet",
-    rpcUrl: "https://rpc.sonic.fantom.network/",
-    isMainnet: false,
-    contractAddress: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-  },
-  [80_001]: {
-    name: "mumbai",
-    rpcUrl: `https://polygon-testnet.blastapi.io/${BLAST_API_KEY}`,
-    isMainnet: false,
-    contractAddress: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
   },
   [80_002]: {
     name: "polygon_amoy",
@@ -699,7 +685,7 @@ export const NETWORK_INFO = {
   },
   [11_155_111]: {
     name: "sepolia",
-    rpcUrl: `https://eth-sepolia.blastapi.io/${BLAST_API_KEY}`,
+    rpcUrl: `https://ethereum-sepolia-rpc.publicnode.com`,
     isMainnet: false,
     contractAddress: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
   },
@@ -762,6 +748,144 @@ export const NETWORK_INFO = {
     rpcUrl: "https://rpc.arb-blueberry.gelato.digital",
     isMainnet: false,
     contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [89]: {
+    name: "viction_testnet",
+    rpcUrl: "https://rpc-testnet.viction.xyz",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [1663]: {
+    name: "horizen_gobi",
+    rpcUrl: "https://rpc.ankr.com/horizen_gobi_testnet",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [6_038_361]: {
+    name: "astar_zkyoto_testnet",
+    rpcUrl: "https://rpc.startale.com/zkyoto",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [8822]: {
+    name: "iota",
+    rpcUrl: "https://json-rpc.evm.iotaledger.net",
+    isMainnet: true,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [9789]: {
+    name: "tabi_testnet",
+    rpcUrl: "https://rpc-internal.testnet.tabichain.com/",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [1993]: {
+    name: "b3_testnet",
+    rpcUrl: "https://sepolia.b3.fun/http/",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [7887]: {
+    name: "kinto",
+    rpcUrl: "https://rpc.kinto-rpc.com",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [282]: {
+    name: "cronos_zkevm_testnet",
+    rpcUrl: "https://testnet.zkevm.cronos.org",
+    isMainnet: false,
+    contractAddress: "0x67DFF3D12dFDCeC9f85fd86f4cBDb0a111fF721A",
+  },
+  [89_346_162]: {
+    name: "reya_testnet",
+    rpcUrl: "https://rpc.reya-cronos.gelato.digital",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [8333]: {
+    name: "b3_mainnet",
+    rpcUrl: "https://mainnet-rpc.b3.fun/http",
+    isMainnet: true,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [388]: {
+    name: "cronos_zkevm_mainnet",
+    rpcUrl: "https://mainnet.zkevm.cronos.org",
+    isMainnet: true,
+    contractAddress: "0x056f829183Ec806A78c26C98961678c24faB71af",
+  },
+  [30_732]: {
+    name: "movement_evm_devnet_imola",
+    rpcUrl: "https://mevm.devnet.imola.movementlabs.xyz",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [545]: {
+    name: "flow_testnet",
+    rpcUrl: "https://testnet.evm.nodes.onflow.org",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [94_524]: {
+    name: "idex_xchain_mainnet",
+    rpcUrl: "https://xchain-rpc.idex.io/",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [33_111]: {
+    name: "apechain_testnet",
+    rpcUrl: "https://curtis.rpc.caldera.xyz/http",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [1946]: {
+    name: "soneium_minato_testnet",
+    rpcUrl: "https://rpc.minato.soneium.org/",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [33_139]: {
+    name: "apechain_mainnet",
+    rpcUrl: "https://apechain.calderachain.xyz/http",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [747]: {
+    name: "flow_mainnet",
+    rpcUrl: "https://mainnet.evm.nodes.onflow.org",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [11_124]: {
+    name: "abstract_testnet",
+    rpcUrl: "https://api.testnet.abs.xyz",
+    isMainnet: false,
+    contractAddress: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486",
+  },
+  [1996]: {
+    name: "sanko",
+    rpcUrl: "https://mainnet.sanko.xyz",
+    isMainnet: true,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [1992]: {
+    name: "sanko_testnet",
+    rpcUrl: "https://sanko-arb-sepolia.rpc.caldera.xyz",
+    isMainnet: false,
+    contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  },
+  [1301]: {
+    name: "unichain_sepolia",
+    rpcUrl: "https://sepolia.unichain.org",
+    isMainnet: false,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
+  [64_165]: {
+    name: "fantom_sonic_testnet",
+    rpcUrl: "https://rpc.testnet.soniclabs.com",
+    isMainnet: false,
+    contractAddress: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376",
   },
 } satisfies Record<number, NetworkInfo>;
 
