@@ -31,6 +31,7 @@
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/cosmwasm-deploy-tools": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
+    "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
@@ -55,6 +56,7 @@
     "yaml": "^2.1.1"
   },
   "devDependencies": {
+    "@types/node": "^22.7.4",
     "@types/web3": "^1.2.2",
     "eslint": "^8.0.0",
     "prettier": "^2.6.2",
