@@ -662,7 +662,7 @@
 - id: cronos_zkevm_testnet
   mainnet: false
   rpcUrl: https://testnet.zkevm.cronos.org
-  networkId: 282
+  networkId: 240
   type: EvmChain
 - id: reya_testnet
   mainnet: false

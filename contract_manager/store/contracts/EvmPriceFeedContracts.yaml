@@ -361,14 +361,14 @@
 - chain: kinto
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: cronos_zkevm_testnet
-  address: "0x67DFF3D12dFDCeC9f85fd86f4cBDb0a111fF721A"
-  type: EvmPriceFeedContract
 - chain: reya_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: cronos_zkevm_mainnet
   address: "0x056f829183Ec806A78c26C98961678c24faB71af"
+  type: EvmPriceFeedContract
+- chain: cronos_zkevm_testnet
+  address: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6"
   type: EvmPriceFeedContract
 - chain: movement_evm_devnet_imola
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
