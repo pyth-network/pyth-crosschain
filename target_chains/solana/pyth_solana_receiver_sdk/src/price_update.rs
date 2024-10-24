@@ -28,7 +28,7 @@ use {
 /// Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update.
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
 pub enum VerificationLevel {
-    Partial { num_signatures: u8 },
+    Partial { #[allow(unused)] num_signatures: u8 },
     Full,
 }
 
