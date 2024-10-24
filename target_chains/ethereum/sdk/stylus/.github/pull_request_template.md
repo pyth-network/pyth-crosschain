@@ -1,12 +1,21 @@
-## Description
+<!--
+Thank you for your interest in contributing to OpenZeppelin!
 
-Please provide a summary of the changes and any backward incompatibilities.
+Consider opening an issue for discussion prior to submitting a PR. New features will be merged faster if they were first discussed and designed with the team.
 
-## Checklist
+Describe the changes introduced in this pull request. Include any context necessary for understanding the PR's purpose.
+-->
 
-- [ ] I have documented these changes where necessary.
-- [ ] I have read the [DCO][DCO] and ensured that these changes comply.
-- [ ] I assign this work under its [open source licensing][terms].
+<!-- Fill in with issue number -->
+Resolves #???
 
-[DCO]: https://github.com/OffchainLabs/stylus-hello-world/blob/main/licenses/DCO.txt
-[terms]: https://github.com/OffchainLabs/stylus-hello-world/blob/main/licenses/COPYRIGHT.md
+#### PR Checklist
+
+<!--
+Before merging the pull request all of the following must be completed.
+Feel free to submit a PR or Draft PR even if some items are pending.
+Some of the items may not apply.
+-->
+
+- [ ] Tests
+- [ ] Documentation

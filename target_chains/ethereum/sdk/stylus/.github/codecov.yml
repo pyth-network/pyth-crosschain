@@ -1,0 +1,26 @@
+# ref: https://docs.codecov.com/docs/codecovyml-reference
+coverage:
+  # Hold ourselves to a high bar.
+  range: 95..100
+  round: down
+  precision: 1
+  status:
+    # ref: https://docs.codecov.com/docs/commit-status
+    project:
+      default:
+        # Avoid false negatives.
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        informational: true
+# Test files aren't important for coverage.
+ignore:
+  - "tests"
+  - "docs"
+# Make comments less noisy.
+comment:
+  layout: "files"
+  require_changes: true
+github_checks:
+  annotations: false
