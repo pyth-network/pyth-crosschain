@@ -4,6 +4,4 @@
 
 *A library for secure smart contract development* written in Rust for {stylus}.
 
-WARNING: This repo contains highly experimental code. It has never been audited nor thoroughly reviewed for security vulnerabilities. *Use at your own risk.*
-
 NOTE: You can track our roadmap in our https://github.com/orgs/OpenZeppelin/projects/35[Github Project].

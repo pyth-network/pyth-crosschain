@@ -1,0 +1,43 @@
+= Utilities
+
+The OpenZeppelin Stylus Contracts provides a ton of useful utilities that you can use in your project.
+For a complete list, check out the https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/index.html[API Reference].
+Here are some of the more popular ones.
+
+[[introspection]]
+== Introspection
+
+It's frequently helpful to know whether a contract supports an interface you'd like to use.
+https://eips.ethereum.org/EIPS/eip-165[`ERC-165`] is a standard that helps do runtime interface detection.
+Contracts for Stylus provides helpers for implementing ERC-165 in your contracts:
+
+* https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/introspection/erc165/trait.IErc165.html[`IERC165`] — this is the ERC-165 trait that defines https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/introspection/erc165/trait.IErc165.html#tymethod.supports_interface[`supportsInterface`]. In order to implement ERC-165 interface detection, you should manually expose https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/introspection/erc165/trait.IErc165.html#tymethod.supports_interface[`supportsInterface`] function in your contract.
+
+[source,rust]
+----
+sol_storage! {
+    #[entrypoint]
+    struct Erc721Example {
+        #[borrow]
+        Erc721 erc721;
+    }
+}
+
+#[public]
+#[inherit(Erc721)]
+impl Erc721Example {
+    pub fn supports_interface(interface_id: FixedBytes<4>) -> bool {
+        Erc721::supports_interface(interface_id)
+    }
+}
+
+----
+
+[[structures]]
+== Structures
+
+Some use cases require more powerful data structures than arrays and mappings offered natively in alloy and the Stylus sdk.
+Contracts for Stylus provides these libraries for enhanced data structure management:
+
+- https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/structs/bitmap/index.html[`BitMaps`]: Store packed booleans in storage.
+- https://docs.rs/openzeppelin-stylus/0.1.0/openzeppelin_stylus/utils/structs/checkpoints/index.html[`Checkpoints`]: Checkpoint values with built-in lookups.
