@@ -744,3 +744,8 @@
   rpcUrl: https://nollie-rpc.skatechain.org
   networkId: 5051
   type: EvmChain
+- id: morph
+  mainnet: true
+  rpcUrl: https://rpc.morphl2.io
+  networkId: 2818
+  type: EvmChain

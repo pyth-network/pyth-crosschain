@@ -89,7 +89,7 @@ export const RECEIVER_CHAINS = {
   flow_mainnet: 60062,
   sanko: 60063,
   skate: 60064,
-
+  morph: 60065,
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
