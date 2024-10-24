@@ -2,14 +2,14 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-
-use stylus_sdk::{ prelude::{entrypoint,public, sol_storage}, storage::StorageAddress, alloy_primitives::{FixedBytes, Uint}};
+use stylus_sdk::{ prelude::{entrypoint,public, sol_storage}, alloy_primitives:: Uint};
 use pyth_stylus::pyth::functions::get_price_no_older_than;
 
 sol_storage! {
     #[entrypoint]
     struct FunctionCallsExample {
         address pyth_address;
+        bytes32 price_id;
     }
 }
 
@@ -17,8 +17,7 @@ sol_storage! {
 #[public]
 impl FunctionCallsExample {
     pub fn check_price(&mut self) -> Result<(), Vec<u8>> {
-        let price =   get_price_no_older_than(self, self.pyth_address,FixedBytes::from("BTC"),Uint::from(10000000000))?;
+        let _price =   get_price_no_older_than(self, self.pyth_address.get(),self.price_id.get() ,Uint::from(1047483647))?;
         Ok(())
     }
-
 }

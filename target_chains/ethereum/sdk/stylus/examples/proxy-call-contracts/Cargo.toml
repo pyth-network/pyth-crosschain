@@ -1,8 +1,8 @@
 [package]
-name = "function-calls"
+name = "proxy-call-contracts"
 authors.workspace = true
-edition.workspace = true
 license.workspace = true
+edition.workspace = true
 keywords.workspace = true
 repository.workspace = true
 publish = false
@@ -22,6 +22,3 @@ e2e.workspace = true
 
 [features]
 e2e = []
-
-[lib]
-crate-type = ["lib", "cdylib"]
