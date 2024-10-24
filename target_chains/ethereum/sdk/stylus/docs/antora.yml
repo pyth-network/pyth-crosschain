@@ -1,6 +1,5 @@
 name: contracts-stylus
 title: Contracts for Stylus
 version: 0.1.0
-prerelease: '-rc' #we can remove this with the official release
 nav:
   - modules/ROOT/nav.adoc
