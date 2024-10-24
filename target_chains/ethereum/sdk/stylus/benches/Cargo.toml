@@ -1,0 +1,19 @@
+[package]
+name = "benches"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+version.workspace = true
+
+[dependencies]
+pyth-stylus.workspace = true
+alloy-primitives = { workspace = true, features = ["tiny-keccak"] }
+alloy.workspace = true
+tokio.workspace = true
+futures.workspace = true
+eyre.workspace = true
+koba.workspace = true
+e2e.workspace = true
+serde = "1.0.203"
+keccak-const = "0.2.0"
