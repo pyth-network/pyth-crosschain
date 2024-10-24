@@ -1,0 +1,7 @@
+dirs:
+  - docs/modules/ROOT/pages/
+
+# There's a bug in linkspector that causes it to only allow one file extension type
+# when using it with directories.
+fileExtensions:
+  - adoc

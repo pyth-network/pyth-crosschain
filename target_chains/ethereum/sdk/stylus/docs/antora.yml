@@ -1,0 +1,5 @@
+name: contracts-stylus
+title: Contracts for Stylus
+version: 0.1.0
+nav:
+  - modules/ROOT/nav.adoc

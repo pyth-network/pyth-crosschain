@@ -1,0 +1,123 @@
+name: test
+# This is the main CI workflow that runs the test suite on all pushes to main
+# and all pull requests. It runs the following jobs:
+# - required: runs the test suite on ubuntu with stable and beta rust
+# toolchains.
+# - os-check: runs the test suite on mac and windows.
+# - coverage: runs the test suite and collects coverage information.
+# See `check.yml` for information about how the concurrency cancellation and
+# workflow triggering works.
+permissions:
+  contents: read
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "**.md"
+      - "**.adoc"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "**.adoc"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  required:
+    runs-on: ubuntu-latest
+    name: ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        # Run on stable and beta to ensure that tests won't break on the next
+        # version of the rust toolchain.
+        toolchain: [ stable, beta ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo generate-lockfile
+        # Enable this ci template to run regardless of whether the lockfile is
+        # checked in or not.
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+        # https://twitter.com/jonhoo/status/1571290371124260865
+      - name: cargo test --locked
+        run: cargo test --locked --features std --all-targets
+        # https://github.com/rust-lang/cargo/issues/6669
+      - name: cargo test --doc
+        run: cargo test --locked --features std --doc
+  os-check:
+    # Run cargo test on MacOS and Windows.
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} / stable
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest ]
+        # Windows fails because of `stylus-proc`.
+        # os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      - name: cargo test
+        run: cargo test --locked --features std --all-targets
+  coverage:
+    # Use llvm-cov to build and collect coverage and outputs in a format that
+    # is compatible with codecov.io.
+    #
+    # Note that codecov as of v4 requires that CODECOV_TOKEN from
+    #
+    #   https://app.codecov.io/gh/<user or org>/<project>/settings
+    #
+    # is set in two places on your repo:
+    #
+    # - https://github.com/jonhoo/guardian/settings/secrets/actions
+    # - https://github.com/jonhoo/guardian/settings/secrets/dependabot
+    #
+    # (the former is needed for codecov uploads to work with Dependabot PRs)
+    #
+    # PRs coming from forks of your repo will not have access to the token, but
+    # for those, codecov allows uploading coverage reports without a token.
+    # it's all a little weird and inconvenient. see
+    #
+    #   https://github.com/codecov/feedback/issues/112
+    #
+    # for lots of more discussion.
+    runs-on: ubuntu-latest
+    name: ubuntu / stable / coverage
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - name: cargo install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      - name: cargo llvm-cov
+        # FIXME: Include e2e tests in coverage.
+        run: cargo llvm-cov --locked --features std --lcov --output-path lcov.info
+      - name: Record Rust version
+        run: echo "RUST=$(rustc --version)" >> "$GITHUB_ENV"
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: OS,RUST
