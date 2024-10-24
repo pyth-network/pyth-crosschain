@@ -133,7 +133,7 @@ int governance_action_is_consumed(int hash) method_id {
     (int expiration_time, cell keys_dict, int key_count) = get_guardian_set_internal(vm_guardian_set_index);
     throw_if(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, cell_null?(keys_dict));
     throw_unless(ERROR_INVALID_GUARDIAN_SET,
-        (current_guardian_set_index == vm_guardian_set_index) &
+        (current_guardian_set_index >= vm_guardian_set_index) &
         ((expiration_time == 0) | (expiration_time > now()))
     );
     int signers_length = in_msg_body~load_uint(8);
