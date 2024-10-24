@@ -1,8 +1,8 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 
 export const DummyWallet: AnchorWallet = {
-  publicKey: PublicKey.default,
+  publicKey: Keypair.generate().publicKey,
   signTransaction: () => {
     throw new Error("Cannot sign transaction without a wallet");
   },
