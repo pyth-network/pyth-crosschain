@@ -142,16 +142,16 @@ where
 /// Sort the pair `(a, b)` and hash the result with `state`. Frequently used
 /// when working with merkle proofs.
 #[inline]
-pub fn commutative_hash_pair<S, H>(mut a: H, mut b: H, state: S) -> S::Output
+pub fn commutative_hash_pair<S, H>(a: &H, b: &H, state: S) -> S::Output
 where
     H: Hash + PartialOrd,
     S: Hasher,
 {
     if a > b {
-        core::mem::swap(&mut a, &mut b);
+        hash_pair(b, a, state)
+    } else {
+        hash_pair(a, b, state)
     }
-
-    hash_pair(&a, &b, state)
 }
 
 #[cfg(all(test, feature = "std"))]
@@ -185,8 +185,8 @@ mod tests {
         let a = [1u8].as_slice();
         let b = [2u8].as_slice();
 
-        let r1 = commutative_hash_pair(a, b, builder.build_hasher());
-        let r2 = commutative_hash_pair(b, a, builder.build_hasher());
+        let r1 = commutative_hash_pair(&a, &b, builder.build_hasher());
+        let r2 = commutative_hash_pair(&b, &a, builder.build_hasher());
         assert_eq!(r1, r2);
     }
 }

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use alloy::{rpc::types::TransactionReceipt, sol_types::SolConstructor};
 use koba::config::Deploy;
 
@@ -45,11 +47,13 @@ impl Deployer {
         let pkg = Crate::new()?;
         let wasm_path = pkg.wasm;
         let sol_path = pkg.manifest_dir.join("src/constructor.sol");
+        let sol =
+            if Path::new(&sol_path).exists() { Some(sol_path) } else { None };
 
         let config = Deploy {
             generate_config: koba::config::Generate {
                 wasm: wasm_path.clone(),
-                sol: Some(sol_path),
+                sol,
                 args: self.ctr_args,
                 legacy: false,
             },

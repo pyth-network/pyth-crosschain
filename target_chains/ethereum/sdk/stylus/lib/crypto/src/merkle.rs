@@ -183,7 +183,7 @@ where
         builder: &B,
     ) -> bool {
         for &hash in proof {
-            leaf = commutative_hash_pair(leaf, hash, builder.build_hasher());
+            leaf = commutative_hash_pair(&leaf, &hash, builder.build_hasher());
         }
 
         leaf == root
@@ -304,7 +304,7 @@ where
                 proof_pos += 1;
             };
 
-            let hash = commutative_hash_pair(a, *b, builder.build_hasher());
+            let hash = commutative_hash_pair(&a, b, builder.build_hasher());
             hashes.push(hash);
         }
 
@@ -412,7 +412,7 @@ mod tests {
         assert!(verification);
 
         let builder = KeccakBuilder.build_hasher();
-        let no_such_leaf = commutative_hash_pair(leaf_a, leaf_b, builder);
+        let no_such_leaf = commutative_hash_pair(&leaf_a, &leaf_b, builder);
         let proof = &proof[1..];
         let verification = Verifier::verify(proof, root, no_such_leaf);
         assert!(verification);

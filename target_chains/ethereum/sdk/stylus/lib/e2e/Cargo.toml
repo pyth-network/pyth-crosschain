@@ -2,10 +2,11 @@
 name = "e2e"
 description = "End-to-end Testing for Stylus"
 version = "0.1.0"
+categories = ["development-tools::testing", "cryptography::cryptocurrencies"]
+keywords = ["arbitrum", "ethereum", "stylus", "integration-testing", "tests"]
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
-keywords.workspace = true
 repository.workspace = true
 
 [dependencies]
@@ -15,7 +16,7 @@ eyre.workspace = true
 regex.workspace = true
 once_cell.workspace = true
 koba.workspace = true
-e2e-proc = { path = "../e2e-proc" }
+e2e-proc.workspace = true
 toml = "0.8.13"
 
 [lints]
