@@ -1,0 +1,32 @@
+# This workflow checks whether the library is able to run without the std
+# library. See `check.yml` for information about how the concurrency
+# cancellation and workflow triggering works.
+name: no-std
+permissions:
+  contents: read
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  nostd:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [ wasm32-unknown-unknown ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: rustup target add ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
+      - name: cargo check
+        run: cargo check --release --target ${{ matrix.target }} --no-default-features

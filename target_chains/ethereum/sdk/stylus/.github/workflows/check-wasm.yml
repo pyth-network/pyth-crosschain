@@ -1,0 +1,38 @@
+name: check-wasm
+# This workflow checks that the compiled wasm binary of every example contract
+# can be deployed to Arbitrum Stylus.
+permissions:
+  contents: read
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  check-wasm:
+    name: Check WASM binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up rust
+        uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          target: wasm32-unknown-unknown
+          components: rust-src
+          toolchain: nightly-2024-01-01
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: install cargo-stylus
+        run: cargo install cargo-stylus@0.5.1
+
+      - name: run wasm check
+        run: |
+          export NIGHTLY_TOOLCHAIN=${{steps.toolchain.outputs.name}}
+          ./scripts/check-wasm.sh
