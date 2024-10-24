@@ -5,7 +5,7 @@
 extern crate alloc;
 
 #[global_allocator]
- static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 pub mod utils;
 pub mod pyth;

@@ -16,7 +16,7 @@ use crate::pyth::functions::{
 };
 
 sol_storage! {
-   struct PythContract {
+    pub struct PythContract {
          address _ipyth;
     }
 }

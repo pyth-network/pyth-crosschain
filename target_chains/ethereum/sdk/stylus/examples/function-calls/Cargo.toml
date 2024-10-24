@@ -3,7 +3,6 @@ name = "function-calls"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
-keywords.workspace = true
 repository.workspace = true
 publish = false
 version = "0.0.0"

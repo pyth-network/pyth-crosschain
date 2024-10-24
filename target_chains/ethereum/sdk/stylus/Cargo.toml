@@ -1,7 +1,15 @@
 [workspace]
-members = ["contracts", "examples/proxy-call-contracts","examples/function-calls"]
+members = [
+  "contracts",
+  "examples/function-calls",
+  "examples/proxy-call-contracts",
+  "benches"
+]
 default-members = [
-  "contracts", "examples/proxy-call-contracts","examples/function-calls"
+  "contracts",
+  "examples/function-calls",
+  "examples/proxy-call-contracts",
+  "benches"
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages
@@ -11,12 +19,10 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Ifechukwu Daniel"]
-license = "MIT"
-keywords = ["arbitrum", "ethereum", "stylus"]
-repository = "https://github.com/pyth-network/pyth-crosschain/"
-version = "0.0.1"
 edition = "2021"
-
+license = "MIT"
+repository = "https://github.com/OpenZeppelin/rust-contracts-stylus"
+version = "0.1.0"
 
 [workspace.lints.rust]
 missing_docs = "warn"
@@ -68,11 +74,11 @@ proc-macro2 = "1.0.79"
 quote = "1.0.35"
 
 # members
-pyth-stylus ={path ="contracts"}
 motsu = { path = "lib/motsu"}
 motsu-proc = { path = "lib/motsu-proc", version = "0.1.0" }
 e2e = { path = "lib/e2e" }
 e2e-proc = {path = "lib/e2e-proc"}
+pyth-stylus ={path ="contracts"}
 
 [profile.release]
 codegen-units = 1
