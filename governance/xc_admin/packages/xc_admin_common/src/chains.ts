@@ -27,6 +27,9 @@ export const RECEIVER_CHAINS = {
   eclipse_devnet: 40001,
   eclipse_testnet: 40002,
   eclipse_mainnet: 40003,
+  mantis_testnet: 40004,
+  sonic_devnet: 40005,
+  sonic_testnet: 40006,
 
   cronos: 60001,
   kcc: 60002,
