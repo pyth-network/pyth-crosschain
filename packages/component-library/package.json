@@ -7,7 +7,7 @@
     "build:storybook": "storybook build",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
-    "start:storybook": "storybook dev --port 4000 --no-open",
+    "start:dev": "storybook dev --port 4000 --no-open",
     "test:format": "prettier --check .",
     "test:lint": "jest --selectProjects lint",
     "test:types": "tsc"
