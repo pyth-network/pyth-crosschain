@@ -7,7 +7,9 @@ import { assert } from "chai";
 import {
   DefaultStore,
   EvmChain,
+  EvmEntropyContract,
   EvmWormholeContract,
+  ENTROPY_DEFAULT_PROVIDER,
 } from "@pythnetwork/contract-manager";
 import {
   findWormholeContract,
@@ -26,14 +28,6 @@ function envOrErr(name: string): string {
   }
   return res;
 }
-export const ENTROPY_DEFAULT_PROVIDER = {
-  mainnet: "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
-  testnet: "0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344",
-};
-export const ENTROPY_DEFAULT_KEEPER = {
-  mainnet: "0xbcab779fca45290288c35f5e231c37f9fa87b130",
-  testnet: "0xa5A68ed167431Afe739846A22597786ba2da85df",
-};
 
 export default async function (hre: HardhatRuntimeEnvironment) {
   // Initialize the wallet.
@@ -49,9 +43,8 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     wormholeInitialSigners,
     governanceEmitter,
     governanceChainId,
+    chainName,
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
-
-  const chainName = envOrErr("MIGRATIONS_NETWORK");
 
   const wormholeReceiverChainId = CHAINS[chainName];
   assert(wormholeReceiverChainId !== undefined);
@@ -95,6 +88,11 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   );
 
   console.log("Entropy contract address:", entropyContractAddress);
+
+  console.log("Saving the contract in the store...");
+  const contract = new EvmEntropyContract(chainName, entropyContractAddress);
+  DefaultStore.entropy_contracts[contract.getId()] = contract;
+  DefaultStore.saveAllContracts();
 }
 
 async function deployExecutorContract(
@@ -150,7 +148,7 @@ async function deployEntropyContract(
     [
       executorContractAddress,
       executorContractAddress,
-      1,
+      1, // pythFeeInWei
       isMainnet
         ? ENTROPY_DEFAULT_PROVIDER.mainnet
         : ENTROPY_DEFAULT_PROVIDER.testnet,
