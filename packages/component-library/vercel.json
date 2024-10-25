@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm --filter component-library build:storybook",
+  "buildCommand": "turbo --filter @pythnetwork/component-library build:storybook",
   "framework": null,
   "outputDirectory": "storybook-static"
 }

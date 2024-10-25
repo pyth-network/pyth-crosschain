@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "next build",
-    "pull:env": "[ $VERCEL ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
+    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
     "start:dev": "next dev --port 3003",
     "start:prod": "next start --port 3003",
     "test:lint": "next lint"
