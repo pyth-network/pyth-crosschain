@@ -5,10 +5,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
-    "test": "pnpm test:types && jest",
     "test:format": "jest --selectProjects format",
     "test:lint": "jest --selectProjects lint",
     "test:types": "tsc"

@@ -12,8 +12,8 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "generate-abi": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs PRNG",
-    "check-abi": "git diff --exit-code abis"
+    "build": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs PRNG",
+    "test": "git diff --exit-code abis"
   },
   "keywords": [
     "pyth",

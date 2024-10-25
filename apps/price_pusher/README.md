@@ -84,7 +84,7 @@ To run the price pusher, please run the following commands, replacing the comman
 ```sh
 # Please run the two following commands once from the root of the repo to build the code.
 pnpm install
-pnpm exec lerna run build --scope @pythnetwork/price-pusher --include-dependencies
+pnpm turbo build --filter @pythnetwork/price-pusher
 
 # Navigate to the price_pusher folder
 cd apps/price_pusher

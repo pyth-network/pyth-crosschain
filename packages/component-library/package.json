@@ -5,11 +5,9 @@
   "type": "module",
   "scripts": {
     "build:storybook": "storybook build",
-    "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "start:storybook": "storybook dev --port 4000 --no-open",
-    "test": "pnpm test:types && pnpm test:lint && pnpm test:format",
     "test:format": "prettier --check .",
     "test:lint": "jest --selectProjects lint",
     "test:types": "tsc"

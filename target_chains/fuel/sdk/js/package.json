@@ -23,9 +23,9 @@
     "usage-example": "ts-node src/examples/usage.ts",
     "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint src/",
-    "prepublishOnly": "pnpm run build && pnpm run lint",
-    "preversion": "pnpm run lint",
+    "test:lint": "eslint src/",
+    "prepublishOnly": "pnpm run build && pnpm run test:lint",
+    "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src",
     "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && prettier --write \"./src/types/**/*.ts\""
   },

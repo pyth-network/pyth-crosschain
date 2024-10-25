@@ -15,31 +15,29 @@
     (
       system: let
         cli-overlay = _: prev: {
-          cli = let
-            pnpm = "${prev.pnpm}/bin/pnpm i && ${prev.pnpm}/bin/pnpm";
-          in
-            prev.lib.mkCli "cli" {
-              _noAll = true;
+          cli = prev.lib.mkCli "cli" {
+            _noAll = true;
 
-              install = "${pnpm} i";
-              start = "${pnpm} lerna run start:dev";
+            start = "${prev.lib.getExe prev.pnpm} start:dev";
 
-              test = {
-                nix = {
-                  lint = "${prev.statix}/bin/statix check --ignore node_modules .";
-                  dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules .";
-                  format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules --check .";
-                };
+            test = {
+              nix = {
+                lint = "${prev.statix}/bin/statix check --ignore node_modules .";
+                dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules .";
+                format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules --check .";
               };
-
-              fix = {
-                nix = {
-                  lint = "${prev.statix}/bin/statix fix --ignore node_modules .";
-                  dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules -e .";
-                  format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules .";
-                };
-              };
+              turbo = "${prev.lib.getExe prev.pnpm} test -- --ui stream";
             };
+
+            fix = {
+              nix = {
+                lint = "${prev.statix}/bin/statix fix --ignore node_modules .";
+                dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules -e .";
+                format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules .";
+              };
+              turbo = "${prev.lib.getExe prev.pnpm} fix -- --ui stream";
+            };
+          };
         };
 
         pkgs = import nixpkgs {
@@ -53,13 +51,14 @@
             pkgs.cargo
             pkgs.cli
             pkgs.git
-            pkgs.libusb
+            pkgs.libusb1
             pkgs.nodejs
             pkgs.pkg-config
             pkgs.pnpm
             pkgs.pre-commit
             pkgs.python3
             pkgs.python3Packages.distutils
+            pkgs.graphviz
           ];
         };
       }

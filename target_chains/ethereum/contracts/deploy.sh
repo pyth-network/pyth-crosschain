@@ -13,7 +13,7 @@ set -euo pipefail
 
 echo "=========== Building dependencies ==========="
 pushd ../../../
-pnpm exec lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 popd
 
 echo "=========== Compiling ==========="

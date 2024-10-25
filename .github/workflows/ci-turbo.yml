@@ -1,4 +1,4 @@
-name: JS/TS checks
+name: Turbo test
 on:
   pull_request:
     paths:
@@ -31,13 +31,5 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
-      - name: Build
-        run: pnpm exec lerna run build
       - name: Test
-        run: pnpm exec lerna run test
-      - name: Lint
-        run: pnpm exec lerna run lint
-      - name: Generate ABIs
-        run: pnpm exec lerna run generate-abi
-      - name: Check ABIs
-        run: pnpm exec lerna run check-abi
+        run: pnpm turbo test --ui stream

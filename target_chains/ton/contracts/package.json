@@ -5,7 +5,7 @@
   "scripts": {
     "start": "blueprint run",
     "build": "echo Pyth | blueprint build",
-    "test": "jest --verbose"
+    "test:unit": "jest --verbose"
   },
   "devDependencies": {
     "@pythnetwork/pyth-ton-js": "workspace:*",

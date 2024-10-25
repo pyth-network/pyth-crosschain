@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src/",
+    "test:lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
     "monitor": "pnpm run build && node tslib/monitor.js",
     "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git --no-commit"
