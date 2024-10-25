@@ -10,7 +10,7 @@ Next, run the following command from the repo root to install required dependenc
 
 ```
 pnpm i
-pnpm exec lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 ```
 
 Next, from the `contracts` directory, run the following command to install forge dependencies:

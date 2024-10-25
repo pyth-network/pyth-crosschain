@@ -20,16 +20,14 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --testPathIgnorePatterns=.*.e2e.test.ts --passWithNoTests",
-    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "tsc",
-    "generate-hermes-api-types": "openapi-zod-client https://hermes.pyth.network/docs/openapi.json --output src/zodSchemas.ts && prettier --write src/zodSchemas.ts",
-    "check-hermes-api-types": "git diff --exit-code src/zodSchemas.ts",
+    "build:typescript": "tsc",
+    "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
+    "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "pnpm run build && node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint src/",
-    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
-    "preversion": "pnpm run lint",
+    "test:lint": "eslint src/",
+    "prepublishOnly": "pnpm run build && pnpm run test:lint",
+    "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },
   "keywords": [

@@ -53,10 +53,7 @@ export abstract class Chain extends Storable {
     super();
     this.wormholeChainName = wormholeChainName as ChainName;
     if (toChainId(this.wormholeChainName) === undefined)
-      throw new Error(
-        `Invalid chain name ${wormholeChainName}.
-        Try rebuilding @pythnetwork/xc-admin-common: pnpm exec lerna run build --scope @pythnetwork/xc-admin-common`
-      );
+      throw new Error(`Invalid chain name ${wormholeChainName}.`);
   }
 
   public getWormholeChainId(): number {

@@ -16,7 +16,7 @@ USER pyth
 
 FROM builder-base AS builder
 ARG package
-RUN pnpm exec lerna run build --scope="$package" --include-dependencies
+RUN pnpm turbo build --filter $package
 RUN pnpm deploy --filter $package --prod /srv/$package
 
 

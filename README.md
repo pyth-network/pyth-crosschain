@@ -75,21 +75,41 @@ Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow 
 
 ### Typescript Monorepo
 
-All of the typescript / javascript packages in this repository are part of a lerna monorepo.
-This setup allows each package to reference the current version of the others.
-You can install dependencies using `pnpm i` from the repository root.
-You can build all of the packages using `pnpm exec lerna run build` and test with `pnpm exec lerna run test`.
+All of the typescript / javascript packages in this repository are part of a
+[turborepo](https://turbo.build/repo/docs) monorepo.
 
-Lerna has some common failure modes that you may encounter:
+#### Setting up
 
-1. `pnpm i` fails with a typescript compilation error about a missing package.
-   This error likely means that the failing package has a `prepare` entry compiling the typescript in its `package.json`.
-   Fix this error by moving that logic to the `prepublishOnly` entry.
-2. The software builds locally but fails in CI, or vice-versa.
-   This error likely means that some local build caches need to be cleaned.
-   The build error may not indicate that this is a caching issue, e.g., it may appear that the packages are being built in the wrong order.
-   Delete `node_modules/`, `lib/` and `tsconfig.tsbuildinfo` from each package's subdirectory. then try again.
-3. `pnpm i` fails due to wrong node version. Make sure to be using `v18`. Node version `v21` is not supported and known to cause issues.
+If you use nix and direnv, just cd to the project directory and `direnv allow`.
+
+If you use nix but not direnv, just cd to the project directory and enter a nix
+development shell with `nix develop`.
+
+If you don't use nix at all, then install the required system packages:
+
+- [Node.js](https://nodejs.org/en) -- match the version to `.nvmrc`; you can use
+  [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js version.
+- [pnpm](https://pnpm.io/) -- match the version to the version specified in
+  `package.json`; you can experiment with
+  [corepack](https://nodejs.org/api/corepack.html) to manage your pnpm version
+  for you.
+
+#### Common tasks
+
+The following tasks are the most common ways to interact with the monorepo.
+Thanks to [turborepo](https://turbo.build/repo/docs), these tasks will
+coordinate building any needed dependencies, and task execution will be cached
+and will only re-run as necessary. For any of the following tasks, you can pass
+[any valid `turbo run` option](https://turbo.build/repo/docs/reference/run)
+after `--`, for instance you could run `pnpm test -- --concurrency 2`.
+
+- `pnpm test`: Run all unit tests, integration tests, linting, and format
+  checks, as well as whatever other code checks any packages support.
+- `pnpm fix`: Run auto fixes, including reformatting code and auto-fixing lint
+  rules where possible.
+- `pnpm start:dev`: Start all development servers in parallel.
+- `pnpm start:prod`: Run production builds and start production mode servers in
+  parallel.
 
 ## Audit / Feature Status
 

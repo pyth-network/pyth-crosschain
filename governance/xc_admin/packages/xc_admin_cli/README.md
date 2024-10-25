@@ -27,7 +27,7 @@ To activate a transaction:
 
 ```
 pnpm i
-pnpm exec lerna run build --scope "@pythnetwork/xc-admin-common"  --include-dependencies
+pnpm turbo build --filter @pythnetwork/xc-admin-common
 pnpm exec ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet|testnet] -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
 
 ```

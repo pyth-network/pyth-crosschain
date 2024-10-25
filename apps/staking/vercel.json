@@ -1,3 +1,0 @@
-{
-  "buildCommand": "cd ../.. && pnpm lerna run build --scope @pythnetwork/staking --include-dependencies"
-}

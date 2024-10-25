@@ -8,10 +8,10 @@
     "directory": "target_chains/ethereum/sdk/solidity"
   },
   "scripts": {
+    "build:abis": "generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors PythUtils",
+    "build:bin:": "solcjs --bin MockPyth.sol --base-path . -o build/",
     "format": "prettier --write .",
-    "generate-abi": "generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors PythUtils",
-    "check-abi": "git diff --exit-code abis",
-    "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
+    "test": "git diff --exit-code abis"
   },
   "keywords": [
     "pyth",

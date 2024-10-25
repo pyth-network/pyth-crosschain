@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 patches/
+.turbo/
 
 # These apps have their own prettier config that uses a later version of
 # prettier

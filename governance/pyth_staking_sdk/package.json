@@ -12,15 +12,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
-    "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
+    "prepublishOnly": "node scripts/update-package-json.mjs",
     "test:format": "prettier --check .",
     "test:lint": "jest --selectProjects lint",
-    "test:types": "tsc",
-    "test:integration": "echo disabled # jest --selectProjects integration",
-    "prepublishOnly": "node scripts/update-package-json.mjs"
+    "test:types": "tsc"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "^3.0.0",

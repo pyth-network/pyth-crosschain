@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest"
+    "test:unit": "jest"
   },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",

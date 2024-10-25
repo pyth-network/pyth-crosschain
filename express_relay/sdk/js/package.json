@@ -14,16 +14,15 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest src/ --passWithNoTests",
     "simple-searcher-evm": "pnpm run build && node lib/examples/simpleSearcherEvm.js",
     "simple-searcher-svm": "pnpm run build && node lib/examples/simpleSearcherSvm.js",
     "simple-searcher-limo": "pnpm run build && node lib/examples/simpleSearcherLimo.js",
     "generate-api-types": "openapi-typescript http://127.0.0.1:9000/docs/openapi.json --output src/serverTypes.d.ts",
     "generate-anchor-types": "anchor idl type src/idl/idlExpressRelay.json --out src/expressRelayTypes.d.ts && anchor idl type src/examples/idl/idlDummy.json --out src/examples/dummyTypes.d.ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint src",
-    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
-    "preversion": "pnpm run lint",
+    "test:lint": "eslint src",
+    "prepublishOnly": "pnpm run build && pnpm test:lint",
+    "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },
   "keywords": [

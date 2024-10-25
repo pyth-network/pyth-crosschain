@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc",
     "shell": "ts-node ./src/shell.ts",
-    "lint": "eslint src/ scripts/",
+    "test:lint": "eslint src/ scripts/",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\""
   },
   "author": "",
@@ -28,7 +28,6 @@
     "@injectivelabs/networks": "^1.14.6",
     "@mysten/sui": "^1.3.0",
     "@pythnetwork/client": "^2.22.0",
-    "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/cosmwasm-deploy-tools": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
     "@pythnetwork/hermes-client": "workspace:*",
