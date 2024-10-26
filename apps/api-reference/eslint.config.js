@@ -6,13 +6,4 @@ const tailwindConfig = fileURLToPath(
   import.meta.resolve(`./tailwind.config.ts`),
 );
 
-export default [
-  ...nextjs,
-  ...tailwind(tailwindConfig),
-  ...storybook,
-  {
-    rules: {
-      "turbo/no-undeclared-env-vars": "off",
-    },
-  },
-];
+export default [...nextjs, ...tailwind(tailwindConfig), ...storybook];

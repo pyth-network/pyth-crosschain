@@ -25,6 +25,7 @@
       "cache": false
     },
     "fix:lint": {
+      "dependsOn": ["^build"],
       "cache": false
     },
     "test": {
