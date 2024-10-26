@@ -16,7 +16,7 @@ USER pyth
 
 FROM builder-base AS builder
 ARG package
-RUN pnpm turbo build --filter $package
+RUN CI=true pnpm turbo build --filter $package
 RUN pnpm deploy --filter $package --prod /srv/$package
 
 
