@@ -2,6 +2,11 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
+// Disable the following rule because variables in this file are only loaded at
+// runtime and do not influence the build outputs, thus they need not be
+// declared to turbo for it to be able to cache build outputs correctly.
+/* eslint-disable turbo/no-undeclared-env-vars */
+
 import "server-only";
 
 /**
