@@ -1,15 +1,23 @@
 [workspace]
 members = [
   "contracts",
+  "lib/crypto",
+  "lib/motsu",
+  "lib/motsu-proc",
+  "lib/e2e",
+  "lib/e2e-proc",
   "examples/function-calls",
   "examples/proxy-call-contracts",
   "benches"
 ]
 default-members = [
   "contracts",
+  "lib/crypto",
+  "lib/motsu",
+  "lib/motsu-proc",
+  "lib/e2e-proc",
   "examples/function-calls",
-  "examples/proxy-call-contracts",
-  "benches"
+  "examples/proxy-call-contracts"
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages
@@ -48,6 +56,7 @@ alloy = { version = "=0.1.4", features = [
   "signer-local",
   "getrandom",
 ] }
+getrandom = { version = "0.2.2", features = ["custom"] }
 # Even though `alloy` includes `alloy-primitives` and `alloy-sol-types` we need
 # to keep both versions for compatibility with the Stylus SDK. Once they start
 # using `alloy` we can remove these.

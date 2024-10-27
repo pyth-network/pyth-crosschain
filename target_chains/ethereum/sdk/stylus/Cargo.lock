@@ -2213,10 +2213,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6cff6390ad19dea5f6bf7011af9560c3dc5f9162fa4b1b33c0d24df18a2c7fcb"
 dependencies = [
  "const-hex",
- "motsu-proc",
+ "motsu-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "stylus-sdk",
  "tiny-keccak",
+]
+
+[[package]]
+name = "motsu"
+version = "0.1.0"
+dependencies = [
+ "const-hex",
+ "motsu-proc 0.1.0",
+ "once_cell",
+ "stylus-sdk",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "motsu-proc"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "motsu 0.1.0",
+ "proc-macro2",
+ "quote",
+ "stylus-sdk",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -2363,6 +2387,16 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "openzeppelin-crypto"
+version = "0.1.0"
+dependencies = [
+ "hex-literal",
+ "mini-alloc",
+ "rand",
+ "tiny-keccak",
 ]
 
 [[package]]
@@ -2620,7 +2654,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "mini-alloc",
- "motsu",
+ "motsu 0.1.0-rc",
  "stylus-sdk",
 ]
 
