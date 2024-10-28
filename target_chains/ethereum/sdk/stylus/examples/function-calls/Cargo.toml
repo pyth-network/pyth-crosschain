@@ -1,17 +1,16 @@
 [package]
-name = "function-calls"
-authors.workspace = true
+name = "function-calls-example"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 publish = false
-version = "0.0.0"
+version.workspace = true
 
 [dependencies]
+pyth-stylus.workspace = true
 alloy-primitives.workspace = true
 stylus-sdk.workspace = true
 mini-alloc.workspace = true
-pyth-stylus.workspace = true
 
 [dev-dependencies]
 alloy.workspace = true
@@ -19,8 +18,8 @@ eyre.workspace = true
 tokio.workspace = true
 e2e.workspace = true
 
-[features]
-e2e = []
-
 [lib]
 crate-type = ["lib", "cdylib"]
+
+[features]
+e2e = []

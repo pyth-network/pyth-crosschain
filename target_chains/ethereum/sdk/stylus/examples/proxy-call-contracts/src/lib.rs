@@ -1,8 +1,7 @@
 #![cfg_attr(not(test), no_std, no_main)]
 extern crate alloc;
 
-use alloc::vec::Vec;
-use stylus_sdk::{ alloy_primitives:: Uint, console, prelude::{entrypoint,public, sol_storage}};
+use stylus_sdk::{  console, prelude::{entrypoint,public, sol_storage}};
 use pyth_stylus::pyth::pyth_contract::PythContract;
 
 sol_storage! {

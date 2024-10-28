@@ -5,6 +5,26 @@ MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR"
 cd ..
 
+export RPC_URL=http://localhost:8547
+export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+export WALLER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+ls
+cd "nitro-testnode"
+./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1    
+
+cd ..
+cd "pyth-solidity"
+deployed_to=$(forge create ./src/MockPyth.sol:MockPythSample \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --constructor-args 100 100 | grep -oP '(?<=Deployed to: )0x[a-fA-F0-9]{40}')
+
+cd ..
+# Output the captured address
+echo "Mock Pyth Deployed to address: $deployed_to"
+echo "MOCK_PYTH_ADDRESS=$deployed_to" > .env
+echo "Deployed address saved to .env file."
+
 NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
 cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
