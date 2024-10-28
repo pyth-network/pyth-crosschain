@@ -379,6 +379,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
 
     async fn estimate_reveal_with_callback_gas(
         &self,
+        sender: Address,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
@@ -391,6 +392,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
                 user_random_number,
                 provider_revelation,
             )
+            .from(sender)
             .estimate_gas()
             .await;
 
