@@ -38,10 +38,10 @@ export const decorators: Decorator[] = [
   withRootClasses("font-sans antialiased", sans.variable),
   withThemeByClassName({
     themes: {
-      white: "light bg-white",
-      light: "light bg-beige-50",
-      dark: "dark bg-steel-800",
-      darker: "dark bg-steel-900",
+      white: "light bg-white text-steel-900",
+      light: "light bg-beige-100 text-steel-900",
+      dark: "dark bg-steel-800 text-steel-50",
+      darker: "dark bg-steel-900 text-steel-50",
     },
     defaultTheme: "light",
   }),
