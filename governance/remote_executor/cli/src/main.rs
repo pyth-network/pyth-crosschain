@@ -40,7 +40,10 @@ use {
         EXECUTOR_KEY_SEED,
         ID,
     },
-    solana_client::rpc_client::RpcClient,
+    solana_client::{
+        rpc_client::RpcClient,
+        rpc_config::RpcSendTransactionConfig,
+    },
     solana_sdk::{
         instruction::{
             AccountMeta,
@@ -273,10 +276,40 @@ pub fn process_transaction(
 ) -> Result<()> {
     let mut transaction =
         Transaction::new_with_payer(instructions.as_slice(), Some(&signers[0].pubkey()));
-    transaction.sign(signers, rpc_client.get_latest_blockhash()?);
-    let transaction_signature =
-        rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
-    println!("Transaction successful : {transaction_signature:?}");
+    let recent_blockhash = rpc_client.get_latest_blockhash()?;
+    transaction.sign(signers, recent_blockhash);
+
+    // Simulate the transaction
+    let simulation_result = rpc_client.simulate_transaction(&transaction)?;
+
+    // Check if simulation was successful
+    if let Some(err) = simulation_result.value.err {
+        println!("Transaction simulation failed: {:?}", err);
+        if let Some(logs) = simulation_result.value.logs {
+            println!("Simulation logs:");
+            for (i, log) in logs.iter().enumerate() {
+                println!("  {}: {}", i, log);
+            }
+        }
+        return Err(anyhow::anyhow!("Transaction simulation failed"));
+    }
+
+    // If simulation was successful, send the actual transaction
+    let config = RpcSendTransactionConfig {
+        skip_preflight: true,
+        ..RpcSendTransactionConfig::default()
+    };
+    let transaction_signature = rpc_client.send_transaction_with_config(&transaction, config)?;
+    println!("Transaction sent: {transaction_signature:?}");
+
+    // Wait for confirmation
+    rpc_client.confirm_transaction_with_spinner(
+        &transaction_signature,
+        &recent_blockhash,
+        rpc_client.commitment(),
+    )?;
+
+    println!("Transaction confirmed: {transaction_signature:?}");
     Ok(())
 }
 

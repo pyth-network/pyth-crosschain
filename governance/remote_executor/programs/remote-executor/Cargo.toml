@@ -27,6 +27,7 @@ eclipse_mainnet = []
 mantis_testnet = []
 sonic_devnet = []
 sonic_testnet = []
+atlas_testnet = []
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}

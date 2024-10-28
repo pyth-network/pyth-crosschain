@@ -23,6 +23,7 @@ pub const CHAIN_ID_ARRAY: &[(&str, u16)] = &[
     ("mantis_testnet", 40004),
     ("sonic_devnet", 40005),
     ("sonic_testnet", 40006),
+    ("atlas_testnet", 40007),
 ];
 
 #[cfg(any(feature = "pythnet", feature = "pythtest"))]
@@ -45,6 +46,9 @@ pub const CHAIN_ID: u16 = 40005;
 
 #[cfg(feature = "sonic_testnet")]
 pub const CHAIN_ID: u16 = 40006;
+
+#[cfg(feature = "atlas_testnet")]
+pub const CHAIN_ID: u16 = 40007;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq)]
 pub struct ExecutorPayload {
