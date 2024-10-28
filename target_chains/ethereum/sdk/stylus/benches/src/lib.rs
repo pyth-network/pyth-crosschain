@@ -14,6 +14,7 @@ use koba::config::{Deploy, Generate, PrivateKey};
 use serde::Deserialize;
 
 pub mod report;
+pub mod function_calls;
 
 #[derive(Debug, Deserialize)]
 struct ArbOtherFields {
@@ -48,6 +49,7 @@ async fn deploy(
         .join("wasm32-unknown-unknown")
         .join("release")
         .join(format!("{}_example.wasm", contract_name.replace('-', "_")));
+    println!("wasm path: {wasm_path:?}");
     let sol_path = args.as_ref().map(|_| {
         manifest_dir
             .join("examples")

@@ -17,3 +17,4 @@ koba.workspace = true
 e2e.workspace = true
 serde = "1.0.203"
 keccak-const = "0.2.0"
+dotenv.workspace = true
