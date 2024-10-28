@@ -444,6 +444,7 @@ pub async fn process_event(
     let gas_estimate_res = chain_config
         .contract
         .estimate_reveal_with_callback_gas(
+            contract.wallet().address(),
             event.provider_address,
             event.sequence_number,
             event.user_random_number,

@@ -60,6 +60,7 @@ pub trait EntropyReader: Send + Sync {
     /// Estimate the gas required to reveal a random number with a callback.
     async fn estimate_reveal_with_callback_gas(
         &self,
+        sender: Address,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
@@ -184,6 +185,7 @@ pub mod mock {
 
         async fn estimate_reveal_with_callback_gas(
             &self,
+            sender: Address,
             provider: Address,
             sequence_number: u64,
             user_random_number: [u8; 32],
