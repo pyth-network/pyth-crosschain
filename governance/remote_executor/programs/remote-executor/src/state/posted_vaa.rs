@@ -27,6 +27,7 @@ impl Owner for AnchorVaa {
         feature = "mantis_testnet",
         feature = "sonic_devnet",
         feature = "sonic_testnet",
+        feature = "atlas_testnet",
     ))]
     fn owner() -> Pubkey {
         Pubkey::from_str("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ").unwrap()
