@@ -201,6 +201,8 @@ int governance_action_is_consumed(int hash) method_id {
     throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index == (current_guardian_set_index + 1));
 
     int guardian_length = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, guardian_length > 0);
+    
     cell new_guardian_set_keys = new_dict();
     int key_count = 0;
     while (key_count < guardian_length) {
