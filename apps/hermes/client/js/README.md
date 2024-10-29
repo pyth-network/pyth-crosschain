@@ -69,12 +69,15 @@ By default, these updates are returned as binary data and is serialized as eithe
 
 ### Examples
 
-The [HermesClient](./src/examples/HermesClient.ts) example demonstrates both the examples above.
-You can run it with `npm run example`.
-A full command that prints BTC and ETH price feeds, in the testnet network, looks like so:
+The [HermesClient](./src/examples/HermesClient.ts) example demonstrates both the
+examples above. To run the example:
+
+1. Clone [the Pyth monorepo](https://github.com/pyth-network/pyth-crosschain)
+2. In the root of the monorepo, run `pnpm example:hermes-client -- <args>`. For
+   example, to print BTC and ETH price feeds in the testnet network, run:
 
 ```bash
-npm run example -- \
+pnpm example:hermes-client -- \
   --endpoint https://hermes.pyth.network \
   --price-ids \
     0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43 \
