@@ -7,6 +7,7 @@
     "pnpm": "^9.12.1"
   },
   "scripts": {
+    "example:hermes-client": "pnpm i && turbo example --filter @pythnetwork/hermes-client --ui stream",
     "fix": "pnpm i && turbo fix",
     "start:dev": "pnpm i && turbo start:dev",
     "start:prod": "pnpm i && turbo start:prod",

@@ -14,6 +14,10 @@
     "build": {
       "dependsOn": ["build:typescript", "build:schemas"]
     },
+    "example": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "pull:schema": {
       "outputs": ["schema.json"],
       "cache": false
