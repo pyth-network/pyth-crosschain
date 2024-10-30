@@ -15,6 +15,7 @@ use serde::Deserialize;
 
 pub mod report;
 pub mod function_calls;
+pub mod proxy_calls;
 
 #[derive(Debug, Deserialize)]
 struct ArbOtherFields {
