@@ -181,7 +181,7 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should correctly get ema price no older than", async () => {
@@ -210,7 +210,7 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getEmaPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should correctly get ema price unsafe", async () => {
@@ -245,8 +245,8 @@ describe("PythTest", () => {
     expect(initialBtcPrice.price).not.toBe(HERMES_BTC_PRICE);
     // Expect an error for ETH price feed as it doesn't exist initially
     await expect(pythTest.getPriceUnsafe(ETH_PRICE_FEED_ID)).rejects.toThrow(
-      "Unable to execute get method. Got exit_code: 1019"
-    ); // ERROR_PRICE_FEED_NOT_FOUND = 1019
+      "Unable to execute get method. Got exit_code: 2000"
+    ); // ERROR_PRICE_FEED_NOT_FOUND = 2000
 
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
@@ -280,8 +280,8 @@ describe("PythTest", () => {
     const invalidUpdateData = Buffer.from("invalid data");
 
     await expect(pythTest.getUpdateFee(invalidUpdateData)).rejects.toThrow(
-      "Unable to execute get method. Got exit_code: 1021"
-    ); // ERROR_INVALID_MAGIC = 1021
+      "Unable to execute get method. Got exit_code: 2002"
+    ); // ERROR_INVALID_MAGIC = 2002
   });
 
   it("should fail to update price feeds with invalid data", async () => {
@@ -303,7 +303,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1021, // ERROR_INVALID_MAGIC
+      exitCode: 2002, // ERROR_INVALID_MAGIC
     });
   });
 
@@ -352,7 +352,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1024, // ERROR_UPDATE_DATA_SOURCE_NOT_FOUND
+      exitCode: 2005, // ERROR_UPDATE_DATA_SOURCE_NOT_FOUND
     });
   });
 
@@ -368,7 +368,7 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should fail to update price feeds with insufficient gas", async () => {
@@ -387,7 +387,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1038, // ERROR_INSUFFICIENT_GAS
+      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
     });
   });
 
@@ -413,7 +413,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1030, // ERROR_INSUFFICIENT_FEE = 1030
+      exitCode: 2011, // ERROR_INSUFFICIENT_FEE = 2011
     });
   });
 
@@ -425,15 +425,15 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getPriceUnsafe(nonExistentPriceFeedId)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND = 1019
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND = 2000
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, nonExistentPriceFeedId)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND
 
     await expect(
       pythTest.getEmaPriceUnsafe(nonExistentPriceFeedId)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND
   });
 
   it("should correctly get chain ID", async () => {
@@ -735,7 +735,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1012, // ERROR_INVALID_GOVERNANCE_ACTION = 1012
+      exitCode: 1012, // ERROR_INVALID_GOVERNANCE_ACTION
     });
 
     // Verify that the governance data source index hasn't changed
@@ -773,7 +773,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1032, // ERROR_INVALID_GOVERNANCE_DATA_SOURCE
+      exitCode: 2013, // ERROR_INVALID_GOVERNANCE_DATA_SOURCE
     });
   });
 
@@ -809,7 +809,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1033, // ERROR_OLD_GOVERNANCE_MESSAGE
+      exitCode: 2014, // ERROR_OLD_GOVERNANCE_MESSAGE
     });
   });
 
@@ -839,7 +839,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1034, // ERROR_INVALID_GOVERNANCE_TARGET
+      exitCode: 2015, // ERROR_INVALID_GOVERNANCE_TARGET
     });
   });
 
@@ -976,7 +976,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1037, // ERROR_INVALID_CODE_HASH
+      exitCode: 2018, // ERROR_INVALID_CODE_HASH
     });
 
     // Verify that the contract has not been upgraded by attempting to call the new method

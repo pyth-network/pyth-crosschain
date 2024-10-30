@@ -265,6 +265,9 @@ int apply_decimal_expo(int value, int expo) {
     ;; Set the code continuation to the new code
     set_c3(new_code.begin_parse().bless());
 
+    ;; Reset the upgrade code hash
+    upgrade_code_hash = 0;
+
     ;; Throw an exception to end the current execution
     ;; The contract will be restarted with the new code
     throw(0);

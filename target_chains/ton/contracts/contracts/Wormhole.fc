@@ -86,6 +86,7 @@ int governance_action_is_consumed(int hash) method_id {
 () verify_signatures(int hash, cell signatures, int signers_length, cell guardian_set_keys, int guardian_set_size) impure {
     slice cs = signatures.begin_parse();
     int i = 0;
+    int last_signature_index = -1;
     int valid_signatures = 0;
 
     while (i < signers_length) {
@@ -105,6 +106,7 @@ int governance_action_is_consumed(int hash) method_id {
 
         slice sig_slice = sig_builder.end_cell().begin_parse();
         int guardian_index = sig_slice~load_uint(8);
+        throw_if(ERROR_SIGNATURE_INDEX_NOT_INCREASING, guardian_index <= last_signature_index);
         int r = sig_slice~load_uint(256);
         int s = sig_slice~load_uint(256);
         int v = sig_slice~load_uint(8);
@@ -115,6 +117,7 @@ int governance_action_is_consumed(int hash) method_id {
         int guardian_address = guardian_key~load_uint(160);
         throw_unless(ERROR_INVALID_GUARDIAN_ADDRESS, parsed_address == guardian_address);
         valid_signatures += 1;
+        last_signature_index = guardian_index;
         i += 1;
     }
 
@@ -198,6 +201,8 @@ int governance_action_is_consumed(int hash) method_id {
     throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index == (current_guardian_set_index + 1));
 
     int guardian_length = payload~load_uint(8);
+    throw_unless(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, guardian_length > 0);
+
     cell new_guardian_set_keys = new_dict();
     int key_count = 0;
     while (key_count < guardian_length) {
