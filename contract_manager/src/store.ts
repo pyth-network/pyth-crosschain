@@ -7,6 +7,7 @@ import {
   FuelChain,
   GlobalChain,
   SuiChain,
+  TonChain,
 } from "./chains";
 import {
   AptosPriceFeedContract,
@@ -83,6 +84,7 @@ export class Store {
       [AptosChain.type]: AptosChain,
       [FuelChain.type]: FuelChain,
       [StarknetChain.type]: StarknetChain,
+      [TonChain.type]: TonChain,
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {

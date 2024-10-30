@@ -3,7 +3,17 @@ import { WormholeContract } from "./wormhole";
 import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { TokenQty } from "../token";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { Address, Contract, TonClient } from "@ton/ton";
+import {
+  Address,
+  Contract,
+  OpenedContract,
+  TonClient,
+  WalletContractV4,
+} from "@ton/ton";
+import {
+  PythContract,
+  PYTH_CONTRACT_ADDRESS_TESTNET,
+} from "@pythnetwork/pyth-ton-js";
 
 export class TonWormholeContract extends WormholeContract {
   static type = "TonWormholeContract";
@@ -112,6 +122,15 @@ export class TonPriceFeedContract extends PriceFeedContract {
     return TonPriceFeedContract.type;
   }
 
+  async getContract(): Promise<OpenedContract<PythContract>> {
+    const provider = await this.chain.getProvider(this.address);
+    const contract = provider.open(
+      PythContract.createFromAddress(Address.parse(this.address))
+    );
+
+    return contract;
+  }
+
   async getTotalFee(): Promise<TokenQty> {
     // const contract = await this.getContract();
     // const balance = await contract.getBalance();
@@ -123,33 +142,35 @@ export class TonPriceFeedContract extends PriceFeedContract {
 
   async getLastExecutedGovernanceSequence(): Promise<number> {
     // const contract = await this.getContract();
-    // const result = await contract.get("get_last_executed_governance_sequence");
+    // const result = await contract.get
     // return Number(result);
     return 1;
   }
 
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
-    // const contract = await this.getContract();
-    // try {
-    //   const result = await contract.get("get_price_unsafe", [feedId]);
-    //   return {
-    //     price: {
-    //       price: result.price.toString(),
-    //       conf: result.conf.toString(),
-    //       expo: result.expo.toString(),
-    //       publishTime: result.publishTime.toString(),
-    //     },
-    //     emaPrice: {
-    //       price: result.emaPrice.price.toString(),
-    //       conf: result.emaPrice.conf.toString(),
-    //       expo: result.emaPrice.expo.toString(),
-    //       publishTime: result.emaPrice.publishTime.toString(),
-    //     },
-    //   };
-    // } catch (e) {
-    //   return undefined;
-    // }
-    return undefined;
+    const contract = await this.getContract();
+    const feedIdWithPrefix = `0x${feedId}`;
+    try {
+      const price = await contract.getPriceUnsafe(feedIdWithPrefix);
+      const emaPrice = await contract.getEmaPriceUnsafe(feedIdWithPrefix);
+      return {
+        price: {
+          price: price.price.toString(),
+          conf: price.conf.toString(),
+          expo: price.expo.toString(),
+          publishTime: price.publishTime.toString(),
+        },
+        emaPrice: {
+          price: emaPrice.price.toString(),
+          conf: emaPrice.conf.toString(),
+          expo: emaPrice.expo.toString(),
+          publishTime: emaPrice.publishTime.toString(),
+        },
+      };
+    } catch (e) {
+      console.error(e);
+      return undefined;
+    }
   }
 
   async getValidTimePeriod(): Promise<number> {
@@ -164,11 +185,10 @@ export class TonPriceFeedContract extends PriceFeedContract {
   }
 
   async getBaseUpdateFee() {
-    // const pythContract = await this.getContract();
-    // const amount = (await pythContract.functions.single_update_fee().get())
-    //   .value;
+    const contract = await this.getContract();
+    const amount = await contract.getSingleUpdateFee();
     return {
-      amount: "0",
+      amount: amount.toString(),
       denom: this.chain.getNativeToken(),
     };
   }

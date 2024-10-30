@@ -26,6 +26,13 @@ import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
+import {
+  TonClient,
+  WalletContractV4,
+  ContractProvider,
+  Address,
+} from "@ton/ton";
+import { keyPairFromSecretKey } from "@ton/crypto";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -752,13 +759,21 @@ export class TonChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  async getProvider(): Promise<Provider> {
-    return await Provider.create(this.rpcUrl);
+  async getProvider(address: string): Promise<ContractProvider> {
+    const client = new TonClient({
+      endpoint: this.rpcUrl,
+    });
+    return client.provider(Address.parse(address));
   }
 
-  async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
-    const provider = await this.getProvider();
-    return Wallet.fromPrivateKey(privateKey, provider);
+  async getWallet(privateKey: PrivateKey): Promise<WalletContractV4> {
+    const keyPair = keyPairFromSecretKey(Buffer.from(privateKey, "hex"));
+    const wallet = WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+    });
+
+    return wallet;
   }
 
   /**
@@ -802,7 +817,8 @@ export class TonChain extends Chain {
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const wallet = await this.getWallet(privateKey);
-    const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
+    const provider = await this.getProvider(wallet.address.toString());
+    const balance = await wallet.getBalance(provider);
     return Number(balance) / 10 ** 9;
   }
 }
