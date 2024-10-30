@@ -9,9 +9,15 @@ edition.workspace = true
 [dependencies]
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
+alloy-sol-macro.workspace = true
+alloy-sol-macro-expander.workspace = true
+alloy-sol-macro-input.workspace = true
 stylus-sdk.workspace = true
 mini-alloc.workspace = true
-motsu = "=0.1.0-rc"
+
+[dev-dependencies]
+motsu.workspace = true
+alloy-primitives = { workspace = true, features = ["arbitrary"] }
 
 [features]
 # Enables using the standard library. This is not included in the default

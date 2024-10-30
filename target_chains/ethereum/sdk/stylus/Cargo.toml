@@ -7,7 +7,7 @@ members = [
   "lib/e2e",
   "lib/e2e-proc",
   "examples/function-calls",
-  "examples/proxy-call-contracts",
+  "examples/proxy-calls",
   "benches"
 ]
 default-members = [
@@ -17,7 +17,7 @@ default-members = [
   "lib/motsu-proc",
   "lib/e2e-proc",
   "examples/function-calls",
-  "examples/proxy-call-contracts",
+  "examples/proxy-calls",
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages
