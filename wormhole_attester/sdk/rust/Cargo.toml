@@ -2,7 +2,7 @@
 name = "pyth-wormhole-attester-sdk"
 version = "0.1.2"
 authors = ["Wormhole Contributors <contact@certus.one>"]
-edition = "2018"
+edition = "2021"
 description = "Pyth to Wormhole SDK"
 
 [lib]

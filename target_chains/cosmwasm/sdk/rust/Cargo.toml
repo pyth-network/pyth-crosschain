@@ -2,7 +2,7 @@
 name = "pyth-sdk-cw"
 version = "1.2.1"
 authors = ["Pyth Data Foundation"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 homepage = "https://pyth.network"
 repository = "https://github.com/pyth-network/pyth-crosschain"
