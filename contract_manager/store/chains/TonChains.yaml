@@ -1,0 +1,5 @@
+- id: ton_testnet
+  wormholeChainName: ton_testnet
+  mainnet: false
+  rpcUrl: https://testnet.tonapi.io
+  type: TonChain
