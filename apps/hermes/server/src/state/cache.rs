@@ -25,7 +25,6 @@ use {
             HashMap,
             HashSet,
         },
-        ops::Bound,
         sync::Arc,
     },
     strum::IntoEnumIterator,
@@ -300,8 +299,8 @@ async fn retrieve_message_state(
 
                     // Get the first element that is greater than or equal to the lookup time.
                     key_cache
-                        .lower_bound(Bound::Included(&lookup_time))
-                        .peek_next()
+                        .range(lookup_time..)
+                        .next()
                         .map(|(_, v)| v)
                         .cloned()
                 }
@@ -593,7 +592,6 @@ mod test {
             vec![slightly_older_message_state]
         );
     }
-
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_fails_for_past_time() {

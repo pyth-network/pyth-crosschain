@@ -1,6 +1,3 @@
-#![feature(never_type)]
-#![feature(btree_cursors)]
-
 use {
     anyhow::Result,
     clap::{
