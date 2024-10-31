@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["GOOGLE_ANALYTICS_ID", "AMPLITUDE_API_KEY"]
+    },
+    "start:dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "start:prod": {
+      "dependsOn": ["build"],
+      "persistent": true,
+      "cache": false
+    }
+  }
+}

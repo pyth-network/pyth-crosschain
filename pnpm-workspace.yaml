@@ -31,13 +31,47 @@ packages:
   - "contract_manager"
 
 catalog:
+  "@amplitude/analytics-browser": 2.11.8
+  "@amplitude/plugin-autocapture-browser": 1.0.0
+  "@axe-core/react": 4.9.1
   "@cprussin/eslint-config": 3.0.0
   "@cprussin/jest-config": 1.4.1
   "@cprussin/prettier-config": 2.1.1
   "@cprussin/tsconfig": 3.0.1
-  "@types/react-dom": npm:types-react-dom@rc
-  "@types/react": npm:types-react@rc
+  "@next/third-parties": 15.0.2
+  "@phosphor-icons/react": 2.1.7
+  "@storybook/addon-essentials": 8.3.5
+  "@storybook/addon-styling-webpack": 1.0.0
+  "@storybook/addon-themes": 8.3.5
+  "@storybook/blocks": 8.3.5
+  "@storybook/nextjs": 8.3.5
+  "@storybook/react": 8.3.5
+  "@svgr/webpack": 8.1.0
+  "@tailwindcss/forms": 0.5.9
+  "@types/jest": 29.5.14
+  "@types/node": 22.8.2
+  "@types/react": npm:types-react@19.0.0-rc.1
+  "@types/react-dom": npm:types-react-dom@19.0.0-rc.1
+  autoprefixer: 10.4.20
+  bcp-47: 2.1.0
+  clsx: 2.1.1
+  css-loader: 7.1.2
+  eslint: 9.13.0
+  framer-motion: 11.11.10
+  jest: 29.7.0
   next: 15.0.2
+  pino: 9.5.0
+  postcss-loader: 8.1.1
+  postcss: 8.4.47
+  prettier: 3.3.3
+  react-aria-components: 1.4.0
+  react-aria: 3.35.0
   react-dom: 19.0.0-rc-603e6108-20241029
   react: 19.0.0-rc-603e6108-20241029
-  framer-motion: 11.11.10
+  storybook: 8.3.5
+  style-loader: 4.0.0
+  tailwindcss-animate: 1.0.7
+  tailwindcss-react-aria-components: 1.1.6
+  tailwindcss: 3.4.14
+  typescript: 5.6.3
+  vercel: 37.12.1

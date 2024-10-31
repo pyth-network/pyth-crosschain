@@ -1,9 +1,12 @@
 {
-  "name": "@pythnetwork/fonts",
+  "name": "@pythnetwork/app-logger",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./provider": "./src/provider.tsx"
+  },
   "scripts": {
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
@@ -12,7 +15,10 @@
     "test:types": "tsc"
   },
   "peerDependencies": {
-    "next": "catalog:"
+    "react": "catalog:"
+  },
+  "dependencies": {
+    "pino": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
@@ -20,10 +26,11 @@
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "catalog:",
+    "@types/react": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
-    "next": "catalog:",
     "prettier": "catalog:",
+    "react": "catalog:",
     "typescript": "catalog:"
   }
 }
