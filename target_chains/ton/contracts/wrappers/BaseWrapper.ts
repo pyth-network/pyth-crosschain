@@ -88,7 +88,7 @@ export class BaseWrapper implements Contract {
 
     // Create a dictionary for data sources
     const dataSourcesDict = Dictionary.empty(
-      Dictionary.Keys.Uint(32),
+      Dictionary.Keys.Uint(8),
       Dictionary.Values.Cell()
     );
     // Create a dictionary for valid data sources

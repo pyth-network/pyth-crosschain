@@ -31,8 +31,11 @@ import {
   WalletContractV4,
   ContractProvider,
   Address,
+  OpenedContract,
+  Sender,
 } from "@ton/ton";
-import { keyPairFromSecretKey } from "@ton/crypto";
+import { keyPairFromSeed } from "@ton/crypto";
+import { PythContract } from "@pythnetwork/pyth-ton-js";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -759,21 +762,44 @@ export class TonChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  async getProvider(address: string): Promise<ContractProvider> {
+  async getClient(): Promise<TonClient> {
+    // add apiKey if facing rate limit
     const client = new TonClient({
       endpoint: this.rpcUrl,
     });
+    return client;
+  }
+
+  async getContract(address: string): Promise<OpenedContract<PythContract>> {
+    const client = await this.getClient();
+    const contract = client.open(
+      PythContract.createFromAddress(Address.parse(address))
+    );
+    return contract;
+  }
+
+  async getContractProvider(address: string): Promise<ContractProvider> {
+    const client = await this.getClient();
     return client.provider(Address.parse(address));
   }
 
   async getWallet(privateKey: PrivateKey): Promise<WalletContractV4> {
-    const keyPair = keyPairFromSecretKey(Buffer.from(privateKey, "hex"));
+    const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
+    return WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+    });
+  }
+
+  async getSender(privateKey: PrivateKey): Promise<Sender> {
+    const client = await this.getClient();
+    const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
     const wallet = WalletContractV4.create({
       publicKey: keyPair.publicKey,
       workchain: 0,
     });
-
-    return wallet;
+    const provider = client.open(wallet);
+    return provider.sender(keyPair.secretKey);
   }
 
   /**
@@ -817,7 +843,7 @@ export class TonChain extends Chain {
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const wallet = await this.getWallet(privateKey);
-    const provider = await this.getProvider(wallet.address.toString());
+    const provider = await this.getContractProvider(wallet.address.toString());
     const balance = await wallet.getBalance(provider);
     return Number(balance) / 10 ** 9;
   }

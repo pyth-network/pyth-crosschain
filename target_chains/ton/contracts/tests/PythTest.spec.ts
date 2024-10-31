@@ -21,7 +21,7 @@ import {
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { parseDataSource, createAuthorizeUpgradePayload } from "./utils";
+import { createAuthorizeUpgradePayload } from "./utils";
 import {
   UniversalAddress,
   createVAA,
@@ -512,9 +512,7 @@ describe("PythTest", () => {
 
     // Check initial value (should be empty)
     let result = await pythTest.getGovernanceDataSource();
-    expect(result).toBeDefined();
-    expect(result.bits.length).toBe(0);
-    expect(result.refs.length).toBe(0);
+    expect(result).toEqual(null);
 
     // Deploy contract with initial governance data source
     await deployContract(
@@ -534,8 +532,7 @@ describe("PythTest", () => {
 
     // Check that the governance data source is set
     result = await pythTest.getGovernanceDataSource();
-    let dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Execute governance action to change data source
     await pythTest.sendExecuteGovernanceAction(
@@ -545,8 +542,7 @@ describe("PythTest", () => {
 
     // Check that the data source has changed
     result = await pythTest.getGovernanceDataSource();
-    dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
   });
 
   it("should correctly get single update fee", async () => {
@@ -674,8 +670,7 @@ describe("PythTest", () => {
     expect(initialIndex).toEqual(0); // Initial value should be 0
 
     // Get the initial governance data source
-    const initialDataSourceCell = await pythTest.getGovernanceDataSource();
-    const initialDataSource = parseDataSource(initialDataSourceCell);
+    const initialDataSource = await pythTest.getGovernanceDataSource();
     expect(initialDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Get the initial last executed governance sequence
@@ -698,8 +693,7 @@ describe("PythTest", () => {
     expect(newIndex).toEqual(1); // The new index value should match the one in the test payload
 
     // Get the new governance data source
-    const newDataSourceCell = await pythTest.getGovernanceDataSource();
-    const newDataSource = parseDataSource(newDataSourceCell);
+    const newDataSource = await pythTest.getGovernanceDataSource();
     expect(newDataSource).not.toEqual(initialDataSource); // The data source should have changed
     expect(newDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // The data source should have changed
 
@@ -743,8 +737,7 @@ describe("PythTest", () => {
     expect(index).toEqual(0); // Should still be the initial value
 
     // Verify that the governance data source hasn't changed
-    const dataSourceCell = await pythTest.getGovernanceDataSource();
-    const dataSource = parseDataSource(dataSourceCell);
+    const dataSource = await pythTest.getGovernanceDataSource();
     expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // Should still be the initial value
   });
 
@@ -981,5 +974,12 @@ describe("PythTest", () => {
 
     // Verify that the contract has not been upgraded by attempting to call the new method
     await expect(pythTest.getNewFunction()).rejects.toThrow();
+  });
+
+  it("should correctly get data sources", async () => {
+    await deployContract();
+
+    const dataSources = await pythTest.getDataSources();
+    expect(dataSources).toEqual(DATA_SOURCES);
   });
 });

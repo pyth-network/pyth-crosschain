@@ -9,7 +9,11 @@ import {
 } from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
-import { createCellChain } from "@pythnetwork/pyth-ton-js";
+import {
+  createCellChain,
+  parseDataSource,
+  parseDataSources,
+} from "@pythnetwork/pyth-ton-js";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export type PythTestConfig = {
@@ -135,7 +139,7 @@ export class PythTest extends BaseWrapper {
 
   async getGovernanceDataSource(provider: ContractProvider) {
     const result = await provider.get("test_get_governance_data_source", []);
-    return result.stack.readCell();
+    return parseDataSource(result.stack.readCell());
   }
 
   async sendExecuteGovernanceAction(
@@ -186,6 +190,11 @@ export class PythTest extends BaseWrapper {
       },
     ]);
     return result.stack.readBoolean();
+  }
+
+  async getDataSources(provider: ContractProvider) {
+    const result = await provider.get("test_get_data_sources", []);
+    return parseDataSources(result.stack.readCell());
   }
 
   async getNewFunction(provider: ContractProvider) {
