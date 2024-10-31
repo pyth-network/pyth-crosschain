@@ -4,7 +4,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["pull:env", "^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "WALLETCONNECT_PROJECT_ID",
+        "AMPLITUDE_API_KEY",
+        "GOOGLE_ANALYTICS_ID"
+      ]
     },
     "pull:env": {
       "outputs": [".env.local"],
