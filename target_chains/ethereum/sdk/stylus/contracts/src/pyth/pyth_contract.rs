@@ -1,5 +1,4 @@
 use alloy_sol_types::SolValue;
-use crate::pyth::ipyth::IPyth;
 use stylus_sdk::{abi::Bytes as AbiBytes, prelude::*, storage::TopLevelStorage};
 use alloc::vec::Vec;
 use alloy_primitives::{ FixedBytes, U256 , Bytes };
@@ -14,6 +13,49 @@ use crate::pyth::functions::{
     parse_price_feed_updates,
     parse_price_feed_updates_unique
 };
+
+pub trait IPyth {
+    type Error: Into<alloc::vec::Vec<u8>>;
+
+    fn get_price_unsafe(&mut self, id: FixedBytes<32>) -> Result<Vec<u8>, Self::Error>;
+
+    fn get_price_no_older_than(&mut self,id: FixedBytes<32>, age: U256) -> Result<Vec<u8>, Self::Error>;
+
+    fn get_ema_price_unsafe(&mut self, id: FixedBytes<32>) -> Result<Vec<u8>, Self::Error>;
+    
+    fn get_ema_price_no_older_than(&mut self, id: FixedBytes<32>, age: u8) -> Result<Vec<u8>, Self::Error>;
+
+    fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Self::Error>;
+
+    fn update_price_feeds_if_necessary(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+        price_ids: Vec<FixedBytes<32>>,
+        publish_times: Vec<u64>,
+    ) -> Result<(), Self::Error>;
+
+    fn get_update_fee(&mut self, update_data: Vec<AbiBytes>) -> Result<U256, Self::Error>;
+
+    fn parse_price_feed_updates(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+        price_ids: Vec<FixedBytes<32>>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<u8>, Self::Error>;
+
+
+    fn parse_price_feed_updates_unique(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+        price_ids: Vec<FixedBytes<32>>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<u8>, Self::Error>;
+
+
+}
+
 
 sol_storage! {
     pub struct PythContract {
@@ -34,8 +76,8 @@ impl IPyth for PythContract  {
         Ok(data)
     }
    
-    fn get_price_no_older_than(&mut self,id: FixedBytes<32>, age: u8) -> Result<Vec<u8>, Self::Error> {
-        let price = get_price_no_older_than(self, self._ipyth.get(), id,U256::from(age))?;
+    fn get_price_no_older_than(&mut self,id: FixedBytes<32>, age: U256) -> Result<Vec<u8>, Self::Error> {
+        let price = get_price_no_older_than(self, self._ipyth.get(), id,age)?;
         let data =  price.abi_encode();
         Ok(data)
     }
