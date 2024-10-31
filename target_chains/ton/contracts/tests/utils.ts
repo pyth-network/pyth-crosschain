@@ -1,19 +1,10 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { Cell, Transaction } from "@ton/core";
+import { Transaction } from "@ton/core";
 import { Buffer } from "buffer";
 
 const GOVERNANCE_MAGIC = 0x5054474d;
 const GOVERNANCE_MODULE = 1;
 const AUTHORIZE_UPGRADE_CONTRACT_ACTION = 0;
 const TARGET_CHAIN_ID = 1;
-
-// Helper function to parse DataSource from a Cell
-export function parseDataSource(cell: Cell): DataSource {
-  const slice = cell.beginParse();
-  const emitterChain = slice.loadUint(16);
-  const emitterAddress = slice.loadUint(256).toString(16).padStart(64, "0");
-  return { emitterChain, emitterAddress };
-}
 
 function computedGeneric(transaction: Transaction) {
   if (transaction.description.type !== "generic")

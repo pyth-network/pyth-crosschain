@@ -3,13 +3,26 @@ import {
   beginCell,
   Cell,
   Contract,
+  Dictionary,
   Sender,
   SendMode,
+  toNano,
 } from "@ton/core";
 import { ContractProvider } from "@ton/ton";
 
 export const PYTH_CONTRACT_ADDRESS_TESTNET =
   "EQDwGkJmcj7MMmWAHmhldnY-lAKI6hcTQ2tAEcapmwCnztQU";
+// This is defined in target_chains/ton/contracts/common/gas.fc
+export const UPDATE_PRICE_FEEDS_GAS = 390000n;
+// Current settings in basechain are as follows: 1 unit of gas costs 400 nanotons
+export const GAS_PRICE_FACTOR = 400n;
+export const BASE_UPDATE_PRICE_FEEDS_FEE =
+  UPDATE_PRICE_FEEDS_GAS * GAS_PRICE_FACTOR;
+
+export interface DataSource {
+  emitterChain: number;
+  emitterAddress: string;
+}
 
 export class PythContract implements Contract {
   constructor(
@@ -27,6 +40,23 @@ export class PythContract implements Contract {
     return result.stack.readNumber();
   }
 
+  async sendUpdateGuardianSet(
+    provider: ContractProvider,
+    via: Sender,
+    vm: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
+      .storeRef(createCellChain(vm))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
+  }
+
   async sendUpdatePriceFeeds(
     provider: ContractProvider,
     via: Sender,
@@ -40,6 +70,23 @@ export class PythContract implements Contract {
 
     await provider.internal(via, {
       value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
+  }
+
+  async sendExecuteGovernanceAction(
+    provider: ContractProvider,
+    via: Sender,
+    governanceAction: Buffer
+  ) {
+    const messageBody = beginCell()
+      .storeUint(3, 32) // OP_EXECUTE_GOVERNANCE_ACTION
+      .storeRef(createCellChain(governanceAction))
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
       sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
     });
@@ -140,6 +187,47 @@ export class PythContract implements Contract {
 
     return result.stack.readNumber();
   }
+
+  async getLastExecutedGovernanceSequence(provider: ContractProvider) {
+    const result = await provider.get(
+      "get_last_executed_governance_sequence",
+      []
+    );
+
+    return result.stack.readNumber();
+  }
+
+  async getChainId(provider: ContractProvider) {
+    const result = await provider.get("get_chain_id", []);
+
+    return result.stack.readNumber();
+  }
+
+  async getDataSources(provider: ContractProvider) {
+    const result = await provider.get("get_data_sources", []);
+    return parseDataSources(result.stack.readCell());
+  }
+
+  async getGovernanceDataSource(provider: ContractProvider) {
+    const result = await provider.get("get_governance_data_source", []);
+    return parseDataSource(result.stack.readCell());
+  }
+
+  async getGuardianSet(provider: ContractProvider, index: number) {
+    const result = await provider.get("get_guardian_set", [
+      { type: "int", value: BigInt(index) },
+    ]);
+
+    const expirationTime = result.stack.readNumber();
+    const keys = parseGuardianSetKeys(result.stack.readCell());
+    const keyCount = result.stack.readNumber();
+
+    return {
+      expirationTime,
+      keys,
+      keyCount,
+    };
+  }
 }
 
 export function createCellChain(buffer: Buffer): Cell {
@@ -181,4 +269,52 @@ function bufferToChunks(buff: Buffer, chunkSizeBytes = 127): Uint8Array[] {
   }
 
   return chunks;
+}
+
+export function parseDataSources(cell: Cell): DataSource[] {
+  const dataSources: DataSource[] = [];
+  const slice = cell.beginParse();
+  const dict = slice.loadDictDirect(
+    Dictionary.Keys.Uint(8),
+    Dictionary.Values.Cell()
+  );
+  for (const [, value] of dict) {
+    const dataSource = parseDataSource(value);
+    if (dataSource) {
+      dataSources.push(dataSource);
+    }
+  }
+  return dataSources;
+}
+
+export function parseDataSource(cell: Cell): DataSource | null {
+  const slice = cell.beginParse();
+  if (slice.remainingBits === 0) {
+    return null;
+  }
+  const emitterChain = slice.loadUint(16);
+  const emitterAddress = slice.loadUintBig(256).toString(16).padStart(64, "0");
+  return { emitterChain, emitterAddress };
+}
+
+export function parseGuardianSetKeys(cell: Cell): string[] {
+  const keys: string[] = [];
+
+  function parseCell(c: Cell) {
+    let slice = c.beginParse();
+    while (slice.remainingRefs > 0 || slice.remainingBits >= 160) {
+      if (slice.remainingBits >= 160) {
+        const bitsToSkip = slice.remainingBits - 160;
+        slice = slice.skip(bitsToSkip);
+        const key = slice.loadBits(160);
+        keys.push("0x" + key.toString());
+      }
+      if (slice.remainingRefs > 0) {
+        parseCell(slice.loadRef());
+      }
+    }
+  }
+
+  parseCell(cell);
+  return keys;
 }

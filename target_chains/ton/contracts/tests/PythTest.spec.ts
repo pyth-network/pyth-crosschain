@@ -21,13 +21,14 @@ import {
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { parseDataSource, createAuthorizeUpgradePayload } from "./utils";
+import { createAuthorizeUpgradePayload } from "./utils";
 import {
   UniversalAddress,
   createVAA,
   serialize,
 } from "@wormhole-foundation/sdk-definitions";
 import { mocks } from "@wormhole-foundation/sdk-definitions/testing";
+import { BASE_UPDATE_PRICE_FEEDS_FEE } from "@pythnetwork/pyth-ton-js";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -86,7 +87,6 @@ describe("PythTest", () => {
 
   async function deployContract(
     priceFeedId: HexString = BTC_PRICE_FEED_ID,
-    timePeriod: number = TIME_PERIOD,
     price: Price = PRICE,
     emaPrice: Price = EMA_PRICE,
     singleUpdateFee: number = SINGLE_UPDATE_FEE,
@@ -100,7 +100,6 @@ describe("PythTest", () => {
   ) {
     const config: PythTestConfig = {
       priceFeedId,
-      timePeriod,
       price,
       emaPrice,
       singleUpdateFee,
@@ -163,7 +162,7 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, price, EMA_PRICE);
 
     const result = await pythTest.getPriceNoOlderThan(
       TIME_PERIOD,
@@ -192,7 +191,7 @@ describe("PythTest", () => {
       expo: 7,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
+    await deployContract(BTC_PRICE_FEED_ID, PRICE, emaPrice);
 
     const result = await pythTest.getEmaPriceNoOlderThan(
       TIME_PERIOD,
@@ -331,7 +330,6 @@ describe("PythTest", () => {
   it("should fail to update price feeds with invalid data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -364,7 +362,7 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: staleTime,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, stalePrice, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, stalePrice, EMA_PRICE);
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
@@ -405,7 +403,7 @@ describe("PythTest", () => {
     const result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
-      156000000n + BigInt(insufficientFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
+      BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(insufficientFee)
     );
 
     // Check that the transaction did not succeed
@@ -446,7 +444,6 @@ describe("PythTest", () => {
   it("should correctly get last executed governance sequence", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -478,7 +475,6 @@ describe("PythTest", () => {
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -512,14 +508,11 @@ describe("PythTest", () => {
 
     // Check initial value (should be empty)
     let result = await pythTest.getGovernanceDataSource();
-    expect(result).toBeDefined();
-    expect(result.bits.length).toBe(0);
-    expect(result.refs.length).toBe(0);
+    expect(result).toEqual(null);
 
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -534,8 +527,7 @@ describe("PythTest", () => {
 
     // Check that the governance data source is set
     result = await pythTest.getGovernanceDataSource();
-    let dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Execute governance action to change data source
     await pythTest.sendExecuteGovernanceAction(
@@ -545,8 +537,7 @@ describe("PythTest", () => {
 
     // Check that the data source has changed
     result = await pythTest.getGovernanceDataSource();
-    dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
   });
 
   it("should correctly get single update fee", async () => {
@@ -561,7 +552,6 @@ describe("PythTest", () => {
   it("should execute set data sources governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -615,7 +605,6 @@ describe("PythTest", () => {
   it("should execute set fee governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -656,7 +645,6 @@ describe("PythTest", () => {
   it("should execute authorize governance data source transfer", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -674,8 +662,7 @@ describe("PythTest", () => {
     expect(initialIndex).toEqual(0); // Initial value should be 0
 
     // Get the initial governance data source
-    const initialDataSourceCell = await pythTest.getGovernanceDataSource();
-    const initialDataSource = parseDataSource(initialDataSourceCell);
+    const initialDataSource = await pythTest.getGovernanceDataSource();
     expect(initialDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Get the initial last executed governance sequence
@@ -698,8 +685,7 @@ describe("PythTest", () => {
     expect(newIndex).toEqual(1); // The new index value should match the one in the test payload
 
     // Get the new governance data source
-    const newDataSourceCell = await pythTest.getGovernanceDataSource();
-    const newDataSource = parseDataSource(newDataSourceCell);
+    const newDataSource = await pythTest.getGovernanceDataSource();
     expect(newDataSource).not.toEqual(initialDataSource); // The data source should have changed
     expect(newDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // The data source should have changed
 
@@ -712,7 +698,6 @@ describe("PythTest", () => {
   it("should fail when executing request governance data source transfer directly", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -743,15 +728,13 @@ describe("PythTest", () => {
     expect(index).toEqual(0); // Should still be the initial value
 
     // Verify that the governance data source hasn't changed
-    const dataSourceCell = await pythTest.getGovernanceDataSource();
-    const dataSource = parseDataSource(dataSourceCell);
+    const dataSource = await pythTest.getGovernanceDataSource();
     expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // Should still be the initial value
   });
 
   it("should fail to execute governance action with invalid governance data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -780,7 +763,6 @@ describe("PythTest", () => {
   it("should fail to execute governance action with old sequence number", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -817,7 +799,6 @@ describe("PythTest", () => {
     const invalidChainId = 999;
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -869,7 +850,6 @@ describe("PythTest", () => {
 
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -938,7 +918,6 @@ describe("PythTest", () => {
 
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -981,5 +960,12 @@ describe("PythTest", () => {
 
     // Verify that the contract has not been upgraded by attempting to call the new method
     await expect(pythTest.getNewFunction()).rejects.toThrow();
+  });
+
+  it("should correctly get data sources", async () => {
+    await deployContract();
+
+    const dataSources = await pythTest.getDataSources();
+    expect(dataSources).toEqual(DATA_SOURCES);
   });
 });

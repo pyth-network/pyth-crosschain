@@ -26,6 +26,16 @@ import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
+import {
+  TonClient,
+  WalletContractV4,
+  ContractProvider,
+  Address,
+  OpenedContract,
+  Sender,
+} from "@ton/ton";
+import { keyPairFromSeed } from "@ton/crypto";
+import { PythContract } from "@pythnetwork/pyth-ton-js";
 
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
@@ -736,5 +746,105 @@ export class StarknetChain extends Chain {
 
   getProvider(): RpcProvider {
     return new RpcProvider({ nodeUrl: this.rpcUrl });
+  }
+}
+
+export class TonChain extends Chain {
+  static type = "TonChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  async getClient(): Promise<TonClient> {
+    // add apiKey if facing rate limit
+    const client = new TonClient({
+      endpoint: this.rpcUrl,
+    });
+    return client;
+  }
+
+  async getContract(address: string): Promise<OpenedContract<PythContract>> {
+    const client = await this.getClient();
+    const contract = client.open(
+      PythContract.createFromAddress(Address.parse(address))
+    );
+    return contract;
+  }
+
+  async getContractProvider(address: string): Promise<ContractProvider> {
+    const client = await this.getClient();
+    return client.provider(Address.parse(address));
+  }
+
+  async getWallet(privateKey: PrivateKey): Promise<WalletContractV4> {
+    const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
+    return WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+    });
+  }
+
+  async getSender(privateKey: PrivateKey): Promise<Sender> {
+    const client = await this.getClient();
+    const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
+    const wallet = WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+    });
+    const provider = client.open(wallet);
+    return provider.sender(keyPair.secretKey);
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    // This might throw an error because the Fuel contract doesn't support upgrades yet (blocked on Fuel releasing Upgradeability standard)
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  getType(): string {
+    return TonChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: TonChain.type,
+    };
+  }
+
+  static fromJson(parsed: ChainConfig): TonChain {
+    if (parsed.type !== TonChain.type) throw new Error("Invalid type");
+    return new TonChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.rpcUrl
+    );
+  }
+
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const wallet = await this.getWallet(privateKey);
+    return wallet.address.toString();
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const wallet = await this.getWallet(privateKey);
+    const provider = await this.getContractProvider(wallet.address.toString());
+    const balance = await wallet.getBalance(provider);
+    return Number(balance) / 10 ** 9;
   }
 }

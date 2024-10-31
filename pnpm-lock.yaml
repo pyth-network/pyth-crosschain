@@ -530,6 +530,9 @@ importers:
       '@pythnetwork/pyth-sui-js':
         specifier: workspace:*
         version: link:../target_chains/sui/sdk/js
+      '@pythnetwork/pyth-ton-js':
+        specifier: workspace:*
+        version: link:../target_chains/ton/sdk/js
       '@pythnetwork/solana-utils':
         specifier: workspace:^
         version: link:../target_chains/solana/sdk/js/solana_utils
@@ -542,6 +545,12 @@ importers:
       '@sqds/mesh':
         specifier: ^1.0.6
         version: 1.0.6(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@ton/crypto':
+        specifier: ^3.3.0
+        version: 3.3.0
+      '@ton/ton':
+        specifier: ^15.1.0
+        version: 15.1.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
       '@types/yargs':
         specifier: ^17.0.32
         version: 17.0.32
@@ -32353,7 +32362,7 @@ snapshots:
       '@ethereumjs/tx': 4.2.0
       '@metamask/superstruct': 3.0.0
       '@noble/hashes': 1.5.0
-      '@scure/base': 1.1.7
+      '@scure/base': 1.1.9
       '@types/debug': 4.1.12
       debug: 4.3.7(supports-color@8.1.1)
       pony-cause: 2.1.11
