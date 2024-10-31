@@ -72,3 +72,14 @@ pub fn call_helper<C: SolCall>(
     C::abi_decode_returns(&res, false /* validate */)
         .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
 }
+
+/// Decodes the data returned by an external contract call
+pub fn decode_helper<T: SolType>(data: &[u8]) -> Result<T::RustType, Vec<u8>> {
+    T::abi_decode(data, false /* validate */)
+        .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())
+}
+
+/// Encodes the data to be returned by an external contract call
+pub fn encode_helper<T: SolType>(data: T::RustType) -> Vec<u8> {
+    T::abi_encode(&data)
+}
