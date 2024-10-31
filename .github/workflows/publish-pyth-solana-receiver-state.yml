@@ -14,11 +14,11 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.82.0
           default: true
           profile: minimal
 
-      - run: cargo +stable-x86_64-unknown-linux-gnu publish --token ${CARGO_REGISTRY_TOKEN}
+      - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         working-directory: "target_chains/solana/pyth_solana_receiver_sdk"

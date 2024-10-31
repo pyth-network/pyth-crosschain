@@ -261,7 +261,7 @@ fn update_price_feeds(
     data: &[Binary],
 ) -> StdResult<Response<MsgWrapper>> {
     if !is_fee_sufficient(&deps.as_ref(), info, data)? {
-        Err(PythContractError::InsufficientFee)?;
+        return Err(PythContractError::InsufficientFee)?;
     }
 
     let (num_total_attestations, total_new_feeds) = apply_updates(&mut deps, &env, data)?;
@@ -308,7 +308,7 @@ fn execute_governance_instruction(
     // Governance messages must be applied in order. This check prevents replay attacks where
     // previous messages are re-applied.
     if vaa.sequence <= state.governance_sequence_number {
-        Err(PythContractError::OldGovernanceMessage)?;
+        return Err(PythContractError::OldGovernanceMessage)?;
     } else {
         updated_config.governance_sequence_number = vaa.sequence;
     }
@@ -320,13 +320,13 @@ fn execute_governance_instruction(
     // Check that the instruction is intended for this chain.
     // chain_id = 0 means the instruction applies to all chains
     if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
-        Err(PythContractError::InvalidGovernancePayload)?;
+        return Err(PythContractError::InvalidGovernancePayload)?;
     }
 
     // Check that the instruction is intended for this target chain contract (as opposed to
     // other Pyth contracts that may live on the same chain).
     if instruction.module != GovernanceModule::Target {
-        Err(PythContractError::InvalidGovernancePayload)?;
+        return Err(PythContractError::InvalidGovernancePayload)?;
     }
 
     let response = match instruction.action {
@@ -463,7 +463,7 @@ fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult
         chain_id: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
-        Err(PythContractError::InvalidUpdateEmitter)?;
+        return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
 }
@@ -475,7 +475,7 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
         chain_id: vaa.emitter_chain,
     };
     if state.governance_source != vaa_data_source {
-        Err(PythContractError::InvalidUpdateEmitter)?;
+        return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
 }
@@ -533,7 +533,7 @@ fn parse_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<Price
             for update in updates {
                 let message_vec = Vec::from(update.message);
                 if !root.check(update.proof, &message_vec) {
-                    Err(PythContractError::InvalidMerkleProof)?;
+                    return Err(PythContractError::InvalidMerkleProof)?;
                 }
 
                 let msg = from_slice::<BigEndian, Message>(&message_vec)
@@ -683,7 +683,7 @@ pub fn parse_price_feed_updates(
 ) -> StdResult<Response<MsgWrapper>> {
     let _config = config_read(deps.storage).load()?;
     if !is_fee_sufficient(&deps.as_ref(), info, updates)? {
-        Err(PythContractError::InsufficientFee)?;
+        return Err(PythContractError::InsufficientFee)?;
     }
     let mut found_feeds = 0;
     let mut results: Vec<(Identifier, Option<PriceFeed>)> =
@@ -709,7 +709,7 @@ pub fn parse_price_feed_updates(
         }
     }
     if found_feeds != price_feeds.len() {
-        Err(PythContractError::InvalidUpdatePayload)?;
+        return Err(PythContractError::InvalidUpdatePayload)?;
     }
 
     let _unwrapped_feeds = results
@@ -1894,7 +1894,7 @@ mod test {
             })
             .unwrap();
 
-        let updates = [Binary::from([1u8]), Binary::from([2u8])];
+        let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
 
         assert_eq!(
             get_update_fee(&deps.as_ref(), &updates[0..0]),
