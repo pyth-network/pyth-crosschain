@@ -8,11 +8,9 @@ use alloy::{
     sol_types::{sol_data::FixedBytes, SolCall, SolConstructor},
 };
 use e2e::{receipt, Account};
-use dotenv;
 
 use crate::{
-    report::{ContractReport, FunctionReport},
-    CacheOpt,
+    env, report::{ContractReport, FunctionReport}, CacheOpt
 };
 
 sol!(
@@ -92,7 +90,7 @@ async fn deploy(
     account: &Account,
     cache_opt: CacheOpt,
 ) -> eyre::Result<Address> {
-    let pyth_addr = dotenv::var("MOCK_PYTH_ADDRESS")?;
+    let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
     let id= "ETH";
     let mut bytes = [0u8; 32];
@@ -101,5 +99,5 @@ async fn deploy(
     println!("pyth address: {address:?} price_id: {price_id:?}"); 
     let args = ProxyCallsExample::constructorCall { _pythAddress: address, _priceId: price_id };
     let args = alloy::hex::encode(args.abi_encode());
-    crate::deploy(account, "proxy_calls", Some(args), cache_opt).await
+    crate::deploy(account, "proxy-calls", Some(args), cache_opt).await
 }

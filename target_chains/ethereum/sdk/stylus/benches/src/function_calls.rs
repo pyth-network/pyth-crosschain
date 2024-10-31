@@ -5,20 +5,21 @@ use alloy::{
     primitives::{Address, FixedBytes as TypeFixedBytes, fixed_bytes},
     providers::ProviderBuilder,
     sol,
-    sol_types::{sol_data::FixedBytes, SolCall, SolConstructor},
+    sol_types::{SolCall, SolConstructor},
 };
 use e2e::{receipt, Account};
-use dotenv;
 
 use crate::{
-    report::{ContractReport, FunctionReport},
-    CacheOpt,
+    env, report::{ContractReport, FunctionReport}, CacheOpt
 };
 
 sol!(
     #[sol(rpc)]
     contract FunctionCall{
-        function getPriceNoOlderThan() external view;
+        function getPriceUnsafe() external ;
+        function getEmaPriceUnsafe() external ;
+        function getPriceNoOlderThan() external ;
+        function getEmaPriceNoOlderThan() external;
     }
 );
 
@@ -60,26 +61,20 @@ pub async fn run_with(
     // let token_2 = uint!(2_U256);
     // let token_3 = uint!(3_U256);
     // let token_4 = uint!(4_U256);
-
-    let _ = receipt!(contract.getPriceNoOlderThan())?;
-    // let _ = receipt!(contract.mint(alice_addr, token_3))?;
+    
+    println!("contract: {contract:?}");
+    let _ = receipt!(contract.getPriceUnsafe())?;
+    let _ = receipt!(contract.getEmaPriceUnsafe())?;
     // let _ = receipt!(contract.mint(alice_addr, token_4))?;
 
     // IMPORTANT: Order matters!
     use FunctionCall::*;
     //#[rustfmt::skip]
     let receipts = vec![
+        (getPriceUnsafeCall::SIGNATURE, receipt!(contract.getPriceUnsafe())?),
+        (getEmaPriceUnsafeCall::SIGNATURE, receipt!(contract.getEmaPriceUnsafe())?),
         (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan())?),
-        // (approveCall::SIGNATURE, receipt!(contract.approve(bob_addr, token_2))?),
-        // (getApprovedCall::SIGNATURE, receipt!(contract.getApproved(token_2))?),
-        // (isApprovedForAllCall::SIGNATURE, receipt!(contract.isApprovedForAll(alice_addr, bob_addr))?),
-        // (ownerOfCall::SIGNATURE, receipt!(contract.ownerOf(token_2))?),
-        // (safeTransferFromCall::SIGNATURE, receipt!(contract.safeTransferFrom(alice_addr, bob_addr, token_3))?),
-        // (setApprovalForAllCall::SIGNATURE, receipt!(contract.setApprovalForAll(bob_addr, true))?),
-        // (totalSupplyCall::SIGNATURE, receipt!(contract.totalSupply())?),
-        // (transferFromCall::SIGNATURE, receipt!(contract.transferFrom(alice_addr, bob_addr, token_4))?),
-        // (mintCall::SIGNATURE, receipt!(contract.mint(alice_addr, token_1))?),
-        // (burnCall::SIGNATURE, receipt!(contract.burn(token_1))?),
+        (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan())?),
     ];
 
     receipts
@@ -92,7 +87,7 @@ async fn deploy(
     account: &Account,
     cache_opt: CacheOpt,
 ) -> eyre::Result<Address> {
-    let pyth_addr = dotenv::var("MOCK_PYTH_ADDRESS")?;
+    let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
     let id= "ETH";
     let mut bytes = [0u8; 32];
@@ -101,5 +96,5 @@ async fn deploy(
     println!("pyth address: {address:?} price_id: {price_id:?}"); 
     let args = FunctionCallsExample::constructorCall { _pythAddress: address, _priceId: price_id };
     let args = alloy::hex::encode(args.abi_encode());
-    crate::deploy(account, "function_calls", Some(args), cache_opt).await
+    crate::deploy(account, "function-calls", Some(args), cache_opt).await
 }

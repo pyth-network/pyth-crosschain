@@ -2,8 +2,8 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use alloy_primitives::Uint;
-use stylus_sdk::prelude::{entrypoint,public, sol_storage};
+use alloy_primitives::U256;
+use stylus_sdk::{console, prelude::{entrypoint,public, sol_storage}};
 use pyth_stylus::pyth::{functions::{
     get_price_no_older_than, 
     get_ema_price_no_older_than, 
@@ -34,9 +34,21 @@ sol_storage! {
 
 #[public]
 impl FunctionCallsExample {
+    pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get());
+       Ok(())
+    }
+
+    pub fn get_ema_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get());
+       Ok(())
+    }
     pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let price =   get_price_no_older_than(self, self.pyth_address.get(),self.price_id.get() ,Uint::from(1047483647))?;
-       self.price.set(price);
+       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000));
+       Ok(())
+    }
+    pub fn get_ema_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_ema_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000));
        Ok(())
     }
 }
