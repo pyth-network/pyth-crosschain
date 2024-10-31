@@ -12,11 +12,7 @@
       "cache": false
     },
     "start:dev": {
-      "dependsOn": [
-        "pull:env",
-        "@pythnetwork/hermes-client#build",
-        "@pythnetwork/solana-utils#build"
-      ],
+      "dependsOn": ["pull:env", "^build"],
       "persistent": true,
       "cache": false
     },

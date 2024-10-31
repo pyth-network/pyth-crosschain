@@ -13,7 +13,7 @@
     "test:types": "tsc"
   },
   "peerDependencies": {
-    "react": "^18.3.1"
+    "react": "catalog:"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -21,10 +21,10 @@
     "react-aria-components": "^1.4.0"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "^3.0.0",
-    "@cprussin/jest-config": "^1.4.1",
-    "@cprussin/prettier-config": "^2.1.1",
-    "@cprussin/tsconfig": "^3.0.1",
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
     "@phosphor-icons/react": "^2.1.7",
     "@pythnetwork/fonts": "workspace:^",
     "@storybook/addon-essentials": "^8.3.5",
@@ -35,7 +35,7 @@
     "@storybook/react": "^8.3.5",
     "@tailwindcss/forms": "^0.5.9",
     "@types/jest": "^29.5.13",
-    "@types/react": "^18.3.11",
+    "@types/react": "catalog:",
     "autoprefixer": "^10.4.20",
     "css-loader": "^7.1.2",
     "eslint": "^9.12.0",

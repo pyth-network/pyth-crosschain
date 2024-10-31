@@ -1,7 +1,7 @@
 import { sans } from "@pythnetwork/fonts";
 import { withThemeByClassName } from "@storybook/addon-themes";
 import type { Preview, Decorator } from "@storybook/react";
-import { useEffect } from "react";
+import { useEffect, type ComponentType } from "react";
 
 import "./tailwind.css";
 
@@ -14,9 +14,8 @@ const preview = {
 
 export default preview;
 
-const withRootClasses =
-  (...classes: string[]): Decorator =>
-  (storyFn) => {
+const withRootClasses = (...classes: string[]): Decorator => {
+  const WithRootClasses = (Story: ComponentType) => {
     useEffect(() => {
       const root = document.querySelector("html");
       const classList = classes
@@ -31,8 +30,10 @@ const withRootClasses =
         return;
       }
     }, []);
-    return storyFn();
+    return <Story />;
   };
+  return WithRootClasses;
+};
 
 export const decorators: Decorator[] = [
   withRootClasses("font-sans antialiased", sans.variable),

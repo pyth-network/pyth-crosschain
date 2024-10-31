@@ -1,4 +1,4 @@
-import { type ComponentProps, Fragment } from "react";
+import { type ComponentProps } from "react";
 import MarkdownComponent from "react-markdown";
 
 import { MARKDOWN_COMPONENTS } from "../../markdown-components";
@@ -12,7 +12,7 @@ export const Markdown = ({ inline, ...props }: Props) =>
     <MarkdownComponent
       components={{
         ...MARKDOWN_COMPONENTS,
-        p: ({ children }) => <Fragment>{children}</Fragment>,
+        p: ({ children }) => <>{children}</>,
       }}
       {...props}
     />
