@@ -16,11 +16,8 @@ deployed_to=$(forge create ./src/MockPyth.sol:MockPythSample \
   --private-key $PRIVATE_KEY \
   --constructor-args 100 100 | grep -oP '(?<=Deployed to: )0x[a-fA-F0-9]{40}')
 
+export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
-# Output the captured address
-echo "Mock Pyth Deployed to address: $deployed_to"
-echo "MOCK_PYTH_ADDRESS=$deployed_to" > .env
-echo "Deployed address saved to .env file."
 
 # Run e2e tests
 NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}

@@ -19,16 +19,13 @@ deployed_to=$(forge create ./src/MockPyth.sol:MockPythSample \
   --private-key $PRIVATE_KEY \
   --constructor-args 100 100 | grep -oP '(?<=Deployed to: )0x[a-fA-F0-9]{40}')
 
+
+export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
 # Output the captured address
-echo "Mock Pyth Deployed to address: $deployed_to"
-echo "MOCK_PYTH_ADDRESS=$deployed_to" > .env
-echo "Deployed address saved to .env file."
 
 NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
 cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
-
-export RPC_URL=http://localhost:8547
 
 # No need to compile benchmarks with `--release`
 # since this only runs the benchmarking code and the contracts have already been compiled with `--release`
