@@ -26,7 +26,7 @@ slice read_and_verify_header(slice data) {
     throw_if(ERROR_INVALID_MINOR_VERSION, minor_version < MINIMUM_ALLOWED_MINOR_VERSION);
     int trailing_header_size = data~load_uint(8);
     ;; skip trailing headers
-    data~skip_bits(trailing_header_size);
+    data~skip_bits(trailing_header_size * 8);
     int update_type = data~load_uint(8);
     throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
     return data;
