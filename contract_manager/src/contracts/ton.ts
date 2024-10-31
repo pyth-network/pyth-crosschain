@@ -4,7 +4,10 @@ import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { TokenQty } from "../token";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 import { Address, OpenedContract } from "@ton/ton";
-import { PythContract } from "@pythnetwork/pyth-ton-js";
+import {
+  BASE_UPDATE_PRICE_FEEDS_FEE,
+  PythContract,
+} from "@pythnetwork/pyth-ton-js";
 
 export class TonWormholeContract extends WormholeContract {
   static type = "TonWormholeContract";
@@ -234,8 +237,8 @@ export class TonPriceFeedContract extends PriceFeedContract {
       await contract.sendUpdatePriceFeeds(
         sender,
         vaa,
-        156000000n + BigInt(fee)
-      ); // 156000000 = 390000 (estimated gas used for the transaction, this is defined in target_chains/ton/contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
+        BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(fee)
+      );
     }
 
     const txDetails = await client.getTransactions(wallet.address, {

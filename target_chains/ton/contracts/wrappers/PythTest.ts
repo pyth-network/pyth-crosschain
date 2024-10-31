@@ -18,7 +18,6 @@ import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
-  timePeriod: number;
   price: Price;
   emaPrice: Price;
   singleUpdateFee: number;

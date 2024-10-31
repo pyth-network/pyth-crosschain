@@ -26,7 +26,6 @@ export class BaseWrapper implements Contract {
 
   static createInitData(config: {
     priceFeedId?: HexString;
-    timePeriod?: number;
     price?: Price;
     emaPrice?: Price;
     singleUpdateFee?: number;
@@ -43,12 +42,7 @@ export class BaseWrapper implements Contract {
       Dictionary.Values.Cell()
     );
 
-    if (
-      config.priceFeedId &&
-      config.price &&
-      config.emaPrice &&
-      config.timePeriod
-    ) {
+    if (config.priceFeedId && config.price && config.emaPrice) {
       const priceCell = beginCell()
         .storeInt(
           config.price.getPriceAsNumberUnchecked() * 10 ** -config.price.expo,
@@ -80,7 +74,6 @@ export class BaseWrapper implements Contract {
       const priceFeedCell = beginCell()
         .storeRef(priceCell)
         .storeRef(emaPriceCell)
-        .storeUint(config.timePeriod, 32)
         .endCell();
 
       priceDict.set(BigInt(config.priceFeedId), priceFeedCell);

@@ -28,6 +28,7 @@ import {
   serialize,
 } from "@wormhole-foundation/sdk-definitions";
 import { mocks } from "@wormhole-foundation/sdk-definitions/testing";
+import { BASE_UPDATE_PRICE_FEEDS_FEE } from "@pythnetwork/pyth-ton-js";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -86,7 +87,6 @@ describe("PythTest", () => {
 
   async function deployContract(
     priceFeedId: HexString = BTC_PRICE_FEED_ID,
-    timePeriod: number = TIME_PERIOD,
     price: Price = PRICE,
     emaPrice: Price = EMA_PRICE,
     singleUpdateFee: number = SINGLE_UPDATE_FEE,
@@ -100,7 +100,6 @@ describe("PythTest", () => {
   ) {
     const config: PythTestConfig = {
       priceFeedId,
-      timePeriod,
       price,
       emaPrice,
       singleUpdateFee,
@@ -163,7 +162,7 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, price, EMA_PRICE);
 
     const result = await pythTest.getPriceNoOlderThan(
       TIME_PERIOD,
@@ -192,7 +191,7 @@ describe("PythTest", () => {
       expo: 7,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
+    await deployContract(BTC_PRICE_FEED_ID, PRICE, emaPrice);
 
     const result = await pythTest.getEmaPriceNoOlderThan(
       TIME_PERIOD,
@@ -331,7 +330,6 @@ describe("PythTest", () => {
   it("should fail to update price feeds with invalid data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -364,7 +362,7 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: staleTime,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, stalePrice, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, stalePrice, EMA_PRICE);
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
@@ -405,7 +403,7 @@ describe("PythTest", () => {
     const result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
-      156000000n + BigInt(insufficientFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
+      BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(insufficientFee)
     );
 
     // Check that the transaction did not succeed
@@ -446,7 +444,6 @@ describe("PythTest", () => {
   it("should correctly get last executed governance sequence", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -478,7 +475,6 @@ describe("PythTest", () => {
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -517,7 +513,6 @@ describe("PythTest", () => {
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -557,7 +552,6 @@ describe("PythTest", () => {
   it("should execute set data sources governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -602,16 +596,14 @@ describe("PythTest", () => {
 
     // Verify that the old data source is no longer valid
     const oldDataSource = DATA_SOURCES[0];
-    const oldDataSourceIsValid = await pythTest.getIsValidDataSource(
-      oldDataSource
-    );
+    const oldDataSourceIsValid =
+      await pythTest.getIsValidDataSource(oldDataSource);
     expect(oldDataSourceIsValid).toBe(false);
   });
 
   it("should execute set fee governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -652,7 +644,6 @@ describe("PythTest", () => {
   it("should execute authorize governance data source transfer", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -706,7 +697,6 @@ describe("PythTest", () => {
   it("should fail when executing request governance data source transfer directly", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -744,7 +734,6 @@ describe("PythTest", () => {
   it("should fail to execute governance action with invalid governance data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -773,7 +762,6 @@ describe("PythTest", () => {
   it("should fail to execute governance action with old sequence number", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -810,7 +798,6 @@ describe("PythTest", () => {
     const invalidChainId = 999;
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -862,7 +849,6 @@ describe("PythTest", () => {
 
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -931,7 +917,6 @@ describe("PythTest", () => {
 
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
