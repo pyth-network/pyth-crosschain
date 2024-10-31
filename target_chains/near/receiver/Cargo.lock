@@ -1759,9 +1759,9 @@ dependencies = [
 
 [[package]]
 name = "near-sandbox-utils"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4b2da180a368a12da1949e9940af2457cbce83acb85743b8834b6c9b4111e9f"
+checksum = "7479b0a2c52890000d410c6e4ba4f851334280530fa7446b78bcaf4683fe69b0"
 dependencies = [
  "anyhow",
  "async-process",
