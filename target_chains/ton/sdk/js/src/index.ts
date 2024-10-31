@@ -208,7 +208,7 @@ export class PythContract implements Contract {
   }
 
   async getGuardianSet(provider: ContractProvider, index: number) {
-    const result = await provider.get("test_get_guardian_set", [
+    const result = await provider.get("get_guardian_set", [
       { type: "int", value: BigInt(index) },
     ]);
 
