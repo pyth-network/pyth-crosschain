@@ -29,3 +29,15 @@ packages:
   - "target_chains/ton/contracts"
   - "target_chains/ton/sdk/js"
   - "contract_manager"
+
+catalog:
+  "@cprussin/eslint-config": 3.0.0
+  "@cprussin/jest-config": 1.4.1
+  "@cprussin/prettier-config": 2.1.1
+  "@cprussin/tsconfig": 3.0.1
+  "@types/react-dom": npm:types-react-dom@rc
+  "@types/react": npm:types-react@rc
+  next: 15.0.2
+  react-dom: 19.0.0-rc-603e6108-20241029
+  react: 19.0.0-rc-603e6108-20241029
+  framer-motion: 11.11.10

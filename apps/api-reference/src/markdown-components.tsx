@@ -31,6 +31,9 @@ export const MARKDOWN_COMPONENTS = {
         </Code>
       );
     } else {
+      // @ts-expect-error react-markdown doesn't officially support react 19
+      // yet; there's no issues here in practice but the types don't currently
+      // unify
       return <pre {...props} />;
     }
   },

@@ -45,7 +45,7 @@ export type PriceRawConfig = {
 }
 
 export const usePyth = (): PythHookData => {
-  const connectionRef = useRef<Connection>()
+  const connectionRef = useRef<Connection | undefined>(undefined)
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
   const [rawConfig, setRawConfig] = useState<RawConfig>({ mappingAccounts: [] })
