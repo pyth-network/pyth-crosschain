@@ -1,12 +1,10 @@
 import clsx from "clsx";
-import type { ComponentProps } from "react";
-import { Checkbox as BaseCheckbox } from "react-aria-components";
+import {
+  Checkbox as BaseCheckbox,
+  type CheckboxProps,
+} from "react-aria-components";
 
-export const Checkbox = ({
-  children,
-  className,
-  ...props
-}: ComponentProps<typeof BaseCheckbox>) => (
+export const Checkbox = ({ children, className, ...props }: CheckboxProps) => (
   <BaseCheckbox
     className={clsx(
       "group/checkbox inline-flex cursor-pointer flex-row gap-2 py-1 text-sm data-[disabled]:cursor-not-allowed",

@@ -1,0 +1,3 @@
+{
+  "extends": "@cprussin/tsconfig/react.json"
+}

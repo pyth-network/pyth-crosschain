@@ -1,14 +1,16 @@
 import clsx from "clsx";
-import type { ComponentProps } from "react";
 import {
+  type LabelProps,
+  type TextProps,
+  type RadioGroupProps as BaseRadioGroupProps,
   RadioGroup as BaseRadioGroup,
   Label,
   Text,
 } from "react-aria-components";
 
-type CheckboxGroupProps = ComponentProps<typeof BaseRadioGroup> & {
-  label: ComponentProps<typeof Label>["children"];
-  description?: ComponentProps<typeof Text>["children"] | undefined;
+type CheckboxGroupProps = BaseRadioGroupProps & {
+  label: LabelProps["children"];
+  description?: TextProps["children"] | undefined;
 };
 
 export const RadioGroup = ({
