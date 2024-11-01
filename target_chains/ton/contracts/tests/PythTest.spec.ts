@@ -28,7 +28,7 @@ import {
   serialize,
 } from "@wormhole-foundation/sdk-definitions";
 import { mocks } from "@wormhole-foundation/sdk-definitions/testing";
-import { BASE_UPDATE_PRICE_FEEDS_FEE } from "@pythnetwork/pyth-ton-js";
+import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -375,10 +375,23 @@ describe("PythTest", () => {
 
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
 
-    const result = await pythTest.sendUpdatePriceFeeds(
+    let result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
       toNano("0.1") // Insufficient gas
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
+    });
+
+    result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      calculateUpdatePriceFeedsFee(1n) // Send enough gas for 1 update instead of 2
     );
 
     expect(result.transactions).toHaveTransaction({
@@ -403,7 +416,7 @@ describe("PythTest", () => {
     const result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
-      BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(insufficientFee)
+      calculateUpdatePriceFeedsFee(2n) + BigInt(insufficientFee)
     );
 
     // Check that the transaction did not succeed

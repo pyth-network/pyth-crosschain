@@ -172,7 +172,10 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
 
     int num_updates = cs~load_uint(8);
     int update_fee = single_update_fee * num_updates;
-    int compute_fee = get_compute_fee(WORKCHAIN, UPDATE_PRICE_FEEDS_GAS);
+    int compute_fee = get_compute_fee(
+        WORKCHAIN,
+        UPDATE_PRICE_FEEDS_BASE_GAS + (UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * num_updates)
+    );
     throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
     int remaining_msg_value = msg_value - compute_fee;
 
