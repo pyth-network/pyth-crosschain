@@ -12,14 +12,14 @@ use crate::pyth::types::{
     Price,
     PriceFeed
 };
-use crate::utils::helpers::{call_helper, delegate_call_helper};
+use crate::utils::helpers::{call_helper, delegate_call_helper, static_call_helper};
 use alloc::vec::Vec;
-use stylus_sdk::storage::TopLevelStorage;
+use stylus_sdk::{storage::TopLevelStorage, console};
 use alloy_primitives::{ Address, FixedBytes, U256, Bytes};
 
 
 pub fn get_price_no_older_than(storage: &mut impl TopLevelStorage,pyth_address: Address,id: FixedBytes<32>, age:U256) -> Result<Price, Vec<u8>> {
-        let price_call = call_helper::<getPriceNoOlderThanCall>(storage, pyth_address, (id,age,))?;
+        let price_call = call_helper::<getPriceNoOlderThanCall>(storage, pyth_address, (id,age,),)?;
         Ok(price_call.price)
 }
 
@@ -39,9 +39,10 @@ pub fn get_ema_price_no_older_than(storage: &mut impl TopLevelStorage,pyth_addre
         Ok(ema_price.price)
 }
 
-pub fn get_price_unsafe(storage: &mut impl TopLevelStorage,pyth_address: Address,id: FixedBytes<32>) -> Result<Price, Vec<u8>> {
+pub fn get_price_unsafe(storage: &mut impl TopLevelStorage,pyth_address: Address,id: FixedBytes<32>) -> Result<Price, Vec<u8>> { 
         let price = call_helper::<getPriceUnsafeCall>(storage, pyth_address, (id,))?;
-        Ok(price.price)
+        let price = Price{price: price._0, conf: price._1, expo: price._2, publish_time: price._3};
+        Ok(price)
 }
 
 pub fn get_valid_time_period(storage: &mut impl TopLevelStorage,pyth_address: Address) -> Result<U256, Vec<u8>> {

@@ -68,94 +68,92 @@ sol! {
         Price price;
         Price ema_price;
     }
-   
-    // Function call selector: Fetches the price associated with the given ID without validation.
-    // Returns the raw `Price` data for the specified `bytes32` ID, acting as a return call selector. 
-    function getPriceUnsafe(bytes32 id) external view returns (Price memory price);
+     // Function call selector: Fetches the price associated with the given ID without validation.
+        // Returns the raw `Price` data for the specified `bytes32` ID, acting as a return call selector. 
+        function getPriceUnsafe(bytes32 id) external view returns (int64,uint64,int32,uint);
 
-    // Function call selector: Retrieves the price associated with the given ID 
-    // ensuring that the price is not older than the specified age in seconds.
-    // Returns the `Price` data for the specified `bytes32` ID.
-    function getPriceNoOlderThan(
-        bytes32 id,
-        uint age
-    ) external view returns (Price memory price);
+        // Function call selector: Retrieves the price associated with the given ID 
+        // ensuring that the price is not older than the specified age in seconds.
+        // Returns the `Price` data for the specified `bytes32` ID.
+        function getPriceNoOlderThan(
+            bytes32 id,
+            uint age
+        ) external view returns (Price memory price);
 
-    // Function call selector: Fetches the Exponential Moving Average (EMA) price 
-    // associated with the given ID without validation. 
-    // Returns the raw `Price` data for the specified `bytes32` ID, acting as a return call selector. 
-    function getEmaPriceUnsafe(
+        // Function call selector: Fetches the Exponential Moving Average (EMA) price 
+        // associated with the given ID without validation. 
+        // Returns the raw `Price` data for the specified `bytes32` ID, acting as a return call selector. 
+        function getEmaPriceUnsafe(
+            bytes32 id
+        ) external view returns (Price memory price);
+
+        // Function call selector: Retrieves the EMA price associated with the given ID 
+        // ensuring that the price is not older than the specified age in seconds.
+        // Returns the `Price` data for the specified `bytes32` ID.
+        function getEmaPriceNoOlderThan(
+            bytes32 id,
+            uint age
+        ) external view returns (Price memory price);
+
+        // Function call selector: Updates multiple price feeds using the provided update data.
+        // Accepts an array of `bytes` containing update data and processes the updates.
+        function updatePriceFeeds(bytes[] calldata updateData) external payable;
+
+        // Function call selector: Updates multiple price feeds only if necessary based on the provided conditions.
+        // Accepts arrays of `bytes`, `bytes32`, and `uint64` to check against existing feeds 
+        // and processes the updates if conditions are met.
+        function updatePriceFeedsIfNecessary(
+            bytes[] calldata updateData,
+            bytes32[] calldata priceIds,
+            uint64[] calldata publishTimes
+        ) external payable;
+
+        // Function call selector: Calculates the fee amount required to update price feeds
+        // based on the provided update data.
+        // Returns the fee amount as a `uint`.
+        function getUpdateFee(
+            bytes[] calldata updateData
+        ) external view returns (uint feeAmount);
+
+        // Function call selector: Parses updates from the provided data for multiple price feeds.
+        // Accepts arrays of `bytes` and `bytes32`, along with publish time constraints,
+        // and returns an array of `PriceFeed` structs containing the parsed updates.
+        function parsePriceFeedUpdates(
+            bytes[] calldata updateData,
+            bytes32[] calldata priceIds,
+            uint64 minPublishTime,
+            uint64 maxPublishTime
+        ) external payable returns (PriceFeed[] memory priceFeeds);
+
+        // Function call selector: Parses updates from the provided data for unique price feeds.
+        // Accepts arrays of `bytes` and `bytes32`, along with publish time constraints,
+        // and returns an array of unique `PriceFeed` structs containing the parsed updates.
+        function parsePriceFeedUpdatesUnique(
+            bytes[] calldata updateData,
+            bytes32[] calldata priceIds,
+            uint64 minPublishTime,
+            uint64 maxPublishTime
+        ) external payable returns (PriceFeed[] memory priceFeeds);
+
+        // Function call selector: Queries the price feed for a given ID.
+        // Returns an array of `PriceFeed` structs associated with the specified `bytes32` ID.
+        function queryPriceFeed(
+            bytes32 id
+        ) public view virtual returns (PriceFeed[] memory priceFeeds);
+
+        // Function call selector: Checks if a price feed exists for the given ID.
+        // Returns an array of `PriceFeed` structs if it exists for the specified `bytes32` ID.
+        function priceFeedExists(
         bytes32 id
-    ) external view returns (Price memory price);
+        ) public view virtual returns (PriceFeed[] memory priceFeeds);
 
-    // Function call selector: Retrieves the EMA price associated with the given ID 
-    // ensuring that the price is not older than the specified age in seconds.
-    // Returns the `Price` data for the specified `bytes32` ID.
-    function getEmaPriceNoOlderThan(
-        bytes32 id,
-        uint age
-    ) external view returns (Price memory price);
-
-    // Function call selector: Updates multiple price feeds using the provided update data.
-    // Accepts an array of `bytes` containing update data and processes the updates.
-    function updatePriceFeeds(bytes[] calldata updateData) external payable;
-
-    // Function call selector: Updates multiple price feeds only if necessary based on the provided conditions.
-    // Accepts arrays of `bytes`, `bytes32`, and `uint64` to check against existing feeds 
-    // and processes the updates if conditions are met.
-    function updatePriceFeedsIfNecessary(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64[] calldata publishTimes
-    ) external payable;
-
-    // Function call selector: Calculates the fee amount required to update price feeds
-    // based on the provided update data.
-    // Returns the fee amount as a `uint`.
-    function getUpdateFee(
-        bytes[] calldata updateData
-    ) external view returns (uint feeAmount);
-
-    // Function call selector: Parses updates from the provided data for multiple price feeds.
-    // Accepts arrays of `bytes` and `bytes32`, along with publish time constraints,
-    // and returns an array of `PriceFeed` structs containing the parsed updates.
-    function parsePriceFeedUpdates(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    ) external payable returns (PriceFeed[] memory priceFeeds);
-
-    // Function call selector: Parses updates from the provided data for unique price feeds.
-    // Accepts arrays of `bytes` and `bytes32`, along with publish time constraints,
-    // and returns an array of unique `PriceFeed` structs containing the parsed updates.
-    function parsePriceFeedUpdatesUnique(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    ) external payable returns (PriceFeed[] memory priceFeeds);
-
-    // Function call selector: Queries the price feed for a given ID.
-    // Returns an array of `PriceFeed` structs associated with the specified `bytes32` ID.
-    function queryPriceFeed(
-        bytes32 id
-    ) public view virtual returns (PriceFeed[] memory priceFeeds);
-
-    // Function call selector: Checks if a price feed exists for the given ID.
-    // Returns an array of `PriceFeed` structs if it exists for the specified `bytes32` ID.
-    function priceFeedExists(
-    bytes32 id
-    ) public view virtual returns (PriceFeed[] memory priceFeeds);
-
-    // Function call selector: Retrieves the valid time period for price feeds.
-    // Returns the valid time period as a `uint`.
-    function getValidTimePeriod() 
-        public 
-        view 
-        virtual 
-        returns (uint validTimePeriod);
-
+        // Function call selector: Retrieves the valid time period for price feeds.
+        // Returns the valid time period as a `uint`.
+        function getValidTimePeriod() 
+            public 
+            view 
+            virtual 
+            returns (uint validTimePeriod);
 }
 
 impl StoragePrice {

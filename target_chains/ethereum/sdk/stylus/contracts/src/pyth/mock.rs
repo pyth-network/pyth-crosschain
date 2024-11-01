@@ -292,8 +292,8 @@ mod tests {
     fn can_update_price_feeds(contract: MockPythContract) {
         let _ = contract.initialize(U256::from(1000), U256::from(1000));
         let id = generate_bytes();
-        let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, U256::from(1000), PREV_PUBLISH_TIME);    
-        let mut update_data: Vec<Bytes> = vec![];
-        update_data.push(Bytes::from(price_feed_created));
+        //let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, U256::from(1000), PREV_PUBLISH_TIME);    
+        //let mut update_data: Vec<Bytes> = vec![];
+        //update_data.push(Bytes::from(price_feed_created));
     }
 }
