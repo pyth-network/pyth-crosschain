@@ -24,6 +24,7 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   PythContract,
   PYTH_CONTRACT_ADDRESS_TESTNET,
+  calculateUpdatePriceFeedsFee,
 } from "@pythnetwork/pyth-ton-js";
 
 const BTC_PRICE_FEED_ID =
@@ -73,7 +74,7 @@ async function main() {
   await contract.sendUpdatePriceFeeds(
     provider.sender(key.secretKey),
     updateData,
-    BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(updateFee)
+    calculateUpdatePriceFeedsFee(1n) + BigInt(updateFee)
   );
   console.log("Price feeds updated successfully.");
 

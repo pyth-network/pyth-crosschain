@@ -13,11 +13,10 @@ import { ContractProvider } from "@ton/ton";
 export const PYTH_CONTRACT_ADDRESS_TESTNET =
   "EQDwGkJmcj7MMmWAHmhldnY-lAKI6hcTQ2tAEcapmwCnztQU";
 // This is defined in target_chains/ton/contracts/common/gas.fc
-export const UPDATE_PRICE_FEEDS_GAS = 390000n;
+export const UPDATE_PRICE_FEEDS_BASE_GAS = 300000n;
+export const UPDATE_PRICE_FEEDS_PER_UPDATE_GAS = 90000n;
 // Current settings in basechain are as follows: 1 unit of gas costs 400 nanotons
 export const GAS_PRICE_FACTOR = 400n;
-export const BASE_UPDATE_PRICE_FEEDS_FEE =
-  UPDATE_PRICE_FEEDS_GAS * GAS_PRICE_FACTOR;
 
 export interface DataSource {
   emitterChain: number;
@@ -317,4 +316,12 @@ export function parseGuardianSetKeys(cell: Cell): string[] {
 
   parseCell(cell);
   return keys;
+}
+
+export function calculateUpdatePriceFeedsFee(numUpdates: bigint) {
+  return (
+    (UPDATE_PRICE_FEEDS_BASE_GAS +
+      UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * numUpdates) *
+    GAS_PRICE_FACTOR
+  );
 }
