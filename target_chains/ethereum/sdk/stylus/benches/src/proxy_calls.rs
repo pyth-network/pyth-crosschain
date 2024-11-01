@@ -2,10 +2,10 @@ use std::str::FromStr;
 
 use alloy::{
     network::{AnyNetwork, EthereumWallet},
-    primitives::{Address, FixedBytes as TypeFixedBytes, fixed_bytes},
+    primitives::{Address, FixedBytes as TypeFixedBytes, uint},
     providers::ProviderBuilder,
     sol,
-    sol_types::{sol_data::FixedBytes, SolCall, SolConstructor},
+    sol_types::{ SolCall, SolConstructor},
 };
 use e2e::{receipt, Account};
 
@@ -16,7 +16,7 @@ use crate::{
 sol!(
     #[sol(rpc)]
     contract ProxyCall{
-        function getPriceNoOlderThan() external view;
+         function getPriceNoOlderThan(bytes32 id, uint256 age) external;
     }
 );
 
@@ -54,12 +54,14 @@ pub async fn run_with(
 
     let contract = ProxyCall::new(contract_addr, &alice_wallet);
     println!("contract address: {contract_addr:?}");
-    // let token_1 = uint!(1_U256);
+    let eth_id = bytes_from_str("ETH");
+    let sol_id = bytes_from_str("SOL");
+    let time_frame = uint!(10000_U256);
     // let token_2 = uint!(2_U256);
     // let token_3 = uint!(3_U256);
     // let token_4 = uint!(4_U256);
 
-    let _ = receipt!(contract.getPriceNoOlderThan())?;
+    let _ = receipt!(contract.getPriceNoOlderThan(eth_id,time_frame))?;
     // let _ = receipt!(contract.mint(alice_addr, token_3))?;
     // let _ = receipt!(contract.mint(alice_addr, token_4))?;
 
@@ -67,7 +69,7 @@ pub async fn run_with(
     use ProxyCall::*;
     //#[rustfmt::skip]
     let receipts = vec![
-        (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan())?),
+        (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan(sol_id, time_frame))?),
         // (approveCall::SIGNATURE, receipt!(contract.approve(bob_addr, token_2))?),
         // (getApprovedCall::SIGNATURE, receipt!(contract.getApproved(token_2))?),
         // (isApprovedForAllCall::SIGNATURE, receipt!(contract.isApprovedForAll(alice_addr, bob_addr))?),
@@ -92,12 +94,15 @@ async fn deploy(
 ) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    let id= "ETH";
-    let mut bytes = [0u8; 32];
-    bytes[..id.len().min(32)].copy_from_slice(&id.as_bytes()[..id.len().min(32)]);
-    let price_id :TypeFixedBytes<32>  = TypeFixedBytes::from(bytes);
-    println!("pyth address: {address:?} price_id: {price_id:?}"); 
-    let args = ProxyCallsExample::constructorCall { _pythAddress: address, _priceId: price_id };
+    println!("pyth address: {address:?}"); 
+    let args = ProxyCallsExample::constructorCall { _pythAddress: address };
     let args = alloy::hex::encode(args.abi_encode());
     crate::deploy(account, "proxy-calls", Some(args), cache_opt).await
+}
+
+
+pub fn bytes_from_str(id: &str) -> TypeFixedBytes<32> {
+    let mut bytes = [0u8; 32];
+    bytes[..id.len().min(32)].copy_from_slice(&id.as_bytes()[..id.len().min(32)]);
+    TypeFixedBytes::<32>::from(bytes)
 }

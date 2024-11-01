@@ -2,11 +2,12 @@ use std::str::FromStr;
 
 use alloy::{
     network::{AnyNetwork, EthereumWallet},
-    primitives::{Address, FixedBytes as TypeFixedBytes, fixed_bytes},
+    primitives::{Address, FixedBytes as TypeFixedBytes},
     providers::ProviderBuilder,
     sol,
     sol_types::{SolCall, SolConstructor},
 };
+use alloy_sol_types::sol_data::String;
 use e2e::{receipt, Account};
 
 use crate::{
@@ -20,6 +21,9 @@ sol!(
         function getEmaPriceUnsafe() external ;
         function getPriceNoOlderThan() external ;
         function getEmaPriceNoOlderThan() external;
+        function getUpdateFee() external;
+        function getValidTimePeriod() external;
+        function updatePriceFeeds() external payable;
     }
 );
 
@@ -57,15 +61,14 @@ pub async fn run_with(
 
     let contract = FunctionCall::new(contract_addr, &alice_wallet);
     println!("contract address: {contract_addr:?}");
-    // let token_1 = uint!(1_U256);
-    // let token_2 = uint!(2_U256);
-    // let token_3 = uint!(3_U256);
-    // let token_4 = uint!(4_U256);
-    
     println!("contract: {contract:?}");
     let _ = receipt!(contract.getPriceUnsafe())?;
     let _ = receipt!(contract.getEmaPriceUnsafe())?;
-    // let _ = receipt!(contract.mint(alice_addr, token_4))?;
+    let _ = receipt!(contract.getPriceNoOlderThan())?;
+    let _ = receipt!(contract.getEmaPriceNoOlderThan())?;
+    let _ = receipt!(contract.getUpdateFee())?;
+    let _ = receipt!(contract.getValidTimePeriod())?;
+    let _ = receipt!(contract.updatePriceFeeds())?;
 
     // IMPORTANT: Order matters!
     use FunctionCall::*;
@@ -75,6 +78,9 @@ pub async fn run_with(
         (getEmaPriceUnsafeCall::SIGNATURE, receipt!(contract.getEmaPriceUnsafe())?),
         (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan())?),
         (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan())?),
+        (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee())?),
+        (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
+        (updatePriceFeedsCall::SIGNATURE, receipt!(contract.updatePriceFeeds())?),
     ];
 
     receipts
@@ -89,11 +95,9 @@ async fn deploy(
 ) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    let id= "ETH";
-    let mut bytes = [0u8; 32];
-    bytes[..id.len().min(32)].copy_from_slice(&id.as_bytes()[..id.len().min(32)]);
-    let price_id :TypeFixedBytes<32>  = TypeFixedBytes::from(bytes);
-    println!("pyth address: {address:?} price_id: {price_id:?}"); 
+    let id= keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
+    let price_id = TypeFixedBytes::<32>::from_slice(&id);
+    println!(" addrss {address:?} price_id: {price_id:?}");
     let args = FunctionCallsExample::constructorCall { _pythAddress: address, _priceId: price_id };
     let args = alloy::hex::encode(args.abi_encode());
     crate::deploy(account, "function-calls", Some(args), cache_opt).await
