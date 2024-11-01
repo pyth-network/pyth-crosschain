@@ -14,11 +14,13 @@ cd "nitro-testnode"
 
 cd ..
 cd "pyth-solidity"
-deployed_to=$(forge create ./src/MockPyth.sol:MockPythSample \
-  --rpc-url $RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --constructor-args 100 100 | grep -oP '(?<=Deployed to: )0x[a-fA-F0-9]{40}')
-
+deployed_to=$(
+  forge script ./script/MockPyth.s.sol:MockPythScript \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  --broadcast \
+  | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1
+)
 
 export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
