@@ -129,7 +129,7 @@
   type: EvmChain
 - id: ethereum
   mainnet: true
-  rpcUrl: https://eth-mainnet.blastapi.io/$ENV_BLAST_API_KEY
+  rpcUrl: https://eth.llamarpc.com
   networkId: 1
   type: EvmChain
   nativeToken: ETH
@@ -748,4 +748,24 @@
   mainnet: true
   rpcUrl: https://rpc.morphl2.io
   networkId: 2818
+  type: EvmChain
+- id: kraken_ink_testnet
+  mainnet: false
+  rpcUrl: https://patient-cool-emerald.ink-sepolia.quiknode.pro/{KRAKEN_INK_API_KEY}
+  networkId: 763373
+  type: EvmChain
+- id: ethena_testnet
+  mainnet: false
+  rpcUrl: https://rpc-ethena-testnet-0.t.conduit.xyz/
+  networkId: 52085143
+  type: EvmChain
+- id: superseed_mainnet
+  mainnet: true
+  rpcUrl: https://rpc-superseed-mainnet-0.t.conduit.xyz/{SUPERSEED_API_KEY}
+  networkId: 5330
+  type: EvmChain
+- id: superseed_testnet
+  mainnet: false
+  rpcUrl: https://rpc-sepolia-superseed-826s35710w.t.conduit.xyz/{SUPERSEED_API_KEY}
+  networkId: 53302
   type: EvmChain
