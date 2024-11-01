@@ -29,7 +29,7 @@ resolver = "2"
 authors = ["Ifechukwu Daniel"]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/OpenZeppelin/rust-contracts-stylus"
+repository = "https://github.com/pyth-network/"
 version = "0.1.0"
 
 [workspace.lints.rust]
