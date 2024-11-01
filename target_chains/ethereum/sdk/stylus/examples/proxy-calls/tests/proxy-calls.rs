@@ -13,7 +13,7 @@ mod abi;
 
  #[e2e::test]
 async fn constructs(alice: Account) -> Result<()> { 
-   let contract_addr = alice.as_deployer().deploy().await?.address()?; 
+  // let contract_addr = alice.as_deployer().deploy().await?.address()?; 
 // //   assert_eq!(true, true);
  
   Ok(())

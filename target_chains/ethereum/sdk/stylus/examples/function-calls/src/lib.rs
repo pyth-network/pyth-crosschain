@@ -3,7 +3,7 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 use alloy_primitives::U256;
-use stylus_sdk::{console, prelude::{entrypoint,public, sol_storage}};
+use stylus_sdk::{console, prelude::{entrypoint,public, sol_storage, SolidityError}};
 use pyth_stylus::pyth::{functions::{
     get_price_no_older_than, 
     get_ema_price_no_older_than, 
@@ -17,6 +17,7 @@ use pyth_stylus::pyth::{functions::{
     StoragePrice, 
     StoragePriceFeed
 }};
+use alloy_sol_types::sol;
 
 
 sol_storage! {
@@ -32,23 +33,62 @@ sol_storage! {
 }
 
 
+sol! {
+
+    error ArraySizeNotMatch();
+
+    error CallFailed();
+
+}
+
+#[derive(SolidityError)]
+pub enum MultiCallErrors {
+
+    ArraySizeNotMatch(ArraySizeNotMatch),
+
+    CallFailed(CallFailed),
+
+}
+
+
 #[public]
 impl FunctionCallsExample {
     pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get());
-       Ok(())
+       let price =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
+       if price.price > 0 {
+          return Ok(());
+       }
+        Err(MultiCallErrors::CallFailed(CallFailed{}).into())
     }
 
     pub fn get_ema_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get());
+       let _ =  get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
        Ok(())
     }
     pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000));
+       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
        Ok(())
     }
+
     pub fn get_ema_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_ema_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000));
+       let _ =  get_ema_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
        Ok(())
     }
+
+    pub fn get_update_fee(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_update_fee(self, self.pyth_address.get(), Vec::new())?;
+       Ok(())
+    }
+
+    pub fn get_valid_time_period(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_valid_time_period(self, self.pyth_address.get())?;
+       Ok(())
+    }
+
+    #[payable]
+    pub fn update_price_feeds(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  update_price_feeds(self, self.pyth_address.get(), Vec::new())?;
+       Ok(())
+    }
+
 }
