@@ -3074,6 +3074,7 @@ dependencies = [
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
  "rand 0.8.5",
+ "serde_with",
  "serde_wormhole",
  "solana-program",
  "solana-sdk",
