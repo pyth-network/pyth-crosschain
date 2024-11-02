@@ -14,9 +14,10 @@ use crate::pyth::types::{
 };
 use crate::utils::helpers::{call_helper, delegate_call_helper, static_call_helper};
 use alloc::vec::Vec;
-use stylus_sdk::{storage::TopLevelStorage, console};
+use stylus_sdk::storage::TopLevelStorage;
 use alloy_primitives::{ Address, FixedBytes, U256, Bytes};
-
+use crate::pyth::mock::DecodeDataType;
+use alloy_sol_types::SolType;
 
 pub fn get_price_no_older_than(storage: &mut impl TopLevelStorage,pyth_address: Address,id: FixedBytes<32>, age:U256) -> Result<Price, Vec<u8>> {
         let price_call = call_helper::<getPriceNoOlderThanCall>(storage, pyth_address, (id,age,),)?;
@@ -69,3 +70,24 @@ pub fn parse_price_feed_updates_unique(storage: &mut impl TopLevelStorage,pyth_a
         let parse_price_feed_updates_call = delegate_call_helper::<parsePriceFeedUpdatesUniqueCall>(storage, pyth_address, (update_data,price_ids, min_publish_time, max_publish_time))?;
         Ok(parse_price_feed_updates_call.priceFeeds)
 }
+/// Create Price Feed 
+pub fn create_price_feed_update_data(
+        id:FixedBytes<32>,
+        price:i64,
+        conf:u64,
+        expo:i32,
+        ema_price:i64,
+        ema_conf:u64,
+        publish_time:U256,
+        prev_publish_time:u64
+    ) -> Vec<u8> {
+        let price = Price { price: price, conf, expo, publish_time };
+        let ema_price = Price { price:ema_price, conf:ema_conf, expo:expo,publish_time};
+        
+        let price_feed_data = PriceFeed {
+          id,price,ema_price
+        };
+        
+        let price_feed_data_encoding = (price_feed_data, prev_publish_time);
+        return  DecodeDataType::abi_encode(&price_feed_data_encoding);
+    }
