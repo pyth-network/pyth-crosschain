@@ -16,6 +16,6 @@ osmosis=[]
 
 [dependencies]
 pyth-sdk = "0.7.0"
-cosmwasm-std = { version = "1.0.0" }
-cosmwasm-schema = "1.1.9"
+cosmwasm-std = { version = "2.0.2" }
+cosmwasm-schema = "2.0.2"
 thiserror = "1.0.20"

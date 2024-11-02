@@ -7,19 +7,11 @@ use {
         QueryMsg,
     },
     cosmwasm_std::{
-        from_binary,
-        to_binary,
-        Binary,
-        Coin,
-        ContractResult,
-        QuerierResult,
-        SystemError,
-        SystemResult,
+        from_json, to_json_binary, Binary, Coin, ContractResult, QuerierResult, SystemError, SystemResult
     },
     std::{
         collections::HashMap,
         time::Duration,
-        u128,
     },
 };
 
@@ -58,18 +50,18 @@ impl MockPyth {
     /// `https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/cosmwasm/examples/cw-contract/src/contract.rs#L13`
     /// for how to use this handler within your tests.
     pub fn handle_wasm_query(&self, msg: &Binary) -> QuerierResult {
-        let query_msg = from_binary::<QueryMsg>(msg);
+        let query_msg = from_json::<QueryMsg>(msg);
         match query_msg {
             Ok(QueryMsg::PriceFeed { id }) => match self.feeds.get(&id) {
                 Some(feed) => {
-                    SystemResult::Ok(to_binary(&PriceFeedResponse { price_feed: *feed }).into())
+                    SystemResult::Ok(to_json_binary(&PriceFeedResponse { price_feed: *feed }).into())
                 }
                 None => SystemResult::Ok(ContractResult::from(Err(
                     PythContractError::PriceFeedNotFound,
                 ))),
             },
             Ok(QueryMsg::GetValidTimePeriod) => {
-                SystemResult::Ok(to_binary(&self.valid_time_period).into())
+                SystemResult::Ok(to_json_binary(&self.valid_time_period).into())
             }
 
             Ok(QueryMsg::GetUpdateFee { vaas }) => {
@@ -79,7 +71,7 @@ impl MockPyth {
                     .u128()
                     .checked_mul(vaas.len() as u128)
                     .unwrap();
-                SystemResult::Ok(to_binary(&Coin::new(new_amount, &self.fee_per_vaa.denom)).into())
+                SystemResult::Ok(to_json_binary(&Coin::new(new_amount, &self.fee_per_vaa.denom)).into())
             }
             #[cfg(feature = "osmosis")]
             Ok(QueryMsg::GetUpdateFeeForDenom { vaas, denom }) => {
@@ -89,7 +81,7 @@ impl MockPyth {
                     .u128()
                     .checked_mul(vaas.len() as u128)
                     .unwrap();
-                SystemResult::Ok(to_binary(&Coin::new(new_amount, denom)).into())
+                SystemResult::Ok(to_json_binary(&Coin::new(new_amount, denom)).into())
             }
             Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
                 error:   "Invalid message".into(),
