@@ -1,13 +1,12 @@
 use std::str::FromStr;
 
 use alloy::{
-    network::{AnyNetwork, EthereumWallet},
-    primitives::{Address, FixedBytes as TypeFixedBytes, uint},
-    providers::ProviderBuilder,
-    sol,
-    sol_types::{ SolCall, SolConstructor},
+    network::{AnyNetwork, EthereumWallet}, primitives::{uint, Address, FixedBytes as TypeFixedBytes, Bytes, U256},
+    providers::ProviderBuilder, 
+    sol, sol_types::{ SolCall, SolConstructor}
 };
 use e2e::{receipt, Account};
+use pyth_stylus::pyth::functions::create_price_feed_update_data;
 
 use crate::{
     env, report::{ContractReport, FunctionReport}, CacheOpt
@@ -16,7 +15,12 @@ use crate::{
 sol!(
     #[sol(rpc)]
     contract ProxyCall{
-         function getPriceNoOlderThan(bytes32 id, uint256 age) external;
+        function getPriceUnsafe(bytes32 id) external;
+        function getEmaPriceUnsafe(bytes32 id) external;
+        function getPriceNoOlderThan(bytes32 id, uint age) external;
+        function getEmaPriceNoOlderThan(bytes32 id, uint age) external;
+        function getUpdateFee(bytes[] calldata updateData) external returns (uint256);
+        function getValidTimePeriod() external;
     }
 );
 
@@ -40,46 +44,39 @@ pub async fn run_with(
     cache_opt: CacheOpt,
 ) -> eyre::Result<Vec<FunctionReport>> {
     let alice = Account::new().await?;
-    let alice_addr = alice.address();
     let alice_wallet = ProviderBuilder::new()
         .network::<AnyNetwork>()
         .with_recommended_fillers()
         .wallet(EthereumWallet::from(alice.signer.clone()))
         .on_http(alice.url().parse()?);
 
-    let bob = Account::new().await?;
-    let bob_addr = bob.address();
-
     let contract_addr = deploy(&alice, cache_opt).await?;
 
     let contract = ProxyCall::new(contract_addr, &alice_wallet);
-    println!("contract address: {contract_addr:?}");
-    let eth_id = bytes_from_str("ETH");
-    let sol_id = bytes_from_str("SOL");
+    let id = keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
+    let id = TypeFixedBytes::<32>::from_slice(&id);
     let time_frame = uint!(10000_U256);
-    // let token_2 = uint!(2_U256);
-    // let token_3 = uint!(3_U256);
-    // let token_4 = uint!(4_U256);
+    let age  = uint!(10000_U256);
 
-    let _ = receipt!(contract.getPriceNoOlderThan(eth_id,time_frame))?;
-    // let _ = receipt!(contract.mint(alice_addr, token_3))?;
-    // let _ = receipt!(contract.mint(alice_addr, token_4))?;
+    let data  = create_price_feed_update_data(id, 10, 100, 100, 100, 100, U256::from(100), 0);
+    let data_bytes: Vec<Bytes> = data.iter().map(|&x| {Bytes::from(vec![x]) }).collect();
+
+    let _ = receipt!(contract.getPriceUnsafe(id))?;
+    let _ = receipt!(contract.getEmaPriceUnsafe(id))?;
+    let _ = receipt!(contract.getPriceNoOlderThan(id,age))?;
+    let _ = receipt!(contract.getEmaPriceNoOlderThan(id,age))?;
+    let _ = receipt!(contract.getValidTimePeriod())?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;
-    //#[rustfmt::skip]
+    #[rustfmt::skip]
     let receipts = vec![
-        (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan(sol_id, time_frame))?),
-        // (approveCall::SIGNATURE, receipt!(contract.approve(bob_addr, token_2))?),
-        // (getApprovedCall::SIGNATURE, receipt!(contract.getApproved(token_2))?),
-        // (isApprovedForAllCall::SIGNATURE, receipt!(contract.isApprovedForAll(alice_addr, bob_addr))?),
-        // (ownerOfCall::SIGNATURE, receipt!(contract.ownerOf(token_2))?),
-        // (safeTransferFromCall::SIGNATURE, receipt!(contract.safeTransferFrom(alice_addr, bob_addr, token_3))?),
-        // (setApprovalForAllCall::SIGNATURE, receipt!(contract.setApprovalForAll(bob_addr, true))?),
-        // (totalSupplyCall::SIGNATURE, receipt!(contract.totalSupply())?),
-        // (transferFromCall::SIGNATURE, receipt!(contract.transferFrom(alice_addr, bob_addr, token_4))?),
-        // (mintCall::SIGNATURE, receipt!(contract.mint(alice_addr, token_1))?),
-        // (burnCall::SIGNATURE, receipt!(contract.burn(token_1))?),
+        (getPriceUnsafeCall::SIGNATURE, receipt!(contract.getPriceUnsafe(id))?),
+        (getEmaPriceUnsafeCall::SIGNATURE, receipt!(contract.getEmaPriceUnsafe(id))?),
+        (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan(id, time_frame))?),
+        (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan(id, time_frame))?),
+        (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
+        (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee(data_bytes.clone()))?),
     ];
 
     receipts
@@ -94,15 +91,7 @@ async fn deploy(
 ) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    println!("pyth address: {address:?}"); 
     let args = ProxyCallsExample::constructorCall { _pythAddress: address };
     let args = alloy::hex::encode(args.abi_encode());
     crate::deploy(account, "proxy-calls", Some(args), cache_opt).await
-}
-
-
-pub fn bytes_from_str(id: &str) -> TypeFixedBytes<32> {
-    let mut bytes = [0u8; 32];
-    bytes[..id.len().min(32)].copy_from_slice(&id.as_bytes()[..id.len().min(32)]);
-    TypeFixedBytes::<32>::from(bytes)
 }
