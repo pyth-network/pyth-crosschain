@@ -7,7 +7,7 @@ use crate::pyth::errors::{Error, PriceFeedNotFound};
 use crate::pyth::types::{ PriceFeed,Price, StoragePriceFeed};
 use crate::pyth::events::PriceFeedUpdate;
 
-//decode data type PriceFeed and uint64
+///Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
 
 sol_storage! {
