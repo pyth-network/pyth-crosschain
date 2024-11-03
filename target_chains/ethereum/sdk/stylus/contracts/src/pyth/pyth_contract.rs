@@ -192,7 +192,8 @@ impl IPyth for PythContract  {
     #[payable]
     fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-        update_price_feeds(self, self._ipyth.get(),data)
+        update_price_feeds(self, self._ipyth.get(),data)?;
+        Ok(())
     }
     
     #[payable]
@@ -203,7 +204,8 @@ impl IPyth for PythContract  {
         publish_times: Vec<u64>,
     ) -> Result<(), Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-        update_price_feeds_if_necessary(self, self._ipyth.get(),data,price_ids,publish_times)
+        update_price_feeds_if_necessary(self, self._ipyth.get(),data,price_ids,publish_times)?;
+        Ok(())
     }
 
     #[payable]

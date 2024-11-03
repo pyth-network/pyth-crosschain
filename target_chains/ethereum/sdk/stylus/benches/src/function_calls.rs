@@ -61,6 +61,8 @@ pub async fn run_with(
     let _ = receipt!(contract.getEmaPriceNoOlderThan())?;
     let _ = receipt!(contract.getUpdateFee())?;
     let _ = receipt!(contract.getValidTimePeriod())?;
+    // let _ = receipt!(contract.updatePriceFeeds())?;
+    // let _ = receipt!(contract.updatePriceFeedsIfNecessary())?;
 
     // IMPORTANT: Order matters!
     use FunctionCall::*;
@@ -72,6 +74,8 @@ pub async fn run_with(
         (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan())?),
         (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee())?),
         (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
+        //(updatePriceFeedsCall::SIGNATURE, receipt!(contract.updatePriceFeeds())?),
+        //(updatePriceFeedsIfNecessaryCall::SIGNATURE, receipt!(contract.updatePriceFeedsIfNecessary())?)
     ];
 
     receipts

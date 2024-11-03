@@ -204,15 +204,12 @@ pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<FixedBytes<32>>)
     });
     let mut price_feed_data_list = Vec::new();
     for i in 0..3 {
-        let price_feed_data = create_price_feed_update_data( id[i],100,100,100,100,100,U256::from(100),0);
+        let price_feed_data = create_price_feed_update_data( id[i],100,100,100,100,100,U256::from(U256::MAX - U256::from(10)),0);
         let price_feed_data = Bytes::from(AbiBytes::from(price_feed_data).0);
         price_feed_data_list.push(price_feed_data);
     }
     return (price_feed_data_list, id.to_vec())
 }
-
-
-
 
 #[cfg(all(test, feature = "std"))]
 mod tests {

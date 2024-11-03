@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{i64, str::FromStr};
 
 use alloy::{
     network::{AnyNetwork, EthereumWallet}, primitives::{uint, Address, FixedBytes as TypeFixedBytes, Bytes, U256},
@@ -21,6 +21,8 @@ sol!(
         function getEmaPriceNoOlderThan(bytes32 id, uint age) external;
         function getUpdateFee(bytes[] calldata updateData) external returns (uint256);
         function getValidTimePeriod() external;
+        function updatePriceFeeds(bytes[] calldata updateData) external payable;
+        function updatePriceFeedsIfNecessary(bytes[] calldata updateData, bytes32[] calldata priceIds, uint64[] calldata publishTimes) external payable;
     }
 );
 
@@ -58,7 +60,8 @@ pub async fn run_with(
     let time_frame = uint!(10000_U256);
     let age  = uint!(10000_U256);
 
-    let (data, _ids)  = create_price_feed_update_data_list();
+    let (data, ids)  = create_price_feed_update_data_list();
+
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
     let _ = receipt!(contract.getEmaPriceUnsafe(id))?;
@@ -66,6 +69,10 @@ pub async fn run_with(
     let _ = receipt!(contract.getEmaPriceNoOlderThan(id,age))?;
     let _ = receipt!(contract.getValidTimePeriod())?;
     let _ = receipt!(contract.getUpdateFee(data.clone()))?;
+    let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
+
+    //println!("{data:?} , {ids:?} ");
+   // let _ = receipt!(contract.updatePriceFeedsIfNecessary(data.clone(),ids.clone(), vec![i64::MAX,i64::MAX,i64::MAX]))?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;
@@ -77,6 +84,8 @@ pub async fn run_with(
         (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan(id, time_frame))?),
         (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
         (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee(data.clone()))?),
+        //(updatePriceFeedsCall::SIGNATURE, receipt!(contract.updatePriceFeeds(data.clone()))?),
+        //(updatePriceFeedsIfNecessaryCall::SIGNATURE, receipt!(contract.updatePriceFeedsIfNecessary(data.clone(), ids.clone(), vec![0,0,0]))?)
     ];
 
     receipts

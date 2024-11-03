@@ -92,7 +92,7 @@ impl FunctionCallsExample {
     #[payable]
     pub fn update_price_feeds_if_necessary(&mut self) -> Result<(), Vec<u8>> {
        let (data,ids)  = create_price_feed_update_data_list();
-       let _ =  update_price_feeds_if_necessary(self, self.pyth_address.get(), data, ids,vec![0])?;
+       let _ =  update_price_feeds_if_necessary(self, self.pyth_address.get(), data, ids,vec![0, 0, 0])?;
        Ok(())
     }
 }
