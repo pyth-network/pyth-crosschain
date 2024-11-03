@@ -91,10 +91,11 @@ pub type Pubkey = [u8; 32];
 )]
 
 pub struct PriceFeedMessage {
-    pub feed_id: FeedId,
-    pub price: i64,
-    pub conf: u64,
-    pub exponent: i32,
+    /// `FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature.
+    pub feed_id:           [u8; 32],
+    pub price:             i64,
+    pub conf:              u64,
+    pub exponent:          i32,
     /// The timestamp of this price update in seconds
     pub publish_time: i64,
     /// The timestamp of the previous price update. This field is intended to allow users to
