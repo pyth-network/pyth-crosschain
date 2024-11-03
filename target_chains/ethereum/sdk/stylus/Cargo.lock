@@ -2726,6 +2726,7 @@ dependencies = [
  "alloy-sol-macro-expander",
  "alloy-sol-macro-input",
  "alloy-sol-types",
+ "keccak-const",
  "mini-alloc",
  "motsu",
  "stylus-sdk",

@@ -1,11 +1,12 @@
 use alloc::vec::Vec;
-use alloy_primitives::Uint;
+use alloy_primitives::{Uint, FixedBytes, U256, Bytes};
 use alloy_sol_types::{ sol_data::Uint as SolUInt, SolType, SolValue};
-use stylus_sdk::{abi::Bytes, alloy_primitives::{FixedBytes, U256}, evm, msg, prelude::*};
+use stylus_sdk::{abi::Bytes as AbiBytes,evm, msg, prelude::*};
 use crate::{pyth::errors::{FalledDecodeData, InsufficientFee, InvalidArgument}, utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE};
 use crate::pyth::errors::{Error, PriceFeedNotFound};
 use crate::pyth::types::{ PriceFeed,Price, StoragePriceFeed};
 use crate::pyth::events::PriceFeedUpdate;
+use crate::pyth::functions::create_price_feed_update_data;
 
 ///Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
@@ -65,7 +66,7 @@ impl MockPythContract {
 
     #[payable]
     fn update_price_feeds(&mut self, 
-        update_data : Vec<Bytes>
+        update_data : Vec<AbiBytes>
     ) -> Result<(), Vec<u8>> {
         let  required_fee = self.get_update_fee(update_data.clone());
          if required_fee.lt(&U256::from(msg::value())) {
@@ -89,13 +90,13 @@ impl MockPythContract {
        Ok(())
     }
 
-    fn get_update_fee(&self, update_data: Vec<Bytes>) -> Uint<256, 4> {
+    fn get_update_fee(&self, update_data: Vec<AbiBytes>) -> Uint<256, 4> {
          self.single_update_fee_in_wei.get() * U256::from(update_data.len())
     }
      #[payable]
     fn parse_price_feed_updates(
         &mut self,
-        update_data:Vec<Bytes>,
+        update_data:Vec<AbiBytes>,
         price_ids:Vec<FixedBytes<32>>,
         min_publish_time:u64,
         max_publish_time:u64
@@ -106,7 +107,7 @@ impl MockPythContract {
     #[payable]
     fn parse_price_feed_updates_unique(
         &mut self,
-        update_data:Vec<Bytes>,
+        update_data:Vec<AbiBytes>,
         price_ids:Vec<FixedBytes<32>>,
         min_publish_time:u64,
         max_publish_time:u64
@@ -139,7 +140,7 @@ impl MockPythContract {
 impl  MockPythContract  {
 
      fn parse_price_feed_updates_internal(&mut self,
-        update_data: Vec<Bytes>,
+        update_data: Vec<AbiBytes>,
         price_ids: Vec<FixedBytes<32>>,
         min_publish_time:u64,
         max_publish_time:u64,
@@ -195,6 +196,22 @@ impl  MockPythContract  {
      Ok(feeds.abi_encode())
     }  
 }
+
+pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<FixedBytes<32>>) {
+    let id = ["ETH","SOL","BTC"].map(|x| {
+        let x =  keccak_const::Keccak256::new().update(x.as_bytes()).finalize().to_vec();
+        return  FixedBytes::<32>::from_slice(&x) ;
+    });
+    let mut price_feed_data_list = Vec::new();
+    for i in 0..3 {
+        let price_feed_data = create_price_feed_update_data( id[i],100,100,100,100,100,U256::from(100),0);
+        let price_feed_data = Bytes::from(AbiBytes::from(price_feed_data).0);
+        price_feed_data_list.push(price_feed_data);
+    }
+    return (price_feed_data_list, id.to_vec())
+}
+
+
 
 
 #[cfg(all(test, feature = "std"))]

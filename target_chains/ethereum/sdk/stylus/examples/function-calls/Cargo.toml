@@ -13,6 +13,7 @@ alloy-sol-types.workspace = true
 stylus-sdk.workspace = true
 mini-alloc.workspace = true
 
+
 [dev-dependencies]
 alloy.workspace = true
 eyre.workspace = true

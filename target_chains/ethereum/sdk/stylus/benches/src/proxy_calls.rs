@@ -6,7 +6,7 @@ use alloy::{
     sol, sol_types::{ SolCall, SolConstructor}
 };
 use e2e::{receipt, Account};
-use pyth_stylus::pyth::functions::create_price_feed_update_data;
+use pyth_stylus::pyth::mock::create_price_feed_update_data_list;
 
 use crate::{
     env, report::{ContractReport, FunctionReport}, CacheOpt
@@ -58,14 +58,14 @@ pub async fn run_with(
     let time_frame = uint!(10000_U256);
     let age  = uint!(10000_U256);
 
-    let data  = create_price_feed_update_data(id, 10, 100, 100, 100, 100, U256::from(100), 0);
-    let data_bytes: Vec<Bytes> = data.iter().map(|&x| {Bytes::from(vec![x]) }).collect();
+    let (data, _ids)  = create_price_feed_update_data_list();
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
     let _ = receipt!(contract.getEmaPriceUnsafe(id))?;
     let _ = receipt!(contract.getPriceNoOlderThan(id,age))?;
     let _ = receipt!(contract.getEmaPriceNoOlderThan(id,age))?;
     let _ = receipt!(contract.getValidTimePeriod())?;
+    let _ = receipt!(contract.getUpdateFee(data.clone()))?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;
@@ -76,7 +76,7 @@ pub async fn run_with(
         (getPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getPriceNoOlderThan(id, time_frame))?),
         (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan(id, time_frame))?),
         (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
-        (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee(data_bytes.clone()))?),
+        (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee(data.clone()))?),
     ];
 
     receipts
