@@ -44,9 +44,9 @@ To set up and run a Hermes node, follow the steps below:
 
    ```bash
    cargo run --release -- run \
-     --pythnet-http-addr https://api2.pythnet.pyth.network \
-     --pythnet-ws-addr wss://api2.pythnet.pyth.network \
-     --wormhole-spy-rpc-addr http://localhost:7073
+     --pythnet-http-addr https://pythnet-rpc/ \
+     --pythnet-ws-addr wss://pythnet-rpc/ \
+     --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
    ```
 
    Your Hermes node will now start and connect to the Pythnet and Wormhole spy RPC. You
