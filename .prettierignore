@@ -19,6 +19,6 @@ patches/
 # build graph config.
 apps/api-reference
 apps/staking
+apps/insights
 governance/pyth_staking_sdk
-packages/component-library
-packages/fonts
+packages/*

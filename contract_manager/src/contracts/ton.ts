@@ -5,7 +5,7 @@ import { TokenQty } from "../token";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 import { Address, OpenedContract } from "@ton/ton";
 import {
-  BASE_UPDATE_PRICE_FEEDS_FEE,
+  calculateUpdatePriceFeedsFee,
   PythContract,
 } from "@pythnetwork/pyth-ton-js";
 
@@ -237,7 +237,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
       await contract.sendUpdatePriceFeeds(
         sender,
         vaa,
-        BASE_UPDATE_PRICE_FEEDS_FEE + BigInt(fee)
+        calculateUpdatePriceFeedsFee(BigInt(fee)) + BigInt(fee)
       );
     }
 

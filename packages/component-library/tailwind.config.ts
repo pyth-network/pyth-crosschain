@@ -4,8 +4,10 @@ import plugin from "tailwindcss/plugin.js";
 import animate from "tailwindcss-animate";
 import reactAria from "tailwindcss-react-aria-components";
 
+import { tailwindGlob } from "./src/index.js";
+
 const tailwindConfig = {
-  content: ["src/**/*.tsx", ".storybook/**/*.tsx"],
+  content: [tailwindGlob, ".storybook/**/*.tsx"],
   darkMode: "class",
   theme: {
     extend: {

@@ -1,8 +1,11 @@
 import clsx from "clsx";
-import type { ComponentType, ReactNode } from "react";
-import { Button as BaseButton, Link } from "react-aria-components";
+import type { ComponentType, ReactNode, SVGProps } from "react";
+import {
+  type ButtonProps as BaseButtonProps,
+  type LinkProps as BaseLinkProps,
+} from "react-aria-components";
 
-import type { Icon, ExtendComponentProps } from "../type-utils.js";
+import { Button as BaseButton, Link } from "./react-aria-buttons.js";
 
 export const VARIANTS = [
   "primary",
@@ -24,7 +27,7 @@ type OwnProps = {
   afterIcon?: Icon | undefined;
 };
 
-export type ButtonProps = ExtendComponentProps<typeof BaseButton, OwnProps>;
+export type ButtonProps = Omit<BaseButtonProps, keyof OwnProps> & OwnProps;
 
 export const Button = ({ className, ...props }: ButtonProps) => (
   <ButtonImpl
@@ -39,7 +42,7 @@ export const Button = ({ className, ...props }: ButtonProps) => (
   />
 );
 
-export type ButtonLinkProps = ExtendComponentProps<typeof Link, OwnProps>;
+export type ButtonLinkProps = Omit<BaseLinkProps, keyof OwnProps> & OwnProps;
 
 export const ButtonLink = (props: ButtonLinkProps) => (
   <ButtonImpl component={Link} {...props} />
@@ -103,10 +106,10 @@ const baseClasses = clsx(
   "data-[size=lg]:h-14 data-[size=lg]:rounded-2xl data-[size=lg]:px-4 data-[size=lg]:text-xl data-[size=lg]:leading-[3.5rem]",
 
   // Primary (default)
-  "data-[variant=primary]:bg-violet-500 data-[variant=primary]:data-[hovered]:bg-violet-700 data-[variant=primary]:data-[pressed]:bg-violet-800 data-[variant=primary]:text-violet-50 data-[variant=primary]:outline-violet-500",
+  "data-[variant=primary]:bg-violet-700 data-[variant=primary]:data-[hovered]:bg-violet-800 data-[variant=primary]:data-[pressed]:bg-violet-900 data-[variant=primary]:text-white data-[variant=primary]:outline-violet-700",
 
   // Dark Mode Primary (default)
-  "dark:data-[variant=primary]:bg-violet-600 dark:data-[variant=primary]:data-[hovered]:bg-violet-700 dark:data-[variant=primary]:data-[pressed]:bg-violet-800 dark:data-[variant=primary]:text-violet-50 dark:data-[variant=primary]:outline-violet-600",
+  "dark:data-[variant=primary]:bg-violet-600 dark:data-[variant=primary]:data-[hovered]:bg-violet-700 dark:data-[variant=primary]:data-[pressed]:bg-violet-800 dark:data-[variant=primary]:text-white dark:data-[variant=primary]:outline-violet-600",
 
   // Secondary
   "data-[variant=secondary]:bg-purple-200 data-[variant=secondary]:data-[hovered]:bg-purple-300 data-[variant=secondary]:data-[pressed]:bg-purple-400 data-[variant=secondary]:text-steel-900 data-[variant=secondary]:outline-purple-300",
@@ -147,3 +150,5 @@ const baseClasses = clsx(
   // Disabled
   "data-[disabled]:data-[variant]:cursor-not-allowed data-[disabled]:data-[variant]:border-transparent data-[disabled]:data-[variant]:bg-stone-200 data-[disabled]:data-[variant]:text-stone-400 dark:data-[disabled]:data-[variant]:bg-steel-600 dark:data-[disabled]:data-[variant]:text-steel-400",
 );
+
+type Icon = ComponentType<SVGProps<SVGSVGElement>>;

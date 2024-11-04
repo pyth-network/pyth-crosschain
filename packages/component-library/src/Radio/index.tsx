@@ -1,12 +1,7 @@
 import clsx from "clsx";
-import type { ComponentProps } from "react";
-import { Radio as BaseRadio } from "react-aria-components";
+import { Radio as BaseRadio, type RadioProps } from "react-aria-components";
 
-export const Radio = ({
-  children,
-  className,
-  ...props
-}: ComponentProps<typeof BaseRadio>) => (
+export const Radio = ({ children, className, ...props }: RadioProps) => (
   <BaseRadio
     className={clsx(
       "group/radio inline-flex cursor-pointer flex-row gap-2 py-1 text-sm data-[disabled]:cursor-not-allowed data-[selected]:cursor-default",

@@ -1,6 +1,8 @@
 import clsx from "clsx";
-import type { ComponentProps } from "react";
 import {
+  type LabelProps,
+  type TextProps,
+  type CheckboxGroupProps as BaseCheckboxGroupProps,
   CheckboxGroup as BaseCheckboxGroup,
   Label,
   Text,
@@ -8,9 +10,9 @@ import {
 
 export const ORIENTATIONS = ["vertical", "horizontal"] as const;
 
-type CheckboxGroupProps = ComponentProps<typeof BaseCheckboxGroup> & {
-  label: ComponentProps<typeof Label>["children"];
-  description?: ComponentProps<typeof Text>["children"] | undefined;
+type CheckboxGroupProps = BaseCheckboxGroupProps & {
+  label: LabelProps["children"];
+  description?: TextProps["children"] | undefined;
   orientation?: (typeof ORIENTATIONS)[number] | undefined;
 };
 

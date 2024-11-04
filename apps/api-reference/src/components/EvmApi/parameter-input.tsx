@@ -137,11 +137,8 @@ const PriceFeedListOptions = ({ priceFeedList }: PriceFeedListOptionsProps) => {
       </div>
     ) : (
       <ComboboxOptions className="h-80 overflow-y-auto py-1" modal={false}>
-        {({ option }) => {
-          // The `option` parameter is typed as `unknown` and we have to
-          // cast to get it to be correctly typed, see
-          // https://github.com/tailwindlabs/headlessui/issues/3326
-          const { feedId, name, description } = option as PriceFeed;
+        {({ option }: { option: PriceFeed }) => {
+          const { feedId, name, description } = option;
           return (
             <ComboboxOption
               key={feedId}

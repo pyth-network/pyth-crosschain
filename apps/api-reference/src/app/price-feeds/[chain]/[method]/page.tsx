@@ -1,19 +1,20 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import type { ComponentProps } from "react";
+import { type ComponentProps, use } from "react";
 
 import * as apis from "../../../../apis";
 import { EvmApi } from "../../../../components/EvmApi";
 
 type Props = {
-  params: {
+  params: Promise<{
     chain: string;
     method: string;
-  };
+  }>;
 };
 
-const Page = ({ params }: Props) => {
+const Page = (props: Props) => {
+  const params = use(props.params);
   const chain: (typeof apis)[keyof typeof apis] | undefined = isKeyOf(
     params.chain,
     apis,

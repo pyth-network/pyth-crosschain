@@ -1,3 +1,4 @@
+import { type Geo, geolocation, ipAddress } from "@vercel/functions";
 import ipRangeCheck from "ip-range-check";
 import { type NextRequest, NextResponse } from "next/server";
 import ProxyCheck from "proxycheck-ts";
@@ -24,16 +25,18 @@ const proxyCheckClient = PROXYCHECK_API_KEY
   : undefined;
 
 export const middleware = async (request: NextRequest) => {
-  if (isIpAllowlisted(request)) {
+  const ip = ipAddress(request);
+  if (isIpAllowlisted(ip)) {
     return isBlockedSegment(request)
       ? rewrite(request, "/not-found")
       : undefined;
   } else {
-    if (await isProxyBlocked(request)) {
+    const geo = geolocation(request);
+    if (await isProxyBlocked(ip)) {
       return rewrite(request, VPN_BLOCKED_PATH);
-    } else if (isGovernanceOnlyRegion(request)) {
+    } else if (isGovernanceOnlyRegion(geo)) {
       return rewrite(request, GOVERNANCE_ONLY_PATH);
-    } else if (isRegionBlocked(request)) {
+    } else if (isRegionBlocked(geo)) {
       return rewrite(request, GEO_BLOCKED_PATH);
     } else if (isBlockedSegment(request)) {
       return rewrite(request, "/not-found");
@@ -46,19 +49,19 @@ export const middleware = async (request: NextRequest) => {
 const rewrite = (request: NextRequest, path: string) =>
   NextResponse.rewrite(new URL(path, request.url));
 
-const isIpAllowlisted = ({ ip }: NextRequest) =>
+const isIpAllowlisted = (ip: string | undefined) =>
   ip !== undefined &&
   IP_ALLOWLIST.some((allowedRange) => ipRangeCheck(ip, allowedRange));
 
-const isGovernanceOnlyRegion = ({ geo }: NextRequest) =>
-  geo?.country !== undefined &&
+const isGovernanceOnlyRegion = (geo: Geo) =>
+  geo.country !== undefined &&
   GOVERNANCE_ONLY_REGIONS.includes(geo.country.toLowerCase());
 
-const isRegionBlocked = ({ geo }: NextRequest) =>
-  geo?.country !== undefined &&
+const isRegionBlocked = (geo: Geo) =>
+  geo.country !== undefined &&
   BLOCKED_REGIONS.includes(geo.country.toLowerCase());
 
-const isProxyBlocked = async ({ ip }: NextRequest) => {
+const isProxyBlocked = async (ip: string | undefined) => {
   if (proxyCheckClient === undefined || ip === undefined) {
     return false;
   } else {

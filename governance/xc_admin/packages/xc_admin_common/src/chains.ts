@@ -90,6 +90,8 @@ export const RECEIVER_CHAINS = {
   sanko: 60063,
   skate: 60064,
   morph: 60065,
+  superseed_mainnet: 60066,
+  fuel_mainnet: 60067, // Note: Currently deployed at 50084 (fuel_testnet) but we should use 60067 for future deployments
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -200,6 +202,9 @@ export const RECEIVER_CHAINS = {
   skate_testnet: 50102,
   movement_porto_testnet: 50103,
   ton_testnet: 50104,
+  kraken_ink_testnet: 50105,
+  ethena_testnet: 50106,
+  superseed_testnet: 50107,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
