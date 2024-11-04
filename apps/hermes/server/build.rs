@@ -15,7 +15,6 @@ fn main() {
     // TREEISH paths we want.
     let protobuf_setup = r#"
         set -e
-        rm -rf .git
         git init .
         git clean -df
         git remote add wormhole https://github.com/wormhole-foundation/wormhole.git || true
