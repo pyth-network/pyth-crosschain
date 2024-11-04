@@ -21,9 +21,10 @@ To set up and run a Hermes node, follow the steps below:
    using [Beacon](https://github.com/pyth-network/beacon), a highly available rewrite for spy, for production purposes.
 1. **Install Rust nightly-2023-07-23**: If you haven't already, you'll need to install Rust. You can
    do so by following the official instructions. Then, run the following command to install the required
-   nightly version of Rust:
+   nightly version of Rust and set it as the default:
    ```bash
     rustup toolchain install nightly-2023-07-23
+    rustup default nightly-2023-07-23
    ```
 2. **Install Go**: If you haven't already, you'll also need to install Go. You can
    do so by following the official instructions. If you are on a Mac with M series
@@ -43,17 +44,19 @@ To set up and run a Hermes node, follow the steps below:
 
    ```bash
    cargo run --release -- run \
-     --pythnet-http-addr https://pythnet-rpc/ \
-     --pythnet-ws-addr wss://pythnet-rpc/ \
-     --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
+     --pythnet-http-addr https://api2.pythnet.pyth.network \
+     --pythnet-ws-addr wss://api2.pythnet.pyth.network \
+     --wormhole-spy-rpc-addr http://localhost:7073
    ```
 
    Your Hermes node will now start and connect to the Pythnet and Wormhole spy RPC. You
    can interact with the node using the REST and Websocket APIs on port 33999.
 
    For local development, you can also run the node with [cargo watch](https://crates.io/crates/cargo-watch) to restart
-   it automatically when the code changes:
+   it automatically when the code changes.
+   Note that cargo-watch v8 and above is incompatible with our `nightly-2023-07-23` rust toolchain, so you'll need to install version 7.x:
 
    ```bash
+   cargo install cargo-watch@^7.x
    cargo watch -w src -x "run -- run --pythnet-http-addr https://pythnet-rpc/ --pythnet-ws-addr wss://pythnet-rpc/ --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
    ```

@@ -94,25 +94,43 @@ impl IntoResponse for RestError {
     }
 }
 
-/// Verify that the price ids exist in the aggregate state.
-pub async fn verify_price_ids_exist<S>(
+/// Validate that the passed in price_ids exist in the aggregate state. Return a Vec of valid price ids.
+/// # Returns  
+/// If `remove_invalid` is true, invalid price ids are filtered out and only valid price ids are returned.
+/// If `remove_invalid` is false and any passed in IDs are invalid, an error is returned.
+pub async fn validate_price_ids<S>(
     state: &ApiState<S>,
     price_ids: &[PriceIdentifier],
-) -> Result<(), RestError>
+    remove_invalid: bool,
+) -> Result<Vec<PriceIdentifier>, RestError>
 where
     S: Aggregates,
 {
     let state = &*state.state;
-    let all_ids = Aggregates::get_price_feed_ids(state).await;
-    let missing_ids = price_ids
+    let valid_ids = Aggregates::get_price_feed_ids(state).await;
+
+    // Find any price IDs that don't exist in the valid set
+    let missing_ids: Vec<PriceIdentifier> = price_ids
         .iter()
-        .filter(|id| !all_ids.contains(id))
-        .cloned()
-        .collect::<Vec<_>>();
+        .filter(|id| !valid_ids.contains(id))
+        .copied()
+        .collect();
 
     if !missing_ids.is_empty() {
-        return Err(RestError::PriceIdsNotFound { missing_ids });
+        // Some of the passed in IDs are invalid
+        if remove_invalid {
+            // Filter out invalid IDs and return only the valid ones
+            Ok(price_ids
+                .iter()
+                .filter(|id| valid_ids.contains(id))
+                .copied()
+                .collect())
+        } else {
+            // Return error with list of missing IDs
+            Err(RestError::PriceIdsNotFound { missing_ids })
+        }
+    } else {
+        // All IDs are valid, return them unchanged
+        Ok(price_ids.to_vec())
     }
-
-    Ok(())
 }

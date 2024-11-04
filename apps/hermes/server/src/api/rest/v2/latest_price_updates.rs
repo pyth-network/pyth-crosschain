@@ -2,7 +2,7 @@ use {
     crate::{
         api::{
             rest::{
-                verify_price_ids_exist,
+                validate_price_ids,
                 RestError,
             },
             types::{
@@ -57,6 +57,10 @@ pub struct LatestPriceUpdatesQueryParams {
     /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
+
+    /// If true, invalid price IDs in the `ids` parameter are ignored. Default is `false`.
+    #[serde(default)]
+    ignore_invalid_price_ids: bool,
 }
 
 fn default_true() -> bool {
@@ -85,7 +89,7 @@ where
     S: Aggregates,
 {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-    verify_price_ids_exist(&state, &price_ids).await?;
+    let price_ids: Vec<PriceIdentifier> = validate_price_ids(&state, &price_ids, params.ignore_invalid_price_ids).await?;
 
     let state = &*state.state;
     let price_feeds_with_update_data =
