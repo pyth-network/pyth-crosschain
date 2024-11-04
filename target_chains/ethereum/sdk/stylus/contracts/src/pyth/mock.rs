@@ -216,8 +216,9 @@ mod tests {
     use alloc::vec;
     use alloy_primitives::{address, uint, Address, U64, U256, FixedBytes, fixed_bytes};
     use stylus_sdk::{abi::Bytes, contract, msg::{self, value}};
-    use crate::pyth::{
-        PythContract, mock::{MockPythContract, DecodeDataType}, 
+    use 
+    crate::pyth::{
+        mock::{MockPythContract, DecodeDataType}, 
         errors::{Error, InvalidArgument}, types::{PriceFeed, Price, StoragePriceFeed}
     };
     use alloy_sol_types::SolType;

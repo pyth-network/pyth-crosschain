@@ -1,7 +1,7 @@
 
 #![allow(missing_docs)]
 //! Solidity type definitions used throughout the project
-use alloy_primitives::{ I32, I64, U64};
+use alloy_primitives::{ I32, I64, U64, U256};
 use stylus_sdk::{alloy_sol_types::sol, prelude::*};
 
 
@@ -142,7 +142,6 @@ sol! {
             returns (uint validTimePeriod);
 }
 
-
 impl StoragePrice {
     /// Converts the `StoragePrice` instance into a `Price` struct.
     ///
@@ -167,6 +166,13 @@ impl StoragePrice {
         self.conf.set(U64::try_from(price.conf).unwrap());
         self.expo.set(I32::try_from(price.expo).unwrap());
         self.publish_time.set(price.publish_time);
+    }
+
+    /// This function is for just for testing
+     pub fn from_price(price: Price) -> Self {
+        let mut storage_price = unsafe { StoragePrice::new(U256::from(100), 0)};
+        storage_price.set(price);
+        storage_price
     }
 }
 
@@ -195,5 +201,84 @@ impl StoragePriceFeed {
         self.price.set(price_feed.price);
         self.ema_price.set(price_feed.ema_price);
     }
+
+     pub fn from_price_feed(price_feed: PriceFeed) -> Self {
+        let mut storage_price_feed = unsafe { StoragePriceFeed::new(U256::from(100), 0)};
+        storage_price_feed.set(price_feed);
+        storage_price_feed
+    }
+
 }
 
+
+
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloy_primitives::{address, FixedBytes, U256};
+    use crate::pyth::types::{PriceFeed, Price, StoragePriceFeed, StoragePrice};
+
+    // Updated constants to use uppercase naming convention
+    const PRICE: i64 = 1000;
+    const CONF: u64 = 1000;
+    const EXPO: i32 = 1000;
+    const EMA_PRICE: i64 = 1000;
+    const EMA_CONF: u64 = 1000;
+
+    fn generate_bytes() -> FixedBytes<32> {
+        FixedBytes::<32>::repeat_byte(30)
+    }
+
+    #[motsu::test]
+    fn can_create_type_price() {
+        let price_result =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        assert_eq!(price_result.price, PRICE);
+        assert_eq!(price_result.conf, CONF);
+        assert_eq!(price_result.expo, EXPO);
+        assert_eq!(price_result.publish_time, U256::from(1000));
+    }
+
+     #[motsu::test]
+    fn can_create_type_price_feed() {
+        let id = generate_bytes();
+        let price_result =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        let price_result_ema =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        let price_feed_result =  PriceFeed{ id, price: price_result, ema_price: price_result_ema};
+        assert_eq!(price_feed_result.price.price, PRICE);
+        assert_eq!(price_feed_result.price.conf, CONF);
+        assert_eq!(price_feed_result.price.expo, EXPO);
+        assert_eq!(price_feed_result.price.publish_time, U256::from(1000));
+        assert_eq!(price_feed_result.ema_price.price, PRICE);
+        assert_eq!(price_feed_result.ema_price.conf, CONF);
+        assert_eq!(price_feed_result.ema_price.expo, EXPO);
+        assert_eq!(price_feed_result.ema_price.publish_time, U256::from(1000));
+    }
+
+    #[motsu::test]
+    fn can_create_type_storage_price() {
+        let price_result =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        let storage_price_result = StoragePrice::from_price(price_result);
+        let price_result = storage_price_result.to_price();
+        assert_eq!(price_result.price, PRICE);
+        assert_eq!(price_result.conf, CONF);
+        assert_eq!(price_result.expo, EXPO);
+        assert_eq!(price_result.publish_time, U256::from(1000));
+    }
+
+     #[motsu::test]
+    fn can_create_type_storage_price_feed() {
+        let price_result =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        let price_result_ema =  Price{price: PRICE, conf: CONF, expo: EXPO, publish_time: U256::from(1000)};
+        let price_feed_result =  PriceFeed{ id: generate_bytes(), price: price_result, ema_price: price_result_ema};
+        let storage_price_feed_result = StoragePriceFeed::from_price_feed(price_feed_result);
+        let price_feed_result = storage_price_feed_result.to_price_feed();
+        assert_eq!(price_feed_result.price.price, PRICE);
+        assert_eq!(price_feed_result.price.conf, CONF);
+        assert_eq!(price_feed_result.price.expo, EXPO);
+        assert_eq!(price_feed_result.price.publish_time, U256::from(1000));
+        assert_eq!(price_feed_result.ema_price.price, PRICE);
+        assert_eq!(price_feed_result.ema_price.conf, CONF);
+        assert_eq!(price_feed_result.ema_price.expo, EXPO);
+        assert_eq!(price_feed_result.ema_price.publish_time, U256::from(1000));
+    }
+
+}
