@@ -91,6 +91,7 @@ export const RECEIVER_CHAINS = {
   skate: 60064,
   morph: 60065,
   superseed_mainnet: 60066,
+  fuel_mainnet: 60067, // Note: Currently deployed at 50084 (fuel_testnet) but we should use 60067 for future deployments
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -210,7 +211,7 @@ export const RECEIVER_CHAINS = {
 // value and that is an expected behavior.
 export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
 export declare type ChainName = keyof typeof CHAINS;
-export declare type ChainId = typeof CHAINS[ChainName];
+export declare type ChainId = (typeof CHAINS)[ChainName];
 
 export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
