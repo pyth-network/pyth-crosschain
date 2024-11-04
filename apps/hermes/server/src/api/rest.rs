@@ -107,27 +107,27 @@ where
     S: Aggregates,
 {
     let state = &*state.state;
-    let valid_ids = Aggregates::get_price_feed_ids(state).await;
+    let available_ids = Aggregates::get_price_feed_ids(state).await;
 
     // Find any price IDs that don't exist in the valid set
-    let missing_ids: Vec<PriceIdentifier> = price_ids
+    let not_found_ids: Vec<PriceIdentifier> = price_ids
         .iter()
-        .filter(|id| !valid_ids.contains(id))
+        .filter(|id| !available_ids.contains(id))
         .copied()
         .collect();
 
-    if !missing_ids.is_empty() {
+    if !not_found_ids.is_empty() {
         // Some of the passed in IDs are invalid
         if remove_invalid {
             // Filter out invalid IDs and return only the valid ones
             Ok(price_ids
                 .iter()
-                .filter(|id| valid_ids.contains(id))
+                .filter(|id| available_ids.contains(id))
                 .copied()
                 .collect())
         } else {
             // Return error with list of missing IDs
-            Err(RestError::PriceIdsNotFound { missing_ids })
+            Err(RestError::PriceIdsNotFound { missing_ids: not_found_ids })
         }
     } else {
         // All IDs are valid, return them unchanged
