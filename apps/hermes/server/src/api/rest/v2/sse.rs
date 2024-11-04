@@ -102,7 +102,8 @@ where
     S: Send + Sync + 'static,
 {
     let price_id_inputs: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
-    let price_ids: Vec<PriceIdentifier> = validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
+    let price_ids: Vec<PriceIdentifier> =
+        validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
     // Clone the update_tx receiver to listen for new price updates
     let update_rx: broadcast::Receiver<AggregationEvent> = Aggregates::subscribe(&*state.state);

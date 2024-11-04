@@ -88,8 +88,10 @@ pub async fn latest_price_updates<S>(
 where
     S: Aggregates,
 {
-    let price_id_inputs: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-    let price_ids: Vec<PriceIdentifier> = validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
+    let price_id_inputs: Vec<PriceIdentifier> =
+        params.ids.into_iter().map(|id| id.into()).collect();
+    let price_ids: Vec<PriceIdentifier> =
+        validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
     let state = &*state.state;
     let price_feeds_with_update_data =

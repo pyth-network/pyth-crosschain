@@ -95,7 +95,7 @@ impl IntoResponse for RestError {
 }
 
 /// Validate that the passed in price_ids exist in the aggregate state. Return a Vec of valid price ids.
-/// # Returns  
+/// # Returns
 /// If `remove_invalid` is true, invalid price ids are filtered out and only valid price ids are returned.
 /// If `remove_invalid` is false and any passed in IDs are invalid, an error is returned.
 pub async fn validate_price_ids<S>(
@@ -127,7 +127,9 @@ where
                 .collect())
         } else {
             // Return error with list of missing IDs
-            Err(RestError::PriceIdsNotFound { missing_ids: not_found_ids })
+            Err(RestError::PriceIdsNotFound {
+                missing_ids: not_found_ids,
+            })
         }
     } else {
         // All IDs are valid, return them unchanged
