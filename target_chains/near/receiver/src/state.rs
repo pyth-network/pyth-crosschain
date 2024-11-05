@@ -26,6 +26,7 @@ pub type WormholeSignature = [u8; 65];
 pub type WormholeAddress = [u8; 32];
 
 #[derive(BorshDeserialize, BorshSerialize, PartialEq, Eq, Hash)]
+#[borsh(crate = "near_sdk::borsh")]
 #[repr(transparent)]
 pub struct PriceIdentifier(pub [u8; 32]);
 
@@ -86,6 +87,7 @@ impl near_sdk::serde::Serialize for PriceIdentifier {
 /// Please refer to the documentation at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for how
 /// to how this price safely.
 #[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct Price {
     pub price:        I64,
@@ -102,6 +104,7 @@ pub struct Price {
 /// This structure matches the layout of the PriceFeed structure in other Pyth receiver contracts
 /// but uses types that are native to NEAR.
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct PriceFeed {
     /// Unique identifier for this price.
@@ -169,6 +172,7 @@ impl From<&PriceFeedMessage> for PriceFeed {
     PartialOrd,
     Serialize,
 )]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 #[repr(transparent)]
 pub struct Chain(u16);
@@ -204,6 +208,7 @@ impl From<Chain> for u16 {
     PartialOrd,
     Serialize,
 )]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct Source {
     pub emitter: WormholeAddress,

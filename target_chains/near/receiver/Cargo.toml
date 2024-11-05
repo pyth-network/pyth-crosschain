@@ -15,7 +15,7 @@ library = []
 [dependencies]
 byteorder                  = { version = "1.4.3" }
 hex                        = { version = "0.4.3" }
-near-sdk                   = { version = "4.1.1" }
+near-sdk                   = { version = "5.5.0", features = ["legacy"] }
 nom                        = { version = "7.1.2" }
 num-traits                 = { version = "0.2.15" }
 num-derive                 = { version = "0.3.3" }
