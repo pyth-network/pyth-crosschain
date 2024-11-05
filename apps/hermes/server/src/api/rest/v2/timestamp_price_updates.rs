@@ -68,8 +68,7 @@ pub struct TimestampPriceUpdatesQueryParams {
     #[serde(default = "default_true")]
     parsed: bool,
 
-    /// If true, invalid price IDs in the `ids` parameter are ignored. Default is `false`.
-    #[serde(default)]
+    /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.    #[serde(default)]
     ignore_invalid_price_ids: bool,
 }
 
