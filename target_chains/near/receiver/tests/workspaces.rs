@@ -1,5 +1,9 @@
 use {
     near_sdk::json_types::U128,
+    near_workspaces::types::{
+        Gas,
+        NearToken,
+    },
     pyth::{
         governance::{
             GovernanceAction,
@@ -35,11 +39,11 @@ use {
 };
 
 async fn initialize_chain() -> (
-    workspaces::Worker<workspaces::network::Sandbox>,
-    workspaces::Contract,
-    workspaces::Contract,
+    near_workspaces::Worker<near_workspaces::network::Sandbox>,
+    near_workspaces::Contract,
+    near_workspaces::Contract,
 ) {
-    let worker = workspaces::sandbox().await.expect("Workspaces Failed");
+    let worker = near_workspaces::sandbox().await.expect("Workspaces Failed");
 
     // Deploy Pyth
     let contract = worker
@@ -60,7 +64,7 @@ async fn initialize_chain() -> (
     let _ = wormhole
         .call("new")
         .args_json(&json!({}))
-        .gas(300_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
         .transact_async()
         .await
         .expect("Failed to initialize Wormhole")
@@ -86,7 +90,7 @@ async fn initialize_chain() -> (
             "update_fee":      U128::from(1u128),
             "stale_threshold": DEFAULT_VALID_TIME_PERIOD,
         }))
-        .gas(300_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
         .transact_async()
         .await
         .expect("Failed to initialize Pyth")
@@ -132,8 +136,8 @@ async fn test_set_sources() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -202,8 +206,8 @@ async fn test_set_governance_source() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -246,8 +250,8 @@ async fn test_set_governance_source() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -293,8 +297,8 @@ async fn test_set_governance_source() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -364,8 +368,8 @@ async fn test_stale_threshold() {
     // Submit price. As there are no prices this should succeed despite being old.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "data": vaa,
         }))
@@ -441,8 +445,8 @@ async fn test_stale_threshold() {
     // The update handler should now succeed even if price is old, but simply not update the price.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "data": vaa,
         }))
@@ -491,8 +495,8 @@ async fn test_stale_threshold() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -584,8 +588,8 @@ async fn test_contract_fees() {
     // Now set the update_fee so that it is too high for the deposit to cover.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -647,8 +651,8 @@ async fn test_contract_fees() {
 
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(update_fee.into()))
         .args_json(&json!({
             "data": vaa,
         }))
@@ -700,8 +704,8 @@ async fn test_same_governance_sequence_fails() {
     // Attempt our first SetFee.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -716,8 +720,8 @@ async fn test_same_governance_sequence_fails() {
     // Attempt to run the same VAA again.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -754,8 +758,8 @@ async fn test_out_of_order_sequences_fail() {
     // Attempt our first SetFee.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -785,8 +789,8 @@ async fn test_out_of_order_sequences_fail() {
     // This should succeed.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -816,8 +820,8 @@ async fn test_out_of_order_sequences_fail() {
     // This should fail due to being out of order.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -853,8 +857,8 @@ async fn test_governance_target_fails_if_not_near() {
     // This should fail as the target is Solana, when Near is expected.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -894,8 +898,8 @@ async fn test_accumulator_updates() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "vaa": vaa,
         }))
@@ -916,8 +920,8 @@ async fn test_accumulator_updates() {
     // Call the usual UpdatePriceFeed function.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
         .args_json(&json!({
             "data": message,
         }))

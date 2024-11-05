@@ -33,7 +33,7 @@ serde_json                 = { version = "1.0.91" }
 serde                      = { version = "1.0.152", features = ["derive"] }
 tokio                      = { version = "1.23.0", features = ["full"] }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
-workspaces                 = { version = "0.7.0" }
+near-workspaces            = { version = "0.14.1" }
 wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk", features = ["test-utils"] }
 
