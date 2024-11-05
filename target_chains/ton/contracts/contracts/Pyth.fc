@@ -119,7 +119,7 @@ int get_is_valid_data_source(cell data_source) method_id {
     load_data();
     (int price, int conf, int expo, int publish_time) = get_price_unsafe(price_feed_id);
     int current_time = now();
-    throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
+    throw_if(ERROR_OUTDATED_PRICE, max(0, current_time - publish_time) > time_period);
     return (price, conf, expo, publish_time);
 }
 
