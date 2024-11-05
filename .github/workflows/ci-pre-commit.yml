@@ -40,6 +40,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
+          toolchain: 1.66.1
+          components: rustfmt, clippy
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
           toolchain: 1.82.0
           components: rustfmt, clippy
       - name: Install protoc

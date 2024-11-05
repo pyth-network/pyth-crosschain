@@ -30,7 +30,7 @@ repos:
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.66.1 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: governance/remote_executor
       # Hooks for cosmwasm contract
