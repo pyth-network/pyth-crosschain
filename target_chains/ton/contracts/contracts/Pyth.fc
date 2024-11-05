@@ -335,7 +335,7 @@ int apply_decimal_expo(int value, int expo) {
     }
 
     ;; Verify that all data in the payload was processed
-    throw_unless(ERROR_INVALID_UPDATE_DATA_LENGTH, payload.slice_empty?());
+    throw_unless(ERROR_INVALID_PAYLOAD_LENGTH, payload.slice_empty?());
 
     is_valid_data_source = new_data_sources;
 }
