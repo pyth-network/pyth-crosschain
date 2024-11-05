@@ -39,7 +39,7 @@ slice read_and_verify_header(slice data) {
     slice cs = read_and_verify_proof(root_digest, message, cs);
 
     int message_type = message~load_uint(8);
-    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == 0);  ;; 0 corresponds to PriceFeed
+    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == PRICE_FEED_MESSAGE_TYPE);
 
     int price_id = message~load_uint(256);
     int price = message~load_int(64);

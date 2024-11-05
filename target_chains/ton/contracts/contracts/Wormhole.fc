@@ -130,7 +130,7 @@ int governance_action_is_consumed(int hash) method_id {
     load_data();
     ;; Parse VM fields
     int version = in_msg_body~load_uint(8);
-    throw_unless(ERROR_INVALID_VERSION, version == 1);
+    throw_unless(ERROR_INVALID_VERSION, version == WORMHOLE_VM_VERSION);
     int vm_guardian_set_index = in_msg_body~load_uint(32);
     ;; Verify and check if guardian set is valid
     (int expiration_time, cell keys_dict, int key_count) = get_guardian_set_internal(vm_guardian_set_index);
@@ -194,7 +194,7 @@ int governance_action_is_consumed(int hash) method_id {
     throw_unless(ERROR_INVALID_MODULE, module == UPGRADE_MODULE);
 
     int action = payload~load_uint(8);
-    throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == 2);
+    throw_unless(ERROR_INVALID_GOVERNANCE_ACTION, action == GUARDIAN_SET_UPGRADE_ACTION);
 
     int chain = payload~load_uint(16);
     int new_guardian_set_index = payload~load_uint(32);

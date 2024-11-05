@@ -5,10 +5,15 @@ const int GOVERNANCE_MODULE = 1;
 const int MAJOR_VERSION = 1;
 const int MINIMUM_ALLOWED_MINOR_VERSION = 0;
 
+const int WORMHOLE_VM_VERSION = 1;
+
 const int GUARDIAN_SET_EXPIRY = 86400; ;; 1 day in seconds
 const int UPGRADE_MODULE = 0x0000000000000000000000000000000000000000000000000000000000436f7265; ;; "Core" (left-padded to 256 bits) in hex
+const int GUARDIAN_SET_UPGRADE_ACTION = 2;
 
 const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
+
+const int PRICE_FEED_MESSAGE_TYPE = 0;
 
 {-
   The main workchain ID in TON. Currently, TON has two blockchains:
