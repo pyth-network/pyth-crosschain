@@ -80,11 +80,6 @@ int get_governance_data_source_index() method_id {
     return governance_data_source_index;
 }
 
-cell get_data_sources() method_id {
-    load_data();
-    return data_sources;
-}
-
 cell get_governance_data_source() method_id {
     load_data();
     return governance_data_source;
