@@ -51,6 +51,7 @@ pub enum MultiCallErrors {
 impl FunctionCallsExample {
     pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
        let price =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
+       self.price.set(price);
        if price.price > 0 {
           return Ok(());
        }
