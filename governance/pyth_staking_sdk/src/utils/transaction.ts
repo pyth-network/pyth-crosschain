@@ -20,5 +20,5 @@ export const sendTransaction = async (
     {},
   );
 
-  return sendTransactions(transactions, connection, wallet);
+  return sendTransactions(transactions, connection, wallet, 20);
 };
