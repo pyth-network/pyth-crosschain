@@ -8,7 +8,7 @@ It is **strongly recommended** to follow the [consumer best practices](https://d
 
 ## Features
 
-- Pyth  smart contracts, that use external calls  [`pyth-solidty -contracts`] library.
+- Pyth  smart contracts use external calls  [`pyth-solidty-contracts`] library.
 - First-class `no_std` support.
 - Solidity constructors powered by [`koba`].
 - [Unit] and [integration] test affordances are used in our tests.
@@ -21,7 +21,7 @@ line to your `Cargo.toml` (We recommend pinning to a specific version):
 
 ```toml
 [dependencies]
-openzeppelin-stylus = "0.1.1"
+pyth-stylus = "0.0.1"
 ```
 
 Optionally, you can specify a git dependency if you want to have the latest
@@ -29,14 +29,13 @@ changes from the `main` branch:
 
 ```toml
 [dependencies]
-openzeppelin-stylus = { git = "https://github.com/OpenZeppelin/rust-contracts-stylus" }
+pyth-stylus = { git = "URL" }
 ```
-
 
 ## Example Usage
 
 To consume prices you should use the [`IPyth`](IPyth.sol) interface. Please make sure to read the documentation of this
-interface in order to use the prices safely.
+interface to use the prices safely.
 
 For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed
 you're interested in. The price feeds available on each chain are listed [below](#target-chains).
@@ -76,13 +75,9 @@ pub enum MultiCallErrors {
 
 
 impl FunctionCallsExample {
-    pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
-       let price =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
-       self.price.set(price);
-       if price.price > 0 {
-          return Ok(());
-       }
-        Err(MultiCallErrors::CallFailed(CallFailed{}).into())
+    pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
+       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
+       Ok(())
     }
 }
 
