@@ -41,34 +41,49 @@ interface in order to use the prices safely.
 For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed
 you're interested in. The price feeds available on each chain are listed [below](#target-chains).
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+```rust
 
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+use pyth_stylus::pyth::{functions::{ get_price_unsafe}};
 
-contract ExampleContract {
-  IPyth pyth;
+sol_storage! {
+    #[entrypoint]
+    struct FunctionCallsExample {
+        address pyth_address;
+        bytes32 price_id;
+        StoragePrice price;
+        StoragePriceFeed price_feed;
+        StoragePrice ema_price;
+        StoragePriceFeed ema_price_feed;
+    }
+}
 
-  constructor(address pythContract) {
-    pyth = IPyth(pythContract);
-  }
+sol! {
 
-  function getBtcUsdPrice(
-    bytes[] calldata priceUpdateData
-  ) public payable returns (PythStructs.Price memory) {
-    // Update the prices to the latest available values and pay the required fee for it. The `priceUpdateData` data
-    // should be retrieved from our off-chain Price Service API using the `pyth-evm-js` package.
-    // See section "How Pyth Works on EVM Chains" below for more information.
-    uint fee = pyth.getUpdateFee(priceUpdateData);
-    pyth.updatePriceFeeds{ value: fee }(priceUpdateData);
+    error ArraySizeNotMatch();
 
-    bytes32 priceID = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
-    // Read the current value of priceID, aborting the transaction if the price has not been updated in the last 10
-    // seconds.
-    return pyth.getPriceNoOlderThan(priceID, 10);
-  }
+    error CallFailed();
+
+}
+
+#[derive(SolidityError)]
+pub enum MultiCallErrors {
+
+    ArraySizeNotMatch(ArraySizeNotMatch),
+
+    CallFailed(CallFailed),
+
+}
+
+
+impl FunctionCallsExample {
+    pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
+       let price =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
+       self.price.set(price);
+       if price.price > 0 {
+          return Ok(());
+       }
+        Err(MultiCallErrors::CallFailed(CallFailed{}).into())
+    }
 }
 
 ```
