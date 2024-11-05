@@ -79,11 +79,6 @@ export class BaseWrapper implements Contract {
       priceDict.set(BigInt(config.priceFeedId), priceFeedCell);
     }
 
-    // Create a dictionary for data sources
-    const dataSourcesDict = Dictionary.empty(
-      Dictionary.Keys.Uint(8),
-      Dictionary.Values.Cell()
-    );
     // Create a dictionary for valid data sources
     const isValidDataSourceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
@@ -91,12 +86,11 @@ export class BaseWrapper implements Contract {
     );
 
     if (config.dataSources) {
-      config.dataSources.forEach((source, index) => {
+      config.dataSources.forEach((source) => {
         const sourceCell = beginCell()
           .storeUint(source.emitterChain, 16)
           .storeBuffer(Buffer.from(source.emitterAddress, "hex"))
           .endCell();
-        dataSourcesDict.set(index, sourceCell);
         const cellHash = BigInt("0x" + sourceCell.hash().toString("hex"));
         isValidDataSourceDict.set(cellHash, true);
       });
@@ -110,8 +104,6 @@ export class BaseWrapper implements Contract {
 
     // Group data sources information
     const dataSourcesCell = beginCell()
-      .storeDict(dataSourcesDict)
-      .storeUint(config.dataSources ? config.dataSources.length : 0, 32)
       .storeDict(isValidDataSourceDict)
       .endCell();
 
