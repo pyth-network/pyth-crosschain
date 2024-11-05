@@ -7,11 +7,9 @@ use alloy::{
     sol,
     sol_types::{SolCall, SolConstructor},
 };
-use e2e::{receipt, Account};
+use e2e::{receipt, Account, env};
 
-use crate::{
-    env, report::{ContractReport, FunctionReport}, CacheOpt
-};
+use crate::{ report::{ContractReport, FunctionReport}, CacheOpt};
 
 sol!(
     #[sol(rpc)]

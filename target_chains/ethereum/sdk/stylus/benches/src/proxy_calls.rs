@@ -5,11 +5,11 @@ use alloy::{
     providers::ProviderBuilder, 
     sol, sol_types::{ SolCall, SolConstructor}
 };
-use e2e::{receipt, Account};
+use e2e::{receipt, Account, env};
 use pyth_stylus::pyth::mock::create_price_feed_update_data_list;
 
 use crate::{
-    env, report::{ContractReport, FunctionReport}, CacheOpt
+     report::{ContractReport, FunctionReport}, CacheOpt
 };
 
 sol!(

@@ -14,6 +14,12 @@ pub use error::{Panic, PanicCode, Revert};
 pub use event::EventExt;
 pub use receipt::ReceiptExt;
 pub use system::{fund_account, provider, Provider, Wallet};
+use eyre::WrapErr;
+
+/// Load the `name` environment variable.
+pub fn env(name: &str) -> eyre::Result<String> {
+    std::env::var(name).wrap_err(format!("failed to load {name}"))
+}
 
 /// This macro provides a shorthand for broadcasting the transaction to the
 /// network.
@@ -90,3 +96,4 @@ macro_rules! receipt {
         $crate::send!($e)?.get_receipt().await
     };
 }
+
