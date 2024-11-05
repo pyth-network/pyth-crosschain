@@ -7,4 +7,5 @@ src/network/p2p.proto
 tools/
 
 # Ignore Wormhole cloned repo
-wormhole*/
+# (Legacy -- we no longer clone the Wormhole repo, the proto files are included in this project under `proto/vendor`.)
+/target/**/wormhole*/
