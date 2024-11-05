@@ -202,7 +202,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
     repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
