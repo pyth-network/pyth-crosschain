@@ -21,10 +21,9 @@ To set up and run a Hermes node, follow the steps below:
    using [Beacon](https://github.com/pyth-network/beacon), a highly available rewrite for spy, for production purposes.
 1. **Install Rust nightly-2023-07-23**: If you haven't already, you'll need to install Rust. You can
    do so by following the official instructions. Then, run the following command to install the required
-   nightly version of Rust and set it as the default:
+   nightly version of Rust:
    ```bash
     rustup toolchain install nightly-2023-07-23
-    rustup default nightly-2023-07-23
    ```
 2. **Install Go**: If you haven't already, you'll also need to install Go. You can
    do so by following the official instructions. If you are on a Mac with M series
