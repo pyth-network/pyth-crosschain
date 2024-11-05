@@ -111,7 +111,6 @@ export class BaseWrapper implements Contract {
     // Group data sources information
     const dataSourcesCell = beginCell()
       .storeDict(dataSourcesDict)
-      .storeUint(config.dataSources ? config.dataSources.length : 0, 32)
       .storeDict(isValidDataSourceDict)
       .endCell();
 
