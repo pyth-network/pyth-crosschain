@@ -232,10 +232,8 @@ int governance_action_is_consumed(int hash) method_id {
     (int version, int vm_guardian_set_index, int timestamp, int nonce, int emitter_chain_id, int emitter_address, int sequence, int consistency_level, slice payload, int hash) = parse_and_verify_wormhole_vm(in_msg_body);
 
     ;; Verify the emitter chain and address
-    int chain_id = get_governance_chain_id();
-    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == chain_id);
-    int contract_address = get_governance_contract();
-    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, emitter_address == contract_address);
+    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == governance_chain_id);
+    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, emitter_address == governance_contract);
 
     ;; Check if the governance action has already been consumed
     throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
