@@ -66,6 +66,12 @@ repos:
         entry: cargo +nightly-2023-07-23 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: apps/fortuna
+      - id: cargo-clippy-fortuna
+        name: Cargo clippy for Fortuna
+        language: "rust"
+        entry: cargo +1.82.0 clippy --manifest-path ./apps/fortuna/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        pass_filenames: false
+        files: apps/fortuna
       # Hooks for message buffer contract
       - id: cargo-fmt-message-buffer
         name: Cargo format for message buffer contract

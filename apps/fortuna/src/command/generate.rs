@@ -56,7 +56,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
             &provider,
             sequence_number,
             &user_randomness,
-            &provider_randomness,
+            provider_randomness,
         )
         .await?;
 

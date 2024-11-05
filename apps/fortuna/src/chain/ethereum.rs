@@ -204,10 +204,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
-                Err(anyhow!("No log with sequence number").into())
+                Err(anyhow!("No log with sequence number"))
             }
         } else {
-            Err(anyhow!("Request failed").into())
+            Err(anyhow!("Request failed"))
         }
     }
 
@@ -238,10 +238,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             {
                 Ok(r.random_number)
             } else {
-                Err(anyhow!("No log with randomnumber").into())
+                Err(anyhow!("No log with randomnumber"))
             }
         } else {
-            Err(anyhow!("Request failed").into())
+            Err(anyhow!("Request failed"))
         }
     }
 
