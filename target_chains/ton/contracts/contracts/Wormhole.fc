@@ -189,7 +189,7 @@ int governance_action_is_consumed(int hash) method_id {
     );
 }
 
-(int, int, int, cell, int) parse_encoded_upgrade(int current_guardian_set_index, slice payload) impure {
+(int, int, int, cell, int) parse_encoded_upgrade(int guardian_set_index, slice payload) impure {
     int module = payload~load_uint(256);
     throw_unless(ERROR_INVALID_MODULE, module == UPGRADE_MODULE);
 
@@ -198,7 +198,7 @@ int governance_action_is_consumed(int hash) method_id {
 
     int chain = payload~load_uint(16);
     int new_guardian_set_index = payload~load_uint(32);
-    throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index == (current_guardian_set_index + 1));
+    throw_unless(ERROR_NEW_GUARDIAN_SET_INDEX_IS_INVALID, new_guardian_set_index == (guardian_set_index + 1));
 
     int guardian_length = payload~load_uint(8);
     throw_unless(ERROR_INVALID_GUARDIAN_SET_KEYS_LENGTH, guardian_length > 0);
@@ -232,10 +232,10 @@ int governance_action_is_consumed(int hash) method_id {
     (int version, int vm_guardian_set_index, int timestamp, int nonce, int emitter_chain_id, int emitter_address, int sequence, int consistency_level, slice payload, int hash) = parse_and_verify_wormhole_vm(in_msg_body);
 
     ;; Verify the emitter chain and address
-    int governance_chain_id = get_governance_chain_id();
-    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == governance_chain_id);
-    int governance_contract_address = get_governance_contract();
-    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, emitter_address == governance_contract_address);
+    int chain_id = get_governance_chain_id();
+    throw_unless(ERROR_INVALID_GOVERNANCE_CHAIN, emitter_chain_id == chain_id);
+    int contract_address = get_governance_contract();
+    throw_unless(ERROR_INVALID_GOVERNANCE_CONTRACT, emitter_address == contract_address);
 
     ;; Check if the governance action has already been consumed
     throw_if(ERROR_GOVERNANCE_ACTION_ALREADY_CONSUMED, governance_action_is_consumed(hash));
