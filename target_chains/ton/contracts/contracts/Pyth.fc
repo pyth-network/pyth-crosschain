@@ -334,6 +334,9 @@ int apply_decimal_expo(int value, int expo) {
         new_data_sources~udict_set(256, data_source_key, begin_cell().store_int(true, 1).end_cell().begin_parse());
     }
 
+    ;; Verify that all data in the payload was processed
+    throw_unless(ERROR_INVALID_UPDATE_DATA_LENGTH, payload.slice_empty?());
+
     is_valid_data_source = new_data_sources;
 }
 
