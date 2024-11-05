@@ -14,19 +14,6 @@
     "NULLSWAPIFNOT" ;; If recovery failed, insert null under the top of the stack
     "NULLSWAPIFNOT2";  ;; If recovery failed, insert two more nulls under the top of the stack
 
-;; For troubleshooting purposes
-() dump_guardian_sets(cell keys_dict) impure {
-    int key = -1;
-    do {
-        (key, slice value, int found) = keys_dict.udict_get_next?(32, key);
-        if (found) {
-            ~dump(key);
-            ~dump(value);
-        }
-    } until (~ found);
-}
-
-
 ;; Internal helper methods
 (int, cell, int) parse_guardian_set(slice guardian_set) {
     slice cs = guardian_set~load_ref().begin_parse();
