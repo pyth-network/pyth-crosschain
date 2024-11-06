@@ -115,11 +115,8 @@ where
         .copied()
         .partition(|id| available_ids.contains(id));
 
-    if invalid_ids.is_empty() {
+    if invalid_ids.is_empty() || remove_invalid {
         // All IDs are valid
-        Ok(valid_ids)
-    } else if remove_invalid {
-        // Return only valid IDs
         Ok(valid_ids)
     } else {
         // Return error with list of missing IDs
