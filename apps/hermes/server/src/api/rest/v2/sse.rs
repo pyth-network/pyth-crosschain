@@ -1,34 +1,19 @@
 use {
     crate::{
         api::{
-            rest::{
-                validate_price_ids,
-                RestError,
-            },
+            rest::{validate_price_ids, RestError},
             types::{
-                BinaryUpdate,
-                EncodingType,
-                ParsedPriceUpdate,
-                PriceIdInput,
-                PriceUpdate,
+                BinaryUpdate, EncodingType, ParsedPriceUpdate, PriceIdInput, PriceUpdate,
                 RpcPriceIdentifier,
             },
             ApiState,
         },
-        state::aggregate::{
-            Aggregates,
-            AggregationEvent,
-            RequestTime,
-        },
+        state::aggregate::{Aggregates, AggregationEvent, RequestTime},
     },
     anyhow::Result,
     axum::{
         extract::State,
-        response::sse::{
-            Event,
-            KeepAlive,
-            Sse,
-        },
+        response::sse::{Event, KeepAlive, Sse},
     },
     futures::Stream,
     pyth_sdk::PriceIdentifier,
@@ -36,10 +21,7 @@ use {
     serde_qs::axum::QsQuery,
     std::convert::Infallible,
     tokio::sync::broadcast,
-    tokio_stream::{
-        wrappers::BroadcastStream,
-        StreamExt as _,
-    },
+    tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
     utoipa::IntoParams,
 };
 
@@ -74,7 +56,8 @@ pub struct StreamPriceUpdatesQueryParams {
     #[serde(default)]
     benchmarks_only: bool,
 
-    /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.    #[serde(default)]
+    /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.
+    #[serde(default)]
     ignore_invalid_price_ids: bool,
 }
 
@@ -178,7 +161,6 @@ where
         .into_iter()
         .map(|price_feed| price_feed.into())
         .collect();
-
 
     if benchmarks_only {
         // Remove those with metadata.prev_publish_time != price.publish_time from parsed_price_updates
