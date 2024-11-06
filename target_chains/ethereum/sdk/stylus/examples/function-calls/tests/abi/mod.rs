@@ -4,7 +4,7 @@ use alloy::sol;
 sol!(
     #[sol(rpc)]
      contract FunctionCalls {
-        function getPriceUnsafe() external ;
+        function getPriceUnsafe() external returns (int64 price);
         function getEmaPriceUnsafe() external ;
         function getPriceNoOlderThan() external ;
         function getEmaPriceNoOlderThan() external;

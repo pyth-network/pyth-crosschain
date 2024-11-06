@@ -49,13 +49,10 @@ pub enum MultiCallErrors {
 
 #[public]
 impl FunctionCallsExample {
-    pub fn get_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
-       let price =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
-       self.price.set(price);
-       if price.price > 0 {
-          return Ok(());
-       }
-        Err(MultiCallErrors::CallFailed(CallFailed{}).into())
+    pub fn get_price_unsafe(&mut self) -> Result<i64, Vec<u8>> {
+       let price_result =  get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
+       self.price.set(price_result);
+       Ok(price_result.price)
     }
 
     pub fn get_ema_price_unsafe(&mut self) -> Result<(), Vec<u8>> {

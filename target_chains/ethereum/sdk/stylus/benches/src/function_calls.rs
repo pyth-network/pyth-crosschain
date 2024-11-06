@@ -14,7 +14,7 @@ use crate::{ report::{ContractReport, FunctionReport}, CacheOpt};
 sol!(
     #[sol(rpc)]
     contract FunctionCall{
-        function getPriceUnsafe() external ;
+        function getPriceUnsafe() external  returns (int64 price);
         function getEmaPriceUnsafe() external ;
         function getPriceNoOlderThan() external ;
         function getEmaPriceNoOlderThan() external;

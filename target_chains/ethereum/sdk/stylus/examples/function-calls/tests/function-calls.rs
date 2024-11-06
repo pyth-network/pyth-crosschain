@@ -20,17 +20,6 @@ mod abi;
 
 sol!("src/constructor.sol");
 
-fn str_to_address(input: &str) -> Address {
-    let mut address_bytes = [0u8; 20]; // Initialize a 20-byte array with zeros
-
-    // Convert the input string to bytes and copy into the 20-byte array
-    let input_bytes = input.as_bytes();
-    let len = input_bytes.len().min(20); // Take up to 20 bytes if input is longer
-
-    address_bytes[..len].copy_from_slice(&input_bytes[..len]);
-
-    Address::new(address_bytes) // Create an Address from the byte array
-}
 
 impl Default for constructorCall {
     fn default() -> Self {
@@ -41,10 +30,10 @@ impl Default for constructorCall {
 
 fn ctr(key_id: &str) -> constructorCall {
     let pyth_addr = env("MOCK_PYTH_ADDRESS").unwrap();
-    let address_addr = str_to_address(&pyth_addr);
-    println!("MOCK_PYTH_ADDRESS: {:?}", pyth_addr);
+    let address_addr = Address::parse_checksummed(&pyth_addr, None).unwrap();
     let id = keccak_const::Keccak256::new().update(key_id.as_bytes()).finalize().to_vec();
     let price_id = FixedBytes::<32>::from_slice(&id);
+    println!("MOCK_PYTH_ADDRESS: {:?} {:?} {:?}", pyth_addr, address_addr, price_id);
     constructorCall {
       _pythAddress: address_addr,
       _priceId: price_id 
@@ -60,17 +49,8 @@ async fn constructs(alice: Account) -> Result<()> {
         .deploy()
         .await?
         .address()?;
-
-    // Instantiate the contract instance
     let contract = FunctionCalls::new(contract_addr, &alice.wallet);
-
-    // Perform basic checks to ensure the contract is correctly initialized
-    // Calling a sample function to validate deployment (e.g., `getPriceUnsafe` as a placeholder)
-    let price_result = contract.getPriceUnsafe().call().await;
-    
-    // Verify that the contract was deployed successfully and the function call does not revert
-    price_result.expect("The contract deployment or function call failed");
-    //assert!(price_result.is_ok(), "The contract deployment or function call failed");
-
+    let FunctionCalls::getPriceUnsafeReturn { price } = contract.getPriceUnsafe().call().await?;
+    println!("Price: {}", price);
     Ok(())
 }
