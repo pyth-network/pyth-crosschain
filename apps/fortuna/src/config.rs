@@ -118,10 +118,10 @@ impl Config {
     }
 
     pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig> {
-        self.chains
-            .get(chain_id)
-            .map(|x| x.clone())
-            .ok_or(anyhow!("Could not find chain id {} in the configuration", &chain_id).into())
+        self.chains.get(chain_id).cloned().ok_or(anyhow!(
+            "Could not find chain id {} in the configuration",
+            &chain_id
+        ))
     }
 }
 
@@ -261,16 +261,12 @@ pub struct SecretString {
 
 impl SecretString {
     pub fn load(&self) -> Result<Option<String>> {
-        match &self.value {
-            Some(v) => return Ok(Some(v.clone())),
-            _ => {}
+        if let Some(v) = &self.value {
+            return Ok(Some(v.clone()));
         }
 
-        match &self.file {
-            Some(v) => {
-                return Ok(Some(fs::read_to_string(v)?.trim().to_string()));
-            }
-            _ => {}
+        if let Some(v) = &self.file {
+            return Ok(Some(fs::read_to_string(v)?.trim().to_string()));
         }
 
         Ok(None)

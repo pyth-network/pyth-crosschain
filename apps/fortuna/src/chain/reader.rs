@@ -23,9 +23,9 @@ pub enum BlockStatus {
     Safe,
 }
 
-impl Into<EthersBlockNumber> for BlockStatus {
-    fn into(self) -> EthersBlockNumber {
-        match self {
+impl From<BlockStatus> for EthersBlockNumber {
+    fn from(val: BlockStatus) -> Self {
+        match val {
             BlockStatus::Latest => EthersBlockNumber::Latest,
             BlockStatus::Finalized => EthersBlockNumber::Finalized,
             BlockStatus::Safe => EthersBlockNumber::Safe,

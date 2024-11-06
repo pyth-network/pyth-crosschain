@@ -23,6 +23,12 @@ jobs:
         working-directory: target_chains/cosmwasm/contracts/pyth
     steps:
       - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.82.0
+          components: rustfmt, clippy
+          override: true
       - name: Build
         run: cargo build --verbose
       - name: Run tests

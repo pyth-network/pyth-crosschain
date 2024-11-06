@@ -140,7 +140,7 @@ where
 }
 
 #[tracing::instrument(skip(opts, state))]
-async fn run<S>(opts: RunOptions, state: Arc<S>) -> Result<!>
+async fn run<S>(opts: RunOptions, state: Arc<S>) -> Result<()>
 where
     S: Wormhole,
     S: Send + Sync + 'static,

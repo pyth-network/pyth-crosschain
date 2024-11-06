@@ -296,7 +296,7 @@ pub async fn run_keeper_threads(
     spawn(
         withdraw_fees_wrapper(
             contract.clone(),
-            chain_state.provider_address.clone(),
+            chain_state.provider_address,
             WITHDRAW_INTERVAL,
             U256::from(chain_eth_config.min_keeper_balance),
         )
@@ -307,7 +307,7 @@ pub async fn run_keeper_threads(
     spawn(
         adjust_fee_wrapper(
             contract.clone(),
-            chain_state.provider_address.clone(),
+            chain_state.provider_address,
             ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
             chain_eth_config.gas_limit,
@@ -327,7 +327,7 @@ pub async fn run_keeper_threads(
         async move {
             let chain_id = chain_state.id.clone();
             let chain_config = chain_eth_config.clone();
-            let provider_address = chain_state.provider_address.clone();
+            let provider_address = chain_state.provider_address;
             let keeper_metrics = metrics.clone();
             let contract = match InstrumentedPythContract::from_config(
                 &chain_config,
@@ -349,7 +349,7 @@ pub async fn run_keeper_threads(
                     track_provider(
                         chain_id.clone(),
                         contract.clone(),
-                        provider_address.clone(),
+                        provider_address,
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),
@@ -358,7 +358,7 @@ pub async fn run_keeper_threads(
                     track_balance(
                         chain_id.clone(),
                         contract.client(),
-                        keeper_address.clone(),
+                        keeper_address,
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),
@@ -738,9 +738,7 @@ pub async fn watch_blocks(
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
         if latest_safe_block > *last_safe_block_processed {
-            let mut from = latest_safe_block
-                .checked_sub(RETRY_PREVIOUS_BLOCKS)
-                .unwrap_or(0);
+            let mut from = latest_safe_block.saturating_sub(RETRY_PREVIOUS_BLOCKS);
 
             // In normal situation, the difference between latest and last safe block should not be more than 2-3 (for arbitrum it can be 10)
             // TODO: add a metric for this in separate PR. We need alerts
@@ -1068,7 +1066,7 @@ pub async fn update_commitments_if_necessary(
     chain_state: &BlockchainState,
 ) -> Result<()> {
     //TODO: we can reuse the result from the last call from the watch_blocks thread to reduce RPCs
-    let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+    let latest_safe_block = get_latest_safe_block(chain_state).in_current_span().await;
     let provider_address = chain_state.provider_address;
     let provider_info = contract
         .get_provider_info(provider_address)

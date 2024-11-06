@@ -1,9 +1,6 @@
-ARG RUST_VERSION=1.66.1
+ARG RUST_VERSION=1.82.0
 
 FROM rust:${RUST_VERSION} AS build
-
-# Set default toolchain
-RUN rustup default nightly-2023-07-23
 
 # Build
 WORKDIR /src

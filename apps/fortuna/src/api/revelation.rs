@@ -58,7 +58,7 @@ pub async fn revelation(
     let state = state
         .chains
         .get(&chain_id)
-        .ok_or_else(|| RestError::InvalidChainId)?;
+        .ok_or(RestError::InvalidChainId)?;
 
     let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
 
@@ -85,7 +85,7 @@ pub async fn revelation(
                 );
                 RestError::Unknown
             })?;
-            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), value.clone());
+            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), *value);
 
             Ok(Json(GetRandomValueResponse {
                 value: encoded_value,
