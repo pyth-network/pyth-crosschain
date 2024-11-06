@@ -42,3 +42,15 @@
   pythId: 9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c
   decimals: 18
   type: token
+- id: BNB
+  pythId: 2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f
+  decimals: 18
+  type: token
+- id: MODE
+  pythId: 0386e113cc716a7c6a55decd97b19c90ce080d9f2f5255ac78a0e26889446d1e
+  decimals: 18
+  type: token
+- id: BTT
+  pythId: 097d687437374051c75160d648800f021086bc8edf469f11284491fda8192315
+  decimals: 18
+  type: token

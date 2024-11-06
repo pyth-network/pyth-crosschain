@@ -154,6 +154,7 @@
   rpcUrl: https://rpc.ankr.com/bsc
   networkId: 56
   type: EvmChain
+  nativeToken: BNB
 - id: eos
   mainnet: true
   rpcUrl: https://api.evm.eosnetwork.com
@@ -413,6 +414,7 @@
   rpcUrl: https://mainnet.mode.network/
   networkId: 34443
   type: EvmChain
+  nativeToken: MODE
 - id: bttc_testnet
   mainnet: false
   rpcUrl: https://pre-rpc.bt.io
@@ -423,6 +425,7 @@
   rpcUrl: https://rpc.bt.io
   networkId: 199
   type: EvmChain
+  nativeToken: BTT
 - id: zksync_sepolia
   mainnet: false
   rpcUrl: https://sepolia.era.zksync.dev/
@@ -519,6 +522,7 @@
   rpcUrl: https://rpc.blast.io
   networkId: 81457
   type: EvmChain
+  nativeToken: ETH
 - id: merlin_testnet
   mainnet: false
   rpcUrl: https://testnet-rpc.merlinchain.io/
@@ -564,6 +568,7 @@
   rpcUrl: https://rpc.hekla.taiko.xyz/
   networkId: 167009
   type: EvmChain
+  nativeToken: ETH
 - id: orange_testnet
   mainnet: false
   rpcUrl: https://subnets.avax.network/orangetest/testnet/rpc
@@ -604,6 +609,7 @@
   rpcUrl: https://opbnb-mainnet-rpc.bnbchain.org
   networkId: 204
   type: EvmChain
+  nativeToken: BNB
 - id: opbnb_testnet
   mainnet: false
   rpcUrl: https://opbnb-testnet-rpc.bnbchain.org
