@@ -165,7 +165,6 @@ tuple parse_price_feeds_from_data(slice data) {
 
     int num_updates = cs~load_uint(8);
 
-    ;; Verify wormhole proof and get emitter info
     (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
 
     ;; Check if the data source is valid
@@ -174,6 +173,7 @@ tuple parse_price_feeds_from_data(slice data) {
         .store_uint(emitter_address, 256)
     .end_cell();
 
+    ;; Dictionary doesn't support cell as key, so we use cell_hash to create a 256-bit integer key
     int data_source_key = cell_hash(data_source);
     (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
     throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
