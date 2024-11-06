@@ -357,18 +357,6 @@ async fn test_stale_threshold() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-    let update_fee = serde_json::from_slice::<U128>(
-        &contract
-            .view("get_update_fee_estimate")
-            .args_json(json!({
-                "data": vaa,
-            }))
-            .await
-            .unwrap()
-            .result,
-    )
-    .unwrap();
-
     // Submit price. As there are no prices this should succeed despite being old.
     assert!(contract
         .call("update_price_feeds")
