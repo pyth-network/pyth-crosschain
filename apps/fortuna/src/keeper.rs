@@ -65,6 +65,7 @@ use {
         },
         time::{
             self,
+            timeout,
             Duration,
         },
     },
@@ -421,6 +422,8 @@ pub async fn process_event_with_backoff(
 }
 
 
+const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
+
 /// Process a callback on a chain. It estimates the gas for the reveal with callback and
 /// submits the transaction if the gas estimate is below the gas limit.
 /// It will return a permanent or transient error depending on the error type and whether
@@ -501,8 +504,28 @@ pub async fn process_event(
             ))
         })?;
 
-    let receipt = pending_tx
-        .await
+    let reset_nonce = || {
+        let nonce_manager = contract.client_ref().inner().inner();
+        nonce_manager.reset();
+    };
+
+    let pending_receipt = timeout(
+        Duration::from_secs(TX_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| {
+        // Tx can get stuck in mempool without any progress if the nonce is too high
+        // in this case ethers internal polling will not reduce the number of retries
+        // and keep retrying indefinitely. So we set a manual timeout here and reset the nonce.
+        reset_nonce();
+        backoff::Error::transient(anyhow!(
+            "Tx stuck in mempool. Resetting nonce. Tx:{:?}",
+            transaction
+        ))
+    })?;
+
+    let receipt = pending_receipt
         .map_err(|e| {
             backoff::Error::transient(anyhow!(
                 "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
@@ -513,10 +536,9 @@ pub async fn process_event(
         .ok_or_else(|| {
             // RPC may not return an error on tx submission if the nonce is too high.
             // But we will never get a receipt. So we reset the nonce manager to get the correct nonce.
-            let nonce_manager = contract.client_ref().inner().inner();
-            nonce_manager.reset();
+            reset_nonce();
             backoff::Error::transient(anyhow!(
-                "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
+                "Can't verify the reveal, probably dropped from mempool. Resetting nonce. Tx:{:?}",
                 transaction
             ))
         })?;
