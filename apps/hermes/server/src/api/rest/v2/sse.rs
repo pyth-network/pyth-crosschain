@@ -1,19 +1,34 @@
 use {
     crate::{
         api::{
-            rest::{validate_price_ids, RestError},
+            rest::{
+                validate_price_ids,
+                RestError,
+            },
             types::{
-                BinaryUpdate, EncodingType, ParsedPriceUpdate, PriceIdInput, PriceUpdate,
+                BinaryUpdate,
+                EncodingType,
+                ParsedPriceUpdate,
+                PriceIdInput,
+                PriceUpdate,
                 RpcPriceIdentifier,
             },
             ApiState,
         },
-        state::aggregate::{Aggregates, AggregationEvent, RequestTime},
+        state::aggregate::{
+            Aggregates,
+            AggregationEvent,
+            RequestTime,
+        },
     },
     anyhow::Result,
     axum::{
         extract::State,
-        response::sse::{Event, KeepAlive, Sse},
+        response::sse::{
+            Event,
+            KeepAlive,
+            Sse,
+        },
     },
     futures::Stream,
     pyth_sdk::PriceIdentifier,
@@ -21,7 +36,10 @@ use {
     serde_qs::axum::QsQuery,
     std::convert::Infallible,
     tokio::sync::broadcast,
-    tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
+    tokio_stream::{
+        wrappers::BroadcastStream,
+        StreamExt as _,
+    },
     utoipa::IntoParams,
 };
 
