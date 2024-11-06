@@ -1,7 +1,6 @@
 use {
     near_sdk::{
         borsh::{
-            self,
             BorshDeserialize,
             BorshSerialize,
         },

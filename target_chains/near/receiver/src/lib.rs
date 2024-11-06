@@ -5,7 +5,6 @@ use {
     ext::ext_wormhole,
     near_sdk::{
         borsh::{
-            self,
             BorshDeserialize,
             BorshSerialize,
         },

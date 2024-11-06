@@ -586,7 +586,7 @@ mod tests {
             .current_account_id(accounts(0))
             .signer_account_id(accounts(0))
             .predecessor_account_id(accounts(0))
-            .attached_deposit(0)
+            .attached_deposit(NearToken::from_yoctonear(0))
             .is_view(false);
         context
     }
@@ -598,7 +598,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -617,7 +617,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -635,7 +635,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -653,7 +653,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -661,7 +661,7 @@ mod tests {
         );
 
         contract.set_update_fee(100, 2).expect("Failed to set fee");
-        assert_eq!(contract.update_fee, 10000);
+        assert_eq!(contract.update_fee, NearToken::from_yoctonear(10000));
     }
 
     #[test]

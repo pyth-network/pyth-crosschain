@@ -26,7 +26,6 @@ use {
         Serializer,
     },
     std::{
-        borrow::Borrow,
         convert::TryInto,
         io::Read,
         iter::Iterator,
@@ -159,7 +158,7 @@ impl BatchPriceAttestation {
         let mut serialized_attestations = Vec::with_capacity(self.price_attestations.len());
         for (idx, a) in self.price_attestations.iter().enumerate() {
             // Learn the current attestation's size
-            let serialized = PriceAttestation::serialize(a.borrow());
+            let serialized = PriceAttestation::serialize(a);
             let a_len = serialized.len();
 
             // Verify it's the same as the first one we saw for the batch, assign if we're first.

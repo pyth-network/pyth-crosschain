@@ -36,6 +36,7 @@ serde_wormhole             = { git = "https://github.com/wormhole-foundation/wor
 near-workspaces            = { version = "0.14.1" }
 wormhole-sdk               = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk", features = ["test-utils"] }
+near-sdk                   = { version = "*", features = ["unit-testing"] }
 
 
 
