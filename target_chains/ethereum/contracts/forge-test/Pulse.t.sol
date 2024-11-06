@@ -83,17 +83,21 @@ contract PulseTest is Test {
         priceIds[0] = bytes32("BTC/USD");
         priceIds[1] = bytes32("ETH/USD");
 
-        bytes[] memory updateData = new bytes[](2);
-        updateData[0] = bytes("data1");
-        updateData[1] = bytes("data2");
-
         uint256 publishTime = block.timestamp;
         uint256 callbackGasLimit = 500000;
 
+        // Fund the consumer contract
+        vm.deal(address(consumer), 1 ether);
+
+        // Step 1: Make the request as consumer
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: PYTH_FEE + PROVIDER_FEE
         }(provider, publishTime, priceIds, callbackGasLimit);
+
+        // Step 2: Execute callback as provider with empty updateData array
+        // Important: must be empty array, not array with empty elements
+        bytes[] memory updateData = new bytes[](0);
 
         vm.prank(provider);
         pulse.executeCallback(
@@ -104,6 +108,7 @@ contract PulseTest is Test {
             callbackGasLimit
         );
 
+        // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
         assertEq(consumer.lastProvider(), provider);
         assertEq(consumer.lastPublishTime(), publishTime);
@@ -217,6 +222,7 @@ contract PulseTest is Test {
         // Setup - make a request to accrue some fees
         bytes32[] memory priceIds = new bytes32[](1);
 
+        vm.deal(address(consumer), 1 ether);
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE + PROVIDER_FEE}(
             provider,
@@ -257,6 +263,7 @@ contract PulseTest is Test {
         // Setup fees
         bytes32[] memory priceIds = new bytes32[](1);
 
+        vm.deal(address(consumer), 1 ether);
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE + PROVIDER_FEE}(
             provider,
@@ -305,6 +312,9 @@ contract PulseTest is Test {
     function testGetAccruedPythFees() public {
         // Setup - make a request to accrue some fees
         bytes32[] memory priceIds = new bytes32[](1);
+
+        // Fund the consumer contract
+        vm.deal(address(consumer), 1 ether);
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE + PROVIDER_FEE}(
@@ -389,12 +399,11 @@ contract PulseTest is Test {
         priceIds[0] = bytes32("BTC/USD");
         priceIds[1] = bytes32("ETH/USD");
 
-        bytes[] memory updateData = new bytes[](2);
-        updateData[0] = bytes("data1");
-        updateData[1] = bytes("data2");
-
         uint256 publishTime = block.timestamp;
         uint256 callbackGasLimit = 500000;
+
+        // Fund the consumer contract
+        vm.deal(address(consumer), 1 ether);
 
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
@@ -412,8 +421,6 @@ contract PulseTest is Test {
         assertEq(req.publishTime, publishTime);
         assertEq(req.priceIds[0], priceIds[0]);
         assertEq(req.priceIds[1], priceIds[1]);
-        assertEq(string(req.updateData[0]), string(updateData[0]));
-        assertEq(string(req.updateData[1]), string(updateData[1]));
         assertEq(req.callbackGasLimit, callbackGasLimit);
         assertEq(req.requester, address(consumer));
     }
