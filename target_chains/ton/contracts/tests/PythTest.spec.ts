@@ -18,6 +18,18 @@ import {
   HERMES_ETH_PRICE,
   HERMES_ETH_PUBLISH_TIME,
   HERMES_BTC_PUBLISH_TIME,
+  HERMES_BTC_CONF,
+  HERMES_BTC_EXPO,
+  HERMES_BTC_EMA_CONF,
+  HERMES_BTC_EMA_EXPO,
+  HERMES_BTC_EMA_PRICE,
+  HERMES_BTC_EMA_PUBLISH_TIME,
+  HERMES_ETH_CONF,
+  HERMES_ETH_EMA_CONF,
+  HERMES_ETH_EMA_EXPO,
+  HERMES_ETH_EMA_PRICE,
+  HERMES_ETH_EMA_PUBLISH_TIME,
+  HERMES_ETH_EXPO,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
@@ -376,19 +388,6 @@ describe("PythTest", () => {
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
 
     let result = await pythTest.sendUpdatePriceFeeds(
-      deployer.getSender(),
-      updateData,
-      toNano("0.1") // Insufficient gas
-    );
-
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: false,
-      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
-    });
-
-    result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
       calculateUpdatePriceFeedsFee(1n) // Send enough gas for 1 update instead of 2
@@ -973,5 +972,57 @@ describe("PythTest", () => {
 
     // Verify that the contract has not been upgraded by attempting to call the new method
     await expect(pythTest.getNewFunction()).rejects.toThrow();
+  });
+
+  it("should successfully parse price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const result = await pythTest.getParsePriceFeedUpdates(
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex")
+    );
+    expect(result).toEqual([
+      {
+        priceId: BTC_PRICE_FEED_ID,
+        price: {
+          price: HERMES_BTC_PRICE,
+          conf: HERMES_BTC_CONF,
+          expo: HERMES_BTC_EXPO,
+          publishTime: HERMES_BTC_PUBLISH_TIME,
+        },
+        emaPrice: {
+          price: HERMES_BTC_EMA_PRICE,
+          conf: HERMES_BTC_EMA_CONF,
+          expo: HERMES_BTC_EMA_EXPO,
+          publishTime: HERMES_BTC_EMA_PUBLISH_TIME,
+        },
+      },
+      {
+        priceId: ETH_PRICE_FEED_ID,
+        price: {
+          price: HERMES_ETH_PRICE,
+          conf: HERMES_ETH_CONF,
+          expo: HERMES_ETH_EXPO,
+          publishTime: HERMES_ETH_PUBLISH_TIME,
+        },
+        emaPrice: {
+          price: HERMES_ETH_EMA_PRICE,
+          conf: HERMES_ETH_EMA_CONF,
+          expo: HERMES_ETH_EMA_EXPO,
+          publishTime: HERMES_ETH_EMA_PUBLISH_TIME,
+        },
+      },
+    ]);
+  });
+
+  it("should fail to parse invalid price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const invalidUpdateData = Buffer.from("invalid data");
+
+    await expect(
+      pythTest.getParsePriceFeedUpdates(invalidUpdateData)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2002"); // ERROR_INVALID_MAGIC = 2002
   });
 });

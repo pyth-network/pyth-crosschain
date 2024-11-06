@@ -72,6 +72,10 @@
     return get_is_valid_data_source(data_source);
 }
 
+(tuple) test_parse_price_feed_updates(slice data) method_id {
+    return parse_price_feed_updates(data);
+}
+
 ;; Add a new function to demonstrate the upgrade
 (int) test_new_function() method_id {
     return 1;

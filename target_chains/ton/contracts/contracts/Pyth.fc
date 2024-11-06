@@ -156,9 +156,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     return payload~load_uint(160);  ;; Return root_digest
 }
 
-
-() update_price_feeds(int msg_value, slice data) impure {
-    load_data();
+tuple parse_price_feeds_from_data(slice data) {
     slice cs = read_and_verify_header(data);
 
     int wormhole_proof_size_bytes = cs~load_uint(16);
@@ -166,6 +164,59 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     cs = new_cs;
 
     int num_updates = cs~load_uint(8);
+
+    ;; Verify wormhole proof and get emitter info
+    (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
+
+    ;; Check if the data source is valid
+    cell data_source = begin_cell()
+        .store_uint(emitter_chain_id, 16)
+        .store_uint(emitter_address, 256)
+    .end_cell();
+
+    int data_source_key = cell_hash(data_source);
+    (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
+    throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
+    int valid = value~load_int(1);
+    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
+
+    int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
+
+    ;; Create tuple to store price feeds
+    tuple price_feeds = empty_tuple();
+
+    repeat(num_updates) {
+        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        cs = new_cs;
+
+        ;; Create price feed cell containing both current and EMA prices
+        cell price_feed_cell = begin_cell()
+            .store_ref(store_price(price, conf, expo, publish_time))
+            .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
+        .end_cell();
+
+        tuple price_feed = empty_tuple();
+        price_feed~tpush(price_id);
+        price_feed~tpush(price_feed_cell);
+        price_feeds~tpush(price_feed);
+    }
+
+    throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
+
+    return price_feeds;
+}
+
+;; Returns a tuple of price feeds (max 255 due to TON limitations of tuple size)
+tuple parse_price_feed_updates(slice data) method_id {
+    load_data();
+    tuple price_feeds = parse_price_feeds_from_data(data);
+    return price_feeds;
+}
+
+() update_price_feeds(int msg_value, slice data) impure {
+    load_data();
+    tuple price_feeds = parse_price_feeds_from_data(data);
+    int num_updates = price_feeds.tlen();
     int update_fee = single_update_fee * num_updates;
     int compute_fee = get_compute_fee(
         WORKCHAIN,
@@ -177,28 +228,15 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     ;; Check if the sender has sent enough TON to cover the update_fee
     throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
 
-    (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
-
-    ;; Check if the data source is valid
-    cell data_source = begin_cell()
-        .store_uint(emitter_chain_id, 16)
-        .store_uint(emitter_address, 256)
-        .end_cell();
-
-    ;; Dictionary doesn't support cell as key, so we use cell_hash to create a 256-bit integer key
-    int data_source_key = cell_hash(data_source);
-
-    (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
-    throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
-    int valid = value~load_int(1);
-    throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
-
-
-    int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
-
-    repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
-        cs = new_cs;
+    int i = 0;
+    while(i < num_updates) {
+        tuple price_feed = price_feeds.at(i);
+        int price_id = price_feed.at(0);
+        cell price_feed_cell = price_feed.at(1);
+        slice price_feed = price_feed_cell.begin_parse();
+        slice price = price_feed~load_ref().begin_parse();
+        slice ema_price = price_feed~load_ref().begin_parse();
+        (_, _, _, int publish_time) = parse_price(price);
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
         int latest_publish_time = 0;
@@ -213,16 +251,10 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
         }
 
         if (publish_time > latest_publish_time) {
-            cell price_feed = begin_cell()
-                .store_ref(store_price(price, conf, expo, publish_time))
-                .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
-            .end_cell();
-
-            latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed).end_cell().begin_parse());
+            latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed_cell).end_cell().begin_parse());
         }
+        i += 1;
     }
-
-    throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
 
     store_data();
 }

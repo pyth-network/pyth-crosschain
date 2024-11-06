@@ -3,6 +3,7 @@ import {
   Cell,
   contractAddress,
   ContractProvider,
+  parseTuple,
   Sender,
   SendMode,
   toNano,
@@ -194,6 +195,49 @@ export class PythTest extends BaseWrapper {
   async getDataSources(provider: ContractProvider) {
     const result = await provider.get("test_get_data_sources", []);
     return parseDataSources(result.stack.readCell());
+  }
+
+  async getParsePriceFeedUpdates(provider: ContractProvider, vm: Buffer) {
+    const result = await provider.get("test_parse_price_feed_updates", [
+      { type: "slice", cell: createCellChain(vm) },
+    ]);
+    const tuple = result.stack.readTuple();
+    const prices = [];
+
+    // Get tuple length and iterate
+    const size = tuple.remaining;
+    for (let i = 0; i < size; i++) {
+      const item = tuple.readTuple();
+      const priceId =
+        "0x" + item.readBigNumber().toString(16).padStart(64, "0");
+      const priceFeedCell = item.readCell();
+      const priceFeedCellSlice = priceFeedCell.beginParse();
+
+      const priceSlice = priceFeedCellSlice.loadRef().beginParse();
+      const price = priceSlice.loadInt(64);
+      const conf = priceSlice.loadUint(64);
+      const expo = priceSlice.loadInt(32);
+      const publishTime = priceSlice.loadUint(64);
+
+      const emaPriceSlice = priceFeedCellSlice.loadRef().beginParse();
+      const emaPrice = emaPriceSlice.loadInt(64);
+      const emaConf = emaPriceSlice.loadUint(64);
+      const emaExpo = emaPriceSlice.loadInt(32);
+      const emaPublishTime = emaPriceSlice.loadUint(64);
+
+      prices.push({
+        priceId,
+        price: { price, conf, expo, publishTime },
+        emaPrice: {
+          price: emaPrice,
+          conf: emaConf,
+          expo: emaExpo,
+          publishTime: emaPublishTime,
+        },
+      });
+    }
+
+    return prices;
   }
 
   async getNewFunction(provider: ContractProvider) {

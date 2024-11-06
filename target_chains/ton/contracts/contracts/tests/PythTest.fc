@@ -77,3 +77,7 @@
 (int) test_get_is_valid_data_source(cell data_source) method_id {
     return get_is_valid_data_source(data_source);
 }
+
+(tuple) test_parse_price_feed_updates(slice data) method_id {
+    return parse_price_feed_updates(data);
+}
