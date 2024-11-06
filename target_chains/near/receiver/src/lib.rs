@@ -735,11 +735,3 @@ impl Pyth {
         Ok(())
     }
 }
-
-#[cfg(not(feature = "library"))]
-#[no_mangle]
-pub extern "C" fn update_contract() {
-    env::setup_panic_hook();
-    let mut contract: Pyth = env::state_read().expect("Failed to Read State");
-    contract.upgrade(env::input().unwrap()).unwrap();
-}

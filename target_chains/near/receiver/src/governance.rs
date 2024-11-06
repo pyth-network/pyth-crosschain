@@ -18,7 +18,6 @@ use {
     },
     near_sdk::{
         borsh::{
-            self,
             BorshDeserialize,
             BorshSerialize,
         },
@@ -488,12 +487,14 @@ impl Pyth {
     /// This function is open to call by anyone, but to perform an authorized upgrade a VAA
     /// containing the hash of the `new_code` must have previously been relayed to this contract's
     /// `process_vaa` endpoint. otherwise the upgrade will fail.
-    ///
-    /// NOTE: This function is pub only within crate scope so that it can only be called by the
-    /// `upgrade_contract` method, this is much much cheaper than serializing a Vec<u8> to call
-    /// this method as a normal public method.
     #[handle_result]
-    pub(crate) fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
+    pub fn update_contract(&mut self) -> Result<Promise, Error> {
+        env::setup_panic_hook();
+        let new_code = env::input().unwrap();
+        self.upgrade(new_code)
+    }
+
+    fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
         let signature = TryInto::<[u8; 32]>::try_into(env::sha256(&new_code)).unwrap();
         let default = <[u8; 32] as Default>::default();
         ensure!(signature != default, UnauthorizedUpgrade);
