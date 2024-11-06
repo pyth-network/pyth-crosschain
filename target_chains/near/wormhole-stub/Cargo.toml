@@ -8,7 +8,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-near-sdk     = { version = "4.1.1" }
+near-sdk     = { version = "5.5.0" }
 
 [profile.release]
 codegen-units   = 1
