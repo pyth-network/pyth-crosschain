@@ -2,15 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./IPulse.sol";
 import "./PulseState.sol";
 import "./PulseErrors.sol";
 
-contract Pulse is IPulse, ReentrancyGuard, PulseState {
-    using SafeCast for uint256;
-
+abstract contract Pulse is IPulse, PulseState {
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -24,15 +21,16 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         );
 
         _state.admin = admin;
-        _state.pythFeeInWei = pythFeeInWei;
         _state.accruedPythFeesInWei = 0;
+        _state.pythFeeInWei = pythFeeInWei;
         _state.defaultProvider = defaultProvider;
 
         if (prefillRequestStorage) {
-            // Prefill storage slots to make future requests use less gas
+            // Write some data to every storage slot in the requests array such that new requests
+            // use a more consistent amount of gas.
+            // Note that these requests are not live because their sequenceNumber is 0.
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {
                 Request storage req = _state.requests[i];
-                req.provider = address(1);
                 req.sequenceNumber = 0; // Keep it inactive
                 req.publishTime = 1;
                 // No need to prefill dynamic arrays (priceIds, updateData)
@@ -42,19 +40,67 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         }
     }
 
+    function register(uint128 feeInWei, bytes calldata uri) public override {
+        ProviderInfo storage providerInfo = _state.providers[msg.sender];
+
+        providerInfo.feeInWei = feeInWei;
+        providerInfo.uri = uri;
+        providerInfo.sequenceNumber += 1;
+
+        emit ProviderRegistered(providerInfo);
+    }
+
+    function withdraw(uint128 amount) public override {
+        ProviderInfo storage providerInfo = _state.providers[msg.sender];
+
+        // Use checks-effects-interactions pattern to prevent reentrancy attacks.
+        require(
+            providerInfo.accruedFeesInWei >= amount,
+            "Insufficient balance"
+        );
+        providerInfo.accruedFeesInWei -= amount;
+
+        // Interaction with an external contract or token transfer
+        (bool sent, ) = msg.sender.call{value: amount}("");
+        require(sent, "withdrawal to msg.sender failed");
+
+        emit ProviderWithdrawn(msg.sender, msg.sender, amount);
+    }
+
+    function withdrawAsFeeManager(
+        address provider,
+        uint128 amount
+    ) external override {
+        ProviderInfo storage providerInfo = _state.providers[provider];
+
+        if (providerInfo.sequenceNumber == 0) {
+            revert NoSuchProvider();
+        }
+
+        if (providerInfo.feeManager != msg.sender) {
+            revert Unauthorized();
+        }
+
+        // Use checks-effects-interactions pattern to prevent reentrancy attacks.
+        require(
+            providerInfo.accruedFeesInWei >= amount,
+            "Insufficient balance"
+        );
+        providerInfo.accruedFeesInWei -= amount;
+
+        // Interaction with an external contract or token transfer
+        (bool sent, ) = msg.sender.call{value: amount}("");
+        require(sent, "withdrawal to msg.sender failed");
+
+        emit ProviderWithdrawn(provider, msg.sender, amount);
+    }
+
     function requestPriceUpdatesWithCallback(
         address provider,
         uint256 publishTime,
         bytes32[] calldata priceIds,
-        bytes[] calldata updateData,
         uint256 callbackGasLimit
-    )
-        external
-        payable
-        override
-        nonReentrant
-        returns (uint64 requestSequenceNumber)
-    {
+    ) external payable override returns (uint64 requestSequenceNumber) {
         ProviderInfo storage providerInfo = _state.providers[provider];
         if (providerInfo.sequenceNumber == 0) revert NoSuchProvider();
 
@@ -78,22 +124,16 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         req.sequenceNumber = requestSequenceNumber;
         req.publishTime = publishTime;
         req.priceIds = priceIds;
-        req.updateData = updateData;
         req.callbackGasLimit = callbackGasLimit;
         req.requester = msg.sender;
 
         // Update fee balances
         providerInfo.accruedFeesInWei += providerInfo.feeInWei;
-        _state.accruedPythFeesInWei += (msg.value.toUint128() -
-            providerInfo.feeInWei);
+        _state.accruedPythFeesInWei +=
+            SafeCast.toUint128(msg.value) -
+            providerInfo.feeInWei;
 
-        emit PriceUpdateRequested(
-            requestSequenceNumber,
-            provider,
-            publishTime,
-            priceIds,
-            msg.sender
-        );
+        emit PriceUpdateRequested(req);
     }
 
     function executeCallback(
@@ -102,7 +142,7 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         bytes32[] calldata priceIds,
         bytes[] calldata updateData,
         uint256 callbackGasLimit
-    ) external override nonReentrant {
+    ) external override {
         Request storage req = findActiveRequest(msg.sender, sequenceNumber);
 
         // Verify request parameters match
@@ -164,170 +204,62 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         clearRequest(msg.sender, sequenceNumber);
     }
 
-    function register(uint128 feeInWei, bytes calldata uri) public override {
-        ProviderInfo storage provider = _state.providers[msg.sender];
-
-        provider.feeInWei = feeInWei;
-        provider.uri = uri;
-
-        if (provider.sequenceNumber == 0) {
-            provider.sequenceNumber = 1;
-        }
-
-        emit ProviderRegistered(msg.sender, feeInWei, uri);
+    function getProviderInfo(
+        address provider
+    ) public view override returns (ProviderInfo memory info) {
+        info = _state.providers[provider];
     }
 
-    function setProviderFee(uint128 newFeeInWei) external override {
-        ProviderInfo storage provider = _state.providers[msg.sender];
-        if (provider.sequenceNumber == 0) revert NoSuchProvider();
+    function getDefaultProvider()
+        public
+        view
+        override
+        returns (address provider)
+    {
+        provider = _state.defaultProvider;
+    }
 
-        uint128 oldFeeInWei = provider.feeInWei;
-        provider.feeInWei = newFeeInWei;
-
-        emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
+    function getRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) public view override returns (Request memory req) {
+        req = findRequest(provider, sequenceNumber);
     }
 
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        feeAmount = _state.providers[provider].feeInWei + _state.pythFeeInWei;
+        return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
-    function getDefaultProvider()
-        external
+    function getPythFeeInWei()
+        public
         view
         override
-        returns (address defaultProvider)
+        returns (uint128 pythFeeInWei)
     {
-        defaultProvider = _state.defaultProvider;
+        pythFeeInWei = _state.pythFeeInWei;
     }
 
-    // Internal helper functions
-    function findActiveRequest(
-        address provider,
-        uint64 sequenceNumber
-    ) internal view returns (Request storage activeRequest) {
-        activeRequest = findRequest(provider, sequenceNumber);
-        if (
-            !isActive(activeRequest) ||
-            activeRequest.provider != provider ||
-            activeRequest.sequenceNumber != sequenceNumber
-        ) {
-            revert NoSuchRequest();
-        }
+    function getAccruedPythFees()
+        public
+        view
+        override
+        returns (uint128 accruedPythFeesInWei)
+    {
+        accruedPythFeesInWei = _state.accruedPythFeesInWei;
     }
 
-    function findRequest(
-        address provider,
-        uint64 sequenceNumber
-    ) internal view returns (Request storage foundRequest) {
-        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
-        foundRequest = _state.requests[shortKey];
+    // Set provider fee. It will revert if provider is not registered.
+    function setProviderFee(uint128 newFeeInWei) external override {
+        ProviderInfo storage provider = _state.providers[msg.sender];
 
-        if (
-            foundRequest.provider == provider &&
-            foundRequest.sequenceNumber == sequenceNumber
-        ) {
-            return foundRequest;
-        } else {
-            foundRequest = _state.requestsOverflow[key];
-        }
-    }
-
-    function clearRequest(address provider, uint64 sequenceNumber) internal {
-        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
-        Request storage req = _state.requests[shortKey];
-
-        if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
-            req.sequenceNumber = 0;
-        } else {
-            delete _state.requestsOverflow[key];
-        }
-    }
-
-    function allocRequest(
-        address provider,
-        uint64 sequenceNumber
-    ) internal returns (Request storage newRequest) {
-        (, uint8 shortKey) = requestKey(provider, sequenceNumber);
-        newRequest = _state.requests[shortKey];
-
-        if (isActive(newRequest)) {
-            (bytes32 reqKey, ) = requestKey(
-                newRequest.provider,
-                newRequest.sequenceNumber
-            );
-            _state.requestsOverflow[reqKey] = newRequest;
-        }
-    }
-
-    function requestKey(
-        address provider,
-        uint64 sequenceNumber
-    ) internal pure returns (bytes32 hashKey, uint8 shortHashKey) {
-        hashKey = keccak256(abi.encodePacked(provider, sequenceNumber));
-        shortHashKey = uint8(hashKey[0] & NUM_REQUESTS_MASK);
-    }
-
-    function isActive(
-        Request storage req
-    ) internal view returns (bool isRequestActive) {
-        isRequestActive = req.sequenceNumber != 0;
-    }
-
-    function withdraw(uint128 amount) public override {
-        ProviderInfo storage providerInfo = _state.providers[msg.sender];
-
-        // Use checks-effects-interactions pattern to prevent reentrancy attacks
-        require(
-            providerInfo.accruedFeesInWei >= amount,
-            "Insufficient balance"
-        );
-        providerInfo.accruedFeesInWei -= amount;
-
-        // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
-        require(sent, "withdrawal to msg.sender failed");
-
-        emit ProviderWithdrawn(msg.sender, msg.sender, amount);
-    }
-
-    function withdrawAsFeeManager(
-        address provider,
-        uint128 amount
-    ) external override {
-        ProviderInfo storage providerInfo = _state.providers[provider];
-
-        if (providerInfo.sequenceNumber == 0) {
+        if (provider.sequenceNumber == 0) {
             revert NoSuchProvider();
         }
-
-        if (providerInfo.feeManager != msg.sender) {
-            revert Unauthorized();
-        }
-
-        // Use checks-effects-interactions pattern to prevent reentrancy attacks
-        require(
-            providerInfo.accruedFeesInWei >= amount,
-            "Insufficient balance"
-        );
-        providerInfo.accruedFeesInWei -= amount;
-
-        // Interaction with an external contract or token transfer
-        (bool sent, ) = msg.sender.call{value: amount}("");
-        require(sent, "withdrawal to msg.sender failed");
-
-        emit ProviderWithdrawn(provider, msg.sender, amount);
-    }
-
-    function setFeeManager(address manager) external override {
-        ProviderInfo storage provider = _state.providers[msg.sender];
-        if (provider.sequenceNumber == 0) revert NoSuchProvider();
-
-        address oldFeeManager = provider.feeManager;
-        provider.feeManager = manager;
-
-        emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+        uint128 oldFeeInWei = provider.feeInWei;
+        provider.feeInWei = newFeeInWei;
+        emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
     }
 
     function setProviderFeeAsFeeManager(
@@ -350,42 +282,113 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
     }
 
-    function getAccruedPythFees()
-        public
-        view
-        override
-        returns (uint128 accruedPythFeesInWei)
-    {
-        accruedPythFeesInWei = _state.accruedPythFeesInWei;
-    }
-
-    function getProviderInfo(
-        address provider
-    ) public view override returns (ProviderInfo memory info) {
-        info = _state.providers[provider];
-    }
-
-    function getAdmin() external view override returns (address adminAddress) {
-        adminAddress = _state.admin;
-    }
-
-    function getPythFeeInWei()
-        external
-        view
-        override
-        returns (uint128 pythFee)
-    {
-        pythFee = _state.pythFeeInWei;
-    }
-
-    function setProviderUri(bytes calldata uri) external override {
+    // Set provider uri. It will revert if provider is not registered.
+    function setProviderUri(bytes calldata newUri) external override {
         ProviderInfo storage provider = _state.providers[msg.sender];
-        if (provider.sequenceNumber == 0) revert NoSuchProvider();
-
+        if (provider.sequenceNumber == 0) {
+            revert NoSuchProvider();
+        }
         bytes memory oldUri = provider.uri;
-        provider.uri = uri;
+        provider.uri = newUri;
+        emit ProviderUriUpdated(msg.sender, oldUri, newUri);
+    }
 
-        emit ProviderUriUpdated(msg.sender, oldUri, uri);
+    function setFeeManager(address manager) external override {
+        ProviderInfo storage provider = _state.providers[msg.sender];
+        if (provider.sequenceNumber == 0) {
+            revert NoSuchProvider();
+        }
+
+        address oldFeeManager = provider.feeManager;
+        provider.feeManager = manager;
+        emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+    }
+
+    function requestKey(
+        address provider,
+        uint64 sequenceNumber
+    ) internal pure returns (bytes32 hash, uint8 shortHash) {
+        hash = keccak256(abi.encodePacked(provider, sequenceNumber));
+        shortHash = uint8(hash[0] & NUM_REQUESTS_MASK);
+    }
+
+    // Find an in-flight active request for given the provider and the sequence number.
+    // This method returns a reference to the request, and will revert if the request is
+    // not active.
+    function findActiveRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal view returns (Request storage req) {
+        req = findRequest(provider, sequenceNumber);
+
+        // Check there is an active request for the given provider and sequence number.
+        if (
+            !isActive(req) ||
+            req.provider != provider ||
+            req.sequenceNumber != sequenceNumber
+        ) revert NoSuchRequest();
+    }
+
+    // Find an in-flight request.
+    // Note that this method can return requests that are not currently active. The caller is responsible for checking
+    // that the returned request is active (if they care).
+    function findRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal view returns (Request storage req) {
+        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
+
+        req = _state.requests[shortKey];
+        if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
+            return req;
+        } else {
+            req = _state.requestsOverflow[key];
+        }
+    }
+
+    // Clear the storage for an in-flight request, deleting it from the hash table.
+    function clearRequest(address provider, uint64 sequenceNumber) internal {
+        (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
+
+        Request storage req = _state.requests[shortKey];
+        if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
+            req.sequenceNumber = 0;
+        } else {
+            delete _state.requestsOverflow[key];
+        }
+    }
+
+    // Allocate storage space for a new in-flight request. This method returns a pointer to a storage slot
+    // that the caller should overwrite with the new request. Note that the memory at this storage slot may
+    // -- and will -- be filled with arbitrary values, so the caller *must* overwrite every field of the returned
+    // struct.
+    function allocRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) internal returns (Request storage req) {
+        (, uint8 shortKey) = requestKey(provider, sequenceNumber);
+
+        req = _state.requests[shortKey];
+        if (isActive(req)) {
+            // There's already a prior active request in the storage slot we want to use.
+            // Overflow the prior request to the requestsOverflow mapping.
+            // It is important that this code overflows the *prior* request to the mapping, and not the new request.
+            // There is a chance that some requests never get revealed and remain active forever. We do not want such
+            // requests to fill up all of the space in the array and cause all new requests to incur the higher gas cost
+            // of the mapping.
+            //
+            // This operation is expensive, but should be rare. If overflow happens frequently, increase
+            // the size of the requests array to support more concurrent active requests.
+            (bytes32 reqKey, ) = requestKey(req.provider, req.sequenceNumber);
+            _state.requestsOverflow[reqKey] = req;
+        }
+    }
+
+    // Returns true if a request is active, i.e., its corresponding random value has not yet been revealed.
+    function isActive(Request storage req) internal view returns (bool) {
+        // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
+        // a price update request with sequence number 0.
+        return req.sequenceNumber != 0;
     }
 
     function setMaxNumPrices(uint32 maxNumPrices) external override {
@@ -400,12 +403,5 @@ contract Pulse is IPulse, ReentrancyGuard, PulseState {
             oldMaxNumPrices,
             maxNumPrices
         );
-    }
-
-    function getRequest(
-        address provider,
-        uint64 sequenceNumber
-    ) public view override returns (Request memory req) {
-        req = findRequest(provider, sequenceNumber);
     }
 }
