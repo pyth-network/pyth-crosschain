@@ -56,7 +56,7 @@ pub async fn register_provider_from_config(
 
     // Initialize a Provider to interface with the EVM contract.
     let contract =
-        Arc::new(SignablePythContract::from_config(&chain_config, &private_key_string).await?);
+        Arc::new(SignablePythContract::from_config(chain_config, &private_key_string).await?);
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
     let secret = provider_config
@@ -68,7 +68,7 @@ pub async fn register_provider_from_config(
     tracing::info!("Generating hash chain");
     let chain = PebbleHashChain::from_config(
         &secret,
-        &chain_id,
+        chain_id,
         &private_key_string.parse::<LocalWallet>()?.address(),
         &chain_config.contract_addr,
         &random,
@@ -86,7 +86,7 @@ pub async fn register_provider_from_config(
         seed:         random,
         chain_length: commitment_length,
     };
-    let uri = get_register_uri(&provider_config.uri, &chain_id)?;
+    let uri = get_register_uri(&provider_config.uri, chain_id)?;
     let call = contract.register(
         fee_in_wei,
         commitment,
@@ -98,7 +98,7 @@ pub async fn register_provider_from_config(
     );
     let mut gas_estimate = call.estimate_gas().await?;
     let gas_multiplier = U256::from(2); //TODO: smarter gas estimation
-    gas_estimate = gas_estimate * gas_multiplier;
+    gas_estimate *= gas_multiplier;
     let call_with_gas = call.gas(gas_estimate);
     if let Some(r) = call_with_gas.send().await?.await? {
         tracing::info!("Registered provider: {:?}", r);

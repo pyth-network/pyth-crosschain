@@ -17,7 +17,7 @@ cell store_price(int price, int conf, int expo, int publish_time) {
     .end_cell();
 }
 
-slice read_and_verify_header(slice data) {
+slice read_and_verify_header(slice data) impure {
     int magic = data~load_uint(32);
     throw_unless(ERROR_INVALID_MAGIC, magic == ACCUMULATOR_MAGIC);
     int major_version = data~load_uint(8);
@@ -39,7 +39,7 @@ slice read_and_verify_header(slice data) {
     slice cs = read_and_verify_proof(root_digest, message, cs);
 
     int message_type = message~load_uint(8);
-    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == 0);  ;; 0 corresponds to PriceFeed
+    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == PRICE_FEED_MESSAGE_TYPE);
 
     int price_id = message~load_uint(256);
     int price = message~load_int(64);
@@ -80,11 +80,6 @@ int get_governance_data_source_index() method_id {
     return governance_data_source_index;
 }
 
-cell get_data_sources() method_id {
-    load_data();
-    return data_sources;
-}
-
 cell get_governance_data_source() method_id {
     load_data();
     return governance_data_source;
@@ -119,7 +114,7 @@ int get_is_valid_data_source(cell data_source) method_id {
     load_data();
     (int price, int conf, int expo, int publish_time) = get_price_unsafe(price_feed_id);
     int current_time = now();
-    throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
+    throw_if(ERROR_OUTDATED_PRICE, max(0, current_time - publish_time) > time_period);
     return (price, conf, expo, publish_time);
 }
 
@@ -137,7 +132,7 @@ int get_is_valid_data_source(cell data_source) method_id {
     load_data();
     (int price, int conf, int expo, int publish_time) = get_ema_price_unsafe(price_feed_id);
     int current_time = now();
-    throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
+    throw_if(ERROR_OUTDATED_PRICE, max(0, current_time - publish_time) > time_period);
     return (price, conf, expo, publish_time);
 }
 
@@ -202,7 +197,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
     repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
@@ -240,7 +235,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     last_executed_governance_sequence = sequence;
 }
 
-(int, int, slice) parse_governance_instruction(slice payload) {
+(int, int, slice) parse_governance_instruction(slice payload) impure {
     int magic = payload~load_uint(32);
     throw_unless(ERROR_INVALID_GOVERNANCE_MAGIC, magic == GOVERNANCE_MAGIC);
 
@@ -333,6 +328,9 @@ int apply_decimal_expo(int value, int expo) {
         int data_source_key = cell_hash(data_source);
         new_data_sources~udict_set(256, data_source_key, begin_cell().store_int(true, 1).end_cell().begin_parse());
     }
+
+    ;; Verify that all data in the payload was processed
+    throw_unless(ERROR_INVALID_PAYLOAD_LENGTH, payload.slice_empty?());
 
     is_valid_data_source = new_data_sources;
 }

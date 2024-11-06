@@ -974,11 +974,4 @@ describe("PythTest", () => {
     // Verify that the contract has not been upgraded by attempting to call the new method
     await expect(pythTest.getNewFunction()).rejects.toThrow();
   });
-
-  it("should correctly get data sources", async () => {
-    await deployContract();
-
-    const dataSources = await pythTest.getDataSources();
-    expect(dataSources).toEqual(DATA_SOURCES);
-  });
 });

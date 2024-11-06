@@ -99,7 +99,7 @@ async fn setup_chain_provider(
     ))?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(SignablePythContract::from_config(&chain_config, &private_key).await?);
+    let contract = Arc::new(SignablePythContract::from_config(chain_config, &private_key).await?);
 
     tracing::info!("Fetching provider info");
     let provider_info = contract.get_provider_info(provider_address).call().await?;
@@ -140,7 +140,7 @@ async fn setup_chain_provider(
         } else {
             let hash_chain = PebbleHashChain::from_config(
                 &secret,
-                &chain_id,
+                chain_id,
                 &provider_address,
                 &chain_config.contract_addr,
                 &metadata.seed,
@@ -167,7 +167,7 @@ async fn setup_chain_provider(
     }
     if register {
         tracing::info!("Registering");
-        register_provider_from_config(&provider_config, &chain_id, &chain_config)
+        register_provider_from_config(provider_config, chain_id, chain_config)
             .await
             .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
         tracing::info!("Registered");
@@ -180,7 +180,7 @@ async fn setup_chain_provider(
         .in_current_span()
         .await?;
 
-    let uri = get_register_uri(&provider_config.uri, &chain_id)?;
+    let uri = get_register_uri(&provider_config.uri, chain_id)?;
     sync_uri(&contract, &provider_info, uri)
         .in_current_span()
         .await?;
@@ -210,7 +210,7 @@ async fn sync_uri(
     uri: String,
 ) -> Result<()> {
     let uri_as_bytes: Bytes = AbiBytes::from(uri.as_str()).into();
-    if &provider_info.uri != &uri_as_bytes {
+    if provider_info.uri != uri_as_bytes {
         tracing::info!("Updating provider uri to {}", uri);
         if let Some(receipt) = contract
             .set_provider_uri(uri_as_bytes)

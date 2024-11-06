@@ -1,8 +1,6 @@
 // Use the Solana client library to pull the addresses of all relevant accounts from PythNet so we
 // can test locally.
 
-// #![feature(proc_macro_hygiene)]
-
 use {
     pythnet_sdk::pythnet::PYTH_PID,
     serde_json::json,

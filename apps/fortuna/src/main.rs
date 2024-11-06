@@ -1,5 +1,4 @@
 #![allow(clippy::just_underscores_and_digits)]
-#![feature(slice_flatten)]
 
 use {
     anyhow::Result,

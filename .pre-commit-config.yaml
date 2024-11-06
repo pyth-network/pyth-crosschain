@@ -30,7 +30,7 @@ repos:
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.66.1 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: governance/remote_executor
       # Hooks for cosmwasm contract
@@ -43,7 +43,7 @@ repos:
       - id: cargo-clippy-cosmwasm
         name: Cargo clippy for cosmwasm contract
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/cosmwasm
       # Hooks for Hermes
@@ -56,7 +56,7 @@ repos:
       - id: cargo-clippy-hermes
         name: Cargo clippy for Hermes
         language: "rust"
-        entry: cargo +nightly-2024-03-26 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: apps/hermes
       # Hooks for Fortuna
@@ -64,6 +64,12 @@ repos:
         name: Cargo format for Fortuna
         language: "rust"
         entry: cargo +nightly-2023-07-23 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: apps/fortuna
+      - id: cargo-clippy-fortuna
+        name: Cargo clippy for Fortuna
+        language: "rust"
+        entry: cargo +1.82.0 clippy --manifest-path ./apps/fortuna/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: apps/fortuna
       # Hooks for message buffer contract
@@ -76,7 +82,7 @@ repos:
       - id: cargo-clippy-message-buffer
         name: Cargo clippy for message buffer contract
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./pythnet/message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged --features test-bpf -- -D warnings
+        entry: cargo +1.66.1 clippy --manifest-path ./pythnet/message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged --features test-bpf -- -D warnings
         pass_filenames: false
         files: pythnet/message_buffer
       # Hooks for pythnet_sdk
@@ -89,7 +95,7 @@ repos:
       - id: cargo-clippy-pythnet-sdk
         name: Cargo clippy for pythnet SDK
         language: "rust"
-        entry: cargo +nightly-2024-08-04 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: pythnet/pythnet_sdk
       # Hooks for solana receiver contract
@@ -102,7 +108,7 @@ repos:
       - id: cargo-clippy-pyth-solana-receiver
         name: Cargo clippy for solana target chain contract
         language: "rust"
-        entry: cargo +nightly-2023-03-01 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.73.0 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/solana
       # For express relay python files

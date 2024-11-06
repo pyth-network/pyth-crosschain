@@ -77,7 +77,3 @@
 (int) test_get_is_valid_data_source(cell data_source) method_id {
     return get_is_valid_data_source(data_source);
 }
-
-(cell) test_get_data_sources() method_id {
-    return get_data_sources();
-}

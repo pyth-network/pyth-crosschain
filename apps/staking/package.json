@@ -47,7 +47,7 @@
     "react-aria": "^3.34.3",
     "react-aria-components": "^1.3.3",
     "react-dom": "catalog:",
-    "recharts": "^2.13.2",
+    "recharts": "^2.13.3",
     "swr": "^2.2.5",
     "zod": "^3.23.8"
   },

@@ -141,7 +141,7 @@ async fn fetch_bridge_data(
     }
 }
 
-pub async fn run<S>(store: Arc<S>, pythnet_ws_endpoint: String) -> Result<!>
+pub async fn run<S>(store: Arc<S>, pythnet_ws_endpoint: String) -> Result<()>
 where
     S: Aggregates,
     S: Wormhole,
