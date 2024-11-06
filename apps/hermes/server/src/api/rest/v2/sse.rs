@@ -2,7 +2,7 @@ use {
     crate::{
         api::{
             rest::{
-                verify_price_ids_exist,
+                validate_price_ids,
                 RestError,
             },
             types::{
@@ -73,6 +73,9 @@ pub struct StreamPriceUpdatesQueryParams {
     /// If true, only include benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime).
     #[serde(default)]
     benchmarks_only: bool,
+
+    /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.    #[serde(default)]
+    ignore_invalid_price_ids: bool,
 }
 
 fn default_true() -> bool {
@@ -97,9 +100,9 @@ where
     S: Aggregates,
     S: Send + Sync + 'static,
 {
-    let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
-
-    verify_price_ids_exist(&state, &price_ids).await?;
+    let price_id_inputs: Vec<PriceIdentifier> = params.ids.into_iter().map(Into::into).collect();
+    let price_ids: Vec<PriceIdentifier> =
+        validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
     // Clone the update_tx receiver to listen for new price updates
     let update_rx: broadcast::Receiver<AggregationEvent> = Aggregates::subscribe(&*state.state);

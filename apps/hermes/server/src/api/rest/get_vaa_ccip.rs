@@ -1,5 +1,5 @@
 use {
-    super::verify_price_ids_exist,
+    super::validate_price_ids,
     crate::{
         api::{
             rest::RestError,
@@ -75,7 +75,7 @@ where
             .try_into()
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
-    verify_price_ids_exist(&state, &[price_id]).await?;
+    validate_price_ids(&state, &[price_id], false).await?;
 
     let publish_time = UnixTimestamp::from_be_bytes(
         params.data[32..40]

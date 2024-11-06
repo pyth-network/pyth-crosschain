@@ -52,7 +52,7 @@ To set up and run a Hermes node, follow the steps below:
    can interact with the node using the REST and Websocket APIs on port 33999.
 
    For local development, you can also run the node with [cargo watch](https://crates.io/crates/cargo-watch) to restart
-   it automatically when the code changes:
+   it automatically when the code changes.
 
    ```bash
    cargo watch -w src -x "run -- run --pythnet-http-addr https://pythnet-rpc/ --pythnet-ws-addr wss://pythnet-rpc/ --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
