@@ -237,7 +237,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         rpc_metrics.clone(),
     ));
 
-    run_api(opts.addr.clone(), chains, metrics_registry, rx_exit).await?;
+    run_api(opts.addr, chains, metrics_registry, rx_exit).await?;
 
     Ok(())
 }
@@ -251,11 +251,11 @@ async fn setup_chain_state(
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<BlockchainState> {
     let contract = Arc::new(InstrumentedPythContract::from_config(
-        &chain_config,
+        chain_config,
         chain_id.clone(),
         rpc_metrics,
     )?);
-    let mut provider_commitments = chain_config.commitments.clone().unwrap_or(Vec::new());
+    let mut provider_commitments = chain_config.commitments.clone().unwrap_or_default();
     provider_commitments.sort_by(|c1, c2| {
         c1.original_commitment_sequence_number
             .cmp(&c2.original_commitment_sequence_number)
@@ -301,9 +301,9 @@ async fn setup_chain_state(
         offsets.push(offset);
 
         let pebble_hash_chain = PebbleHashChain::from_config(
-            &secret,
-            &chain_id,
-            &provider,
+            secret,
+            chain_id,
+            provider,
             &chain_config.contract_addr,
             &commitment.seed,
             commitment.chain_length,
@@ -321,7 +321,7 @@ async fn setup_chain_state(
     if chain_state.reveal(provider_info.original_commitment_sequence_number)?
         != provider_info.original_commitment
     {
-        return Err(anyhow!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_id).into());
+        return Err(anyhow!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_id));
     } else {
         tracing::info!("Root of chain id {} matches commitment", &chain_id);
     }
@@ -330,7 +330,7 @@ async fn setup_chain_state(
         id: chain_id.clone(),
         state: Arc::new(chain_state),
         contract,
-        provider_address: provider.clone(),
+        provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
         confirmed_block_status: chain_config.confirmed_block_status,
     };

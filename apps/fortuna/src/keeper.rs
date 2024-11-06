@@ -65,6 +65,7 @@ use {
         },
         time::{
             self,
+            timeout,
             Duration,
         },
     },
@@ -296,7 +297,7 @@ pub async fn run_keeper_threads(
     spawn(
         withdraw_fees_wrapper(
             contract.clone(),
-            chain_state.provider_address.clone(),
+            chain_state.provider_address,
             WITHDRAW_INTERVAL,
             U256::from(chain_eth_config.min_keeper_balance),
         )
@@ -307,7 +308,7 @@ pub async fn run_keeper_threads(
     spawn(
         adjust_fee_wrapper(
             contract.clone(),
-            chain_state.provider_address.clone(),
+            chain_state.provider_address,
             ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
             chain_eth_config.gas_limit,
@@ -327,7 +328,7 @@ pub async fn run_keeper_threads(
         async move {
             let chain_id = chain_state.id.clone();
             let chain_config = chain_eth_config.clone();
-            let provider_address = chain_state.provider_address.clone();
+            let provider_address = chain_state.provider_address;
             let keeper_metrics = metrics.clone();
             let contract = match InstrumentedPythContract::from_config(
                 &chain_config,
@@ -349,7 +350,7 @@ pub async fn run_keeper_threads(
                     track_provider(
                         chain_id.clone(),
                         contract.clone(),
-                        provider_address.clone(),
+                        provider_address,
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),
@@ -358,7 +359,7 @@ pub async fn run_keeper_threads(
                     track_balance(
                         chain_id.clone(),
                         contract.client(),
-                        keeper_address.clone(),
+                        keeper_address,
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),
@@ -420,6 +421,8 @@ pub async fn process_event_with_backoff(
         .inc();
 }
 
+
+const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 
 /// Process a callback on a chain. It estimates the gas for the reveal with callback and
 /// submits the transaction if the gas estimate is below the gas limit.
@@ -501,8 +504,28 @@ pub async fn process_event(
             ))
         })?;
 
-    let receipt = pending_tx
-        .await
+    let reset_nonce = || {
+        let nonce_manager = contract.client_ref().inner().inner();
+        nonce_manager.reset();
+    };
+
+    let pending_receipt = timeout(
+        Duration::from_secs(TX_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| {
+        // Tx can get stuck in mempool without any progress if the nonce is too high
+        // in this case ethers internal polling will not reduce the number of retries
+        // and keep retrying indefinitely. So we set a manual timeout here and reset the nonce.
+        reset_nonce();
+        backoff::Error::transient(anyhow!(
+            "Tx stuck in mempool. Resetting nonce. Tx:{:?}",
+            transaction
+        ))
+    })?;
+
+    let receipt = pending_receipt
         .map_err(|e| {
             backoff::Error::transient(anyhow!(
                 "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
@@ -513,10 +536,9 @@ pub async fn process_event(
         .ok_or_else(|| {
             // RPC may not return an error on tx submission if the nonce is too high.
             // But we will never get a receipt. So we reset the nonce manager to get the correct nonce.
-            let nonce_manager = contract.client_ref().inner().inner();
-            nonce_manager.reset();
+            reset_nonce();
             backoff::Error::transient(anyhow!(
-                "Can't verify the reveal, probably dropped from mempool Tx:{:?}",
+                "Can't verify the reveal, probably dropped from mempool. Resetting nonce. Tx:{:?}",
                 transaction
             ))
         })?;
@@ -738,9 +760,7 @@ pub async fn watch_blocks(
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
         if latest_safe_block > *last_safe_block_processed {
-            let mut from = latest_safe_block
-                .checked_sub(RETRY_PREVIOUS_BLOCKS)
-                .unwrap_or(0);
+            let mut from = latest_safe_block.saturating_sub(RETRY_PREVIOUS_BLOCKS);
 
             // In normal situation, the difference between latest and last safe block should not be more than 2-3 (for arbitrum it can be 10)
             // TODO: add a metric for this in separate PR. We need alerts
@@ -1068,7 +1088,7 @@ pub async fn update_commitments_if_necessary(
     chain_state: &BlockchainState,
 ) -> Result<()> {
     //TODO: we can reuse the result from the last call from the watch_blocks thread to reduce RPCs
-    let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+    let latest_safe_block = get_latest_safe_block(chain_state).in_current_span().await;
     let provider_address = chain_state.provider_address;
     let provider_info = contract
         .get_provider_info(provider_address)

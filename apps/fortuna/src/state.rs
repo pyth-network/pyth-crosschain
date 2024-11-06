@@ -31,9 +31,9 @@ impl PebbleHashChain {
         let mut hash = Vec::<[u8; 32]>::with_capacity(length);
         let mut current: [u8; 32] = Keccak256::digest(secret).into();
 
-        hash.push(current.clone());
+        hash.push(current);
         for i in 1..length {
-            current = Keccak256::digest(&current).into();
+            current = Keccak256::digest(current).into();
             if i % sample_interval == 0 {
                 hash.push(current);
             }
@@ -60,9 +60,9 @@ impl PebbleHashChain {
     ) -> Result<Self> {
         let mut input: Vec<u8> = vec![];
         input.extend_from_slice(&hex::decode(secret.trim())?);
-        input.extend_from_slice(&chain_id.as_bytes());
-        input.extend_from_slice(&provider_address.as_bytes());
-        input.extend_from_slice(&contract_address.as_bytes());
+        input.extend_from_slice(chain_id.as_bytes());
+        input.extend_from_slice(provider_address.as_bytes());
+        input.extend_from_slice(contract_address.as_bytes());
         input.extend_from_slice(random);
 
         let secret: [u8; 32] = Keccak256::digest(input).into();
@@ -80,7 +80,7 @@ impl PebbleHashChain {
         // actually at the *front* of the list. Thus, it's easier to compute indexes from the end of the list.
         let index_from_end_of_subsampled_list = ((self.len() - 1) - i) / self.sample_interval;
         let mut i_index = self.len() - 1 - index_from_end_of_subsampled_list * self.sample_interval;
-        let mut val = self.hash[self.hash.len() - 1 - index_from_end_of_subsampled_list].clone();
+        let mut val = self.hash[self.hash.len() - 1 - index_from_end_of_subsampled_list];
 
         while i_index > i {
             val = Keccak256::digest(val).into();
@@ -139,9 +139,9 @@ mod test {
         // Calculate the hash chain the naive way as a comparison point to the subsampled implementation.
         let mut basic_chain = Vec::<[u8; 32]>::with_capacity(length);
         let mut current: [u8; 32] = Keccak256::digest(secret).into();
-        basic_chain.push(current.clone());
+        basic_chain.push(current);
         for _ in 1..length {
-            current = Keccak256::digest(&current).into();
+            current = Keccak256::digest(current).into();
             basic_chain.push(current);
         }
 

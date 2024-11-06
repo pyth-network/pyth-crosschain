@@ -93,6 +93,7 @@ If you don't use nix at all, then install the required system packages:
   `package.json`; you can experiment with
   [corepack](https://nodejs.org/api/corepack.html) to manage your pnpm version
   for you.
+- [turbo](https://turbo.build/repo/docs/getting-started/installation)
 
 #### Common tasks
 

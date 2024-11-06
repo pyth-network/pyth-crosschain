@@ -14,7 +14,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2024-03-26
+          toolchain: 1.82.0
           components: rustfmt, clippy
           override: true
       - name: Install protoc
