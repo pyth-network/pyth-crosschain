@@ -53,9 +53,7 @@ To set up and run a Hermes node, follow the steps below:
 
    For local development, you can also run the node with [cargo watch](https://crates.io/crates/cargo-watch) to restart
    it automatically when the code changes.
-   Note that cargo-watch v8 and above is incompatible with our `nightly-2023-07-23` rust toolchain, so you'll need to install version 7.x:
 
    ```bash
-   cargo install cargo-watch@^7.x
    cargo watch -w src -x "run -- run --pythnet-http-addr https://pythnet-rpc/ --pythnet-ws-addr wss://pythnet-rpc/ --wormhole-spy-rpc-addr https://wormhole-spy-rpc/
    ```
