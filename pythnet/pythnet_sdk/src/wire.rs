@@ -84,10 +84,13 @@ pub mod v1 {
                 Error::InvalidMagic
             );
             require!(message.major_version == 1, Error::InvalidVersion);
-            require!(
-                message.minor_version >= CURRENT_MINOR_VERSION,
-                Error::InvalidVersion
-            );
+            #[allow(clippy::absurd_extreme_comparisons)]
+            {
+                require!(
+                    message.minor_version >= CURRENT_MINOR_VERSION,
+                    Error::InvalidVersion
+                );
+            }
             Ok(message)
         }
     }
