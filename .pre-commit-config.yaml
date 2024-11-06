@@ -7,7 +7,7 @@ repos:
           (?x)^(
             target_chains/sui/vendor/|
             patches/|
-            apps/hermes/server/proto/
+            apps/hermes/server/proto/vendor/
           )
       - id: end-of-file-fixer
         exclude: >
@@ -15,7 +15,7 @@ repos:
             target_chains/sui/vendor/|
             patches/|
             apps/api-reference/public/currency-icons/|
-            apps/hermes/server/proto/
+            apps/hermes/server/proto/vendor/
           )
       - id: check-added-large-files
         exclude: >
