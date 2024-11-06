@@ -328,7 +328,7 @@ contract PulseTest is Test {
         assertEq(pulse.getAccruedPythFees(), PYTH_FEE);
     }
 
-    function testGetProviderInfo() public view {
+    function testGetProviderInfo() public {
         // Get provider info
         PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
 
@@ -341,7 +341,7 @@ contract PulseTest is Test {
         assertEq(info.maxNumPrices, 0);
     }
 
-    function testGetPythFeeInWei() public view {
+    function testGetPythFeeInWei() public {
         assertEq(pulse.getPythFeeInWei(), PYTH_FEE);
     }
 
