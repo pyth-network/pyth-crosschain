@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+package publicrpc.v1;
+
+option go_package = "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1;publicrpcv1";
+
+import "gossip/v1/gossip.proto";
+import "google/api/annotations.proto";
+
+enum ChainID {
+  CHAIN_ID_UNSPECIFIED = 0;
+  CHAIN_ID_SOLANA = 1;
+  CHAIN_ID_ETHEREUM = 2;
+  CHAIN_ID_TERRA = 3;
+  CHAIN_ID_BSC = 4;
+  CHAIN_ID_POLYGON = 5;
+  CHAIN_ID_AVALANCHE = 6;
+  CHAIN_ID_OASIS = 7;
+  CHAIN_ID_ALGORAND = 8;
+  CHAIN_ID_AURORA = 9;
+  CHAIN_ID_FANTOM = 10;
+  CHAIN_ID_KARURA = 11;
+  CHAIN_ID_ACALA = 12;
+  CHAIN_ID_KLAYTN = 13;
+  CHAIN_ID_CELO = 14;
+  CHAIN_ID_NEAR = 15;
+  CHAIN_ID_MOONBEAM = 16;
+  // OBSOLETE: CHAIN_ID_NEON = 17;
+  CHAIN_ID_TERRA2 = 18;
+  CHAIN_ID_INJECTIVE = 19;
+  CHAIN_ID_OSMOSIS = 20;
+  CHAIN_ID_SUI = 21;
+  CHAIN_ID_APTOS = 22;
+  CHAIN_ID_ARBITRUM = 23;
+  CHAIN_ID_OPTIMISM = 24;
+  CHAIN_ID_GNOSIS = 25;
+  CHAIN_ID_PYTHNET = 26;
+  CHAIN_ID_XPLA = 28;
+  CHAIN_ID_BTC = 29;
+  CHAIN_ID_BASE = 30;
+  CHAIN_ID_SEI = 32;
+  CHAIN_ID_ROOTSTOCK = 33;
+  CHAIN_ID_SCROLL = 34;
+  CHAIN_ID_MANTLE = 35;
+  CHAIN_ID_BLAST = 36;
+  CHAIN_ID_XLAYER = 37;
+  CHAIN_ID_LINEA = 38;
+  CHAIN_ID_BERACHAIN = 39;
+  CHAIN_ID_SEIEVM = 40;
+  CHAIN_ID_SNAXCHAIN = 43;
+  CHAIN_ID_UNICHAIN = 44;
+  CHAIN_ID_WORLDCHAIN = 45;
+  CHAIN_ID_WORMCHAIN = 3104;
+  CHAIN_ID_COSMOSHUB = 4000;
+  CHAIN_ID_EVMOS = 4001;
+  CHAIN_ID_KUJIRA = 4002;
+  CHAIN_ID_NEUTRON = 4003;
+  CHAIN_ID_CELESTIA = 4004;
+  CHAIN_ID_STARGAZE = 4005;
+  CHAIN_ID_SEDA = 4006;
+  CHAIN_ID_DYMENSION = 4007;
+  CHAIN_ID_PROVENANCE = 4008;
+  CHAIN_ID_SEPOLIA = 10002;
+  CHAIN_ID_ARBITRUM_SEPOLIA = 10003;
+  CHAIN_ID_BASE_SEPOLIA = 10004;
+  CHAIN_ID_OPTIMISM_SEPOLIA = 10005;
+  CHAIN_ID_HOLESKY = 10006;
+  CHAIN_ID_POLYGON_SEPOLIA = 10007;
+  CHAIN_ID_MONAD_DEVNET = 10008;
+}
+
+// MessageID is a VAA's globally unique identifier (see data availability design document).
+message MessageID {
+  // Emitter chain ID.
+  ChainID emitter_chain = 1;
+  // Hex-encoded (without leading 0x) emitter address.
+  string emitter_address = 2;
+  // Sequence number for (emitter_chain, emitter_address).
+  uint64 sequence = 3;
+}
+
+// PublicRPCService service exposes endpoints to be consumed externally; GUIs, historical record keeping, etc.
+service PublicRPCService {
+  // GetLastHeartbeats returns the last heartbeat received for each guardian node in the
+  // node's active guardian set. Heartbeats received by nodes not in the guardian set are ignored.
+  // The heartbeat value is null if no heartbeat has yet been received.
+  rpc GetLastHeartbeats (GetLastHeartbeatsRequest) returns (GetLastHeartbeatsResponse) {
+    option (google.api.http) = {
+      get: "/v1/heartbeats"
+    };
+  }
+
+  rpc GetSignedVAA (GetSignedVAARequest) returns (GetSignedVAAResponse) {
+    option (google.api.http) = {
+      get: "/v1/signed_vaa/{message_id.emitter_chain}/{message_id.emitter_address}/{message_id.sequence}"
+    };
+  }
+
+  rpc GetCurrentGuardianSet (GetCurrentGuardianSetRequest) returns (GetCurrentGuardianSetResponse) {
+    option (google.api.http) = {
+      get: "/v1/guardianset/current"
+    };
+  }
+
+  rpc GovernorGetAvailableNotionalByChain (GovernorGetAvailableNotionalByChainRequest) returns (GovernorGetAvailableNotionalByChainResponse) {
+    option (google.api.http) = {
+      get: "/v1/governor/available_notional_by_chain"
+    };
+  }
+
+  rpc GovernorGetEnqueuedVAAs (GovernorGetEnqueuedVAAsRequest) returns (GovernorGetEnqueuedVAAsResponse) {
+    option (google.api.http) = {
+      get: "/v1/governor/enqueued_vaas"
+    };
+  }
+
+  rpc GovernorIsVAAEnqueued (GovernorIsVAAEnqueuedRequest) returns (GovernorIsVAAEnqueuedResponse) {
+    option (google.api.http) = {
+      get: "/v1/governor/is_vaa_enqueued/{message_id.emitter_chain}/{message_id.emitter_address}/{message_id.sequence}"
+    };
+  }
+
+  rpc GovernorGetTokenList (GovernorGetTokenListRequest) returns (GovernorGetTokenListResponse) {
+    option (google.api.http) = {
+      get: "/v1/governor/token_list"
+    };
+  }
+
+}
+
+message GetSignedVAARequest {
+  MessageID message_id = 1;
+}
+
+message GetSignedVAAResponse {
+  bytes vaa_bytes = 1;
+}
+
+message GetLastHeartbeatsRequest {
+}
+
+message GetLastHeartbeatsResponse {
+  message Entry {
+    // Verified, hex-encoded (with leading 0x) guardian address. This is the guardian address
+    // which signed this heartbeat. The GuardianAddr field inside the heartbeat
+    // is NOT verified - remote nodes can put arbitrary data in it.
+    string verified_guardian_addr = 1;
+
+    // Base58-encoded libp2p node address that sent this heartbeat, used to
+    // distinguish between multiple nodes running for the same guardian.
+    string p2p_node_addr = 2;
+
+    // Raw heartbeat received from the network. Data is only as trusted
+    // as the guardian node that sent it - none of the fields are verified.
+    gossip.v1.Heartbeat raw_heartbeat = 3;
+  }
+
+  repeated Entry entries = 1;
+}
+
+message GetCurrentGuardianSetRequest {
+}
+
+message GetCurrentGuardianSetResponse {
+  GuardianSet guardian_set = 1;
+}
+
+message GuardianSet {
+  // Guardian set index
+  uint32 index = 1;
+  // List of guardian addresses as human-readable hex-encoded (leading 0x) addresses.
+  repeated string addresses = 2;
+}
+
+message GovernorGetAvailableNotionalByChainRequest {
+}
+
+message GovernorGetAvailableNotionalByChainResponse {
+  message Entry {
+    uint32 chain_id = 1;
+    uint64 remaining_available_notional = 2;
+    uint64 notional_limit = 3;
+    uint64 big_transaction_size = 4;
+  }
+
+  // There is an entry for each chain that is being governed.
+  // Chains that are not being governed are not listed, and assumed to be unlimited.
+  repeated Entry entries = 1;
+}
+
+message GovernorGetEnqueuedVAAsRequest {
+}
+
+message GovernorGetEnqueuedVAAsResponse {
+  message Entry {
+    uint32 emitter_chain = 1;
+    string emitter_address = 2; // human-readable hex-encoded (leading 0x)
+    uint64 sequence = 3;
+    uint32 release_time = 4;
+    uint64 notional_value = 5;
+    string tx_hash = 6;
+  }
+
+  // There is an entry for each enqueued vaa.
+  repeated Entry entries = 1;
+}
+
+message GovernorIsVAAEnqueuedRequest {
+  MessageID message_id = 1;
+}
+
+message GovernorIsVAAEnqueuedResponse {
+  bool is_enqueued = 1;
+}
+
+message GovernorGetTokenListRequest {
+}
+
+message GovernorGetTokenListResponse {
+  message Entry {
+    uint32 origin_chain_id = 1;
+    string origin_address = 2; // human-readable hex-encoded (leading 0x)
+    float price = 3;
+  }
+
+  // There is an entry for each token that applies to the notional TVL calcuation.
+  repeated Entry entries = 1;
+}

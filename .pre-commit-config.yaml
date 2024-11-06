@@ -3,11 +3,26 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
-        exclude: target_chains/sui/vendor/|patches/
+        exclude: >
+          (?x)^(
+            target_chains/sui/vendor/|
+            patches/|
+            apps/hermes/server/proto/vendor/
+          )
       - id: end-of-file-fixer
-        exclude: target_chains/sui/vendor/|patches/|apps/api-reference/public/currency-icons/
+        exclude: >
+          (?x)^(
+            target_chains/sui/vendor/|
+            patches/|
+            apps/api-reference/public/currency-icons/|
+            apps/hermes/server/proto/vendor/
+          )
       - id: check-added-large-files
-        exclude: target_chains/sui/vendor/|patches/
+        exclude: >
+          (?x)^(
+            target_chains/sui/vendor/|
+            patches/
+          )
   # Hook to format many type of files in the repo
   # including solidity contracts.
   - repo: https://github.com/pre-commit/mirrors-prettier
