@@ -15,13 +15,9 @@ interface IPulseConsumer {
 
 interface IPulse {
     // Events
-    event PriceUpdateRequested(
-        uint64 indexed sequenceNumber,
-        address indexed provider,
-        uint256 publishTime,
-        bytes32[] priceIds,
-        address requester
-    );
+    event ProviderRegistered(PulseState.ProviderInfo providerInfo);
+
+    event PriceUpdateRequested(PulseState.Request request);
 
     event PriceUpdateExecuted(
         uint64 indexed sequenceNumber,
@@ -30,16 +26,16 @@ interface IPulse {
         bytes32[] priceIds
     );
 
-    event ProviderRegistered(
-        address indexed provider,
-        uint128 feeInWei,
-        bytes uri
-    );
-
     event ProviderFeeUpdated(
         address indexed provider,
         uint128 oldFeeInWei,
         uint128 newFeeInWei
+    );
+
+    event ProviderUriUpdated(
+        address indexed provider,
+        bytes oldUri,
+        bytes newUri
     );
 
     event ProviderWithdrawn(
@@ -52,12 +48,6 @@ interface IPulse {
         address indexed provider,
         address oldFeeManager,
         address newFeeManager
-    );
-
-    event ProviderUriUpdated(
-        address indexed provider,
-        bytes oldUri,
-        bytes newUri
     );
 
     event ProviderMaxNumPricesUpdated(
@@ -80,7 +70,6 @@ interface IPulse {
         address provider,
         uint256 publishTime,
         bytes32[] calldata priceIds,
-        bytes[] calldata updateData,
         uint256 callbackGasLimit
     ) external payable returns (uint64 sequenceNumber);
 
@@ -97,29 +86,32 @@ interface IPulse {
 
     function setProviderFee(uint128 newFeeInWei) external;
 
+    function setProviderFeeAsFeeManager(
+        address provider,
+        uint128 newFeeInWei
+    ) external;
+
+    function setProviderUri(bytes calldata uri) external;
+
     function withdraw(uint128 amount) external;
 
     function withdrawAsFeeManager(address provider, uint128 amount) external;
 
-    function setProviderUri(bytes calldata uri) external;
-
     // Getters
     function getFee(address provider) external view returns (uint128 feeAmount);
 
-    function getDefaultProvider() external view returns (address);
+    function getPythFeeInWei() external view returns (uint128 pythFeeInWei);
 
     function getAccruedPythFees()
         external
         view
         returns (uint128 accruedPythFeesInWei);
 
+    function getDefaultProvider() external view returns (address);
+
     function getProviderInfo(
         address provider
     ) external view returns (PulseState.ProviderInfo memory info);
-
-    function getAdmin() external view returns (address admin);
-
-    function getPythFeeInWei() external view returns (uint128 pythFeeInWei);
 
     function getRequest(
         address provider,
@@ -128,11 +120,6 @@ interface IPulse {
 
     // Setters
     function setFeeManager(address manager) external;
-
-    function setProviderFeeAsFeeManager(
-        address provider,
-        uint128 newFeeInWei
-    ) external;
 
     function setMaxNumPrices(uint32 maxNumPrices) external;
 }
