@@ -32,18 +32,53 @@ contract MockPythScript is Script {
     function _generateInitialData() internal {
         for (uint i = 0; i < tickers.length; i++) {
             priceIds[i] = keccak256(abi.encodePacked(tickers[i]));
-            uint randomNumber = randNumber(priceIds[i], 10);
-            int64 price = int64(uint64(randomNumber + randNumber(priceIds[i], 2)) + 1);
-            uint64 conf = uint64(randomNumber + randNumber(priceIds[i], 3) + 1); 
-            int32 expo = int32(uint32(randomNumber + randNumber(priceIds[i], 40)) + 1);
-            int64 emaPrice = int64(uint64(randomNumber + randNumber(priceIds[i], 5)) + 1);
-            uint64 emaConf = uint64(randomNumber + randNumber(priceIds[i], 6) +1);
-            priceData[i] = pyth_contract.createPriceFeedUpdateData(priceIds[i], price, conf, expo, emaPrice, emaConf, uint64(block.timestamp), 0);
+            
+            uint randomBase = uint(keccak256(abi.encodePacked(block.timestamp, priceIds[i], msg.sender)));
+            
+            int64 price = int64(uint64(_deriveRandom(randomBase, 1) % 10 ));
+            uint64 conf = uint64(_deriveRandom(randomBase, 2) % 10); 
+            int32 expo = int32(uint32(_deriveRandom(randomBase, 3) % 40));
+            int64 emaPrice = int64(uint64(_deriveRandom(randomBase, 4) % 10));
+            uint64 emaConf = uint64(_deriveRandom(randomBase, 5) % 10);
+
+            priceData[i] = pyth_contract.createPriceFeedUpdateData(
+                priceIds[i],
+                price,
+                conf,
+                expo,
+                emaPrice,
+                emaConf,
+                uint64(block.timestamp),
+                0
+            );
         }
+        
     }
 
-    function randNumber(bytes32 ticker, uint salt) internal returns (uint) {
-        randNonce++;
-        return uint(keccak256(abi.encodePacked(block.timestamp, ticker, msg.sender, randNonce, salt))) % randNonce;
-    } 
+    // Internal function to generate deterministic random numbers from a base seed
+    function _deriveRandom(uint base, uint salt) internal pure returns (uint) {
+        return uint(keccak256(abi.encodePacked(base, salt)) ) + 1;
+    }
+
+    function uint2str(uint256 _i) internal pure returns (string memory str) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 length;
+        while (j != 0)
+        {
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        uint256 k = length;
+        j = _i;
+        while (j != 0)
+        {
+            bstr[--k] = bytes1(uint8(48 + j % 10));
+            j /= 10;
+        }
+        str = string(bstr);
+    }
 }
