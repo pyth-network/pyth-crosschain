@@ -34,8 +34,8 @@ pyth-stylus = { git = "URL" }
 
 ## Example Usage
 
-To consume prices you should use the [`IPyth`](IPyth.sol) interface. Please make sure to read the documentation of this
-interface to use the prices safely.
+To consume prices you should use the functions interface. Please make sure to read the documentation of this
+functions to use the prices safely.
 
 For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed
 you're interested in. The price feeds available on each chain are listed [below](#target-chains).
@@ -83,19 +83,30 @@ impl FunctionCallsExample {
 
 ```
 
-## How Pyth Works on EVM Chains
+Another approach is not to  use the call functions but use the Pyth contract, that implment the IPyth functions 
 
-Pyth prices are published on Pythnet, and relayed to EVM chains using the [Wormhole Network](https://wormholenetwork.com/) as a cross-chain message passing bridge. The Wormhole Network observes when Pyth prices on Pythnet have changed and publishes an off-chain signed message attesting to this fact. This is explained in more detail [here](https://docs.wormholenetwork.com/wormhole/).
+```rust 
+#![cfg_attr(not(test), no_std, no_main)]
+extern crate alloc;
 
-This signed message can then be submitted to the Pyth contract on the EVM networks along the required update fee for it, which will verify the Wormhole message and update the Pyth contract with the new price.
+use stylus_sdk::prelude::{entrypoint,public, sol_storage,};
+use pyth_stylus::pyth::pyth_contract::PythContract;
 
-Please refer to [Pyth On-Demand Updates page](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information.
 
-## Solidity Target Chains
+sol_storage! {
+    #[entrypoint]
+    struct ProxyCallsExample {
+        #[borrow]
+        PythContract pyth
+    }
+}
 
-[This](https://docs.pyth.network/documentation/pythnet-price-feeds/evm#networks) document contains list of the EVM networks that Pyth is available on.
+#[public]
+#[inherit(PythContract)]
+impl ProxyCallsExample {
+}
 
-You can find a list of available price feeds [here](https://pyth.network/developers/price-feed-ids/).
+```
 
 ## Mocking Pyth
 
