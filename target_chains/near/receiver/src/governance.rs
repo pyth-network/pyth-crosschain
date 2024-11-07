@@ -18,7 +18,6 @@ use {
     },
     near_sdk::{
         borsh::{
-            self,
             BorshDeserialize,
             BorshSerialize,
         },
@@ -31,6 +30,7 @@ use {
         },
         AccountId,
         Gas,
+        NearToken,
         Promise,
         PromiseOrValue,
     },
@@ -57,6 +57,7 @@ const GOVERNANCE_MAGIC: [u8; 4] = *b"PTGM";
     num_derive::FromPrimitive,
     num_derive::ToPrimitive,
 )]
+#[borsh(crate = "near_sdk::borsh", use_discriminant = false)]
 #[serde(crate = "near_sdk::serde")]
 #[repr(u8)]
 pub enum GovernanceModule {
@@ -89,6 +90,7 @@ pub enum GovernanceModule {
 )]
 #[strum_discriminants(derive(num_derive::ToPrimitive, num_derive::FromPrimitive))]
 #[strum_discriminants(name(GovernanceActionId))]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub enum GovernanceAction {
     UpgradeContract { codehash: [u8; 32] },
@@ -100,6 +102,7 @@ pub enum GovernanceAction {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct GovernanceInstruction {
     pub module: GovernanceModule,
@@ -283,17 +286,17 @@ impl Pyth {
 
         // Verify VAA and refund the caller in case of failure.
         Ok(ext_wormhole::ext(self.wormhole.clone())
-            .with_static_gas(Gas(30_000_000_000_000))
+            .with_static_gas(Gas::from_gas(30_000_000_000_000))
             .verify_vaa(vaa.clone())
             .then(
                 Self::ext(env::current_account_id())
-                    .with_static_gas(Gas(10_000_000_000_000))
+                    .with_static_gas(Gas::from_gas(10_000_000_000_000))
                     .with_attached_deposit(env::attached_deposit())
                     .verify_gov_vaa_callback(env::predecessor_account_id(), vaa),
             )
             .then(
                 Self::ext(env::current_account_id())
-                    .with_static_gas(Gas(10_000_000_000_000))
+                    .with_static_gas(Gas::from_gas(10_000_000_000_000))
                     .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
             ))
     }
@@ -372,11 +375,11 @@ impl Pyth {
                 // and the logic below is duplicated within the authorize_gov_source_transfer function.
                 return Ok(PromiseOrValue::Promise(
                     ext_wormhole::ext(self.wormhole.clone())
-                        .with_static_gas(Gas(10_000_000_000_000))
+                        .with_static_gas(Gas::from_gas(10_000_000_000_000))
                         .verify_vaa(claim_vaa.clone())
                         .then(
                             Self::ext(env::current_account_id())
-                                .with_static_gas(Gas(10_000_000_000_000))
+                                .with_static_gas(Gas::from_gas(10_000_000_000_000))
                                 .with_attached_deposit(env::attached_deposit())
                                 .authorize_gov_source_transfer(
                                     env::predecessor_account_id(),
@@ -386,7 +389,7 @@ impl Pyth {
                         )
                         .then(
                             Self::ext(env::current_account_id())
-                                .with_static_gas(Gas(10_000_000_000_000))
+                                .with_static_gas(Gas::from_gas(10_000_000_000_000))
                                 .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
                         ),
                 ));
@@ -406,7 +409,7 @@ impl Pyth {
 
     /// If submitting an action fails then this callback will refund the caller.
     #[private]
-    pub fn refund_vaa(&mut self, account_id: AccountId, amount: u128) {
+    pub fn refund_vaa(&mut self, account_id: AccountId, amount: NearToken) {
         if !is_promise_success() {
             // No calculations needed as deposit size will have not changed. Can just refund the
             // whole deposit amount.
@@ -484,12 +487,14 @@ impl Pyth {
     /// This function is open to call by anyone, but to perform an authorized upgrade a VAA
     /// containing the hash of the `new_code` must have previously been relayed to this contract's
     /// `process_vaa` endpoint. otherwise the upgrade will fail.
-    ///
-    /// NOTE: This function is pub only within crate scope so that it can only be called by the
-    /// `upgrade_contract` method, this is much much cheaper than serializing a Vec<u8> to call
-    /// this method as a normal public method.
     #[handle_result]
-    pub(crate) fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
+    pub fn update_contract(&mut self) -> Result<Promise, Error> {
+        env::setup_panic_hook();
+        let new_code = env::input().unwrap();
+        self.upgrade(new_code)
+    }
+
+    fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
         let signature = TryInto::<[u8; 32]>::try_into(env::sha256(&new_code)).unwrap();
         let default = <[u8; 32] as Default>::default();
         ensure!(signature != default, UnauthorizedUpgrade);
@@ -512,7 +517,7 @@ impl Pyth {
     pub fn refund_upgrade(
         &mut self,
         account_id: AccountId,
-        amount: u128,
+        amount: NearToken,
         storage: u64,
     ) -> Result<(), Error> {
         Self::refund_storage_usage(account_id, storage, env::storage_usage(), amount, None)
@@ -532,13 +537,15 @@ impl Pyth {
     }
 
     pub fn set_update_fee(&mut self, fee: u64, expo: u64) -> Result<(), Error> {
-        self.update_fee = (fee as u128)
-            .checked_mul(
-                10_u128
-                    .checked_pow(u32::try_from(expo).map_err(|_| ArithmeticOverflow)?)
-                    .ok_or(ArithmeticOverflow)?,
-            )
-            .ok_or(ArithmeticOverflow)?;
+        self.update_fee = NearToken::from_yoctonear(
+            (fee as u128)
+                .checked_mul(
+                    10_u128
+                        .checked_pow(u32::try_from(expo).map_err(|_| ArithmeticOverflow)?)
+                        .ok_or(ArithmeticOverflow)?,
+                )
+                .ok_or(ArithmeticOverflow)?,
+        );
 
         Ok(())
     }
@@ -579,7 +586,7 @@ mod tests {
             .current_account_id(accounts(0))
             .signer_account_id(accounts(0))
             .predecessor_account_id(accounts(0))
-            .attached_deposit(0)
+            .attached_deposit(NearToken::from_yoctonear(0))
             .is_view(false);
         context
     }
@@ -591,7 +598,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -610,7 +617,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -628,7 +635,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -646,7 +653,7 @@ mod tests {
         testing_env!(context.build());
 
         let mut contract = Pyth::new(
-            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
             Source::default(),
             Source::default(),
             0.into(),
@@ -654,7 +661,7 @@ mod tests {
         );
 
         contract.set_update_fee(100, 2).expect("Failed to set fee");
-        assert_eq!(contract.update_fee, 10000);
+        assert_eq!(contract.update_fee, NearToken::from_yoctonear(10000));
     }
 
     #[test]

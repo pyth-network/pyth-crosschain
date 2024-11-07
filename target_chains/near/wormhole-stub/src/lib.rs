@@ -2,7 +2,6 @@
 
 use near_sdk::{
     borsh::{
-        self,
         BorshDeserialize,
         BorshSerialize,
     },
@@ -13,6 +12,7 @@ use near_sdk::{
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct State {}
 
 #[near_bindgen]

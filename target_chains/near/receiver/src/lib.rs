@@ -5,7 +5,6 @@ use {
     ext::ext_wormhole,
     near_sdk::{
         borsh::{
-            self,
             BorshDeserialize,
             BorshSerialize,
         },
@@ -19,10 +18,10 @@ use {
         log,
         near_bindgen,
         AccountId,
-        Balance,
         BorshStorageKey,
         Duration,
         Gas,
+        NearToken,
         PanicOnDefault,
         Promise,
         StorageUsage,
@@ -71,6 +70,7 @@ pub mod state;
 pub mod tests;
 
 #[derive(BorshSerialize, BorshStorageKey)]
+#[borsh(crate = "near_sdk::borsh")]
 enum StorageKeys {
     Source,
     Prices,
@@ -87,6 +87,7 @@ type Seconds = u64;
 #[cfg(not(feature = "library"))]
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Pyth {
     /// The set of `Source`s from which Pyth attestations are allowed to be relayed from.
     sources: UnorderedSet<Source>,
@@ -117,7 +118,7 @@ pub struct Pyth {
     stale_threshold: Duration,
 
     /// Fee for updating price.
-    update_fee: u128,
+    update_fee: NearToken,
 }
 
 #[cfg(not(feature = "library"))]
@@ -144,7 +145,7 @@ impl Pyth {
             sources,
             wormhole,
             codehash: Default::default(),
-            update_fee: update_fee.into(),
+            update_fee: NearToken::from_yoctonear(update_fee.into()),
         }
     }
 
@@ -211,11 +212,11 @@ impl Pyth {
                     self.verify_encoded_vaa_source(vaa.as_ref())?;
                     let vaa_hex = hex::encode(vaa.as_ref());
                     ext_wormhole::ext(self.wormhole.clone())
-                        .with_static_gas(Gas(30_000_000_000_000))
+                        .with_static_gas(Gas::from_gas(30_000_000_000_000))
                         .verify_vaa(vaa_hex.clone())
                         .then(
                             Self::ext(env::current_account_id())
-                                .with_static_gas(Gas(30_000_000_000_000))
+                                .with_static_gas(Gas::from_gas(30_000_000_000_000))
                                 .with_attached_deposit(env::attached_deposit())
                                 .verify_wormhole_merkle_callback(
                                     env::predecessor_account_id(),
@@ -224,7 +225,7 @@ impl Pyth {
                         )
                         .then(
                             Self::ext(env::current_account_id())
-                                .with_static_gas(Gas(30_000_000_000_000))
+                                .with_static_gas(Gas::from_gas(30_000_000_000_000))
                                 .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
                         );
                 }
@@ -236,17 +237,17 @@ impl Pyth {
 
             // Verify VAA and refund the caller in case of failure.
             ext_wormhole::ext(self.wormhole.clone())
-                .with_static_gas(Gas(30_000_000_000_000))
+                .with_static_gas(Gas::from_gas(30_000_000_000_000))
                 .verify_vaa(data.clone())
                 .then(
                     Self::ext(env::current_account_id())
-                        .with_static_gas(Gas(30_000_000_000_000))
+                        .with_static_gas(Gas::from_gas(30_000_000_000_000))
                         .with_attached_deposit(env::attached_deposit())
                         .verify_wormhole_batch_callback(env::predecessor_account_id(), data),
                 )
                 .then(
                     Self::ext(env::current_account_id())
-                        .with_static_gas(Gas(30_000_000_000_000))
+                        .with_static_gas(Gas::from_gas(30_000_000_000_000))
                         .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
                 );
         }
@@ -313,7 +314,9 @@ impl Pyth {
             "#,
             count_updates,
             env::storage_usage() - storage,
-            env::storage_byte_cost() * (env::storage_usage() - storage) as u128,
+            env::storage_byte_cost()
+                .checked_mul(env::storage_usage().checked_sub(storage).unwrap().into())
+                .unwrap(),
         );
 
         // Refund storage difference to `account_id` after storage execution.
@@ -346,7 +349,8 @@ impl Pyth {
         let storage = (env::storage_usage() as u128)
             .checked_sub(
                 self.update_fee
-                    .checked_div(env::storage_byte_cost())
+                    .as_yoctonear()
+                    .checked_div(env::storage_byte_cost().as_yoctonear())
                     .ok_or(Error::ArithmeticOverflow)?,
             )
             .ok_or(Error::InsufficientDeposit)
@@ -404,7 +408,9 @@ impl Pyth {
             "#,
             count_updates,
             env::storage_usage() - storage,
-            env::storage_byte_cost() * (env::storage_usage() - storage) as u128,
+            env::storage_byte_cost()
+                .checked_mul(env::storage_usage().checked_sub(storage).unwrap().into())
+                .unwrap(),
         );
 
         // Refund storage difference to `account_id` after storage execution.
@@ -422,7 +428,9 @@ impl Pyth {
     #[allow(unused_variables)]
     pub fn get_update_fee_estimate(&self, data: String) -> U128 {
         let byte_cost = env::storage_byte_cost();
-        let data_cost = byte_cost * std::mem::size_of::<PriceFeed>() as u128;
+        let data_cost = byte_cost
+            .checked_mul(std::mem::size_of::<PriceFeed>().try_into().unwrap())
+            .unwrap();
 
         // If the data is an Accumulator style update, we should count he number of updates being
         // calculated in the fee.
@@ -448,7 +456,13 @@ impl Pyth {
         //
         // 5 is the upper limit for PriceFeed amount in a single update.
         // 4 is the value obtained through testing for headway.
-        (5u128 * 4u128 * data_cost + self.update_fee * total_updates).into()
+        (data_cost
+            .checked_mul(5u128 * 4u128)
+            .unwrap()
+            .checked_add(self.update_fee.checked_mul(total_updates).unwrap())
+            .unwrap())
+        .as_yoctonear()
+        .into()
     }
 
     /// Read the list of accepted `Source` chains for a price attestation.
@@ -681,42 +695,42 @@ impl Pyth {
         recipient: AccountId,
         before: StorageUsage,
         after: StorageUsage,
-        deposit: Balance,
-        additional_fee: Option<Balance>,
+        deposit: NearToken,
+        additional_fee: Option<NearToken>,
     ) -> Result<(), Error> {
-        let fee = additional_fee.unwrap_or(0);
+        let fee = additional_fee.unwrap_or_default();
 
         if let Some(diff) = after.checked_sub(before) {
             // Handle storage increases if checked_sub succeeds.
-            let cost = Balance::from(diff);
-            let cost = (cost * env::storage_byte_cost()) + fee;
+            let cost = (env::storage_byte_cost().checked_mul(diff.into()).unwrap())
+                .checked_add(fee)
+                .unwrap();
 
-            // If the cost is higher than the deposit we bail.
-            if cost > deposit {
-                return Err(Error::InsufficientDeposit);
-            }
-
-            // Otherwise we refund whatever is left over.
-            if deposit - cost > 0 {
-                Promise::new(recipient).transfer(deposit - cost);
+            // Use match
+            match deposit.checked_sub(cost) {
+                Some(refund) => {
+                    if !refund.is_zero() {
+                        Promise::new(recipient).transfer(refund);
+                    }
+                }
+                None => {
+                    return Err(Error::InsufficientDeposit);
+                }
             }
         } else {
             // If checked_sub fails we have a storage decrease, we want to refund them the cost of
             // the amount reduced, as well the original deposit they sent.
-            let refund = Balance::from(before - after);
-            let refund = refund * env::storage_byte_cost();
-            let refund = refund + deposit - fee;
+            let storage_refund = env::storage_byte_cost()
+                .checked_mul(before.checked_sub(after).unwrap().into())
+                .unwrap();
+            let refund = storage_refund
+                .checked_add(deposit)
+                .unwrap()
+                .checked_sub(fee)
+                .unwrap();
             Promise::new(recipient).transfer(refund);
         }
 
         Ok(())
     }
-}
-
-#[cfg(not(feature = "library"))]
-#[no_mangle]
-pub extern "C" fn update_contract() {
-    env::setup_panic_hook();
-    let mut contract: Pyth = env::state_read().expect("Failed to Read State");
-    contract.upgrade(env::input().unwrap()).unwrap();
 }
