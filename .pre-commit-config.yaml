@@ -78,7 +78,7 @@ repos:
       - id: cargo-fmt-fortuna
         name: Cargo format for Fortuna
         language: "rust"
-        entry: cargo +1.82.0 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: apps/fortuna
       - id: cargo-clippy-fortuna
