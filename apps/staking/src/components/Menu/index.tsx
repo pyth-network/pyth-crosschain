@@ -23,16 +23,13 @@ export const Menu = <T extends object>({
   ...props
 }: MenuProps<T>) => (
   <Popover
-    className="data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
+    className={clsx(
+      "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out",
+      className,
+    )}
     {...(placement && { placement })}
   >
-    <BaseMenu
-      className={clsx(
-        "flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none",
-        className,
-      )}
-      {...props}
-    />
+    <BaseMenu className="outline-none" {...props} />
   </Popover>
 );
 
@@ -51,7 +48,7 @@ export const MenuItem = ({
   <BaseMenuItem
     textValue={textValue ?? (typeof children === "string" ? children : "")}
     className={clsx(
-      "flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20 focus:outline-none focus-visible:outline-none",
+      "flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left outline-none data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20",
       className,
     )}
     {...props}

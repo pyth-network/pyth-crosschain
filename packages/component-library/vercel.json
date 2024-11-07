@@ -1,0 +1,6 @@
+{
+  "buildCommand": "turbo --filter @pythnetwork/component-library build:storybook",
+  "ignoreCommand": "pnpm dlx turbo-ignore --fallback=HEAD^",
+  "framework": null,
+  "outputDirectory": "storybook-static"
+}

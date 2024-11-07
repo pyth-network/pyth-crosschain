@@ -74,12 +74,12 @@ There is an example searcher in [examples](./src/examples/) directory.
 
 #### SimpleSearcher
 
-[This example](./src/examples/simpleSearcher.ts) fetches `OpportunityParams` from the specified endpoint,
+[This example](./src/examples/simpleSearcherEvm.ts) fetches `OpportunityParams` from the specified endpoint,
 creates a fixed bid on each opportunity and signs them with the provided private key, and finally submits them back to the server. You can run it with
 `npm run simple-searcher`. A full command looks like this:
 
 ```bash
-npm run simple-searcher -- \
+npm run simple-searcher-evm -- \
   --endpoint https://per-staging.dourolabs.app/ \
   --chain-id op_sepolia \
   --private-key <YOUR-PRIVATE-KEY>
@@ -91,8 +91,8 @@ The SimpleSearcherSvm example submits a dummy SVM transaction to the auction ser
 
 ```bash
 npm run simple-searcher-svm -- \
-  --endpoint-express-relay http://per-staging.dourolabs.app/ \
-  --chain-id solana \
+  --endpoint-express-relay https://per-staging.dourolabs.app/ \
+  --chain-id development-solana \
   --private-key <YOUR-PRIVATE-KEY> \
   --endpoint-svm "https://api.mainnet-beta.solana.com"
 ```

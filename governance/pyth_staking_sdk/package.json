@@ -1,22 +1,23 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.0.0",
+  "version": "0.0.3",
   "description": "Pyth staking SDK",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
+  "main": "src/index.ts",
+  "types": "src/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
-  "private": true,
   "scripts": {
     "build": "tsc",
-    "test": "pnpm run test:format && pnpm run test:lint && pnpm run test:integration && pnpm run test:types",
-    "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
+    "prepublishOnly": "node scripts/update-package-json.mjs",
     "test:format": "prettier --check .",
     "test:lint": "jest --selectProjects lint",
-    "test:types": "tsc",
-    "test:integration": "echo disabled # jest --selectProjects integration"
+    "test:types": "tsc"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "^3.0.0",
@@ -34,6 +35,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
+    "@pythnetwork/client": "^2.22.0",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/spl-governance": "^0.3.28",
     "@solana/spl-token": "^0.3.7",

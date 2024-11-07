@@ -7,11 +7,12 @@
     "baseUrl": "./",
     "noEmit": false,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "declaration": true,
     "composite": true,
     "declarationMap": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false
   }
 }

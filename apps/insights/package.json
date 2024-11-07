@@ -1,0 +1,48 @@
+{
+  "name": "@pythnetwork/insights",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "next build",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "start:dev": "next dev --port 3003",
+    "start:prod": "next start --port 3003",
+    "test:format": "prettier --check .",
+    "test:lint": "jest --selectProjects lint",
+    "test:types": "tsc"
+  },
+  "dependencies": {
+    "@pythnetwork/app-logger": "workspace:*",
+    "@pythnetwork/component-library": "workspace:*",
+    "@pythnetwork/fonts": "workspace:*",
+    "@pythnetwork/next-root": "workspace:*",
+    "clsx": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@svgr/webpack": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "postcss": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vercel": "catalog:"
+  }
+}

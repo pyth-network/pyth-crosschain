@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:schemas": {
+      "dependsOn": ["pull:schema"],
+      "inputs": ["schema.json"],
+      "outputs": ["src/zodSchemas.ts"]
+    },
+    "build:typescript": {
+      "dependsOn": ["build:schemas", "^build"],
+      "outputs": ["lib/**"]
+    },
+    "build": {
+      "dependsOn": ["build:typescript", "build:schemas"]
+    },
+    "example": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "pull:schema": {
+      "outputs": ["schema.json"],
+      "cache": false
+    }
+  }
+}

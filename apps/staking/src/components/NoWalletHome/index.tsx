@@ -57,11 +57,7 @@ export const NoWalletHome = () => {
           Choose Your Journey
         </h1>
         <p className="text-lg">You can participate in both programs.</p>
-        <Button
-          onPress={showModal}
-          className="flex flex-row items-center justify-center gap-2 px-10 py-4"
-          size="nopad"
-        >
+        <Button onPress={showModal} className="px-10 py-4" size="nopad">
           <WalletIcon className="size-4" />
           <div>Connect wallet</div>
         </Button>
@@ -145,7 +141,7 @@ export const NoWalletHome = () => {
             },
             {
               title: "Secure Pyth to Obtain Rewards",
-              body: "The protocol programmatically distributes rewards to publishers who contributed high quality data, and then distributes remaining rewards to the stakers who supported these publishers. Rewards are generated every epoch—one week period.",
+              body: "The protocol programmatically distributes rewards to publishers who contributed high quality data, and then distributes remaining rewards to the stakers who supported these publishers. Rewards are calculated every epoch (i.e. one week period).",
               icon: ObtainRewards,
             },
           ]}
@@ -183,11 +179,7 @@ export const NoWalletHome = () => {
             Staking or Pyth Governance.
           </p>
         </div>
-        <Button
-          onPress={showModal}
-          className="inline-flex flex-row items-center gap-2 px-10 py-4"
-          size="nopad"
-        >
+        <Button onPress={showModal} className="px-10 py-4" size="nopad">
           <WalletIcon className="size-4" />
           <span>Connect wallet</span>
         </Button>

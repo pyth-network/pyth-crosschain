@@ -1,6 +1,6 @@
 [package]
 name    = "fortuna"
-version = "6.5.3"
+version = "6.5.5"
 edition = "2021"
 
 [dependencies]

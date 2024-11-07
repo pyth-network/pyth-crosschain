@@ -1,3 +1,4 @@
 const int OP_UPDATE_GUARDIAN_SET = 1;
 const int OP_UPDATE_PRICE_FEEDS = 2;
 const int OP_EXECUTE_GOVERNANCE_ACTION = 3;
+const int OP_UPGRADE_CONTRACT = 4;

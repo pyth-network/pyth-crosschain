@@ -1,0 +1,29 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["pull:env", "^build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "WALLETCONNECT_PROJECT_ID",
+        "AMPLITUDE_API_KEY",
+        "GOOGLE_ANALYTICS_ID"
+      ]
+    },
+    "pull:env": {
+      "outputs": [".env.local"],
+      "cache": false
+    },
+    "start:dev": {
+      "dependsOn": ["pull:env"],
+      "persistent": true,
+      "cache": false
+    },
+    "start:prod": {
+      "dependsOn": ["build"],
+      "persistent": true,
+      "cache": false
+    }
+  }
+}

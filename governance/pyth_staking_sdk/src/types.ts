@@ -35,10 +35,18 @@ export type TargetWithParameters = IdlTypes<Staking>["targetWithParameters"];
 export type VestingScheduleAnchor = IdlTypes<Staking>["vestingSchedule"];
 export type VestingSchedule = ConvertBNToBigInt<VestingScheduleAnchor>;
 
+export type TargetAccountAnchor = IdlAccounts<Staking>["targetMetadata"];
+export type TargetAccount = ConvertBNToBigInt<TargetAccountAnchor>;
+
+export type VoterWeightAction = IdlTypes<Staking>["voterWeightAction"];
+
 export type UnlockSchedule = {
-  date: Date;
-  amount: bigint;
-}[];
+  type: "fullyUnlocked" | "periodicUnlockingAfterListing" | "periodicUnlocking";
+  schedule: {
+    date: Date;
+    amount: bigint;
+  }[];
+};
 
 export type StakeAccountPositions = {
   address: PublicKey;
@@ -55,6 +63,7 @@ export type PublisherData = {
   totalDelegationDelta: bigint;
   selfDelegation: bigint;
   selfDelegationDelta: bigint;
+  delegationFee: bigint;
   apyHistory: { epoch: bigint; apy: number; selfApy: number }[];
 }[];
 

@@ -1,6 +1,3 @@
-// TODO remove these disables when moving off the mock APIs
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import {
   epochToDate,
@@ -8,11 +5,14 @@ import {
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
+  PythnetClient,
   PythStakingClient,
   type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
+
+import { KNOWN_PUBLISHERS } from "./known-publishers";
 
 const publishersRankingSchema = z
   .object({
@@ -46,8 +46,12 @@ type Data = {
     cooldown2: bigint;
   };
   yieldRate: bigint;
+  m: bigint;
+  z: bigint;
   integrityStakingPublishers: {
-    name: string | undefined;
+    identity:
+      | (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
+      | undefined;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -57,7 +61,8 @@ type Data = {
     poolUtilizationDelta: bigint;
     numFeeds: number;
     qualityRanking: number;
-    apyHistory: { date: Date; apy: number }[];
+    delegationFee: bigint;
+    apyHistory: { date: Date; apy: number; selfApy: number }[];
     positions?:
       | {
           warmup?: bigint | undefined;
@@ -86,72 +91,9 @@ export type StakeDetails = ReturnType<
   (typeof StakeDetails)[keyof typeof StakeDetails]
 >;
 
-export enum AccountHistoryItemType {
-  AddTokens,
-  LockedDeposit,
-  Withdrawal,
-  RewardsCredited,
-  Claim,
-  Slash,
-  Unlock,
-  StakeCreated,
-  StakeFinishedWarmup,
-  UnstakeCreated,
-  UnstakeExitedCooldown,
-}
-
-const AccountHistoryAction = {
-  AddTokens: () => ({ type: AccountHistoryItemType.AddTokens as const }),
-  LockedDeposit: (unlockDate: Date) => ({
-    type: AccountHistoryItemType.LockedDeposit as const,
-    unlockDate,
-  }),
-  Withdrawal: () => ({ type: AccountHistoryItemType.Withdrawal as const }),
-  RewardsCredited: () => ({
-    type: AccountHistoryItemType.RewardsCredited as const,
-  }),
-  Claim: () => ({ type: AccountHistoryItemType.Claim as const }),
-  Slash: (publisherName: string) => ({
-    type: AccountHistoryItemType.Slash as const,
-    publisherName,
-  }),
-  Unlock: () => ({ type: AccountHistoryItemType.Unlock as const }),
-  StakeCreated: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.StakeCreated as const,
-    details,
-  }),
-  StakeFinishedWarmup: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.StakeFinishedWarmup as const,
-    details,
-  }),
-  UnstakeCreated: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.UnstakeCreated as const,
-    details,
-  }),
-  UnstakeExitedCooldown: (details: StakeDetails) => ({
-    type: AccountHistoryItemType.UnstakeExitedCooldown as const,
-    details,
-  }),
-};
-
-export type AccountHistoryAction = ReturnType<
-  (typeof AccountHistoryAction)[keyof typeof AccountHistoryAction]
->;
-
-export type AccountHistory = {
-  timestamp: Date;
-  action: AccountHistoryAction;
-  amount: bigint;
-  accountTotal: bigint;
-  availableToWithdraw: bigint;
-  availableRewards: bigint;
-  locked: bigint;
-}[];
-
 export const getAllStakeAccountAddresses = async (
   client: PythStakingClient,
-): Promise<PublicKey[]> =>
-  client.getAllStakeAccountPositions(client.wallet.publicKey);
+): Promise<PublicKey[]> => client.getAllStakeAccountPositions();
 
 export const getStakeAccount = async (
   client: PythStakingClient,
@@ -161,18 +103,29 @@ export const getStakeAccount = async (
 
 export const loadData = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount?: PublicKey | undefined,
 ): Promise<Data> =>
   stakeAccount === undefined
-    ? loadDataNoStakeAccount(client, hermesClient)
-    : loadDataForStakeAccount(client, hermesClient, stakeAccount);
+    ? loadDataNoStakeAccount(client, pythnetClient, hermesClient)
+    : loadDataForStakeAccount(
+        client,
+        pythnetClient,
+        hermesClient,
+        stakeAccount,
+      );
 
 const loadDataNoStakeAccount = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ): Promise<Data> => {
-  const { publishers, ...baseInfo } = await loadBaseInfo(client, hermesClient);
+  const { publishers, ...baseInfo } = await loadBaseInfo(
+    client,
+    pythnetClient,
+    hermesClient,
+  );
 
   return {
     ...baseInfo,
@@ -193,9 +146,10 @@ const loadDataNoStakeAccount = async (
 
 const loadDataForStakeAccount = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount: PublicKey,
-) => {
+): Promise<Data> => {
   const [
     { publishers, ...baseInfo },
     stakeAccountCustody,
@@ -203,7 +157,7 @@ const loadDataForStakeAccount = async (
     claimableRewards,
     stakeAccountPositions,
   ] = await Promise.all([
-    loadBaseInfo(client, hermesClient),
+    loadBaseInfo(client, pythnetClient, hermesClient),
     client.getStakeAccountCustody(stakeAccount),
     client.getUnlockSchedule(stakeAccount),
     client.getClaimableRewards(stakeAccount),
@@ -241,7 +195,7 @@ const loadDataForStakeAccount = async (
       cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
       cooldown2: filterGovernancePositions(PositionState.UNLOCKING),
     },
-    unlockSchedule,
+    unlockSchedule: unlockSchedule.schedule,
     integrityStakingPublishers: publishers.map((publisher) => ({
       ...publisher,
       positions: {
@@ -262,45 +216,64 @@ const loadDataForStakeAccount = async (
 
 const loadBaseInfo = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ) => {
-  const [publishers, walletAmount, poolConfig, currentEpoch] =
+  const [publishers, walletAmount, poolConfig, currentEpoch, parameters] =
     await Promise.all([
-      loadPublisherData(client, hermesClient),
+      loadPublisherData(client, pythnetClient, hermesClient),
       client.getOwnerPythBalance(),
       client.getPoolConfigAccount(),
       getCurrentEpoch(client.connection),
+      pythnetClient.getStakeCapParameters(),
     ]);
 
-  return { yieldRate: poolConfig.y, walletAmount, publishers, currentEpoch };
+  return {
+    yieldRate: poolConfig.y,
+    walletAmount,
+    publishers,
+    currentEpoch,
+    m: parameters.m,
+    z: parameters.z,
+  };
 };
 
 const loadPublisherData = async (
   client: PythStakingClient,
+  pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ) => {
-  const [poolData, publisherRankings, publisherCaps] = await Promise.all([
-    client.getPoolDataAccount(),
-    getPublisherRankings(),
-    hermesClient.getLatestPublisherCaps({
-      parsed: true,
-    }),
-  ]);
+  const [poolData, publisherRankings, publisherCaps, publisherNumberOfSymbols] =
+    await Promise.all([
+      client.getPoolDataAccount(),
+      getPublisherRankings(),
+      hermesClient.getLatestPublisherCaps({
+        parsed: true,
+      }),
+      pythnetClient.getPublisherNumberOfSymbols(),
+    ]);
 
   return extractPublisherData(poolData).map((publisher) => {
     const publisherPubkeyString = publisher.pubkey.toBase58();
     const publisherRanking = publisherRankings.find(
       (ranking) => ranking.publisher === publisherPubkeyString,
     );
-    const apyHistory = publisher.apyHistory.map(({ epoch, apy }) => ({
+    const numberOfSymbols = publisherNumberOfSymbols[publisherPubkeyString];
+    const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
       date: epochToDate(epoch + 1n),
       apy,
+      selfApy,
     }));
 
     return {
       apyHistory,
-      name: undefined, // TODO
-      numFeeds: publisherRanking?.numSymbols ?? 0,
+      identity: (
+        KNOWN_PUBLISHERS as Record<
+          string,
+          (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
+        >
+      )[publisher.pubkey.toBase58()],
+      numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
       poolUtilizationDelta: publisher.totalDelegationDelta,
@@ -309,6 +282,7 @@ const loadPublisherData = async (
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
+      delegationFee: publisher.delegationFee,
     };
   });
 };
@@ -325,14 +299,6 @@ const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
       ({ publisher: p }) => p === publisher.toBase58(),
     )?.cap ?? 0,
   );
-
-export const loadAccountHistory = async (
-  _client: PythStakingClient,
-  _stakeAccount: PublicKey,
-): Promise<AccountHistory> => {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
-  return mkMockHistory();
-};
 
 export const createStakeAccountAndDeposit = async (
   client: PythStakingClient,
@@ -433,6 +399,16 @@ export const unstakeIntegrityStaking = async (
   );
 };
 
+export const unstakeAllIntegrityStaking = async (
+  client: PythStakingClient,
+  stakeAccount: PublicKey,
+): Promise<void> => {
+  await client.unstakeFromAllPublishers(stakeAccount, [
+    PositionState.LOCKED,
+    PositionState.LOCKING,
+  ]);
+};
+
 export const reassignPublisherAccount = async (
   client: PythStakingClient,
   stakeAccount: PublicKey,
@@ -451,46 +427,5 @@ export const optPublisherOut = async (
   stakeAccount: PublicKey,
   publisherKey: PublicKey,
 ): Promise<void> => {
-  await client.removePublisherStakeAccount(stakeAccount, publisherKey);
+  await client.removePublisherStakeAccount(publisherKey, stakeAccount);
 };
-
-const MOCK_DELAY = 500;
-
-const mkMockHistory = (): AccountHistory => [
-  {
-    timestamp: new Date("2024-06-10T00:00:00Z"),
-    action: AccountHistoryAction.AddTokens(),
-    amount: 2_000_000n,
-    accountTotal: 2_000_000n,
-    availableRewards: 0n,
-    availableToWithdraw: 2_000_000n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-14T02:00:00Z"),
-    action: AccountHistoryAction.RewardsCredited(),
-    amount: 200n,
-    accountTotal: 2_000_000n,
-    availableRewards: 200n,
-    availableToWithdraw: 2_000_000n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-16T08:00:00Z"),
-    action: AccountHistoryAction.Claim(),
-    amount: 200n,
-    accountTotal: 2_000_200n,
-    availableRewards: 0n,
-    availableToWithdraw: 2_000_200n,
-    locked: 0n,
-  },
-  {
-    timestamp: new Date("2024-06-16T08:00:00Z"),
-    action: AccountHistoryAction.Slash("Cboe"),
-    amount: 1000n,
-    accountTotal: 1_999_200n,
-    availableRewards: 0n,
-    availableToWithdraw: 1_999_200n,
-    locked: 0n,
-  },
-];

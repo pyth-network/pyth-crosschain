@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "8.0.1",
+  "version": "8.0.4",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -20,14 +20,13 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest src/ --passWithNoTests",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint src/",
+    "test:lint": "eslint src/",
     "start": "node lib/index.js",
     "dev": "ts-node src/index.ts",
-    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
-    "preversion": "pnpm run lint",
+    "prepublishOnly": "pnpm run build && pnpm run test:lint",
+    "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },
   "keywords": [

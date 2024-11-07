@@ -1,4 +1,8 @@
-from express_relay.express_relay_types import OpportunityAdapterConfig
+from typing import Dict, TypedDict
+
+from solders.pubkey import Pubkey
+
+from express_relay.models import OpportunityAdapterConfig
 
 OPPORTUNITY_ADAPTER_CONFIGS = {
     "op_sepolia": OpportunityAdapterConfig(
@@ -24,3 +28,16 @@ EXECUTION_WITNESS_TYPESTRING = (
 EXECUTION_PARAMS_TYPESTRING = (
     f"({PERMIT_BATCH_TRANSFER_FROM_TYPESTRING},{EXECUTION_WITNESS_TYPESTRING})"
 )
+
+
+class SvmProgramConfig(TypedDict):
+    express_relay_program: Pubkey
+
+
+SVM_CONFIGS: Dict[str, SvmProgramConfig] = {
+    "development-solana": {
+        "express_relay_program": Pubkey.from_string(
+            "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou"
+        ),
+    }
+}

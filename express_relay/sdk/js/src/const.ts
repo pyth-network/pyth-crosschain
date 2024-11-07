@@ -25,14 +25,8 @@ export const OPPORTUNITY_ADAPTER_CONFIGS: Record<
 
 export const SVM_CONSTANTS: Record<string, SvmConstantsConfig> = {
   "development-solana": {
-    relayerSigner: new PublicKey(
-      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
-    ),
-    feeReceiverRelayer: new PublicKey(
-      "3pR5W8qPTHKEdoD7mNMx1SwkaPE18aQZwoAKWYpnHozY"
-    ),
     expressRelayProgram: new PublicKey(
-      "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM"
+      "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou"
     ),
   },
 };

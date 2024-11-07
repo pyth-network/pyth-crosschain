@@ -1,0 +1,3 @@
+- chain: ton_testnet
+  address: "EQDwGkJmcj7MMmWAHmhldnY-lAKI6hcTQ2tAEcapmwCnztQU"
+  type: TonWormholeContract

@@ -1,0 +1,59 @@
+{
+  "name": "@pythnetwork/component-library",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tailwind-config": "./tailwind.config.ts",
+    "./*": "./src/*/index.tsx"
+  },
+  "scripts": {
+    "build:storybook": "storybook build",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "start:dev": "storybook dev --port 4000 --no-open",
+    "test:format": "prettier --check .",
+    "test:lint": "jest --selectProjects lint",
+    "test:types": "tsc"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "dependencies": {
+    "clsx": "catalog:",
+    "react-aria": "catalog:",
+    "react-aria-components": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@pythnetwork/fonts": "workspace:*",
+    "@storybook/addon-essentials": "catalog:",
+    "@storybook/addon-styling-webpack": "catalog:",
+    "@storybook/addon-themes": "catalog:",
+    "@storybook/blocks": "catalog:",
+    "@storybook/nextjs": "catalog:",
+    "@storybook/react": "catalog:",
+    "@tailwindcss/forms": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/react": "catalog:",
+    "autoprefixer": "catalog:",
+    "css-loader": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "postcss": "catalog:",
+    "postcss-loader": "catalog:",
+    "prettier": "catalog:",
+    "react": "catalog:",
+    "storybook": "catalog:",
+    "style-loader": "catalog:",
+    "tailwindcss": "catalog:",
+    "tailwindcss-animate": "catalog:",
+    "tailwindcss-react-aria-components": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -157,6 +157,7 @@ export class HermesClient {
    * @param options Optional parameters:
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
    *
    * @returns PriceUpdate object containing the latest updates.
    */
@@ -165,6 +166,7 @@ export class HermesClient {
     options?: {
       encoding?: EncodingType;
       parsed?: boolean;
+      ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<PriceUpdate> {
     const url = new URL("v2/updates/price/latest", this.baseURL);
@@ -173,7 +175,8 @@ export class HermesClient {
     }
 
     if (options) {
-      this.appendUrlSearchParams(url, options);
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
     }
 
     return this.httpRequest(url.toString(), schemas.PriceUpdate);
@@ -189,6 +192,7 @@ export class HermesClient {
    * @param options Optional parameters:
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
    *
    * @returns PriceUpdate object containing the updates at the specified timestamp.
    */
@@ -198,6 +202,7 @@ export class HermesClient {
     options?: {
       encoding?: EncodingType;
       parsed?: boolean;
+      ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<PriceUpdate> {
     const url = new URL(`v2/updates/price/${publishTime}`, this.baseURL);
@@ -206,7 +211,8 @@ export class HermesClient {
     }
 
     if (options) {
-      this.appendUrlSearchParams(url, options);
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
     }
 
     return this.httpRequest(url.toString(), schemas.PriceUpdate);
@@ -219,12 +225,14 @@ export class HermesClient {
    * This will return an EventSource that can be used to listen to streaming updates.
    * If an invalid hex-encoded ID is passed, it will throw an error.
    *
-   *
    * @param ids Array of hex-encoded price feed IDs for which streaming updates are requested.
-   * @param encoding Optional encoding type. If specified, updates are returned in the specified encoding. Default is hex.
-   * @param parsed Optional boolean to specify if the parsed price update should be included in the response. Default is false.
-   * @param allow_unordered Optional boolean to specify if unordered updates are allowed to be included in the stream. Default is false.
-   * @param benchmarks_only Optional boolean to specify if only benchmark prices that are the initial price updates at a given timestamp (i.e., prevPubTime != pubTime) should be returned. Default is false.
+   * @param options Optional parameters:
+   *        - encoding: Encoding type. If specified, updates are returned in the specified encoding. Default is hex.
+   *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
+   *        - allowUnordered: Boolean to specify if unordered updates are allowed to be included in the stream. Default is false.
+   *        - benchmarksOnly: Boolean to specify if only benchmark prices should be returned. Default is false.
+   *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
+   *
    * @returns An EventSource instance for receiving streaming updates.
    */
   async getPriceUpdatesStream(
@@ -234,6 +242,7 @@ export class HermesClient {
       parsed?: boolean;
       allowUnordered?: boolean;
       benchmarksOnly?: boolean;
+      ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<EventSource> {
     const url = new URL("v2/updates/price/stream", this.baseURL);

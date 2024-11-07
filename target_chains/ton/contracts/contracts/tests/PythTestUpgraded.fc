@@ -1,0 +1,78 @@
+{-
+  This test contract is an upgraded version of PythTest.fc. This is used to test the upgrade functionality of the Pyth contract.
+-}
+
+#include "../imports/stdlib.fc";
+#include "../Pyth.fc";
+#include "../Wormhole.fc";
+#include "../common/op.fc";
+
+() recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    int op = in_msg_body~load_uint(32);
+    cell data = in_msg_body~load_ref();
+    slice data_slice = data.begin_parse();
+    if (op == OP_UPDATE_GUARDIAN_SET) {
+        update_guardian_set(data_slice);
+    } elseif (op == OP_UPDATE_PRICE_FEEDS) {
+        update_price_feeds(msg_value, data_slice);
+    } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
+        execute_governance_action(data_slice);
+    } elseif (op == OP_UPGRADE_CONTRACT) {
+        execute_upgrade_contract(data);
+    } else {
+        throw(0xffff); ;; Throw exception for unknown op
+    }
+}
+
+(int, int, int, int) test_get_price_unsafe(int price_feed_id) method_id {
+    return get_price_unsafe(price_feed_id);
+}
+
+(int, int, int, int) test_get_price_no_older_than(int time_period, int price_feed_id) method_id {
+    return get_price_no_older_than(time_period, price_feed_id);
+}
+
+(int, int, int, int) test_get_ema_price_unsafe(int price_feed_id) method_id {
+    return get_ema_price_unsafe(price_feed_id);
+}
+
+(int, int, int, int) test_get_ema_price_no_older_than(int time_period, int price_feed_id) method_id {
+    return get_ema_price_no_older_than(time_period, price_feed_id);
+}
+
+(int) test_get_update_fee(slice in_msg_body) method_id {
+    return get_update_fee(in_msg_body);
+}
+
+(int) test_get_single_update_fee() method_id {
+    return get_single_update_fee();
+}
+
+(int) test_get_chain_id() method_id {
+    return get_chain_id();
+}
+
+(int) test_get_last_executed_governance_sequence() method_id {
+    return get_last_executed_governance_sequence();
+}
+
+(int) test_get_governance_data_source_index() method_id {
+    return get_governance_data_source_index();
+}
+
+(cell) test_get_governance_data_source() method_id {
+    return get_governance_data_source();
+}
+
+(int) test_get_is_valid_data_source(cell data_source) method_id {
+    return get_is_valid_data_source(data_source);
+}
+
+;; Add a new function to demonstrate the upgrade
+(int) test_new_function() method_id {
+    return 1;
+}

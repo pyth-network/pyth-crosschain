@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV"],
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!**/*.test.*",
+        "!jest.config.js",
+        "!eslint.config.js",
+        "!prettier.config.js",
+        "!vercel.json"
+      ],
+      "outputs": ["dist/**", "lib/**"]
+    },
+    "fix": {
+      "dependsOn": ["fix:lint", "fix:format"],
+      "cache": false
+    },
+    "fix:format": {
+      "dependsOn": ["fix:lint"],
+      "cache": false
+    },
+    "fix:lint": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "test": {
+      "dependsOn": [
+        "test:types",
+        "test:unit",
+        "test:integration",
+        "test:format",
+        "test:lint"
+      ]
+    },
+    "test:format": {},
+    "test:lint": {
+      "dependsOn": ["^build"]
+    },
+    "test:types": {
+      "dependsOn": ["^build"]
+    },
+    "test:unit": {
+      "dependsOn": ["^build"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build"]
+    }
+  }
+}

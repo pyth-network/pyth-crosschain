@@ -241,9 +241,6 @@
 - chain: lightlink_pegasus_testnet
   address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"
   type: EvmPriceFeedContract
-- chain: fantom_sonic_testnet
-  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
-  type: EvmPriceFeedContract
 - chain: dela_deperp_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
@@ -307,9 +304,6 @@
 - chain: morph_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmPriceFeedContract
-- chain: flow_previewnet
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
 - chain: taiko_hekla
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
@@ -330,9 +324,6 @@
   type: EvmPriceFeedContract
 - chain: dela_mithreum_deperp_testnet
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
-  type: EvmPriceFeedContract
-- chain: kakarot_sepolia
-  address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
   type: EvmPriceFeedContract
 - chain: berachain_testnet_v2
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
@@ -370,14 +361,14 @@
 - chain: kinto
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: cronos_zkevm_testnet
-  address: "0x67DFF3D12dFDCeC9f85fd86f4cBDb0a111fF721A"
-  type: EvmPriceFeedContract
 - chain: reya_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: cronos_zkevm_mainnet
   address: "0x056f829183Ec806A78c26C98961678c24faB71af"
+  type: EvmPriceFeedContract
+- chain: cronos_zkevm_testnet
+  address: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6"
   type: EvmPriceFeedContract
 - chain: movement_evm_devnet_imola
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
@@ -395,5 +386,41 @@
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: apechain_mainnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: flow_mainnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: fantom_sonic_testnet
+  address: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376"
+  type: EvmPriceFeedContract
+- chain: abstract_testnet
+  address: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486"
+  type: EvmPriceFeedContract
+- chain: unichain_sepolia
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: kakarot_sepolia
+  address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
+  type: EvmPriceFeedContract
+- chain: skate
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: skate_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: morph
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: kraken_ink_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: ethena_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: superseed_mainnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: superseed_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract

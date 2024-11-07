@@ -16,8 +16,10 @@ import {
 } from "react-aria-components";
 
 import { StateType, useAsync } from "../../hooks/use-async";
+import { useToast } from "../../hooks/use-toast";
 import { stringToTokens, tokensToString } from "../../tokens";
 import { Button } from "../Button";
+import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import PythTokensIcon from "../Tokens/pyth.svg";
@@ -35,6 +37,7 @@ type Props = Omit<ComponentProps<typeof Button>, "children"> & {
     | ReactNode[]
     | undefined;
   transfer?: ((amount: bigint) => Promise<void>) | undefined;
+  successMessage: ReactNode;
 };
 
 export const TransferButton = ({
@@ -47,10 +50,9 @@ export const TransferButton = ({
   transfer,
   children,
   isDisabled,
+  successMessage,
   ...props
 }: Props) => {
-  const [closeDisabled, setCloseDisabled] = useState(false);
-
   return transfer === undefined ||
     isDisabled === true ||
     (max === 0n && !enableWithZeroMax) ? (
@@ -60,24 +62,60 @@ export const TransferButton = ({
   ) : (
     <DialogTrigger>
       <Button {...props}>{actionName}</Button>
-      <ModalDialog
+      <TransferDialog
         title={title ?? actionName}
-        closeDisabled={closeDisabled}
         description={actionDescription}
+        max={max}
+        transfer={transfer}
+        submitButtonText={submitButtonText ?? actionName}
+        successMessage={successMessage}
       >
-        {({ close }) => (
-          <DialogContents
-            max={max}
-            transfer={transfer}
-            setCloseDisabled={setCloseDisabled}
-            submitButtonText={submitButtonText ?? actionName}
-            close={close}
-          >
-            {children}
-          </DialogContents>
-        )}
-      </ModalDialog>
+        {children}
+      </TransferDialog>
     </DialogTrigger>
+  );
+};
+
+type TransferDialogProps = Omit<
+  ComponentProps<typeof ModalDialog>,
+  "children"
+> & {
+  max: bigint;
+  transfer: (amount: bigint) => Promise<void>;
+  submitButtonText: ReactNode;
+  children?:
+    | ((amount: Amount) => ReactNode | ReactNode[])
+    | ReactNode
+    | ReactNode[]
+    | undefined;
+  successMessage: ReactNode;
+};
+
+const TransferDialog = ({
+  max,
+  transfer,
+  submitButtonText,
+  children,
+  successMessage,
+  ...props
+}: TransferDialogProps) => {
+  const [closeDisabled, setCloseDisabled] = useState(false);
+
+  return (
+    <ModalDialog closeDisabled={closeDisabled} {...props}>
+      {({ close }) => (
+        <DialogContents
+          max={max}
+          transfer={transfer}
+          setCloseDisabled={setCloseDisabled}
+          submitButtonText={submitButtonText}
+          close={close}
+          successMessage={successMessage}
+        >
+          {children}
+        </DialogContents>
+      )}
+    </ModalDialog>
   );
 };
 
@@ -88,6 +126,7 @@ type DialogContentsProps = {
   setCloseDisabled: (value: boolean) => void;
   submitButtonText: ReactNode;
   close: () => void;
+  successMessage: ReactNode;
 };
 
 const DialogContents = ({
@@ -97,8 +136,10 @@ const DialogContents = ({
   submitButtonText,
   setCloseDisabled,
   close,
+  successMessage,
 }: DialogContentsProps) => {
   const { amount, setAmount, setMax, stringValue } = useAmountInput(max);
+  const toast = useToast();
 
   const validationError = useMemo(() => {
     switch (amount.type) {
@@ -137,15 +178,16 @@ const DialogContents = ({
       execute()
         .then(() => {
           close();
+          toast.success(successMessage);
         })
         .catch(() => {
-          /* no-op since this is already handled in the UI using `state` and is logged in useTransfer */
+          /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
         })
         .finally(() => {
           setCloseDisabled(false);
         });
     },
-    [execute, close, setCloseDisabled],
+    [execute, close, setCloseDisabled, toast, successMessage],
   );
 
   return (
@@ -187,9 +229,9 @@ const DialogContents = ({
           </div>
         </Group>
         {state.type === StateType.Error && (
-          <p className="mt-1 text-red-600">
-            Uh oh, an error occurred! Please try again
-          </p>
+          <div className="mt-4 max-w-sm">
+            <ErrorMessage error={state.error} />
+          </div>
         )}
       </TextField>
       {children && (
@@ -199,7 +241,9 @@ const DialogContents = ({
         className="mt-6 w-full"
         type="submit"
         isLoading={state.type === StateType.Running}
-        isDisabled={amount.type !== AmountType.Valid}
+        isDisabled={
+          amount.type !== AmountType.Valid || state.type === StateType.Complete
+        }
       >
         {validationError ?? submitButtonText}
       </Button>

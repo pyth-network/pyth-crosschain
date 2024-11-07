@@ -40,7 +40,10 @@ use {
         EXECUTOR_KEY_SEED,
         ID,
     },
-    solana_client::rpc_client::RpcClient,
+    solana_client::{
+        rpc_client::RpcClient,
+        rpc_config::RpcSendTransactionConfig,
+    },
     solana_sdk::{
         instruction::{
             AccountMeta,
@@ -87,9 +90,11 @@ fn main() -> Result<()> {
             let wormhole_config_data =
                 Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
+            let guardian_set_data_offset = if cli.chain == 26 { 0 } else { 8 }; // Pythnet's guardian set account has no discriminator
             let guardian_set = GuardianSet::key(&wormhole, wormhole_config_data.guardian_set_index);
-            let guardian_set_data =
-                GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?)?;
+            let guardian_set_data = GuardianSet::try_from_slice(
+                &rpc_client.get_account_data(&guardian_set)?[guardian_set_data_offset..],
+            )?;
 
             let signature_set_keypair = Keypair::new();
 
@@ -167,9 +172,18 @@ fn main() -> Result<()> {
             let wormhole_config_data =
                 Config::try_from_slice(&rpc_client.get_account_data(&wormhole_config)?)?;
 
+            let executor_key = Pubkey::find_program_address(
+                &[EXECUTOR_KEY_SEED.as_bytes(), &payer.pubkey().to_bytes()],
+                &ID,
+            )
+            .0;
             let payload = ExecutorPayload {
                 header:       GovernanceHeader::executor_governance_header(cli.chain),
-                instructions: vec![],
+                instructions: vec![InstructionData::from(&system_instruction::transfer(
+                    &executor_key,
+                    &payer.pubkey(),
+                    1,
+                ))],
             }
             .try_to_vec()?;
 
@@ -262,10 +276,40 @@ pub fn process_transaction(
 ) -> Result<()> {
     let mut transaction =
         Transaction::new_with_payer(instructions.as_slice(), Some(&signers[0].pubkey()));
-    transaction.sign(signers, rpc_client.get_latest_blockhash()?);
-    let transaction_signature =
-        rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
-    println!("Transaction successful : {transaction_signature:?}");
+    let recent_blockhash = rpc_client.get_latest_blockhash()?;
+    transaction.sign(signers, recent_blockhash);
+
+    // Simulate the transaction
+    let simulation_result = rpc_client.simulate_transaction(&transaction)?;
+
+    // Check if simulation was successful
+    if let Some(err) = simulation_result.value.err {
+        println!("Transaction simulation failed: {:?}", err);
+        if let Some(logs) = simulation_result.value.logs {
+            println!("Simulation logs:");
+            for (i, log) in logs.iter().enumerate() {
+                println!("  {}: {}", i, log);
+            }
+        }
+        return Err(anyhow::anyhow!("Transaction simulation failed"));
+    }
+
+    // If simulation was successful, send the actual transaction
+    let config = RpcSendTransactionConfig {
+        skip_preflight: true,
+        ..RpcSendTransactionConfig::default()
+    };
+    let transaction_signature = rpc_client.send_transaction_with_config(&transaction, config)?;
+    println!("Transaction sent: {transaction_signature:?}");
+
+    // Wait for confirmation
+    rpc_client.confirm_transaction_with_spinner(
+        &transaction_signature,
+        &recent_blockhash,
+        rpc_client.commitment(),
+    )?;
+
+    println!("Transaction confirmed: {transaction_signature:?}");
     Ok(())
 }
 

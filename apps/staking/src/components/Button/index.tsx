@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
 import { Button as ReactAriaButton } from "react-aria-components";
@@ -23,18 +24,40 @@ export const Button = ({
   size,
   isDisabled,
   className,
+  children,
   ...props
 }: ButtonProps) => (
   <ReactAriaButton
     isDisabled={isLoading === true || isDisabled === true}
     className={clsx(
-      "disabled:border-neutral-50/10 disabled:bg-neutral-50/10 disabled:text-white/60",
+      "relative text-center disabled:border-neutral-50/10 disabled:bg-neutral-50/10 disabled:text-white/60",
       isLoading ? "cursor-wait" : "disabled:cursor-not-allowed",
       baseClassName({ variant, size }),
       className,
     )}
     {...props}
-  />
+  >
+    {(values) => (
+      <>
+        <div
+          className={clsx(
+            "flex flex-row items-center justify-center gap-[0.5em] transition",
+            { "opacity-0": isLoading },
+          )}
+        >
+          {typeof children === "function" ? children(values) : children}
+        </div>
+        <div
+          className={clsx(
+            "absolute inset-0 grid place-content-center transition",
+            { "opacity-0": !isLoading },
+          )}
+        >
+          <ArrowPathIcon className="inline-block size-[1em] animate-spin" />
+        </div>
+      </>
+    )}
+  </ReactAriaButton>
 );
 
 type LinkButtonProps = ComponentProps<typeof Link> & VariantProps;

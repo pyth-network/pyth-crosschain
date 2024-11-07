@@ -1,0 +1,451 @@
+syntax = "proto3";
+
+package node.v1;
+
+option go_package = "github.com/certusone/wormhole/node/pkg/proto/node/v1;nodev1";
+
+import "gossip/v1/gossip.proto";
+
+// NodePrivilegedService exposes an administrative API. It runs on a UNIX socket and is authenticated
+// using Linux filesystem permissions.
+service NodePrivilegedService {
+  // InjectGovernanceVAA injects a governance VAA into the guardian node.
+  // The node will inject the VAA into the aggregator and sign/broadcast the VAA signature.
+  //
+  // A consensus majority of nodes on the network will have to inject the VAA within the
+  // VAA timeout window for it to reach consensus.
+  //
+  rpc InjectGovernanceVAA (InjectGovernanceVAARequest) returns (InjectGovernanceVAAResponse);
+
+  // FindMissingMessages will detect message sequence gaps in the local VAA store for a
+  // specific emitter chain and address. Start and end slots are the lowest and highest
+  // sequence numbers available in the local store, respectively.
+  //
+  // An error is returned if more than 1000 gaps are found.
+  rpc FindMissingMessages (FindMissingMessagesRequest) returns (FindMissingMessagesResponse);
+
+  // SendObservationRequest broadcasts a signed observation request to the gossip network
+  // using the node's guardian key. The network rate limits these requests to one per second.
+  // Requests at higher rates will fail silently.
+  rpc SendObservationRequest (SendObservationRequestRequest) returns (SendObservationRequestResponse);
+
+  // ChainGovernorStatus displays the status of the chain governor.
+  rpc ChainGovernorStatus (ChainGovernorStatusRequest) returns (ChainGovernorStatusResponse);
+
+  // ChainGovernorReload clears the chain governor history and reloads it from the database.
+  rpc ChainGovernorReload (ChainGovernorReloadRequest) returns (ChainGovernorReloadResponse);
+
+  // ChainGovernorDropPendingVAA drops a VAA from the chain governor pending list.
+  rpc ChainGovernorDropPendingVAA (ChainGovernorDropPendingVAARequest) returns (ChainGovernorDropPendingVAAResponse);
+
+  // ChainGovernorReleasePendingVAA release a VAA from the chain governor pending list, publishing it immediately.
+  rpc ChainGovernorReleasePendingVAA (ChainGovernorReleasePendingVAARequest) returns (ChainGovernorReleasePendingVAAResponse);
+
+  // ChainGovernorResetReleaseTimer resets the release timer for a chain governor pending VAA to the configured maximum.
+  rpc ChainGovernorResetReleaseTimer (ChainGovernorResetReleaseTimerRequest) returns (ChainGovernorResetReleaseTimerResponse);
+
+  // PurgePythNetVaas deletes PythNet VAAs from the database that are more than the specified number of days old.
+  rpc PurgePythNetVaas (PurgePythNetVaasRequest) returns (PurgePythNetVaasResponse);
+
+  // SignExistingVAA signs an existing VAA for a new guardian set using the local guardian key.
+  rpc SignExistingVAA (SignExistingVAARequest) returns (SignExistingVAAResponse);
+
+  // DumpRPCs returns the RPCs being used by the guardian
+  rpc DumpRPCs (DumpRPCsRequest) returns (DumpRPCsResponse);
+
+  // GetMissingVAAs returns the VAAs from a cloud function that need to be reobserved.
+  rpc GetAndObserveMissingVAAs (GetAndObserveMissingVAAsRequest) returns (GetAndObserveMissingVAAsResponse);
+}
+
+message InjectGovernanceVAARequest {
+  // Index of the current guardian set.
+  uint32 current_set_index = 1;
+
+  // List of governance VAA messages to inject.
+  repeated GovernanceMessage messages = 2;
+
+  // UNIX wall time in seconds
+  uint32 timestamp = 3;
+}
+
+message GovernanceMessage {
+  // Sequence number. This is critical for replay protection - make sure the sequence number
+  // is unique for every new manually injected governance VAA. Sequences are tracked
+  // by emitter, and manually injected VAAs all use a single hardcoded emitter.
+  //
+  // We use random sequence numbers for the manual emitter.
+  uint64 sequence = 2;
+
+  // Random nonce for disambiguation. Must be identical across all nodes.
+  uint32 nonce = 3;
+
+  oneof payload{
+    // Core module
+
+    GuardianSetUpdate guardian_set = 10;
+    ContractUpgrade contract_upgrade = 11;
+
+    // Token bridge, NFT module, and Wormhole Relayer module (for the first two)
+
+    BridgeRegisterChain bridge_register_chain = 12;
+    BridgeUpgradeContract bridge_contract_upgrade = 13;
+
+    // Core, Token bridge, and NFT module
+    RecoverChainId recover_chain_id = 27;
+
+    // Wormchain
+
+    WormchainStoreCode wormchain_store_code = 14;
+    WormchainInstantiateContract wormchain_instantiate_contract = 15;
+    WormchainMigrateContract wormchain_migrate_contract = 16;
+    WormchainWasmInstantiateAllowlist wormchain_wasm_instantiate_allowlist = 23;
+
+    // Gateway
+    GatewayScheduleUpgrade gateway_schedule_upgrade = 24;
+    GatewayCancelUpgrade gateway_cancel_upgrade = 25;
+    GatewayIbcComposabilityMwSetContract gateway_ibc_composability_mw_set_contract = 26;
+
+    // Global Accountant
+    AccountantModifyBalance accountant_modify_balance = 17;
+
+    // Circle Integration
+    CircleIntegrationUpdateWormholeFinality circle_integration_update_wormhole_finality = 18;
+    CircleIntegrationRegisterEmitterAndDomain circle_integration_register_emitter_and_domain = 19;
+    CircleIntegrationUpgradeContractImplementation circle_integration_upgrade_contract_implementation = 20;
+
+    // IBC Receiver Integration
+    IbcUpdateChannelChain ibc_update_channel_chain = 21;
+    // Wormhole Relayer module
+    WormholeRelayerSetDefaultDeliveryProvider wormhole_relayer_set_default_delivery_provider = 22;
+
+    // Generic governance
+    EvmCall evm_call = 28;
+    SolanaCall solana_call = 29;
+  }
+}
+
+message InjectGovernanceVAAResponse {
+  // Canonical digests of the submitted VAAs.
+  repeated bytes digests = 1;
+}
+
+// GuardianSet represents a new guardian set to be submitted to and signed by the node.
+// During the genesis procedure, this data structure will be assembled using off-chain collaborative tooling
+// like GitHub using a human-readable encoding, so readability is a concern.
+message GuardianSetUpdate {
+  // List of guardian set members.
+  message Guardian {
+    // Guardian key pubkey. Stored as hex string with 0x prefix for human readability -
+    // this is the canonical Ethereum representation.
+    string pubkey = 1;
+    // Optional descriptive name. Not stored on any chain, purely informational.
+    string name = 2;
+  };
+  repeated Guardian guardians = 3;
+}
+
+// GuardianKey specifies the on-disk format for a node's guardian key.
+message GuardianKey {
+  // data is the binary representation of the secp256k1 private key.
+  bytes data = 1;
+  // Whether this key is deterministically generated and unsuitable for production mode.
+  bool unsafe_deterministic_key = 2;
+}
+
+message BridgeRegisterChain {
+  // Module identifier of the token or NFT bridge (typically "TokenBridge" or "NFTBridge")
+  string module = 1;
+
+  // ID of the chain to be registered.
+  uint32 chain_id = 2;
+
+  // Hex-encoded emitter address to be registered (without leading 0x).
+  string emitter_address = 3;
+}
+
+enum ModificationKind {
+  MODIFICATION_KIND_UNSPECIFIED = 0;
+  MODIFICATION_KIND_ADD = 1;
+  MODIFICATION_KIND_SUBTRACT = 2;
+}
+
+message AccountantModifyBalance {
+  // Module identifier of the accountant "GlobalAccountant"
+  string module = 1;
+  // ID of the chain to receive this modify.
+  uint32 target_chain_id = 2;
+
+  // The sequence number of this modification.  Each modification must be
+  // uniquely identifiable just by its sequnce number.
+  uint64 sequence = 3;
+  // U16 chain id of the account to be modified.
+  uint32 chain_id = 4;
+  // U16 the chain id of the native chain for the token.
+  uint32 token_chain = 5;
+  // The address of the token on its native chain, hex string encoded.
+  string token_address = 6;
+  // The kind of modification to be made.
+  ModificationKind kind = 7;
+  // The amount to be modified.  This should be a decimal formatted string indicating the
+  // "raw" amount, not adjusted by the decimals of the token.
+  string amount = 8;
+  // A human-readable reason for the modification (max 32 bytes).
+  string reason = 9;
+}
+
+// ContractUpgrade represents a Wormhole contract update to be submitted to and signed by the node.
+message ContractUpgrade {
+  // ID of the chain where the Wormhole contract should be updated (uint16).
+  uint32 chain_id = 1;
+
+  // Hex-encoded address (without leading 0x) address of the new program/contract.
+  string new_contract = 2;
+}
+
+message BridgeUpgradeContract {
+  // Module identifier of the token or NFT bridge (typically "TokenBridge" or "NFTBridge").
+  string module = 1;
+
+  // ID of the chain where the bridge contract should be updated (uint16).
+  uint32 target_chain_id = 2;
+
+  // Hex-encoded address (without leading 0x) of the new program/contract.
+  string new_contract = 3;
+}
+
+message RecoverChainId {
+  // Module identifier
+  string module = 1;
+
+  // The EVM chain ID of the chain to be recovered
+  // This should be a decimal formatted integer string (Uint256)
+  string evm_chain_id = 2;
+
+  // The new chain ID to be used for the chain
+  uint32 new_chain_id = 3;
+}
+
+message WormchainStoreCode {
+  // payload is the hex string of the sha3 256 hash of the wasm binary being uploaded
+  string wasm_hash = 1;
+}
+
+message WormchainInstantiateContract {
+  // CodeID is the reference to the stored WASM code
+  uint64 code_id = 1;
+
+  // Label is optional metadata to be stored with a contract instance.
+  string label = 2;
+
+  // Json encoded message to be passed to the contract on instantiation
+  string instantiation_msg = 3;
+}
+
+message WormchainMigrateContract {
+  // CodeID is the reference to the stored WASM code that the contract should migrate to.
+  uint64 code_id = 1;
+
+  // The address of the contract being migrated.
+  string contract = 2;
+
+  // Msg json encoded message to be passed to the contract on migration
+  string instantiation_msg = 3;
+}
+
+enum WormchainWasmInstantiateAllowlistAction {
+  WORMCHAIN_WASM_INSTANTIATE_ALLOWLIST_ACTION_UNSPECIFIED = 0;
+  WORMCHAIN_WASM_INSTANTIATE_ALLOWLIST_ACTION_ADD = 1;
+  WORMCHAIN_WASM_INSTANTIATE_ALLOWLIST_ACTION_DELETE = 2;
+}
+
+message WormchainWasmInstantiateAllowlist {
+  // CodeID is the reference to the stored WASM code.
+  uint64 code_id = 1;
+
+  // The address of the contract that is allowlisted to call wasm instantiate without a VAA.
+  string contract = 2;
+
+  // Specifying whether to add or delete the allowlist entry
+  WormchainWasmInstantiateAllowlistAction action = 3;
+}
+
+message GatewayIbcComposabilityMwSetContract {
+    // The address of the contract that is set in the ibc composability middleware.
+    string contract = 1;
+}
+
+message GatewayScheduleUpgrade {
+  // Name of the upgrade
+  string name = 1;
+
+  // Height of the upgrade halt
+  uint64 height = 2;
+}
+
+message GatewayCancelUpgrade {}
+
+message CircleIntegrationUpdateWormholeFinality {
+  uint32 finality = 1;
+  uint32 target_chain_id = 2;
+}
+
+message CircleIntegrationRegisterEmitterAndDomain {
+  uint32 foreign_emitter_chain_id = 1;
+  string foreign_emitter_address = 2;
+  uint32 circle_domain = 3;
+  uint32 target_chain_id = 4;
+}
+
+message CircleIntegrationUpgradeContractImplementation {
+  string new_implementation_address = 1;
+  uint32 target_chain_id = 2;
+}
+
+enum IbcUpdateChannelChainModule {
+  IBC_UPDATE_CHANNEL_CHAIN_MODULE_UNSPECIFIED = 0;
+  IBC_UPDATE_CHANNEL_CHAIN_MODULE_RECEIVER = 1;
+  IBC_UPDATE_CHANNEL_CHAIN_MODULE_TRANSLATOR = 2;
+}
+
+message IbcUpdateChannelChain {
+  // Chain ID that this governance VAA should be redeemed on
+  uint32 target_chain_id = 1;
+  // IBC channel ID
+  string channel_id = 2;
+  // ChainID corresponding to the IBC channel
+  uint32 chain_id = 3;
+  // Specifying which governance module this message is for
+  IbcUpdateChannelChainModule module = 4;
+}
+
+message WormholeRelayerSetDefaultDeliveryProvider {
+  // ID of the chain of the Wormhole Relayer contract where the default delivery provider should be updated (uint16).
+  uint32 chain_id = 1;
+
+  // Hex-encoded address (without leading 0x) of the new default delivery provider contract address.
+  string new_default_delivery_provider_address = 2;
+}
+
+message FindMissingMessagesRequest {
+  // Emitter chain ID to iterate.
+  uint32 emitter_chain = 1;
+  // Hex-encoded (without leading 0x) emitter address to iterate.
+  string emitter_address = 2;
+  // Whether to attempt to backfill missing messages from a list of remote nodes.
+  bool rpc_backfill = 3;
+  // List of remote nodes to backfill from.
+  repeated string backfill_nodes = 4;
+}
+
+message FindMissingMessagesResponse {
+  // List of missing sequence numbers.
+  repeated string missing_messages = 1;
+
+  // Range processed
+  uint64 first_sequence = 2;
+  uint64 last_sequence = 3;
+}
+
+message SendObservationRequestRequest {
+  gossip.v1.ObservationRequest observation_request = 1;
+}
+
+message SendObservationRequestResponse {}
+
+message ChainGovernorStatusRequest {}
+
+message ChainGovernorStatusResponse {
+  string response = 1;
+}
+
+message ChainGovernorReloadRequest {}
+
+message ChainGovernorReloadResponse {
+  string response = 1;
+}
+
+message ChainGovernorDropPendingVAARequest {
+  string vaa_id = 1;
+}
+
+message ChainGovernorDropPendingVAAResponse {
+  string response = 1;
+}
+
+message ChainGovernorReleasePendingVAARequest {
+  string vaa_id = 1;
+}
+
+message ChainGovernorReleasePendingVAAResponse {
+  string response = 1;
+}
+
+message ChainGovernorResetReleaseTimerRequest {
+  string vaa_id = 1;
+  uint32 num_days = 2;
+}
+
+message ChainGovernorResetReleaseTimerResponse {
+  string response = 1;
+}
+
+message PurgePythNetVaasRequest {
+  uint64 days_old = 1;
+  bool log_only = 2;
+}
+
+message PurgePythNetVaasResponse {
+  string response = 1;
+}
+
+message SignExistingVAARequest {
+  bytes vaa = 1;
+  repeated string new_guardian_addrs = 2;
+  uint32 new_guardian_set_index = 3;
+}
+
+message SignExistingVAAResponse {
+  bytes vaa = 1;
+}
+
+message DumpRPCsRequest {}
+
+message DumpRPCsResponse {
+  map<string, string> response = 1;
+}
+
+message GetAndObserveMissingVAAsRequest {
+  string url = 1;
+  string api_key = 2;
+}
+
+message GetAndObserveMissingVAAsResponse {
+  string response =1;
+}
+
+// EvmCall represents a generic EVM call that can be executed by the generalized governance contract.
+message EvmCall {
+  // ID of the chain where the action should be executed (uint16).
+  uint32 chain_id = 1;
+
+  // Address of the governance contract (eth address starting with 0x)
+  string governance_contract = 2;
+
+  // Address of the governed contract (eth address starting with 0x)
+  string target_contract = 3;
+
+  // ABI-encoded calldata to be passed on to the governed contract (hex encoded)
+  string abi_encoded_call = 4;
+}
+
+// SolanaCall represents a generic Solana call that can be executed by the generalized governance contract.
+message SolanaCall {
+  // ID of the chain where the action should be executed (uint16).
+  uint32 chain_id = 1;
+
+  // Address of the governance contract (solana address)
+  string governance_contract = 2;
+
+  // Encoded instruction data to be passed on to the governed contract (hex encoded)
+  string encoded_instruction = 3;
+}

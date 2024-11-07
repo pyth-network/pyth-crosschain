@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
-    "@ledgerhq/hw-transport": "^6.27.10",
-    "@ledgerhq/hw-transport-node-hid": "^6.27.10",
+    "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-node-hid": "^6.29.5",
     "@pythnetwork/client": "^2.22.0",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
@@ -32,5 +32,8 @@
     "@sqds/mesh": "^1.0.6",
     "commander": "^9.5.0",
     "typescript": "^4.9.4"
+  },
+  "dev-dependencies": {
+    "ts-node": "^10.9.2"
   }
 }

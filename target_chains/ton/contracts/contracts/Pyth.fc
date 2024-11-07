@@ -17,7 +17,7 @@ cell store_price(int price, int conf, int expo, int publish_time) {
     .end_cell();
 }
 
-slice read_and_verify_header(slice data) {
+slice read_and_verify_header(slice data) impure {
     int magic = data~load_uint(32);
     throw_unless(ERROR_INVALID_MAGIC, magic == ACCUMULATOR_MAGIC);
     int major_version = data~load_uint(8);
@@ -26,7 +26,7 @@ slice read_and_verify_header(slice data) {
     throw_if(ERROR_INVALID_MINOR_VERSION, minor_version < MINIMUM_ALLOWED_MINOR_VERSION);
     int trailing_header_size = data~load_uint(8);
     ;; skip trailing headers
-    data~skip_bits(trailing_header_size);
+    data~skip_bits(trailing_header_size * 8);
     int update_type = data~load_uint(8);
     throw_unless(ERROR_INVALID_UPDATE_DATA_TYPE, update_type == WORMHOLE_MERKLE_UPDATE_TYPE);
     return data;
@@ -39,7 +39,7 @@ slice read_and_verify_header(slice data) {
     slice cs = read_and_verify_proof(root_digest, message, cs);
 
     int message_type = message~load_uint(8);
-    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == 0);  ;; 0 corresponds to PriceFeed
+    throw_unless(ERROR_INVALID_MESSAGE_TYPE, message_type == PRICE_FEED_MESSAGE_TYPE);
 
     int price_id = message~load_uint(256);
     int price = message~load_int(64);
@@ -114,7 +114,7 @@ int get_is_valid_data_source(cell data_source) method_id {
     load_data();
     (int price, int conf, int expo, int publish_time) = get_price_unsafe(price_feed_id);
     int current_time = now();
-    throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
+    throw_if(ERROR_OUTDATED_PRICE, max(0, current_time - publish_time) > time_period);
     return (price, conf, expo, publish_time);
 }
 
@@ -132,7 +132,7 @@ int get_is_valid_data_source(cell data_source) method_id {
     load_data();
     (int price, int conf, int expo, int publish_time) = get_ema_price_unsafe(price_feed_id);
     int current_time = now();
-    throw_if(ERROR_OUTDATED_PRICE, current_time - publish_time > time_period);
+    throw_if(ERROR_OUTDATED_PRICE, max(0, current_time - publish_time) > time_period);
     return (price, conf, expo, publish_time);
 }
 
@@ -167,7 +167,10 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
 
     int num_updates = cs~load_uint(8);
     int update_fee = single_update_fee * num_updates;
-    int compute_fee = get_compute_fee(WORKCHAIN, UPDATE_PRICE_FEEDS_GAS);
+    int compute_fee = get_compute_fee(
+        WORKCHAIN,
+        UPDATE_PRICE_FEEDS_BASE_GAS + (UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * num_updates)
+    );
     throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
     int remaining_msg_value = msg_value - compute_fee;
 
@@ -194,7 +197,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
     repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
@@ -232,7 +235,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     last_executed_governance_sequence = sequence;
 }
 
-(int, int, slice) parse_governance_instruction(slice payload) {
+(int, int, slice) parse_governance_instruction(slice payload) impure {
     int magic = payload~load_uint(32);
     throw_unless(ERROR_INVALID_GOVERNANCE_MAGIC, magic == GOVERNANCE_MAGIC);
 
@@ -254,8 +257,28 @@ int apply_decimal_expo(int value, int expo) {
     return result;
 }
 
-() execute_upgrade_contract(slice payload) impure {
-    ;; TODO: Implement
+() execute_upgrade_contract(cell new_code) impure {
+    load_data();
+    int hash_code = cell_hash(new_code);
+    throw_unless(ERROR_INVALID_CODE_HASH, upgrade_code_hash == hash_code);
+
+    ;; Set the new code
+    set_code(new_code);
+
+    ;; Set the code continuation to the new code
+    set_c3(new_code.begin_parse().bless());
+
+    ;; Reset the upgrade code hash
+    upgrade_code_hash = 0;
+
+    ;; Throw an exception to end the current execution
+    ;; The contract will be restarted with the new code
+    throw(0);
+}
+
+() execute_authorize_upgrade_contract(slice payload) impure {
+    int code_hash = payload~load_uint(256);
+    upgrade_code_hash = code_hash;
 }
 
 () execute_authorize_governance_data_source_transfer(slice payload) impure {
@@ -306,6 +329,9 @@ int apply_decimal_expo(int value, int expo) {
         new_data_sources~udict_set(256, data_source_key, begin_cell().store_int(true, 1).end_cell().begin_parse());
     }
 
+    ;; Verify that all data in the payload was processed
+    throw_unless(ERROR_INVALID_PAYLOAD_LENGTH, payload.slice_empty?());
+
     is_valid_data_source = new_data_sources;
 }
 
@@ -317,8 +343,8 @@ int apply_decimal_expo(int value, int expo) {
 }
 
 () execute_governance_payload(int action, slice payload) impure {
-    if (action == UPGRADE_CONTRACT) {
-        execute_upgrade_contract(payload);
+    if (action == AUTHORIZE_UPGRADE_CONTRACT) {
+        execute_authorize_upgrade_contract(payload);
     } elseif (action == AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER) {
         execute_authorize_governance_data_source_transfer(payload);
     } elseif (action == SET_DATA_SOURCES) {

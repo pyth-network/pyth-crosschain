@@ -20,13 +20,34 @@ const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
 
-export const Home = () => {
-  const isSSR = useIsSSR();
+export const Home = () => <HomeImpl enableGovernance enableOis />;
+export const GeoBlockedHome = () => <HomeImpl />;
+export const GovernanceOnlyHome = () => <HomeImpl enableGovernance />;
 
-  return isSSR ? <Loading /> : <MountedHome />;
+type HomeImplProps = {
+  enableGovernance?: boolean | undefined;
+  enableOis?: boolean | undefined;
 };
 
-const MountedHome = () => {
+export const HomeImpl = ({ enableGovernance, enableOis }: HomeImplProps) => {
+  const isSSR = useIsSSR();
+
+  return isSSR ? (
+    <Loading />
+  ) : (
+    <MountedHome
+      enableGovernance={enableGovernance ?? false}
+      enableOis={enableOis ?? false}
+    />
+  );
+};
+
+type MountedHomeProps = {
+  enableGovernance: boolean;
+  enableOis: boolean;
+};
+
+const MountedHome = ({ enableGovernance, enableOis }: MountedHomeProps) => {
   const api = useApi();
 
   switch (api.type) {
@@ -44,16 +65,28 @@ const MountedHome = () => {
     }
     case ApiStateType.LoadedNoStakeAccount:
     case ApiStateType.Loaded: {
-      return <StakeAccountLoadedHome api={api} />;
+      return (
+        <StakeAccountLoadedHome
+          enableGovernance={enableGovernance}
+          enableOis={enableOis}
+          api={api}
+        />
+      );
     }
   }
 };
 
 type StakeAccountLoadedHomeProps = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
+  enableGovernance: boolean;
+  enableOis: boolean;
 };
 
-const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
+const StakeAccountLoadedHome = ({
+  api,
+  enableGovernance,
+  enableOis,
+}: StakeAccountLoadedHomeProps) => {
   const data = useData(api.dashboardDataCacheKey, api.loadData, {
     refreshInterval: REFRESH_INTERVAL,
   });
@@ -69,7 +102,14 @@ const StakeAccountLoadedHome = ({ api }: StakeAccountLoadedHomeProps) => {
     }
 
     case DashboardDataStateType.Loaded: {
-      return <Dashboard {...data.data} api={api} />;
+      return (
+        <Dashboard
+          {...data.data}
+          api={api}
+          enableGovernance={enableGovernance}
+          enableOis={enableOis}
+        />
+      );
     }
   }
 };

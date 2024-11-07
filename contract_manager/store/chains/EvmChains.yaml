@@ -129,7 +129,7 @@
   type: EvmChain
 - id: ethereum
   mainnet: true
-  rpcUrl: https://eth-mainnet.blastapi.io/$ENV_BLAST_API_KEY
+  rpcUrl: https://eth.llamarpc.com
   networkId: 1
   type: EvmChain
   nativeToken: ETH
@@ -154,6 +154,7 @@
   rpcUrl: https://rpc.ankr.com/bsc
   networkId: 56
   type: EvmChain
+  nativeToken: BNB
 - id: eos
   mainnet: true
   rpcUrl: https://api.evm.eosnetwork.com
@@ -413,6 +414,7 @@
   rpcUrl: https://mainnet.mode.network/
   networkId: 34443
   type: EvmChain
+  nativeToken: MODE
 - id: bttc_testnet
   mainnet: false
   rpcUrl: https://pre-rpc.bt.io
@@ -423,6 +425,7 @@
   rpcUrl: https://rpc.bt.io
   networkId: 199
   type: EvmChain
+  nativeToken: BTT
 - id: zksync_sepolia
   mainnet: false
   rpcUrl: https://sepolia.era.zksync.dev/
@@ -491,7 +494,7 @@
   type: EvmChain
 - id: fantom_sonic_testnet
   mainnet: false
-  rpcUrl: https://rpc.sonic.fantom.network/
+  rpcUrl: https://rpc.testnet.soniclabs.com
   networkId: 64165
   type: EvmChain
 - id: dela_deperp_testnet
@@ -519,6 +522,7 @@
   rpcUrl: https://rpc.blast.io
   networkId: 81457
   type: EvmChain
+  nativeToken: ETH
 - id: merlin_testnet
   mainnet: false
   rpcUrl: https://testnet-rpc.merlinchain.io/
@@ -554,11 +558,6 @@
   rpcUrl: https://json-rpc.evm.iotaledger.net
   networkId: 8822
   type: EvmChain
-- id: flow_previewnet
-  mainnet: true
-  rpcUrl: https://previewnet.evm.nodes.onflow.org
-  networkId: 646
-  type: EvmChain
 - id: olive_testnet
   mainnet: false
   rpcUrl: https://olive-network-testnet.rpc.caldera.xyz/http
@@ -569,6 +568,7 @@
   rpcUrl: https://rpc.hekla.taiko.xyz/
   networkId: 167009
   type: EvmChain
+  nativeToken: ETH
 - id: orange_testnet
   mainnet: false
   rpcUrl: https://subnets.avax.network/orangetest/testnet/rpc
@@ -596,8 +596,8 @@
   type: EvmChain
 - id: kakarot_sepolia
   mainnet: false
-  rpcUrl: https://sepolia-rpc-priority.kakarot.org
-  networkId: 1802203764
+  rpcUrl: https://rpc-kakarot-sepolia.karnot.xyz/
+  networkId: 920637907288165
   type: EvmChain
 - id: berachain_testnet_v2
   mainnet: false
@@ -609,6 +609,7 @@
   rpcUrl: https://opbnb-mainnet-rpc.bnbchain.org
   networkId: 204
   type: EvmChain
+  nativeToken: BNB
 - id: opbnb_testnet
   mainnet: false
   rpcUrl: https://opbnb-testnet-rpc.bnbchain.org
@@ -651,7 +652,7 @@
   type: EvmChain
 - id: tabi_testnet
   mainnet: false
-  rpcUrl: https://rpc-internal.testnet.tabichain.com/
+  rpcUrl: https://rpc-internal.testnet.tabichain.com
   networkId: 9789
   type: EvmChain
 - id: b3_testnet
@@ -667,7 +668,7 @@
 - id: cronos_zkevm_testnet
   mainnet: false
   rpcUrl: https://testnet.zkevm.cronos.org
-  networkId: 282
+  networkId: 240
   type: EvmChain
 - id: reya_testnet
   mainnet: false
@@ -713,4 +714,64 @@
   mainnet: true
   rpcUrl: https://apechain.calderachain.xyz/http
   networkId: 33139
+  type: EvmChain
+- id: flow_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet.evm.nodes.onflow.org
+  networkId: 747
+  type: EvmChain
+- id: abstract_testnet
+  mainnet: false
+  rpcUrl: https://api.testnet.abs.xyz
+  networkId: 11124
+  type: EvmChain
+- id: sanko
+  mainnet: true
+  rpcUrl: https://mainnet.sanko.xyz
+  networkId: 1996
+  type: EvmChain
+- id: sanko_testnet
+  mainnet: false
+  rpcUrl: https://sanko-arb-sepolia.rpc.caldera.xyz
+  networkId: 1992
+  type: EvmChain
+- id: unichain_sepolia
+  mainnet: false
+  rpcUrl: https://sepolia.unichain.org
+  networkId: 1301
+  type: EvmChain
+- id: skate
+  mainnet: true
+  rpcUrl: https://rpc.skatechain.org
+  networkId: 5050
+  type: EvmChain
+- id: skate_testnet
+  mainnet: false
+  rpcUrl: https://nollie-rpc.skatechain.org
+  networkId: 5051
+  type: EvmChain
+- id: morph
+  mainnet: true
+  rpcUrl: https://rpc.morphl2.io
+  networkId: 2818
+  type: EvmChain
+- id: kraken_ink_testnet
+  mainnet: false
+  rpcUrl: https://patient-cool-emerald.ink-sepolia.quiknode.pro/{KRAKEN_INK_API_KEY}
+  networkId: 763373
+  type: EvmChain
+- id: ethena_testnet
+  mainnet: false
+  rpcUrl: https://rpc-ethena-testnet-0.t.conduit.xyz/
+  networkId: 52085143
+  type: EvmChain
+- id: superseed_mainnet
+  mainnet: true
+  rpcUrl: https://rpc-superseed-mainnet-0.t.conduit.xyz/{SUPERSEED_API_KEY}
+  networkId: 5330
+  type: EvmChain
+- id: superseed_testnet
+  mainnet: false
+  rpcUrl: https://rpc-sepolia-superseed-826s35710w.t.conduit.xyz/{SUPERSEED_API_KEY}
+  networkId: 53302
   type: EvmChain

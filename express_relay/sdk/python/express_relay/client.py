@@ -1,37 +1,59 @@
 import asyncio
-from asyncio import Task
-from datetime import datetime
-from eth_abi import encode
 import json
 import urllib.parse
-from typing import Callable, Any, Union, cast
+import warnings
+from asyncio import Task
 from collections.abc import Coroutine
+from datetime import datetime
+from typing import Callable, Any, Union, cast
 from uuid import UUID
-from hexbytes import HexBytes
+
 import httpx
-import websockets
-from websockets.client import WebSocketClientProtocol
-from eth_account.account import Account
-from eth_utils import to_checksum_address
 import web3
-from express_relay.express_relay_types import (
-    BidResponse,
-    Opportunity,
-    BidStatusUpdate,
-    ClientMessage,
-    Bid,
-    OpportunityBid,
-    OpportunityParams,
-    Address,
-    Bytes32,
-    TokenAmount,
-    OpportunityBidParams,
-)
+import websockets
+from eth_abi.abi import encode
+from eth_account.account import Account
 from eth_account.datastructures import SignedMessage
+from eth_utils import to_checksum_address
+from hexbytes import HexBytes
+from solders.instruction import Instruction
+from solders.pubkey import Pubkey
+from solders.sysvar import INSTRUCTIONS
+from websockets.client import WebSocketClientProtocol
+
 from express_relay.constants import (
     OPPORTUNITY_ADAPTER_CONFIGS,
     EXECUTION_PARAMS_TYPESTRING,
+    SVM_CONFIGS,
 )
+from express_relay.models.evm import (
+    Address,
+    Bytes32,
+    TokenAmount,
+    BidEvm,
+)
+from express_relay.models import (
+    Bid,
+    BidStatusUpdate,
+    BidResponse,
+    OpportunityBidParams,
+    OpportunityBid,
+    OpportunityParams,
+    Opportunity,
+    OpportunityRoot,
+    ClientMessage,
+    BidResponseRoot,
+)
+from express_relay.models.base import UnsupportedOpportunityVersionException
+from express_relay.models.evm import OpportunityEvm
+from express_relay.svm.generated.express_relay.instructions.submit_bid import submit_bid
+from express_relay.svm.generated.express_relay.program_id import (
+    PROGRAM_ID as SVM_EXPRESS_RELAY_PROGRAM_ID,
+)
+from express_relay.svm.generated.express_relay.types.submit_bid_args import (
+    SubmitBidArgs,
+)
+from express_relay.svm.limo_client import LimoClient
 
 
 def _get_permitted_tokens(
@@ -182,16 +204,7 @@ class ExpressRelayClient:
         self.ws_msg_counter += 1
 
         if method == "post_bid":
-            params = {
-                "bid": {
-                    "amount": msg["params"]["amount"],
-                    "target_contract": msg["params"]["target_contract"],
-                    "chain_id": msg["params"]["chain_id"],
-                    "target_calldata": msg["params"]["target_calldata"],
-                    "permission_key": msg["params"]["permission_key"],
-                }
-            }
-            msg["params"] = params
+            msg["params"] = {"bid": msg["params"]}
 
         msg["method"] = method
 
@@ -320,19 +333,18 @@ class ExpressRelayClient:
             if msg_json.get("type"):
                 if msg_json.get("type") == "new_opportunity":
                     if opportunity_callback is not None:
-                        opportunity = Opportunity.process_opportunity_dict(
+                        opportunity = OpportunityRoot.model_validate(
                             msg_json["opportunity"]
                         )
                         if opportunity:
-                            asyncio.create_task(opportunity_callback(opportunity))
+                            asyncio.create_task(opportunity_callback(opportunity.root))
 
                 elif msg_json.get("type") == "bid_status_update":
                     if bid_status_callback is not None:
-                        bid_status_update = BidStatusUpdate.process_bid_status_dict(
+                        bid_status_update = BidStatusUpdate.model_validate(
                             msg_json["status"]
                         )
-                        if bid_status_update:
-                            asyncio.create_task(bid_status_callback(bid_status_update))
+                        asyncio.create_task(bid_status_callback(bid_status_update))
 
             elif msg_json.get("id"):
                 future = self.ws_msg_futures.pop(msg_json["id"])
@@ -361,12 +373,13 @@ class ExpressRelayClient:
 
         resp.raise_for_status()
 
-        opportunities = []
+        opportunities: list[Opportunity] = []
         for opportunity in resp.json():
-            opportunity_processed = Opportunity.process_opportunity_dict(opportunity)
-            if opportunity_processed:
-                opportunities.append(opportunity_processed)
-
+            try:
+                opportunity_processed = OpportunityRoot.model_validate(opportunity)
+                opportunities.append(opportunity_processed.root)
+            except UnsupportedOpportunityVersionException as e:
+                warnings.warn(str(e))
         return opportunities
 
     async def submit_opportunity(self, opportunity: OpportunityParams) -> UUID:
@@ -413,11 +426,46 @@ class ExpressRelayClient:
 
         bids = []
         for bid in resp.json()["items"]:
-            bid_processed = BidResponse.process_bid_response_dict(bid)
-            if bid_processed:
-                bids.append(bid_processed)
+            bid_processed = BidResponseRoot.model_validate(bid)
+            bids.append(bid_processed.root)
 
         return bids
+
+    @staticmethod
+    def get_svm_submit_bid_instruction(
+        searcher: Pubkey,
+        router: Pubkey,
+        permission_key: Pubkey,
+        bid_amount: int,
+        deadline: int,
+        chain_id: str,
+        fee_receiver_relayer: Pubkey,
+        relayer_signer: Pubkey,
+    ) -> Instruction:
+        if chain_id not in SVM_CONFIGS:
+            raise ValueError(f"Chain ID {chain_id} not supported")
+        svm_config = SVM_CONFIGS[chain_id]
+        config_router = LimoClient.get_express_relay_config_router_pda(
+            SVM_EXPRESS_RELAY_PROGRAM_ID, router
+        )
+        express_relay_metadata = LimoClient.get_express_relay_metadata_pda(
+            SVM_EXPRESS_RELAY_PROGRAM_ID
+        )
+        submit_bid_ix = submit_bid(
+            {"data": SubmitBidArgs(deadline=deadline, bid_amount=bid_amount)},
+            {
+                "searcher": searcher,
+                "relayer_signer": relayer_signer,
+                "permission": permission_key,
+                "router": router,
+                "config_router": config_router,
+                "express_relay_metadata": express_relay_metadata,
+                "fee_receiver_relayer": fee_receiver_relayer,
+                "sysvar_instructions": INSTRUCTIONS,
+            },
+            svm_config["express_relay_program"],
+        )
+        return submit_bid_ix
 
 
 def compute_create2_address(
@@ -449,7 +497,7 @@ def compute_create2_address(
 
 
 def make_adapter_calldata(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     permitted: list[dict[str, Union[str, int]]],
     executor: Address,
     bid_params: OpportunityBidParams,
@@ -503,7 +551,7 @@ def get_opportunity_adapter_config(chain_id: str):
 
 
 def get_signature(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     bid_params: OpportunityBidParams,
     private_key: str,
 ) -> SignedMessage:
@@ -594,7 +642,7 @@ def get_signature(
 
 
 def sign_opportunity_bid(
-    opportunity: Opportunity,
+    opportunity: OpportunityEvm,
     bid_params: OpportunityBidParams,
     private_key: str,
 ) -> OpportunityBid:
@@ -623,8 +671,8 @@ def sign_opportunity_bid(
 
 
 def sign_bid(
-    opportunity: Opportunity, bid_params: OpportunityBidParams, private_key: str
-) -> Bid:
+    opportunity: OpportunityEvm, bid_params: OpportunityBidParams, private_key: str
+) -> BidEvm:
     """
     Constructs a signature for a searcher's bid and returns the Bid object to be submitted to the server.
 
@@ -649,7 +697,7 @@ def sign_bid(
         opportunity, permitted, executor, bid_params, signature
     )
 
-    return Bid(
+    return BidEvm(
         amount=bid_params.amount,
         target_calldata=calldata,
         chain_id=opportunity.chain_id,

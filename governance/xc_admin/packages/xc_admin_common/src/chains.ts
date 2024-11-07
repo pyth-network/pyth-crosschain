@@ -27,6 +27,9 @@ export const RECEIVER_CHAINS = {
   eclipse_devnet: 40001,
   eclipse_testnet: 40002,
   eclipse_mainnet: 40003,
+  mantis_testnet: 40004,
+  sonic_devnet: 40005,
+  sonic_testnet: 40006,
 
   cronos: 60001,
   kcc: 60002,
@@ -83,7 +86,12 @@ export const RECEIVER_CHAINS = {
   cronos_zkevm_mainnet: 60059,
   idex_xchain_mainnet: 60060,
   apechain_mainnet: 60061,
-
+  flow_mainnet: 60062,
+  sanko: 60063,
+  skate: 60064,
+  morph: 60065,
+  superseed_mainnet: 60066,
+  fuel_mainnet: 60067, // Note: Currently deployed at 50084 (fuel_testnet) but we should use 60067 for future deployments
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -187,6 +195,16 @@ export const RECEIVER_CHAINS = {
   flow_testnet: 50094,
   apechain_testnet: 50095,
   soneium_minato_testnet: 50096,
+  nighthawk: 50097,
+  unichain_sepolia: 50099,
+  abstract_testnet: 50100,
+  sanko_testnet: 50101,
+  skate_testnet: 50102,
+  movement_porto_testnet: 50103,
+  ton_testnet: 50104,
+  kraken_ink_testnet: 50105,
+  ethena_testnet: 50106,
+  superseed_testnet: 50107,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

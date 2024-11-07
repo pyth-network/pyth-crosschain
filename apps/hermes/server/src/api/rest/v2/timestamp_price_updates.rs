@@ -3,7 +3,7 @@ use {
         api::{
             doc_examples,
             rest::{
-                verify_price_ids_exist,
+                validate_price_ids,
                 RestError,
             },
             types::{
@@ -67,6 +67,10 @@ pub struct TimestampPriceUpdatesQueryParams {
     /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
+
+    /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.
+    #[serde(default)]
+    ignore_invalid_price_ids: bool,
 }
 
 
@@ -97,10 +101,14 @@ pub async fn timestamp_price_updates<S>(
 where
     S: Aggregates,
 {
-    let price_ids: Vec<PriceIdentifier> =
+    let price_id_inputs: Vec<PriceIdentifier> =
         query_params.ids.into_iter().map(|id| id.into()).collect();
-
-    verify_price_ids_exist(&state, &price_ids).await?;
+    let price_ids: Vec<PriceIdentifier> = validate_price_ids(
+        &state,
+        &price_id_inputs,
+        query_params.ignore_invalid_price_ids,
+    )
+    .await?;
 
     let state = &*state.state;
     let price_feeds_with_update_data = Aggregates::get_price_feeds_with_update_data(

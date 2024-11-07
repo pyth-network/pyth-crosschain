@@ -41,9 +41,11 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   createDetermisticPriceStoreInitializePublisherInstruction,
   createPriceStoreInstruction,
+  fetchStakeAccounts,
   findDetermisticStakeAccountAddress,
   getMultisigCluster,
   getProposalInstructions,
+  idlSetBuffer,
   isPriceStorePublisherInitialized,
 } from "@pythnetwork/xc-admin-common";
 
@@ -54,7 +56,11 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 
 import { LedgerNodeWallet } from "./ledger";
-import { DEFAULT_PRIORITY_FEE_CONFIG } from "@pythnetwork/solana-utils";
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -284,6 +290,30 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
     );
   });
 
+multisigCommand("upgrade-idl", "Upgrade an Anchor Idl from a bufffer")
+  .requiredOption(
+    "-p, --program-id <pubkey>",
+    "program whose idl you want to upgrade"
+  )
+  .requiredOption("-b, --buffer <pubkey>", "buffer account")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const cluster: PythCluster = options.cluster;
+    const programId: PublicKey = new PublicKey(options.programId);
+    const buffer: PublicKey = new PublicKey(options.buffer);
+
+    const proposalInstruction: TransactionInstruction = await idlSetBuffer(
+      programId,
+      buffer,
+      await vault.getVaultAuthorityPDA(cluster)
+    );
+
+    await vault.proposeInstructions(
+      [proposalInstruction],
+      cluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+  });
 async function closeProgramOrBuffer(
   vault: MultisigVault,
   cluster: PythCluster,
@@ -361,8 +391,8 @@ multisigCommand(
   "Deactivate the delegated stake from the account"
 )
   .requiredOption(
-    "-s, --stake-accounts <accounts...>",
-    "stake accounts to be deactivated"
+    "-d, --vote-pubkeys <comma_separated_voter_pubkeys>",
+    "vote account unstake from"
   )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
@@ -370,16 +400,26 @@ multisigCommand(
     const authorizedPubkey: PublicKey = await vault.getVaultAuthorityPDA(
       cluster
     );
-    const instructions = options.stakeAccounts.reduce(
-      (instructions: TransactionInstruction[], stakeAccount: string) => {
-        const transaction = StakeProgram.deactivate({
-          stakePubkey: new PublicKey(stakeAccount),
-          authorizedPubkey,
-        });
 
-        return instructions.concat(transaction.instructions);
-      },
-      []
+    const voteAccounts: PublicKey[] = options.votePubkeys
+      ? options.votePubkeys.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    const stakeAccounts = (
+      await Promise.all(
+        voteAccounts.map((voteAccount: PublicKey) =>
+          fetchStakeAccounts(
+            new Connection(getPythClusterApiUrl(cluster)),
+            voteAccount
+          )
+        )
+      )
+    ).flat();
+
+    const instructions = stakeAccounts.flatMap(
+      (stakeAccount) =>
+        StakeProgram.deactivate({ stakePubkey: stakeAccount, authorizedPubkey })
+          .instructions
     );
 
     await vault.proposeInstructions(
@@ -593,7 +633,10 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
     const allPythAccounts = await connection.getProgramAccounts(
       oracleProgramId
     );
-    const allPublishers: Set<PublicKey> = new Set();
+
+    // Storing them as string to make sure equal comparison works (for the Set)
+    const allPublishers: Set<string> = new Set();
+
     for (const account of allPythAccounts) {
       const data = account.account.data;
       const base = parseBaseData(data);
@@ -603,13 +646,14 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
           0,
           parsed.numComponentPrices
         )) {
-          allPublishers.add(component.publisher);
+          allPublishers.add(component.publisher.toBase58());
         }
       }
     }
 
     let instructions = [];
-    for (const publisherKey of allPublishers) {
+    for (const publisherKeyBase58 of allPublishers) {
+      const publisherKey = new PublicKey(publisherKeyBase58);
       if (await isPriceStorePublisherInitialized(connection, publisherKey)) {
         // Already configured.
         continue;
@@ -673,7 +717,14 @@ multisigCommand("approve", "Approve a transaction sitting in the multisig")
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    await vault.squad.approveTransaction(transaction);
+    const instruction = await vault.approveProposalIx(transaction);
+
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      [instruction],
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+
+    await vault.sendAllTransactions(txToSend);
   });
 
 multisigCommand("propose-token-transfer", "Propose token transfer")
@@ -771,7 +822,14 @@ multisigCommand("activate", "Activate a transaction sitting in the multisig")
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    await vault.squad.activateTransaction(transaction);
+    const instruction = await vault.activateProposalIx(transaction);
+
+    const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
+      [instruction],
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
+
+    await vault.sendAllTransactions(txToSend);
   });
 
 multisigCommand("add-and-delete", "Change the roster of the multisig")

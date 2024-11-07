@@ -10,8 +10,8 @@
   pythId: c19405e4c8bdcbf2a66c37ae05a27d385c8309e9d648ed20dc6ee717e7d30e17
   decimals: 18
   type: token
-- id: MATIC
-  pythId: 5de33a9112c2b700b8d30b8a3402c103578ccfa2765696471cc672bd5cf6ac52
+- id: POL
+  pythId: ffd11c5a1cfd42f80afb2df4d9f264c15f956d68153335374ec10722edd70472
   decimals: 18
   type: token
 - id: NEAR
@@ -40,5 +40,17 @@
   type: token
 - id: CORE
   pythId: 9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c
+  decimals: 18
+  type: token
+- id: BNB
+  pythId: 2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f
+  decimals: 18
+  type: token
+- id: MODE
+  pythId: 0386e113cc716a7c6a55decd97b19c90ce080d9f2f5255ac78a0e26889446d1e
+  decimals: 18
+  type: token
+- id: BTT
+  pythId: 097d687437374051c75160d648800f021086bc8edf469f11284491fda8192315
   decimals: 18
   type: token

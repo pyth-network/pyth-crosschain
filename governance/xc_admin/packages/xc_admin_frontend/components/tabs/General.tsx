@@ -396,16 +396,17 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
           // create add publisher instruction if there are any publishers
           for (const publisherKey of newChanges.priceAccounts[0].publishers) {
+            const publisherPubKey = new PublicKey(publisherKey)
             instructions.push(
               await pythProgramClient.methods
-                .addPublisher(new PublicKey(publisherKey))
+                .addPublisher(publisherPubKey)
                 .accounts({
                   fundingAccount,
                   priceAccount: priceAccountKey,
                 })
                 .instruction()
             )
-            await initPublisher(publisherKey)
+            await initPublisher(publisherPubKey)
           }
 
           // create set min publisher instruction if there are any publishers
@@ -565,16 +566,17 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
           // add instructions to add new publishers
           for (const publisherKey of publisherKeysToAdd) {
+            const publisherPubKey = new PublicKey(publisherKey)
             instructions.push(
               await pythProgramClient.methods
-                .addPublisher(new PublicKey(publisherKey))
+                .addPublisher(publisherPubKey)
                 .accounts({
                   fundingAccount,
                   priceAccount: new PublicKey(prev.priceAccounts[0].address),
                 })
                 .instruction()
             )
-            await initPublisher(publisherKey)
+            await initPublisher(publisherPubKey)
           }
         }
       }

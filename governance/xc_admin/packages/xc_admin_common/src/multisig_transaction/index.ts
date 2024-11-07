@@ -167,9 +167,13 @@ export class MultisigParser {
   }
 }
 
+export { idlSetBuffer } from "./anchor";
 export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { AnchorMultisigInstruction } from "./MessageBufferMultisigInstruction";
 export { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
-export { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
+export {
+  SolanaStakingMultisigInstruction,
+  fetchStakeAccounts,
+} from "./SolanaStakingMultisigInstruction";

@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 patches/
+.turbo/
 
 # These apps have their own prettier config that uses a later version of
 # prettier
@@ -18,4 +19,6 @@ patches/
 # build graph config.
 apps/api-reference
 apps/staking
+apps/insights
 governance/pyth_staking_sdk
+packages/*

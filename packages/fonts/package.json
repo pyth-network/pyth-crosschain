@@ -1,0 +1,29 @@
+{
+  "name": "@pythnetwork/fonts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "test:format": "jest --selectProjects format",
+    "test:lint": "jest --selectProjects lint",
+    "test:types": "tsc"
+  },
+  "peerDependencies": {
+    "next": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/jest": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "next": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  }
+}

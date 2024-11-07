@@ -204,10 +204,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
-                Err(anyhow!("No log with sequence number").into())
+                Err(anyhow!("No log with sequence number"))
             }
         } else {
-            Err(anyhow!("Request failed").into())
+            Err(anyhow!("Request failed"))
         }
     }
 
@@ -238,10 +238,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             {
                 Ok(r.random_number)
             } else {
-                Err(anyhow!("No log with randomnumber").into())
+                Err(anyhow!("No log with randomnumber"))
             }
         } else {
-            Err(anyhow!("Request failed").into())
+            Err(anyhow!("Request failed"))
         }
     }
 
@@ -379,6 +379,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
 
     async fn estimate_reveal_with_callback_gas(
         &self,
+        sender: Address,
         provider: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
@@ -391,6 +392,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
                 user_random_number,
                 provider_revelation,
             )
+            .from(sender)
             .estimate_gas()
             .await;
 

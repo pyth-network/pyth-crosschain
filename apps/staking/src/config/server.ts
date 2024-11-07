@@ -2,6 +2,11 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
+// Disable the following rule because variables in this file are only loaded at
+// runtime and do not influence the build outputs, thus they need not be
+// declared to turbo for it to be able to cache build outputs correctly.
+/* eslint-disable turbo/no-undeclared-env-vars */
+
 import "server-only";
 
 /**
@@ -9,12 +14,29 @@ import "server-only";
  */
 const demand = (key: string): string => {
   const value = process.env[key];
-  if (value && value !== "") {
-    return value;
-  } else {
+  if (value === undefined || value === "") {
     throw new MissingEnvironmentError(key);
+  } else {
+    return value;
   }
 };
+
+const fromCsv = (value: string): string[] =>
+  value.split(",").map((entry) => entry.toLowerCase().trim());
+
+const transform = <T>(key: string, fn: (value: string | undefined) => T): T => {
+  const value = process.env[key];
+  return fn(value === "" ? undefined : value);
+};
+
+const transformOr = <T>(
+  key: string,
+  fn: (value: string) => T,
+  defaultValue: T,
+): T => transform(key, (value) => (value ? fn(value) : defaultValue));
+
+const getOr = (key: string, defaultValue: string): string =>
+  transform(key, (value) => value ?? defaultValue);
 
 /**
  * Indicates that this server is the live customer-facing production server.
@@ -34,20 +56,21 @@ export const AMPLITUDE_API_KEY = demandInProduction("AMPLITUDE_API_KEY");
 export const WALLETCONNECT_PROJECT_ID = demandInProduction(
   "WALLETCONNECT_PROJECT_ID",
 );
-export const RPC = process.env.RPC;
-export const IS_MAINNET = process.env.IS_MAINNET !== undefined;
-export const HERMES_URL =
-  process.env.HERMES_URL ??
-  (IS_PRODUCTION_SERVER
-    ? "https://hermes.pyth.network"
-    : "https://hermes-beta.pyth.network");
-export const BLOCKED_REGIONS =
-  process.env.BLOCKED_REGIONS === undefined ||
-  process.env.BLOCKED_REGIONS === ""
-    ? []
-    : process.env.BLOCKED_REGIONS.split(",").map((region) =>
-        region.toLowerCase().trim(),
-      );
+export const MAINNET_RPC = process.env.MAINNET_RPC;
+export const PYTHNET_RPC = getOr("PYTHNET_RPC", "https://pythnet.rpcpool.com");
+export const HERMES_URL = getOr("HERMES_URL", "https://hermes.pyth.network");
+export const BLOCKED_REGIONS = transformOr("BLOCKED_REGIONS", fromCsv, []);
+export const IP_ALLOWLIST = transformOr("IP_ALLOWLIST", fromCsv, []);
+export const VPN_ORGANIZATION_ALLOWLIST = transformOr(
+  "VPN_ORGANIZATION_ALLOWLIST",
+  fromCsv,
+  ["iCloud Private Relay"],
+);
+export const GOVERNANCE_ONLY_REGIONS = transformOr(
+  "GOVERNANCE_ONLY_REGIONS",
+  fromCsv,
+  [],
+);
 export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 
 class MissingEnvironmentError extends Error {

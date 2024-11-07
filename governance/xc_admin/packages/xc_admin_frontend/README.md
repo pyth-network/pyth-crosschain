@@ -5,13 +5,10 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 First, run the development server:
 
 ```bash
-pyth-crosschain % pnpm i
-pyth-crosschain % pnpm exec lerna run build --scope @pythnetwork/xc-admin-frontend --include-dependencies
-pyth-crosschain % cd governance/xc_admin/packages/xc_admin_frontend
-xc_admin_frontend % npm run dev
+pyth-crosschain % pnpm start:dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3003](http://localhost:3003) with your browser to see the result.
 
 You can start editing the code. The page auto-updates as you edit the file.
 

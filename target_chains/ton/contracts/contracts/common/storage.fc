@@ -8,9 +8,8 @@ global int single_update_fee;
 ;; DataSource struct: (emitter_chain_id: int, emitter_address: int)
 ;; emitter_chain_id is a 16-bit unsigned integer
 ;; emitter_address is a 256-bit unsigned integer
-global cell data_sources; ;; Dictionary of DataSource tuples, keyed by u8
-global int num_data_sources;
 global cell is_valid_data_source; ;; Dictionary of int (0 as false, -1 as true), keyed by DataSource cell_hash
+global int upgrade_code_hash; ;; 256-bit unsigned integer
 
 
 ;; Wormhole
@@ -36,8 +35,6 @@ global int governance_data_source_index; ;; u32
         .end_cell();
 
     cell data_sources_cell = begin_cell()
-        .store_dict(data_sources)
-        .store_uint(num_data_sources, 32)
         .store_dict(is_valid_data_source)
         .end_cell();
 
@@ -54,6 +51,7 @@ global int governance_data_source_index; ;; u32
         .store_ref(governance_data_source)
         .store_uint(last_executed_governance_sequence, 64)
         .store_uint(governance_data_source_index, 32)
+        .store_uint(upgrade_code_hash, 256)
         .end_cell();
 
     begin_cell()
@@ -76,8 +74,6 @@ global int governance_data_source_index; ;; u32
 
     cell data_sources_cell = ds~load_ref();
     slice data_sources_slice = data_sources_cell.begin_parse();
-    data_sources = data_sources_slice~load_dict();
-    num_data_sources = data_sources_slice~load_uint(32);
     is_valid_data_source = data_sources_slice~load_dict();
 
     cell guardian_set_cell = ds~load_ref();
@@ -94,6 +90,7 @@ global int governance_data_source_index; ;; u32
     governance_data_source = governance_slice~load_ref();
     last_executed_governance_sequence = governance_slice~load_uint(64);
     governance_data_source_index = governance_slice~load_uint(32);
+    upgrade_code_hash = governance_slice~load_uint(256);
 
     ds.end_parse();
 }

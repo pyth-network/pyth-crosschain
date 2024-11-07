@@ -13,9 +13,6 @@
 - chain: arbitrum_sepolia
   address: "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440"
   type: EvmEntropyContract
-- chain: fantom_sonic_testnet
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmEntropyContract
 - chain: blast_s2_testnet
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
@@ -108,4 +105,16 @@
   type: EvmEntropyContract
 - chain: apechain_mainnet
   address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+  type: EvmEntropyContract
+- chain: fantom_sonic_testnet
+  address: "0x5124FAE0890dE83B3bb2cc30Bb3EDAfFc07Da744"
+  type: EvmEntropyContract
+- chain: sanko
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
+- chain: sanko_testnet
+  address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
+  type: EvmEntropyContract
+- chain: abstract_testnet
+  address: "0x858687fD592112f7046E394A3Bf10D0C11fF9e63"
   type: EvmEntropyContract

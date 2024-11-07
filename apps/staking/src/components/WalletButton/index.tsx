@@ -26,12 +26,10 @@ import {
   SubmenuTrigger,
   Header,
   Collection,
+  MenuItem as BaseMenuItem,
 } from "react-aria-components";
 
-import {
-  REGION_BLOCKED_SEGMENT,
-  VPN_BLOCKED_SEGMENT,
-} from "../../config/isomorphic";
+import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
 import {
   StateType as ApiStateType,
   type States,
@@ -39,9 +37,11 @@ import {
 } from "../../hooks/use-api";
 import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { useLogger } from "../../hooks/use-logger";
+import { useNetwork } from "../../hooks/use-network";
 import { usePrimaryDomain } from "../../hooks/use-primary-domain";
 import { Button } from "../Button";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
+import { Switch } from "../Switch";
 import { TruncatedKey } from "../TruncatedKey";
 
 const ONE_SECOND_IN_MS = 1000;
@@ -52,8 +52,7 @@ type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 
 export const WalletButton = (props: Props) => {
   const segment = useSelectedLayoutSegment();
-  const isBlocked =
-    segment === REGION_BLOCKED_SEGMENT || segment === VPN_BLOCKED_SEGMENT;
+  const isBlocked = segment === VPN_BLOCKED_SEGMENT;
 
   // eslint-disable-next-line unicorn/no-null
   return isBlocked ? null : <WalletButtonImpl {...props} />;
@@ -110,6 +109,7 @@ const ConnectedButton = ({
       logger.error(error);
     });
   }, [wallet, logger]);
+  const { isMainnet, toggleMainnet } = useNetwork();
 
   return (
     <MenuTrigger>
@@ -142,6 +142,20 @@ const ConnectedButton = ({
           <MenuItem onAction={disconnectWallet} icon={XCircleIcon}>
             Disconnect
           </MenuItem>
+        </Section>
+        <Separator />
+        <Section>
+          <BaseMenuItem
+            className="outline-none data-[focused]:bg-pythpurple-800/20"
+            onAction={toggleMainnet}
+          >
+            <Switch
+              isSelected={isMainnet}
+              postLabel="Mainnet"
+              className="px-4 py-1"
+              size="small"
+            />
+          </BaseMenuItem>
         </Section>
       </Menu>
     </MenuTrigger>
@@ -281,10 +295,8 @@ const ButtonComponent = ({
   ...props
 }: ButtonComponentProps) => (
   <Button
-    className={clsx(
-      "flex w-36 flex-row items-center justify-center gap-2 text-sm sm:w-52 sm:text-base",
-      className,
-    )}
+    className={clsx("w-36 text-sm lg:w-52 lg:text-base", className)}
+    size="nopad"
     {...props}
   >
     <WalletIcon className="size-4 flex-none opacity-60" />

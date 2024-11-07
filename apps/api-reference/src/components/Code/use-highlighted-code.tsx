@@ -2,7 +2,7 @@
 
 import {
   type ReactNode,
-  type MutableRefObject,
+  type RefObject,
   createContext,
   useContext,
   useState,
@@ -17,7 +17,7 @@ import type { SupportedLanguage } from "./supported-language";
 import { getLogger } from "../../browser-logger";
 
 const HighlighterContext = createContext<
-  undefined | MutableRefObject<undefined | Highlighter>
+  undefined | RefObject<undefined | Highlighter>
 >(undefined);
 
 export const HighlighterProvider = ({
@@ -25,7 +25,7 @@ export const HighlighterProvider = ({
 }: {
   children: ReactNode | ReactNode[];
 }) => {
-  const highlighterRef = useRef<undefined | Highlighter>();
+  const highlighterRef = useRef<undefined | Highlighter>(undefined);
   return (
     <HighlighterContext.Provider value={highlighterRef}>
       {children}

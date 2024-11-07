@@ -9,7 +9,7 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import dummyIdl from "./idl/idlDummy.json";
 import { Dummy } from "./dummyTypes";
-import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svmPda";
+import { getConfigRouterPda, getExpressRelayMetadataPda } from "../svm";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const DUMMY_PIDS: Record<string, PublicKey> = {
@@ -52,10 +52,7 @@ class SimpleSearcherSvm {
       }
     }
     console.log(
-      `Bid status for bid ${bidStatus.id}: ${bidStatus.type.replaceAll(
-        "_",
-        " "
-      )}${resultDetails}`
+      `Bid status for bid ${bidStatus.id}: ${bidStatus.type}${resultDetails}`
     );
   }
 
@@ -105,7 +102,10 @@ class SimpleSearcherSvm {
     ixDummy.programId = dummyPid;
 
     const txRaw = new anchor.web3.Transaction().add(ixDummy);
-
+    const expressRelayConfig = await this.client.getExpressRelaySvmConfig(
+      this.chainId,
+      this.connectionSvm
+    );
     const bid = await this.client.constructSvmBid(
       txRaw,
       searcher.publicKey,
@@ -113,7 +113,9 @@ class SimpleSearcherSvm {
       permission,
       bidAmount,
       new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
-      this.chainId
+      this.chainId,
+      expressRelayConfig.relayerSigner,
+      expressRelayConfig.feeReceiverRelayer
     );
 
     try {

@@ -5,6 +5,7 @@ import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 import { Button } from "../Button";
+import { Date } from "../Date";
 import { ModalDialog } from "../ModalDialog";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
@@ -32,7 +33,7 @@ export const ProgramSection = ({
 }: Props) => (
   <section
     className={clsx(
-      "border border-t-0 border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
+      "border-x border-b border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
       className,
     )}
     {...props}
@@ -144,6 +145,7 @@ const TokenOverview = ({
             actionName="Stake"
             max={available}
             transfer={stake}
+            successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
           >
             <StakingTimeline currentEpoch={currentEpoch} />
           </TransferButton>
@@ -159,7 +161,7 @@ const TokenOverview = ({
       {...(warmup > 0n && {
         details: (
           <div className="mt-2 text-xs text-neutral-500">
-            Staking {epochToDate(currentEpoch + 1n).toLocaleString()}
+            Staking <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
           </div>
         ),
       })}
@@ -174,6 +176,7 @@ const TokenOverview = ({
             title="Cancel Warmup"
             max={warmup}
             transfer={cancelWarmup}
+            successMessage="Your tokens are no longer in warmup for staking"
           />
         ),
       })}
@@ -193,6 +196,7 @@ const TokenOverview = ({
             actionName="Unstake"
             max={staked}
             transfer={unstake}
+            successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
           >
             <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
           </TransferButton>
@@ -210,13 +214,13 @@ const TokenOverview = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 1n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              {epochToDate(currentEpoch + 2n).toLocaleString()}
+              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
             </div>
           )}
         </>

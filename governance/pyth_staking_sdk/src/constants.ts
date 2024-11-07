@@ -5,8 +5,11 @@ const ONE_MINUTE_IN_SECONDS = 60n;
 const ONE_HOUR_IN_SECONDS = 60n * ONE_MINUTE_IN_SECONDS;
 const ONE_DAY_IN_SECONDS = 24n * ONE_HOUR_IN_SECONDS;
 const ONE_WEEK_IN_SECONDS = 7n * ONE_DAY_IN_SECONDS;
+export const ONE_YEAR_IN_SECONDS = 365n * ONE_DAY_IN_SECONDS;
 
 export const EPOCH_DURATION = ONE_WEEK_IN_SECONDS;
+
+export const MAX_VOTER_WEIGHT = 10_000_000_000_000_000n; // 10 Billion with 6 decimals
 
 export const FRACTION_PRECISION = 1_000_000;
 export const FRACTION_PRECISION_N = 1_000_000n;
@@ -29,4 +32,8 @@ export const PUBLISHER_CAPS_PROGRAM_ADDRESS = new PublicKey(
 
 export const GOVERNANCE_ADDRESS = new PublicKey(
   "pytGY6tWRgGinSCvRLnSv4fHfBTMoiDGiCsesmHWM6U",
+);
+
+export const STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS = new PublicKey(
+  "ujSFv8q8woXW5PUnby52PQyxYGUudxkrvgN6A631Qmm",
 );

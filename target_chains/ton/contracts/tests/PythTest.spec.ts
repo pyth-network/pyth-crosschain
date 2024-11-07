@@ -12,10 +12,23 @@ import {
   TEST_GUARDIAN_ADDRESS1,
   PYTH_AUTHORIZE_GOVERNANCE_DATA_SOURCE_TRANSFER,
   PYTH_REQUEST_GOVERNANCE_DATA_SOURCE_TRANSFER,
+  TEST_GUARDIAN_ADDRESS2,
+  ETH_PRICE_FEED_ID,
+  HERMES_BTC_PRICE,
+  HERMES_ETH_PRICE,
+  HERMES_ETH_PUBLISH_TIME,
+  HERMES_BTC_PUBLISH_TIME,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { parseDataSource } from "./utils";
+import { createAuthorizeUpgradePayload } from "./utils";
+import {
+  UniversalAddress,
+  createVAA,
+  serialize,
+} from "@wormhole-foundation/sdk-definitions";
+import { mocks } from "@wormhole-foundation/sdk-definitions/testing";
+import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
 
 const TIME_PERIOD = 60;
 const PRICE = new Price({
@@ -49,6 +62,11 @@ const TEST_GOVERNANCE_DATA_SOURCES: DataSource[] = [
     emitterAddress:
       "000000000000000000000000000000000000000000000000000000000000002b",
   },
+  {
+    emitterChain: 1,
+    emitterAddress:
+      "0000000000000000000000000000000000000000000000000000000000000000",
+  },
 ];
 
 describe("PythTest", () => {
@@ -69,7 +87,6 @@ describe("PythTest", () => {
 
   async function deployContract(
     priceFeedId: HexString = BTC_PRICE_FEED_ID,
-    timePeriod: number = TIME_PERIOD,
     price: Price = PRICE,
     emaPrice: Price = EMA_PRICE,
     singleUpdateFee: number = SINGLE_UPDATE_FEE,
@@ -83,7 +100,6 @@ describe("PythTest", () => {
   ) {
     const config: PythTestConfig = {
       priceFeedId,
-      timePeriod,
       price,
       emaPrice,
       singleUpdateFee,
@@ -146,7 +162,7 @@ describe("PythTest", () => {
       expo: 3,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, price, EMA_PRICE);
+    await deployContract(BTC_PRICE_FEED_ID, price, EMA_PRICE);
 
     const result = await pythTest.getPriceNoOlderThan(
       TIME_PERIOD,
@@ -164,7 +180,7 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should correctly get ema price no older than", async () => {
@@ -175,7 +191,7 @@ describe("PythTest", () => {
       expo: 7,
       publishTime: timeNow,
     });
-    await deployContract(BTC_PRICE_FEED_ID, TIME_PERIOD, PRICE, emaPrice);
+    await deployContract(BTC_PRICE_FEED_ID, PRICE, emaPrice);
 
     const result = await pythTest.getEmaPriceNoOlderThan(
       TIME_PERIOD,
@@ -193,7 +209,7 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getEmaPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1020"); // ERROR_OUTDATED_PRICE = 1020
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should correctly get ema price unsafe", async () => {
@@ -223,6 +239,14 @@ describe("PythTest", () => {
 
     await updateGuardianSets(pythTest, deployer);
 
+    // Check initial prices
+    const initialBtcPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
+    expect(initialBtcPrice.price).not.toBe(HERMES_BTC_PRICE);
+    // Expect an error for ETH price feed as it doesn't exist initially
+    await expect(pythTest.getPriceUnsafe(ETH_PRICE_FEED_ID)).rejects.toThrow(
+      "Unable to execute get method. Got exit_code: 2000"
+    ); // ERROR_PRICE_FEED_NOT_FOUND = 2000
+
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
 
@@ -238,10 +262,14 @@ describe("PythTest", () => {
       success: true,
     });
 
-    // Check if the price has been updated correctly
-    const updatedPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
-    expect(updatedPrice.price).not.toBe(Number(PRICE.price)); // Since we updated the price, it should not be the same as the initial price
-    expect(updatedPrice.publishTime).toBeGreaterThan(PRICE.publishTime);
+    // Check if both BTC and ETH prices have been updated
+    const updatedBtcPrice = await pythTest.getPriceUnsafe(BTC_PRICE_FEED_ID);
+    expect(updatedBtcPrice.price).toBe(HERMES_BTC_PRICE);
+    expect(updatedBtcPrice.publishTime).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    const updatedEthPrice = await pythTest.getPriceUnsafe(ETH_PRICE_FEED_ID);
+    expect(updatedEthPrice.price).toBe(HERMES_ETH_PRICE);
+    expect(updatedEthPrice.publishTime).toBe(HERMES_ETH_PUBLISH_TIME);
   });
 
   it("should fail to get update fee with invalid data", async () => {
@@ -251,8 +279,8 @@ describe("PythTest", () => {
     const invalidUpdateData = Buffer.from("invalid data");
 
     await expect(pythTest.getUpdateFee(invalidUpdateData)).rejects.toThrow(
-      "Unable to execute get method. Got exit_code: 1021"
-    ); // ERROR_INVALID_MAGIC = 1021
+      "Unable to execute get method. Got exit_code: 2002"
+    ); // ERROR_INVALID_MAGIC = 2002
   });
 
   it("should fail to update price feeds with invalid data", async () => {
@@ -274,7 +302,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1021, // ERROR_INVALID_MAGIC
+      exitCode: 2002, // ERROR_INVALID_MAGIC
     });
   });
 
@@ -302,7 +330,6 @@ describe("PythTest", () => {
   it("should fail to update price feeds with invalid data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -323,8 +350,23 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1024, // ERROR_UPDATE_DATA_SOURCE_NOT_FOUND
+      exitCode: 2005, // ERROR_UPDATE_DATA_SOURCE_NOT_FOUND
     });
+  });
+
+  it("should correctly handle stale prices", async () => {
+    const staleTime = Math.floor(Date.now() / 1000) - TIME_PERIOD - 10; // 10 seconds past the allowed period
+    const stalePrice = new Price({
+      price: "1",
+      conf: "2",
+      expo: 3,
+      publishTime: staleTime,
+    });
+    await deployContract(BTC_PRICE_FEED_ID, stalePrice, EMA_PRICE);
+
+    await expect(
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, BTC_PRICE_FEED_ID)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2001"); // ERROR_OUTDATED_PRICE = 2001
   });
 
   it("should fail to update price feeds with insufficient gas", async () => {
@@ -333,7 +375,7 @@ describe("PythTest", () => {
 
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
 
-    const result = await pythTest.sendUpdatePriceFeeds(
+    let result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
       toNano("0.1") // Insufficient gas
@@ -343,7 +385,20 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1037, // ERROR_INSUFFICIENT_GAS
+      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
+    });
+
+    result = await pythTest.sendUpdatePriceFeeds(
+      deployer.getSender(),
+      updateData,
+      calculateUpdatePriceFeedsFee(1n) // Send enough gas for 1 update instead of 2
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
     });
   });
 
@@ -361,7 +416,7 @@ describe("PythTest", () => {
     const result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
-      156000000n + BigInt(insufficientFee) // 156000000 = 390000 (estimated gas used for the transaction, this is defined in contracts/common/gas.fc as UPDATE_PRICE_FEEDS_GAS) * 400 (current settings in basechain are as follows: 1 unit of gas costs 400 nanotons)
+      calculateUpdatePriceFeedsFee(2n) + BigInt(insufficientFee)
     );
 
     // Check that the transaction did not succeed
@@ -369,11 +424,11 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1030, // ERROR_INSUFFICIENT_FEE = 1030
+      exitCode: 2011, // ERROR_INSUFFICIENT_FEE = 2011
     });
   });
 
-  it("should fail to get price for non-existent price feed", async () => {
+  it("should fail to get prices for non-existent price feed", async () => {
     await deployContract();
 
     const nonExistentPriceFeedId =
@@ -381,7 +436,15 @@ describe("PythTest", () => {
 
     await expect(
       pythTest.getPriceUnsafe(nonExistentPriceFeedId)
-    ).rejects.toThrow("Unable to execute get method. Got exit_code: 1019"); // ERROR_PRICE_FEED_NOT_FOUND = 1019
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND = 2000
+
+    await expect(
+      pythTest.getPriceNoOlderThan(TIME_PERIOD, nonExistentPriceFeedId)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND
+
+    await expect(
+      pythTest.getEmaPriceUnsafe(nonExistentPriceFeedId)
+    ).rejects.toThrow("Unable to execute get method. Got exit_code: 2000"); // ERROR_PRICE_FEED_NOT_FOUND
   });
 
   it("should correctly get chain ID", async () => {
@@ -394,7 +457,6 @@ describe("PythTest", () => {
   it("should correctly get last executed governance sequence", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -426,7 +488,6 @@ describe("PythTest", () => {
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -460,14 +521,11 @@ describe("PythTest", () => {
 
     // Check initial value (should be empty)
     let result = await pythTest.getGovernanceDataSource();
-    expect(result).toBeDefined();
-    expect(result.bits.length).toBe(0);
-    expect(result.refs.length).toBe(0);
+    expect(result).toEqual(null);
 
     // Deploy contract with initial governance data source
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -482,8 +540,7 @@ describe("PythTest", () => {
 
     // Check that the governance data source is set
     result = await pythTest.getGovernanceDataSource();
-    let dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Execute governance action to change data source
     await pythTest.sendExecuteGovernanceAction(
@@ -493,8 +550,7 @@ describe("PythTest", () => {
 
     // Check that the data source has changed
     result = await pythTest.getGovernanceDataSource();
-    dataSource = parseDataSource(result);
-    expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
+    expect(result).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]);
   });
 
   it("should correctly get single update fee", async () => {
@@ -506,10 +562,9 @@ describe("PythTest", () => {
     expect(result).toBe(SINGLE_UPDATE_FEE);
   });
 
-  it("should execute set fee governance instruction", async () => {
+  it("should execute set data sources governance instruction", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -560,10 +615,49 @@ describe("PythTest", () => {
     expect(oldDataSourceIsValid).toBe(false);
   });
 
+  it("should execute set fee governance instruction", async () => {
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      60051, // CHAIN_ID of starknet since we are using the test payload for starknet
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    // Get the initial fee
+    const initialFee = await pythTest.getSingleUpdateFee();
+    expect(initialFee).toBe(SINGLE_UPDATE_FEE);
+
+    // Execute the governance action
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Get the new fee
+    const newFee = await pythTest.getSingleUpdateFee();
+    expect(newFee).toBe(4200); // The new fee value is 4200 in the PYTH_SET_FEE payload
+
+    // Verify that the new fee is used for updates
+    const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
+    const updateFee = await pythTest.getUpdateFee(updateData);
+    expect(updateFee).toBe(8400); // There are two price updates in HERMES_BTC_ETH_UPDATE
+  });
+
   it("should execute authorize governance data source transfer", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -581,8 +675,7 @@ describe("PythTest", () => {
     expect(initialIndex).toEqual(0); // Initial value should be 0
 
     // Get the initial governance data source
-    const initialDataSourceCell = await pythTest.getGovernanceDataSource();
-    const initialDataSource = parseDataSource(initialDataSourceCell);
+    const initialDataSource = await pythTest.getGovernanceDataSource();
     expect(initialDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[0]);
 
     // Get the initial last executed governance sequence
@@ -605,8 +698,7 @@ describe("PythTest", () => {
     expect(newIndex).toEqual(1); // The new index value should match the one in the test payload
 
     // Get the new governance data source
-    const newDataSourceCell = await pythTest.getGovernanceDataSource();
-    const newDataSource = parseDataSource(newDataSourceCell);
+    const newDataSource = await pythTest.getGovernanceDataSource();
     expect(newDataSource).not.toEqual(initialDataSource); // The data source should have changed
     expect(newDataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // The data source should have changed
 
@@ -619,7 +711,6 @@ describe("PythTest", () => {
   it("should fail when executing request governance data source transfer directly", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -642,7 +733,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1012, // ERROR_INVALID_GOVERNANCE_ACTION = 1012
+      exitCode: 1012, // ERROR_INVALID_GOVERNANCE_ACTION
     });
 
     // Verify that the governance data source index hasn't changed
@@ -650,15 +741,13 @@ describe("PythTest", () => {
     expect(index).toEqual(0); // Should still be the initial value
 
     // Verify that the governance data source hasn't changed
-    const dataSourceCell = await pythTest.getGovernanceDataSource();
-    const dataSource = parseDataSource(dataSourceCell);
+    const dataSource = await pythTest.getGovernanceDataSource();
     expect(dataSource).toEqual(TEST_GOVERNANCE_DATA_SOURCES[1]); // Should still be the initial value
   });
 
   it("should fail to execute governance action with invalid governance data source", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -680,14 +769,13 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1032, // ERROR_INVALID_GOVERNANCE_DATA_SOURCE
+      exitCode: 2013, // ERROR_INVALID_GOVERNANCE_DATA_SOURCE
     });
   });
 
   it("should fail to execute governance action with old sequence number", async () => {
     await deployContract(
       BTC_PRICE_FEED_ID,
-      TIME_PERIOD,
       PRICE,
       EMA_PRICE,
       SINGLE_UPDATE_FEE,
@@ -716,7 +804,174 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 1033, // ERROR_OLD_GOVERNANCE_MESSAGE
+      exitCode: 2014, // ERROR_OLD_GOVERNANCE_MESSAGE
     });
+  });
+
+  it("should fail to execute governance action with invalid chain ID", async () => {
+    const invalidChainId = 999;
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS1],
+      invalidChainId,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000004",
+      TEST_GOVERNANCE_DATA_SOURCES[0]
+    );
+
+    const result = await pythTest.sendExecuteGovernanceAction(
+      deployer.getSender(),
+      Buffer.from(PYTH_SET_FEE, "hex")
+    );
+
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2015, // ERROR_INVALID_GOVERNANCE_TARGET
+    });
+  });
+
+  it("should successfully upgrade the contract", async () => {
+    // Compile the upgraded contract
+    const upgradedCode = await compile("PythTestUpgraded");
+    const upgradedCodeHash = upgradedCode.hash();
+
+    // Create the authorize upgrade payload
+    const authorizeUpgradePayload =
+      createAuthorizeUpgradePayload(upgradedCodeHash);
+
+    const authorizeUpgradeVaa = createVAA("Uint8Array", {
+      guardianSet: 0,
+      timestamp: 0,
+      nonce: 0,
+      emitterChain: "Solana",
+      emitterAddress: new UniversalAddress(new Uint8Array(32)),
+      sequence: 1n,
+      consistencyLevel: 0,
+      signatures: [],
+      payload: authorizeUpgradePayload,
+    });
+
+    const guardianSet = mocks.devnetGuardianSet();
+    guardianSet.setSignatures(authorizeUpgradeVaa);
+
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS2],
+      1,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      TEST_GOVERNANCE_DATA_SOURCES[2]
+    );
+
+    // Execute the upgrade
+    const sendExecuteGovernanceActionResult =
+      await pythTest.sendExecuteGovernanceAction(
+        deployer.getSender(),
+        Buffer.from(serialize(authorizeUpgradeVaa))
+      );
+
+    expect(sendExecuteGovernanceActionResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Execute the upgrade
+    const sendUpgradeContractResult = await pythTest.sendUpgradeContract(
+      deployer.getSender(),
+      upgradedCode
+    );
+
+    expect(sendUpgradeContractResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Verify that the contract has been upgraded by calling a new method
+    const newMethodResult = await pythTest.getNewFunction();
+    expect(newMethodResult).toBe(1);
+  });
+
+  it("should fail to upgrade the contract with modified code", async () => {
+    // Compile the upgraded contract
+    const upgradedCode = await compile("PythTestUpgraded");
+    const upgradedCodeHash = upgradedCode.hash();
+
+    // Create the authorize upgrade payload
+    const authorizeUpgradePayload =
+      createAuthorizeUpgradePayload(upgradedCodeHash);
+
+    const authorizeUpgradeVaa = createVAA("Uint8Array", {
+      guardianSet: 0,
+      timestamp: 0,
+      nonce: 0,
+      emitterChain: "Solana",
+      emitterAddress: new UniversalAddress(new Uint8Array(32)),
+      sequence: 1n,
+      consistencyLevel: 0,
+      signatures: [],
+      payload: authorizeUpgradePayload,
+    });
+
+    const guardianSet = mocks.devnetGuardianSet();
+    guardianSet.setSignatures(authorizeUpgradeVaa);
+
+    await deployContract(
+      BTC_PRICE_FEED_ID,
+      PRICE,
+      EMA_PRICE,
+      SINGLE_UPDATE_FEE,
+      DATA_SOURCES,
+      0,
+      [TEST_GUARDIAN_ADDRESS2],
+      1,
+      1,
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      TEST_GOVERNANCE_DATA_SOURCES[2]
+    );
+
+    // Execute the upgrade authorization
+    const sendExecuteGovernanceActionResult =
+      await pythTest.sendExecuteGovernanceAction(
+        deployer.getSender(),
+        Buffer.from(serialize(authorizeUpgradeVaa))
+      );
+
+    expect(sendExecuteGovernanceActionResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+    });
+
+    // Attempt to execute the upgrade with a different code
+    const wormholeTestCode = await compile("WormholeTest");
+    const sendUpgradeContractResult = await pythTest.sendUpgradeContract(
+      deployer.getSender(),
+      wormholeTestCode
+    );
+
+    // Expect the transaction to fail
+    expect(sendUpgradeContractResult.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2018, // ERROR_INVALID_CODE_HASH
+    });
+
+    // Verify that the contract has not been upgraded by attempting to call the new method
+    await expect(pythTest.getNewFunction()).rejects.toThrow();
   });
 });

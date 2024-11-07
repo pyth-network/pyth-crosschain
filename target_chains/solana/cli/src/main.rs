@@ -126,50 +126,85 @@ fn main() -> Result<()> {
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
-            let initialize_instruction = initialize(
-                wormhole,
-                payer.pubkey(),
-                0,
-                GUARDIAN_EXPIRATION_TIME,
-                &[hex::decode(INITIAL_GUARDIAN).unwrap().try_into().unwrap()],
-            )
-            .unwrap();
-            process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
+            // Check whether the wormhole config account exists, if it does not exist, initialize the wormhole receiver
+            let wormhole_config = BridgeConfig::key(&wormhole, ());
 
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
-                wormhole,
-                &payer,
-                true,
-            )?;
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
-                wormhole,
-                &payer,
-                false,
-            )?;
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
-                wormhole,
-                &payer,
-                false,
-            )?;
-            process_upgrade_guardian_set(
-                &rpc_client,
-                &hex::decode(UPGRADE_GUARDIAN_SET_VAA_4).unwrap(),
-                wormhole,
-                &payer,
-                false,
-            )?;
+            let wormhole_account_data = rpc_client.get_account_data(&wormhole_config);
+
+            let mut current_guardian_set_index = match wormhole_account_data {
+                Ok(data) => {
+                    let config = BridgeConfig::try_from_slice(&data)?;
+                    println!("Wormhole already initialized. config: {:?}", config);
+                    config.guardian_set_index
+                }
+                Err(_) => {
+                    println!("Initializing wormhole receiver");
+                    let initialize_instruction = initialize(
+                        wormhole,
+                        payer.pubkey(),
+                        0,
+                        GUARDIAN_EXPIRATION_TIME,
+                        &[hex::decode(INITIAL_GUARDIAN).unwrap().try_into().unwrap()],
+                    )
+                    .expect("Failed to create initialize instruction");
+                    process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
+                    0
+                }
+            };
+
+            if current_guardian_set_index == 0 {
+                println!("Upgrading guardian set from 0 to 1");
+                process_upgrade_guardian_set(
+                    &rpc_client,
+                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
+                    wormhole,
+                    &payer,
+                    true,
+                )?;
+                current_guardian_set_index += 1;
+            }
+
+            if current_guardian_set_index == 1 {
+                println!("Upgrading guardian set from 1 to 2");
+                process_upgrade_guardian_set(
+                    &rpc_client,
+                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
+                    wormhole,
+                    &payer,
+                    false,
+                )?;
+                current_guardian_set_index += 1;
+            }
+
+            if current_guardian_set_index == 2 {
+                println!("Upgrading guardian set from 2 to 3");
+                process_upgrade_guardian_set(
+                    &rpc_client,
+                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
+                    wormhole,
+                    &payer,
+                    false,
+                )?;
+                current_guardian_set_index += 1;
+            }
+
+            if current_guardian_set_index == 3 {
+                println!("Upgrading guardian set from 3 to 4");
+                process_upgrade_guardian_set(
+                    &rpc_client,
+                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_4).unwrap(),
+                    wormhole,
+                    &payer,
+                    false,
+                )?;
+            }
         }
 
         Action::InitializePythReceiver {
             fee,
             emitter,
             chain,
+            governance_authority,
         } => {
             let rpc_client = RpcClient::new(url);
             let payer =
@@ -179,7 +214,7 @@ fn main() -> Result<()> {
                 pyth_solana_receiver::instruction::Initialize::populate(
                     &payer.pubkey(),
                     pyth_solana_receiver_sdk::config::Config {
-                        governance_authority: payer.pubkey(),
+                        governance_authority,
                         target_governance_authority: None,
                         wormhole,
                         valid_data_sources: vec![DataSource { chain, emitter }],
@@ -480,7 +515,7 @@ pub fn process_transaction(
     let transaction_signature_res = rpc_client
         .send_and_confirm_transaction_with_spinner_and_config(
             &transaction,
-            CommitmentConfig::finalized(),
+            CommitmentConfig::confirmed(),
             RpcSendTransactionConfig {
                 skip_preflight: true,
                 ..Default::default()

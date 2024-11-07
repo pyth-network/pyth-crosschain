@@ -1,14 +1,15 @@
 "use client";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { PythStakingClient } from "@pythnetwork/staking-sdk";
+import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import type { PublicKey } from "@solana/web3.js";
+import { Connection, type PublicKey } from "@solana/web3.js";
 import { type ComponentProps, createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
 import { StateType as DataStateType, useData } from "./use-data";
+import { useNetwork } from "./use-network";
 import * as api from "../api";
 
 export enum StateType {
@@ -40,13 +41,18 @@ const State = {
   }),
 
   [StateType.LoadedNoStakeAccount]: (
+    isMainnet: boolean,
     client: PythStakingClient,
+    pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
     type: StateType.LoadedNoStakeAccount as const,
-    dashboardDataCacheKey: client.wallet.publicKey.toBase58(),
-    loadData: () => api.loadData(client, hermesClient),
+    dashboardDataCacheKey: [
+      isMainnet ? "mainnet" : "devnet",
+      client.wallet.publicKey.toBase58(),
+    ],
+    loadData: () => api.loadData(client, pythnetClient, hermesClient),
     deposit: async (amount: bigint) => {
       const account = await api.createStakeAccountAndDeposit(client, amount);
       return onCreateAccount(account);
@@ -54,22 +60,19 @@ const State = {
   }),
 
   [StateType.Loaded]: (
+    isMainnet: boolean,
     client: PythStakingClient,
+    pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     account: PublicKey,
     allAccounts: [PublicKey, ...PublicKey[]],
     selectAccount: (account: PublicKey) => void,
     mutate: ReturnType<typeof useSWRConfig>["mutate"],
   ) => {
-    const dashboardDataCacheKey = account.toBase58();
-    const accountHistoryCacheKey = `${account.toBase58()}/history`;
-
-    const reload = async () => {
-      await Promise.all([
-        mutate(dashboardDataCacheKey),
-        mutate(accountHistoryCacheKey),
-      ]);
-    };
+    const dashboardDataCacheKey = [
+      isMainnet ? "mainnet" : "devnet",
+      account.toBase58(),
+    ];
 
     const bindApi =
       <T extends unknown[]>(
@@ -81,7 +84,7 @@ const State = {
       ) =>
       async (...args: T) => {
         await fn(client, account, ...args);
-        await reload();
+        await mutate(dashboardDataCacheKey);
       };
 
     return {
@@ -90,10 +93,9 @@ const State = {
       allAccounts,
       selectAccount,
       dashboardDataCacheKey,
-      accountHistoryCacheKey,
 
-      loadData: () => api.loadData(client, hermesClient, account),
-      loadAccountHistory: () => api.loadAccountHistory(client, account),
+      loadData: () =>
+        api.loadData(client, pythnetClient, hermesClient, account),
 
       claim: bindApi(api.claim),
       deposit: bindApi(api.deposit),
@@ -106,6 +108,7 @@ const State = {
       cancelWarmupIntegrityStaking: bindApi(api.cancelWarmupIntegrityStaking),
       reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
       optPublisherOut: bindApi(api.optPublisherOut),
+      unstakeAllIntegrityStaking: bindApi(api.unstakeAllIntegrityStaking),
     };
   },
 
@@ -126,20 +129,30 @@ type ApiProviderProps = Omit<
   ComponentProps<typeof ApiContext.Provider>,
   "value"
 > & {
+  pythnetRpcUrl: string;
   hermesUrl: string;
 };
 
-export const ApiProvider = ({ hermesUrl, ...props }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl);
+export const ApiProvider = ({
+  hermesUrl,
+  pythnetRpcUrl,
+  ...props
+}: ApiProviderProps) => {
+  const state = useApiContext(hermesUrl, pythnetRpcUrl);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (hermesUrl: string) => {
+const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
   const wallet = useWallet();
   const { connection } = useConnection();
+  const { isMainnet } = useNetwork();
   const { mutate } = useSWRConfig();
   const hermesClient = useMemo(() => new HermesClient(hermesUrl), [hermesUrl]);
+  const pythnetClient = useMemo(
+    () => new PythnetClient(new Connection(pythnetRpcUrl)),
+    [pythnetRpcUrl],
+  );
   const pythStakingClient = useMemo(
     () =>
       wallet.publicKey && wallet.signAllTransactions && wallet.signTransaction
@@ -160,7 +173,10 @@ const useApiContext = (hermesUrl: string) => {
     ],
   );
   const stakeAccounts = useData(
-    () => (pythStakingClient ? ["stakeAccounts", wallet.publicKey] : undefined),
+    () =>
+      pythStakingClient
+        ? [isMainnet ? "mainnet" : "devnet", "stakeAccounts", wallet.publicKey]
+        : undefined,
     () =>
       pythStakingClient
         ? api.getAllStakeAccountAddresses(pythStakingClient)
@@ -170,7 +186,12 @@ const useApiContext = (hermesUrl: string) => {
       revalidateOnReconnect: false,
     },
   );
-  const lastStakeAccount = useLocalStorageValue<string>("last-stake-account");
+  const lastStakeAccountMainnet = useLocalStorageValue<string>(
+    `last-stake-account.mainnet`,
+  );
+  const lastStakeAccountDevnet = useLocalStorageValue<string>(
+    `last-stake-account.devnet`,
+  );
 
   return useMemo(() => {
     if (wallet.connecting) {
@@ -197,24 +218,34 @@ const useApiContext = (hermesUrl: string) => {
           } else {
             const [firstAccount, ...otherAccounts] = stakeAccounts.data;
             if (firstAccount) {
-              const selectedAccount = lastStakeAccount.value
+              const localStorageValue = isMainnet
+                ? lastStakeAccountMainnet
+                : lastStakeAccountDevnet;
+              const selectedAccount = localStorageValue.value
                 ? stakeAccounts.data.find(
-                    (account) => account.toBase58() === lastStakeAccount.value,
+                    (account) => account.toBase58() === localStorageValue.value,
                   )
                 : undefined;
+              if (!selectedAccount) {
+                localStorageValue.set(firstAccount.toBase58());
+              }
               return State[StateType.Loaded](
+                isMainnet,
                 pythStakingClient,
+                pythnetClient,
                 hermesClient,
                 selectedAccount ?? firstAccount,
                 [firstAccount, ...otherAccounts],
                 (account: PublicKey) => {
-                  lastStakeAccount.set(account.toBase58());
+                  localStorageValue.set(account.toBase58());
                 },
                 mutate,
               );
             } else {
               return State[StateType.LoadedNoStakeAccount](
+                isMainnet,
                 pythStakingClient,
+                pythnetClient,
                 hermesClient,
                 async (newAccount) => {
                   await stakeAccounts.mutate([newAccount]);
@@ -228,13 +259,16 @@ const useApiContext = (hermesUrl: string) => {
       return State[StateType.NoWallet]();
     }
   }, [
+    isMainnet,
     wallet.connecting,
     wallet.disconnecting,
     wallet.connected,
     pythStakingClient,
+    pythnetClient,
     stakeAccounts,
     hermesClient,
-    lastStakeAccount,
+    lastStakeAccountMainnet,
+    lastStakeAccountDevnet,
     mutate,
   ]);
 };

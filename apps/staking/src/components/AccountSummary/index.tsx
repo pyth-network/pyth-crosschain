@@ -1,6 +1,14 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { epochToDate } from "@pythnetwork/staking-sdk";
+import clsx from "clsx";
 import Image from "next/image";
-import { type ComponentProps, type ReactNode, useCallback } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import {
   DialogTrigger,
   Button as ReactAriaButton,
@@ -9,7 +17,10 @@ import {
 import background from "./background.png";
 import { type States, StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
+import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
+import { Date } from "../Date";
+import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
@@ -32,6 +43,13 @@ type Props = {
   availableRewards: bigint;
   expiringRewards: Date | undefined;
   availableToWithdraw: bigint;
+  enableGovernance: boolean;
+  enableOis: boolean;
+  integrityStakingWarmup: bigint;
+  integrityStakingStaked: bigint;
+  integrityStakingCooldown: bigint;
+  integrityStakingCooldown2: bigint;
+  currentEpoch: bigint;
 };
 
 export const AccountSummary = ({
@@ -44,6 +62,13 @@ export const AccountSummary = ({
   availableToWithdraw,
   availableRewards,
   expiringRewards,
+  enableGovernance,
+  enableOis,
+  integrityStakingWarmup,
+  integrityStakingStaked,
+  integrityStakingCooldown,
+  integrityStakingCooldown2,
+  currentEpoch,
 }: Props) => (
   <section className="relative w-full overflow-hidden sm:border sm:border-neutral-600/50 sm:bg-pythpurple-800">
     <Image
@@ -51,7 +76,7 @@ export const AccountSummary = ({
       alt=""
       className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
     />
-    <div className="relative flex flex-row items-center justify-between gap-8 sm:px-6 sm:py-10 md:gap-16 lg:px-12 lg:py-20">
+    <div className="relative flex flex-col items-start justify-between gap-8 sm:px-6 sm:py-10 md:flex-row md:items-center md:gap-16 lg:px-12 lg:py-20">
       <div>
         <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400 sm:mb-4">
           Total Balance
@@ -63,7 +88,7 @@ export const AccountSummary = ({
           {lastSlash && (
             <p className="max-w-48 text-sm text-red-600">
               <Tokens>{lastSlash.amount}</Tokens> were slashed on{" "}
-              {lastSlash.date.toLocaleString()}
+              <Date options="time">{lastSlash.date}</Date>
             </p>
           )}
         </div>
@@ -93,7 +118,7 @@ export const AccountSummary = ({
                       {unlockSchedule.map((unlock, i) => (
                         <tr key={i}>
                           <td className="pr-12 text-xs opacity-80 sm:text-sm">
-                            {unlock.date.toLocaleString()}
+                            <Date options="time">{unlock.date}</Date>
                           </td>
                           <td>
                             <Tokens>{unlock.amount}</Tokens>
@@ -108,13 +133,16 @@ export const AccountSummary = ({
           </>
         )}
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
-          <TransferButton
-            actionDescription="Add funds to your balance"
-            actionName="Add Tokens"
-            max={walletAmount}
-            transfer={api.deposit}
-            enableWithZeroMax
-          />
+          {(enableGovernance || enableOis) && (
+            <TransferButton
+              actionName="Add tokens"
+              actionDescription="Add funds to your balance"
+              max={walletAmount}
+              transfer={api.deposit}
+              submitButtonText="Add tokens"
+              successMessage="Your tokens have been added to your stake account"
+            />
+          )}
           {availableToWithdraw === 0n ? (
             <DialogTrigger>
               <Button variant="secondary" className="xl:hidden">
@@ -141,25 +169,38 @@ export const AccountSummary = ({
               className="xl:hidden"
             />
           )}
-          <DialogTrigger>
-            <Button variant="secondary" className="xl:hidden">
-              Claim
-            </Button>
-            {availableRewards === 0n ||
-            api.type === ApiStateType.LoadedNoStakeAccount ? (
-              <ModalDialog title="No Rewards" closeButtonText="Ok">
-                <p>You have no rewards available to be claimed</p>
-              </ModalDialog>
-            ) : (
-              <ClaimDialog
-                expiringRewards={expiringRewards}
-                availableRewards={availableRewards}
-                api={api}
-              />
-            )}
-          </DialogTrigger>
+          {enableOis && (
+            <DialogTrigger>
+              <Button variant="secondary" className="xl:hidden">
+                Claim
+              </Button>
+              {availableRewards === 0n ||
+              api.type === ApiStateType.LoadedNoStakeAccount ? (
+                <ModalDialog title="No Rewards" closeButtonText="Ok">
+                  <p>You have no rewards available to be claimed</p>
+                </ModalDialog>
+              ) : (
+                <ClaimDialog
+                  expiringRewards={expiringRewards}
+                  availableRewards={availableRewards}
+                  api={api}
+                />
+              )}
+            </DialogTrigger>
+          )}
         </div>
       </div>
+      {!enableOis && api.type === ApiStateType.Loaded && (
+        <OisUnstake
+          api={api}
+          className="max-w-sm xl:hidden"
+          warmup={integrityStakingWarmup}
+          staked={integrityStakingStaked}
+          cooldown={integrityStakingCooldown}
+          cooldown2={integrityStakingCooldown2}
+          currentEpoch={currentEpoch}
+        />
+      )}
       <div className="hidden w-auto items-stretch gap-4 xl:flex">
         <BalanceCategory
           name="Unlocked & Unstaked"
@@ -169,43 +210,154 @@ export const AccountSummary = ({
             <WithdrawButton api={api} max={availableToWithdraw} size="small" />
           }
         />
-        <BalanceCategory
-          name="Available Rewards"
-          amount={availableRewards}
-          description="Rewards you have earned from OIS"
-          action={
-            api.type === ApiStateType.Loaded ? (
-              <ClaimButton
-                size="small"
-                variant="secondary"
-                isDisabled={availableRewards === 0n}
-                api={api}
-              />
-            ) : (
-              <Button size="small" variant="secondary" isDisabled={true}>
-                Claim
-              </Button>
-            )
-          }
-          {...(expiringRewards !== undefined &&
-            availableRewards > 0n && {
-              warning: (
-                <>
-                  Rewards expire one year from the epoch in which they were
-                  earned. You have rewards expiring on{" "}
-                  {expiringRewards.toLocaleDateString()}.
-                </>
-              ),
-            })}
-        />
+        {!enableOis && api.type === ApiStateType.Loaded && (
+          <OisUnstake
+            api={api}
+            warmup={integrityStakingWarmup}
+            staked={integrityStakingStaked}
+            cooldown={integrityStakingCooldown}
+            cooldown2={integrityStakingCooldown2}
+            currentEpoch={currentEpoch}
+          />
+        )}
+        {enableOis && (
+          <BalanceCategory
+            name="Available Rewards"
+            amount={availableRewards}
+            description="Rewards you have earned from OIS"
+            action={
+              api.type === ApiStateType.Loaded ? (
+                <ClaimButton
+                  size="small"
+                  variant="secondary"
+                  isDisabled={availableRewards === 0n}
+                  api={api}
+                />
+              ) : (
+                <Button size="small" variant="secondary" isDisabled={true}>
+                  Claim
+                </Button>
+              )
+            }
+            {...(expiringRewards !== undefined &&
+              availableRewards > 0n && {
+                warning: (
+                  <>
+                    Rewards expire one year from the epoch in which they were
+                    earned. You have rewards expiring on{" "}
+                    <Date>{expiringRewards}</Date>.
+                  </>
+                ),
+              })}
+          />
+        )}
       </div>
     </div>
   </section>
 );
 
+type OisUnstakeProps = {
+  api: States[ApiStateType.Loaded];
+  warmup: bigint;
+  staked: bigint;
+  cooldown: bigint;
+  cooldown2: bigint;
+  currentEpoch: bigint;
+  className?: string | undefined;
+};
+
+const OisUnstake = ({
+  api,
+  warmup,
+  staked,
+  cooldown,
+  cooldown2,
+  currentEpoch,
+  className,
+}: OisUnstakeProps) => {
+  const stakedPlusWarmup = useMemo(() => staked + warmup, [staked, warmup]);
+  const totalCooldown = useMemo(
+    () => cooldown + cooldown2,
+    [cooldown, cooldown2],
+  );
+  const total = useMemo(
+    () => staked + warmup + cooldown + cooldown2,
+    [staked, warmup, cooldown, cooldown2],
+  );
+  const toast = useToast();
+  const { state, execute } = useAsync(api.unstakeAllIntegrityStaking);
+
+  const doUnstakeAll = useCallback(() => {
+    execute()
+      .then(() => {
+        toast.success(
+          "Your tokens are now cooling down and will be available to withdraw at the end of the next epoch",
+        );
+      })
+      .catch((error: unknown) => {
+        toast.error(error);
+      });
+  }, [execute, toast]);
+
+  // eslint-disable-next-line unicorn/no-null
+  return total === 0n ? null : (
+    <BalanceCategory
+      className={className}
+      name={stakedPlusWarmup === 0n ? "OIS Cooldown" : "OIS Unstake"}
+      amount={stakedPlusWarmup === 0n ? totalCooldown : stakedPlusWarmup}
+      description={
+        <>
+          <p>
+            {stakedPlusWarmup > 0n ? (
+              <>
+                You have tokens that are staked or in warmup to OIS. You are not
+                eligible to participate in OIS because you are in a restricted
+                region. Please unstake your tokens here and wait for the
+                cooldown.
+              </>
+            ) : (
+              <>You have OIS tokens in cooldown.</>
+            )}
+          </p>
+          {stakedPlusWarmup > 0n && totalCooldown > 0n && (
+            <p className="mt-4 font-semibold">Cooldown Summary</p>
+          )}
+          {cooldown > 0n && (
+            <div className="mt-2 text-xs text-neutral-500">
+              <Tokens>{cooldown}</Tokens> end{" "}
+              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
+            </div>
+          )}
+          {cooldown2 > 0n && (
+            <div className="mt-2 text-xs text-neutral-500">
+              <Tokens>{cooldown2}</Tokens> end{" "}
+              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
+            </div>
+          )}
+        </>
+      }
+      action={
+        <>
+          {stakedPlusWarmup > 0n && (
+            <Button
+              size="small"
+              variant="secondary"
+              onPress={doUnstakeAll}
+              isDisabled={state.type === StateType.Complete}
+              isLoading={state.type === StateType.Running}
+            >
+              Unstake All
+            </Button>
+          )}
+        </>
+      }
+    />
+  );
+};
+
 type WithdrawButtonProps = Omit<
   ComponentProps<typeof TransferButton>,
-  "variant" | "actionDescription" | "actionName" | "transfer"
+  "variant" | "actionDescription" | "actionName" | "transfer" | "successMessage"
 > & {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
 };
@@ -215,6 +367,7 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
     variant="secondary"
     actionDescription="Move funds from your account back to your wallet"
     actionName="Withdraw"
+    successMessage="You have withdrawn tokens from your stake account to your wallet"
     {...(api.type === ApiStateType.Loaded && {
       transfer: api.withdraw,
     })}
@@ -233,19 +386,26 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
 type BalanceCategoryProps = {
   name: string;
   amount: bigint;
-  description: string;
+  description: ReactNode;
   action: ReactNode;
   warning?: ReactNode | undefined;
+  className?: string | undefined;
 };
 
 const BalanceCategory = ({
+  className,
   name,
   amount,
   description,
   action,
   warning,
 }: BalanceCategoryProps) => (
-  <div className="flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:p-6 xl:w-80 2xl:w-96">
+  <div
+    className={clsx(
+      "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:p-6 xl:w-80 2xl:w-96",
+      className,
+    )}
+  >
     <div>
       <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}
@@ -253,11 +413,11 @@ const BalanceCategory = ({
       <div>
         <Tokens className="text-xl font-light">{amount}</Tokens>
       </div>
-      <p className="mt-4 text-sm text-neutral-500">{description}</p>
+      <div className="mt-4 text-sm text-neutral-500">{description}</div>
     </div>
     <div className="mt-4 flex flex-row items-center gap-4">
       {action}
-      {warning && <p className="text-xs text-red-600">{warning}</p>}
+      {warning && <div className="text-xs text-red-600">{warning}</div>}
     </div>
   </div>
 );
@@ -273,57 +433,96 @@ const ClaimDialog = ({
   expiringRewards,
   availableRewards,
 }: ClaimDialogProps) => {
-  const { state, execute } = useAsync(api.claim);
-
-  const doClaim = useCallback(() => {
-    execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
-    });
-  }, [execute]);
+  const [closeDisabled, setCloseDisabled] = useState(false);
 
   return (
-    <ModalDialog title="Claim">
+    <ModalDialog title="Claim" closeDisabled={closeDisabled}>
       {({ close }) => (
-        <>
-          <p className="mb-4">
-            Claim your <Tokens>{availableRewards}</Tokens> rewards
-          </p>
-          {expiringRewards && (
-            <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
-              <InformationCircleIcon className="size-8 flex-none" />
-              <div className="text-sm">
-                Rewards expire one year from the epoch in which they were
-                earned. You have rewards expiring on{" "}
-                {expiringRewards.toLocaleDateString()}.
-              </div>
-            </div>
-          )}
-          {state.type === StateType.Error && (
-            <p className="mt-8 text-red-600">
-              Uh oh, an error occurred! Please try again
-            </p>
-          )}
-          <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-            <Button
-              variant="secondary"
-              className="w-full sm:w-auto"
-              size="noshrink"
-              onPress={close}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              size="noshrink"
-              isLoading={state.type === StateType.Running}
-              onPress={doClaim}
-            >
-              Claim
-            </Button>
-          </div>
-        </>
+        <ClaimDialogContents
+          expiringRewards={expiringRewards}
+          availableRewards={availableRewards}
+          api={api}
+          close={close}
+          setCloseDisabled={setCloseDisabled}
+        />
       )}
     </ModalDialog>
+  );
+};
+
+type ClaimDialogContentsProps = {
+  availableRewards: bigint;
+  expiringRewards: Date | undefined;
+  api: States[ApiStateType.Loaded];
+  close: () => void;
+  setCloseDisabled: (value: boolean) => void;
+};
+
+const ClaimDialogContents = ({
+  api,
+  expiringRewards,
+  availableRewards,
+  close,
+  setCloseDisabled,
+}: ClaimDialogContentsProps) => {
+  const { state, execute } = useAsync(api.claim);
+
+  const toast = useToast();
+
+  const doClaim = useCallback(() => {
+    setCloseDisabled(true);
+    execute()
+      .then(() => {
+        close();
+        toast.success("You have claimed your rewards");
+      })
+      .catch(() => {
+        /* no-op since this is already handled in the UI using `state` and is logged in useAsync */
+      })
+      .finally(() => {
+        setCloseDisabled(false);
+      });
+  }, [execute, toast, close, setCloseDisabled]);
+
+  return (
+    <>
+      <p className="mb-4">
+        Claim your <Tokens>{availableRewards}</Tokens> rewards
+      </p>
+      {expiringRewards && (
+        <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
+          <InformationCircleIcon className="size-8 flex-none" />
+          <div className="text-sm">
+            Rewards expire one year from the epoch in which they were earned.
+            You have rewards expiring on <Date>{expiringRewards}</Date>.
+          </div>
+        </div>
+      )}
+      {state.type === StateType.Error && (
+        <div className="mt-4 max-w-sm">
+          <ErrorMessage error={state.error} />
+        </div>
+      )}
+      <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
+        <Button
+          variant="secondary"
+          className="w-full sm:w-auto"
+          size="noshrink"
+          onPress={close}
+        >
+          Cancel
+        </Button>
+        <Button
+          className="w-full sm:w-auto"
+          size="noshrink"
+          isDisabled={state.type === StateType.Complete}
+          isLoading={state.type === StateType.Running}
+          onPress={doClaim}
+        >
+          Claim
+        </Button>
+      </div>
+    </>
   );
 };
 
@@ -337,16 +536,22 @@ type ClaimButtonProps = Omit<
 const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
   const { state, execute } = useAsync(api.claim);
 
+  const toast = useToast();
+
   const doClaim = useCallback(() => {
-    execute().catch(() => {
-      /* TODO figure out a better UI treatment for when claim fails */
-    });
-  }, [execute]);
+    execute()
+      .then(() => {
+        toast.success("You have claimed your rewards");
+      })
+      .catch((error: unknown) => {
+        toast.error(error);
+      });
+  }, [execute, toast]);
 
   return (
     <Button
       onPress={doClaim}
-      isDisabled={state.type !== StateType.Base}
+      isDisabled={state.type === StateType.Complete}
       isLoading={state.type === StateType.Running}
       {...props}
     >

@@ -52,7 +52,7 @@ export const CopyButton = ({
       onPress={copy}
       isDisabled={isCopied}
       className={clsx(
-        "group -mx-2 -mt-0.5 rounded-md px-2 py-0.5 align-middle transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
+        "group mx-[-0.25em] -mt-0.5 inline-block rounded-md px-[0.25em] py-0.5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
         className,
       )}
       {...(isCopied && { "data-is-copied": true })}
@@ -60,13 +60,13 @@ export const CopyButton = ({
     >
       {(...args) => (
         <>
-          <span className="align-middle">
+          <span>
             {typeof children === "function" ? children(...args) : children}
           </span>
-          <span className="relative ml-[0.25em] inline-block align-middle">
+          <span className="relative top-[0.125em] ml-[0.25em] inline-block">
             <span className="opacity-50 transition-opacity duration-100 group-data-[is-copied]:opacity-0">
               <ClipboardDocumentIcon className="size-[1em]" />
-              <div className="sr-only">Copy code to clipboaord</div>
+              <div className="sr-only">Copy to clipboard</div>
             </span>
             <CheckIcon className="absolute inset-0 text-green-600 opacity-0 transition-opacity duration-100 group-data-[is-copied]:opacity-100" />
           </span>

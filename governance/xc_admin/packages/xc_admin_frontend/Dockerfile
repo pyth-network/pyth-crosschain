@@ -4,7 +4,8 @@ ARG NEXT_PUBLIC_RPC_POOL_TOKEN
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV BUILD_STANDALONE true
 ENV NEXT_PUBLIC_RPC_POOL_TOKEN $NEXT_PUBLIC_RPC_POOL_TOKEN
-RUN pnpm exec lerna run build --scope="@pythnetwork/xc-admin-frontend" --include-dependencies
+ENV CI true
+RUN pnpm turbo build --filter @pythnetwork/xc-admin-frontend
 
 
 # See https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile

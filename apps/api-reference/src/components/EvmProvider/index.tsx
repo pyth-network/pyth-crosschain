@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import * as chains from "viem/chains";
 import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
-import { NETWORK_IDS /*, getRpcUrl */ } from "../../evm-networks";
+import { NETWORK_IDS, getRpcUrl } from "../../evm-networks";
 import { metadata } from "../../metadata";
 
 const CHAINS = NETWORK_IDS.map((id) =>
@@ -18,26 +18,15 @@ const CHAINS = NETWORK_IDS.map((id) =>
 ];
 
 const TRANSPORTS = Object.fromEntries(
-  CHAINS.map((chain) => [chain.id, http()]),
+  CHAINS.map((chain) => {
+    const url = getRpcUrl(chain.id);
+    if (url) {
+      return [chain.id, http(url)];
+    } else {
+      throw new Error(`No rpc url found for ${chain.name}`);
+    }
+  }),
 );
-
-// TODO figure out if we should use the rpc urls from contract-manager, which
-// assume use of ronin & blast and require API keys, or the ones from viem which
-// require no keys.
-//
-// If we should use contract-manager's, uncomment this code and remove the prior
-// implementation of `TRANSPORTS`.
-//
-// const TRANSPORTS = Object.fromEntries(
-//   CHAINS.map((chain) => {
-//     const url = getRpcUrl(chain.id);
-//     if (url) {
-//       return [chain.id, http(url)];
-//     } else {
-//       throw new Error(`No rpc url found for ${chain.name}`);
-//     }
-//   }),
-// );
 
 type EvmProviderProps = {
   children: ReactNode;

@@ -1,0 +1,35 @@
+name: Turbo test
+on:
+  pull_request:
+    paths:
+      - "**.tsx?"
+      - "**.jsx?"
+      - "**.json"
+      - "**.sol"
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/tsconfig.json"
+  push:
+    branches: [main]
+    paths:
+      - "**.tsx?"
+      - "**.jsx?"
+      - "**.json"
+      - "**.sol"
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/tsconfig.json"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "package.json"
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
+      - name: Test
+        run: pnpm turbo test --ui stream

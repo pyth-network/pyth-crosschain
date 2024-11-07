@@ -19,10 +19,9 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint src/",
-    "test": "jest src/ --passWithNoTests",
-    "prepublishOnly": "pnpm run build && pnpm test && pnpm run lint",
-    "preversion": "pnpm run lint",
+    "test:lint": "eslint src/",
+    "prepublishOnly": "pnpm run build && pnpm test:lint",
+    "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },
   "keywords": [

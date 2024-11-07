@@ -15,6 +15,8 @@ import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { Logger } from "pino";
 
+const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
+
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
@@ -31,11 +33,21 @@ export class SolanaPriceListener extends ChainPriceListener {
   // Checking the health of the Solana connection by checking the last block time
   // and ensuring it is not older than 30 seconds.
   private async checkHealth() {
-    const slot = await this.pythSolanaReceiver.connection.getSlot();
+    const slot = await this.pythSolanaReceiver.connection.getSlot("finalized");
     const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
       slot
     );
-    if (blockTime === null || blockTime < Date.now() / 1000 - 30) {
+    if (
+      blockTime === null ||
+      blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
+    ) {
+      if (blockTime !== null) {
+        this.logger.info(
+          `Solana connection is behind by ${
+            Date.now() / 1000 - blockTime
+          } seconds`
+        );
+      }
       throw new Error("Solana connection is unhealthy");
     }
   }

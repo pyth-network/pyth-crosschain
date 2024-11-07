@@ -1,0 +1,38 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["pull:env", "^build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "IP_ALLOWLIST",
+        "GOVERNANCE_ONLY_REGIONS",
+        "WALLETCONNECT_PROJECT_ID",
+        "PROXYCHECK_API_KEY",
+        "MAINNET_RPC",
+        "BLOCKED_REGIONS",
+        "AMPLITUDE_API_KEY",
+        "GOOGLE_ANALYTICS_ID"
+      ]
+    },
+    "pull:env": {
+      "outputs": [".env.local"],
+      "cache": false
+    },
+    "start:dev": {
+      "dependsOn": [
+        "pull:env",
+        "@pythnetwork/hermes-client#build",
+        "@pythnetwork/solana-utils#build"
+      ],
+      "persistent": true,
+      "cache": false
+    },
+    "start:prod": {
+      "dependsOn": ["build"],
+      "persistent": true,
+      "cache": false
+    }
+  }
+}
