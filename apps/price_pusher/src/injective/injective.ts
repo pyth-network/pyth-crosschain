@@ -23,8 +23,8 @@ import { Logger } from "pino";
 import { Account } from "@injectivelabs/sdk-ts/dist/cjs/client/chain/types/auth";
 
 const DEFAULT_GAS_PRICE = 160000000;
-const DEFAULT_GAS_MULTIPLIER = 1.05
-const INJECTIVE_TESTNET_CHAIN_ID = "injective-888"
+const DEFAULT_GAS_MULTIPLIER = 1.05;
+const INJECTIVE_TESTNET_CHAIN_ID = "injective-888";
 
 type PriceQueryResponse = {
   price_feed: {

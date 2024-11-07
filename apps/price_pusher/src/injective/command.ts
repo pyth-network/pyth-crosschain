@@ -106,7 +106,7 @@ export default {
       {
         chainId: getNetworkInfo(network).chainId,
         gasPrice,
-        gasMultiplier
+        gasMultiplier,
       }
     );
 
