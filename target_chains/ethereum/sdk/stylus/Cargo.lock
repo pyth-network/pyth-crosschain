@@ -2693,6 +2693,7 @@ dependencies = [
  "alloy-sol-types",
  "e2e",
  "eyre",
+ "keccak-const",
  "mini-alloc",
  "pyth-stylus",
  "stylus-sdk",
