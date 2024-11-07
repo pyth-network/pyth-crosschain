@@ -34,7 +34,7 @@ To consume prices, use the functions interface. Be sure to read the function doc
 For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed you are interested in:
 
 ```rust
-use pyth_stylus::pyth::functions::get_price_unsafe;
+use pyth_stylus::pyth::functions::get_price_no_older_than;
 
 sol_storage! {
     #[entrypoint]
@@ -48,16 +48,6 @@ sol_storage! {
     }
 }
 
-sol! {
-    error ArraySizeNotMatch();
-    error CallFailed();
-}
-
-#[derive(SolidityError)]
-pub enum MultiCallErrors {
-    ArraySizeNotMatch(ArraySizeNotMatch),
-    CallFailed(CallFailed),
-}
 
 impl FunctionCallsExample {
     pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
