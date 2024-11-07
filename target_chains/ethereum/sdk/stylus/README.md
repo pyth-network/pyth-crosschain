@@ -38,7 +38,7 @@ To consume prices you should use the functions interface. Please make sure to re
 functions to use the prices safely.
 
 For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed
-you're interested in. The price feeds available on each chain are listed [below](#target-chains).
+you're interested in
 
 ```rust
 
@@ -83,7 +83,7 @@ impl FunctionCallsExample {
 
 ```
 
-Another approach is not to  use the call functions but use the Pyth contract, that implment the IPyth functions 
+Another approach is not to  use the call functions but use the Pyth contract, that implement the IPyth functions 
 
 ```rust 
 #![cfg_attr(not(test), no_std, no_main)]
@@ -110,13 +110,7 @@ impl ProxyCallsExample {
 
 ## Mocking Pyth
 
-[MockPyth](./MockPyth.sol) is a mock contract that you can use and deploy locally to mock Pyth contract behaviour. To set and update price feeds you should call `updatePriceFeeds` and provide an array of encoded price feeds (the struct defined in [PythStructs](./PythStructs.sol)) as its argument. You can create encoded price feeds either by using web3.js or ethers ABI utilities or calling `createPriceFeedUpdateData` function in the mock contract.
-
-## Development
-
-### ABIs
-
-When making changes to a contract interface, please make sure to update the ABI files too. You can update it using `npm run generate-abi` and it will update the ABI files in [abis](./abis) directory. If you create a new contract, you also need to add the contract name in [the ABI generation script](./scripts/generateAbi.js#L5) so the script can create the ABI file for the new contract as well.
+[MockPyth](./mock.rs) is a mock contract you can use and deploy locally to mock Pyth contract behavior. To set and update price feeds you should call `updatePriceFeeds` and provide an array of encoded price feeds  as its argument. You can create encoded price feeds either by calling `create_price_feed_update_data` function in the mock contract, That functions also exist in the function file.
 
 ### Releases
 
