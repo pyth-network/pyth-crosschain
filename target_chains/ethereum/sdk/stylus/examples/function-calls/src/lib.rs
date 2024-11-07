@@ -55,18 +55,18 @@ impl FunctionCallsExample {
        Ok(price_result.price)
     }
 
-    pub fn get_ema_price_unsafe(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
-       Ok(())
+    pub fn get_ema_price_unsafe(&mut self) -> Result<i64, Vec<u8>> {
+       let price_result =  get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
+       Ok(price_result.price)
     }
-    pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
-       Ok(())
+    pub fn get_price_no_older_than(&mut self) -> Result<i64, Vec<u8>> {
+       let price_result =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
+       Ok(price_result.price)
     }
 
-    pub fn get_ema_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_ema_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
-       Ok(())
+    pub fn get_ema_price_no_older_than(&mut self) -> Result<i64, Vec<u8>> {
+       let price_result =  get_ema_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
+       Ok(price_result.price)
     }
 
     pub fn get_update_fee(&mut self) -> Result<U256, Vec<u8>> {
@@ -75,9 +75,9 @@ impl FunctionCallsExample {
         Ok(fee)
     }
 
-    pub fn get_valid_time_period(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_valid_time_period(self, self.pyth_address.get())?;
-       Ok(())
+    pub fn get_valid_time_period(&mut self) -> Result<U256, Vec<u8>> {
+       let time =  get_valid_time_period(self, self.pyth_address.get())?;
+       Ok(time)
     }
 
     #[payable]
