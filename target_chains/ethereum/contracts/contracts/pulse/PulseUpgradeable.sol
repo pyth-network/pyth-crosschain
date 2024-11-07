@@ -23,6 +23,7 @@ contract PulseUpgradeable is
         address admin,
         uint128 pythFeeInWei,
         address defaultProvider,
+        address pythAddress,
         bool prefillRequestStorage
     ) public initializer {
         require(owner != address(0), "owner is zero address");
@@ -34,6 +35,7 @@ contract PulseUpgradeable is
             admin,
             pythFeeInWei,
             defaultProvider,
+            pythAddress,
             prefillRequestStorage
         );
 

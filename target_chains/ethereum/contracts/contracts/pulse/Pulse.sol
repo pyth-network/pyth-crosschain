@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "./IPulse.sol";
 import "./PulseState.sol";
 import "./PulseErrors.sol";
@@ -12,6 +13,7 @@ abstract contract Pulse is IPulse, PulseState {
         address admin,
         uint128 pythFeeInWei,
         address defaultProvider,
+        address pythAddress,
         bool prefillRequestStorage
     ) internal {
         require(admin != address(0), "admin is zero address");
@@ -19,11 +21,13 @@ abstract contract Pulse is IPulse, PulseState {
             defaultProvider != address(0),
             "defaultProvider is zero address"
         );
+        require(pythAddress != address(0), "pyth is zero address");
 
         _state.admin = admin;
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
         _state.defaultProvider = defaultProvider;
+        _state.pyth = pythAddress;
 
         if (prefillRequestStorage) {
             // Write some data to every storage slot in the requests array such that new requests
@@ -40,10 +44,15 @@ abstract contract Pulse is IPulse, PulseState {
         }
     }
 
-    function register(uint128 feeInWei, bytes calldata uri) public override {
+    function register(
+        uint128 feeInWei,
+        uint128 feePerGas,
+        bytes calldata uri
+    ) public override {
         ProviderInfo storage providerInfo = _state.providers[msg.sender];
 
         providerInfo.feeInWei = feeInWei;
+        providerInfo.feePerGas = feePerGas;
         providerInfo.uri = uri;
         providerInfo.sequenceNumber += 1;
 
@@ -115,7 +124,7 @@ abstract contract Pulse is IPulse, PulseState {
         requestSequenceNumber = providerInfo.sequenceNumber++;
 
         // Verify fee payment
-        uint128 requiredFee = getFee(provider);
+        uint128 requiredFee = getFee(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert InsufficientFee();
 
         // Store request for callback execution
@@ -137,13 +146,28 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function executeCallback(
+        address provider,
         uint64 sequenceNumber,
-        uint256 publishTime,
         bytes32[] calldata priceIds,
         bytes[] calldata updateData,
         uint256 callbackGasLimit
-    ) external override {
-        Request storage req = findActiveRequest(msg.sender, sequenceNumber);
+    ) external payable override {
+        Request storage req = findActiveRequest(provider, sequenceNumber);
+
+        require(
+            gasleft() >= req.callbackGasLimit,
+            "Insufficient gas for callback"
+        );
+
+        PythStructs.PriceFeed[] memory priceFeeds = IPyth(_state.pyth)
+            .parsePriceFeedUpdates(
+                updateData,
+                priceIds,
+                SafeCast.toUint64(req.publishTime),
+                SafeCast.toUint64(req.publishTime)
+            );
+
+        uint256 publishTime = priceFeeds[0].price.publishTime;
 
         // Verify request parameters match
         require(req.publishTime == publishTime, "Invalid publish time");
@@ -153,14 +177,12 @@ abstract contract Pulse is IPulse, PulseState {
             "Invalid price IDs"
         );
         require(
-            keccak256(abi.encode(req.updateData)) ==
-                keccak256(abi.encode(updateData)),
-            "Invalid update data"
-        );
-        require(
             req.callbackGasLimit == callbackGasLimit,
             "Invalid callback gas limit"
         );
+
+        // Update price feeds before executing callback
+        IPyth(_state.pyth).updatePriceFeeds{value: msg.value}(updateData);
 
         // Execute callback but don't revert if it fails
         try
@@ -227,9 +249,14 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function getFee(
-        address provider
+        address provider,
+        uint256 callbackGasLimit
     ) public view override returns (uint128 feeAmount) {
-        return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+        ProviderInfo storage providerInfo = _state.providers[provider];
+        feeAmount =
+            providerInfo.feeInWei +
+            (providerInfo.feePerGas * uint128(callbackGasLimit)) +
+            _state.pythFeeInWei;
     }
 
     function getPythFeeInWei()
@@ -384,7 +411,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
     }
 
-    // Returns true if a request is active, i.e., its corresponding random value has not yet been revealed.
+    // Returns true if a request is active, i.e., its corresponding price update has not yet been executed.
     function isActive(Request storage req) internal view returns (bool) {
         // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
         // a price update request with sequence number 0.

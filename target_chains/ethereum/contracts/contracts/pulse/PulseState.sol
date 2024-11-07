@@ -11,7 +11,6 @@ contract PulseState {
         uint64 sequenceNumber;
         uint256 publishTime;
         bytes32[] priceIds;
-        bytes[] updateData;
         uint256 callbackGasLimit;
         address requester;
     }
@@ -23,6 +22,7 @@ contract PulseState {
         bytes uri;
         address feeManager;
         uint32 maxNumPrices;
+        uint128 feePerGas;
     }
 
     struct State {
@@ -30,6 +30,7 @@ contract PulseState {
         uint128 pythFeeInWei;
         uint128 accruedPythFeesInWei;
         address defaultProvider;
+        address pyth;
         Request[32] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
