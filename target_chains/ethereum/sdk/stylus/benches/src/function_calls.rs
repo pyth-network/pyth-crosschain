@@ -14,14 +14,14 @@ use crate::{ report::{ContractReport, FunctionReport}, CacheOpt};
 sol!(
     #[sol(rpc)]
     contract FunctionCall{
-        function getPriceUnsafe() external  returns (int64 price);
-        function getEmaPriceUnsafe() external ;
-        function getPriceNoOlderThan() external ;
-        function getEmaPriceNoOlderThan() external;
-        function getUpdateFee() external;
-        function getValidTimePeriod() external;
+        function getPriceUnsafe() external returns (int64 price);
+        function getEmaPriceUnsafe() external returns (int64 price);
+        function getPriceNoOlderThan() external returns (int64 price);
+        function getEmaPriceNoOlderThan() external returns (int64 price);
+        function getUpdateFee() external returns (uint256 fee);
+        function getValidTimePeriod() external returns (uint256 period);
         function updatePriceFeeds() external payable;
-        function updatePriceFeedsIfNecessary() external payable;
+        function updatePriceFeedsIfNecessary() external payable;  
     }
 );
 

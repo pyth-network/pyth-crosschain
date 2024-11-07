@@ -60,7 +60,7 @@ pub async fn run_with(
     let time_frame = uint!(10000_U256);
     let age  = uint!(10000_U256);
 
-    let (data, ids)  = create_price_feed_update_data_list();
+    let (data, _ids)  = create_price_feed_update_data_list();
 
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
