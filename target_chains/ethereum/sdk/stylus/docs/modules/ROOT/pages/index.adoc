@@ -1,7 +1,0 @@
-:stylus: https://docs.arbitrum.io/stylus/stylus-gentle-introduction[Stylus]
-
-= Contracts for Stylus
-
-*A library for secure smart contract development* written in Rust for {stylus}.
-
-NOTE: You can track our roadmap in our https://github.com/orgs/OpenZeppelin/projects/35[Github Project].

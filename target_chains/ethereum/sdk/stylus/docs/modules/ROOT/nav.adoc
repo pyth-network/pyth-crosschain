@@ -1,4 +1,0 @@
-* xref:index.adoc[Overview]
-* xref:deploy.adoc[Deploying Contracts]
-
-*** xref:erc20.adoc#erc20-token-extensions[Extensions]
