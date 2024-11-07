@@ -1,7 +1,3 @@
-Here's a refined version of the documentation for clarity, consistency, and accuracy:
-
----
-
 # Pyth Stylus SDK
 
 This package provides utilities for consuming prices from the [Pyth Network](https://pyth.network/) Oracle in Solidity. It also includes the [Pyth Interface ABI](./abis/IPyth.json), which can be used in your libraries to interact with the Pyth contract.
