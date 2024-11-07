@@ -30,6 +30,10 @@ export default {
       description: "Gas price to be used for each transasction",
       type: "number",
     } as Options,
+    "gas-multiplier": {
+      description: "Gas multiplier to be used for each transasction",
+      type: "number",
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -44,6 +48,7 @@ export default {
     // FIXME: type checks for this
     const {
       gasPrice,
+      gasMultiplier,
       grpcEndpoint,
       priceConfigFile,
       priceServiceEndpoint,
@@ -101,6 +106,7 @@ export default {
       {
         chainId: getNetworkInfo(network).chainId,
         gasPrice,
+        gasMultiplier
       }
     );
 
