@@ -1,31 +1,30 @@
+Here's a refined version of the documentation for clarity, consistency, and accuracy:
+
+---
+
 # Pyth Stylus SDK
 
-This package provides utilities for consuming prices from the [Pyth Network](https://pyth.network/) Oracle using Solidity. Also, it contains [the Pyth Interface ABI](./abis/IPyth.json) that you can use in your libraries
-to communicate with the Pyth contract.
+This package provides utilities for consuming prices from the [Pyth Network](https://pyth.network/) Oracle in Solidity. It also includes the [Pyth Interface ABI](./abis/IPyth.json), which can be used in your libraries to interact with the Pyth contract.
 
-It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices) when consuming Pyth data.
-
+It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices) when consuming data from Pyth.
 
 ## Features
 
-- Pyth  smart contracts use external calls  [`pyth-solidty-contracts`] library.
-- First-class `no_std` support.
-- Solidity constructors powered by [`koba`].
-- [Unit] and [integration] test affordances are used in our tests.
-  
+- Integrates with the [`pyth-solidity-contracts`] library for external calls to Pyth smart contracts.
+- Provides first-class `no_std` support.
+- Includes Solidity constructors powered by [`koba`].
+- Supports both [unit] and [integration] test affordances for thorough testing.
 
 ## Installation
 
-You can import Stylus  Contracts from crates.io by adding the following
-line to your `Cargo.toml` (We recommend pinning to a specific version):
+To add the Stylus Contracts from crates.io, add the following line to your `Cargo.toml` (pinning to a specific version is recommended):
 
 ```toml
 [dependencies]
 pyth-stylus = "0.0.1"
 ```
 
-Optionally, you can specify a git dependency if you want to have the latest
-changes from the `main` branch:
+For the latest changes from the `main` branch, you can also specify a git dependency:
 
 ```toml
 [dependencies]
@@ -34,15 +33,12 @@ pyth-stylus = { git = "URL" }
 
 ## Example Usage
 
-To consume prices you should use the functions interface. Please make sure to read the documentation of this
-functions to use the prices safely.
+To consume prices, use the functions interface. Be sure to read the function documentation to ensure safe use of price data.
 
-For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed
-you're interested in
+For example, to read the latest price, call [`getPriceNoOlderThan`](IPyth.sol) with the Price ID of the price feed you are interested in:
 
 ```rust
-
-use pyth_stylus::pyth::{functions::{ get_price_unsafe}};
+use pyth_stylus::pyth::functions::get_price_unsafe;
 
 sol_storage! {
     #[entrypoint]
@@ -57,41 +53,32 @@ sol_storage! {
 }
 
 sol! {
-
     error ArraySizeNotMatch();
-
     error CallFailed();
-
 }
 
 #[derive(SolidityError)]
 pub enum MultiCallErrors {
-
     ArraySizeNotMatch(ArraySizeNotMatch),
-
     CallFailed(CallFailed),
-
 }
-
 
 impl FunctionCallsExample {
     pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ =  get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
+       let _ = get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
        Ok(())
     }
 }
-
 ```
 
-Another approach is not to  use the call functions but use the Pyth contract, that implement the IPyth functions 
+Alternatively, you can interact directly with the Pyth contract, which implements the IPyth functions, instead of using call functions:
 
-```rust 
+```rust
 #![cfg_attr(not(test), no_std, no_main)]
 extern crate alloc;
 
-use stylus_sdk::prelude::{entrypoint,public, sol_storage,};
+use stylus_sdk::prelude::{entrypoint, public, sol_storage};
 use pyth_stylus::pyth::pyth_contract::PythContract;
-
 
 sol_storage! {
     #[entrypoint]
@@ -105,16 +92,15 @@ sol_storage! {
 #[inherit(PythContract)]
 impl ProxyCallsExample {
 }
-
 ```
 
 ## Mocking Pyth
 
-[MockPyth](./mock.rs) is a mock contract you can use and deploy locally to mock Pyth contract behavior. To set and update price feeds you should call `updatePriceFeeds` and provide an array of encoded price feeds  as its argument. You can create encoded price feeds by calling `create_price_feed_update_data` function in the mock contract, That functions also exist in the function file.
+[MockPyth](./mock.rs) is a mock contract that can be deployed locally to simulate Pyth contract behavior. To set and update price feeds, call `updatePriceFeeds` and provide an array of encoded price feeds as the argument. Encoded price feeds can be created using the `create_price_feed_update_data` function in the mock contract, which is also available in the functions module.
 
 ### Releases
 
-We use [Semantic Versioning](https://semver.org/) for our releases. In order to release a new version of this package and publish it to npm, follow these steps:
+We use [Semantic Versioning](https://semver.org/) for our releases. To release a new version of this package and publish it to npm, follow these steps:
 
-1. Run `npm version <new version number> --no-git-tag-version`. This command will update the version of the package. Then push your changes to github.
-2. Once your change is merged into `main`, create a release with tag `v<new version number>` like `v1.5.2`, and a github action will automatically publish the new version of this package to npm.
+1. Run `npm version <new version number> --no-git-tag-version` to update the package version, then push your changes to GitHub.
+2. Once the change is merged into `main`, create a release with the tag `v<new version number>`, such as `v1.5.2`. A GitHub action will automatically publish the new version of the package to npm.
