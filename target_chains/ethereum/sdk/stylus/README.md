@@ -110,7 +110,7 @@ impl ProxyCallsExample {
 
 ## Mocking Pyth
 
-[MockPyth](./mock.rs) is a mock contract you can use and deploy locally to mock Pyth contract behavior. To set and update price feeds you should call `updatePriceFeeds` and provide an array of encoded price feeds  as its argument. You can create encoded price feeds either by calling `create_price_feed_update_data` function in the mock contract, That functions also exist in the function file.
+[MockPyth](./mock.rs) is a mock contract you can use and deploy locally to mock Pyth contract behavior. To set and update price feeds you should call `updatePriceFeeds` and provide an array of encoded price feeds  as its argument. You can create encoded price feeds by calling `create_price_feed_update_data` function in the mock contract, That functions also exist in the function file.
 
 ### Releases
 
