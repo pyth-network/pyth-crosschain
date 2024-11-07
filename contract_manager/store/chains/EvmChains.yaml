@@ -652,8 +652,8 @@
   type: EvmChain
 - id: tabi_testnet
   mainnet: false
-  rpcUrl: https://rpc-internal.testnet.tabichain.com
-  networkId: 9789
+  rpcUrl: https://rpc.testnetv2.tabichain.com
+  networkId: 9788
   type: EvmChain
 - id: b3_testnet
   mainnet: false
@@ -774,4 +774,9 @@
   mainnet: false
   rpcUrl: https://rpc-sepolia-superseed-826s35710w.t.conduit.xyz/{SUPERSEED_API_KEY}
   networkId: 53302
+  type: EvmChain
+- id: hemi_mainnet
+  mainnet: true
+  rpcUrl: https://7e57304f.rpc.hemi.network/rpc
+  networkId: 43111
   type: EvmChain

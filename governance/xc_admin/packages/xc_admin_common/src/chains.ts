@@ -92,6 +92,7 @@ export const RECEIVER_CHAINS = {
   morph: 60065,
   superseed_mainnet: 60066,
   fuel_mainnet: 60067, // Note: Currently deployed at 50084 (fuel_testnet) but we should use 60067 for future deployments
+  hemi_mainnet: 60068,
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
