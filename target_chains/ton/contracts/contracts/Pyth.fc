@@ -6,6 +6,7 @@
 #include "common/merkle_tree.fc";
 #include "common/governance_actions.fc";
 #include "common/gas.fc";
+#include "common/op.fc";
 #include "./Wormhole.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
@@ -156,7 +157,20 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     return payload~load_uint(160);  ;; Return root_digest
 }
 
-tuple parse_price_feeds_from_data(slice data) {
+() calculate_and_validate_fees(int msg_value, int num_updates) impure {
+    int update_fee = single_update_fee * num_updates;
+    int compute_fee = get_compute_fee(
+        WORKCHAIN,
+        UPDATE_PRICE_FEEDS_BASE_GAS + (UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * num_updates)
+    );
+    throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
+    int remaining_msg_value = msg_value - compute_fee;
+
+    ;; Check if the sender has sent enough TON to cover the update_fee
+    throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
+}
+
+tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, int min_publish_time, int max_publish_time, int unique) {
     slice cs = read_and_verify_header(data);
 
     int wormhole_proof_size_bytes = cs~load_uint(16);
@@ -164,6 +178,8 @@ tuple parse_price_feeds_from_data(slice data) {
     cs = new_cs;
 
     int num_updates = cs~load_uint(8);
+
+    calculate_and_validate_fees(msg_value, num_updates);
 
     (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
 
@@ -186,19 +202,27 @@ tuple parse_price_feeds_from_data(slice data) {
     tuple price_feeds = empty_tuple();
 
     repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
+        int should_include = (price_ids.tlen() == 0)
+            | ((price_ids.tlen() > 0)
+            & (publish_time >= min_publish_time)
+            & (publish_time <= max_publish_time)
+            & ((unique == 0) | (min_publish_time > prev_publish_time)));
 
-        ;; Create price feed cell containing both current and EMA prices
-        cell price_feed_cell = begin_cell()
-            .store_ref(store_price(price, conf, expo, publish_time))
-            .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
-        .end_cell();
+        if (should_include) {
+            ;; Create price feed cell containing both current and EMA prices
+            cell price_feed_cell = begin_cell()
+                .store_ref(store_price(price, conf, expo, publish_time))
+                .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
+            .end_cell();
 
-        tuple price_feed = empty_tuple();
-        price_feed~tpush(price_id);
-        price_feed~tpush(price_feed_cell);
-        price_feeds~tpush(price_feed);
+            tuple price_feed = empty_tuple();
+            price_feed~tpush(price_id);
+            price_feed~tpush(price_feed_cell);
+            price_feeds~tpush(price_feed);
+        }
+
     }
 
     throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
@@ -206,27 +230,108 @@ tuple parse_price_feeds_from_data(slice data) {
     return price_feeds;
 }
 
-;; Returns a tuple of price feeds (max 255 due to TON limitations of tuple size)
-tuple parse_price_feed_updates(slice data) method_id {
+;; Creates a chain of cells from price feeds, with each cell containing exactly one price_id (256 bits)
+;; and one ref to the price feed cell. Returns the head of the chain.
+;; Each cell now contains exactly:
+;; - One price_id (256 bits)
+;; - One ref to price_feed_cell
+;; - One optional ref to next cell in chain
+;; This approach is:
+;; - More consistent with TON's cell model
+;; - Easier to traverse and read individual price feeds
+;; - Cleaner separation of data
+;; - More predictable in terms of cell structure
+cell create_price_feed_cell_chain(tuple price_feeds) {
+    cell result = null();
+
+    int i = price_feeds.tlen() - 1;
+    while (i >= 0) {
+        tuple price_feed = price_feeds.at(i);
+        int price_id = price_feed.at(0);
+        cell price_feed_cell = price_feed.at(1);
+
+        ;; Create new cell with single price feed and chain to previous result
+        builder current_builder = begin_cell()
+            .store_uint(price_id, 256)    ;; Store price_id
+            .store_ref(price_feed_cell);   ;; Store price data ref
+
+        ;; Chain to previous cells if they exist
+        if (~ cell_null?(result)) {
+            current_builder = current_builder.store_ref(result);
+        }
+
+        result = current_builder.end_cell();
+        i -= 1;
+    }
+
+    return result;
+}
+
+() send_price_feeds_response(tuple price_feeds, int msg_value, int op, slice sender_address) impure {
+    ;; Build response cell with price feeds
+    builder response = begin_cell()
+        .store_uint(op, 32)  ;; Response op
+        .store_uint(price_feeds.tlen(), 8);  ;; Number of price feeds
+
+    ;; Create and store price feed cell chain
+    cell price_feeds_cell = create_price_feed_cell_chain(price_feeds);
+    response = response.store_ref(price_feeds_cell);
+
+    ;; Calculate remaining value after fees
+    int compute_fee = get_compute_fee(
+        WORKCHAIN,
+        UPDATE_PRICE_FEEDS_BASE_GAS + (UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * price_feeds.tlen())
+    );
+    int update_fee = single_update_fee * price_feeds.tlen();
+    int excess = msg_value - compute_fee - update_fee;
+
+    ;; Send response message back to sender with exact excess amount
+    send_raw_message(begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(sender_address)
+        .store_coins(excess)
+        .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .store_ref(response.end_cell())
+        .end_cell(),
+        0);
+}
+
+() parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address) impure {
     load_data();
-    tuple price_feeds = parse_price_feeds_from_data(data);
-    return price_feeds;
+
+    ;; Load price_ids tuple
+    int price_ids_len = price_ids_slice~load_uint(8);
+    tuple price_ids = empty_tuple();
+    repeat(price_ids_len) {
+        int price_id = price_ids_slice~load_uint(256);
+        price_ids~tpush(price_id);
+    }
+
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
+    throw_if(ERROR_NO_PRICE_FEEDS_FOUND, price_feeds.tlen() == 0);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address);
+}
+
+() parse_unique_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int publish_time, int max_staleness, slice sender_address) impure {
+    load_data();
+
+    ;; Load price_ids tuple
+    int price_ids_len = price_ids_slice~load_uint(8);
+    tuple price_ids = empty_tuple();
+    repeat(price_ids_len) {
+        int price_id = price_ids_slice~load_uint(256);
+        price_ids~tpush(price_id);
+    }
+
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, publish_time, publish_time + max_staleness, true);
+    throw_if(ERROR_NO_PRICE_FEEDS_FOUND, price_feeds.tlen() == 0);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address);
 }
 
 () update_price_feeds(int msg_value, slice data) impure {
     load_data();
-    tuple price_feeds = parse_price_feeds_from_data(data);
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, data, empty_tuple(), 0, 0, false);
     int num_updates = price_feeds.tlen();
-    int update_fee = single_update_fee * num_updates;
-    int compute_fee = get_compute_fee(
-        WORKCHAIN,
-        UPDATE_PRICE_FEEDS_BASE_GAS + (UPDATE_PRICE_FEEDS_PER_UPDATE_GAS * num_updates)
-    );
-    throw_unless(ERROR_INSUFFICIENT_GAS, msg_value >= compute_fee);
-    int remaining_msg_value = msg_value - compute_fee;
-
-    ;; Check if the sender has sent enough TON to cover the update_fee
-    throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
 
     int i = 0;
     while(i < num_updates) {

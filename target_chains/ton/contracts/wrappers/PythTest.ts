@@ -197,47 +197,79 @@ export class PythTest extends BaseWrapper {
     return parseDataSources(result.stack.readCell());
   }
 
-  async getParsePriceFeedUpdates(provider: ContractProvider, vm: Buffer) {
-    const result = await provider.get("test_parse_price_feed_updates", [
-      { type: "slice", cell: createCellChain(vm) },
-    ]);
-    const tuple = result.stack.readTuple();
-    const prices = [];
+  private createPriceFeedMessage(
+    op: number,
+    updateData: Buffer,
+    priceIds: HexString[],
+    time1: number,
+    time2: number
+  ): Cell {
+    // Create a buffer for price IDs: 1 byte length + (32 bytes per ID)
+    const priceIdsBuffer = Buffer.alloc(1 + priceIds.length * 32);
+    priceIdsBuffer.writeUint8(priceIds.length, 0);
 
-    // Get tuple length and iterate
-    const size = tuple.remaining;
-    for (let i = 0; i < size; i++) {
-      const item = tuple.readTuple();
-      const priceId =
-        "0x" + item.readBigNumber().toString(16).padStart(64, "0");
-      const priceFeedCell = item.readCell();
-      const priceFeedCellSlice = priceFeedCell.beginParse();
+    // Write each price ID as a 32-byte value
+    priceIds.forEach((id, index) => {
+      // Remove '0x' prefix if present and pad to 64 hex chars (32 bytes)
+      const hexId = id.replace("0x", "").padStart(64, "0");
+      Buffer.from(hexId, "hex").copy(priceIdsBuffer, 1 + index * 32);
+    });
 
-      const priceSlice = priceFeedCellSlice.loadRef().beginParse();
-      const price = priceSlice.loadInt(64);
-      const conf = priceSlice.loadUint(64);
-      const expo = priceSlice.loadInt(32);
-      const publishTime = priceSlice.loadUint(64);
+    return beginCell()
+      .storeUint(op, 32)
+      .storeRef(createCellChain(updateData))
+      .storeRef(createCellChain(priceIdsBuffer))
+      .storeUint(time1, 64)
+      .storeUint(time2, 64)
+      .endCell();
+  }
 
-      const emaPriceSlice = priceFeedCellSlice.loadRef().beginParse();
-      const emaPrice = emaPriceSlice.loadInt(64);
-      const emaConf = emaPriceSlice.loadUint(64);
-      const emaExpo = emaPriceSlice.loadInt(32);
-      const emaPublishTime = emaPriceSlice.loadUint(64);
+  async sendParsePriceFeedUpdates(
+    provider: ContractProvider,
+    via: Sender,
+    updateData: Buffer,
+    updateFee: bigint,
+    priceIds: HexString[],
+    minPublishTime: number,
+    maxPublishTime: number
+  ) {
+    const messageCell = this.createPriceFeedMessage(
+      5, // OP_PARSE_PRICE_FEED_UPDATES
+      updateData,
+      priceIds,
+      minPublishTime,
+      maxPublishTime
+    );
 
-      prices.push({
-        priceId,
-        price: { price, conf, expo, publishTime },
-        emaPrice: {
-          price: emaPrice,
-          conf: emaConf,
-          expo: emaExpo,
-          publishTime: emaPublishTime,
-        },
-      });
-    }
+    await provider.internal(via, {
+      value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageCell,
+    });
+  }
 
-    return prices;
+  async sendParseUniquePriceFeedUpdates(
+    provider: ContractProvider,
+    via: Sender,
+    updateData: Buffer,
+    updateFee: bigint,
+    priceIds: HexString[],
+    publishTime: number,
+    maxStaleness: number
+  ) {
+    const messageCell = this.createPriceFeedMessage(
+      6, // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+      updateData,
+      priceIds,
+      publishTime,
+      maxStaleness
+    );
+
+    await provider.internal(via, {
+      value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageCell,
+    });
   }
 
   async getNewFunction(provider: ContractProvider) {
