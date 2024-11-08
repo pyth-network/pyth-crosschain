@@ -1,13 +1,7 @@
 use {
     crate::{
-        instructions::{
-            UpdatePrice,
-            UpdatePriceParams,
-        },
-        message::{
-            price::DummyPriceMessage,
-            AccumulatorSerializer,
-        },
+        instructions::{UpdatePrice, UpdatePriceParams},
+        message::{price::DummyPriceMessage, AccumulatorSerializer},
     },
     anchor_lang::prelude::*,
 };
@@ -31,7 +25,6 @@ pub fn cpi_max_test<'info>(
 
     let input_len = inputs.iter().map(|x| x.len()).sum::<usize>();
     msg!("input_len: {}", input_len);
-
 
     UpdatePrice::emit_messages(ctx, inputs)
 }

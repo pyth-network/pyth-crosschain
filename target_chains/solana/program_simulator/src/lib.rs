@@ -2,41 +2,27 @@ use {
     borsh::BorshDeserialize,
     solana_program::{
         hash::Hash,
-        instruction::{
-            Instruction,
-            InstructionError,
-        },
+        instruction::{Instruction, InstructionError},
         native_token::LAMPORTS_PER_SOL,
         program_error::ProgramError,
         pubkey::Pubkey,
         system_instruction,
     },
-    solana_program_test::{
-        BanksClient,
-        BanksClientError,
-        ProgramTest,
-        ProgramTestBanksClientExt,
-    },
+    solana_program_test::{BanksClient, BanksClientError, ProgramTest, ProgramTestBanksClientExt},
     solana_sdk::{
         clock::Clock,
         compute_budget,
-        signature::{
-            Keypair,
-            Signer,
-        },
-        transaction::{
-            Transaction,
-            TransactionError,
-        },
+        signature::{Keypair, Signer},
+        transaction::{Transaction, TransactionError},
     },
 };
 
 pub struct ProgramSimulator {
-    banks_client:    BanksClient,
+    banks_client: BanksClient,
     /// Hash used to submit the last transaction. The hash must be advanced for each new
     /// transaction; otherwise, replayed transactions in different states can return stale
     /// results.
-    last_blockhash:  Hash,
+    last_blockhash: Hash,
     genesis_keypair: Keypair,
 }
 

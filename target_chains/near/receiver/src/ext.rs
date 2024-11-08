@@ -4,16 +4,9 @@
 use {
     crate::{
         error::Error,
-        state::{
-            Price,
-            PriceIdentifier,
-            Source,
-        },
+        state::{Price, PriceIdentifier, Source},
     },
-    near_sdk::{
-        ext_contract,
-        json_types::U128,
-    },
+    near_sdk::{ext_contract, json_types::U128},
     std::collections::HashMap,
 };
 

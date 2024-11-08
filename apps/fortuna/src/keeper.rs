@@ -1,78 +1,39 @@
 use {
     crate::{
-        api::{
-            self,
-            BlockchainState,
-            ChainId,
-        },
+        api::{self, BlockchainState, ChainId},
         chain::{
             eth_gas_oracle::eip1559_default_estimator,
             ethereum::{
-                InstrumentedPythContract,
-                InstrumentedSignablePythContract,
-                PythContractCall,
+                InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
             },
-            reader::{
-                BlockNumber,
-                RequestedWithCallbackEvent,
-            },
-            traced_client::{
-                RpcMetrics,
-                TracedClient,
-            },
+            reader::{BlockNumber, RequestedWithCallbackEvent},
+            traced_client::{RpcMetrics, TracedClient},
         },
         config::EthereumConfig,
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethers::{
-        providers::{
-            Middleware,
-            Provider,
-            Ws,
-        },
+        providers::{Middleware, Provider, Ws},
         signers::Signer,
-        types::{
-            Address,
-            U256,
-        },
+        types::{Address, U256},
     },
     futures::StreamExt,
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            counter::Counter,
-            family::Family,
-            gauge::Gauge,
-        },
+        metrics::{counter::Counter, family::Family, gauge::Gauge},
         registry::Registry,
     },
     std::{
         collections::HashSet,
-        sync::{
-            atomic::AtomicU64,
-            Arc,
-        },
+        sync::{atomic::AtomicU64, Arc},
     },
     tokio::{
         spawn,
-        sync::{
-            mpsc,
-            RwLock,
-        },
-        time::{
-            self,
-            timeout,
-            Duration,
-        },
+        sync::{mpsc, RwLock},
+        time::{self, timeout, Duration},
     },
-    tracing::{
-        self,
-        Instrument,
-    },
+    tracing::{self, Instrument},
 };
 
 /// How much to wait before retrying in case of an RPC error
@@ -99,21 +60,21 @@ const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct AccountLabel {
     pub chain_id: String,
-    pub address:  String,
+    pub address: String,
 }
 
 #[derive(Default)]
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
-    pub end_sequence_number:     Family<AccountLabel, Gauge>,
-    pub balance:                 Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub collected_fee:           Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub current_fee:             Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub total_gas_spent:         Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub requests:                Family<AccountLabel, Counter>,
-    pub requests_processed:      Family<AccountLabel, Counter>,
-    pub requests_reprocessed:    Family<AccountLabel, Counter>,
-    pub reveals:                 Family<AccountLabel, Counter>,
+    pub end_sequence_number: Family<AccountLabel, Gauge>,
+    pub balance: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub collected_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub current_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub total_gas_spent: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub requests: Family<AccountLabel, Counter>,
+    pub requests_processed: Family<AccountLabel, Counter>,
+    pub requests_reprocessed: Family<AccountLabel, Counter>,
+    pub reveals: Family<AccountLabel, Counter>,
 }
 
 impl KeeperMetrics {
@@ -188,7 +149,7 @@ impl KeeperMetrics {
 #[derive(Debug)]
 pub struct BlockRange {
     pub from: BlockNumber,
-    pub to:   BlockNumber,
+    pub to: BlockNumber,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -258,7 +219,7 @@ pub async fn run_keeper_threads(
         process_backlog(
             BlockRange {
                 from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
-                to:   latest_safe_block,
+                to: latest_safe_block,
             },
             contract.clone(),
             gas_limit,
@@ -322,7 +283,6 @@ pub async fn run_keeper_threads(
 
     spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
-
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
         async move {
@@ -372,7 +332,6 @@ pub async fn run_keeper_threads(
     );
 }
 
-
 /// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
 #[tracing::instrument(name = "process_event_with_backoff", skip_all, fields(
     sequence_number = event.sequence_number
@@ -388,7 +347,7 @@ pub async fn process_event_with_backoff(
         .requests
         .get_or_create(&AccountLabel {
             chain_id: chain_state.id.clone(),
-            address:  chain_state.provider_address.to_string(),
+            address: chain_state.provider_address.to_string(),
         })
         .inc();
     tracing::info!("Started processing event");
@@ -416,11 +375,10 @@ pub async fn process_event_with_backoff(
         .requests_processed
         .get_or_create(&AccountLabel {
             chain_id: chain_state.id.clone(),
-            address:  chain_state.provider_address.to_string(),
+            address: chain_state.provider_address.to_string(),
         })
         .inc();
 }
-
 
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 
@@ -462,7 +420,6 @@ pub async fn process_event(
         // incur a few additional RPC calls, but it is fine.
         backoff::Error::transient(anyhow!("Error estimating gas for reveal: {:?}", e))
     })?;
-
 
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
@@ -557,7 +514,7 @@ pub async fn process_event(
             .total_gas_spent
             .get_or_create(&AccountLabel {
                 chain_id: chain_config.id.clone(),
-                address:  client
+                address: client
                     .inner()
                     .inner()
                     .inner()
@@ -572,13 +529,12 @@ pub async fn process_event(
         .reveals
         .get_or_create(&AccountLabel {
             chain_id: chain_config.id.clone(),
-            address:  chain_config.provider_address.to_string(),
+            address: chain_config.provider_address.to_string(),
         })
         .inc();
 
     Ok(())
 }
-
 
 /// Process a range of blocks in batches. It calls the `process_single_block_batch` method for each batch.
 #[tracing::instrument(skip_all, fields(
@@ -607,7 +563,7 @@ pub async fn process_block_range(
         process_single_block_batch(
             BlockRange {
                 from: current_block,
-                to:   to_block,
+                to: to_block,
             },
             contract.clone(),
             gas_limit,
@@ -849,7 +805,6 @@ pub async fn process_backlog(
     tracing::info!("Backlog processed");
 }
 
-
 /// tracks the balance of the given address on the given chain
 /// if there was an error, the function will just return
 #[tracing::instrument(skip_all)]
@@ -876,7 +831,7 @@ pub async fn track_balance(
         .balance
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
-            address:  address.to_string(),
+            address: address.to_string(),
         })
         .set(balance);
 }
@@ -910,7 +865,7 @@ pub async fn track_provider(
         .collected_fee
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
-            address:  provider_address.to_string(),
+            address: provider_address.to_string(),
         })
         .set(collected_fee);
 
@@ -918,7 +873,7 @@ pub async fn track_provider(
         .current_fee
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
-            address:  provider_address.to_string(),
+            address: provider_address.to_string(),
         })
         .set(current_fee);
 
@@ -926,7 +881,7 @@ pub async fn track_provider(
         .current_sequence_number
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
-            address:  provider_address.to_string(),
+            address: provider_address.to_string(),
         })
         // sequence_number type on chain is u64 but practically it will take
         // a long time for it to cross the limits of i64.
@@ -936,7 +891,7 @@ pub async fn track_provider(
         .end_sequence_number
         .get_or_create(&AccountLabel {
             chain_id: chain_id.clone(),
-            address:  provider_address.to_string(),
+            address: provider_address.to_string(),
         })
         .set(end_sequence_number as i64);
 }
@@ -1081,7 +1036,6 @@ pub async fn update_commitments_loop(
         time::sleep(UPDATE_COMMITMENTS_INTERVAL).await;
     }
 }
-
 
 pub async fn update_commitments_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
@@ -1230,7 +1184,6 @@ pub async fn adjust_fee_if_necessary(
             *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
         }
     };
-
 
     Ok(())
 }

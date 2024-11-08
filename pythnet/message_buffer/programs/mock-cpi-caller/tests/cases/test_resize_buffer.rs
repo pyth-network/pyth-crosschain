@@ -11,7 +11,6 @@ async fn test_resize_buffer() {
 
     let (msg_buffer_pda, _) = MessageBufferTestContext::default_msg_buffer();
 
-
     // increase buffer size
     let mut target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240;
     let target_sizes = vec![target_size];
@@ -23,12 +22,10 @@ async fn test_resize_buffer() {
         .await
         .unwrap();
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     assert_eq!(msg_buffer_account_data.len(), target_size as usize);
 
@@ -43,12 +40,10 @@ async fn test_resize_buffer() {
         .await
         .unwrap();
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     assert_eq!(msg_buffer_account_data.len(), target_size as usize);
 }
@@ -64,7 +59,6 @@ async fn test_multiple_resize_buffer_ixs_in_same_txn() {
 
     let (msg_buffer_pda, _) = MessageBufferTestContext::default_msg_buffer();
 
-
     // increase buffer size
     let mut target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240;
     let mut target_sizes = vec![];
@@ -79,12 +73,10 @@ async fn test_multiple_resize_buffer_ixs_in_same_txn() {
         .await
         .unwrap();
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     assert_eq!(msg_buffer_account_data.len(), target_size as usize);
 }
@@ -104,7 +96,6 @@ async fn fail_resize_buffer_invalid_increase() {
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
     let (msg_buffer_pda, msg_buffer_bump) = MessageBufferTestContext::default_msg_buffer();
-
 
     // increase buffer size beyond maximum allowed
     let target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240 + 100;
@@ -129,12 +120,10 @@ async fn fail_resize_buffer_invalid_increase() {
         ProgramError::Custom(anchor_lang::error::ErrorCode::AccountReallocExceedsLimit.into())
     );
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     assert_eq!(
         msg_buffer_account_data.len(),
@@ -197,7 +186,6 @@ async fn test_resize_initialized_buffer() {
         .await
         .unwrap();
 
-
     let (bump, _version, header_len, end_offsets) =
         deserialize_msg_buffer_header(&msg_buffer_account_data);
 
@@ -215,7 +203,6 @@ async fn test_resize_initialized_buffer() {
     let msgs = extract_msg_buffer_messages(header_len, end_offsets, &msg_buffer_account_data);
     validate_price_msgs(id, price, price_expo, ema, ema_expo, &msgs).unwrap();
 
-
     // increase buffer size should not edit the original data
     let target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240;
     let target_sizes = vec![target_size];
@@ -226,7 +213,6 @@ async fn test_resize_initialized_buffer() {
         )
         .await
         .unwrap();
-
 
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
@@ -273,12 +259,10 @@ async fn fail_resize_initialized_buffer() {
         .await
         .unwrap();
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     let (_, _version, header_len, end_offsets) =
         deserialize_msg_buffer_header(&msg_buffer_account_data);
@@ -286,10 +270,8 @@ async fn fail_resize_initialized_buffer() {
     let max_end_offset = end_offsets.iter().max().unwrap();
     let min_size = header_len + max_end_offset;
 
-
     // decrease buffer size to less than something that can fit the current messages
     let target_size = (min_size as u32) - 1;
-
 
     let resize_ix = resize_msg_buffer_ix(
         cpi_caller_auth,
@@ -312,7 +294,6 @@ async fn fail_resize_initialized_buffer() {
     );
 
     let target_size = (min_size as u32) + 1;
-
 
     let resize_ix = resize_msg_buffer_ix(
         cpi_caller_auth,
@@ -349,7 +330,6 @@ async fn fail_resize_buffer_exceed_max_size() {
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
     let (msg_buffer_pda, _msg_buffer_bump) = MessageBufferTestContext::default_msg_buffer();
-
 
     // increase buffer size beyond maximum allowed
     let mut target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240;

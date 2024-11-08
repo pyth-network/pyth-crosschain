@@ -1,23 +1,9 @@
 use {
     near_sdk::{
-        borsh::{
-            self,
-            BorshDeserialize,
-            BorshSerialize,
-        },
-        env,
-        is_promise_success,
-        log,
-        near_bindgen,
-        AccountId,
-        Gas,
-        PanicOnDefault,
-        Promise,
+        borsh::{self, BorshDeserialize, BorshSerialize},
+        env, is_promise_success, log, near_bindgen, AccountId, Gas, PanicOnDefault, Promise,
     },
-    pyth::state::{
-        Price,
-        PriceIdentifier,
-    },
+    pyth::state::{Price, PriceIdentifier},
 };
 
 /// Our contract simply processes prices, so for now the only state we

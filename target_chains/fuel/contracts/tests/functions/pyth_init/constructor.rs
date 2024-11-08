@@ -8,7 +8,9 @@ use crate::utils::interface::{
 };
 use pyth_sdk::{
     constants::{
-        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, UPGRADE_3_VAA_GOVERNANCE_ACTION_HASH, GOVERNANCE_DATA_SOURCE, WORMHOLE_GOVERNANCE_DATA_SOURCE, DUMMY_CHAIN_ID
+        DEFAULT_SINGLE_UPDATE_FEE, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID,
+        GOVERNANCE_DATA_SOURCE, UPGRADE_3_VAA_GOVERNANCE_ACTION_HASH,
+        WORMHOLE_GOVERNANCE_DATA_SOURCE,
     },
     pyth_utils::{
         default_data_sources, guardian_set_upgrade_3_addresses, ConstructedEvent, DataSource, State,
@@ -66,7 +68,7 @@ mod success {
             DEFAULT_VALID_TIME_PERIOD,
             guardian_set_upgrade_3_addresses(),
             3,
-            DUMMY_CHAIN_ID
+            DUMMY_CHAIN_ID,
         )
         .await;
 

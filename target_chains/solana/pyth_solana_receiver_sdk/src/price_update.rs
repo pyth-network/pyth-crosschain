@@ -1,19 +1,9 @@
-pub use pythnet_sdk::messages::{
-    FeedId,
-    PriceFeedMessage,
-};
+pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
-    crate::{
-        check,
-        error::GetPriceError,
-    },
-    anchor_lang::prelude::{
-        borsh::BorshSchema,
-        *,
-    },
+    crate::{check, error::GetPriceError},
+    anchor_lang::prelude::{borsh::BorshSchema, *},
     solana_program::pubkey::Pubkey,
 };
-
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
 /// Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.
@@ -60,10 +50,10 @@ impl VerificationLevel {
 #[account]
 #[derive(BorshSchema)]
 pub struct PriceUpdateV2 {
-    pub write_authority:    Pubkey,
+    pub write_authority: Pubkey,
     pub verification_level: VerificationLevel,
-    pub price_message:      PriceFeedMessage,
-    pub posted_slot:        u64,
+    pub price_message: PriceFeedMessage,
+    pub posted_slot: u64,
 }
 
 impl PriceUpdateV2 {
@@ -74,9 +64,9 @@ impl PriceUpdateV2 {
 /// The actual price is `(price ± conf)* 10^exponent`. `publish_time` may be used to check the recency of the price.
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Price {
-    pub price:        i64,
-    pub conf:         u64,
-    pub exponent:     i32,
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
     pub publish_time: i64,
 }
 
@@ -98,9 +88,9 @@ impl PriceUpdateV2 {
             GetPriceError::MismatchedFeedId
         );
         Ok(Price {
-            price:        self.price_message.price,
-            conf:         self.price_message.conf,
-            exponent:     self.price_message.exponent,
+            price: self.price_message.price,
+            conf: self.price_message.conf,
+            exponent: self.price_message.exponent,
             publish_time: self.price_message.publish_time,
         })
     }
@@ -220,19 +210,11 @@ pub mod tests {
     use {
         crate::{
             error::GetPriceError,
-            price_update::{
-                Price,
-                PriceUpdateV2,
-                VerificationLevel,
-            },
+            price_update::{Price, PriceUpdateV2, VerificationLevel},
         },
         anchor_lang::Discriminator,
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{
-            borsh0_10,
-            clock::Clock,
-            pubkey::Pubkey,
-        },
+        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]
@@ -285,9 +267,9 @@ pub mod tests {
     #[test]
     fn get_price() {
         let expected_price = Price {
-            price:        1,
-            conf:         2,
-            exponent:     3,
+            price: 1,
+            conf: 2,
+            exponent: 3,
             publish_time: 900,
         };
 
@@ -299,9 +281,9 @@ pub mod tests {
         };
 
         let price_update_unverified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 0 },
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -311,13 +293,13 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
 
         let price_update_partially_verified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 5 },
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -327,13 +309,13 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
 
         let price_update_fully_verified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Full,
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -343,9 +325,8 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
-
 
         assert_eq!(
             price_update_unverified.get_price_unchecked(&feed_id),

@@ -4,41 +4,27 @@ use {
     axum::async_trait,
     ethers::{
         prelude::Http,
-        providers::{
-            HttpClientError,
-            JsonRpcClient,
-            Provider,
-        },
+        providers::{HttpClientError, JsonRpcClient, Provider},
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            counter::Counter,
-            family::Family,
-            histogram::Histogram,
-        },
+        metrics::{counter::Counter, family::Family, histogram::Histogram},
         registry::Registry,
     },
-    std::{
-        str::FromStr,
-        sync::Arc,
-    },
-    tokio::{
-        sync::RwLock,
-        time::Instant,
-    },
+    std::{str::FromStr, sync::Arc},
+    tokio::{sync::RwLock, time::Instant},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelSet)]
 pub struct RpcLabel {
     chain_id: ChainId,
-    method:   String,
+    method: String,
 }
 
 #[derive(Debug)]
 pub struct RpcMetrics {
-    count:        Family<RpcLabel, Counter>,
-    latency:      Family<RpcLabel, Histogram>,
+    count: Family<RpcLabel, Counter>,
+    latency: Family<RpcLabel, Histogram>,
     errors_count: Family<RpcLabel, Counter>,
 }
 
@@ -87,7 +73,7 @@ pub struct TracedClient {
     inner: Http,
 
     chain_id: ChainId,
-    metrics:  Arc<RpcMetrics>,
+    metrics: Arc<RpcMetrics>,
 }
 
 #[async_trait]
@@ -105,7 +91,7 @@ impl JsonRpcClient for TracedClient {
         let start = Instant::now();
         let label = &RpcLabel {
             chain_id: self.chain_id.clone(),
-            method:   method.to_string(),
+            method: method.to_string(),
         };
         self.metrics.count.get_or_create(label).inc();
         let res = match self.inner.request(method, params).await {

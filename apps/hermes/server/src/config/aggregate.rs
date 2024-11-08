@@ -1,7 +1,4 @@
-use {
-    clap::Args,
-    humantime::Duration,
-};
+use {clap::Args, humantime::Duration};
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Aggregate Options")]

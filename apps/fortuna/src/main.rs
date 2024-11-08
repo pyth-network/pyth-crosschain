@@ -1,10 +1,6 @@
 #![allow(clippy::just_underscores_and_digits)]
 
-use {
-    anyhow::Result,
-    clap::Parser,
-    std::io::IsTerminal,
-};
+use {anyhow::Result, clap::Parser, std::io::IsTerminal};
 
 pub mod api;
 pub mod chain;

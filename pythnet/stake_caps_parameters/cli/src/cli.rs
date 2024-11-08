@@ -3,10 +3,7 @@ use {
     clap::Parser,
     solana_sdk::{
         pubkey::Pubkey,
-        signature::{
-            read_keypair_file,
-            Keypair,
-        },
+        signature::{read_keypair_file, Keypair},
     },
 };
 
@@ -17,18 +14,18 @@ use {
 )]
 pub struct Cli {
     #[clap(long, default_value = "https://pythnet.rpcpool.com/")]
-    pub rpc_url:   String,
+    pub rpc_url: String,
     #[clap(
         long,
         default_value = "~/.config/solana/id.json",
         help = "Keypair file the funder of the transaction",
         parse(try_from_str = get_keypair_from_file)
     )]
-    pub keypair:   Keypair,
+    pub keypair: Keypair,
     #[clap(long, help = "M parameter")]
-    pub m:         u64,
+    pub m: u64,
     #[clap(long, help = "Z parameter")]
-    pub z:         u64,
+    pub z: u64,
     #[clap(long, help = "Update authority for the parameters")]
     pub authority: Pubkey,
 }

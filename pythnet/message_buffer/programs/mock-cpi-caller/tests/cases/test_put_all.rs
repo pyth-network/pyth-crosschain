@@ -28,7 +28,6 @@ async fn test_put_all() {
         .await
         .unwrap();
 
-
     let (bump, _version, header_len, end_offsets) =
         deserialize_msg_buffer_header(&msg_buffer_account_data);
 

@@ -1,10 +1,7 @@
 //! Exposing prometheus metrics via HTTP in openmetrics format.
 
 use {
-    axum::{
-        extract::State,
-        response::IntoResponse,
-    },
+    axum::{extract::State, response::IntoResponse},
     prometheus_client::encoding::text::encode,
 };
 

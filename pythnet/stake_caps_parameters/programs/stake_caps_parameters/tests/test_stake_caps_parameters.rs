@@ -1,35 +1,18 @@
 use {
     anchor_lang::{
-        error::Error,
-        solana_program::native_token::LAMPORTS_PER_SOL,
-        AccountDeserialize,
-        InstructionData,
-        ToAccountMetas,
+        error::Error, solana_program::native_token::LAMPORTS_PER_SOL, AccountDeserialize,
+        InstructionData, ToAccountMetas,
     },
-    litesvm::{
-        types::TransactionResult,
-        LiteSVM,
-    },
+    litesvm::{types::TransactionResult, LiteSVM},
     solana_sdk::{
-        instruction::{
-            Instruction,
-            InstructionError,
-        },
+        instruction::{Instruction, InstructionError},
         program_error::ProgramError,
         signature::Keypair,
         signer::Signer,
-        transaction::{
-            Transaction,
-            TransactionError,
-        },
+        transaction::{Transaction, TransactionError},
     },
-    stake_caps_parameters::{
-        ErrorCode,
-        Parameters,
-        PARAMETERS_ADDRESS,
-    },
+    stake_caps_parameters::{ErrorCode, Parameters, PARAMETERS_ADDRESS},
 };
-
 
 #[test]
 fn test_stake_caps_parameters() {
@@ -43,15 +26,13 @@ fn test_stake_caps_parameters() {
     )
     .unwrap();
 
-
     svm.airdrop(&payer_1.pubkey(), LAMPORTS_PER_SOL).unwrap();
     svm.airdrop(&payer_2.pubkey(), LAMPORTS_PER_SOL).unwrap();
 
-
     let parameter_1 = Parameters {
         current_authority: payer_1.pubkey(),
-        m:                 1,
-        z:                 2,
+        m: 1,
+        z: 2,
     };
 
     assert!(set_parameters(&mut svm, &payer_1, parameter_1).is_ok());
@@ -59,8 +40,8 @@ fn test_stake_caps_parameters() {
 
     let parameter_2 = Parameters {
         current_authority: payer_2.pubkey(),
-        m:                 3,
-        z:                 4,
+        m: 3,
+        z: 4,
     };
 
     require_wrong_authority_error(set_parameters(&mut svm, &payer_2, parameter_2));
@@ -71,8 +52,8 @@ fn test_stake_caps_parameters() {
 
     let parameter_3 = Parameters {
         current_authority: payer_1.pubkey(),
-        m:                 5,
-        z:                 6,
+        m: 5,
+        z: 6,
     };
 
     require_wrong_authority_error(set_parameters(&mut svm, &payer_1, parameter_3));
@@ -85,8 +66,8 @@ fn set_parameters(svm: &mut LiteSVM, payer: &Keypair, parameters: Parameters) ->
         stake_caps_parameters::ID,
         &stake_caps_parameters::instruction::SetParameters { parameters }.data(),
         stake_caps_parameters::accounts::SetParameters {
-            signer:         payer.pubkey(),
-            parameters:     PARAMETERS_ADDRESS,
+            signer: payer.pubkey(),
+            parameters: PARAMETERS_ADDRESS,
             system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),

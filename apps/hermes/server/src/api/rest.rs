@@ -3,10 +3,7 @@ use {
     crate::state::aggregate::Aggregates,
     axum::{
         http::StatusCode,
-        response::{
-            IntoResponse,
-            Response,
-        },
+        response::{IntoResponse, Response},
     },
     pyth_sdk::PriceIdentifier,
 };
@@ -22,7 +19,6 @@ mod price_feed_ids;
 mod ready;
 mod v2;
 
-
 pub use {
     get_price_feed::*,
     get_vaa::*,
@@ -34,10 +30,7 @@ pub use {
     price_feed_ids::*,
     ready::*,
     v2::{
-        latest_price_updates::*,
-        latest_publisher_stake_caps::*,
-        price_feeds_metadata::*,
-        sse::*,
+        latest_price_updates::*, latest_publisher_stake_caps::*, price_feeds_metadata::*, sse::*,
         timestamp_price_updates::*,
     },
 };
@@ -131,12 +124,8 @@ mod tests {
         super::*,
         crate::state::{
             aggregate::{
-                AggregationEvent,
-                PriceFeedsWithUpdateData,
-                PublisherStakeCapsWithUpdateData,
-                ReadinessMetadata,
-                RequestTime,
-                Update,
+                AggregationEvent, PriceFeedsWithUpdateData, PublisherStakeCapsWithUpdateData,
+                ReadinessMetadata, RequestTime, Update,
             },
             benchmarks::BenchmarksState,
             cache::CacheState,
@@ -144,10 +133,7 @@ mod tests {
             price_feeds_metadata::PriceFeedMetaState,
         },
         anyhow::Result,
-        std::{
-            collections::HashSet,
-            sync::Arc,
-        },
+        std::{collections::HashSet, sync::Arc},
         tokio::sync::broadcast::Receiver,
     };
 

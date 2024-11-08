@@ -1,8 +1,4 @@
-use {
-    crate::config::ConfigOptions,
-    clap::Args,
-    std::net::SocketAddr,
-};
+use {crate::config::ConfigOptions, clap::Args, std::net::SocketAddr};
 
 /// Run the webservice
 #[derive(Args, Clone, Debug)]

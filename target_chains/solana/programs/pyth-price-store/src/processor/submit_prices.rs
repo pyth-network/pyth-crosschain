@@ -1,25 +1,13 @@
 use {
     crate::{
-        accounts::{
-            buffer,
-            publisher_config,
-        },
+        accounts::{buffer, publisher_config},
         ensure,
         instruction::SubmitPricesArgsHeader,
-        validate::{
-            validate_buffer,
-            validate_publisher,
-            validate_publisher_config_for_access,
-        },
+        validate::{validate_buffer, validate_publisher, validate_publisher_config_for_access},
     },
     solana_program::{
-        account_info::AccountInfo,
-        clock::Clock,
-        entrypoint::ProgramResult,
-        program_error::ProgramError,
-        program_memory::sol_memcmp,
-        pubkey::Pubkey,
-        sysvar::Sysvar,
+        account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
+        program_error::ProgramError, program_memory::sol_memcmp, pubkey::Pubkey, sysvar::Sysvar,
     },
 };
 

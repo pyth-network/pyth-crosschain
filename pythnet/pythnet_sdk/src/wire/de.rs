@@ -24,25 +24,13 @@
 
 use {
     crate::require,
-    byteorder::{
-        ByteOrder,
-        ReadBytesExt,
-    },
+    byteorder::{ByteOrder, ReadBytesExt},
     serde::{
-        de::{
-            EnumAccess,
-            MapAccess,
-            SeqAccess,
-            VariantAccess,
-        },
+        de::{EnumAccess, MapAccess, SeqAccess, VariantAccess},
         Deserialize,
     },
     std::{
-        io::{
-            Cursor,
-            Seek,
-            SeekFrom,
-        },
+        io::{Cursor, Seek, SeekFrom},
         mem::size_of,
     },
     thiserror::Error,
@@ -481,7 +469,7 @@ impl<'de, 'a, B: ByteOrder> VariantAccess<'de> for &'a mut Deserializer<'de, B> 
 }
 
 struct SequenceIterator<'de, 'a, B: ByteOrder> {
-    de:  &'a mut Deserializer<'de, B>,
+    de: &'a mut Deserializer<'de, B>,
     len: usize,
 }
 
@@ -539,7 +527,7 @@ impl<'de, 'a, B: ByteOrder> MapAccess<'de> for SequenceIterator<'de, 'a, B> {
 }
 
 struct Enum<'de, 'a, B: ByteOrder> {
-    de:      &'a mut Deserializer<'de, B>,
+    de: &'a mut Deserializer<'de, B>,
     variant: u8,
 }
 

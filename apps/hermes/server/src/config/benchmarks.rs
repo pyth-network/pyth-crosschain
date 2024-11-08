@@ -1,7 +1,4 @@
-use {
-    clap::Args,
-    reqwest::Url,
-};
+use {clap::Args, reqwest::Url};
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Benchmark Options")]

@@ -1,8 +1,5 @@
 #[cfg(feature = "injective")]
-use crate::injective::{
-    create_relay_pyth_prices_msg,
-    InjectiveMsgWrapper as MsgWrapper,
-};
+use crate::injective::{create_relay_pyth_prices_msg, InjectiveMsgWrapper as MsgWrapper};
 #[cfg(not(feature = "injective"))]
 use cosmwasm_std::Empty as MsgWrapper;
 #[cfg(feature = "osmosis")]
@@ -11,73 +8,30 @@ use {
     crate::{
         governance::{
             GovernanceAction::{
-                AuthorizeGovernanceDataSourceTransfer,
-                RequestGovernanceDataSourceTransfer,
-                SetDataSources,
-                SetFee,
-                SetValidPeriod,
-                UpgradeContract,
+                AuthorizeGovernanceDataSourceTransfer, RequestGovernanceDataSourceTransfer,
+                SetDataSources, SetFee, SetValidPeriod, UpgradeContract,
             },
-            GovernanceInstruction,
-            GovernanceModule,
+            GovernanceInstruction, GovernanceModule,
         },
-        msg::{
-            InstantiateMsg,
-            MigrateMsg,
-        },
+        msg::{InstantiateMsg, MigrateMsg},
         state::{
-            config,
-            config_read,
-            price_feed_bucket,
-            price_feed_read_bucket,
-            set_contract_version,
-            ConfigInfo,
-            PythDataSource,
+            config, config_read, price_feed_bucket, price_feed_read_bucket, set_contract_version,
+            ConfigInfo, PythDataSource,
         },
     },
     byteorder::BigEndian,
     cosmwasm_std::{
-        coin,
-        entry_point,
-        to_binary,
-        Addr,
-        Binary,
-        Coin,
-        CosmosMsg,
-        Deps,
-        DepsMut,
-        Env,
-        MessageInfo,
-        OverflowError,
-        OverflowOperation,
-        QueryRequest,
-        Response,
-        StdResult,
-        WasmMsg,
+        coin, entry_point, to_binary, Addr, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+        MessageInfo, OverflowError, OverflowOperation, QueryRequest, Response, StdResult, WasmMsg,
         WasmQuery,
     },
-    cw_wormhole::{
-        msg::QueryMsg as WormholeQueryMsg,
-        state::ParsedVAA,
-    },
-    pyth_sdk::{
-        Identifier,
-        UnixTimestamp,
-    },
+    cw_wormhole::{msg::QueryMsg as WormholeQueryMsg, state::ParsedVAA},
+    pyth_sdk::{Identifier, UnixTimestamp},
     pyth_sdk_cw::{
-        error::PythContractError,
-        ExecuteMsg,
-        Price,
-        PriceFeed,
-        PriceFeedResponse,
-        PriceIdentifier,
+        error::PythContractError, ExecuteMsg, Price, PriceFeed, PriceFeedResponse, PriceIdentifier,
         QueryMsg,
     },
-    pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation,
-        PriceAttestation,
-        PriceStatus,
-    },
+    pyth_wormhole_attester_sdk::{BatchPriceAttestation, PriceAttestation, PriceStatus},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -85,20 +39,12 @@ use {
         wire::{
             from_slice,
             v1::{
-                AccumulatorUpdateData,
-                Proof,
-                WormholeMessage,
-                WormholePayload,
+                AccumulatorUpdateData, Proof, WormholeMessage, WormholePayload,
                 PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
             },
         },
     },
-    std::{
-        collections::HashSet,
-        convert::TryFrom,
-        iter::FromIterator,
-        time::Duration,
-    },
+    std::{collections::HashSet, convert::TryFrom, iter::FromIterator, time::Duration},
 };
 
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -129,14 +75,14 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
-        data_sources:               msg.data_sources.iter().cloned().collect(),
-        chain_id:                   msg.chain_id,
-        governance_source:          msg.governance_source.clone(),
-        governance_source_index:    msg.governance_source_index,
+        wormhole_contract: deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
+        data_sources: msg.data_sources.iter().cloned().collect(),
+        chain_id: msg.chain_id,
+        governance_source: msg.governance_source.clone(),
+        governance_source_index: msg.governance_source_index,
         governance_sequence_number: msg.governance_sequence_number,
-        valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
-        fee:                        msg.fee,
+        valid_time_period: Duration::from_secs(msg.valid_time_period_secs as u64),
+        fee: msg.fee,
     };
     config(deps.storage).save(&state)?;
 
@@ -154,7 +100,7 @@ pub fn parse_and_verify_vaa(deps: Deps, block_time: u64, data: &Binary) -> StdRe
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: cfg.wormhole_contract.to_string(),
-        msg:           to_binary(&WormholeQueryMsg::VerifyVAA {
+        msg: to_binary(&WormholeQueryMsg::VerifyVAA {
             vaa: data.clone(),
             block_time,
         })?,
@@ -417,7 +363,7 @@ fn transfer_governance(
 
             next_config.governance_source_index = governance_data_source_index;
             let new_governance_source = PythDataSource {
-                emitter:  Binary::from(parsed_claim_vaa.emitter_address.clone()),
+                emitter: Binary::from(parsed_claim_vaa.emitter_address.clone()),
                 chain_id: parsed_claim_vaa.emitter_chain,
             };
             next_config.governance_source = new_governance_source;
@@ -459,7 +405,7 @@ fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response<MsgW
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
 fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
-        emitter:  vaa.emitter_address.clone().into(),
+        emitter: vaa.emitter_address.clone().into(),
         chain_id: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
@@ -471,7 +417,7 @@ fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult
 /// Check that `vaa` is from a valid governance source (and hence is a legitimate governance instruction).
 fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
-        emitter:  vaa.emitter_address.clone().into(),
+        emitter: vaa.emitter_address.clone().into(),
         chain_id: vaa.emitter_chain,
     };
     if state.governance_source != vaa_data_source {
@@ -544,15 +490,15 @@ fn parse_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<Price
                         let price_feed = PriceFeed::new(
                             PriceIdentifier::new(price_feed_message.feed_id),
                             Price {
-                                price:        price_feed_message.price,
-                                conf:         price_feed_message.conf,
-                                expo:         price_feed_message.exponent,
+                                price: price_feed_message.price,
+                                conf: price_feed_message.conf,
+                                expo: price_feed_message.exponent,
                                 publish_time: price_feed_message.publish_time,
                             },
                             Price {
-                                price:        price_feed_message.ema_price,
-                                conf:         price_feed_message.ema_conf,
-                                expo:         price_feed_message.exponent,
+                                price: price_feed_message.ema_price,
+                                conf: price_feed_message.ema_conf,
+                                expo: price_feed_message.exponent,
                                 publish_time: price_feed_message.publish_time,
                             },
                         );
@@ -590,30 +536,30 @@ fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation
         PriceStatus::Trading => PriceFeed::new(
             PriceIdentifier::new(price_attestation.price_id.to_bytes()),
             Price {
-                price:        price_attestation.price,
-                conf:         price_attestation.conf,
-                expo:         price_attestation.expo,
+                price: price_attestation.price,
+                conf: price_attestation.conf,
+                expo: price_attestation.expo,
                 publish_time: price_attestation.publish_time,
             },
             Price {
-                price:        price_attestation.ema_price,
-                conf:         price_attestation.ema_conf,
-                expo:         price_attestation.expo,
+                price: price_attestation.ema_price,
+                conf: price_attestation.ema_conf,
+                expo: price_attestation.expo,
                 publish_time: price_attestation.publish_time,
             },
         ),
         _ => PriceFeed::new(
             PriceIdentifier::new(price_attestation.price_id.to_bytes()),
             Price {
-                price:        price_attestation.prev_price,
-                conf:         price_attestation.prev_conf,
-                expo:         price_attestation.expo,
+                price: price_attestation.prev_price,
+                conf: price_attestation.prev_conf,
+                expo: price_attestation.expo,
                 publish_time: price_attestation.prev_publish_time,
             },
             Price {
-                price:        price_attestation.ema_price,
-                conf:         price_attestation.ema_conf,
-                expo:         price_attestation.expo,
+                price: price_attestation.ema_price,
+                conf: price_attestation.ema_conf,
+                expo: price_attestation.expo,
                 publish_time: price_attestation.prev_publish_time,
             },
         ),
@@ -667,7 +613,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(&deps)?),
     }
 }
-
 
 /// This function is not used in the contract yet but mimicks the behavior implemented
 /// in the EVM contract. We are yet to finalize how the parsed prices should be consumed
@@ -797,70 +742,32 @@ mod test {
     use {
         super::*,
         crate::{
-            governance::GovernanceModule::{
-                Executor,
-                Target,
-            },
+            governance::GovernanceModule::{Executor, Target},
             state::get_contract_version,
         },
         cosmwasm_std::{
-            coins,
-            from_binary,
-            testing::{
-                mock_dependencies,
-                mock_env,
-                mock_info,
-                MockApi,
-                MockQuerier,
-                MockStorage,
-            },
-            Addr,
-            ContractResult,
-            OwnedDeps,
-            QuerierResult,
-            StdError,
-            SystemError,
-            SystemResult,
+            coins, from_binary,
+            testing::{mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage},
+            Addr, ContractResult, OwnedDeps, QuerierResult, StdError, SystemError, SystemResult,
             Uint128,
         },
         pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
         pythnet_sdk::{
-            accumulators::{
-                merkle::MerkleTree,
-                Accumulator,
-            },
-            messages::{
-                PriceFeedMessage,
-                TwapMessage,
-            },
+            accumulators::{merkle::MerkleTree, Accumulator},
+            messages::{PriceFeedMessage, TwapMessage},
             test_utils::{
-                create_accumulator_message,
-                create_accumulator_message_from_updates,
-                create_dummy_price_feed_message,
-                create_vaa_from_payload,
-                DEFAULT_CHAIN_ID,
-                DEFAULT_DATA_SOURCE,
-                DEFAULT_GOVERNANCE_SOURCE,
-                DEFAULT_VALID_TIME_PERIOD,
-                SECONDARY_GOVERNANCE_SOURCE,
-                WRONG_CHAIN_ID,
-                WRONG_SOURCE,
+                create_accumulator_message, create_accumulator_message_from_updates,
+                create_dummy_price_feed_message, create_vaa_from_payload, DEFAULT_CHAIN_ID,
+                DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD,
+                SECONDARY_GOVERNANCE_SOURCE, WRONG_CHAIN_ID, WRONG_SOURCE,
             },
-            wire::{
-                to_vec,
-                v1::MerklePriceUpdate,
-                PrefixedVec,
-            },
+            wire::{to_vec, v1::MerklePriceUpdate, PrefixedVec},
         },
         serde_wormhole::RawMessage,
         std::time::Duration,
-        wormhole_sdk::{
-            Address,
-            Chain,
-            Vaa,
-        },
+        wormhole_sdk::{Address, Chain, Vaa},
     };
 
     /// Default valid time period for testing purposes.
@@ -902,7 +809,7 @@ mod test {
                         ))
                     }
                     Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
-                        error:   "Invalid message".into(),
+                        error: "Invalid message".into(),
                         request: msg.clone(),
                     }),
                     _ => SystemResult::Err(SystemError::NoSuchContract {
@@ -957,20 +864,19 @@ mod test {
         )
     }
 
-
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
-            wormhole_contract:          Addr::unchecked(String::default()),
-            data_sources:               HashSet::default(),
-            governance_source:          PythDataSource {
-                emitter:  Binary(vec![]),
+            wormhole_contract: Addr::unchecked(String::default()),
+            data_sources: HashSet::default(),
+            governance_source: PythDataSource {
+                emitter: Binary(vec![]),
                 chain_id: 0,
             },
-            governance_source_index:    0,
+            governance_source_index: 0,
             governance_sequence_number: 0,
-            chain_id:                   0,
-            valid_time_period:          Duration::new(0, 0),
-            fee:                        Coin::new(0, ""),
+            chain_id: 0,
+            valid_time_period: Duration::new(0, 0),
+            fee: Coin::new(0, ""),
         }
     }
 
@@ -994,7 +900,7 @@ mod test {
         pyth_emitter_chain: u16,
     ) -> HashSet<PythDataSource> {
         HashSet::from([PythDataSource {
-            emitter:  pyth_emitter.into(),
+            emitter: pyth_emitter.into(),
             chain_id: pyth_emitter_chain,
         }])
     }
@@ -1023,17 +929,17 @@ mod test {
 
         let instantiate_msg = InstantiateMsg {
             // this is an example wormhole contract address in order to create a valid instantiate message
-            wormhole_contract:          String::from("inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg"),
-            data_sources:               Vec::new(),
-            governance_source:          PythDataSource {
-                emitter:  Binary(vec![]),
+            wormhole_contract: String::from("inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg"),
+            data_sources: Vec::new(),
+            governance_source: PythDataSource {
+                emitter: Binary(vec![]),
                 chain_id: 0,
             },
-            governance_source_index:    0,
+            governance_source_index: 0,
             governance_sequence_number: 0,
-            chain_id:                   0,
-            valid_time_period_secs:     0,
-            fee:                        Coin::new(0, ""),
+            chain_id: 0,
+            valid_time_period_secs: 0,
+            fee: Coin::new(0, ""),
         };
 
         let res = instantiate(
@@ -1041,7 +947,7 @@ mod test {
             mock_env(),
             MessageInfo {
                 sender: Addr::unchecked(""),
-                funds:  Vec::new(),
+                funds: Vec::new(),
             },
             instantiate_msg,
         );
@@ -1061,17 +967,17 @@ mod test {
         let mut deps = mock_dependencies();
 
         let instantiate_msg = InstantiateMsg {
-            wormhole_contract:          String::from(""),
-            data_sources:               Vec::new(),
-            governance_source:          PythDataSource {
-                emitter:  Binary(vec![]),
+            wormhole_contract: String::from(""),
+            data_sources: Vec::new(),
+            governance_source: PythDataSource {
+                emitter: Binary(vec![]),
                 chain_id: 0,
             },
-            governance_source_index:    0,
+            governance_source_index: 0,
             governance_sequence_number: 0,
-            chain_id:                   0,
-            valid_time_period_secs:     0,
-            fee:                        Coin::new(0, ""),
+            chain_id: 0,
+            valid_time_period_secs: 0,
+            fee: Coin::new(0, ""),
         };
 
         let res = instantiate(
@@ -1079,13 +985,12 @@ mod test {
             mock_env(),
             MessageInfo {
                 sender: Addr::unchecked(""),
-                funds:  Vec::new(),
+                funds: Vec::new(),
             },
             instantiate_msg,
         );
         assert!(res.is_err());
     }
-
 
     #[cfg(feature = "osmosis")]
     fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
@@ -1209,7 +1114,7 @@ mod test {
         let proof1 = tree.prove(&feed1_bytes).unwrap();
         price_updates.push(MerklePriceUpdate {
             message: PrefixedVec::from(feed1_bytes),
-            proof:   proof1,
+            proof: proof1,
         });
         let msg = create_accumulator_message_from_updates(
             price_updates,
@@ -1241,7 +1146,6 @@ mod test {
 
         let (mut deps, _env) = setup_test();
         config(&mut deps.storage).save(&config_info).unwrap();
-
 
         let feed1 = create_dummy_price_feed_message(100);
         let feed2 = create_dummy_price_feed_message(200);
@@ -1292,7 +1196,6 @@ mod test {
             400
         );
     }
-
 
     #[test]
     fn test_accumulator_message_single_update() {
@@ -1483,14 +1386,14 @@ mod test {
         // Although Twap Message is a valid message but it won't get stored on-chain via
         // `update_price_feeds` and (will be) used in other methods
         let feed1 = Message::TwapMessage(TwapMessage {
-            feed_id:           [0; 32],
-            cumulative_price:  0,
-            cumulative_conf:   0,
-            num_down_slots:    0,
-            exponent:          0,
-            publish_time:      0,
+            feed_id: [0; 32],
+            cumulative_price: 0,
+            cumulative_conf: 0,
+            num_down_slots: 0,
+            exponent: 0,
+            publish_time: 0,
             prev_publish_time: 0,
-            publish_slot:      0,
+            publish_slot: 0,
         });
         let msg = create_accumulator_message(&[&feed1], &[&feed1], false, false, None);
         let info = mock_info("123", &[]);
@@ -1520,7 +1423,7 @@ mod test {
         price_updates.push(MerklePriceUpdate {
             // proof1 is valid for feed1, but not feed2
             message: PrefixedVec::from(feed2_bytes),
-            proof:   proof1,
+            proof: proof1,
         });
         let msg = create_accumulator_message_from_updates(
             price_updates,
@@ -1554,7 +1457,7 @@ mod test {
         let proof1 = tree.prove(&feed1_bytes).unwrap();
         price_updates.push(MerklePriceUpdate {
             message: PrefixedVec::from(feed1_bytes),
-            proof:   proof1,
+            proof: proof1,
         });
         let msg = create_accumulator_message_from_updates(
             price_updates,
@@ -1852,9 +1755,9 @@ mod test {
         let dummy_price_feed = PriceFeed::new(
             PriceIdentifier::new([0u8; 32]),
             Price {
-                price:        300,
-                conf:         301,
-                expo:         302,
+                price: 300,
+                conf: 301,
+                expo: 302,
                 publish_time: 303,
             },
             Default::default(),
@@ -1967,7 +1870,6 @@ mod test {
             Ok(Coin::new(20, "uion"))
         );
 
-
         // test for invalid denom
         assert_eq!(
             get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], "invalid_denom".to_string()),
@@ -2077,7 +1979,7 @@ mod test {
         ConfigInfo {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
-                emitter:  Binary(DEFAULT_GOVERNANCE_SOURCE.address.0.to_vec()),
+                emitter: Binary(DEFAULT_GOVERNANCE_SOURCE.address.0.to_vec()),
                 chain_id: DEFAULT_GOVERNANCE_SOURCE.chain.into(),
             },
             governance_sequence_number: 4,
@@ -2100,9 +2002,9 @@ mod test {
         let test_config = governance_test_config();
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: DEFAULT_CHAIN_ID.into(),
-            action:          SetFee { val: 6, expo: 0 },
+            action: SetFee { val: 6, expo: 0 },
         };
         let test_vaa = governance_vaa(&test_instruction);
 
@@ -2162,7 +2064,7 @@ mod test {
     #[test]
     fn test_authorize_governance_transfer_success() {
         let source_2 = PythDataSource {
-            emitter:  Binary::from(SECONDARY_GOVERNANCE_SOURCE.address.0),
+            emitter: Binary::from(SECONDARY_GOVERNANCE_SOURCE.address.0),
             chain_id: SECONDARY_GOVERNANCE_SOURCE.chain.into(),
         };
 
@@ -2170,9 +2072,9 @@ mod test {
 
         let claim_vaa = create_vaa_from_payload(
             &GovernanceInstruction {
-                module:          Target,
+                module: Target,
                 target_chain_id: test_config.chain_id,
-                action:          RequestGovernanceDataSourceTransfer {
+                action: RequestGovernanceDataSourceTransfer {
                     governance_data_source_index: 1,
                 },
             }
@@ -2184,9 +2086,9 @@ mod test {
         );
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          AuthorizeGovernanceDataSourceTransfer {
+            action: AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
@@ -2205,9 +2107,9 @@ mod test {
 
         let claim_vaa = create_vaa_from_payload(
             &GovernanceInstruction {
-                module:          Target,
+                module: Target,
                 target_chain_id: test_config.chain_id,
-                action:          RequestGovernanceDataSourceTransfer {
+                action: RequestGovernanceDataSourceTransfer {
                     governance_data_source_index: 10,
                 },
             }
@@ -2219,9 +2121,9 @@ mod test {
         );
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          AuthorizeGovernanceDataSourceTransfer {
+            action: AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
@@ -2239,9 +2141,9 @@ mod test {
 
         let claim_vaa = create_vaa_from_payload(
             &GovernanceInstruction {
-                module:          Target,
+                module: Target,
                 target_chain_id: WRONG_CHAIN_ID.into(),
-                action:          RequestGovernanceDataSourceTransfer {
+                action: RequestGovernanceDataSourceTransfer {
                     governance_data_source_index: 11,
                 },
             }
@@ -2253,9 +2155,9 @@ mod test {
         );
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          AuthorizeGovernanceDataSourceTransfer {
+            action: AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: serde_wormhole::to_vec(&claim_vaa).unwrap().into(),
             },
         };
@@ -2270,15 +2172,15 @@ mod test {
     #[test]
     fn test_set_data_sources() {
         let source_1 = PythDataSource {
-            emitter:  Binary::from([1u8; 32]),
+            emitter: Binary::from([1u8; 32]),
             chain_id: 2,
         };
         let source_2 = PythDataSource {
-            emitter:  Binary::from([2u8; 32]),
+            emitter: Binary::from([2u8; 32]),
             chain_id: 4,
         };
         let source_3 = PythDataSource {
-            emitter:  Binary::from([3u8; 32]),
+            emitter: Binary::from([3u8; 32]),
             chain_id: 6,
         };
 
@@ -2286,9 +2188,9 @@ mod test {
         test_config.data_sources = HashSet::from([source_1]);
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          SetDataSources {
+            action: SetDataSources {
                 data_sources: vec![source_2.clone(), source_3.clone()],
             },
         };
@@ -2299,9 +2201,9 @@ mod test {
         );
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          SetDataSources {
+            action: SetDataSources {
                 data_sources: vec![],
             },
         };
@@ -2318,9 +2220,9 @@ mod test {
         test_config.fee = Coin::new(1, "foo");
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: DEFAULT_CHAIN_ID.into(),
-            action:          SetFee { val: 6, expo: 1 },
+            action: SetFee { val: 6, expo: 1 },
         };
         let test_vaa = governance_vaa(&test_instruction);
 
@@ -2330,9 +2232,9 @@ mod test {
         );
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: DEFAULT_CHAIN_ID.into(),
-            action:          SetFee { val: 6, expo: 0 },
+            action: SetFee { val: 6, expo: 0 },
         };
         let test_vaa = governance_vaa(&test_instruction);
 
@@ -2348,9 +2250,9 @@ mod test {
         test_config.valid_time_period = Duration::from_secs(10);
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: DEFAULT_CHAIN_ID.into(),
-            action:          SetValidPeriod { valid_seconds: 20 },
+            action: SetValidPeriod { valid_seconds: 20 },
         };
         let test_vaa = governance_vaa(&test_instruction);
 
@@ -2365,9 +2267,9 @@ mod test {
         let test_config = governance_test_config();
 
         let test_instruction = GovernanceInstruction {
-            module:          Target,
+            module: Target,
             target_chain_id: test_config.chain_id,
-            action:          RequestGovernanceDataSourceTransfer {
+            action: RequestGovernanceDataSourceTransfer {
                 governance_data_source_index: 7,
             },
         };

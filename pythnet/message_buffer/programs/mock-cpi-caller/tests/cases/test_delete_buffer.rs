@@ -54,7 +54,6 @@ async fn delete_buffer_after_update_allowed_programs() {
         .await
         .unwrap();
 
-
     let payer = context.payer.pubkey();
     let (msg_buffer_pda, _) = MessageBufferTestContext::default_msg_buffer();
 

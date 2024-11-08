@@ -2,10 +2,7 @@ use {
     super::State,
     prometheus_client::{
         encoding::text::encode,
-        registry::{
-            Metric,
-            Registry,
-        },
+        registry::{Metric, Registry},
     },
     tokio::sync::RwLock,
 };

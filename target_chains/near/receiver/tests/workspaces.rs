@@ -1,41 +1,17 @@
 use {
-    near_sdk::json_types::{
-        I64,
-        U128,
-        U64,
-    },
-    near_workspaces::types::{
-        Gas,
-        NearToken,
-    },
+    near_sdk::json_types::{I64, U128, U64},
+    near_workspaces::types::{Gas, NearToken},
     pyth::{
-        governance::{
-            GovernanceAction,
-            GovernanceInstruction,
-            GovernanceModule,
-        },
-        state::{
-            Chain,
-            Price,
-            PriceIdentifier,
-            Source,
-        },
+        governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
+        state::{Chain, Price, PriceIdentifier, Source},
     },
     pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation,
-        Identifier,
-        PriceAttestation,
-        PriceStatus,
+        BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
     },
     pythnet_sdk::test_utils::{
-        create_accumulator_message,
-        create_dummy_price_feed_message,
-        create_vaa_from_payload,
-        DEFAULT_DATA_SOURCE,
-        DEFAULT_GOVERNANCE_SOURCE,
-        DEFAULT_VALID_TIME_PERIOD,
-        SECONDARY_DATA_SOURCE,
-        SECONDARY_GOVERNANCE_SOURCE,
+        create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload,
+        DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD,
+        SECONDARY_DATA_SOURCE, SECONDARY_GOVERNANCE_SOURCE,
     },
     serde_json::json,
     std::collections::HashMap,
@@ -117,13 +93,13 @@ async fn test_set_sources() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -160,11 +136,11 @@ async fn test_set_sources() {
         &[
             Source {
                 emitter: DEFAULT_DATA_SOURCE.address.0,
-                chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                chain: Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
             },
             Source {
                 emitter: SECONDARY_DATA_SOURCE.address.0,
-                chain:   Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
+                chain: Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
             },
         ]
     );
@@ -231,13 +207,13 @@ async fn test_set_governance_source() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -277,13 +253,13 @@ async fn test_set_governance_source() {
                     Source::default(),
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -297,7 +273,6 @@ async fn test_set_governance_source() {
         4,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
-
 
     assert!(contract
         .call("execute_governance_instruction")
@@ -331,21 +306,21 @@ async fn test_stale_threshold() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      100,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  100,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           now.try_into().unwrap(),
-                publish_time:               now.try_into().unwrap(),
-                prev_publish_time:          now.try_into().unwrap(),
-                prev_price:                 100,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 100,
+                conf: 1,
+                expo: 8,
+                ema_price: 100,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: now.try_into().unwrap(),
+                publish_time: now.try_into().unwrap(),
+                prev_publish_time: now.try_into().unwrap(),
+                prev_price: 100,
+                prev_conf: 1,
                 last_attested_publish_time: now.try_into().unwrap(),
             }],
         }
@@ -408,21 +383,21 @@ async fn test_stale_threshold() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      1000,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  1000,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           (now - 1024).try_into().unwrap(),
-                publish_time:               (now - 1024).try_into().unwrap(),
-                prev_publish_time:          (now - 1024).try_into().unwrap(),
-                prev_price:                 90,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 1000,
+                conf: 1,
+                expo: 8,
+                ema_price: 1000,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: (now - 1024).try_into().unwrap(),
+                publish_time: (now - 1024).try_into().unwrap(),
+                prev_publish_time: (now - 1024).try_into().unwrap(),
+                prev_price: 90,
+                prev_conf: 1,
                 last_attested_publish_time: (now - 1024).try_into().unwrap(),
             }],
         }
@@ -454,9 +429,9 @@ async fn test_stale_threshold() {
     // timestamp and price should be unchanged.
     assert_eq!(
         Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         },
         serde_json::from_slice::<Price>(
@@ -504,9 +479,9 @@ async fn test_stale_threshold() {
     // [ref:failed_price_check]
     assert_eq!(
         Some(Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         }),
         serde_json::from_slice::<Option<Price>>(
@@ -521,9 +496,9 @@ async fn test_stale_threshold() {
     );
     assert_eq!(
         &Some(Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         }),
         serde_json::from_slice::<HashMap<PriceIdentifier, Option<Price>>>(
@@ -615,21 +590,21 @@ async fn test_contract_fees() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      1000,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  1000,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           (now - 1024).try_into().unwrap(),
-                publish_time:               (now - 1024).try_into().unwrap(),
-                prev_publish_time:          (now - 1024).try_into().unwrap(),
-                prev_price:                 90,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 1000,
+                conf: 1,
+                expo: 8,
+                ema_price: 1000,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: (now - 1024).try_into().unwrap(),
+                publish_time: (now - 1024).try_into().unwrap(),
+                prev_publish_time: (now - 1024).try_into().unwrap(),
+                prev_price: 90,
+                prev_conf: 1,
                 last_attested_publish_time: (now - 1024).try_into().unwrap(),
             }],
         }
@@ -691,7 +666,6 @@ async fn test_same_governance_sequence_fails() {
         1,
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
-
 
     // Attempt our first SetFee.
     assert!(contract
@@ -845,7 +819,6 @@ async fn test_governance_target_fails_if_not_near() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-
     // This should fail as the target is Solana, when Near is expected.
     assert!(!contract
         .call("execute_governance_instruction")
@@ -876,7 +849,7 @@ async fn test_accumulator_updates() {
             action: GovernanceAction::SetDataSources {
                 data_sources: vec![Source {
                     emitter: DEFAULT_DATA_SOURCE.address.0,
-                    chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                    chain: Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
                 }],
             },
         }
@@ -931,9 +904,9 @@ async fn test_accumulator_updates() {
 
     assert_eq!(
         Some(Price {
-            price:        100.into(),
-            conf:         100.into(),
-            expo:         100,
+            price: 100.into(),
+            conf: 100.into(),
+            expo: 100,
             publish_time: 100,
         }),
         serde_json::from_slice::<Option<Price>>(
@@ -951,9 +924,9 @@ async fn test_accumulator_updates() {
 #[tokio::test]
 async fn test_sdk_compat() {
     let price = pyth_sdk::Price {
-        price:        i64::MAX,
-        conf:         u64::MAX,
-        expo:         100,
+        price: i64::MAX,
+        conf: u64::MAX,
+        expo: 100,
         publish_time: 100,
     };
 
@@ -962,9 +935,9 @@ async fn test_sdk_compat() {
     assert_eq!(
         decoded_price,
         Price {
-            price:        i64::MAX.into(),
-            conf:         u64::MAX.into(),
-            expo:         100,
+            price: i64::MAX.into(),
+            conf: u64::MAX.into(),
+            expo: 100,
             publish_time: 100,
         }
     );
@@ -972,15 +945,12 @@ async fn test_sdk_compat() {
 
 #[tokio::test]
 async fn test_borsh_field_cmopat() {
-    use near_sdk::borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    };
+    use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 
     let price = Price {
-        price:        I64(i64::MAX),
-        conf:         U64(u64::MAX),
-        expo:         100,
+        price: I64(i64::MAX),
+        conf: U64(u64::MAX),
+        expo: 100,
         publish_time: 100,
     };
 
@@ -989,9 +959,9 @@ async fn test_borsh_field_cmopat() {
     #[derive(Eq, PartialEq, Debug, BorshSerialize, BorshDeserialize)]
     #[borsh(crate = "near_sdk::borsh")]
     struct PriceTester {
-        price:          i64,
-        conf:           u64,
-        expo:           u32,
+        price: i64,
+        conf: u64,
+        expo: u32,
         bad_field_name: u64,
     }
 
@@ -1001,9 +971,9 @@ async fn test_borsh_field_cmopat() {
     assert_eq!(
         decoded_price,
         PriceTester {
-            price:          i64::MAX,
-            conf:           u64::MAX,
-            expo:           100,
+            price: i64::MAX,
+            conf: u64::MAX,
+            expo: 100,
             bad_field_name: 100,
         }
     );

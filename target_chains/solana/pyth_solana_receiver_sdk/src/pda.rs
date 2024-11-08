@@ -1,7 +1,4 @@
-use {
-    crate::ID,
-    anchor_lang::prelude::*,
-};
+use {crate::ID, anchor_lang::prelude::*};
 
 pub const CONFIG_SEED: &str = "config";
 pub const TREASURY_SEED: &str = "treasury";

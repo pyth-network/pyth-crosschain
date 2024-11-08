@@ -1,34 +1,23 @@
 use {
     crate::{
-        instructions::{
-            sighash,
-            ACCUMULATOR_UPDATER_IX_NAME,
-            UPD_PRICE_WRITE,
-        },
+        instructions::{sighash, ACCUMULATOR_UPDATER_IX_NAME, UPD_PRICE_WRITE},
         message::{
-            price::{
-                CompactPriceMessage,
-                FullPriceMessage,
-            },
+            price::{CompactPriceMessage, FullPriceMessage},
             AccumulatorSerializer,
         },
         state::PriceAccount,
     },
-    anchor_lang::{
-        prelude::*,
-        system_program,
-    },
+    anchor_lang::{prelude::*, system_program},
     message_buffer::program::MessageBuffer as MessageBufferProgram,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
 pub struct UpdatePriceParams {
-    pub price:      u64,
+    pub price: u64,
     pub price_expo: u64,
-    pub ema:        u64,
-    pub ema_expo:   u64,
+    pub ema: u64,
+    pub ema_expo: u64,
 }
-
 
 #[derive(Accounts)]
 pub struct UpdatePrice<'info> {
@@ -41,15 +30,15 @@ pub struct UpdatePrice<'info> {
     ],
     bump,
     )]
-    pub pyth_price_account:     AccountLoader<'info, PriceAccount>,
+    pub pyth_price_account: AccountLoader<'info, PriceAccount>,
     /// CHECK: whitelist
-    pub accumulator_whitelist:  UncheckedAccount<'info>,
+    pub accumulator_whitelist: UncheckedAccount<'info>,
     #[account(
         seeds = [b"upd_price_write".as_ref(), message_buffer_program.key().as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
-    pub auth:                   SystemAccount<'info>,
+    pub auth: SystemAccount<'info>,
     pub message_buffer_program: Program<'info, MessageBufferProgram>,
 }
 
@@ -69,12 +58,10 @@ pub fn update_price<'info>(
 
         inputs.push(price_full_data);
 
-
         let price_compact_data =
             CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
         inputs.push(price_compact_data);
     }
-
 
     UpdatePrice::emit_messages(ctx, inputs)
 }

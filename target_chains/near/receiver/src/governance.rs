@@ -3,36 +3,16 @@
 use {
     crate::{
         ensure,
-        error::Error::{
-            self,
-            *,
-        },
+        error::Error::{self, *},
         ext::ext_wormhole,
-        state::{
-            Chain,
-            Source,
-            Vaa,
-        },
-        Pyth,
-        PythExt,
+        state::{Chain, Source, Vaa},
+        Pyth, PythExt,
     },
     near_sdk::{
-        borsh::{
-            BorshDeserialize,
-            BorshSerialize,
-        },
-        env,
-        is_promise_success,
-        near_bindgen,
-        serde::{
-            Deserialize,
-            Serialize,
-        },
-        AccountId,
-        Gas,
-        NearToken,
-        Promise,
-        PromiseOrValue,
+        borsh::{BorshDeserialize, BorshSerialize},
+        env, is_promise_success, near_bindgen,
+        serde::{Deserialize, Serialize},
+        AccountId, Gas, NearToken, Promise, PromiseOrValue,
     },
     num_traits::FromPrimitive,
     serde_wormhole::RawMessage,
@@ -64,7 +44,7 @@ pub enum GovernanceModule {
     /// The PythNet executor contract
     Executor = 0,
     /// A target chain contract (like this one!)
-    Target   = 1,
+    Target = 1,
 }
 
 /// A `GovernanceAction` represents the different actions that can be voted on and executed by the
@@ -119,12 +99,7 @@ impl GovernanceInstruction {
             bytes::complete::take,
             combinator::all_consuming,
             multi::length_count,
-            number::complete::{
-                be_u16,
-                be_u32,
-                be_u64,
-                be_u8,
-            },
+            number::complete::{be_u16, be_u32, be_u64, be_u8},
         };
 
         let input = input.as_ref();
@@ -278,7 +253,7 @@ impl Pyth {
                 self.gov_source
                     == (Source {
                         emitter: vaa.emitter_address,
-                        chain:   vaa.emitter_chain,
+                        chain: vaa.emitter_chain,
                     }),
                 UnknownSource(vaa.emitter_address)
             );
@@ -465,7 +440,7 @@ impl Pyth {
                 // Update Governance Source
                 self.gov_source = Source {
                     emitter: vaa.emitter_address,
-                    chain:   vaa.emitter_chain,
+                    chain: vaa.emitter_chain,
                 };
             }
 
@@ -568,16 +543,10 @@ mod tests {
         super::*,
         crate::governance::GovernanceActionId,
         near_sdk::{
-            test_utils::{
-                accounts,
-                VMContextBuilder,
-            },
+            test_utils::{accounts, VMContextBuilder},
             testing_env,
         },
-        std::io::{
-            Cursor,
-            Write,
-        },
+        std::io::{Cursor, Write},
     };
 
     fn get_context() -> VMContextBuilder {

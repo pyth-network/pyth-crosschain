@@ -26,10 +26,7 @@ pub enum ExtendError {
 
 #[cfg(feature = "solana-program")]
 mod convert {
-    use {
-        super::*,
-        solana_program::program_error::ProgramError,
-    };
+    use {super::*, solana_program::program_error::ProgramError};
 
     impl From<ReadAccountError> for ProgramError {
         fn from(value: ReadAccountError) -> Self {

@@ -1,26 +1,11 @@
 pub mod error;
 pub mod testing;
 
-pub use pyth_sdk::{
-    Price,
-    PriceFeed,
-    PriceIdentifier,
-    UnixTimestamp,
-};
+pub use pyth_sdk::{Price, PriceFeed, PriceIdentifier, UnixTimestamp};
 use {
-    cosmwasm_schema::{
-        cw_serde,
-        QueryResponses,
-    },
+    cosmwasm_schema::{cw_serde, QueryResponses},
     cosmwasm_std::{
-        to_binary,
-        Addr,
-        Binary,
-        Coin,
-        QuerierWrapper,
-        QueryRequest,
-        StdResult,
-        WasmQuery,
+        to_binary, Addr, Binary, Coin, QuerierWrapper, QueryRequest, StdResult, WasmQuery,
     },
     std::time::Duration,
 };
@@ -59,7 +44,7 @@ pub fn query_price_feed(
 ) -> StdResult<PriceFeedResponse> {
     let price_feed_response = querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: contract_addr.into_string(),
-        msg:           to_binary(&QueryMsg::PriceFeed { id })?,
+        msg: to_binary(&QueryMsg::PriceFeed { id })?,
     }))?;
     Ok(price_feed_response)
 }
@@ -73,7 +58,7 @@ pub fn get_update_fee(
 ) -> StdResult<Coin> {
     querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: contract_addr.into_string(),
-        msg:           to_binary(&QueryMsg::GetUpdateFee {
+        msg: to_binary(&QueryMsg::GetUpdateFee {
             vaas: price_update_vaas.to_vec(),
         })?,
     }))
@@ -90,7 +75,7 @@ pub fn get_update_fee_for_denom(
 ) -> StdResult<Coin> {
     querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: contract_addr.into_string(),
-        msg:           to_binary(&QueryMsg::GetUpdateFeeForDenom {
+        msg: to_binary(&QueryMsg::GetUpdateFeeForDenom {
             vaas: price_update_vaas.to_vec(),
             denom,
         })?,
@@ -101,6 +86,6 @@ pub fn get_update_fee_for_denom(
 pub fn get_valid_time_period(querier: &QuerierWrapper, contract_addr: Addr) -> StdResult<Duration> {
     querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: contract_addr.into_string(),
-        msg:           to_binary(&QueryMsg::GetValidTimePeriod)?,
+        msg: to_binary(&QueryMsg::GetValidTimePeriod)?,
     }))
 }

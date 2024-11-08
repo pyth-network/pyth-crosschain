@@ -3,22 +3,13 @@ use {
     crate::{
         api::{
             rest::RestError,
-            types::{
-                PriceIdInput,
-                RpcPriceFeed,
-            },
+            types::{PriceIdInput, RpcPriceFeed},
             ApiState,
         },
-        state::aggregate::{
-            Aggregates,
-            RequestTime,
-        },
+        state::aggregate::{Aggregates, RequestTime},
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
+    axum::{extract::State, Json},
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,

@@ -2,28 +2,21 @@ use {
     super::ApiState,
     crate::state::metrics::Metrics,
     axum::{
-        extract::{
-            MatchedPath,
-            State,
-        },
+        extract::{MatchedPath, State},
         http::Request,
         middleware::Next,
         response::IntoResponse,
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            counter::Counter,
-            family::Family,
-            histogram::Histogram,
-        },
+        metrics::{counter::Counter, family::Family, histogram::Histogram},
     },
     std::sync::Arc,
     tokio::time::Instant,
 };
 
 pub struct ApiMetrics {
-    pub requests:  Family<Labels, Counter>,
+    pub requests: Family<Labels, Counter>,
     pub latencies: Family<Labels, Histogram>,
 }
 
@@ -34,7 +27,7 @@ impl ApiMetrics {
         S: Send + Sync + 'static,
     {
         let new = Self {
-            requests:  Family::default(),
+            requests: Family::default(),
             latencies: Family::new_with_constructor(|| {
                 Histogram::new(
                     [
@@ -75,7 +68,7 @@ impl ApiMetrics {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
 pub struct Labels {
     pub method: String,
-    pub path:   String,
+    pub path: String,
     pub status: u16,
 }
 

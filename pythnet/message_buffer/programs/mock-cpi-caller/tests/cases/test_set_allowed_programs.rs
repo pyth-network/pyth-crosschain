@@ -6,7 +6,6 @@ async fn test_set_allowed_programs() {
     let admin = Keypair::new();
     context.initialize(&admin).await.unwrap();
 
-
     let mock_cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let allowed_programs = vec![mock_cpi_caller_auth];
     context

@@ -1,47 +1,27 @@
 use {
     crate::{
-        chain::reader::{
-            BlockNumber,
-            BlockStatus,
-            EntropyReader,
-        },
+        chain::reader::{BlockNumber, BlockStatus, EntropyReader},
         state::HashChainState,
     },
     anyhow::Result,
     axum::{
         body::Body,
         http::StatusCode,
-        response::{
-            IntoResponse,
-            Response,
-        },
+        response::{IntoResponse, Response},
         routing::get,
         Router,
     },
     ethers::core::types::Address,
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            counter::Counter,
-            family::Family,
-        },
+        metrics::{counter::Counter, family::Family},
         registry::Registry,
     },
-    std::{
-        collections::HashMap,
-        sync::Arc,
-    },
+    std::{collections::HashMap, sync::Arc},
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {
-    chain_ids::*,
-    index::*,
-    live::*,
-    metrics::*,
-    ready::*,
-    revelation::*,
-};
+pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
 
 mod chain_ids;
 mod index;
@@ -99,16 +79,16 @@ impl ApiState {
 #[derive(Clone)]
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
-    pub id:                     ChainId,
+    pub id: ChainId,
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state:                  Arc<HashChainState>,
+    pub state: Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
-    pub contract:               Arc<dyn EntropyReader>,
+    pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
-    pub provider_address:       Address,
+    pub provider_address: Address,
     /// The server will wait for this many block confirmations of a request before revealing
     /// the random number.
-    pub reveal_delay_blocks:    BlockNumber,
+    pub reveal_delay_blocks: BlockNumber,
     /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,
@@ -194,35 +174,16 @@ pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
 mod test {
     use {
         crate::{
-            api::{
-                self,
-                ApiState,
-                BinaryEncoding,
-                Blob,
-                BlockchainState,
-                GetRandomValueResponse,
-            },
-            chain::reader::{
-                mock::MockEntropyReader,
-                BlockStatus,
-            },
-            state::{
-                HashChainState,
-                PebbleHashChain,
-            },
+            api::{self, ApiState, BinaryEncoding, Blob, BlockchainState, GetRandomValueResponse},
+            chain::reader::{mock::MockEntropyReader, BlockStatus},
+            state::{HashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,
-        axum_test::{
-            TestResponse,
-            TestServer,
-        },
+        axum_test::{TestResponse, TestServer},
         ethers::prelude::Address,
         lazy_static::lazy_static,
         prometheus_client::registry::Registry,
-        std::{
-            collections::HashMap,
-            sync::Arc,
-        },
+        std::{collections::HashMap, sync::Arc},
         tokio::sync::RwLock,
     };
 
@@ -245,11 +206,11 @@ mod test {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let eth_state = BlockchainState {
-            id:                     "ethereum".into(),
-            state:                  ETH_CHAIN.clone(),
-            contract:               eth_read.clone(),
-            provider_address:       PROVIDER,
-            reveal_delay_blocks:    1,
+            id: "ethereum".into(),
+            state: ETH_CHAIN.clone(),
+            contract: eth_read.clone(),
+            provider_address: PROVIDER,
+            reveal_delay_blocks: 1,
             confirmed_block_status: BlockStatus::Latest,
         };
 
@@ -258,11 +219,11 @@ mod test {
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
         let avax_state = BlockchainState {
-            id:                     "avalanche".into(),
-            state:                  AVAX_CHAIN.clone(),
-            contract:               avax_read.clone(),
-            provider_address:       PROVIDER,
-            reveal_delay_blocks:    2,
+            id: "avalanche".into(),
+            state: AVAX_CHAIN.clone(),
+            contract: avax_read.clone(),
+            provider_address: PROVIDER,
+            reveal_delay_blocks: 2,
             confirmed_block_status: BlockStatus::Latest,
         };
 

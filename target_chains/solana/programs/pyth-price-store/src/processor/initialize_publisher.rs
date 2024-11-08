@@ -1,30 +1,16 @@
 use {
     crate::{
-        accounts::{
-            buffer,
-            publisher_config,
-        },
+        accounts::{buffer, publisher_config},
         ensure,
-        instruction::{
-            InitializePublisherArgs,
-            PUBLISHER_CONFIG_SEED,
-        },
+        instruction::{InitializePublisherArgs, PUBLISHER_CONFIG_SEED},
         validate::{
-            validate_authority,
-            validate_buffer,
-            validate_config,
-            validate_publisher_config_for_init,
-            validate_system,
+            validate_authority, validate_buffer, validate_config,
+            validate_publisher_config_for_init, validate_system,
         },
     },
     solana_program::{
-        account_info::AccountInfo,
-        entrypoint::ProgramResult,
-        program::invoke_signed,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
+        account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
+        program_error::ProgramError, pubkey::Pubkey, rent::Rent, system_instruction,
         sysvar::Sysvar,
     },
 };
@@ -106,35 +92,20 @@ mod tests {
         crate::{
             accounts::{
                 self,
-                buffer::{
-                    BufferHeader,
-                    BufferedPrice,
-                },
+                buffer::{BufferHeader, BufferedPrice},
             },
-            instruction::{
-                CONFIG_SEED,
-                PUBLISHER_CONFIG_SEED,
-            },
+            instruction::{CONFIG_SEED, PUBLISHER_CONFIG_SEED},
         },
-        bytemuck::{
-            bytes_of,
-            cast_slice,
-        },
+        bytemuck::{bytes_of, cast_slice},
         solana_program::{
-            instruction::{
-                AccountMeta,
-                Instruction,
-            },
+            instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
             system_program,
         },
         solana_program_test::*,
         solana_sdk::{
             rent::Rent,
-            signature::{
-                Keypair,
-                Signer,
-            },
+            signature::{Keypair, Signer},
             transaction::Transaction,
         },
     };

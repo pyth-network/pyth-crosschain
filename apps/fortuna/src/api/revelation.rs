@@ -1,25 +1,14 @@
 use {
-    crate::api::{
-        ChainId,
-        RequestLabel,
-        RestError,
-    },
+    crate::api::{ChainId, RequestLabel, RestError},
     anyhow::Result,
     axum::{
-        extract::{
-            Path,
-            Query,
-            State,
-        },
+        extract::{Path, Query, State},
         Json,
     },
     pythnet_sdk::wire::array,
     serde_with::serde_as,
     tokio::try_join,
-    utoipa::{
-        IntoParams,
-        ToSchema,
-    },
+    utoipa::{IntoParams, ToSchema},
 };
 
 /// Reveal the random value for a given sequence number and blockchain.

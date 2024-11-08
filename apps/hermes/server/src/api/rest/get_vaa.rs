@@ -1,33 +1,15 @@
 use {
     super::validate_price_ids,
     crate::{
-        api::{
-            doc_examples,
-            rest::RestError,
-            types::PriceIdInput,
-            ApiState,
-        },
-        state::aggregate::{
-            Aggregates,
-            RequestTime,
-            UnixTimestamp,
-        },
+        api::{doc_examples, rest::RestError, types::PriceIdInput, ApiState},
+        state::aggregate::{Aggregates, RequestTime, UnixTimestamp},
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
+    axum::{extract::State, Json},
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
-    utoipa::{
-        IntoParams,
-        ToSchema,
-    },
+    utoipa::{IntoParams, ToSchema},
 };
 
 #[derive(Debug, serde::Deserialize, IntoParams)]

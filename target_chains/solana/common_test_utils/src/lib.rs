@@ -2,45 +2,19 @@ use {
     anchor_lang::AnchorSerialize,
     libsecp256k1::PublicKey,
     program_simulator::ProgramSimulator,
-    pyth_solana_receiver::{
-        instruction::Initialize,
-        sdk::get_guardian_set_address,
-        ID,
-    },
+    pyth_solana_receiver::{instruction::Initialize, sdk::get_guardian_set_address, ID},
     pyth_solana_receiver_sdk::{
-        config::{
-            Config,
-            DataSource,
-        },
-        pda::{
-            get_config_address,
-            get_treasury_address,
-        },
+        config::{Config, DataSource},
+        pda::{get_config_address, get_treasury_address},
         PYTH_PUSH_ORACLE_ID,
     },
-    pythnet_sdk::test_utils::{
-        dummy_guardians,
-        DEFAULT_DATA_SOURCE,
-    },
+    pythnet_sdk::test_utils::{dummy_guardians, DEFAULT_DATA_SOURCE},
     serde_wormhole::RawMessage,
-    solana_program::{
-        keccak,
-        pubkey::Pubkey,
-        rent::Rent,
-    },
+    solana_program::{keccak, pubkey::Pubkey, rent::Rent},
     solana_program_test::ProgramTest,
-    solana_sdk::{
-        account::Account,
-        signature::Keypair,
-        signer::Signer,
-    },
+    solana_sdk::{account::Account, signature::Keypair, signer::Signer},
     wormhole_core_bridge_solana::{
-        state::{
-            EncodedVaa,
-            GuardianSet,
-            Header,
-            ProcessingStatus,
-        },
+        state::{EncodedVaa, GuardianSet, Header, ProcessingStatus},
         ID as BRIDGE_ID,
     },
     wormhole_sdk::Vaa,
@@ -55,7 +29,7 @@ pub fn default_receiver_config(governance_authority: Pubkey) -> Config {
         target_governance_authority: None,
         wormhole: BRIDGE_ID,
         valid_data_sources: vec![DataSource {
-            chain:   DEFAULT_DATA_SOURCE.chain.into(),
+            chain: DEFAULT_DATA_SOURCE.chain.into(),
             emitter: Pubkey::from(DEFAULT_DATA_SOURCE.address.0),
         }],
         single_update_fee_in_lamports: 1,
@@ -63,11 +37,10 @@ pub fn default_receiver_config(governance_authority: Pubkey) -> Config {
     }
 }
 
-
 pub struct ProgramTestFixtures {
-    pub program_simulator:     ProgramSimulator,
+    pub program_simulator: ProgramSimulator,
     pub encoded_vaa_addresses: Vec<Pubkey>,
-    pub governance_authority:  Keypair,
+    pub governance_authority: Keypair,
 }
 
 pub fn build_encoded_vaa_account_from_vaa(
@@ -77,7 +50,7 @@ pub fn build_encoded_vaa_account_from_vaa(
     let encoded_vaa_data = (
         <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
         Header {
-            status:          {
+            status: {
                 if matches!(wrong_setup_option, WrongSetupOption::UnverifiedEncodedVaa) {
                     ProcessingStatus::Writing
                 } else {
@@ -85,7 +58,7 @@ pub fn build_encoded_vaa_account_from_vaa(
                 }
             },
             write_authority: Pubkey::new_unique(),
-            version:         1,
+            version: 1,
         },
         serde_wormhole::to_vec(&vaa).unwrap(),
     )
@@ -93,9 +66,9 @@ pub fn build_encoded_vaa_account_from_vaa(
         .unwrap();
 
     Account {
-        lamports:   Rent::default().minimum_balance(encoded_vaa_data.len()),
-        data:       encoded_vaa_data,
-        owner:      BRIDGE_ID,
+        lamports: Rent::default().minimum_balance(encoded_vaa_data.len()),
+        data: encoded_vaa_data,
+        owner: BRIDGE_ID,
         executable: false,
         rent_epoch: 0,
     }
@@ -103,14 +76,14 @@ pub fn build_encoded_vaa_account_from_vaa(
 
 pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Account {
     let guardian_set = GuardianSet {
-        index:           {
+        index: {
             if matches!(wrong_setup_option, WrongSetupOption::GuardianSetWrongIndex) {
                 WRONG_GUARDIAN_SET_INDEX
             } else {
                 DEFAULT_GUARDIAN_SET_INDEX
             }
         },
-        keys:            dummy_guardians()
+        keys: dummy_guardians()
             .iter()
             .map(|x| {
                 let mut result: [u8; 20] = [0u8; 20];
@@ -120,7 +93,7 @@ pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Accou
                 result
             })
             .collect::<Vec<[u8; 20]>>(),
-        creation_time:   0.into(),
+        creation_time: 0.into(),
         expiration_time: {
             if matches!(wrong_setup_option, WrongSetupOption::GuardianSetExpired) {
                 1
@@ -139,9 +112,9 @@ pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Accou
         .unwrap();
 
     Account {
-        lamports:   Rent::default().minimum_balance(guardian_set_data.len()),
-        data:       guardian_set_data,
-        owner:      BRIDGE_ID,
+        lamports: Rent::default().minimum_balance(guardian_set_data.len()),
+        data: guardian_set_data,
+        owner: BRIDGE_ID,
         executable: false,
         rent_epoch: 0,
     }
@@ -186,7 +159,6 @@ pub async fn setup_pyth_receiver(
 
     let setup_keypair: Keypair = program_simulator.get_funded_keypair().await.unwrap();
     let initial_config = default_receiver_config(setup_keypair.pubkey());
-
 
     program_simulator
         .process_ix_with_default_compute_limit(

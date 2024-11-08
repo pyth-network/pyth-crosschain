@@ -1,15 +1,9 @@
 use {
-    crate::{
-        api::ApiState,
-        state::aggregate::Aggregates,
-    },
+    crate::{api::ApiState, state::aggregate::Aggregates},
     axum::{
         extract::State,
         http::StatusCode,
-        response::{
-            IntoResponse,
-            Response,
-        },
+        response::{IntoResponse, Response},
         Json,
     },
 };

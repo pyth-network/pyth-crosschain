@@ -1,9 +1,6 @@
 use {
     crate::{
-        api::types::{
-            AssetType,
-            PriceFeedMetadata,
-        },
+        api::types::{AssetType, PriceFeedMetadata},
         state::State,
     },
     anyhow::Result,
@@ -65,7 +62,6 @@ where
         *price_feeds_metadata_write_guard = price_feeds_metadata.to_vec();
         Ok(())
     }
-
 
     async fn get_price_feeds_metadata(
         &self,

@@ -2,15 +2,8 @@
 #[allow(clippy::module_inception)]
 mod tests {
     use {
-        crate::{
-            state::Source,
-            Pyth,
-        },
-        near_sdk::{
-            test_utils::VMContextBuilder,
-            testing_env,
-            VMContext,
-        },
+        crate::{state::Source, Pyth},
+        near_sdk::{test_utils::VMContextBuilder, testing_env, VMContext},
     };
 
     fn create_contract() -> Pyth {

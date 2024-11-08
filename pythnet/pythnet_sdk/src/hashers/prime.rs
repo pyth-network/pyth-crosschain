@@ -1,9 +1,4 @@
-use {
-    crate::hashers::Hasher,
-    serde::Serialize,
-    sha3::Digest,
-    slow_primes::is_prime_miller_rabin,
-};
+use {crate::hashers::Hasher, serde::Serialize, sha3::Digest, slow_primes::is_prime_miller_rabin};
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, Serialize)]
 pub struct PrimeHasher {}

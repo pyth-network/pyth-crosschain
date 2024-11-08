@@ -1,21 +1,11 @@
 use {
     super::Slot,
     prometheus_client::{
-        encoding::{
-            EncodeLabelSet,
-            EncodeLabelValue,
-        },
-        metrics::{
-            counter::Counter,
-            family::Family,
-            histogram::Histogram,
-        },
+        encoding::{EncodeLabelSet, EncodeLabelValue},
+        metrics::{counter::Counter, family::Family, histogram::Histogram},
         registry::Registry,
     },
-    std::collections::{
-        BTreeMap,
-        HashMap,
-    },
+    std::collections::{BTreeMap, HashMap},
     tokio::time::Instant,
 };
 
@@ -42,17 +32,17 @@ struct ObservedSlotLabels {
 
 #[derive(Clone, Debug)]
 pub struct Metrics {
-    observed_slot:               Family<ObservedSlotLabels, Counter>,
-    observed_slot_latency:       Family<ObservedSlotLabels, Histogram>,
+    observed_slot: Family<ObservedSlotLabels, Counter>,
+    observed_slot_latency: Family<ObservedSlotLabels, Histogram>,
     first_observed_time_of_slot: BTreeMap<Slot, Instant>,
-    newest_observed_slot:        HashMap<Event, Slot>,
+    newest_observed_slot: HashMap<Event, Slot>,
 }
 
 impl Metrics {
     pub fn new(metrics_registry: &mut Registry) -> Self {
         let new = Self {
-            observed_slot:               Family::default(),
-            observed_slot_latency:       Family::new_with_constructor(|| {
+            observed_slot: Family::default(),
+            observed_slot_latency: Family::new_with_constructor(|| {
                 Histogram::new(
                     [
                         0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0,
@@ -61,7 +51,7 @@ impl Metrics {
                 )
             }),
             first_observed_time_of_slot: BTreeMap::new(),
-            newest_observed_slot:        HashMap::new(),
+            newest_observed_slot: HashMap::new(),
         };
 
         {

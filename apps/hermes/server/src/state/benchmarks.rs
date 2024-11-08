@@ -2,18 +2,12 @@
 
 use {
     super::{
-        aggregate::{
-            PriceFeedsWithUpdateData,
-            UnixTimestamp,
-        },
+        aggregate::{PriceFeedsWithUpdateData, UnixTimestamp},
         State,
     },
     crate::api::types::PriceUpdate,
     anyhow::Result,
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     pyth_sdk::PriceIdentifier,
     reqwest::Url,
     serde::Deserialize,
@@ -32,7 +26,7 @@ enum BlobEncoding {
 #[derive(Deserialize, Debug, Clone)]
 struct BinaryBlob {
     pub encoding: BlobEncoding,
-    pub data:     Vec<String>,
+    pub data: Vec<String>,
 }
 
 impl TryFrom<BinaryBlob> for Vec<Vec<u8>> {

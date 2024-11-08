@@ -1,11 +1,6 @@
 use {
     super::errors::ReadAccountError,
-    bytemuck::{
-        from_bytes,
-        from_bytes_mut,
-        Pod,
-        Zeroable,
-    },
+    bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable},
     std::mem::size_of,
 };
 
@@ -21,10 +16,10 @@ pub fn format_matches(data: &[u8]) -> bool {
 #[repr(C, packed)]
 pub struct PublisherConfig {
     /// Account magic to avoid account confusion.
-    pub format:         u32,
+    pub format: u32,
     /// The publisher this config is associated with.
     /// Always matches the pubkey used to derive the PDA pubkey.
-    pub publisher:      [u8; 32],
+    pub publisher: [u8; 32],
     /// The publisher's buffer account.
     pub buffer_account: [u8; 32],
 }

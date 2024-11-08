@@ -12,18 +12,9 @@ mod prefixed_vec;
 mod ser;
 
 pub use {
-    de::{
-        from_slice,
-        Deserializer,
-        DeserializerError,
-    },
+    de::{from_slice, Deserializer, DeserializerError},
     prefixed_vec::PrefixedVec,
-    ser::{
-        to_vec,
-        to_writer,
-        Serializer,
-        SerializerError,
-    },
+    ser::{to_vec, to_writer, Serializer, SerializerError},
 };
 
 // Proof Format (V1)
@@ -35,19 +26,11 @@ pub mod v1 {
     use {
         super::*,
         crate::{
-            accumulators::merkle::MerklePath,
-            error::Error,
-            hashers::keccak256_160::Keccak160,
+            accumulators::merkle::MerklePath, error::Error, hashers::keccak256_160::Keccak160,
             require,
         },
-        borsh::{
-            BorshDeserialize,
-            BorshSerialize,
-        },
-        serde::{
-            Deserialize,
-            Serialize,
-        },
+        borsh::{BorshDeserialize, BorshSerialize},
+        serde::{Deserialize, Serialize},
     };
     pub const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: &[u8; 4] = b"PNAU";
     pub const CURRENT_MINOR_VERSION: u8 = 0;
@@ -58,11 +41,11 @@ pub mod v1 {
     // to target chains).
     #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
     pub struct AccumulatorUpdateData {
-        magic:         [u8; 4],
+        magic: [u8; 4],
         major_version: u8,
         minor_version: u8,
-        trailing:      Vec<u8>,
-        pub proof:     Proof,
+        trailing: Vec<u8>,
+        pub proof: Proof,
     }
 
     impl AccumulatorUpdateData {
@@ -101,7 +84,7 @@ pub mod v1 {
     #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
     pub enum Proof {
         WormholeMerkle {
-            vaa:     PrefixedVec<u16, u8>,
+            vaa: PrefixedVec<u16, u8>,
             updates: Vec<MerklePriceUpdate>,
         },
     }
@@ -111,12 +94,12 @@ pub mod v1 {
     )]
     pub struct MerklePriceUpdate {
         pub message: PrefixedVec<u16, u8>,
-        pub proof:   MerklePath<Keccak160>,
+        pub proof: MerklePath<Keccak160>,
     }
 
     #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
     pub struct WormholeMessage {
-        pub magic:   [u8; 4],
+        pub magic: [u8; 4],
         pub payload: WormholePayload,
     }
 
@@ -148,9 +131,9 @@ pub mod v1 {
 
     #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
     pub struct WormholeMerkleRoot {
-        pub slot:      u64,
+        pub slot: u64,
         pub ring_size: u32,
-        pub root:      Hash,
+        pub root: Hash,
     }
 }
 
@@ -158,13 +141,8 @@ pub mod v1 {
 mod tests {
     use crate::wire::{
         array,
-        v1::{
-            AccumulatorUpdateData,
-            Proof,
-        },
-        Deserializer,
-        PrefixedVec,
-        Serializer,
+        v1::{AccumulatorUpdateData, Proof},
+        Deserializer, PrefixedVec, Serializer,
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -233,41 +211,41 @@ mod tests {
             t_bool: bool,
 
             // Test integer serializations.
-            t_u8:  u8,
+            t_u8: u8,
             t_u16: u16,
             t_u32: u32,
             t_u64: u64,
 
             // Test `str` is serialized to a variable length array.
             t_string: String,
-            t_str:    &'a str,
+            t_str: &'a str,
 
             // Test `Vec` is serialized to a variable length array.
-            t_vec:              Vec<u8>,
-            t_vec_empty:        Vec<u8>,
-            t_vec_nested:       Vec<Vec<u8>>,
+            t_vec: Vec<u8>,
+            t_vec_empty: Vec<u8>,
+            t_vec_nested: Vec<Vec<u8>>,
             t_vec_nested_empty: Vec<Vec<u8>>,
-            t_slice:            &'a [u8],
-            t_slice_empty:      &'a [u8],
+            t_slice: &'a [u8],
+            t_slice_empty: &'a [u8],
 
             // Test tuples serialize as expected.
-            t_tuple:        (u8, u16, u32, u64, String, Vec<u8>, &'a [u8]),
+            t_tuple: (u8, u16, u32, u64, String, Vec<u8>, &'a [u8]),
             t_tuple_nested: ((u8, u16), (u32, u64)),
 
             // Test enum serializations.
-            t_enum_unit:    GoldenEnum,
+            t_enum_unit: GoldenEnum,
             t_enum_newtype: GoldenEnum,
-            t_enum_tuple:   GoldenEnum,
-            t_enum_struct:  GoldenEnum,
+            t_enum_tuple: GoldenEnum,
+            t_enum_struct: GoldenEnum,
 
             // Test nested structs, which includes our PrefixedVec implementations work as we expect.
-            t_struct:   GoldenNested<u8>,
+            t_struct: GoldenNested<u8>,
             t_prefixed: PrefixedVec<u16, u8>,
         }
 
         #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
         struct GoldenNested<T> {
-            nested_u8:    T,
+            nested_u8: T,
             nested_tuple: (u8, u8),
         }
 
@@ -281,21 +259,21 @@ mod tests {
 
         // Serialize the golden test value.
         let golden_struct = GoldenStruct {
-            unit:               (),
-            t_bool:             true,
-            t_u8:               1,
-            t_u16:              2,
-            t_u32:              3,
-            t_u64:              4,
-            t_string:           "9".to_string(),
-            t_str:              "10",
-            t_vec:              vec![11, 12, 13],
-            t_vec_empty:        vec![],
-            t_vec_nested:       vec![vec![14, 15, 16], vec![17, 18, 19]],
+            unit: (),
+            t_bool: true,
+            t_u8: 1,
+            t_u16: 2,
+            t_u32: 3,
+            t_u64: 4,
+            t_string: "9".to_string(),
+            t_str: "10",
+            t_vec: vec![11, 12, 13],
+            t_vec_empty: vec![],
+            t_vec_nested: vec![vec![14, 15, 16], vec![17, 18, 19]],
             t_vec_nested_empty: vec![vec![], vec![]],
-            t_slice:            &[20, 21, 22],
-            t_slice_empty:      &[],
-            t_tuple:            (
+            t_slice: &[20, 21, 22],
+            t_slice_empty: &[],
+            t_tuple: (
                 29,
                 30,
                 31,
@@ -304,16 +282,16 @@ mod tests {
                 vec![35, 36, 37],
                 &[38, 39, 40],
             ),
-            t_tuple_nested:     ((41, 42), (43, 44)),
-            t_enum_unit:        GoldenEnum::Unit,
-            t_enum_newtype:     GoldenEnum::Newtype(45),
-            t_enum_tuple:       GoldenEnum::Tuple(46, 47),
-            t_enum_struct:      GoldenEnum::Struct { a: 48, b: 49 },
-            t_struct:           GoldenNested {
-                nested_u8:    50,
+            t_tuple_nested: ((41, 42), (43, 44)),
+            t_enum_unit: GoldenEnum::Unit,
+            t_enum_newtype: GoldenEnum::Newtype(45),
+            t_enum_tuple: GoldenEnum::Tuple(46, 47),
+            t_enum_struct: GoldenEnum::Struct { a: 48, b: 49 },
+            t_struct: GoldenNested {
+                nested_u8: 50,
                 nested_tuple: (51, 52),
             },
-            t_prefixed:         vec![0u8; 512].into(),
+            t_prefixed: vec![0u8; 512].into(),
         };
 
         golden_struct.serialize(&mut serializer).unwrap();
@@ -504,7 +482,7 @@ mod tests {
         use serde::Serialize;
         // Serialize an empty update into a buffer.
         let empty_update = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-            vaa:     PrefixedVec::from(vec![]),
+            vaa: PrefixedVec::from(vec![]),
             updates: vec![],
         });
         let mut buffer = Vec::new();
@@ -526,7 +504,7 @@ mod tests {
         // Serialize an empty update into a buffer.
 
         let empty_update = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-            vaa:     PrefixedVec::from(vec![]),
+            vaa: PrefixedVec::from(vec![]),
             updates: vec![],
         });
         let mut buffer = Vec::new();
