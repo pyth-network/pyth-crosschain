@@ -1216,4 +1216,50 @@ describe("PythTest", () => {
       exitCode: 2002, // ERROR_INVALID_MAGIC
     });
   });
+
+  it("should fail to parse price feed updates within range", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME + 1,
+      HERMES_BTC_PUBLISH_TIME + 1
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2020, // ERROR_NO_PRICE_FEEDS_FOUND
+    });
+  });
+
+  it("should fail to parse unique price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      60
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2020, // ERROR_NO_PRICE_FEEDS_FOUND
+    });
+  });
 });
