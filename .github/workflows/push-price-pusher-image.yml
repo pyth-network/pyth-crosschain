@@ -1,6 +1,6 @@
 name: Build and Push Price Pusher Image
 on:
-  pull:
+  pull_request:
   workflow_dispatch:
     inputs:
       dispatch_description:
