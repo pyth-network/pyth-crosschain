@@ -1,37 +1,22 @@
 use {
-    common_test_utils::{
-        setup_pyth_receiver,
-        ProgramTestFixtures,
-        WrongSetupOption,
-    },
+    common_test_utils::{setup_pyth_receiver, ProgramTestFixtures, WrongSetupOption},
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
         error::ReceiverError,
         instruction::{
-            AcceptGovernanceAuthorityTransfer,
-            CancelGovernanceAuthorityTransfer,
-            RequestGovernanceAuthorityTransfer,
-            SetDataSources,
-            SetFee,
-            SetMinimumSignatures,
+            AcceptGovernanceAuthorityTransfer, CancelGovernanceAuthorityTransfer,
+            RequestGovernanceAuthorityTransfer, SetDataSources, SetFee, SetMinimumSignatures,
             SetWormholeAddress,
         },
     },
     pyth_solana_receiver_sdk::{
-        config::{
-            Config,
-            DataSource,
-        },
+        config::{Config, DataSource},
         pda::get_config_address,
     },
     pythnet_sdk::test_utils::SECONDARY_DATA_SOURCE,
-    solana_program::{
-        native_token::LAMPORTS_PER_SOL,
-        pubkey::Pubkey,
-    },
+    solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
     solana_sdk::signer::Signer,
 };
-
 
 #[tokio::test]
 async fn test_governance() {
@@ -49,17 +34,16 @@ async fn test_governance() {
         .unwrap();
 
     let new_config = Config {
-        governance_authority:          new_governance_authority.pubkey(),
-        target_governance_authority:   None,
-        wormhole:                      Pubkey::new_unique(),
-        valid_data_sources:            vec![DataSource {
-            chain:   SECONDARY_DATA_SOURCE.chain.into(),
+        governance_authority: new_governance_authority.pubkey(),
+        target_governance_authority: None,
+        wormhole: Pubkey::new_unique(),
+        valid_data_sources: vec![DataSource {
+            chain: SECONDARY_DATA_SOURCE.chain.into(),
             emitter: Pubkey::from(SECONDARY_DATA_SOURCE.address.0),
         }],
         single_update_fee_in_lamports: LAMPORTS_PER_SOL,
-        minimum_signatures:            20,
+        minimum_signatures: 20,
     };
-
 
     // this authority is not allowed to do anything
     assert_eq!(
@@ -149,7 +133,6 @@ async fn test_governance() {
             .unwrap(),
         initial_config
     );
-
 
     // Now start changing for real
     program_simulator
@@ -330,7 +313,6 @@ async fn test_governance() {
         .await
         .unwrap();
 
-
     current_config = program_simulator
         .get_anchor_account_data::<Config>(get_config_address())
         .await
@@ -373,7 +355,6 @@ async fn test_governance() {
         into_transaction_error(ReceiverError::TargetGovernanceAuthorityMismatch)
     );
 
-
     // Undo the request
     program_simulator
         .process_ix_with_default_compute_limit(
@@ -406,7 +387,6 @@ async fn test_governance() {
         current_config.minimum_signatures,
         new_config.minimum_signatures
     );
-
 
     // Redo the request
     program_simulator
@@ -446,7 +426,6 @@ async fn test_governance() {
         current_config.minimum_signatures,
         new_config.minimum_signatures
     );
-
 
     // New authority can accept
     program_simulator

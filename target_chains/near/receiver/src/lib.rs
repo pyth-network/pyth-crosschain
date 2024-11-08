@@ -4,32 +4,14 @@ use {
     error::Error,
     ext::ext_wormhole,
     near_sdk::{
-        borsh::{
-            BorshDeserialize,
-            BorshSerialize,
-        },
-        collections::{
-            UnorderedMap,
-            UnorderedSet,
-        },
-        env,
-        is_promise_success,
+        borsh::{BorshDeserialize, BorshSerialize},
+        collections::{UnorderedMap, UnorderedSet},
+        env, is_promise_success,
         json_types::U128,
-        log,
-        near_bindgen,
-        AccountId,
-        BorshStorageKey,
-        Duration,
-        Gas,
-        NearToken,
-        PanicOnDefault,
-        Promise,
-        StorageUsage,
+        log, near_bindgen, AccountId, BorshStorageKey, Duration, Gas, NearToken, PanicOnDefault,
+        Promise, StorageUsage,
     },
-    pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation,
-        P2W_MAGIC,
-    },
+    pyth_wormhole_attester_sdk::{BatchPriceAttestation, P2W_MAGIC},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -37,28 +19,16 @@ use {
         wire::{
             from_slice,
             v1::{
-                AccumulatorUpdateData,
-                Proof,
-                WormholeMessage,
-                WormholePayload,
+                AccumulatorUpdateData, Proof, WormholeMessage, WormholePayload,
                 PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
             },
         },
     },
     serde_wormhole::RawMessage,
-    state::{
-        Price,
-        PriceFeed,
-        PriceIdentifier,
-        Source,
-        Vaa,
-    },
+    state::{Price, PriceFeed, PriceIdentifier, Source, Vaa},
     std::{
         collections::HashMap,
-        io::{
-            Cursor,
-            Read,
-        },
+        io::{Cursor, Read},
     },
 };
 
@@ -662,7 +632,7 @@ impl Pyth {
 
         if !self.sources.contains(&Source {
             emitter: vaa.emitter_address,
-            chain:   vaa.emitter_chain,
+            chain: vaa.emitter_chain,
         }) {
             return Err(Error::UnknownSource(vaa.emitter_address));
         }

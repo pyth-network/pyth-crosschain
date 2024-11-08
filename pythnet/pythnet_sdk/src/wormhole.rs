@@ -5,24 +5,11 @@
 //! allows us to emit and parse messages through Wormhole.
 use {
     crate::Pubkey,
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    borsh::{BorshDeserialize, BorshSerialize},
+    serde::{Deserialize, Serialize},
     std::{
-        io::{
-            Error,
-            ErrorKind::InvalidData,
-            Write,
-        },
-        ops::{
-            Deref,
-            DerefMut,
-        },
+        io::{Error, ErrorKind::InvalidData, Write},
+        ops::{Deref, DerefMut},
     },
 };
 
@@ -36,16 +23,16 @@ pub struct PostedMessageUnreliableData {
     Debug, Default, BorshSerialize, BorshDeserialize, Clone, Serialize, Deserialize, PartialEq,
 )]
 pub struct MessageData {
-    pub vaa_version:           u8,
-    pub consistency_level:     u8,
-    pub vaa_time:              u32,
+    pub vaa_version: u8,
+    pub consistency_level: u8,
+    pub vaa_time: u32,
     pub vaa_signature_account: Pubkey,
-    pub submission_time:       u32,
-    pub nonce:                 u32,
-    pub sequence:              u64,
-    pub emitter_chain:         u16,
-    pub emitter_address:       [u8; 32],
-    pub payload:               Vec<u8>,
+    pub submission_time: u32,
+    pub nonce: u32,
+    pub sequence: u64,
+    pub emitter_chain: u16,
+    pub emitter_address: [u8; 32],
+    pub payload: Vec<u8>,
 }
 
 impl BorshSerialize for PostedMessageUnreliableData {
@@ -103,19 +90,18 @@ pub struct AccumulatorSequenceTracker {
 fn test_borsh_roundtrip() {
     let post_message_unreliable_data = PostedMessageUnreliableData {
         message: MessageData {
-            vaa_version:           1,
-            consistency_level:     2,
-            vaa_time:              3,
+            vaa_version: 1,
+            consistency_level: 2,
+            vaa_time: 3,
             vaa_signature_account: [4u8; 32],
-            submission_time:       5,
-            nonce:                 6,
-            sequence:              7,
-            emitter_chain:         8,
-            emitter_address:       [9u8; 32],
-            payload:               vec![10u8; 32],
+            submission_time: 5,
+            nonce: 6,
+            sequence: 7,
+            emitter_chain: 8,
+            emitter_address: [9u8; 32],
+            payload: vec![10u8; 32],
         },
     };
-
 
     let encoded = borsh::to_vec(&post_message_unreliable_data).unwrap();
 

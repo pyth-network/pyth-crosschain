@@ -5,10 +5,7 @@ pub use {
     solana_program_test::*,
     solana_sdk::{
         pubkey::Pubkey,
-        signature::{
-            Keypair,
-            Signer,
-        },
+        signature::{Keypair, Signer},
     },
 };
 

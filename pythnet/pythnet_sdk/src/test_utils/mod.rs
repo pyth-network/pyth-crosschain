@@ -1,85 +1,55 @@
 use {
     crate::{
-        accumulators::{
-            merkle::MerkleTree,
-            Accumulator,
-        },
-        hashers::{
-            keccak256::Keccak256,
-            keccak256_160::Keccak160,
-            Hasher,
-        },
-        messages::{
-            FeedId,
-            Message,
-            PriceFeedMessage,
-            TwapMessage,
-        },
+        accumulators::{merkle::MerkleTree, Accumulator},
+        hashers::{keccak256::Keccak256, keccak256_160::Keccak160, Hasher},
+        messages::{FeedId, Message, PriceFeedMessage, TwapMessage},
         wire::{
             to_vec,
             v1::{
-                AccumulatorUpdateData,
-                MerklePriceUpdate,
-                Proof,
-                WormholeMerkleRoot,
-                WormholeMessage,
-                WormholePayload,
+                AccumulatorUpdateData, MerklePriceUpdate, Proof, WormholeMerkleRoot,
+                WormholeMessage, WormholePayload,
             },
             PrefixedVec,
         },
     },
     byteorder::BigEndian,
-    libsecp256k1::{
-        Message as libsecp256k1Message,
-        PublicKey,
-        RecoveryId,
-        SecretKey,
-        Signature,
-    },
-    rand::{
-        seq::SliceRandom,
-        thread_rng,
-    },
+    libsecp256k1::{Message as libsecp256k1Message, PublicKey, RecoveryId, SecretKey, Signature},
+    rand::{seq::SliceRandom, thread_rng},
     serde_wormhole::RawMessage,
     wormhole_sdk::{
-        vaa::{
-            Body,
-            Header,
-        },
-        Address,
-        Chain,
-        Vaa,
+        vaa::{Body, Header},
+        Address, Chain, Vaa,
     },
 };
 
 pub struct DataSource {
     pub address: Address,
-    pub chain:   Chain,
+    pub chain: Chain,
 }
 
 pub const DEFAULT_DATA_SOURCE: DataSource = DataSource {
     address: Address([1u8; 32]),
-    chain:   Chain::Solana,
+    chain: Chain::Solana,
 };
 
 pub const DEFAULT_GOVERNANCE_SOURCE: DataSource = DataSource {
     address: Address([2u8; 32]),
-    chain:   Chain::Ethereum,
+    chain: Chain::Ethereum,
 };
 
 pub const WRONG_SOURCE: DataSource = DataSource {
     address: Address([3u8; 32]),
-    chain:   Chain::Bsc,
+    chain: Chain::Bsc,
 };
 
 pub const SECONDARY_DATA_SOURCE: DataSource = DataSource {
     address: Address([4u8; 32]),
-    chain:   Chain::Polygon,
+    chain: Chain::Polygon,
 };
 
 pub const SECONDARY_GOVERNANCE_SOURCE: DataSource = DataSource {
     address: Address([5u8; 32]),
-    chain:   Chain::Avalanche,
+    chain: Chain::Avalanche,
 };
 
 pub const DEFAULT_CHAIN_ID: Chain = Chain::Oasis;
@@ -140,14 +110,14 @@ pub fn create_dummy_price_feed_message(value: i64) -> Message {
 
 pub fn create_dummy_twap_message() -> Message {
     let msg = TwapMessage {
-        feed_id:           [0; 32],
-        cumulative_price:  0,
-        cumulative_conf:   0,
-        num_down_slots:    0,
-        exponent:          0,
-        publish_time:      0,
+        feed_id: [0; 32],
+        cumulative_price: 0,
+        cumulative_conf: 0,
+        num_down_slots: 0,
+        exponent: 0,
+        publish_time: 0,
         prev_publish_time: 0,
-        publish_slot:      0,
+        publish_slot: 0,
     };
     Message::TwapMessage(msg)
 }
@@ -217,9 +187,9 @@ pub fn create_accumulator_message_from_updates(
     let mut root_hash = [0u8; 20];
     root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
     let wormhole_message = WormholeMessage::new(WormholePayload::Merkle(WormholeMerkleRoot {
-        slot:      0,
+        slot: 0,
         ring_size: 0,
-        root:      root_hash,
+        root: root_hash,
     }));
 
     let mut vaa_payload = to_vec::<_, BigEndian>(&wormhole_message).unwrap();
@@ -235,7 +205,7 @@ pub fn create_accumulator_message_from_updates(
     );
 
     let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-        vaa:     PrefixedVec::from(serde_wormhole::to_vec(&vaa).unwrap()),
+        vaa: PrefixedVec::from(serde_wormhole::to_vec(&vaa).unwrap()),
         updates: price_updates,
     });
 

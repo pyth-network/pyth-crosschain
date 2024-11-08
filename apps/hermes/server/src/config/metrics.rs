@@ -1,7 +1,4 @@
-use {
-    clap::Args,
-    std::net::SocketAddr,
-};
+use {clap::Args, std::net::SocketAddr};
 
 const DEFAULT_METRICS_SERVER_LISTEN_ADDR: &str = "127.0.0.1:33888";
 

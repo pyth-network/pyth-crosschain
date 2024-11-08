@@ -1,12 +1,7 @@
 pub mod hex {
     use {
         hex::FromHex,
-        serde::{
-            de::IntoDeserializer,
-            Deserialize,
-            Deserializer,
-            Serializer,
-        },
+        serde::{de::IntoDeserializer, Deserialize, Deserializer, Serializer},
     };
 
     pub fn serialize<S, const N: usize>(b: &[u8; N], s: S) -> Result<S::Ok, S::Error>

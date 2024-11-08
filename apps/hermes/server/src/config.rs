@@ -1,11 +1,4 @@
-use clap::{
-    crate_authors,
-    crate_description,
-    crate_name,
-    crate_version,
-    Args,
-    Parser,
-};
+use clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser};
 
 mod aggregate;
 mod benchmarks;

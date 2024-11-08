@@ -1,24 +1,12 @@
 use {
     crate::{
         accounts,
-        instruction::{
-            InitializeArgs,
-            CONFIG_SEED,
-        },
-        validate::{
-            validate_config,
-            validate_payer,
-            validate_system,
-        },
+        instruction::{InitializeArgs, CONFIG_SEED},
+        validate::{validate_config, validate_payer, validate_system},
     },
     solana_program::{
-        account_info::AccountInfo,
-        entrypoint::ProgramResult,
-        program::invoke_signed,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
-        sysvar::Sysvar,
+        account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
+        pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
     },
 };
 
@@ -60,23 +48,14 @@ pub fn initialize(
 #[cfg(test)]
 mod tests {
     use {
-        crate::{
-            accounts,
-            instruction::CONFIG_SEED,
-        },
+        crate::{accounts, instruction::CONFIG_SEED},
         solana_program::{
-            instruction::{
-                AccountMeta,
-                Instruction,
-            },
+            instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
             system_program,
         },
         solana_program_test::*,
-        solana_sdk::{
-            signature::Signer,
-            transaction::Transaction,
-        },
+        solana_sdk::{signature::Signer, transaction::Transaction},
     };
 
     #[tokio::test]

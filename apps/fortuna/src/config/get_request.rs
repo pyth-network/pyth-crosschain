@@ -1,8 +1,5 @@
 use {
-    crate::{
-        api::ChainId,
-        config::ConfigOptions,
-    },
+    crate::{api::ChainId, config::ConfigOptions},
     clap::Args,
     ethers::types::Address,
 };

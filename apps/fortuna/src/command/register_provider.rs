@@ -1,28 +1,14 @@
 use {
     crate::{
-        api::{
-            get_register_uri,
-            ChainId,
-        },
+        api::{get_register_uri, ChainId},
         chain::ethereum::SignablePythContract,
-        config::{
-            Config,
-            EthereumConfig,
-            ProviderConfig,
-            RegisterProviderOptions,
-        },
+        config::{Config, EthereumConfig, ProviderConfig, RegisterProviderOptions},
         state::PebbleHashChain,
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     ethers::{
         abi::Bytes,
-        signers::{
-            LocalWallet,
-            Signer,
-        },
+        signers::{LocalWallet, Signer},
         types::U256,
     },
     std::sync::Arc,
@@ -30,7 +16,7 @@ use {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct CommitmentMetadata {
-    pub seed:         [u8; 32],
+    pub seed: [u8; 32],
     pub chain_length: u64,
 }
 
@@ -83,7 +69,7 @@ pub async fn register_provider_from_config(
     // Store the random seed and chain length in the metadata field so that we can regenerate the hash
     // chain at-will. (This is secure because you can't generate the chain unless you also have the secret)
     let commitment_metadata = CommitmentMetadata {
-        seed:         random,
+        seed: random,
         chain_length: commitment_length,
     };
     let uri = get_register_uri(&provider_config.uri, chain_id)?;

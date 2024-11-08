@@ -1,7 +1,4 @@
-use axum::{
-    response::IntoResponse,
-    Json,
-};
+use axum::{response::IntoResponse, Json};
 
 /// This is the index page for the REST service. It lists all the available endpoints.
 ///

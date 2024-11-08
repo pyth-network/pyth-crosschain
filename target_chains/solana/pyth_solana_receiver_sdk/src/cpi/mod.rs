@@ -1,12 +1,6 @@
 use {
-    self::accounts::{
-        PostUpdate,
-        PostUpdateAtomic,
-    },
-    crate::{
-        PostUpdateAtomicParams,
-        PostUpdateParams,
-    },
+    self::accounts::{PostUpdate, PostUpdateAtomic},
+    crate::{PostUpdateAtomicParams, PostUpdateParams},
     anchor_lang::prelude::*,
 };
 

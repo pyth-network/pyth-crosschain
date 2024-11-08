@@ -1,38 +1,17 @@
 use {
     crate::{
         api::ChainId,
-        chain::reader::{
-            BlockNumber,
-            BlockStatus,
-        },
+        chain::reader::{BlockNumber, BlockStatus},
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
-    clap::{
-        crate_authors,
-        crate_description,
-        crate_name,
-        crate_version,
-        Args,
-        Parser,
-    },
+    anyhow::{anyhow, Result},
+    clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
-    std::{
-        collections::HashMap,
-        fs,
-    },
+    std::{collections::HashMap, fs},
 };
 pub use {
-    generate::GenerateOptions,
-    get_request::GetRequestOptions,
-    inspect::InspectOptions,
-    register_provider::RegisterProviderOptions,
-    request_randomness::RequestRandomnessOptions,
-    run::RunOptions,
-    setup_provider::SetupProviderOptions,
-    withdraw_fees::WithdrawFeesOptions,
+    generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
+    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
+    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -93,9 +72,9 @@ pub struct ConfigOptions {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains:   HashMap<ChainId, EthereumConfig>,
+    pub chains: HashMap<ChainId, EthereumConfig>,
     pub provider: ProviderConfig,
-    pub keeper:   KeeperConfig,
+    pub keeper: KeeperConfig,
 }
 
 impl Config {
@@ -189,15 +168,14 @@ pub struct EthereumConfig {
     pub max_num_hashes: Option<u32>,
 }
 
-
 /// A commitment that the provider used to generate random numbers at some point in the past.
 /// These historical commitments need to be stored in the configuration to support transition points where
 /// the commitment changes. In theory, this information is stored on the blockchain, but unfortunately it
 /// is hard to retrieve from there.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Commitment {
-    pub seed:                                [u8; 32],
-    pub chain_length:                        u64,
+    pub seed: [u8; 32],
+    pub chain_length: u64,
     pub original_commitment_sequence_number: u64,
 }
 

@@ -23,7 +23,7 @@ pub mod stake_caps_parameters {
 #[derive(Accounts)]
 pub struct SetParameters<'info> {
     #[account(mut)]
-    pub signer:         Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(
         init_if_needed,
         seeds = ["parameters".as_bytes()],
@@ -31,17 +31,16 @@ pub struct SetParameters<'info> {
         payer = signer,
         space = Parameters::LEN
     )]
-    pub parameters:     Account<'info, Parameters>,
+    pub parameters: Account<'info, Parameters>,
     pub system_program: Program<'info, System>,
 }
-
 
 #[account]
 #[derive(PartialEq, Eq, Debug, Copy)]
 pub struct Parameters {
     pub current_authority: Pubkey,
-    pub m:                 u64,
-    pub z:                 u64,
+    pub m: u64,
+    pub z: u64,
 }
 
 impl Parameters {

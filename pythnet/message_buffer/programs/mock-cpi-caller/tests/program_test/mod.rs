@@ -1,56 +1,30 @@
 use {
     anchor_lang::{
-        prelude::{
-            ProgramError::Custom,
-            *,
-        },
+        prelude::{ProgramError::Custom, *},
         solana_program::{
             hash::hashv,
-            instruction::{
-                Instruction,
-                InstructionError,
-            },
+            instruction::{Instruction, InstructionError},
         },
         Id,
     },
-    byteorder::{
-        BigEndian,
-        LittleEndian,
-        ReadBytesExt,
-    },
-    message_buffer::instructions::{
-        MESSAGE,
-        WHITELIST,
-    },
-    solana_program_test::{
-        BanksClientError,
-        ProgramTest,
-        ProgramTestContext,
-    },
+    byteorder::{BigEndian, LittleEndian, ReadBytesExt},
+    message_buffer::instructions::{MESSAGE, WHITELIST},
+    solana_program_test::{BanksClientError, ProgramTest, ProgramTestContext},
     solana_sdk::{
         account::ReadableAccount,
-        signature::{
-            Keypair,
-            Signer,
-        },
-        transaction::{
-            Transaction,
-            TransactionError,
-        },
+        signature::{Keypair, Signer},
+        transaction::{Transaction, TransactionError},
     },
     std::{
-        io::{
-            Cursor,
-            Read,
-        },
+        io::{Cursor, Read},
         str::FromStr,
     },
 };
 
 pub struct MessageBufferTestContext {
-    context:   ProgramTestContext,
+    context: ProgramTestContext,
     pub payer: Keypair,
-    admin:     Option<Keypair>,
+    admin: Option<Keypair>,
     whitelist: Option<Pubkey>,
 }
 
@@ -71,7 +45,6 @@ impl MessageBufferTestContext {
                     solana_runtime::system_instruction_processor=trace,\
                     solana_program_test=debug";
         solana_logger::setup_with(log_filter);
-
 
         let mut pt = ProgramTest::new("message_buffer", ::message_buffer::id(), None);
         pt.add_program("mock_cpi_caller", ::mock_cpi_caller::id(), None);
@@ -107,7 +80,6 @@ impl MessageBufferTestContext {
         Ok(context)
     }
 
-
     pub async fn initialize_with_default_test_buffer(
         disable_loosen_cpi_limit: bool,
         target_size: u32,
@@ -122,7 +94,6 @@ impl MessageBufferTestContext {
             .unwrap();
         Ok(context)
     }
-
 
     pub async fn get_balance(&mut self, pubkey: Pubkey) -> u64 {
         self.context.banks_client.get_balance(pubkey).await.unwrap()
@@ -152,7 +123,6 @@ impl MessageBufferTestContext {
         vec![MessageBufferTestContext::get_mock_cpi_auth()]
     }
 
-
     pub fn default_pyth_price_account() -> Pubkey {
         Self::get_mock_pyth_price_account(Self::DEFAULT_TEST_PRICE_ID)
     }
@@ -171,7 +141,6 @@ impl MessageBufferTestContext {
             Self::default_pyth_price_account(),
         )
     }
-
 
     pub async fn process_ixs(
         &mut self,
@@ -241,7 +210,6 @@ impl MessageBufferTestContext {
         deserialize_whitelist(account_data)
     }
 
-
     pub async fn set_allowed_programs(&mut self, allowed_programs: &Vec<Pubkey>) -> Result<()> {
         let set_allowed_programs_ix =
             set_allowed_programs_ix(self.admin_pubkey(), self.whitelist(), allowed_programs);
@@ -254,7 +222,6 @@ impl MessageBufferTestContext {
         .unwrap();
         Ok(())
     }
-
 
     pub async fn create_buffer(&mut self, id: u64, target_size: u32) -> Result<(Pubkey, u8)> {
         let pyth_price_account = Self::get_mock_pyth_price_account(id);
@@ -273,7 +240,6 @@ impl MessageBufferTestContext {
         );
         self.process_ixs(&[create_msg_buffer_ix], vec![&admin])
             .await?;
-
 
         Ok((msg_buffer_pda, msg_buffer_bump))
     }
@@ -321,7 +287,6 @@ impl MessageBufferTestContext {
         let resize_ixs = &mut vec![];
 
         let admin = self.admin.as_ref().unwrap().insecure_clone();
-
 
         for target_size in target_sizes {
             let resize_ix = resize_msg_buffer_ix(
@@ -432,7 +397,6 @@ pub fn create_msg_buffer_ix(
     )
 }
 
-
 pub fn resize_msg_buffer_ix(
     cpi_caller_auth: Pubkey,
     pyth_price_acct: Pubkey,
@@ -461,7 +425,6 @@ pub fn resize_msg_buffer_ix(
         ],
     )
 }
-
 
 pub fn delete_msg_buffer_ix(
     cpi_caller_auth: Pubkey,
@@ -518,7 +481,6 @@ type Version = u8;
 type HeaderLen = u16;
 type EndOffsets = [u16; 255];
 
-
 pub fn deserialize_msg_buffer_header(
     account_data: &[u8],
 ) -> (Bump, Version, HeaderLen, EndOffsets) {
@@ -526,7 +488,6 @@ pub fn deserialize_msg_buffer_header(
     let discriminator = &mut vec![0u8; 8];
     cursor.read_exact(discriminator).unwrap();
     assert_eq!(discriminator, &sighash("account", "MessageBuffer"));
-
 
     let msg_buffer_acct_bump = cursor.read_u8().unwrap();
     let version = cursor.read_u8().unwrap();
@@ -573,7 +534,6 @@ pub fn sighash(namespace: &str, name: &str) -> [u8; 8] {
 type PriceMsgSchema = u8;
 type PriceMsgVersion = u16;
 type PriceMsgSize = u32;
-
 
 pub fn validate_price_msgs(
     id: u64,
@@ -639,7 +599,6 @@ pub fn deserialize_price_msg_header(msg: &[u8]) -> (PriceMsgSchema, PriceMsgVers
     (schema, version, size)
 }
 
-
 pub fn find_msg_buffer_pda(cpi_caller_auth: Pubkey, pyth_price_acct: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
@@ -651,13 +610,11 @@ pub fn find_msg_buffer_pda(cpi_caller_auth: Pubkey, pyth_price_acct: Pubkey) -> 
     )
 }
 
-
 pub fn deserialize_whitelist(account_data: &[u8]) -> Result<(u8, Pubkey, u32, Vec<Pubkey>)> {
     let mut cursor = Cursor::new(account_data);
     let discriminator = &mut vec![0u8; 8];
     cursor.read_exact(discriminator).unwrap();
     assert_eq!(discriminator, &sighash("account", "Whitelist"));
-
 
     let whitelist_acct_bump = cursor.read_u8().unwrap();
 

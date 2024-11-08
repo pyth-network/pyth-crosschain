@@ -142,26 +142,15 @@
 //! ```
 
 use {
-    byteorder::{
-        ByteOrder,
-        WriteBytesExt,
-    },
+    byteorder::{ByteOrder, WriteBytesExt},
     serde::{
         ser::{
-            SerializeMap,
-            SerializeSeq,
-            SerializeStruct,
-            SerializeStructVariant,
-            SerializeTuple,
-            SerializeTupleStruct,
-            SerializeTupleVariant,
+            SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
+            SerializeTupleStruct, SerializeTupleVariant,
         },
         Serialize,
     },
-    std::{
-        fmt::Display,
-        io::Write,
-    },
+    std::{fmt::Display, io::Write},
     thiserror::Error,
 };
 
@@ -210,7 +199,7 @@ pub enum SerializerError {
 /// we serialize in both big and little endian depending on different use-cases.
 #[derive(Clone)]
 pub struct Serializer<W: Write, B: ByteOrder> {
-    writer:  W,
+    writer: W,
     _endian: std::marker::PhantomData<B>,
 }
 

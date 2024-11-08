@@ -1,7 +1,4 @@
-use {
-    anchor_lang::prelude::*,
-    instructions::*,
-};
+use {anchor_lang::prelude::*, instructions::*};
 
 pub mod instructions;
 pub mod message;
@@ -39,19 +36,15 @@ pub mod mock_cpi_caller {
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    use {
-        super::*,
-        anchor_lang::InstructionData,
-    };
+    use {super::*, anchor_lang::InstructionData};
 
     #[test]
     fn ix_discriminator() {
         let a = &(message_buffer::instruction::PutAll {
             base_account_key: anchor_lang::prelude::Pubkey::default(),
-            messages:         vec![],
+            messages: vec![],
         }
         .data()[..8]);
 

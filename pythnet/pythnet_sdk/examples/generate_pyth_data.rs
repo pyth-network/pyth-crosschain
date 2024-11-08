@@ -6,10 +6,7 @@ use {
     serde_json::json,
     solana_client::rpc_client::RpcClient,
     solana_sdk::pubkey::Pubkey,
-    std::{
-        io::Write,
-        str::FromStr,
-    },
+    std::{io::Write, str::FromStr},
 };
 
 fn main() {

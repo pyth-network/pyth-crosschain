@@ -1,23 +1,13 @@
 use {
     crate::{
-        chain::ethereum::{
-            PythContract,
-            Request,
-        },
-        config::{
-            Config,
-            EthereumConfig,
-            InspectOptions,
-        },
+        chain::ethereum::{PythContract, Request},
+        config::{Config, EthereumConfig, InspectOptions},
     },
     anyhow::Result,
     ethers::{
         contract::Multicall,
         middleware::Middleware,
-        prelude::{
-            Http,
-            Provider,
-        },
+        prelude::{Http, Provider},
     },
 };
 

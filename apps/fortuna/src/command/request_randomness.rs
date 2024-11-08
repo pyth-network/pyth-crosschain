@@ -1,10 +1,7 @@
 use {
     crate::{
         chain::ethereum::SignablePythContract,
-        config::{
-            Config,
-            RequestRandomnessOptions,
-        },
+        config::{Config, RequestRandomnessOptions},
     },
     anyhow::Result,
     std::sync::Arc,

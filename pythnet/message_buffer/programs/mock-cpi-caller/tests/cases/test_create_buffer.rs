@@ -14,12 +14,10 @@ async fn test_create_buffer() {
         .await
         .unwrap();
 
-
     let msg_buffer_account_data = context
         .fetch_msg_buffer_account_data(&msg_buffer_pda)
         .await
         .unwrap();
-
 
     assert_eq!(msg_buffer_account_data.len(), space as usize);
 
@@ -74,7 +72,6 @@ async fn create_buffer_with_invalid_size_should_fail() {
         MessageBufferTestContext::initialize_with_default_test_allowed_programs(false)
             .await
             .unwrap();
-
 
     let pyth_price_acct = MessageBufferTestContext::get_mock_pyth_price_account(
         MessageBufferTestContext::DEFAULT_TEST_PRICE_ID,

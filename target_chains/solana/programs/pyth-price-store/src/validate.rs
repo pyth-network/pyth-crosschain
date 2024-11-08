@@ -1,18 +1,11 @@
 use {
     crate::{
-        accounts,
-        ensure,
-        instruction::{
-            CONFIG_SEED,
-            PUBLISHER_CONFIG_SEED,
-        },
+        accounts, ensure,
+        instruction::{CONFIG_SEED, PUBLISHER_CONFIG_SEED},
     },
     solana_program::{
-        account_info::AccountInfo,
-        program_error::ProgramError,
-        program_memory::sol_memcmp,
-        pubkey::Pubkey,
-        system_program,
+        account_info::AccountInfo, program_error::ProgramError, program_memory::sol_memcmp,
+        pubkey::Pubkey, system_program,
     },
 };
 

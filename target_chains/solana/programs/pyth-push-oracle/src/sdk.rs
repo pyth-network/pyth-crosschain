@@ -1,23 +1,8 @@
 use {
-    crate::{
-        accounts,
-        instruction,
-        PostUpdateParams,
-        ID,
-    },
-    anchor_lang::{
-        prelude::*,
-        system_program,
-        InstructionData,
-    },
-    pyth_solana_receiver_sdk::pda::{
-        get_config_address,
-        get_treasury_address,
-    },
-    pythnet_sdk::{
-        messages::FeedId,
-        wire::v1::MerklePriceUpdate,
-    },
+    crate::{accounts, instruction, PostUpdateParams, ID},
+    anchor_lang::{prelude::*, system_program, InstructionData},
+    pyth_solana_receiver_sdk::pda::{get_config_address, get_treasury_address},
+    pythnet_sdk::{messages::FeedId, wire::v1::MerklePriceUpdate},
     solana_program::instruction::Instruction,
 };
 
@@ -59,8 +44,8 @@ impl instruction::UpdatePriceFeed {
                 .to_account_metas(None);
         Instruction {
             program_id: ID,
-            accounts:   update_price_feed_accounts,
-            data:       instruction::UpdatePriceFeed {
+            accounts: update_price_feed_accounts,
+            data: instruction::UpdatePriceFeed {
                 params: PostUpdateParams {
                     merkle_price_update,
                     treasury_id,

@@ -1,21 +1,10 @@
 use {
-    super::executor_simulator::{
-        ExecutorAttack,
-        ExecutorBench,
-        VaaAttack,
-    },
+    super::executor_simulator::{ExecutorAttack, ExecutorBench, VaaAttack},
     crate::error::ExecutorError,
-    anchor_lang::prelude::{
-        ErrorCode,
-        ProgramError,
-        Pubkey,
-        Rent,
-    },
+    anchor_lang::prelude::{ErrorCode, ProgramError, Pubkey, Rent},
     solana_sdk::{
-        instruction::InstructionError,
-        native_token::LAMPORTS_PER_SOL,
-        system_instruction::transfer,
-        transaction::TransactionError,
+        instruction::InstructionError, native_token::LAMPORTS_PER_SOL,
+        system_instruction::transfer, transaction::TransactionError,
     },
 };
 

@@ -1,39 +1,20 @@
 use {
     crate::{
         api::{
-            rest::{
-                validate_price_ids,
-                RestError,
-            },
-            types::{
-                BinaryUpdate,
-                EncodingType,
-                ParsedPriceUpdate,
-                PriceIdInput,
-                PriceUpdate,
-            },
+            rest::{validate_price_ids, RestError},
+            types::{BinaryUpdate, EncodingType, ParsedPriceUpdate, PriceIdInput, PriceUpdate},
             ApiState,
         },
-        state::aggregate::{
-            Aggregates,
-            RequestTime,
-        },
+        state::aggregate::{Aggregates, RequestTime},
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
+    axum::{extract::State, Json},
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
-
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
@@ -116,7 +97,7 @@ where
         .collect();
     let binary_price_update = BinaryUpdate {
         encoding: params.encoding,
-        data:     encoded_data,
+        data: encoded_data,
     };
     let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> = if params.parsed {
         Some(
@@ -134,7 +115,6 @@ where
         binary: binary_price_update,
         parsed: parsed_price_updates,
     };
-
 
     Ok(Json(compressed_price_update))
 }

@@ -2,25 +2,14 @@ use {
     super::executor_simulator::ExecutorBench,
     crate::{
         error::ExecutorError,
-        tests::executor_simulator::{
-            ExecutorAttack,
-            VaaAttack,
-        },
+        tests::executor_simulator::{ExecutorAttack, VaaAttack},
     },
     anchor_lang::{
-        prelude::{
-            Pubkey,
-            Rent,
-        },
-        solana_program::{
-            system_instruction::create_account,
-            system_program,
-        },
+        prelude::{Pubkey, Rent},
+        solana_program::{system_instruction::create_account, system_program},
     },
     solana_sdk::{
-        native_token::LAMPORTS_PER_SOL,
-        signature::Keypair,
-        signer::Signer,
+        native_token::LAMPORTS_PER_SOL, signature::Keypair, signer::Signer,
         system_instruction::transfer,
     },
 };

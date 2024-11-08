@@ -1,11 +1,6 @@
 use {
     super::errors::ReadAccountError,
-    bytemuck::{
-        from_bytes,
-        from_bytes_mut,
-        Pod,
-        Zeroable,
-    },
+    bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable},
     std::mem::size_of,
 };
 
@@ -21,7 +16,7 @@ pub fn format_matches(data: &[u8]) -> bool {
 #[repr(C, packed)]
 pub struct Config {
     /// Account magic to avoid account confusion.
-    pub format:    u32,
+    pub format: u32,
     /// The signature of the authority account will be required to execute
     /// `InitializePublisher` instruction.
     pub authority: [u8; 32],

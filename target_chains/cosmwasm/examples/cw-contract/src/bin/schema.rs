@@ -1,11 +1,6 @@
 use {
     cosmwasm_schema::write_api,
-    example_cw_contract::msg::{
-        ExecuteMsg,
-        InstantiateMsg,
-        MigrateMsg,
-        QueryMsg,
-    },
+    example_cw_contract::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
 };
 
 fn main() {

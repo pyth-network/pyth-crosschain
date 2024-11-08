@@ -1,13 +1,7 @@
 use {
-    crate::{
-        state::*,
-        MessageBufferError,
-        MESSAGE,
-        WHITELIST,
-    },
+    crate::{state::*, MessageBufferError, MESSAGE, WHITELIST},
     anchor_lang::prelude::*,
 };
-
 
 pub fn resize_buffer<'info>(
     ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,

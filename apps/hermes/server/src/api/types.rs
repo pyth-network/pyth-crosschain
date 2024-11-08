@@ -1,45 +1,19 @@
 use {
     super::doc_examples,
-    crate::state::aggregate::{
-        PriceFeedUpdate,
-        PriceFeedsWithUpdateData,
-        Slot,
-        UnixTimestamp,
-    },
+    crate::state::aggregate::{PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp},
     anyhow::Result,
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
-    derive_more::{
-        Deref,
-        DerefMut,
-    },
-    pyth_sdk::{
-        Price,
-        PriceFeed,
-        PriceIdentifier,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
+    borsh::{BorshDeserialize, BorshSerialize},
+    derive_more::{Deref, DerefMut},
+    pyth_sdk::{Price, PriceFeed, PriceIdentifier},
+    serde::{Deserialize, Serialize},
     std::{
         collections::BTreeMap,
-        fmt::{
-            Display,
-            Formatter,
-            Result as FmtResult,
-        },
+        fmt::{Display, Formatter, Result as FmtResult},
     },
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
-
 
 /// A price id is a 32-byte hex string, optionally prefixed with "0x".
 /// Price ids are case insensitive.
@@ -64,36 +38,36 @@ type Base64String = String;
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
     #[schema(value_type = Option<u64>, example=85480034)]
-    pub slot:                       Option<Slot>,
+    pub slot: Option<Slot>,
     #[schema(example = 26)]
-    pub emitter_chain:              u16,
+    pub emitter_chain: u16,
     #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
     pub price_service_receive_time: Option<UnixTimestamp>,
     #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
-    pub prev_publish_time:          Option<UnixTimestamp>,
+    pub prev_publish_time: Option<UnixTimestamp>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadataV2 {
     #[schema(value_type = Option<u64>, example=85480034)]
-    pub slot:                 Option<Slot>,
+    pub slot: Option<Slot>,
     #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
     pub proof_available_time: Option<UnixTimestamp>,
     #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
-    pub prev_publish_time:    Option<UnixTimestamp>,
+    pub prev_publish_time: Option<UnixTimestamp>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
-    pub id:        RpcPriceIdentifier,
-    pub price:     RpcPrice,
+    pub id: RpcPriceIdentifier,
+    pub price: RpcPrice,
     pub ema_price: RpcPrice,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata:  Option<RpcPriceFeedMetadata>,
+    pub metadata: Option<RpcPriceFeedMetadata>,
     /// The VAA binary represented as a base64 string.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(value_type = Option<String>, example=doc_examples::vaa_example)]
-    pub vaa:       Option<Base64String>,
+    pub vaa: Option<Base64String>,
 }
 
 impl RpcPriceFeed {
@@ -107,26 +81,26 @@ impl RpcPriceFeed {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        RpcPriceIdentifier::new(price_feed.id.to_bytes()),
-            price:     RpcPrice {
-                price:        price_feed.get_price_unchecked().price,
-                conf:         price_feed.get_price_unchecked().conf,
-                expo:         price_feed.get_price_unchecked().expo,
+            id: RpcPriceIdentifier::new(price_feed.id.to_bytes()),
+            price: RpcPrice {
+                price: price_feed.get_price_unchecked().price,
+                conf: price_feed.get_price_unchecked().conf,
+                expo: price_feed.get_price_unchecked().expo,
                 publish_time: price_feed.get_price_unchecked().publish_time,
             },
             ema_price: RpcPrice {
-                price:        price_feed.get_ema_price_unchecked().price,
-                conf:         price_feed.get_ema_price_unchecked().conf,
-                expo:         price_feed.get_ema_price_unchecked().expo,
+                price: price_feed.get_ema_price_unchecked().price,
+                conf: price_feed.get_ema_price_unchecked().conf,
+                expo: price_feed.get_ema_price_unchecked().expo,
                 publish_time: price_feed.get_ema_price_unchecked().publish_time,
             },
-            metadata:  verbose.then_some(RpcPriceFeedMetadata {
-                emitter_chain:              Chain::Pythnet.into(),
+            metadata: verbose.then_some(RpcPriceFeedMetadata {
+                emitter_chain: Chain::Pythnet.into(),
                 price_service_receive_time: price_feed_update.received_at,
-                slot:                       price_feed_update.slot,
-                prev_publish_time:          price_feed_update.prev_publish_time,
+                slot: price_feed_update.slot,
+                prev_publish_time: price_feed_update.prev_publish_time,
             }),
-            vaa:       match binary {
+            vaa: match binary {
                 false => None,
                 true => price_feed_update
                     .update_data
@@ -159,21 +133,20 @@ pub struct RpcPrice {
     /// The price itself, stored as a string to avoid precision loss
     #[serde(with = "pyth_sdk::utils::as_string")]
     #[schema(value_type = String, example="2920679499999")]
-    pub price:        i64,
+    pub price: i64,
     /// The confidence interval associated with the price, stored as a string to avoid precision loss
     #[serde(with = "pyth_sdk::utils::as_string")]
     #[schema(value_type = String, example="509500001")]
-    pub conf:         u64,
+    pub conf: u64,
     /// The exponent associated with both the price and confidence interval. Multiply those values
     /// by `10^expo` to get the real value.
     #[schema(example=-8)]
-    pub expo:         i32,
+    pub expo: i32,
     /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
     /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
     #[schema(value_type = i64, example=doc_examples::timestamp_example)]
     pub publish_time: UnixTimestamp,
 }
-
 
 #[derive(
     Copy,
@@ -234,15 +207,15 @@ impl EncodingType {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct BinaryUpdate {
     pub encoding: EncodingType,
-    pub data:     Vec<String>,
+    pub data: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ParsedPriceUpdate {
-    pub id:        RpcPriceIdentifier,
-    pub price:     RpcPrice,
+    pub id: RpcPriceIdentifier,
+    pub price: RpcPrice,
     pub ema_price: RpcPrice,
-    pub metadata:  RpcPriceFeedMetadataV2,
+    pub metadata: RpcPriceFeedMetadataV2,
 }
 
 impl From<PriceFeedUpdate> for ParsedPriceUpdate {
@@ -250,23 +223,23 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        RpcPriceIdentifier::from(price_feed.id),
-            price:     RpcPrice {
-                price:        price_feed.get_price_unchecked().price,
-                conf:         price_feed.get_price_unchecked().conf,
-                expo:         price_feed.get_price_unchecked().expo,
+            id: RpcPriceIdentifier::from(price_feed.id),
+            price: RpcPrice {
+                price: price_feed.get_price_unchecked().price,
+                conf: price_feed.get_price_unchecked().conf,
+                expo: price_feed.get_price_unchecked().expo,
                 publish_time: price_feed.get_price_unchecked().publish_time,
             },
             ema_price: RpcPrice {
-                price:        price_feed.get_ema_price_unchecked().price,
-                conf:         price_feed.get_ema_price_unchecked().conf,
-                expo:         price_feed.get_ema_price_unchecked().expo,
+                price: price_feed.get_ema_price_unchecked().price,
+                conf: price_feed.get_ema_price_unchecked().conf,
+                expo: price_feed.get_ema_price_unchecked().expo,
                 publish_time: price_feed.get_ema_price_unchecked().publish_time,
             },
-            metadata:  RpcPriceFeedMetadataV2 {
+            metadata: RpcPriceFeedMetadataV2 {
                 proof_available_time: price_feed_update.received_at,
-                slot:                 price_feed_update.slot,
-                prev_publish_time:    price_feed_update.prev_publish_time,
+                slot: price_feed_update.slot,
+                prev_publish_time: price_feed_update.prev_publish_time,
             },
         }
     }
@@ -280,7 +253,7 @@ pub struct ParsedPublisherStakeCapsUpdate {
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]
 pub struct ParsedPublisherStakeCap {
     pub publisher: String,
-    pub cap:       u64,
+    pub cap: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -305,24 +278,24 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
                 .into_iter()
                 .map(|parsed_price_update| {
                     Ok(PriceFeedUpdate {
-                        price_feed:        PriceFeed::new(
+                        price_feed: PriceFeed::new(
                             parsed_price_update.id.into(),
                             Price {
-                                price:        parsed_price_update.price.price,
-                                conf:         parsed_price_update.price.conf,
-                                expo:         parsed_price_update.price.expo,
+                                price: parsed_price_update.price.price,
+                                conf: parsed_price_update.price.conf,
+                                expo: parsed_price_update.price.expo,
                                 publish_time: parsed_price_update.price.publish_time,
                             },
                             Price {
-                                price:        parsed_price_update.ema_price.price,
-                                conf:         parsed_price_update.ema_price.conf,
-                                expo:         parsed_price_update.ema_price.expo,
+                                price: parsed_price_update.ema_price.price,
+                                conf: parsed_price_update.ema_price.conf,
+                                expo: parsed_price_update.ema_price.expo,
                                 publish_time: parsed_price_update.ema_price.publish_time,
                             },
                         ),
-                        slot:              parsed_price_update.metadata.slot,
-                        received_at:       parsed_price_update.metadata.proof_available_time,
-                        update_data:       None, // This field is not available in ParsedPriceUpdate
+                        slot: parsed_price_update.metadata.slot,
+                        received_at: parsed_price_update.metadata.proof_available_time,
+                        update_data: None, // This field is not available in ParsedPriceUpdate
                         prev_publish_time: parsed_price_update.metadata.prev_publish_time,
                     })
                 })
@@ -346,7 +319,7 @@ impl TryFrom<PriceUpdate> for PriceFeedsWithUpdateData {
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PriceFeedMetadata {
-    pub id:         RpcPriceIdentifier,
+    pub id: RpcPriceIdentifier,
     // BTreeMap is used to automatically sort the keys to ensure consistent ordering of attributes in the JSON response.
     // This enhances user experience by providing a predictable structure, avoiding confusion from varying orders in different responses.
     pub attributes: BTreeMap<String, String>,

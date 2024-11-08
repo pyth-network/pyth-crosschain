@@ -1,13 +1,7 @@
 use {
-    crate::api::{
-        ChainId,
-        RestError,
-    },
+    crate::api::{ChainId, RestError},
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
+    axum::{extract::State, Json},
 };
 
 /// Get the list of supported chain ids

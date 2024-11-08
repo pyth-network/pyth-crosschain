@@ -2,75 +2,41 @@
 
 use {
     serde_wormhole::RawMessage,
-    wormhole_sdk::vaa::{
-        Body,
-        Header,
-        Vaa,
-    },
+    wormhole_sdk::vaa::{Body, Header, Vaa},
 };
 pub mod cli;
 use {
     anchor_client::{
         anchor_lang::{
-            AccountDeserialize,
-            AnchorDeserialize,
-            AnchorSerialize,
-            InstructionData as AnchorInstructionData,
-            Owner,
-            ToAccountMetas,
+            AccountDeserialize, AnchorDeserialize, AnchorSerialize,
+            InstructionData as AnchorInstructionData, Owner, ToAccountMetas,
         },
         solana_sdk::bpf_loader_upgradeable,
     },
     anyhow::Result,
     clap::Parser,
-    cli::{
-        Action,
-        Cli,
-    },
+    cli::{Action, Cli},
     remote_executor::{
         accounts::ExecutePostedVaa,
         state::{
-            governance_payload::{
-                ExecutorPayload,
-                GovernanceHeader,
-                InstructionData,
-            },
+            governance_payload::{ExecutorPayload, GovernanceHeader, InstructionData},
             posted_vaa::AnchorVaa,
         },
-        EXECUTOR_KEY_SEED,
-        ID,
+        EXECUTOR_KEY_SEED, ID,
     },
-    solana_client::{
-        rpc_client::RpcClient,
-        rpc_config::RpcSendTransactionConfig,
-    },
+    solana_client::{rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig},
     solana_sdk::{
-        instruction::{
-            AccountMeta,
-            Instruction,
-        },
+        instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
-        signature::{
-            read_keypair_file,
-            Keypair,
-        },
+        signature::{read_keypair_file, Keypair},
         signer::Signer,
-        system_instruction::{self,},
+        system_instruction::{self},
         transaction::Transaction,
     },
     std::str::FromStr,
     wormhole_solana::{
-        instructions::{
-            post_message,
-            post_vaa,
-            verify_signatures_txs,
-            PostVAAData,
-        },
-        Account,
-        Config,
-        FeeCollector,
-        GuardianSet,
-        VAA as PostedVAA,
+        instructions::{post_message, post_vaa, verify_signatures_txs, PostVAAData},
+        Account, Config, FeeCollector, GuardianSet, VAA as PostedVAA,
     },
 };
 
@@ -119,15 +85,15 @@ fn main() -> Result<()> {
 
             // Post VAA
             let post_vaa_data = PostVAAData {
-                version:            header.version,
+                version: header.version,
                 guardian_set_index: header.guardian_set_index,
-                timestamp:          body.timestamp,
-                nonce:              body.nonce,
-                emitter_chain:      body.emitter_chain.into(),
-                emitter_address:    body.emitter_address.0,
-                sequence:           body.sequence,
-                consistency_level:  body.consistency_level,
-                payload:            body.payload.to_vec(),
+                timestamp: body.timestamp,
+                nonce: body.nonce,
+                emitter_chain: body.emitter_chain.into(),
+                emitter_address: body.emitter_address.0,
+                sequence: body.sequence,
+                consistency_level: body.consistency_level,
+                payload: body.payload.to_vec(),
             };
 
             process_transaction(
@@ -178,7 +144,7 @@ fn main() -> Result<()> {
             )
             .0;
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(cli.chain),
+                header: GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&system_instruction::transfer(
                     &executor_key,
                     &payer.pubkey(),
@@ -210,7 +176,7 @@ fn main() -> Result<()> {
         }
         Action::GetTestPayload {} => {
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(cli.chain),
+                header: GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![],
             }
             .try_to_vec()?;
@@ -237,7 +203,7 @@ fn main() -> Result<()> {
             instruction.accounts[2].is_signer = true; // Require signature of new authority for safety
             println!("New authority : {:}", instruction.accounts[2].pubkey);
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(cli.chain),
+                header: GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&instruction)],
             }
             .try_to_vec()?;
@@ -259,7 +225,7 @@ fn main() -> Result<()> {
                 instruction.accounts[3].pubkey
             );
             let payload = ExecutorPayload {
-                header:       GovernanceHeader::executor_governance_header(cli.chain),
+                header: GovernanceHeader::executor_governance_header(cli.chain),
                 instructions: vec![InstructionData::from(&instruction)],
             }
             .try_to_vec()?;
@@ -338,8 +304,8 @@ pub fn get_execute_instruction(
     .0;
 
     account_metas.push(AccountMeta {
-        pubkey:      executor_key,
-        is_signer:   false,
+        pubkey: executor_key,
+        is_signer: false,
         is_writable: true,
     });
 
@@ -347,8 +313,8 @@ pub fn get_execute_instruction(
     for instruction in executor_payload.instructions {
         // Push program_id
         account_metas.push(AccountMeta {
-            pubkey:      instruction.program_id,
-            is_signer:   false,
+            pubkey: instruction.program_id,
+            is_signer: false,
             is_writable: false,
         });
         // Push other accounts
@@ -361,7 +327,7 @@ pub fn get_execute_instruction(
 
     Ok(Instruction {
         program_id: ID,
-        accounts:   account_metas,
-        data:       remote_executor::instruction::ExecutePostedVaa.data(),
+        accounts: account_metas,
+        data: remote_executor::instruction::ExecutePostedVaa.data(),
     })
 }

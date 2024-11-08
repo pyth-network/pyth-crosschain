@@ -1,75 +1,39 @@
 #[cfg(test)]
-use mock_instant::{
-    SystemTime,
-    UNIX_EPOCH,
-};
+use mock_instant::{SystemTime, UNIX_EPOCH};
 #[cfg(not(test))]
-use std::time::{
-    SystemTime,
-    UNIX_EPOCH,
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 use {
     self::wormhole_merkle::{
-        construct_message_states_proofs,
-        construct_update_data,
-        store_wormhole_merkle_verified_message,
-        WormholeMerkleMessageProof,
-        WormholeMerkleState,
+        construct_message_states_proofs, construct_update_data,
+        store_wormhole_merkle_verified_message, WormholeMerkleMessageProof, WormholeMerkleState,
     },
     crate::{
-        api::types::{
-            ParsedPublisherStakeCap,
-            ParsedPublisherStakeCapsUpdate,
-        },
+        api::types::{ParsedPublisherStakeCap, ParsedPublisherStakeCapsUpdate},
         network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
-            cache::{
-                Cache,
-                MessageState,
-                MessageStateFilter,
-            },
+            cache::{Cache, MessageState, MessageStateFilter},
             price_feeds_metadata::PriceFeedMeta,
             State,
         },
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     borsh::BorshDeserialize,
     byteorder::BigEndian,
     prometheus_client::registry::Registry,
-    pyth_sdk::{
-        Price,
-        PriceFeed,
-        PriceIdentifier,
-    },
+    pyth_sdk::{Price, PriceFeed, PriceIdentifier},
     pythnet_sdk::{
-        messages::{
-            Message,
-            MessageType,
-            PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID,
-        },
+        messages::{Message, MessageType, PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID},
         wire::{
             from_slice,
-            v1::{
-                WormholeMessage,
-                WormholePayload,
-            },
+            v1::{WormholeMessage, WormholePayload},
         },
     },
     serde::Serialize,
     solana_sdk::pubkey::Pubkey,
-    std::{
-        collections::HashSet,
-        time::Duration,
-    },
+    std::{collections::HashSet, time::Duration},
     tokio::sync::{
-        broadcast::{
-            Receiver,
-            Sender,
-        },
+        broadcast::{Receiver, Sender},
         RwLock,
     },
     wormhole_sdk::Vaa,
@@ -157,7 +121,7 @@ impl AggregateStateData {
 }
 
 pub struct AggregateState {
-    pub data:          RwLock<AggregateStateData>,
+    pub data: RwLock<AggregateStateData>,
     pub api_update_tx: Sender<AggregationEvent>,
 }
 
@@ -169,7 +133,7 @@ impl AggregateState {
         metrics_registry: &mut Registry,
     ) -> Self {
         Self {
-            data:          RwLock::new(AggregateStateData::new(
+            data: RwLock::new(AggregateStateData::new(
                 readiness_staleness_threshold,
                 readiness_max_allowed_slot_lag,
                 metrics_registry,
@@ -187,9 +151,9 @@ impl AggregateState {
 /// uses little-endian byte order.
 #[derive(Clone, PartialEq, Debug, BorshDeserialize)]
 pub struct AccumulatorMessages {
-    pub magic:        [u8; 4],
-    pub slot:         u64,
-    pub ring_size:    u32,
+    pub magic: [u8; 4],
+    pub slot: u64,
+    pub ring_size: u32,
     pub raw_messages: Vec<RawMessage>,
 }
 
@@ -207,10 +171,10 @@ pub enum Update {
 
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
-    pub price_feed:        PriceFeed,
-    pub slot:              Option<Slot>,
-    pub received_at:       Option<UnixTimestamp>,
-    pub update_data:       Option<Vec<u8>>,
+    pub price_feed: PriceFeed,
+    pub slot: Option<Slot>,
+    pub received_at: Option<UnixTimestamp>,
+    pub update_data: Option<Vec<u8>>,
     pub prev_publish_time: Option<UnixTimestamp>,
 }
 
@@ -223,18 +187,18 @@ pub struct PriceFeedsWithUpdateData {
 #[derive(Debug, PartialEq)]
 pub struct PublisherStakeCapsWithUpdateData {
     pub publisher_stake_caps: Vec<ParsedPublisherStakeCapsUpdate>,
-    pub update_data:          Vec<Vec<u8>>,
+    pub update_data: Vec<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ReadinessMetadata {
-    pub has_completed_recently:          bool,
-    pub is_not_behind:                   bool,
-    pub is_metadata_loaded:              bool,
-    pub latest_completed_slot:           Option<Slot>,
-    pub latest_observed_slot:            Option<Slot>,
+    pub has_completed_recently: bool,
+    pub is_not_behind: bool,
+    pub is_metadata_loaded: bool,
+    pub latest_completed_slot: Option<Slot>,
+    pub latest_observed_slot: Option<Slot>,
     pub latest_completed_unix_timestamp: Option<UnixTimestamp>,
-    pub price_feeds_metadata_len:        usize,
+    pub price_feeds_metadata_len: usize,
 }
 
 #[async_trait::async_trait]
@@ -437,7 +401,7 @@ where
                         .iter()
                         .map(|cap| ParsedPublisherStakeCap {
                             publisher: Pubkey::from(cap.publisher).to_string(),
-                            cap:       cap.cap,
+                            cap: cap.cap,
                         })
                         .collect(),
                 }),
@@ -567,24 +531,24 @@ where
         .iter()
         .map(|message_state| match message_state.message {
             Message::PriceFeedMessage(price_feed) => Ok(PriceFeedUpdate {
-                price_feed:        PriceFeed::new(
+                price_feed: PriceFeed::new(
                     PriceIdentifier::new(price_feed.feed_id),
                     Price {
-                        price:        price_feed.price,
-                        conf:         price_feed.conf,
-                        expo:         price_feed.exponent,
+                        price: price_feed.price,
+                        conf: price_feed.conf,
+                        expo: price_feed.exponent,
                         publish_time: price_feed.publish_time,
                     },
                     Price {
-                        price:        price_feed.ema_price,
-                        conf:         price_feed.ema_conf,
-                        expo:         price_feed.exponent,
+                        price: price_feed.ema_price,
+                        conf: price_feed.ema_conf,
+                        expo: price_feed.exponent,
                         publish_time: price_feed.publish_time,
                     },
                 ),
-                received_at:       Some(message_state.received_at),
-                slot:              Some(message_state.slot),
-                update_data:       Some(
+                received_at: Some(message_state.received_at),
+                slot: Some(message_state.slot),
+                update_data: Some(
                     construct_update_data(vec![message_state.clone().into()])?
                         .into_iter()
                         .next()
@@ -609,37 +573,24 @@ mod test {
     use {
         super::*,
         crate::{
-            api::types::{
-                PriceFeedMetadata,
-                RpcPriceIdentifier,
-            },
+            api::types::{PriceFeedMetadata, RpcPriceIdentifier},
             state::test::setup_state,
         },
         futures::future::join_all,
         mock_instant::MockClock,
         pythnet_sdk::{
             accumulators::{
-                merkle::{
-                    MerkleRoot,
-                    MerkleTree,
-                },
+                merkle::{MerkleRoot, MerkleTree},
                 Accumulator,
             },
             hashers::keccak256_160::Keccak160,
             messages::PriceFeedMessage,
-            wire::v1::{
-                AccumulatorUpdateData,
-                Proof,
-                WormholeMerkleRoot,
-            },
+            wire::v1::{AccumulatorUpdateData, Proof, WormholeMerkleRoot},
         },
         rand::seq::SliceRandom,
         serde_wormhole::RawMessage,
         std::sync::Arc,
-        wormhole_sdk::{
-            Address,
-            Chain,
-        },
+        wormhole_sdk::{Address, Chain},
     };
 
     /// Generate list of updates for the given list of messages at a given slot with given sequence
@@ -761,24 +712,24 @@ mod test {
         assert_eq!(
             price_feeds_with_update_data.price_feeds,
             vec![PriceFeedUpdate {
-                price_feed:        PriceFeed::new(
+                price_feed: PriceFeed::new(
                     PriceIdentifier::new(price_feed_message.feed_id),
                     Price {
-                        price:        price_feed_message.price,
-                        conf:         price_feed_message.conf,
-                        expo:         price_feed_message.exponent,
+                        price: price_feed_message.price,
+                        conf: price_feed_message.conf,
+                        expo: price_feed_message.exponent,
                         publish_time: price_feed_message.publish_time,
                     },
                     Price {
-                        price:        price_feed_message.ema_price,
-                        conf:         price_feed_message.ema_conf,
-                        expo:         price_feed_message.exponent,
+                        price: price_feed_message.ema_price,
+                        conf: price_feed_message.ema_conf,
+                        expo: price_feed_message.exponent,
                         publish_time: price_feed_message.publish_time,
                     }
                 ),
-                slot:              Some(10),
-                received_at:       price_feeds_with_update_data.price_feeds[0].received_at, // Ignore checking this field.
-                update_data:       price_feeds_with_update_data.price_feeds[0]
+                slot: Some(10),
+                received_at: price_feeds_with_update_data.price_feeds[0].received_at, // Ignore checking this field.
+                update_data: price_feeds_with_update_data.price_feeds[0]
                     .update_data
                     .clone(), // Ignore checking this field.
                 prev_publish_time: Some(9),
@@ -797,16 +748,16 @@ mod test {
                 assert_eq!(
                     vaa,
                     Vaa {
-                        nonce:              0,
-                        version:            0,
-                        sequence:           20,
-                        timestamp:          0,
-                        signatures:         vec![],
+                        nonce: 0,
+                        version: 0,
+                        sequence: 20,
+                        timestamp: 0,
+                        signatures: vec![],
                         guardian_set_index: 0,
-                        emitter_chain:      Chain::Pythnet,
-                        emitter_address:    Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS),
-                        consistency_level:  0,
-                        payload:            vaa.payload, // Ignore checking this field.
+                        emitter_chain: Chain::Pythnet,
+                        emitter_address: Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS),
+                        consistency_level: 0,
+                        payload: vaa.payload, // Ignore checking this field.
                     }
                 );
                 let merkle_root = WormholeMessage::try_from_bytes(vaa.payload.as_ref()).unwrap();
@@ -814,9 +765,9 @@ mod test {
                 assert_eq!(
                     merkle_root,
                     WormholeMerkleRoot {
-                        slot:      10,
+                        slot: 10,
                         ring_size: 100,
-                        root:      merkle_root.root, // Ignore checking this field.
+                        root: merkle_root.root, // Ignore checking this field.
                     }
                 );
 
@@ -967,11 +918,10 @@ mod test {
             Some(unix_timestamp as i64)
         );
 
-
         // Add a dummy price feeds metadata
         state
             .store_price_feeds_metadata(&[PriceFeedMetadata {
-                id:         RpcPriceIdentifier::new([100; 32]),
+                id: RpcPriceIdentifier::new([100; 32]),
                 attributes: Default::default(),
             }])
             .await

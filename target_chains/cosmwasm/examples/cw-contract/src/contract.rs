@@ -2,36 +2,13 @@
 use cosmwasm_std::entry_point;
 use {
     crate::{
-        msg::{
-            ExecuteMsg,
-            FetchPriceResponse,
-            InstantiateMsg,
-            MigrateMsg,
-            QueryMsg,
-        },
-        state::{
-            State,
-            STATE,
-        },
+        msg::{ExecuteMsg, FetchPriceResponse, InstantiateMsg, MigrateMsg, QueryMsg},
+        state::{State, STATE},
     },
     cosmwasm_std::{
-        to_binary,
-        Binary,
-        Coin,
-        Deps,
-        DepsMut,
-        Env,
-        MessageInfo,
-        Response,
-        StdError,
-        StdResult,
+        to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
     },
-    pyth_sdk_cw::{
-        get_update_fee,
-        get_valid_time_period,
-        query_price_feed,
-        PriceFeedResponse,
-    },
+    pyth_sdk_cw::{get_update_fee, get_valid_time_period, query_price_feed, PriceFeedResponse},
     std::time::Duration,
 };
 
@@ -54,7 +31,7 @@ pub fn instantiate(
     // that a wrong address won't be used.
     let state = State {
         pyth_contract_addr: deps.api.addr_validate(msg.pyth_contract_addr.as_ref())?,
-        price_feed_id:      msg.price_feed_id,
+        price_feed_id: msg.price_feed_id,
     };
     STATE.save(deps.storage, &state)?;
 
@@ -137,33 +114,11 @@ mod test {
         super::*,
         cosmwasm_std::{
             from_binary,
-            testing::{
-                mock_dependencies,
-                mock_env,
-                MockApi,
-                MockQuerier,
-                MockStorage,
-            },
-            Addr,
-            Coin,
-            OwnedDeps,
-            QuerierResult,
-            SystemError,
-            SystemResult,
-            Timestamp,
-            WasmQuery,
+            testing::{mock_dependencies, mock_env, MockApi, MockQuerier, MockStorage},
+            Addr, Coin, OwnedDeps, QuerierResult, SystemError, SystemResult, Timestamp, WasmQuery,
         },
-        pyth_sdk_cw::{
-            testing::MockPyth,
-            Price,
-            PriceFeed,
-            PriceIdentifier,
-            UnixTimestamp,
-        },
-        std::{
-            convert::TryFrom,
-            time::Duration,
-        },
+        pyth_sdk_cw::{testing::MockPyth, Price, PriceFeed, PriceIdentifier, UnixTimestamp},
+        std::{convert::TryFrom, time::Duration},
     };
 
     // Dummy contract address for testing.
@@ -175,7 +130,7 @@ mod test {
     fn default_state() -> State {
         State {
             pyth_contract_addr: Addr::unchecked(PYTH_CONTRACT_ADDR),
-            price_feed_id:      PriceIdentifier::from_hex(PRICE_ID).unwrap(),
+            price_feed_id: PriceIdentifier::from_hex(PRICE_ID).unwrap(),
         }
     }
 
@@ -234,15 +189,15 @@ mod test {
         let price_feed = PriceFeed::new(
             PriceIdentifier::from_hex(PRICE_ID).unwrap(),
             Price {
-                price:        100,
-                conf:         10,
-                expo:         -1,
+                price: 100,
+                conf: 10,
+                expo: -1,
                 publish_time: current_unix_time,
             },
             Price {
-                price:        200,
-                conf:         20,
-                expo:         -1,
+                price: 200,
+                conf: 20,
+                expo: -1,
                 publish_time: current_unix_time,
             },
         );

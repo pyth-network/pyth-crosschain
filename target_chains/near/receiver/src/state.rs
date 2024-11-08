@@ -1,17 +1,8 @@
 use {
     near_sdk::{
-        borsh::{
-            BorshDeserialize,
-            BorshSerialize,
-        },
-        json_types::{
-            I64,
-            U64,
-        },
-        serde::{
-            Deserialize,
-            Serialize,
-        },
+        borsh::{BorshDeserialize, BorshSerialize},
+        json_types::{I64, U64},
+        serde::{Deserialize, Serialize},
     },
     pyth_wormhole_attester_sdk::PriceAttestation,
     pythnet_sdk::messages::PriceFeedMessage,
@@ -89,11 +80,11 @@ impl near_sdk::serde::Serialize for PriceIdentifier {
 #[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct Price {
-    pub price:        I64,
+    pub price: I64,
     /// Confidence interval around the price
-    pub conf:         U64,
+    pub conf: U64,
     /// The exponent
-    pub expo:         i32,
+    pub expo: i32,
     /// Unix timestamp of when this price was computed
     pub publish_time: i64,
 }
@@ -107,9 +98,9 @@ pub struct Price {
 #[serde(crate = "near_sdk::serde")]
 pub struct PriceFeed {
     /// Unique identifier for this price.
-    pub id:        PriceIdentifier,
+    pub id: PriceIdentifier,
     /// The current aggregation price.
-    pub price:     Price,
+    pub price: Price,
     /// Exponentially moving average price.
     pub ema_price: Price,
 }
@@ -117,17 +108,17 @@ pub struct PriceFeed {
 impl From<&PriceAttestation> for PriceFeed {
     fn from(price_attestation: &PriceAttestation) -> Self {
         Self {
-            id:        PriceIdentifier(price_attestation.price_id.to_bytes()),
-            price:     Price {
-                price:        price_attestation.price.into(),
-                conf:         price_attestation.conf.into(),
-                expo:         price_attestation.expo,
+            id: PriceIdentifier(price_attestation.price_id.to_bytes()),
+            price: Price {
+                price: price_attestation.price.into(),
+                conf: price_attestation.conf.into(),
+                expo: price_attestation.expo,
                 publish_time: price_attestation.publish_time,
             },
             ema_price: Price {
-                price:        price_attestation.ema_price.into(),
-                conf:         price_attestation.ema_conf.into(),
-                expo:         price_attestation.expo,
+                price: price_attestation.ema_price.into(),
+                conf: price_attestation.ema_conf.into(),
+                expo: price_attestation.expo,
                 publish_time: price_attestation.publish_time,
             },
         }
@@ -137,17 +128,17 @@ impl From<&PriceAttestation> for PriceFeed {
 impl From<&PriceFeedMessage> for PriceFeed {
     fn from(price_feed_message: &PriceFeedMessage) -> Self {
         Self {
-            id:        PriceIdentifier(price_feed_message.feed_id),
-            price:     Price {
-                price:        price_feed_message.price.into(),
-                conf:         price_feed_message.conf.into(),
-                expo:         price_feed_message.exponent,
+            id: PriceIdentifier(price_feed_message.feed_id),
+            price: Price {
+                price: price_feed_message.price.into(),
+                conf: price_feed_message.conf.into(),
+                expo: price_feed_message.exponent,
                 publish_time: price_feed_message.publish_time,
             },
             ema_price: Price {
-                price:        price_feed_message.ema_price.into(),
-                conf:         price_feed_message.ema_conf.into(),
-                expo:         price_feed_message.exponent,
+                price: price_feed_message.ema_price.into(),
+                conf: price_feed_message.ema_conf.into(),
+                expo: price_feed_message.exponent,
                 publish_time: price_feed_message.publish_time,
             },
         }
@@ -211,37 +202,37 @@ impl From<Chain> for u16 {
 #[serde(crate = "near_sdk::serde")]
 pub struct Source {
     pub emitter: WormholeAddress,
-    pub chain:   Chain,
+    pub chain: Chain,
 }
 
 /// A local `Vaa` type converted to from the Wormhole definition, this helps catch any upstream
 /// changes to the Wormhole VAA format.
 pub struct Vaa<P> {
-    pub version:            u8,
+    pub version: u8,
     pub guardian_set_index: u32,
-    pub signatures:         Vec<WormholeSignature>,
-    pub timestamp:          u32, // Seconds since UNIX epoch
-    pub nonce:              u32,
-    pub emitter_chain:      Chain,
-    pub emitter_address:    WormholeAddress,
-    pub sequence:           u64,
-    pub consistency_level:  u8,
-    pub payload:            P,
+    pub signatures: Vec<WormholeSignature>,
+    pub timestamp: u32, // Seconds since UNIX epoch
+    pub nonce: u32,
+    pub emitter_chain: Chain,
+    pub emitter_address: WormholeAddress,
+    pub sequence: u64,
+    pub consistency_level: u8,
+    pub payload: P,
 }
 
 impl<P> From<wormhole_sdk::Vaa<P>> for Vaa<P> {
     fn from(vaa: wormhole_sdk::Vaa<P>) -> Self {
         Self {
-            version:            vaa.version,
+            version: vaa.version,
             guardian_set_index: vaa.guardian_set_index,
-            signatures:         vaa.signatures.iter().map(|s| s.signature).collect(),
-            timestamp:          vaa.timestamp,
-            nonce:              vaa.nonce,
-            emitter_chain:      vaa.emitter_chain.into(),
-            emitter_address:    vaa.emitter_address.0,
-            sequence:           vaa.sequence,
-            consistency_level:  vaa.consistency_level,
-            payload:            vaa.payload,
+            signatures: vaa.signatures.iter().map(|s| s.signature).collect(),
+            timestamp: vaa.timestamp,
+            nonce: vaa.nonce,
+            emitter_chain: vaa.emitter_chain.into(),
+            emitter_address: vaa.emitter_address.0,
+            sequence: vaa.sequence,
+            consistency_level: vaa.consistency_level,
+            payload: vaa.payload,
         }
     }
 }

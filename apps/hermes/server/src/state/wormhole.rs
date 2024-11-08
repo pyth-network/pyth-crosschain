@@ -1,51 +1,26 @@
 use {
     super::{
-        aggregate::{
-            Aggregates,
-            Update,
-        },
+        aggregate::{Aggregates, Update},
         State,
     },
     crate::network::wormhole::GuardianSet,
-    anyhow::{
-        anyhow,
-        ensure,
-        Result,
-    },
+    anyhow::{anyhow, ensure, Result},
     chrono::DateTime,
     pythnet_sdk::{
-        wire::v1::{
-            WormholeMessage,
-            WormholePayload,
-        },
+        wire::v1::{WormholeMessage, WormholePayload},
         ACCUMULATOR_EMITTER_ADDRESS,
     },
     secp256k1::{
-        ecdsa::{
-            RecoverableSignature,
-            RecoveryId,
-        },
-        Message,
-        Secp256k1,
+        ecdsa::{RecoverableSignature, RecoveryId},
+        Message, Secp256k1,
     },
     serde_wormhole::RawMessage,
-    sha3::{
-        Digest,
-        Keccak256,
-    },
-    std::collections::{
-        BTreeMap,
-        BTreeSet,
-    },
+    sha3::{Digest, Keccak256},
+    std::collections::{BTreeMap, BTreeSet},
     tokio::sync::RwLock,
     wormhole_sdk::{
-        vaa::{
-            Body,
-            Header,
-        },
-        Address,
-        Chain,
-        Vaa,
+        vaa::{Body, Header},
+        Address, Chain, Vaa,
     },
 };
 
@@ -71,7 +46,7 @@ impl WormholeState {
     pub fn new() -> Self {
         Self {
             observed_vaa_seqs: RwLock::new(BTreeSet::new()),
-            guardian_set:      RwLock::new(BTreeMap::new()),
+            guardian_set: RwLock::new(BTreeMap::new()),
         }
     }
 }

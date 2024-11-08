@@ -1,37 +1,19 @@
 use {
-    super::{
-        AccumulatorMessages,
-        RawMessage,
-        Slot,
-    },
+    super::{AccumulatorMessages, RawMessage, Slot},
     crate::{
         network::wormhole::VaaBytes,
-        state::cache::{
-            Cache,
-            MessageState,
-        },
+        state::cache::{Cache, MessageState},
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     pythnet_sdk::{
         accumulators::{
-            merkle::{
-                MerklePath,
-                MerkleTree,
-            },
+            merkle::{MerklePath, MerkleTree},
             Accumulator,
         },
         hashers::keccak256_160::Keccak160,
         wire::{
             to_vec,
-            v1::{
-                AccumulatorUpdateData,
-                MerklePriceUpdate,
-                Proof,
-                WormholeMerkleRoot,
-            },
+            v1::{AccumulatorUpdateData, MerklePriceUpdate, Proof, WormholeMerkleRoot},
         },
     },
 };
@@ -43,28 +25,28 @@ pub const MAX_MESSAGE_IN_SINGLE_UPDATE_DATA: usize = 255;
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleState {
     pub root: WormholeMerkleRoot,
-    pub vaa:  VaaBytes,
+    pub vaa: VaaBytes,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
     pub proof: MerklePath<Keccak160>,
-    pub vaa:   VaaBytes,
+    pub vaa: VaaBytes,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct RawMessageWithMerkleProof {
-    pub slot:        Slot,
+    pub slot: Slot,
     pub raw_message: RawMessage,
-    pub proof:       WormholeMerkleMessageProof,
+    pub proof: WormholeMerkleMessageProof,
 }
 
 impl From<MessageState> for RawMessageWithMerkleProof {
     fn from(message_state: MessageState) -> Self {
         Self {
-            slot:        message_state.slot,
+            slot: message_state.slot,
             raw_message: message_state.raw_message,
-            proof:       message_state.proof_set.wormhole_merkle_proof,
+            proof: message_state.proof_set.wormhole_merkle_proof,
         }
     }
 }
@@ -104,7 +86,7 @@ pub fn construct_message_states_proofs(
         .iter()
         .map(|m| {
             Ok(WormholeMerkleMessageProof {
-                vaa:   wormhole_merkle_state.vaa.clone(),
+                vaa: wormhole_merkle_state.vaa.clone(),
                 proof: merkle_acc
                     .prove(m.as_ref())
                     .ok_or(anyhow!("Failed to prove message"))?,
@@ -126,14 +108,14 @@ pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Re
         let vaa = message.proof.vaa;
         let mut updates = vec![MerklePriceUpdate {
             message: message.raw_message.into(),
-            proof:   message.proof.proof,
+            proof: message.proof.proof,
         }];
 
         while updates.len() < MAX_MESSAGE_IN_SINGLE_UPDATE_DATA {
             if let Some(message) = iter.next_if(|m| m.slot == slot) {
                 updates.push(MerklePriceUpdate {
                     message: message.raw_message.into(),
-                    proof:   message.proof.proof,
+                    proof: message.proof.proof,
                 });
             } else {
                 break;
@@ -162,10 +144,7 @@ mod test {
     use {
         super::*,
         pythnet_sdk::{
-            messages::{
-                Message,
-                PriceFeedMessage,
-            },
+            messages::{Message, PriceFeedMessage},
             wire::from_slice,
         },
     };
@@ -174,19 +153,19 @@ mod test {
         slot_and_pubtime: u64,
     ) -> RawMessageWithMerkleProof {
         let price_feed_message = Message::PriceFeedMessage(PriceFeedMessage {
-            conf:              0,
-            price:             0,
-            feed_id:           [0; 32],
-            exponent:          0,
-            ema_conf:          0,
-            ema_price:         0,
-            publish_time:      slot_and_pubtime as i64,
+            conf: 0,
+            price: 0,
+            feed_id: [0; 32],
+            exponent: 0,
+            ema_conf: 0,
+            ema_price: 0,
+            publish_time: slot_and_pubtime as i64,
             prev_publish_time: 0,
         });
         RawMessageWithMerkleProof {
-            slot:        slot_and_pubtime,
-            proof:       WormholeMerkleMessageProof {
-                vaa:   vec![],
+            slot: slot_and_pubtime,
+            proof: WormholeMerkleMessageProof {
+                vaa: vec![],
                 proof: MerklePath::default(),
             },
             raw_message: to_vec::<_, byteorder::BE>(&price_feed_message).unwrap(),

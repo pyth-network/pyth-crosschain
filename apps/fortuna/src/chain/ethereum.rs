@@ -4,64 +4,24 @@ use {
         chain::{
             eth_gas_oracle::EthProviderOracle,
             nonce_manager::NonceManagerMiddleware,
-            reader::{
-                self,
-                BlockNumber,
-                BlockStatus,
-                EntropyReader,
-                RequestedWithCallbackEvent,
-            },
-            traced_client::{
-                RpcMetrics,
-                TracedClient,
-            },
+            reader::{self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent},
+            traced_client::{RpcMetrics, TracedClient},
         },
         config::EthereumConfig,
     },
-    anyhow::{
-        anyhow,
-        Error,
-        Result,
-    },
+    anyhow::{anyhow, Error, Result},
     axum::async_trait,
     ethers::{
         abi::RawLog,
-        contract::{
-            abigen,
-            ContractCall,
-            EthLogDecode,
-        },
+        contract::{abigen, ContractCall, EthLogDecode},
         core::types::Address,
-        middleware::{
-            gas_oracle::GasOracleMiddleware,
-            MiddlewareError,
-            SignerMiddleware,
-        },
-        prelude::{
-            BlockId,
-            JsonRpcClient,
-            PendingTransaction,
-            TransactionRequest,
-        },
-        providers::{
-            Http,
-            Middleware,
-            Provider,
-        },
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-        types::{
-            transaction::eip2718::TypedTransaction,
-            BlockNumber as EthersBlockNumber,
-            U256,
-        },
+        middleware::{gas_oracle::GasOracleMiddleware, MiddlewareError, SignerMiddleware},
+        prelude::{BlockId, JsonRpcClient, PendingTransaction, TransactionRequest},
+        providers::{Http, Middleware, Provider},
+        signers::{LocalWallet, Signer},
+        types::{transaction::eip2718::TypedTransaction, BlockNumber as EthersBlockNumber, U256},
     },
-    sha3::{
-        Digest,
-        Keccak256,
-    },
+    sha3::{Digest, Keccak256},
     std::sync::Arc,
     thiserror::Error,
 };
@@ -94,7 +54,7 @@ pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
 #[derive(Clone, Debug)]
 pub struct LegacyTxMiddleware<M> {
     use_legacy_tx: bool,
-    inner:         M,
+    inner: M,
 }
 
 impl<M> LegacyTxMiddleware<M> {
@@ -333,10 +293,10 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         // sequence_number == 0 means the request does not exist.
         if r.sequence_number != 0 {
             Ok(Some(reader::Request {
-                provider:        r.provider,
+                provider: r.provider,
                 sequence_number: r.sequence_number,
-                block_number:    r.block_number.try_into()?,
-                use_blockhash:   r.use_blockhash,
+                block_number: r.block_number.try_into()?,
+                use_blockhash: r.use_blockhash,
             }))
         } else {
             Ok(None)
@@ -370,9 +330,9 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         Ok(res
             .iter()
             .map(|r| RequestedWithCallbackEvent {
-                sequence_number:    r.sequence_number,
+                sequence_number: r.sequence_number,
                 user_random_number: r.user_random_number,
-                provider_address:   r.request.provider,
+                provider_address: r.request.provider,
             })
             .collect())
     }

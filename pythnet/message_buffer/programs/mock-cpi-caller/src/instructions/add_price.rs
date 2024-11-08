@@ -1,27 +1,14 @@
 use {
     crate::{
-        instructions::{
-            sighash,
-            ACCUMULATOR_UPDATER_IX_NAME,
-            UPD_PRICE_WRITE,
-        },
+        instructions::{sighash, ACCUMULATOR_UPDATER_IX_NAME, UPD_PRICE_WRITE},
         message::{
             get_schemas,
-            price::{
-                CompactPriceMessage,
-                FullPriceMessage,
-            },
+            price::{CompactPriceMessage, FullPriceMessage},
             AccumulatorSerializer,
         },
-        state::{
-            PriceAccount,
-            PythAccountType,
-        },
+        state::{PriceAccount, PythAccountType},
     },
-    anchor_lang::{
-        prelude::*,
-        system_program,
-    },
+    anchor_lang::{prelude::*, system_program},
     message_buffer::program::MessageBuffer as MessageBufferProgram,
 };
 
@@ -41,19 +28,16 @@ pub fn add_price<'info>(
 
         inputs.push(price_full_data);
 
-
         let price_compact_data =
             CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
         inputs.push(price_compact_data);
     }
-
 
     // Note: normally pyth oracle add_price wouldn't call emit_accumulator_inputs
     // since add_price doesn't actually add/update any price data we would
     // want included in the accumulator anyways. This is just for testing
     AddPrice::emit_messages(ctx, inputs)
 }
-
 
 impl<'info> AddPrice<'info> {
     /// Invoke message_buffer::put_all ix cpi call using solana
@@ -109,11 +93,11 @@ impl<'info> AddPrice<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AddPriceParams {
-    pub id:         u64,
-    pub price:      u64,
+    pub id: u64,
+    pub price: u64,
     pub price_expo: u64,
-    pub ema:        u64,
-    pub ema_expo:   u64,
+    pub ema: u64,
+    pub ema_expo: u64,
 }
 
 #[derive(Accounts)]
@@ -126,13 +110,13 @@ pub struct AddPrice<'info> {
         bump,
         space = 8 + PriceAccount::INIT_SPACE
     )]
-    pub pyth_price_account:     AccountLoader<'info, PriceAccount>,
+    pub pyth_price_account: AccountLoader<'info, PriceAccount>,
     #[account(mut)]
-    pub payer:                  Signer<'info>,
+    pub payer: Signer<'info>,
     /// also needed for accumulator_updater
-    pub system_program:         Program<'info, System>,
+    pub system_program: Program<'info, System>,
     /// CHECK: whitelist
-    pub accumulator_whitelist:  UncheckedAccount<'info>,
+    pub accumulator_whitelist: UncheckedAccount<'info>,
     /// PDA representing this program's authority
     /// to call the accumulator program
     #[account(
@@ -140,7 +124,7 @@ pub struct AddPrice<'info> {
         owner = system_program::System::id(),
         bump,
     )]
-    pub auth:                   SystemAccount<'info>,
+    pub auth: SystemAccount<'info>,
     pub message_buffer_program: Program<'info, MessageBufferProgram>,
     // Remaining Accounts
     // MessageBuffer PDA

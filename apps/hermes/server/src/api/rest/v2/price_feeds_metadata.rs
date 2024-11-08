@@ -2,24 +2,17 @@ use {
     crate::{
         api::{
             rest::RestError,
-            types::{
-                AssetType,
-                PriceFeedMetadata,
-            },
+            types::{AssetType, PriceFeedMetadata},
             ApiState,
         },
         state::price_feeds_metadata::PriceFeedMeta,
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
+    axum::{extract::State, Json},
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
-
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]

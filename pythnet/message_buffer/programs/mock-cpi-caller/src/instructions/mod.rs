@@ -1,9 +1,5 @@
 use anchor_lang::solana_program::hash::hashv;
-pub use {
-    add_price::*,
-    cpi_max_test::*,
-    update_price::*,
-};
+pub use {add_price::*, cpi_max_test::*, update_price::*};
 
 mod add_price;
 mod cpi_max_test;
