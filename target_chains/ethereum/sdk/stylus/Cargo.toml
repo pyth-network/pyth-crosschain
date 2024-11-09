@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "contracts",
-  "lib/crypto",
   "lib/motsu",
   "lib/motsu-proc",
   "lib/e2e",
@@ -12,7 +11,6 @@ members = [
 ]
 default-members = [
   "contracts",
-  "lib/crypto",
   "lib/motsu",
   "lib/motsu-proc",
   "lib/e2e-proc",
@@ -83,7 +81,6 @@ proc-macro2 = "1.0.79"
 quote = "1.0.35"
 
 # members
-openzeppelin-crypto = { path = "lib/crypto" }
 motsu = { path = "lib/motsu"}
 motsu-proc = { path = "lib/motsu-proc", version = "0.1.0" }
 e2e = { path = "lib/e2e" }
