@@ -30,6 +30,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: "gas-bench"
+          
+       - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
 
       - name: install cargo-stylus
         run: cargo install cargo-stylus@0.5.1
