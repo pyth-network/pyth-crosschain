@@ -1,7 +1,7 @@
-use std::{i64, str::FromStr};
+use std::str::FromStr;
 
 use alloy::{
-    network::{AnyNetwork, EthereumWallet}, primitives::{uint, Address, FixedBytes as TypeFixedBytes, Bytes, U256},
+    network::{AnyNetwork, EthereumWallet}, primitives::{uint, Address, FixedBytes as TypeFixedBytes},
     providers::ProviderBuilder, 
     sol, sol_types::{ SolCall, SolConstructor}
 };
@@ -15,14 +15,14 @@ use crate::{
 sol!(
     #[sol(rpc)]
     contract ProxyCall{
-        function getPriceUnsafe(bytes32 id) external;
-        function getEmaPriceUnsafe(bytes32 id) external;
-        function getPriceNoOlderThan(bytes32 id, uint age) external;
-        function getEmaPriceNoOlderThan(bytes32 id, uint age) external;
-        function getUpdateFee(bytes[] calldata updateData) external returns (uint256);
-        function getValidTimePeriod() external;
-        function updatePriceFeeds(bytes[] calldata updateData) external payable;
-        function updatePriceFeedsIfNecessary(bytes[] calldata updateData, bytes32[] calldata priceIds, uint64[] calldata publishTimes) external payable;
+     function getPriceUnsafe(bytes32 id) external returns (uint8[] price);
+     function getEmaPriceUnsafe(bytes32 id) external returns (uint8[] price);
+     function getPriceNoOlderThan(bytes32 id, uint age) external returns (uint8[] price);
+     function getEmaPriceNoOlderThan(bytes32 id, uint age) external returns (uint8[] price);
+     function getUpdateFee(bytes[] calldata updateData) external returns (uint256 fee);
+     function getValidTimePeriod() external returns (uint256 period);
+     function updatePriceFeeds(bytes[] calldata updateData) external payable;
+     function updatePriceFeedsIfNecessary(bytes[] calldata updateData, bytes32[] calldata priceIds, uint64[] calldata publishTimes) external payable;
     }
 );
 
