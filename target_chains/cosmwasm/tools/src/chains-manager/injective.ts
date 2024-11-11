@@ -34,7 +34,7 @@ import {
 } from "@injectivelabs/networks";
 import * as net from "net";
 
-const DEFAULT_GAS_PRICE = 500000000;
+const DEFAULT_GAS_PRICE = 160000000;
 
 export class InjectiveExecutor implements ChainExecutor {
   private readonly gasMultiplier = 2;

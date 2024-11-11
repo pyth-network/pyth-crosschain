@@ -105,7 +105,8 @@ pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     --network testnet \
-    [--gas-price 500000000] \
+    [--gas-price 160000000] \
+    [--gas-multiplier 1.1] \
     [--pushing-frequency 10] \
     [--polling-frequency 5]
 

@@ -87,12 +87,12 @@ export class InjectiveDeployer implements Deployer {
     const txResponse = await this.signAndBroadcastMsg(store_code, {
       amount: [
         {
-          // gas = 5000000 & gasPrice = 500000000
-          amount: String(500000000 * 5000000),
+          // gas = 5000000 & gasPrice = 160000000
+          amount: String(160000000 * 5000000),
           denom: "inj",
         },
       ],
-      // DEFAULT STD FEE that we use has gas = 400000 and gasPrice = 500000000
+      // DEFAULT STD FEE that we use has gas = 400000 and gasPrice = 160000000
       // But this transaction was taking gas around 3000000. Which is a lot more
       // Keeping the gasPrice same as in default std fee as seen above in amount.
       // Changing the gasLimit to 5000000
