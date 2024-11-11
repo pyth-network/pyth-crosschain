@@ -58,7 +58,7 @@ repos:
       - id: cargo-clippy-cosmwasm
         name: Cargo clippy for cosmwasm contract
         language: "rust"
-        entry: cargo +1.82.0 clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: target_chains/cosmwasm
       # Hooks for Hermes

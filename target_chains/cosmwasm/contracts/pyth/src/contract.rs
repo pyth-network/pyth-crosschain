@@ -1097,7 +1097,7 @@ mod test {
                 assert_eq!(ema_price.expo, feed_msg.exponent);
                 assert_eq!(ema_price.publish_time, feed_msg.publish_time);
             }
-            _ => assert!(false, "invalid message type"),
+            _ => panic!("invalid message type"),
         };
     }
 
@@ -1228,8 +1228,8 @@ mod test {
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg.into()]);
         assert!(result.is_ok());
-        for i in 100..110 {
-            check_price_match(&deps, all_feeds[i]);
+        for msg in &all_feeds[100..110] {
+            check_price_match(&deps, msg);
         }
     }
 

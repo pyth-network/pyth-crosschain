@@ -4,7 +4,7 @@ use {
         from_binary, to_binary, Binary, Coin, ContractResult, QuerierResult, SystemError,
         SystemResult,
     },
-    std::{collections::HashMap, time::Duration, u128},
+    std::{collections::HashMap, time::Duration},
 };
 
 /// Mock version of Pyth for testing cosmwasm contracts.
