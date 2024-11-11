@@ -111,6 +111,9 @@ To run the end-to-end tests for `pyth-stylus`, follow these steps:
    ```
 
 2. Run the end-to-end tests:
+   ```
+   ./scripts/e2e-tests.sh
+   ```
 
 
 ### Releases
