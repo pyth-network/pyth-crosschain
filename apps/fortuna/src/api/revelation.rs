@@ -40,10 +40,6 @@ pub async fn revelation(
         })
         .inc();
 
-    let sequence: u64 = sequence
-        .try_into()
-        .map_err(|_| RestError::InvalidSequenceNumber)?;
-
     let state = state
         .chains
         .get(&chain_id)

@@ -83,6 +83,7 @@ impl PebbleHashChain {
         Ok(val)
     }
 
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -140,6 +141,8 @@ mod test {
         let chain = PebbleHashChain::new(secret, length, sample_interval);
 
         let mut last_val = chain.reveal_ith(0).unwrap();
+
+        #[allow(clippy::needless_range_loop)]
         for i in 1..length {
             let cur_val = chain.reveal_ith(i).unwrap();
             println!("{}", i);

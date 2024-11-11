@@ -295,7 +295,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             Ok(Some(reader::Request {
                 provider: r.provider,
                 sequence_number: r.sequence_number,
-                block_number: r.block_number.try_into()?,
+                block_number: r.block_number,
                 use_blockhash: r.use_blockhash,
             }))
         } else {

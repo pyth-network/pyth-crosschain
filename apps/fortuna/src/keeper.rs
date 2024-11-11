@@ -351,8 +351,10 @@ pub async fn process_event_with_backoff(
         })
         .inc();
     tracing::info!("Started processing event");
-    let mut backoff = ExponentialBackoff::default();
-    backoff.max_elapsed_time = Some(Duration::from_secs(300)); // retry for 5 minutes
+    let backoff = ExponentialBackoff {
+        max_elapsed_time: Some(Duration::from_secs(300)), // retry for 5 minutes
+        ..Default::default()
+    };
     match backoff::future::retry_notify(
         backoff,
         || async {
@@ -704,7 +706,7 @@ pub async fn watch_blocks(
     loop {
         match stream_option {
             Some(ref mut stream) => {
-                if let None = stream.next().await {
+                if stream.next().await.is_none() {
                     tracing::error!("Error blocks subscription stream ended");
                     return Err(anyhow!("Error blocks subscription stream ended"));
                 }
@@ -984,6 +986,7 @@ pub async fn send_and_confirm(contract_call: PythContractCall) -> Result<()> {
 }
 
 #[tracing::instrument(name = "adjust_fee", skip_all)]
+#[allow(clippy::too_many_arguments)]
 pub async fn adjust_fee_wrapper(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
@@ -1082,6 +1085,7 @@ pub async fn update_commitments_if_necessary(
 ///
 /// These conditions are intended to make sure that the keeper is profitable while also minimizing the number of fee
 /// update transactions.
+#[allow(clippy::too_many_arguments)]
 pub async fn adjust_fee_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,

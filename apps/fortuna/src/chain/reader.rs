@@ -157,7 +157,7 @@ pub mod mock {
 
         async fn get_block_number(
             &self,
-            confirmed_block_status: BlockStatus,
+            _confirmed_block_status: BlockStatus,
         ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
         }
@@ -172,11 +172,11 @@ pub mod mock {
 
         async fn estimate_reveal_with_callback_gas(
             &self,
-            sender: Address,
-            provider: Address,
-            sequence_number: u64,
-            user_random_number: [u8; 32],
-            provider_revelation: [u8; 32],
+            _sender: Address,
+            _provider: Address,
+            _sequence_number: u64,
+            _user_random_number: [u8; 32],
+            _provider_revelation: [u8; 32],
         ) -> Result<U256> {
             Ok(U256::from(5))
         }

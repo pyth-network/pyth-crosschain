@@ -84,7 +84,7 @@ repos:
       - id: cargo-clippy-fortuna
         name: Cargo clippy for Fortuna
         language: "rust"
-        entry: cargo +1.82.0 clippy --manifest-path ./apps/fortuna/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./apps/fortuna/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: apps/fortuna
       # Hooks for message buffer contract

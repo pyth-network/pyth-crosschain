@@ -207,7 +207,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
 async fn setup_chain_state(
     provider: &Address,
-    secret: &String,
+    secret: &str,
     chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
