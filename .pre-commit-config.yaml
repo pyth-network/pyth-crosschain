@@ -71,7 +71,7 @@ repos:
       - id: cargo-clippy-hermes
         name: Cargo clippy for Hermes
         language: "rust"
-        entry: cargo +1.82.0 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: apps/hermes
       # Hooks for Fortuna

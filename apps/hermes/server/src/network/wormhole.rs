@@ -75,6 +75,7 @@ pub struct GuardianSetData {
 ///
 /// The following module structure must match the protobuf definitions, so that the generated code
 /// can correctly reference modules from each other.
+#[allow(clippy::enum_variant_names)]
 mod proto {
     pub mod node {
         pub mod v1 {
