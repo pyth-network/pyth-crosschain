@@ -84,6 +84,12 @@ impl ProxyCallsExample {
 
 [MockPyth](./mock.rs) is a mock contract that can be deployed locally to simulate Pyth contract behavior. To set and update price feeds, call `updatePriceFeeds` and provide an array of encoded price feeds as the argument. Encoded price feeds can be created using the `create_price_feed_update_data` function in the mock contract, which is also available in the functions module.
 
+
+## Test Documentation
+
+Check out this link for all the test instructions and detailed setup for the pyth-stylus package.
+[Test Documentaion](./TEST.md)
+
 ### Releases
 
 We use [Semantic Versioning](https://semver.org/) for our releases. To release a new version of this package and publish it to npm, follow these steps:
