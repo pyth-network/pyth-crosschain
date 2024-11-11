@@ -2293,7 +2293,20 @@ name = "motsu"
 version = "0.1.0"
 dependencies = [
  "const-hex",
- "motsu-proc",
+ "motsu-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell",
+ "stylus-sdk",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "motsu"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "744174e5011fed86212d90c1120037da87e0c45fee7a5861c2b3105e41283810"
+dependencies = [
+ "const-hex",
+ "motsu-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "stylus-sdk",
  "tiny-keccak",
@@ -2305,10 +2318,21 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
- "motsu",
+ "motsu 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "stylus-sdk",
+ "syn 2.0.68",
+]
+
+[[package]]
+name = "motsu-proc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0785317ee15f9a1bc5d761da9d0d1dadd92225cd5a88eed0ec37c54a277fac44"
+dependencies = [
+ "proc-macro2",
+ "quote",
  "syn 2.0.68",
 ]
 
@@ -2721,7 +2745,7 @@ dependencies = [
  "alloy-sol-types",
  "keccak-const",
  "mini-alloc",
- "motsu",
+ "motsu 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "stylus-sdk",
 ]
 

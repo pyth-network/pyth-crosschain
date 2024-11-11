@@ -214,16 +214,11 @@ pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<FixedBytes<32>>)
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use alloc::vec;
-    use alloy_primitives::{address, uint, Address, U64, U256, FixedBytes, fixed_bytes};
-    use stylus_sdk::{abi::Bytes, contract, msg::{self, value}};
+    use alloy_primitives::{ U256, FixedBytes};
+    use stylus_sdk::abi::Bytes;
     use 
-    crate::pyth::{
-        mock::{MockPythContract, DecodeDataType}, 
-        errors::{Error, InvalidArgument}, types::{PriceFeed, Price, StoragePriceFeed}
-    };
+    crate::pyth::mock::{MockPythContract, DecodeDataType};
     use alloy_sol_types::SolType;
-
-    use std::{println as info, println as warn};
 
     // Updated constants to use uppercase naming convention
     const PRICE: i64 = 1000;

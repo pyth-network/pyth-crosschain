@@ -81,8 +81,8 @@ proc-macro2 = "1.0.79"
 quote = "1.0.35"
 
 # members
-motsu = { path = "lib/motsu"}
-motsu-proc = { path = "lib/motsu-proc", version = "0.1.0" }
+motsu = "0.1.0"
+motsu-proc = "0.1.0" 
 e2e = { path = "lib/e2e" }
 e2e-proc = {path = "lib/e2e-proc"}
 pyth-stylus ={path ="contracts"}

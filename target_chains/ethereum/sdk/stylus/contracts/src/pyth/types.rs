@@ -214,7 +214,7 @@ impl StoragePriceFeed {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use alloy_primitives::{address, FixedBytes, U256};
+    use alloy_primitives::{ FixedBytes, U256};
     use crate::pyth::types::{PriceFeed, Price, StoragePriceFeed, StoragePrice};
 
     // Updated constants to use uppercase naming convention
