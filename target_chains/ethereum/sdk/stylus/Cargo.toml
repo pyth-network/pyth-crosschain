@@ -1,15 +1,12 @@
 [workspace]
 members = [
   "contracts",
-  "lib/e2e",
-  "lib/e2e-proc",
   "examples/function-calls",
   "examples/proxy-calls",
   "benches"
 ]
 default-members = [
   "contracts",
-  "lib/e2e-proc",
   "examples/function-calls",
   "examples/proxy-calls",
 ]
@@ -78,9 +75,7 @@ quote = "1.0.35"
 
 # members
 motsu = "0.1.0"
-motsu-proc = "0.1.0" 
-e2e = { path = "lib/e2e" }
-e2e-proc = {path = "lib/e2e-proc"}
+e2e = { git = "https://github.com/Ifechukwudaniel/e2e-stylus"}
 pyth-stylus ={path ="contracts"}
 
 [profile.release]

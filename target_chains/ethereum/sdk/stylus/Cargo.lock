@@ -1357,6 +1357,7 @@ checksum = "56ce8c6da7551ec6c462cbaf3bfbc75131ebbfa1c944aeaa9dab51ca1c5f0c3b"
 [[package]]
 name = "e2e"
 version = "0.1.0"
+source = "git+https://github.com/Ifechukwudaniel/e2e-stylus#bbcc5885f0b45a53d1f87adcbf31c0b5e7e144d2"
 dependencies = [
  "alloy",
  "e2e-proc",
@@ -1371,6 +1372,7 @@ dependencies = [
 [[package]]
 name = "e2e-proc"
 version = "0.1.0"
+source = "git+https://github.com/Ifechukwudaniel/e2e-proc-stylus#6894e8b62896ed16fb3128664ec2f390536c27c5"
 dependencies = [
  "proc-macro2",
  "quote",
