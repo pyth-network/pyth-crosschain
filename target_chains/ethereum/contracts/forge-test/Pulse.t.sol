@@ -45,6 +45,15 @@ contract PulseTest is Test, PulseEvents {
     bytes32 constant ETH_PRICE_FEED_ID =
         0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 
+    // Price feed constants
+    int8 constant MOCK_PRICE_FEED_EXPO = -8;
+
+    // Mock price values (already scaled according to Pyth's format)
+    int64 constant MOCK_BTC_PRICE = 5_000_000_000_000; // $50,000
+    int64 constant MOCK_ETH_PRICE = 300_000_000_000; // $3,000
+    uint64 constant MOCK_BTC_CONF = 10_000_000_000; // $100
+    uint64 constant MOCK_ETH_CONF = 5_000_000_000; // $50
+
     function setUp() public {
         owner = address(1);
         admin = address(2);
@@ -146,13 +155,19 @@ contract PulseTest is Test, PulseEvents {
             2
         );
 
-        // Create mock price feed for BTC
-        priceFeeds[0].price.publishTime = publishTime;
+        // Create mock price feed for BTC with specific values
         priceFeeds[0].id = BTC_PRICE_FEED_ID;
+        priceFeeds[0].price.price = MOCK_BTC_PRICE;
+        priceFeeds[0].price.conf = MOCK_BTC_CONF;
+        priceFeeds[0].price.expo = MOCK_PRICE_FEED_EXPO;
+        priceFeeds[0].price.publishTime = publishTime;
 
-        // Create mock price feed for ETH
-        priceFeeds[1].price.publishTime = publishTime;
+        // Create mock price feed for ETH with specific values
         priceFeeds[1].id = ETH_PRICE_FEED_ID;
+        priceFeeds[1].price.price = MOCK_ETH_PRICE;
+        priceFeeds[1].price.conf = MOCK_ETH_CONF;
+        priceFeeds[1].price.expo = MOCK_PRICE_FEED_EXPO;
+        priceFeeds[1].price.publishTime = publishTime;
 
         // Mock Pyth's parsePriceFeedUpdates to return our price feeds
         vm.mockCall(
@@ -161,11 +176,34 @@ contract PulseTest is Test, PulseEvents {
             abi.encode(priceFeeds)
         );
 
-        // Mock Pyth's updatePriceFeeds
-        vm.mockCall(
-            address(pyth),
-            abi.encodeWithSelector(IPyth.updatePriceFeeds.selector),
-            abi.encode()
+        // Create arrays for expected event data
+        int64[] memory expectedPrices = new int64[](2);
+        expectedPrices[0] = MOCK_BTC_PRICE;
+        expectedPrices[1] = MOCK_ETH_PRICE;
+
+        uint64[] memory expectedConf = new uint64[](2);
+        expectedConf[0] = MOCK_BTC_CONF;
+        expectedConf[1] = MOCK_ETH_CONF;
+
+        int32[] memory expectedExpos = new int32[](2);
+        expectedExpos[0] = MOCK_PRICE_FEED_EXPO;
+        expectedExpos[1] = MOCK_PRICE_FEED_EXPO;
+
+        uint256[] memory expectedPublishTimes = new uint256[](2);
+        expectedPublishTimes[0] = publishTime;
+        expectedPublishTimes[1] = publishTime;
+
+        // Expect the PriceUpdateExecuted event with all price data
+        vm.expectEmit(true, true, false, true);
+        emit PriceUpdateExecuted(
+            sequenceNumber,
+            provider,
+            publishTime,
+            priceIds,
+            expectedPrices,
+            expectedConf,
+            expectedExpos,
+            expectedPublishTimes
         );
 
         // Create mock update data

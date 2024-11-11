@@ -13,7 +13,11 @@ interface PulseEvents {
         uint64 indexed sequenceNumber,
         address indexed provider,
         uint256 publishTime,
-        bytes32[] priceIds
+        bytes32[] priceIds,
+        int64[] prices,
+        uint64[] conf,
+        int32[] expos,
+        uint256[] publishTimes
     );
 
     event ProviderFeeUpdated(
