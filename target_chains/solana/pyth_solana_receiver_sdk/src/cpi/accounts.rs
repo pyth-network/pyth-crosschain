@@ -1,3 +1,5 @@
+#![allow(clippy::vec_init_then_push)]
+
 // This file was populated with the expanded macros of programs/pyth-solana-receiver/src/lib.rs
 
 pub struct PostUpdateAtomic<'info> {

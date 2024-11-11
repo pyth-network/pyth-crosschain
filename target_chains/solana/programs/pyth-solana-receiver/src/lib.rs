@@ -1,3 +1,6 @@
+// We can't do much about the size of `anchor_lang::error::Error`.
+#![allow(clippy::result_large_err)]
+
 pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
     crate::error::ReceiverError,
@@ -354,6 +357,7 @@ struct VaaComponents {
     emitter_chain: u16,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn post_price_update_from_vaa<'info>(
     config: &Account<'info, Config>,
     payer: &Signer<'info>,

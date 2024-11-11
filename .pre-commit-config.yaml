@@ -110,7 +110,7 @@ repos:
       - id: cargo-clippy-pythnet-sdk
         name: Cargo clippy for pythnet SDK
         language: "rust"
-        entry: cargo +1.82.0 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: pythnet/pythnet_sdk
       # Hooks for solana receiver contract
@@ -123,7 +123,7 @@ repos:
       - id: cargo-clippy-pyth-solana-receiver
         name: Cargo clippy for solana target chain contract
         language: "rust"
-        entry: cargo +1.73.0 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +1.73.0 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: target_chains/solana
       # For express relay python files
