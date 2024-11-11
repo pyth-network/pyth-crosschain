@@ -1,3 +1,6 @@
+// We can't do much about the size of `anchor_lang::error::Error`.
+#![allow(clippy::result_large_err)]
+
 pub mod instructions;
 mod state;
 

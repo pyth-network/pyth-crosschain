@@ -18,8 +18,3 @@ pub enum PythAccountType {
     Test = 4,
     Permissions = 5,
 }
-impl PythAccountType {
-    pub(crate) fn to_u32(&self) -> u32 {
-        *self as u32
-    }
-}
