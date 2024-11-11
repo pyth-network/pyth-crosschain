@@ -170,7 +170,6 @@ abstract contract Pulse is IPulse, PulseState {
         uint256 publishTime = priceFeeds[0].price.publishTime;
 
         // Verify request parameters match
-        require(req.publishTime == publishTime, "Invalid publish time");
         require(
             keccak256(abi.encode(req.priceIds)) ==
                 keccak256(abi.encode(priceIds)),
@@ -181,10 +180,6 @@ abstract contract Pulse is IPulse, PulseState {
             "Invalid callback gas limit"
         );
 
-        // Update price feeds before executing callback
-        IPyth(_state.pyth).updatePriceFeeds{value: msg.value}(updateData);
-
-        // Execute callback but don't revert if it fails
         try
             IPulseConsumer(req.requester).pulseCallback(
                 sequenceNumber,
@@ -194,11 +189,12 @@ abstract contract Pulse is IPulse, PulseState {
             )
         {
             // Callback succeeded
-            emit PriceUpdateExecuted(
+            emitPriceUpdate(
                 sequenceNumber,
                 msg.sender,
                 publishTime,
-                priceIds
+                priceIds,
+                priceFeeds
             );
         } catch Error(string memory reason) {
             // Explicit revert/require
@@ -224,6 +220,37 @@ abstract contract Pulse is IPulse, PulseState {
 
         // Clear request regardless of callback success
         clearRequest(msg.sender, sequenceNumber);
+    }
+
+    function emitPriceUpdate(
+        uint64 sequenceNumber,
+        address provider,
+        uint256 publishTime,
+        bytes32[] memory priceIds,
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal {
+        int64[] memory prices = new int64[](priceFeeds.length);
+        uint64[] memory conf = new uint64[](priceFeeds.length);
+        int32[] memory expos = new int32[](priceFeeds.length);
+        uint256[] memory publishTimes = new uint256[](priceFeeds.length);
+
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            prices[i] = priceFeeds[i].price.price;
+            conf[i] = priceFeeds[i].price.conf;
+            expos[i] = priceFeeds[i].price.expo;
+            publishTimes[i] = priceFeeds[i].price.publishTime;
+        }
+
+        emit PriceUpdateExecuted(
+            sequenceNumber,
+            provider,
+            publishTime,
+            priceIds,
+            prices,
+            conf,
+            expos,
+            publishTimes
+        );
     }
 
     function getProviderInfo(
