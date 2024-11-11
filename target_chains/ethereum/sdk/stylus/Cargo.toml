@@ -1,8 +1,6 @@
 [workspace]
 members = [
   "contracts",
-  "lib/motsu",
-  "lib/motsu-proc",
   "lib/e2e",
   "lib/e2e-proc",
   "examples/function-calls",
@@ -11,8 +9,6 @@ members = [
 ]
 default-members = [
   "contracts",
-  "lib/motsu",
-  "lib/motsu-proc",
   "lib/e2e-proc",
   "examples/function-calls",
   "examples/proxy-calls",

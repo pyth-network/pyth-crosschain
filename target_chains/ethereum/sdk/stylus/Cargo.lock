@@ -2291,38 +2291,14 @@ checksum = "7843ec2de400bcbc6a6328c958dc38e5359da6e93e72e37bc5246bf1ae776389"
 [[package]]
 name = "motsu"
 version = "0.1.0"
-dependencies = [
- "const-hex",
- "motsu-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "once_cell",
- "stylus-sdk",
- "tiny-keccak",
-]
-
-[[package]]
-name = "motsu"
-version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "744174e5011fed86212d90c1120037da87e0c45fee7a5861c2b3105e41283810"
 dependencies = [
  "const-hex",
- "motsu-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "motsu-proc",
  "once_cell",
  "stylus-sdk",
  "tiny-keccak",
-]
-
-[[package]]
-name = "motsu-proc"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "motsu 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "proc-macro2",
- "quote",
- "stylus-sdk",
- "syn 2.0.68",
 ]
 
 [[package]]
@@ -2745,7 +2721,7 @@ dependencies = [
  "alloy-sol-types",
  "keccak-const",
  "mini-alloc",
- "motsu 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "motsu",
  "stylus-sdk",
 ]
 
