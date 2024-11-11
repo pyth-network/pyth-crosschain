@@ -170,6 +170,19 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
 }
 
+(int) find_price_id_index(tuple price_ids, int price_id) {
+    int len = price_ids.tlen();
+    int i = 0;
+    while (i < len) {
+        if (price_ids.at(i) == price_id) {
+            return i;
+        }
+        i += 1;
+    }
+    return -1;  ;; Not found
+}
+
+
 tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, int min_publish_time, int max_publish_time, int unique) {
     slice cs = read_and_verify_header(data);
 
@@ -198,34 +211,54 @@ tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, in
 
     int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
-    ;; Create tuple to store price feeds
-    tuple price_feeds = empty_tuple();
+    ;; Create dictionary to store price feeds in order (dict has a udict_get_next? method which returns the next key in order)
+    cell ordered_feeds = new_dict();
     ;; Track which price IDs we've found
     cell found_price_ids = new_dict();
+
+    int index = 0;
 
     repeat(num_updates) {
         (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
-        int should_include = (price_ids.tlen() == 0)
-            | ((price_ids.tlen() > 0)
-            & (publish_time >= min_publish_time)
-            & (publish_time <= max_publish_time)
-            & ((unique == 0) | (min_publish_time > prev_publish_time)));
 
-        if (should_include) {
-            ;; Create price feed cell containing both current and EMA prices
-            cell price_feed_cell = begin_cell()
-                .store_ref(store_price(price, conf, expo, publish_time))
-                .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
-            .end_cell();
+        int price_ids_len = price_ids.tlen();
 
-            tuple price_feed = empty_tuple();
-            price_feed~tpush(price_id);
-            price_feed~tpush(price_feed_cell);
-            price_feeds~tpush(price_feed);
+        ;; Check if we've already processed this price_id to avoid duplicates
+        (_, int already_processed?) = found_price_ids.udict_get?(256, price_id);
+        if (~ already_processed?) { ;; Only process if we haven't seen this price_id yet
+            int should_include = (price_ids_len == 0)
+                | ((price_ids_len > 0)
+                & (publish_time >= min_publish_time)
+                & (publish_time <= max_publish_time)
+                & ((unique == 0) | (min_publish_time > prev_publish_time)));
 
-            ;; Mark this price ID as found
-            found_price_ids~udict_set(256, price_id, begin_cell().store_int(true, 1).end_cell().begin_parse());
+            if (should_include) {
+                ;; Create price feed cell containing both current and EMA prices
+                cell price_feed_cell = begin_cell()
+                    .store_ref(store_price(price, conf, expo, publish_time))
+                    .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
+                .end_cell();
+
+                if (price_ids_len == 0) {
+                    ordered_feeds~udict_set(8, index, begin_cell()
+                        .store_uint(price_id, 256)
+                        .store_ref(price_feed_cell)
+                    .end_cell().begin_parse());
+                    index += 1;
+                } else {
+                    index = find_price_id_index(price_ids, price_id);
+                    if (index >= 0) {
+                        ordered_feeds~udict_set(8, index, begin_cell()
+                            .store_uint(price_id, 256)
+                            .store_ref(price_feed_cell)
+                        .end_cell().begin_parse());
+                    }
+                }
+
+                ;; Mark this price ID as found
+                found_price_ids~udict_set(256, price_id, begin_cell().store_int(true, 1).end_cell().begin_parse());
+            }
         }
     }
 
@@ -241,6 +274,19 @@ tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, in
             i += 1;
         }
     }
+
+    ;; Create final ordered tuple from dictionary
+    tuple price_feeds = empty_tuple();
+    int index = -1;
+    do {
+        (index, slice value, int success) = ordered_feeds.udict_get_next?(8, index);
+        if (success) {
+            tuple price_feed = empty_tuple();
+            price_feed~tpush(value~load_uint(256));  ;; price_id
+            price_feed~tpush(value~load_ref());      ;; price_feed_cell
+            price_feeds~tpush(price_feed);
+        }
+    } until (~ success);
 
     return price_feeds;
 }
@@ -378,7 +424,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
         slice price_feed = price_feed_cell.begin_parse();
         slice price = price_feed~load_ref().begin_parse();
         slice ema_price = price_feed~load_ref().begin_parse();
-        (_, _, _, int publish_time) = parse_price(price);
+        (int price_, int conf, int expo, int publish_time) = parse_price(price);
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
         int latest_publish_time = 0;
