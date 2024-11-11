@@ -123,7 +123,7 @@ impl ExecutorBench {
     pub fn add_vaa_account(
         &mut self,
         emitter: &Pubkey,
-        instructions: &Vec<Instruction>,
+        instructions: &[Instruction],
         validity: VaaAttack,
     ) -> Pubkey {
         let emitter_chain: u16 = match validity {
