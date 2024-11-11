@@ -1236,7 +1236,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 2020, // ERROR_NO_PRICE_FEEDS_FOUND
+      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
     });
   });
 
@@ -1259,7 +1259,7 @@ describe("PythTest", () => {
       from: deployer.address,
       to: pythTest.address,
       success: false,
-      exitCode: 2020, // ERROR_NO_PRICE_FEEDS_FOUND
+      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
     });
   });
 });

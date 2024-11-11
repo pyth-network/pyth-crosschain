@@ -200,6 +200,8 @@ tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, in
 
     ;; Create tuple to store price feeds
     tuple price_feeds = empty_tuple();
+    ;; Track which price IDs we've found
+    cell found_price_ids = new_dict();
 
     repeat(num_updates) {
         (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
@@ -221,11 +223,24 @@ tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, in
             price_feed~tpush(price_id);
             price_feed~tpush(price_feed_cell);
             price_feeds~tpush(price_feed);
-        }
 
+            ;; Mark this price ID as found
+            found_price_ids~udict_set(256, price_id, begin_cell().store_int(true, 1).end_cell().begin_parse());
+        }
     }
 
     throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
+
+    ;; Verify all requested price IDs were found
+    if (price_ids.tlen() > 0) {
+        int i = 0;
+        repeat(price_ids.tlen()) {
+            int requested_id = price_ids.at(i);
+            (_, int found?) = found_price_ids.udict_get?(256, requested_id);
+            throw_unless(ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE, found?);
+            i += 1;
+        }
+    }
 
     return price_feeds;
 }
@@ -308,7 +323,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     }
 
     tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
-    throw_if(ERROR_NO_PRICE_FEEDS_FOUND, price_feeds.tlen() == 0);
+    ~dump(price_feeds);
     send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address);
 }
 
@@ -324,7 +339,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     }
 
     tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, publish_time, publish_time + max_staleness, true);
-    throw_if(ERROR_NO_PRICE_FEEDS_FOUND, price_feeds.tlen() == 0);
+    ~dump(price_feeds);
     send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address);
 }
 
