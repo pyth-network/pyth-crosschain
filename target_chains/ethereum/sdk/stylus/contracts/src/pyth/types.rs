@@ -214,18 +214,22 @@ impl StoragePriceFeed {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use alloy_primitives::{ FixedBytes, U256};
+    use alloy_primitives::{  B256, U256};
     use crate::pyth::types::{PriceFeed, Price, StoragePriceFeed, StoragePrice};
 
     // Updated constants to use uppercase naming convention
     const PRICE: i64 = 1000;
     const CONF: u64 = 1000;
-    const EXPO: i32 = 1000;
-    const EMA_PRICE: i64 = 1000;
-    const EMA_CONF: u64 = 1000;
+    const EXPO: i32 = 1000; 
 
-    fn generate_bytes() -> FixedBytes<32> {
-        FixedBytes::<32>::repeat_byte(30)
+
+
+    /// Generates a 256-bit hash filled with the byte value 30.
+    ///
+    /// # Returns
+    /// - `B256`: A 256-bit hash where each byte is set to 30.
+    fn generate_bytes() -> B256 {
+        B256::repeat_byte(30)
     }
 
     #[motsu::test]

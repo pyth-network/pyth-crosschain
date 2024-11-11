@@ -15,7 +15,7 @@ use crate::pyth::types::{
 use crate::utils::helpers::{call_helper, delegate_call_helper};
 use alloc::vec::Vec;
 use stylus_sdk::storage::TopLevelStorage;
-use alloy_primitives::{ Address, FixedBytes, U256, Bytes};
+use alloy_primitives::{ Address, B256, U256, Bytes};
 use crate::pyth::mock::DecodeDataType;
 use alloy_sol_types::SolType;
 
@@ -32,7 +32,7 @@ use alloy_sol_types::SolType;
 pub fn get_price_no_older_than(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
-    id: FixedBytes<32>,
+    id: B256,
     age: U256,
 ) -> Result<Price, Vec<u8>> {
     let price_call = call_helper::<getPriceNoOlderThanCall>(storage, pyth_address, (id, age,))?;
@@ -69,7 +69,7 @@ pub fn get_update_fee(
 pub fn get_ema_price_unsafe(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
-    id: FixedBytes<32>,
+    id: B256,
 ) -> Result<Price, Vec<u8>> {
     let ema_price = call_helper::<getEmaPriceUnsafeCall>(storage, pyth_address, (id,))?;
     Ok(ema_price.price)
@@ -88,7 +88,7 @@ pub fn get_ema_price_unsafe(
 pub fn get_ema_price_no_older_than(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
-    id: FixedBytes<32>,
+    id: B256,
     age: U256,
 ) -> Result<Price, Vec<u8>> {
     let ema_price = call_helper::<getEmaPriceNoOlderThanCall>(storage, pyth_address, (id, age,))?;
@@ -107,7 +107,7 @@ pub fn get_ema_price_no_older_than(
 pub fn get_price_unsafe(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
-    id: FixedBytes<32>,
+    id: B256,
 ) -> Result<Price, Vec<u8>> {
     let price = call_helper::<getPriceUnsafeCall>(storage, pyth_address, (id,))?;
     let price = Price {
@@ -168,7 +168,7 @@ pub fn update_price_feeds_if_necessary(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
     update_data: Vec<Bytes>,
-    price_ids: Vec<FixedBytes<32>>,
+    price_ids: Vec<B256>,
     publish_times: Vec<u64>,
 ) -> Result<(), Vec<u8>> {
     delegate_call_helper::<updatePriceFeedsIfNecessaryCall>(
@@ -195,7 +195,7 @@ pub fn parse_price_feed_updates(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
     update_data: Vec<Bytes>,
-    price_ids: Vec<FixedBytes<32>>,
+    price_ids: Vec<B256>,
     min_publish_time: u64,
     max_publish_time: u64,
 ) -> Result<Vec<PriceFeed>, Vec<u8>> {
@@ -218,7 +218,7 @@ pub fn parse_price_feed_updates_unique(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
     update_data: Vec<Bytes>,
-    price_ids: Vec<FixedBytes<32>>,
+    price_ids: Vec<B256>,
     min_publish_time: u64,
     max_publish_time: u64
 ) -> Result<Vec<PriceFeed>, Vec<u8>> {
@@ -243,7 +243,7 @@ pub fn parse_price_feed_updates_unique(
 /// # Returns
 /// - `Vec<u8>`: A byte vector containing the encoded update data for the price feed.
 pub fn create_price_feed_update_data(
-    id: FixedBytes<32>,
+    id: B256,
     price: i64,
     conf: u64,
     expo: i32,

@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use alloy_primitives::{Uint, FixedBytes, U256, Bytes};
+use alloy_primitives::{Uint, U256, Bytes, B256};
 use alloy_sol_types::{ sol_data::Uint as SolUInt, SolType, SolValue};
 use stylus_sdk::{abi::Bytes as AbiBytes,evm, msg, prelude::*};
 use crate::{pyth::errors::{FalledDecodeData, InsufficientFee, InvalidArgument}, utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE};
@@ -32,15 +32,15 @@ impl MockPythContract {
     }
 
 
-    fn query_price_feed(&self, id: FixedBytes<32>) -> Result<Vec<u8>, Vec<u8>> {
+    fn query_price_feed(&self, id: B256) -> Result<Vec<u8>, Vec<u8>> {
         let price_feed  =  self.price_feeds.get(id).to_price_feed();
-        if price_feed.id.eq(&FixedBytes::<32>::ZERO) {
+        if price_feed.id.eq(&B256::ZERO) {
             return Err(Error::PriceFeedNotFound(PriceFeedNotFound {}).into());
         }
         Ok(price_feed.abi_encode())
     }
 
-    fn price_feed_exists(&self, id:FixedBytes<32>) -> bool {
+    fn price_feed_exists(&self, id:B256) -> bool {
          self.price_feeds.getter(id).id.is_empty()
     }
 
@@ -97,7 +97,7 @@ impl MockPythContract {
     fn parse_price_feed_updates(
         &mut self,
         update_data:Vec<AbiBytes>,
-        price_ids:Vec<FixedBytes<32>>,
+        price_ids:Vec<B256>,
         min_publish_time:u64,
         max_publish_time:u64
     ) -> Result<Vec<u8>, Vec<u8>>{
@@ -108,7 +108,7 @@ impl MockPythContract {
     fn parse_price_feed_updates_unique(
         &mut self,
         update_data:Vec<AbiBytes>,
-        price_ids:Vec<FixedBytes<32>>,
+        price_ids:Vec<B256>,
         min_publish_time:u64,
         max_publish_time:u64
     ) ->  Result<Vec<u8>, Vec<u8>>{
@@ -116,7 +116,7 @@ impl MockPythContract {
     }
 
     fn create_price_feed_update_data(&self,
-        id:FixedBytes<32>,
+        id:B256,
         price:i64,
         conf:u64,
         expo:i32,
@@ -141,7 +141,7 @@ impl  MockPythContract  {
 
      fn parse_price_feed_updates_internal(&mut self,
         update_data: Vec<AbiBytes>,
-        price_ids: Vec<FixedBytes<32>>,
+        price_ids: Vec<B256>,
         min_publish_time:u64,
         max_publish_time:u64,
         unique:bool
@@ -183,7 +183,7 @@ impl  MockPythContract  {
                      {
                         break;
                   } else {
-                       feeds[i].id = FixedBytes::<32>::ZERO;
+                       feeds[i].id = B256::ZERO;
                    }
                 }
 
@@ -197,10 +197,10 @@ impl  MockPythContract  {
     }  
 }
 
-pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<FixedBytes<32>>) {
+pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<B256>) {
     let id = ["ETH","SOL","BTC"].map(|x| {
         let x =  keccak_const::Keccak256::new().update(x.as_bytes()).finalize().to_vec();
-        return  FixedBytes::<32>::from_slice(&x) ;
+        return  B256::from_slice(&x);
     });
     let mut price_feed_data_list = Vec::new();
     for i in 0..3 {
@@ -214,7 +214,7 @@ pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<FixedBytes<32>>)
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use alloc::vec;
-    use alloy_primitives::{ U256, FixedBytes};
+    use alloy_primitives::{ U256, B256};
     use stylus_sdk::abi::Bytes;
     use 
     crate::pyth::mock::{MockPythContract, DecodeDataType};
@@ -228,8 +228,8 @@ mod tests {
     const EMA_CONF: u64 = 1000;
     const PREV_PUBLISH_TIME: u64 = 1000;
 
-    fn generate_bytes() -> FixedBytes<32> {
-        FixedBytes::<32>::repeat_byte(30)
+    fn generate_bytes() -> B256 {
+        B256::repeat_byte(30)
     }
 
     #[motsu::test]
@@ -241,7 +241,8 @@ mod tests {
 
     #[motsu::test]
     fn error_initialize_mock_contract(contract: MockPythContract) {
-      let err = contract.initialize(U256::from(0), U256::from(0)).expect_err("should not initialize with invalid parameters");
+      let err = contract.initialize(U256::from(0), U256::from(0))  ;
+      assert!(err.is_err())
     }
 
     #[motsu::test]
@@ -298,12 +299,4 @@ mod tests {
         assert_eq!(valid_time_period, U256::from(1000));
     }
 
-    #[motsu::test]
-    fn can_update_price_feeds(contract: MockPythContract) {
-        let _ = contract.initialize(U256::from(1000), U256::from(1000));
-        let id = generate_bytes();
-        //let price_feed_created = contract.create_price_feed_update_data(id, PRICE, CONF, EXPO, EMA_PRICE, EMA_CONF, U256::from(1000), PREV_PUBLISH_TIME);    
-        //let mut update_data: Vec<Bytes> = vec![];
-        //update_data.push(Bytes::from(price_feed_created));
-    }
 }
