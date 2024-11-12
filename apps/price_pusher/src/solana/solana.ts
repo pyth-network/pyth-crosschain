@@ -229,11 +229,11 @@ export class SolanaPricePusherJito implements IPricePusher {
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      await sendTransactionsJito(
-        transactions,
-        this.searcherClient,
-        this.pythSolanaReceiver.wallet
-      );
+      // await sendTransactionsJito(
+      //   transactions,
+      //   this.searcherClient,
+      //   this.pythSolanaReceiver.wallet
+      // );
     }
   }
 }
