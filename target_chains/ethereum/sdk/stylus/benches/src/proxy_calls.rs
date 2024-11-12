@@ -60,7 +60,7 @@ pub async fn run_with(
     let time_frame = uint!(10000_U256);
     let age  = uint!(10000_U256);
 
-    let (data, _ids)  = create_price_feed_update_data_list();
+    let (data, ids)  = create_price_feed_update_data_list();
 
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
@@ -72,7 +72,7 @@ pub async fn run_with(
     let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
 
     //println!("{data:?} , {ids:?} ");
-   // let _ = receipt!(contract.updatePriceFeedsIfNecessary(data.clone(),ids.clone(), vec![i64::MAX,i64::MAX,i64::MAX]))?;
+    let _ = contract.updatePriceFeedsIfNecessary(data.clone(),ids.clone(), vec![100,100,100]).send().await?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;
