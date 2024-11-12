@@ -357,9 +357,9 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     ;; - 6 bits: optimized way of serializing the tag and the first 4 fields
     ;; - 256 bits: owner address
     ;; - 128 bits: coins (VarUInteger 16) from grams$_ amount:(VarUInteger 16) = Grams
-    ;; - 107 bits: other data (extra_currencies + ihr_fee + fwd_fee + lt of transaction + unixtime of transaction + no init-field flag + inplace message body flag)
+    ;; - 107 bits: MSG_SERIALIZE_BITS
     ;; - PRICE_FEED_BITS * num_price_feeds: space for each price feed
-    int bits = 6 + 256 + 128 + 107 + (PRICE_FEED_BITS * num_price_feeds);
+    int bits = 6 + 256 + 128 + MSG_SERIALIZE_BITS + (PRICE_FEED_BITS * num_price_feeds);
     int fwd_fee = get_forward_fee(cells, bits, WORKCHAIN);
 
     ;; Calculate all fees
@@ -375,7 +375,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
         .store_uint(0x18, 6)
         .store_slice(sender_address)
         .store_coins(excess)
-        .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .store_uint(1, MSG_SERIALIZE_BITS)
         .store_ref(response.end_cell())
         .end_cell(),
         0);

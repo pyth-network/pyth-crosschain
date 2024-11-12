@@ -1,6 +1,6 @@
 - chain: ton_testnet
-  address: "EQDi9IHGin5GmrJyU5d_dQqjuYC22tshx1dxz9j5_ZGUz74j"
+  address: "EQB4ZnrI5qsP_IUJgVJNwEGKLzZWsQOFhiaqDbD7pTt_f9oU"
   type: TonPriceFeedContract
 - chain: ton_mainnet
-  address: "EQD2QZABE_SbKwCN0kyr5XU_qP_uNkL0fwDodHEgHFLaahgC"
+  address: "EQB29vl9WnkhuGw0Zo2azE97Eo3QUZuZ9JSu2rul_5w2RZnG"
   type: TonPriceFeedContract
