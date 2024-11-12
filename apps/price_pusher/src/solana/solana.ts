@@ -191,7 +191,8 @@ export class SolanaPricePusherJito implements IPricePusher {
   ): Promise<void> {
     const jitoTip =
       (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports;
-    this.logger.info(`using jito tip of ${jitoTip} lamports`);
+    this.logger.info({ jitoTip }, "using jito tip of");
+
     let priceFeedUpdateData: string[];
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
