@@ -21,6 +21,12 @@
     int op = in_msg_body~load_uint(32);
     cell data = in_msg_body~load_ref();
     slice data_slice = data.begin_parse();
+
+    ;; Get sender address from message
+    slice cs = in_msg_full.begin_parse();
+    cs~skip_bits(4);  ;; skip flags
+    slice sender_address = cs~load_msg_addr();  ;; load sender address
+
     if (op == OP_UPDATE_GUARDIAN_SET) {
         update_guardian_set(data_slice);
     } elseif (op == OP_UPDATE_PRICE_FEEDS) {
@@ -29,6 +35,18 @@
         execute_governance_action(data_slice);
     } elseif (op == OP_UPGRADE_CONTRACT) {
         execute_upgrade_contract(data);
+    } elseif (op == OP_PARSE_PRICE_FEED_UPDATES) {
+        cell price_ids_cell = in_msg_body~load_ref();
+        slice price_ids_slice = price_ids_cell.begin_parse();
+        int min_publish_time = in_msg_body~load_uint(64);
+        int max_publish_time = in_msg_body~load_uint(64);
+        parse_price_feed_updates(msg_value, data_slice, price_ids_slice, min_publish_time, max_publish_time, sender_address);
+    } elseif (op == OP_PARSE_UNIQUE_PRICE_FEED_UPDATES) {
+        cell price_ids_cell = in_msg_body~load_ref();
+        slice price_ids_slice = price_ids_cell.begin_parse();
+        int publish_time = in_msg_body~load_uint(64);
+        int max_staleness = in_msg_body~load_uint(64);
+        parse_unique_price_feed_updates(msg_value, data_slice, price_ids_slice, publish_time, max_staleness, sender_address);
     } else {
         throw(0xffff); ;; Throw exception for unknown op
     }

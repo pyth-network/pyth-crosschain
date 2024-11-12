@@ -15,6 +15,20 @@ const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
 
 const int PRICE_FEED_MESSAGE_TYPE = 0;
 
+;; Structure:
+;; - 256 bits: price_id
+;; Price:
+;;   - 64 bits: price
+;;   - 64 bits: confidence
+;;   - 32 bits: exponent
+;;   - 64 bits: publish_time
+;; EMA Price:
+;;   - 64 bits: price
+;;   - 64 bits: confidence
+;;   - 32 bits: exponent
+;;   - 64 bits: publish_time
+const int PRICE_FEED_BITS = 256 + 224 + 224;
+
 {-
   The main workchain ID in TON. Currently, TON has two blockchains:
   1. Masterchain: Used for system-level operations and consensus.

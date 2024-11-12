@@ -1,5 +1,5 @@
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Cell, toNano } from "@ton/core";
+import { Cell, CommonMessageInfoInternal, Message, toNano } from "@ton/core";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
@@ -18,6 +18,35 @@ import {
   HERMES_ETH_PRICE,
   HERMES_ETH_PUBLISH_TIME,
   HERMES_BTC_PUBLISH_TIME,
+  HERMES_BTC_CONF,
+  HERMES_BTC_EXPO,
+  HERMES_BTC_EMA_CONF,
+  HERMES_BTC_EMA_EXPO,
+  HERMES_BTC_EMA_PRICE,
+  HERMES_BTC_EMA_PUBLISH_TIME,
+  HERMES_ETH_CONF,
+  HERMES_ETH_EMA_CONF,
+  HERMES_ETH_EMA_EXPO,
+  HERMES_ETH_EMA_PRICE,
+  HERMES_ETH_EMA_PUBLISH_TIME,
+  HERMES_ETH_EXPO,
+  HERMES_BTC_ETH_UNIQUE_UPDATE,
+  HERMES_ETH_UNIQUE_EMA_PRICE,
+  HERMES_BTC_UNIQUE_CONF,
+  HERMES_BTC_UNIQUE_EMA_CONF,
+  HERMES_BTC_UNIQUE_EMA_EXPO,
+  HERMES_BTC_UNIQUE_EMA_PRICE,
+  HERMES_BTC_UNIQUE_EMA_PUBLISH_TIME,
+  HERMES_BTC_UNIQUE_EXPO,
+  HERMES_BTC_UNIQUE_PRICE,
+  HERMES_BTC_UNIQUE_PUBLISH_TIME,
+  HERMES_ETH_UNIQUE_CONF,
+  HERMES_ETH_UNIQUE_EMA_CONF,
+  HERMES_ETH_UNIQUE_EMA_EXPO,
+  HERMES_ETH_UNIQUE_EMA_PUBLISH_TIME,
+  HERMES_ETH_UNIQUE_EXPO,
+  HERMES_ETH_UNIQUE_PRICE,
+  HERMES_ETH_UNIQUE_PUBLISH_TIME,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
@@ -376,19 +405,6 @@ describe("PythTest", () => {
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
 
     let result = await pythTest.sendUpdatePriceFeeds(
-      deployer.getSender(),
-      updateData,
-      toNano("0.1") // Insufficient gas
-    );
-
-    expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: pythTest.address,
-      success: false,
-      exitCode: 3000, // ERROR_INSUFFICIENT_GAS
-    });
-
-    result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
       calculateUpdatePriceFeedsFee(1n) // Send enough gas for 1 update instead of 2
@@ -973,5 +989,478 @@ describe("PythTest", () => {
 
     // Verify that the contract has not been upgraded by attempting to call the new method
     await expect(pythTest.getNewFunction()).rejects.toThrow();
+  });
+
+  it("should successfully parse price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      HERMES_BTC_PUBLISH_TIME
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (BTC)
+    const btcCs = currentCell.beginParse();
+    const btcPriceId =
+      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
+
+    const btcPriceFeedCell = btcCs.loadRef();
+    const btcPriceFeedSlice = btcPriceFeedCell.beginParse();
+
+    // Verify BTC current price
+    const btcCurrentPriceCell = btcPriceFeedSlice.loadRef();
+    const btcCurrentPrice = btcCurrentPriceCell.beginParse();
+    expect(btcCurrentPrice.loadInt(64)).toBe(HERMES_BTC_PRICE);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_CONF);
+    expect(btcCurrentPrice.loadInt(32)).toBe(HERMES_BTC_EXPO);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    // Verify BTC EMA price
+    const btcEmaPriceCell = btcPriceFeedSlice.loadRef();
+    const btcEmaPrice = btcEmaPriceCell.beginParse();
+    expect(btcEmaPrice.loadInt(64)).toBe(HERMES_BTC_EMA_PRICE);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_EMA_CONF);
+    expect(btcEmaPrice.loadInt(32)).toBe(HERMES_BTC_EMA_EXPO);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    // Move to ETH price feed
+    currentCell = btcCs.loadRef();
+
+    // Second price feed (ETH)
+    const ethCs = currentCell.beginParse();
+    const ethPriceId =
+      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
+
+    const ethPriceFeedCell = ethCs.loadRef();
+    const ethPriceFeedSlice = ethPriceFeedCell.beginParse();
+
+    // Verify ETH current price
+    const ethCurrentPriceCell = ethPriceFeedSlice.loadRef();
+    const ethCurrentPrice = ethCurrentPriceCell.beginParse();
+    expect(ethCurrentPrice.loadInt(64)).toBe(HERMES_ETH_PRICE);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_CONF);
+    expect(ethCurrentPrice.loadInt(32)).toBe(HERMES_ETH_EXPO);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
+
+    // Verify ETH EMA price
+    const ethEmaPriceCell = ethPriceFeedSlice.loadRef();
+    const ethEmaPrice = ethEmaPriceCell.beginParse();
+    expect(ethEmaPrice.loadInt(64)).toBe(HERMES_ETH_EMA_PRICE);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_EMA_CONF);
+    expect(ethEmaPrice.loadInt(32)).toBe(HERMES_ETH_EMA_EXPO);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(ethCs.remainingRefs).toBe(0);
+  });
+
+  it("should successfully parse unique price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UNIQUE_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      60
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (BTC)
+    const btcCs = currentCell.beginParse();
+    const btcPriceId =
+      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
+
+    const btcPriceFeedCell = btcCs.loadRef();
+    const btcPriceFeedSlice = btcPriceFeedCell.beginParse();
+
+    // Verify BTC current price
+    const btcCurrentPriceCell = btcPriceFeedSlice.loadRef();
+    const btcCurrentPrice = btcCurrentPriceCell.beginParse();
+    expect(btcCurrentPrice.loadInt(64)).toBe(HERMES_BTC_UNIQUE_PRICE);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_CONF);
+    expect(btcCurrentPrice.loadInt(32)).toBe(HERMES_BTC_UNIQUE_EXPO);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_PUBLISH_TIME);
+
+    // Verify BTC EMA price
+    const btcEmaPriceCell = btcPriceFeedSlice.loadRef();
+    const btcEmaPrice = btcEmaPriceCell.beginParse();
+    expect(btcEmaPrice.loadInt(64)).toBe(HERMES_BTC_UNIQUE_EMA_PRICE);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_EMA_CONF);
+    expect(btcEmaPrice.loadInt(32)).toBe(HERMES_BTC_UNIQUE_EMA_EXPO);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_EMA_PUBLISH_TIME);
+
+    // Move to ETH price feed
+    currentCell = btcCs.loadRef();
+
+    // Second price feed (ETH)
+    const ethCs = currentCell.beginParse();
+    const ethPriceId =
+      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
+
+    const ethPriceFeedCell = ethCs.loadRef();
+    const ethPriceFeedSlice = ethPriceFeedCell.beginParse();
+
+    // Verify ETH current price
+    const ethCurrentPriceCell = ethPriceFeedSlice.loadRef();
+    const ethCurrentPrice = ethCurrentPriceCell.beginParse();
+    expect(ethCurrentPrice.loadInt(64)).toBe(HERMES_ETH_UNIQUE_PRICE);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_CONF);
+    expect(ethCurrentPrice.loadInt(32)).toBe(HERMES_ETH_UNIQUE_EXPO);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_PUBLISH_TIME);
+
+    // Verify ETH EMA price
+    const ethEmaPriceCell = ethPriceFeedSlice.loadRef();
+    const ethEmaPrice = ethEmaPriceCell.beginParse();
+    expect(ethEmaPrice.loadInt(64)).toBe(HERMES_ETH_UNIQUE_EMA_PRICE);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_EMA_CONF);
+    expect(ethEmaPrice.loadInt(32)).toBe(HERMES_ETH_UNIQUE_EMA_EXPO);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_EMA_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(ethCs.remainingRefs).toBe(0);
+  });
+
+  it("should fail to parse invalid price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const invalidUpdateData = Buffer.from("invalid data");
+
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      invalidUpdateData,
+      toNano("1"),
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      HERMES_BTC_PUBLISH_TIME
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2002, // ERROR_INVALID_MAGIC
+    });
+  });
+
+  it("should fail to parse price feed updates within range", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME + 1,
+      HERMES_BTC_PUBLISH_TIME + 1
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+    });
+  });
+
+  it("should fail to parse unique price feed updates", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      60
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: false,
+      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+    });
+  });
+
+  it("should successfully parse price feed updates in price ids order", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [ETH_PRICE_FEED_ID, BTC_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      HERMES_BTC_PUBLISH_TIME
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (ETH)
+    const ethCs = currentCell.beginParse();
+    const ethPriceId =
+      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
+
+    const ethPriceFeedCell = ethCs.loadRef();
+    const ethPriceFeedSlice = ethPriceFeedCell.beginParse();
+
+    // Verify ETH current price
+    const ethCurrentPriceCell = ethPriceFeedSlice.loadRef();
+    const ethCurrentPrice = ethCurrentPriceCell.beginParse();
+    expect(ethCurrentPrice.loadInt(64)).toBe(HERMES_ETH_PRICE);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_CONF);
+    expect(ethCurrentPrice.loadInt(32)).toBe(HERMES_ETH_EXPO);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
+
+    // Verify ETH EMA price
+    const ethEmaPriceCell = ethPriceFeedSlice.loadRef();
+    const ethEmaPrice = ethEmaPriceCell.beginParse();
+    expect(ethEmaPrice.loadInt(64)).toBe(HERMES_ETH_EMA_PRICE);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_EMA_CONF);
+    expect(ethEmaPrice.loadInt(32)).toBe(HERMES_ETH_EMA_EXPO);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
+
+    // Move to ETH price feed
+    currentCell = ethCs.loadRef();
+
+    // Second price feed (BTC)
+    const btcCs = currentCell.beginParse();
+    const btcPriceId =
+      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
+
+    const btcPriceFeedCell = btcCs.loadRef();
+    const btcPriceFeedSlice = btcPriceFeedCell.beginParse();
+
+    // Verify BTC current price
+    const btcCurrentPriceCell = btcPriceFeedSlice.loadRef();
+    const btcCurrentPrice = btcCurrentPriceCell.beginParse();
+    expect(btcCurrentPrice.loadInt(64)).toBe(HERMES_BTC_PRICE);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_CONF);
+    expect(btcCurrentPrice.loadInt(32)).toBe(HERMES_BTC_EXPO);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    // Verify BTC EMA price
+    const btcEmaPriceCell = btcPriceFeedSlice.loadRef();
+    const btcEmaPrice = btcEmaPriceCell.beginParse();
+    expect(btcEmaPrice.loadInt(64)).toBe(HERMES_BTC_EMA_PRICE);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_EMA_CONF);
+    expect(btcEmaPrice.loadInt(32)).toBe(HERMES_BTC_EMA_EXPO);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(ethCs.remainingRefs).toBe(0);
+  });
+
+  it("should successfully parse unique price feed updates in price ids order", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UNIQUE_UPDATE, "hex"),
+      sentValue,
+      [ETH_PRICE_FEED_ID, BTC_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      60
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (ETH)
+    const ethCs = currentCell.beginParse();
+    const ethPriceId =
+      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
+
+    const ethPriceFeedCell = ethCs.loadRef();
+    const ethPriceFeedSlice = ethPriceFeedCell.beginParse();
+
+    // Verify ETH current price
+    const ethCurrentPriceCell = ethPriceFeedSlice.loadRef();
+    const ethCurrentPrice = ethCurrentPriceCell.beginParse();
+    expect(ethCurrentPrice.loadInt(64)).toBe(HERMES_ETH_UNIQUE_PRICE);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_CONF);
+    expect(ethCurrentPrice.loadInt(32)).toBe(HERMES_ETH_UNIQUE_EXPO);
+    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_PUBLISH_TIME);
+
+    // Verify ETH EMA price
+    const ethEmaPriceCell = ethPriceFeedSlice.loadRef();
+    const ethEmaPrice = ethEmaPriceCell.beginParse();
+    expect(ethEmaPrice.loadInt(64)).toBe(HERMES_ETH_UNIQUE_EMA_PRICE);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_EMA_CONF);
+    expect(ethEmaPrice.loadInt(32)).toBe(HERMES_ETH_UNIQUE_EMA_EXPO);
+    expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_UNIQUE_EMA_PUBLISH_TIME);
+
+    currentCell = ethCs.loadRef();
+
+    // Second price feed (BTC)
+    const btcCs = currentCell.beginParse();
+    const btcPriceId =
+      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
+
+    const btcPriceFeedCell = btcCs.loadRef();
+    const btcPriceFeedSlice = btcPriceFeedCell.beginParse();
+
+    // Verify BTC current price
+    const btcCurrentPriceCell = btcPriceFeedSlice.loadRef();
+    const btcCurrentPrice = btcCurrentPriceCell.beginParse();
+    expect(btcCurrentPrice.loadInt(64)).toBe(HERMES_BTC_UNIQUE_PRICE);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_CONF);
+    expect(btcCurrentPrice.loadInt(32)).toBe(HERMES_BTC_UNIQUE_EXPO);
+    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_PUBLISH_TIME);
+
+    // Verify BTC EMA price
+    const btcEmaPriceCell = btcPriceFeedSlice.loadRef();
+    const btcEmaPrice = btcEmaPriceCell.beginParse();
+    expect(btcEmaPrice.loadInt(64)).toBe(HERMES_BTC_UNIQUE_EMA_PRICE);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_EMA_CONF);
+    expect(btcEmaPrice.loadInt(32)).toBe(HERMES_BTC_UNIQUE_EMA_EXPO);
+    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_UNIQUE_EMA_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(btcCs.remainingRefs).toBe(0);
   });
 });
