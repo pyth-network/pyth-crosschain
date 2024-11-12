@@ -156,7 +156,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     private priceServiceConnection: PriceServiceConnection,
     private logger: Logger,
     private shardId: number,
-    private jitoTipLamports: number,
+    private defaultJitoTipLamports: number,
     private searcherClient: SearcherClient,
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number
@@ -188,7 +188,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     _pubTimesToPush: number[]
   ): Promise<void> {
     let jitoTip =
-      (await this.getRecentJitoTipsLamports()) ?? this.jitoTipLamports;
+      (await this.getRecentJitoTipsLamports()) ?? this.defaultJitoTipLamports;
     this.logger.info(`using jito tip of ${jitoTip} lamports`);
     let priceFeedUpdateData: string[];
     try {
@@ -221,11 +221,11 @@ export class SolanaPricePusherJito implements IPricePusher {
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      // await sendTransactionsJito(
-      //   transactions,
-      //   this.searcherClient,
-      //   this.pythSolanaReceiver.wallet
-      // );
+      await sendTransactionsJito(
+        transactions,
+        this.searcherClient,
+        this.pythSolanaReceiver.wallet
+      );
     }
   }
 }
