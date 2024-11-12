@@ -21,12 +21,28 @@ export async function run(provider: NetworkProvider) {
     },
   ];
 
+  // Require CHAIN_ID environment variable
+  if (!process.env.CHAIN_ID) {
+    throw new Error(
+      "CHAIN_ID environment variable is required. Example usage: CHAIN_ID=2 npx blueprint run ..."
+    );
+  }
+
+  const chainId = parseInt(process.env.CHAIN_ID, 10);
+
+  // Validate that chainId is a valid number
+  if (isNaN(chainId)) {
+    throw new Error("CHAIN_ID must be a valid number");
+  }
+
+  console.log("Chain ID:", chainId);
+
   const config: MainConfig = {
     singleUpdateFee: SINGLE_UPDATE_FEE,
     dataSources: DATA_SOURCES,
     guardianSetIndex: 0,
     guardianSet: GUARDIAN_SET_0,
-    chainId: 1,
+    chainId,
     governanceChainId: 1,
     governanceContract:
       "0000000000000000000000000000000000000000000000000000000000000004",
