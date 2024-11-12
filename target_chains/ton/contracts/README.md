@@ -19,7 +19,13 @@
 
 ### Deploy or run another script
 
-`npx blueprint run` or `yarn blueprint run`
+First, visit [TON Center](https://toncenter.com/) and register to get an API key to bypass rate limits. Replace `<YOUR-API-KEY>` with the API key you obtained from TON Center. `<CUSTOM-TYPE>` is either `testnet` or `mainnet`.
+
+Then run:
+
+```bash
+npx blueprint run --custom https://testnet.toncenter.com/api/v2/jsonRPC --custom-version v2 --custom-type <CUSTOM-TYPE> --custom-key <YOUR-API-KEY>
+```
 
 ### Add a new contract
 
