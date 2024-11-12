@@ -28,6 +28,30 @@ contract MockPulseConsumer is IPulseConsumer {
     }
 }
 
+contract FailingPulseConsumer is IPulseConsumer {
+    function pulseCallback(
+        uint64,
+        address,
+        uint256,
+        bytes32[] calldata
+    ) external pure override {
+        revert("callback failed");
+    }
+}
+
+contract CustomErrorPulseConsumer is IPulseConsumer {
+    error CustomError(string message);
+
+    function pulseCallback(
+        uint64,
+        address,
+        uint256,
+        bytes32[] calldata
+    ) external pure override {
+        revert CustomError("callback failed");
+    }
+}
+
 contract PulseTest is Test, PulseEvents {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
@@ -36,6 +60,8 @@ contract PulseTest is Test, PulseEvents {
     address public admin;
     address public provider;
     address public pyth;
+
+    // Constants
     uint128 constant PYTH_FEE = 1 wei;
     uint128 constant PROVIDER_FEE = 1 wei;
     uint128 constant PROVIDER_FEE_PER_GAS = 1 wei;
@@ -47,8 +73,6 @@ contract PulseTest is Test, PulseEvents {
 
     // Price feed constants
     int8 constant MOCK_PRICE_FEED_EXPO = -8;
-
-    // Mock price values (already scaled according to Pyth's format)
     int64 constant MOCK_BTC_PRICE = 5_000_000_000_000; // $50,000
     int64 constant MOCK_ETH_PRICE = 300_000_000_000; // $3,000
     uint64 constant MOCK_BTC_CONF = 10_000_000_000; // $100
@@ -62,13 +86,11 @@ contract PulseTest is Test, PulseEvents {
 
         PulseUpgradeable _pulse = new PulseUpgradeable();
         proxy = new ERC1967Proxy(address(_pulse), "");
-        // wrap in ABI to support easier calls
         pulse = PulseUpgradeable(address(proxy));
 
         pulse.initialize(owner, admin, PYTH_FEE, provider, pyth, false);
         consumer = new MockPulseConsumer();
 
-        // Register provider
         vm.prank(provider);
         pulse.register(
             PROVIDER_FEE,
@@ -77,11 +99,91 @@ contract PulseTest is Test, PulseEvents {
         );
     }
 
-    function testRequestPriceUpdate() public {
+    // Helper function to create price IDs array
+    function createPriceIds() internal pure returns (bytes32[] memory) {
         bytes32[] memory priceIds = new bytes32[](2);
         priceIds[0] = BTC_PRICE_FEED_ID;
         priceIds[1] = ETH_PRICE_FEED_ID;
+        return priceIds;
+    }
 
+    // Helper function to create mock price feeds
+    function createMockPriceFeeds(
+        uint256 publishTime
+    ) internal pure returns (PythStructs.PriceFeed[] memory) {
+        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
+            2
+        );
+
+        priceFeeds[0].id = BTC_PRICE_FEED_ID;
+        priceFeeds[0].price.price = MOCK_BTC_PRICE;
+        priceFeeds[0].price.conf = MOCK_BTC_CONF;
+        priceFeeds[0].price.expo = MOCK_PRICE_FEED_EXPO;
+        priceFeeds[0].price.publishTime = publishTime;
+
+        priceFeeds[1].id = ETH_PRICE_FEED_ID;
+        priceFeeds[1].price.price = MOCK_ETH_PRICE;
+        priceFeeds[1].price.conf = MOCK_ETH_CONF;
+        priceFeeds[1].price.expo = MOCK_PRICE_FEED_EXPO;
+        priceFeeds[1].price.publishTime = publishTime;
+
+        return priceFeeds;
+    }
+
+    // Helper function to mock Pyth response
+    function mockPythResponse(
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal {
+        vm.mockCall(
+            address(pyth),
+            abi.encodeWithSelector(IPyth.parsePriceFeedUpdates.selector),
+            abi.encode(priceFeeds)
+        );
+    }
+
+    // Helper function to create update data
+    function createUpdateData(
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal pure returns (bytes[] memory) {
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = abi.encode(priceFeeds[0]);
+        updateData[1] = abi.encode(priceFeeds[1]);
+        return updateData;
+    }
+
+    // Helper function to calculate total fee
+    function calculateTotalFee() internal pure returns (uint128) {
+        return
+            PYTH_FEE +
+            PROVIDER_FEE +
+            (PROVIDER_FEE_PER_GAS * uint128(CALLBACK_GAS_LIMIT));
+    }
+
+    // Helper function to setup consumer request
+    function setupConsumerRequest(
+        address consumerAddress
+    )
+        internal
+        returns (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        )
+    {
+        priceIds = createPriceIds();
+        publishTime = block.timestamp;
+        vm.deal(consumerAddress, 1 gwei);
+
+        vm.prank(consumerAddress);
+        sequenceNumber = pulse.requestPriceUpdatesWithCallback{
+            value: calculateTotalFee()
+        }(provider, publishTime, priceIds, CALLBACK_GAS_LIMIT);
+
+        return (sequenceNumber, priceIds, publishTime);
+    }
+
+    function testRequestPriceUpdate() public {
+        bytes32[] memory priceIds = createPriceIds();
         uint256 publishTime = block.timestamp;
 
         // Fund the consumer contract
@@ -103,13 +205,8 @@ contract PulseTest is Test, PulseEvents {
         vm.expectEmit();
         emit PriceUpdateRequested(expectedRequest);
 
-        // Calculate total fee including gas component
-        uint128 totalFee = PYTH_FEE +
-            PROVIDER_FEE +
-            (PROVIDER_FEE_PER_GAS * uint128(CALLBACK_GAS_LIMIT));
-
         // Make the actual call that should emit the event
-        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
             provider,
             publishTime,
             priceIds,
@@ -129,10 +226,7 @@ contract PulseTest is Test, PulseEvents {
     }
 
     function testExecuteCallback() public {
-        bytes32[] memory priceIds = new bytes32[](2);
-        priceIds[0] = BTC_PRICE_FEED_ID;
-        priceIds[1] = ETH_PRICE_FEED_ID;
-
+        bytes32[] memory priceIds = createPriceIds();
         uint256 publishTime = block.timestamp;
 
         // Fund the consumer contract
@@ -140,41 +234,15 @@ contract PulseTest is Test, PulseEvents {
 
         // Step 1: Make the request as consumer
         vm.prank(address(consumer));
-
-        // Calculate total fee including gas component
-        uint128 totalFee = PYTH_FEE +
-            PROVIDER_FEE +
-            (PROVIDER_FEE_PER_GAS * uint128(CALLBACK_GAS_LIMIT));
-
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
-            value: totalFee
+            value: calculateTotalFee()
         }(provider, publishTime, priceIds, CALLBACK_GAS_LIMIT);
 
-        // Step 2: Create mock price feeds that match the expected publish time
-        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
-            2
+        // Step 2: Create mock price feeds and setup Pyth response
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
         );
-
-        // Create mock price feed for BTC with specific values
-        priceFeeds[0].id = BTC_PRICE_FEED_ID;
-        priceFeeds[0].price.price = MOCK_BTC_PRICE;
-        priceFeeds[0].price.conf = MOCK_BTC_CONF;
-        priceFeeds[0].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[0].price.publishTime = publishTime;
-
-        // Create mock price feed for ETH with specific values
-        priceFeeds[1].id = ETH_PRICE_FEED_ID;
-        priceFeeds[1].price.price = MOCK_ETH_PRICE;
-        priceFeeds[1].price.conf = MOCK_ETH_CONF;
-        priceFeeds[1].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[1].price.publishTime = publishTime;
-
-        // Mock Pyth's parsePriceFeedUpdates to return our price feeds
-        vm.mockCall(
-            address(pyth),
-            abi.encodeWithSelector(IPyth.parsePriceFeedUpdates.selector),
-            abi.encode(priceFeeds)
-        );
+        mockPythResponse(priceFeeds);
 
         // Create arrays for expected event data
         int64[] memory expectedPrices = new int64[](2);
@@ -206,12 +274,9 @@ contract PulseTest is Test, PulseEvents {
             expectedPublishTimes
         );
 
-        // Create mock update data
-        bytes[] memory updateData = new bytes[](2);
-        updateData[0] = abi.encode(priceFeeds[0]);
-        updateData[1] = abi.encode(priceFeeds[1]);
+        // Create mock update data and execute callback
+        bytes[] memory updateData = createUpdateData(priceFeeds);
 
-        // Execute callback as provider
         vm.prank(provider);
         pulse.executeCallback(
             provider,
@@ -225,5 +290,75 @@ contract PulseTest is Test, PulseEvents {
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
         assertEq(consumer.lastProvider(), provider);
         assertEq(consumer.lastPublishTime(), publishTime);
+    }
+
+    function testExecuteCallbackFailure() public {
+        FailingPulseConsumer failingConsumer = new FailingPulseConsumer();
+
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(failingConsumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockPythResponse(priceFeeds);
+        bytes[] memory updateData = createUpdateData(priceFeeds);
+
+        vm.expectEmit(true, true, true, true);
+        emit PriceUpdateCallbackFailed(
+            sequenceNumber,
+            provider,
+            publishTime,
+            priceIds,
+            address(failingConsumer),
+            "callback failed"
+        );
+
+        vm.prank(provider);
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+    }
+
+    function testExecuteCallbackCustomErrorFailure() public {
+        CustomErrorPulseConsumer failingConsumer = new CustomErrorPulseConsumer();
+
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(failingConsumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockPythResponse(priceFeeds);
+        bytes[] memory updateData = createUpdateData(priceFeeds);
+
+        vm.expectEmit(true, true, true, true);
+        emit PriceUpdateCallbackFailed(
+            sequenceNumber,
+            provider,
+            publishTime,
+            priceIds,
+            address(failingConsumer),
+            "low-level error (possibly out of gas)"
+        );
+
+        vm.prank(provider);
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
     }
 }
