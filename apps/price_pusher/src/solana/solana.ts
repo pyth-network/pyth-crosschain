@@ -17,6 +17,7 @@ import { Logger } from "pino";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
+const MAX_JITO_TIP_LAMPORTS = LAMPORTS_PER_SOL / 100;
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -193,7 +194,9 @@ export class SolanaPricePusherJito implements IPricePusher {
     const jitoTip = this.dynamicJitoTips
       ? (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports
       : this.defaultJitoTipLamports;
-    this.logger.info({ jitoTip }, "using jito tip of");
+
+    const cappedJitoTip = Math.min(jitoTip, MAX_JITO_TIP_LAMPORTS);
+    this.logger.info({ cappedJitoTip }, "using jito tip of");
 
     let priceFeedUpdateData: string[];
     try {
@@ -221,7 +224,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       );
 
       const transactions = await transactionBuilder.buildVersionedTransactions({
-        jitoTipLamports: jitoTip,
+        jitoTipLamports: cappedJitoTip,
         tightComputeBudget: true,
         jitoBundleSize: this.jitoBundleSize,
       });
