@@ -146,6 +146,7 @@ impl instruction::PostUpdate {
 }
 
 impl instruction::PostUpdateAtomic {
+    #[allow(clippy::too_many_arguments)]
     pub fn populate(
         payer: Pubkey,
         write_authority: Pubkey,
