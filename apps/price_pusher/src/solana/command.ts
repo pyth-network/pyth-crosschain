@@ -61,6 +61,11 @@ export default {
       type: "number",
       optional: true,
     } as Options,
+    "dynamic-jito-tips": {
+      description: "Use dynamic jito tips",
+      type: "boolean",
+      default: false,
+    } as Options,
     "jito-bundle-size": {
       description: "Number of transactions in each bundle",
       type: "number",
@@ -94,6 +99,7 @@ export default {
       jitoEndpoint,
       jitoKeypairFile,
       jitoTipLamports,
+      dynamicJitoTips,
       jitoBundleSize,
       updatesPerJitoBundle,
       logLevel,
@@ -148,6 +154,7 @@ export default {
         logger.child({ module: "SolanaPricePusherJito" }),
         shardId,
         jitoTipLamports,
+        dynamicJitoTips,
         jitoClient,
         jitoBundleSize,
         updatesPerJitoBundle

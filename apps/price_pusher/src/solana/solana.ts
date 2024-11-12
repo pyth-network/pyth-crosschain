@@ -157,6 +157,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     private logger: Logger,
     private shardId: number,
     private defaultJitoTipLamports: number,
+    private dynamicJitoTips: boolean,
     private searcherClient: SearcherClient,
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number
@@ -189,8 +190,9 @@ export class SolanaPricePusherJito implements IPricePusher {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _pubTimesToPush: number[]
   ): Promise<void> {
-    const jitoTip =
-      (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports;
+    const jitoTip = this.dynamicJitoTips
+      ? (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports
+      : this.defaultJitoTipLamports;
     this.logger.info({ jitoTip }, "using jito tip of");
 
     let priceFeedUpdateData: string[];
