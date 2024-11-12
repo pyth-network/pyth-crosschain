@@ -10,6 +10,8 @@ import {
 } from "@ton/core";
 import { ContractProvider } from "@ton/ton";
 
+export const PYTH_CONTRACT_ADDRESS_MAINNET =
+  "EQD2QZABE_SbKwCN0kyr5XU_qP_uNkL0fwDodHEgHFLaahgC";
 export const PYTH_CONTRACT_ADDRESS_TESTNET =
   "EQDi9IHGin5GmrJyU5d_dQqjuYC22tshx1dxz9j5_ZGUz74j";
 // This is defined in target_chains/ton/contracts/common/gas.fc
