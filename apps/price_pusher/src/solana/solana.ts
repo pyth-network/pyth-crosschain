@@ -14,6 +14,7 @@ import {
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { Logger } from "pino";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
 
@@ -161,11 +162,34 @@ export class SolanaPricePusherJito implements IPricePusher {
     private updatesPerJitoBundle: number
   ) {}
 
+  async getRecentJitoTipsLamports(): Promise<number | undefined> {
+    try {
+      const response = await fetch(
+        "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor"
+      );
+      if (!response.ok) {
+        this.logger.error(`Failed to fetch Jito tips: ${response.statusText}`);
+        return 0;
+      }
+      const data = await response.json();
+      this.logger.info({ data }, "getRecentJitoTipsLamports");
+      return Math.floor(
+        Number(data[0].landed_tips_25th_percentile) * LAMPORTS_PER_SOL
+      );
+    } catch (err: any) {
+      this.logger.error(err, "getRecentJitoTips failed");
+      return undefined;
+    }
+  }
+
   async updatePriceFeed(
     priceIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _pubTimesToPush: number[]
   ): Promise<void> {
+    let jitoTip =
+      (await this.getRecentJitoTipsLamports()) ?? this.jitoTipLamports;
+    this.logger.info(`using jito tip of ${jitoTip} lamports`);
     let priceFeedUpdateData: string[];
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
@@ -192,16 +216,16 @@ export class SolanaPricePusherJito implements IPricePusher {
       );
 
       const transactions = await transactionBuilder.buildVersionedTransactions({
-        jitoTipLamports: this.jitoTipLamports,
+        jitoTipLamports: jitoTip,
         tightComputeBudget: true,
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      await sendTransactionsJito(
-        transactions,
-        this.searcherClient,
-        this.pythSolanaReceiver.wallet
-      );
+      // await sendTransactionsJito(
+      //   transactions,
+      //   this.searcherClient,
+      //   this.pythSolanaReceiver.wallet
+      // );
     }
   }
 }
