@@ -162,22 +162,24 @@ export class SolanaPricePusherJito implements IPricePusher {
     private updatesPerJitoBundle: number
   ) {}
 
-  async getRecentJitoTipsLamports(): Promise<number | undefined> {
+  async getRecentJitoTipLamports(): Promise<number | undefined> {
     try {
       const response = await fetch(
         "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor"
       );
       if (!response.ok) {
-        this.logger.error(`Failed to fetch Jito tips: ${response.statusText}`);
-        return 0;
+        this.logger.error(
+          { status: response.status, statusText: response.statusText },
+          "getRecentJitoTips http request failed"
+        );
+        return undefined;
       }
       const data = await response.json();
-      this.logger.info({ data }, "getRecentJitoTipsLamports");
       return Math.floor(
         Number(data[0].landed_tips_25th_percentile) * LAMPORTS_PER_SOL
       );
     } catch (err: any) {
-      this.logger.error(err, "getRecentJitoTips failed");
+      this.logger.error({ err }, "getRecentJitoTips failed");
       return undefined;
     }
   }
@@ -187,8 +189,8 @@ export class SolanaPricePusherJito implements IPricePusher {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _pubTimesToPush: number[]
   ): Promise<void> {
-    let jitoTip =
-      (await this.getRecentJitoTipsLamports()) ?? this.defaultJitoTipLamports;
+    const jitoTip =
+      (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports;
     this.logger.info(`using jito tip of ${jitoTip} lamports`);
     let priceFeedUpdateData: string[];
     try {
