@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/hermes-client",
-  "version": "1.2.0",
+  "version": "1.1.0",
   "description": "Pyth Hermes Client",
   "author": {
     "name": "Pyth Data Association"
@@ -26,7 +26,7 @@
     "example": "node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
+    "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },
