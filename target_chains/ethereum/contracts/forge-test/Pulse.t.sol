@@ -220,6 +220,10 @@ contract PulseTest is Test, PulseEvents {
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
         assertEq(
+            keccak256(abi.encode(lastRequest.priceIds)),
+            keccak256(abi.encode(expectedRequest.priceIds))
+        );
+        assertEq(
             lastRequest.callbackGasLimit,
             expectedRequest.callbackGasLimit
         );
@@ -466,6 +470,38 @@ contract PulseTest is Test, PulseEvents {
             updateData,
             differentGasLimit
         );
+    }
+
+    function testExecuteCallbackWithFutureTimestamp() public {
+        // Setup request with future timestamp
+        bytes32[] memory priceIds = createPriceIds();
+        uint256 futureTime = block.timestamp + 1 days;
+        vm.deal(address(consumer), 1 gwei);
+
+        vm.prank(address(consumer));
+        uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
+            value: calculateTotalFee()
+        }(provider, futureTime, priceIds, CALLBACK_GAS_LIMIT);
+
+        // Try to execute callback before the requested timestamp
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            futureTime // Mock price feeds with future timestamp
+        );
+        mockPythResponse(priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(provider);
+        // Should succeed because we're simulating receiving future-dated price updates
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+
+        // Verify the callback was executed with future timestamp
+        assertEq(consumer.lastPublishTime(), futureTime);
     }
 
     function testGetFee() public {
