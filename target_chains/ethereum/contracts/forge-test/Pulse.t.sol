@@ -482,4 +482,26 @@ contract PulseTest is Test, PulseEvents {
             managerBalanceBefore + info.accruedFeesInWei
         );
     }
+
+    function testMaxNumPrices() public {
+        // Set max number of prices
+        vm.prank(provider);
+        pulse.setMaxNumPrices(1);
+
+        // Try to request more prices than allowed
+        bytes32[] memory priceIds = new bytes32[](2);
+        priceIds[0] = BTC_PRICE_FEED_ID;
+        priceIds[1] = ETH_PRICE_FEED_ID;
+
+        vm.deal(address(consumer), 1 gwei);
+        vm.prank(address(consumer));
+
+        vm.expectRevert("Exceeds max number of prices");
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
+            provider,
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
+    }
 }
