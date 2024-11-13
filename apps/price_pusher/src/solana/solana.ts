@@ -14,6 +14,7 @@ import {
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { Logger } from "pino";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
 
@@ -34,21 +35,24 @@ export class SolanaPriceListener extends ChainPriceListener {
   // and ensuring it is not older than 30 seconds.
   private async checkHealth() {
     const slot = await this.pythSolanaReceiver.connection.getSlot("finalized");
-    const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
-      slot
-    );
-    if (
-      blockTime === null ||
-      blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
-    ) {
-      if (blockTime !== null) {
-        this.logger.info(
-          `Solana connection is behind by ${
-            Date.now() / 1000 - blockTime
-          } seconds`
-        );
+    try {
+      const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
+        slot
+      );
+      if (
+        blockTime === null ||
+        blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
+      ) {
+        if (blockTime !== null) {
+          this.logger.info(
+            `Solana connection is behind by ${
+              Date.now() / 1000 - blockTime
+            } seconds`
+          );
+        }
       }
-      throw new Error("Solana connection is unhealthy");
+    } catch (err) {
+      this.logger.error({ err }, "checkHealth failed");
     }
   }
 
@@ -155,17 +159,48 @@ export class SolanaPricePusherJito implements IPricePusher {
     private priceServiceConnection: PriceServiceConnection,
     private logger: Logger,
     private shardId: number,
-    private jitoTipLamports: number,
+    private defaultJitoTipLamports: number,
+    private dynamicJitoTips: boolean,
+    private maxJitoTipLamports: number,
     private searcherClient: SearcherClient,
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number
   ) {}
+
+  async getRecentJitoTipLamports(): Promise<number | undefined> {
+    try {
+      const response = await fetch(
+        "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor"
+      );
+      if (!response.ok) {
+        this.logger.error(
+          { status: response.status, statusText: response.statusText },
+          "getRecentJitoTips http request failed"
+        );
+        return undefined;
+      }
+      const data = await response.json();
+      return Math.floor(
+        Number(data[0].landed_tips_25th_percentile) * LAMPORTS_PER_SOL
+      );
+    } catch (err: any) {
+      this.logger.error({ err }, "getRecentJitoTips failed");
+      return undefined;
+    }
+  }
 
   async updatePriceFeed(
     priceIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _pubTimesToPush: number[]
   ): Promise<void> {
+    const jitoTip = this.dynamicJitoTips
+      ? (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports
+      : this.defaultJitoTipLamports;
+
+    const cappedJitoTip = Math.min(jitoTip, this.maxJitoTipLamports);
+    this.logger.info({ cappedJitoTip }, "using jito tip of");
+
     let priceFeedUpdateData: string[];
     try {
       priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
@@ -192,7 +227,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       );
 
       const transactions = await transactionBuilder.buildVersionedTransactions({
-        jitoTipLamports: this.jitoTipLamports,
+        jitoTipLamports: cappedJitoTip,
         tightComputeBudget: true,
         jitoBundleSize: this.jitoBundleSize,
       });

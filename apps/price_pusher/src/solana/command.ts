@@ -11,7 +11,7 @@ import {
 import { Controller } from "../controller";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { Keypair, Connection } from "@solana/web3.js";
+import { Keypair, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import fs from "fs";
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -61,6 +61,16 @@ export default {
       type: "number",
       optional: true,
     } as Options,
+    "dynamic-jito-tips": {
+      description: "Use dynamic jito tips",
+      type: "boolean",
+      default: false,
+    } as Options,
+    "max-jito-tip-lamports": {
+      description: "Maximum jito tip lamports",
+      type: "number",
+      default: LAMPORTS_PER_SOL / 100,
+    } as Options,
     "jito-bundle-size": {
       description: "Number of transactions in each bundle",
       type: "number",
@@ -94,6 +104,8 @@ export default {
       jitoEndpoint,
       jitoKeypairFile,
       jitoTipLamports,
+      dynamicJitoTips,
+      maxJitoTipLamports,
       jitoBundleSize,
       updatesPerJitoBundle,
       logLevel,
@@ -148,6 +160,8 @@ export default {
         logger.child({ module: "SolanaPricePusherJito" }),
         shardId,
         jitoTipLamports,
+        dynamicJitoTips,
+        maxJitoTipLamports,
         jitoClient,
         jitoBundleSize,
         updatesPerJitoBundle
