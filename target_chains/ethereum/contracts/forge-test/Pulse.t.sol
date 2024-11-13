@@ -361,4 +361,48 @@ contract PulseTest is Test, PulseEvents {
             CALLBACK_GAS_LIMIT
         );
     }
+
+    function testGetFee() public {
+        // Test with different gas limits to verify fee calculation
+        uint256[] memory gasLimits = new uint256[](3);
+        gasLimits[0] = 100_000;
+        gasLimits[1] = 500_000;
+        gasLimits[2] = 1_000_000;
+
+        for (uint256 i = 0; i < gasLimits.length; i++) {
+            uint256 gasLimit = gasLimits[i];
+            uint128 expectedFee = PROVIDER_FEE + // Base provider fee
+                (PROVIDER_FEE_PER_GAS * uint128(gasLimit)) + // Gas-based fee
+                PYTH_FEE; // Pyth oracle fee
+
+            uint128 actualFee = pulse.getFee(provider, gasLimit);
+
+            assertEq(
+                actualFee,
+                expectedFee,
+                "Fee calculation incorrect for gas limit"
+            );
+        }
+
+        // Test with zero gas limit
+        uint128 expectedMinFee = PROVIDER_FEE + PYTH_FEE;
+        uint128 actualMinFee = pulse.getFee(provider, 0);
+        assertEq(
+            actualMinFee,
+            expectedMinFee,
+            "Minimum fee calculation incorrect"
+        );
+
+        // Test with unregistered provider (should return 0 fees)
+        address unregisteredProvider = address(0x123);
+        uint128 unregisteredFee = pulse.getFee(
+            unregisteredProvider,
+            gasLimits[0]
+        );
+        assertEq(
+            unregisteredFee,
+            PYTH_FEE,
+            "Unregistered provider fee should only include Pyth fee"
+        );
+    }
 }
