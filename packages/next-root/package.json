@@ -25,7 +25,8 @@
     "@axe-core/react": "catalog:",
     "@next/third-parties": "catalog:",
     "@pythnetwork/app-logger": "workspace:*",
-    "bcp-47": "catalog:"
+    "bcp-47": "catalog:",
+    "next-themes": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
