@@ -117,7 +117,10 @@ abstract contract Pulse is IPulse, PulseState {
             providerInfo.maxNumPrices > 0 &&
             priceIds.length > providerInfo.maxNumPrices
         ) {
-            revert("Exceeds max number of prices");
+            revert ExceedsMaxPrices(
+                uint32(priceIds.length),
+                providerInfo.maxNumPrices
+            );
         }
 
         // Assign sequence number and increment
@@ -154,10 +157,19 @@ abstract contract Pulse is IPulse, PulseState {
     ) external payable override {
         Request storage req = findActiveRequest(provider, sequenceNumber);
 
-        require(
-            gasleft() >= req.callbackGasLimit,
-            "Insufficient gas for callback"
-        );
+        if (
+            keccak256(abi.encode(req.priceIds)) !=
+            keccak256(abi.encode(priceIds))
+        ) {
+            revert InvalidPriceIds(priceIds, req.priceIds);
+        }
+
+        if (req.callbackGasLimit != callbackGasLimit) {
+            revert InvalidCallbackGasLimit(
+                callbackGasLimit,
+                req.callbackGasLimit
+            );
+        }
 
         PythStructs.PriceFeed[] memory priceFeeds = IPyth(_state.pyth)
             .parsePriceFeedUpdates(
@@ -168,17 +180,6 @@ abstract contract Pulse is IPulse, PulseState {
             );
 
         uint256 publishTime = priceFeeds[0].price.publishTime;
-
-        // Verify request parameters match
-        require(
-            keccak256(abi.encode(req.priceIds)) ==
-                keccak256(abi.encode(priceIds)),
-            "Invalid price IDs"
-        );
-        require(
-            req.callbackGasLimit == callbackGasLimit,
-            "Invalid callback gas limit"
-        );
 
         try
             IPulseConsumer(req.requester).pulseCallback(
