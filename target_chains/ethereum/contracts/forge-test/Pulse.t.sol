@@ -446,4 +446,40 @@ contract PulseTest is Test, PulseEvents {
         vm.expectRevert("Insufficient balance");
         pulse.withdraw(1 ether);
     }
+
+    function testSetAndWithdrawAsFeeManager() public {
+        address feeManager = address(0x789);
+
+        // Set fee manager
+        vm.prank(provider);
+        pulse.setFeeManager(feeManager);
+
+        // Verify fee manager was set
+        PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
+        assertEq(info.feeManager, feeManager);
+
+        // Setup: Request price update to accrue some fees
+        bytes32[] memory priceIds = createPriceIds();
+        vm.deal(address(consumer), 1 gwei);
+
+        vm.prank(address(consumer));
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
+            provider,
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
+
+        // Test withdrawal as fee manager
+        uint256 managerBalanceBefore = feeManager.balance;
+        info = pulse.getProviderInfo(provider);
+
+        vm.prank(feeManager);
+        pulse.withdrawAsFeeManager(provider, info.accruedFeesInWei);
+
+        assertEq(
+            feeManager.balance,
+            managerBalanceBefore + info.accruedFeesInWei
+        );
+    }
 }
