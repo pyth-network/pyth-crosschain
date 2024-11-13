@@ -504,4 +504,14 @@ contract PulseTest is Test, PulseEvents {
             CALLBACK_GAS_LIMIT
         );
     }
+
+    function testSetProviderUri() public {
+        bytes memory newUri = "https://updated-provider.com";
+
+        vm.prank(provider);
+        pulse.setProviderUri(newUri);
+
+        PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
+        assertEq(info.uri, newUri);
+    }
 }
