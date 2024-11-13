@@ -35,20 +35,24 @@ export class SolanaPriceListener extends ChainPriceListener {
   // and ensuring it is not older than 30 seconds.
   private async checkHealth() {
     const slot = await this.pythSolanaReceiver.connection.getSlot("finalized");
-    const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
-      slot
-    );
-    if (
-      blockTime === null ||
-      blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
-    ) {
-      if (blockTime !== null) {
-        this.logger.info(
-          `Solana connection is behind by ${
-            Date.now() / 1000 - blockTime
-          } seconds`
-        );
+    try {
+      const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
+        slot
+      );
+      if (
+        blockTime === null ||
+        blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
+      ) {
+        if (blockTime !== null) {
+          this.logger.info(
+            `Solana connection is behind by ${
+              Date.now() / 1000 - blockTime
+            } seconds`
+          );
+        }
       }
+    } catch (err) {
+      this.logger.error({ err }, "checkHealth failed");
     }
   }
 
